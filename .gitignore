@@ -2,8 +2,9 @@
 
 # Dependencies
 node_modules
-.pnp
-.pnp.js
+.pnp.cjs
+.pnp.loader.mjs
+.yarn
 
 # Local env files
 .env

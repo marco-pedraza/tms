@@ -1,5 +1,5 @@
 {
-  "name": "ims-client",
+  "name": "@repo/ims-client",
   "version": "0.0.0",
   "private": true,
   "exports": {

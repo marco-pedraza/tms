@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { PageHeader, ActionButtons } from '@/components/ui-components';
-import { countries, type Country } from '@/lib/data';
 import {
   Table,
   TableBody,
@@ -38,7 +37,6 @@ export default function CountriesPage() {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [data, setData] = useState<Country[]>(countries);
 
   const filteredData =
     countriesData?.countries?.filter(
@@ -53,7 +51,7 @@ export default function CountriesPage() {
 
   const confirmDelete = () => {
     if (deleteId) {
-      setData(data.filter((country) => country.id !== deleteId));
+      // @todo implement delete
       setDeleteId(null);
     }
   };

@@ -1,0 +1,156 @@
+---
+description: Patterns for controllers in Encore applications
+globs: *.controller.ts
+alwaysApply: false
+---
+# Controller Patterns
+
+## Rules for Controllers
+
+1. Controllers should ONLY:
+
+   - Define API routes and endpoints
+   - Handle request/response transformation
+   - Manage error handling through the shared `parseApiError` utility
+   - Call handler methods
+
+2. No business logic in controllers
+
+3. Use HTTP status codes consistently through Encore's APIError:
+
+   - 200: Success
+   - 201: Created
+   - 204: No Content
+   - 400: Bad Request (ErrCode.InvalidArgument)
+   - 404: Not Found (ErrCode.NotFound)
+   - 409: Conflict (ErrCode.AlreadyExists)
+   - 500: Internal Server Error (ErrCode.Internal)
+
+4. All endpoints must use shared error handling
+
+5. Use clear and consistent route naming:
+
+   - GET /entities - List
+   - GET /entities/:id - Get One
+   - POST /entities - Create
+   - PUT /entities/:id - Update
+   - DELETE /entities/:id - Delete
+
+6. Document all endpoints with clear descriptions
+
+7. Use descriptive names for endpoint functions (e.g., `createEntity`, `getEntity`, etc.)
+
+## Implementation Example
+
+```typescript
+/**
+ * Creates a new country.
+ * @param params - The country data to create
+ * @returns {Promise<CountryResponse>} The created country
+ * @throws {APIError} If the country creation fails
+ */
+export const createCountry = api(
+  { method: 'POST', path: '/countries' },
+  async (params: CreateCountryDto): Promise<CountryResponse> => {
+    try {
+      return await countryHandler.create(params);
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);
+
+/**
+ * Retrieves a country by its ID.
+ * @param params - Object containing the country ID
+ * @param params.id - The ID of the country to retrieve
+ * @returns {Promise<CountryResponse>} The found country
+ * @throws {APIError} If the country is not found or retrieval fails
+ */
+export const getCountry = api(
+  { method: 'GET', path: '/countries/:id' },
+  async ({ id }: { id: number }): Promise<CountryResponse> => {
+    try {
+      return await countryHandler.findOne(id);
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);
+
+/**
+ * Retrieves all countries.
+ * @returns {Promise<CountriesResponse>} An object containing an array of countries
+ * @throws {APIError} If the retrieval fails
+ */
+export const listCountries = api(
+  { method: 'GET', path: '/countries' },
+  async (): Promise<CountriesResponse> => {
+    try {
+      const { countries } = await countryHandler.findAll();
+      return { countries };
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);
+
+/**
+ * Updates an existing country.
+ * @param params - Object containing the country ID and update data
+ * @param params.id - The ID of the country to update
+ * @param params.data - The country data to update
+ * @returns {Promise<CountryResponse>} The updated country
+ * @throws {APIError} If the country is not found or update fails
+ */
+export const updateCountry = api(
+  { method: 'PUT', path: '/countries/:id' },
+  async ({
+    id,
+    ...data
+  }: UpdateCountryDto & { id: number }): Promise<CountryResponse> => {
+    try {
+      return await countryHandler.update(id, data);
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);
+
+/**
+ * Deletes a country by its ID.
+ * @param params - Object containing the country ID
+ * @param params.id - The ID of the country to delete
+ * @returns {Promise<CountryResponse>} The deleted country
+ * @throws {APIError} If the country is not found or deletion fails
+ */
+export const deleteCountry = api(
+  { method: 'DELETE', path: '/countries/:id' },
+  async ({ id }: { id: number }): Promise<CountryResponse> => {
+    try {
+      return await countryHandler.delete(id);
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+```
+
+## Best Practices
+
+- Route definition and error transformation only
+- No business logic
+- Consistent naming for endpoints (createEntity, getEntity, etc.)
+- Use of handlers as singletons
+- Strong typing with DTOs
+- Use of shared error handling
+- Request validation
+- Response transformation
+- Consistent error handling
+- Homogeneous code structure
+- Document parameters and responses
+- Maintain simplicity

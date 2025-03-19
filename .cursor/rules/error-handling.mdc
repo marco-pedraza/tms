@@ -1,0 +1,139 @@
+---
+description: Patterns for error handling in Encore applications
+globs: *.controller.ts, apps/server/*/*/*.ts
+alwaysApply: false
+---
+# Error Handling Patterns
+
+## Rules for Error Handling
+
+1. Use the centralized error classes from `server/shared/errors.ts`:
+
+   - `NotFoundError`: For resources that don't exist
+   - `ValidationError`: For validation failures
+   - `DuplicateError`: For uniqueness constraint violations
+
+2. Error messages should be:
+
+   - Clear and descriptive
+   - User-friendly
+   - Actionable when possible
+
+3. Include relevant error details
+
+4. Use the `parseApiError` function in controllers to map domain errors to API errors
+
+5. Log errors with proper context
+
+## Implementation Example
+
+### Shared Error Handling (server/shared/errors.ts)
+
+```typescript
+import { APIError, ErrCode } from 'encore.dev/api';
+
+/**
+ * Base error class for resources not found
+ */
+export class NotFoundError extends Error {
+  constructor(message: string = 'Resource not found') {
+    super(message);
+    this.name = 'NotFoundError';
+  }
+}
+
+/**
+ * Base error class for validation errors
+ */
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+/**
+ * Base error class for duplicate resource errors
+ */
+export class DuplicateError extends Error {
+  constructor(message: string = 'Resource with this name or code already exists') {
+    super(message);
+    this.name = 'DuplicateError';
+  }
+}
+
+/**
+ * Maps domain-specific errors to APIError with appropriate error codes
+ * Use this in controllers to handle all domain errors consistently
+ *
+ * @param error - The error to handle
+ * @returns {APIError} Mapped API error with appropriate error code and message
+ */
+export const parseApiError = (error: unknown): APIError => {
+  if (error instanceof NotFoundError) {
+    return new APIError(ErrCode.NotFound, error.message);
+  }
+  if (error instanceof ValidationError) {
+    return new APIError(ErrCode.InvalidArgument, error.message);
+  }
+  if (error instanceof DuplicateError) {
+    return new APIError(ErrCode.AlreadyExists, error.message);
+  }
+  return new APIError(ErrCode.Internal, 'Internal server error');
+};
+```
+
+## Usage in Handlers
+
+In handlers, throw domain-specific errors that capture the nature of the problem:
+
+```typescript
+async findOne(id: number): Promise<EntityDto> {
+  const [entity] = await db.select().from(entities).where(eq(entities.id, id)).limit(1);
+
+  if (!entity) {
+    throw new NotFoundError('Entity not found');
+  }
+
+  return entity;
+}
+
+private async validateUniqueName(name: string, excludeId?: number): Promise<void> {
+  // ... search logic ...
+
+  if (existing) {
+    throw new DuplicateError('An entity with this name already exists');
+  }
+}
+```
+
+## Usage in Controllers
+
+In controllers, catch domain errors, parse them with `parseApiError`, and throw the resulting API error:
+
+```typescript
+export const getEntity = api(
+  { method: 'GET', path: '/entities/:id' },
+  async ({ id }: { id: number }): Promise<EntityResponse> => {
+    try {
+      return await entityHandler.findOne(id);
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  }
+);
+```
+
+## Best Practices
+
+- Use consistent error hierarchy
+- Throw specific and descriptive errors
+- Handle all errors explicitly
+- Provide useful error messages
+- Avoid exposing implementation details in error messages
+- Centralize error handling in one location
+- Map domain errors to appropriate HTTP codes
+- Use try/catch appropriately
+- Log internal errors for diagnostics
+- Provide context in error messages

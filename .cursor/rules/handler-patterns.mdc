@@ -1,0 +1,152 @@
+---
+description: Patterns for services in Encore applications
+globs: *.handler.ts
+alwaysApply: false
+---
+# Handler Patterns
+
+## Rules for Handlers
+
+1. Handlers should contain:
+
+   - All business logic
+   - Data validation
+   - Database operations
+   - Domain-specific operations
+
+2. Keep methods small and focused (max 30 lines)
+
+3. Use clear method naming:
+
+   - `create*` for creation operations
+   - `find*` for retrieval operations
+   - `update*` for update operations
+   - `delete*` for deletion operations
+   - `validate*` for validation methods
+
+4. Implement private validation methods for repetitive validations
+
+5. Handle all database errors appropriately
+
+6. Document all business logic with JSDoc
+
+7. Use appropriate error classes from shared error utilities
+
+8. Export the handler as a singleton instance
+
+## Implementation Example
+
+```typescript
+import { db } from '../db/database';
+import { entities } from '../db/schemas/entities.schema';
+import { eq, and, or, not } from 'drizzle-orm';
+import type { EntityDto, CreateEntityDto, UpdateEntityDto } from './entity.types';
+import { NotFoundError, ValidationError, DuplicateError } from '../../shared/errors';
+
+export class EntityHandler {
+  /**
+   * Validates that the entity name is unique
+   * @param name - The name to check for uniqueness
+   * @param excludeId - Optional ID to exclude from the check (for updates)
+   * @throws {DuplicateError} If the name is already in use
+   * @private
+   */
+  private async validateUniqueName(name: string, excludeId?: number): Promise<void> {
+    const whereCondition = excludeId
+      ? and(eq(entities.name, name), not(eq(entities.id, excludeId)))
+      : eq(entities.name, name);
+
+    const [existing] = await db.select().from(entities).where(whereCondition).limit(1);
+
+    if (existing) {
+      throw new DuplicateError('An entity with this name already exists');
+    }
+  }
+
+  async create(data: CreateEntityDto): Promise<EntityDto> {
+    try {
+      // Validate unique name
+      await this.validateUniqueName(data.name);
+
+      const [entity] = await db.insert(entities).values(data).returning();
+      return entity;
+    } catch (error) {
+      if (error instanceof DuplicateError) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw new ValidationError(error.message);
+      }
+      throw error;
+    }
+  }
+
+  async findOne(id: number): Promise<EntityDto> {
+    const [entity] = await db.select().from(entities).where(eq(entities.id, id)).limit(1);
+
+    if (!entity) {
+      throw new NotFoundError('Entity not found');
+    }
+
+    return entity;
+  }
+
+  async update(id: number, data: UpdateEntityDto): Promise<EntityDto> {
+    try {
+      // Verify entity exists
+      await this.findOne(id);
+
+      // Check for duplicates if updating the name
+      if (data.name) {
+        await this.validateUniqueName(data.name, id);
+      }
+
+      const [updated] = await db
+        .update(entities)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(entities.id, id))
+        .returning();
+
+      return updated;
+    } catch (error) {
+      if (error instanceof NotFoundError || error instanceof DuplicateError) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw new ValidationError(error.message);
+      }
+      throw error;
+    }
+  }
+
+  async delete(id: number): Promise<EntityDto> {
+    // Verify entity exists
+    await this.findOne(id);
+    const [deletedEntity] = await db.delete(entities).where(eq(entities.id, id)).returning();
+    return deletedEntity;
+  }
+
+  async findAll(): Promise<{ entities: EntityDto[] }> {
+    const entitiesList = await db.select().from(entities).orderBy(entities.name);
+    return {
+      entities: entitiesList,
+    };
+  }
+}
+
+// Export as singleton
+export const entityHandler = new EntityHandler();
+```
+
+## Best Practices
+
+- Contain all business logic
+- Implement private validation methods for reusable validations
+- Direct ORM access
+- Domain-specific error handling
+- Concise and focused methods
+- Clear documentation with JSDoc
+- Proper transaction handling
+- Consistent error throwing
+- Clear separation of concerns
+- Avoid duplicated logic

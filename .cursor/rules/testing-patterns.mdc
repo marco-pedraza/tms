@@ -1,0 +1,237 @@
+---
+description: Patterns for testing in Encore applications
+globs: apps/server/*/*/*.spec.ts, apps/server/*/*/*.test.ts
+alwaysApply: false
+---
+
+# Testing Patterns
+
+## Overview
+
+This document defines the standard structure and implementation patterns for tests in our Encore-based application. Tests are primarily focused on controllers and follow a consistent structure for both success and error scenarios.
+
+## Test Structure
+
+Each feature should include controller tests with the following naming convention:
+
+```
+feature-name.controller.spec.ts
+```
+
+## Testing Framework
+
+We use Vitest as our testing framework with the following imports:
+
+```typescript
+import { expect, describe, test, beforeAll, afterAll } from 'vitest';
+```
+
+## Test Organization
+
+Tests should be organized with the following structure:
+
+1. Import necessary test utilities and controllers
+2. Define a top-level `describe` block for the feature
+3. Setup test data and variables at the top
+4. Use `beforeAll` for test setup (if needed)
+5. Use `afterAll` for cleanup operations
+6. Group tests into logical sections using nested `describe` blocks:
+   - `describe('success scenarios', () => {...})`
+   - `describe('error scenarios', () => {...})`
+
+## Rules for Controller Tests
+
+1. Tests should cover all controller endpoints (create, read, update, delete)
+2. Tests should verify both success and error scenarios
+3. Always clean up test data in an `afterAll` block to prevent test pollution
+4. Handle interdependencies properly (e.g., create required resources first)
+5. Test response structure and values with explicit assertions
+6. Use clear and descriptive test names
+
+## Validation Testing Approach
+
+In our Encore-based application, input validation is handled automatically by the Encore Rust runtime based on the type definitions and validators (such as `MinLen`, `MatchesRegexp`, etc.) specified in our `.types.ts` files. These validators are processed at the API boundary before the controller code is even executed.
+
+Because of this architecture:
+
+1. **We do not explicitly test basic validation errors in controller tests** - Validation errors are thrown by the Encore runtime and not by the controller code itself
+2. **Validation tests would require integration tests** - To test validation properly would require running the actual Encore runtime, which is outside the scope of our unit tests
+3. **Focus on business logic validation** - Our tests should focus on domain-specific validation that occurs inside our service layer, rather than testing the framework's validation
+
+This approach is noted in our test files with comments like:
+
+```typescript
+// NOTE: We are not testing the validation errors because it's handled by
+// Encore Rust runtime and they are not thrown in the controller
+```
+
+## Example Implementation
+
+```typescript
+import { expect, describe, test, beforeAll, afterAll } from 'vitest';
+import {
+  createEntity,
+  getEntity,
+  listEntities,
+  updateEntity,
+  deleteEntity,
+} from './entity.controller';
+
+describe('Entity Controller', () => {
+  // Test data and setup
+  const testEntity = {
+    name: 'Test Entity',
+    code: 'TE',
+    active: true,
+  };
+
+  // Variable to store created IDs for cleanup
+  let createdEntityId: number;
+
+  // Optional: Setup test dependencies
+  beforeAll(async () => {
+    // Create any required dependencies
+  });
+
+  // Clean up after all tests
+  afterAll(async () => {
+    if (createdEntityId) {
+      try {
+        await deleteEntity({ id: createdEntityId });
+      } catch (error) {
+        console.log('Error cleaning up test entity:', error);
+      }
+    }
+    // Clean up any other created resources
+  });
+
+  describe('success scenarios', () => {
+    test('should create a new entity', async () => {
+      // Create a new entity
+      const response = await createEntity(testEntity);
+
+      // Store the ID for later cleanup
+      createdEntityId = response.id;
+
+      // Assertions
+      expect(response).toBeDefined();
+      expect(response.id).toBeDefined();
+      expect(response.name).toBe(testEntity.name);
+      expect(response.code).toBe(testEntity.code);
+      expect(response.active).toBe(testEntity.active);
+      expect(response.createdAt).toBeDefined();
+    });
+
+    test('should retrieve an entity by ID', async () => {
+      const response = await getEntity({ id: createdEntityId });
+
+      expect(response).toBeDefined();
+      expect(response.id).toBe(createdEntityId);
+      expect(response.name).toBe(testEntity.name);
+    });
+
+    test('should list all entities', async () => {
+      const response = await listEntities();
+
+      expect(response.entities).toBeDefined();
+      expect(Array.isArray(response.entities)).toBe(true);
+      expect(response.entities.length).toBeGreaterThan(0);
+      // Verify our test entity is in the list
+      expect(response.entities.some((entity) => entity.id === createdEntityId)).toBe(true);
+    });
+
+    test('should update an entity', async () => {
+      const updatedName = 'Updated Test Entity';
+      const response = await updateEntity({
+        id: createdEntityId,
+        name: updatedName,
+      });
+
+      expect(response).toBeDefined();
+      expect(response.id).toBe(createdEntityId);
+      expect(response.name).toBe(updatedName);
+    });
+
+    test('should delete an entity', async () => {
+      // Create an entity specifically for deletion test
+      const entityToDelete = await createEntity({
+        name: 'Entity To Delete',
+        code: 'ETD',
+      });
+
+      // Delete should not throw an error
+      await expect(deleteEntity({ id: entityToDelete.id })).resolves.not.toThrow();
+
+      // Attempt to get should throw a not found error
+      await expect(getEntity({ id: entityToDelete.id })).rejects.toThrow();
+    });
+  });
+
+  describe('error scenarios', () => {
+    // NOTE: We are not testing the validation errors because it's handled by Encore rust runtime and they are not thrown in the controller
+
+    test('should handle not found errors', async () => {
+      await expect(getEntity({ id: 9999 })).rejects.toThrow();
+    });
+
+    test('should handle duplicate errors', async () => {
+      // Try to create entity with same name/code as existing one
+      await expect(
+        createEntity({
+          name: testEntity.name,
+          code: testEntity.code,
+        })
+      ).rejects.toThrow();
+    });
+
+    // Add more error scenario tests as appropriate for the feature
+  });
+});
+```
+
+## Best Practices
+
+1. **Test Independence**
+
+   - Each test should be independent and not rely on the state from other tests
+   - Setup and teardown should be handled appropriately
+
+2. **Descriptive Test Names**
+
+   - Use clear and descriptive test names that explain what is being tested
+   - Follow the pattern "should [expected behavior]"
+
+3. **Assertion Quality**
+
+   - Make specific assertions about the response structure and values
+   - Test both presence of fields and their values
+   - Use appropriate matchers (toBe, toEqual, toBeDefined, etc.)
+
+4. **Test Coverage**
+
+   - Test all controller endpoints
+   - Test both success and error paths
+   - Include tests for edge cases
+   - Focus on business logic validation rather than framework validation
+
+5. **Resource Cleanup**
+
+   - Always clean up created resources in afterAll blocks
+   - Use try/catch when cleaning up to avoid affecting other tests
+
+6. **Testing Dependencies**
+
+   - Handle resource dependencies explicitly
+   - Create required resources before tests that need them
+   - Clean up in reverse order of creation
+
+7. **Error Testing**
+
+   - Test for appropriate error responses
+   - Verify error handling in edge cases
+   - Focus on business/domain errors rather than validation errors
+
+8. **Test Organization**
+   - Group related tests logically
+   - Separate success and error scenarios
+   - Keep test files focused and maintainable

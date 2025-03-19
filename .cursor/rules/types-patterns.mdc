@@ -1,0 +1,110 @@
+---
+description: Patterns for type definitions in Encore applications
+globs: ['apps/server/*/*/*.types.ts']
+alwaysApply: false
+---
+
+# Patterns for Type Definitions
+
+## Rules for Types
+
+1. Define clear and specific interfaces
+
+2. Create DTOs manually instead of using Drizzle schema types directly:
+
+   - Base interface for the entity (e.g., `Country`)
+   - `CreateEntityDto`: Required fields for creation
+   - `UpdateEntityDto`: Optional fields for updates (extends Partial<CreateEntityDto>)
+   - `EntityDto`: Complete entity representation
+   - `EntityResponse`: API response structure
+
+3. Use strict TypeScript types (avoid 'any')
+
+4. Document all interface properties with JSDoc
+
+5. Use readonly where appropriate
+
+6. Keep DTOs focused and minimal
+
+7. Use Encore validators (MinLen, MatchesRegexp, etc.) for input validation
+
+## Implementation Example
+
+```typescript
+import { MinLen, MatchesRegexp } from 'encore.dev/validate';
+
+// Base interface
+export interface Entity {
+  id: number;
+  name: string;
+  active: boolean;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+}
+
+export interface EntityDto extends Entity {}
+
+/**
+ * DTO for creating a new entity
+ */
+export interface CreateEntityDto {
+  /**
+   * The entity name
+   * Must have at least 1 non-whitespace character
+   */
+  name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Whether the entity is active
+   * @default true
+   */
+  active?: boolean;
+}
+
+export interface UpdateEntityDto extends Partial<CreateEntityDto> {}
+
+// Response types
+export interface EntityResponse extends EntityDto {}
+
+export interface EntitiesResponse {
+  entities: EntityResponse[];
+}
+```
+
+## Using Encore Validators
+
+Encore provides a set of validators that can be combined with TypeScript types for runtime validation:
+
+```typescript
+import { MinLen, MaxLen, MatchesRegexp, Min, Max, Email } from 'encore.dev/validate';
+
+interface UserCreateDto {
+  // Validate minimum length
+  username: string & MinLen<3>;
+
+  // Validate maximum length
+  bio: string & MaxLen<500>;
+
+  // Validate email format
+  email: string & Email;
+
+  // Validate numeric range
+  age: number & Min<18> & Max<120>;
+
+  // Validate with regular expression
+  password: string & MatchesRegexp<'^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$'>;
+}
+```
+
+## Best Practices
+
+- Clear and descriptive interfaces
+- Separate DTOs for different operations
+- Required field documentation with JSDoc
+- Use Encore validators for validation
+- Strict TypeScript typing
+- Proper type exports
+- Consistent naming conventions
+- Avoid any/unknown types where possible
+- Define reusable types
+- Organize related types together

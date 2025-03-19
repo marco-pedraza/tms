@@ -1,0 +1,122 @@
+---
+description: Structure and patterns for features in Encore-based applications
+globs: **/server/**
+alwaysApply: false
+---
+
+# Feature Structure Pattern
+
+## Overview
+
+This document defines the standard structure and implementation patterns for features in our Encore-based application. The codebase is organized hierarchically with systems, subsystems, and features.
+
+## Directory Structure
+
+```
+apps/
+└── server/                   # Main system
+    ├── inventory/            # Subsystem for inventory management
+    │   ├── countries/        # Feature: countries management
+    │   │   ├── countries.handler.ts          # Business logic (Handler)
+    │   │   ├── countries.controller.ts       # API endpoints (Controller)
+    │   │   ├── countries.types.ts            # Type definitions
+    │   │   └── countries.controller.spec.ts  # Unit tests
+    │   ├── states/           # Feature: states management
+    │   │   └── ...
+    │   └── db/               # Database related code
+    │       ├── database.ts   # Database configuration
+    │       └── schemas/      # Database schemas
+    ├── users/                # Another subsystem
+    │   └── ...
+    └── shared/               # Utilities shared across subsystems
+        ├── errors.ts         # Centralized error handling
+        └── validators.ts     # Shared validation utilities
+```
+
+## Feature Structure
+
+Each feature follows this structure:
+
+```
+feature-name/                 # Example: countries/
+├── feature-name.handler.ts           # Handler with business logic
+├── feature-name.controller.ts        # Encore API endpoints
+├── feature-name.types.ts             # Type definitions
+└── feature-name.controller.spec.ts   # Unit tests for controller
+```
+
+
+## Specific Rules
+
+### General Rules
+
+1. Each feature should be contained in its own directory inside the relevant subsystem
+2. All files in a feature should be prefixed with the feature name
+3. Keep feature-specific code within the feature directory
+4. Maximum file size should not exceed 500 lines
+5. Use meaningful and descriptive names for all entities
+6. Follow TypeScript naming conventions strictly
+
+For detailed documentation of each component, see:
+
+- [typescript-patterns.mdc](mdc:.cursor/rules/typescript-patterns.mdc) - General TypeScript patterns
+- [handler-patterns.mdc](mdc:.cursor/rules/handler-patterns.mdc) - Patterns for handlers
+- [controller-patterns.mdc](mdc:.cursor/rules/controller-patterns.mdc) - Patterns for controllers
+- [types-patterns.mdc](mdc:.cursor/rules/types-patterns.mdc) - Patterns for type definitions
+- [error-handling.mdc](mdc:.cursor/rules/error-handling.mdc) - Error handling
+- [testing-patterns.mdc](mdc:.cursor/rules/testing-patterns.mdc) - Testing standards and patterns
+
+## Creating New Features
+
+### Adding a New Feature to an Existing Subsystem
+
+1. Create a new directory with the feature name inside the subsystem (e.g., `inventory/cities/`)
+2. Create the standard feature files with appropriate naming:
+   - `cities.handler.ts` (Handler)
+   - `cities.controller.ts` (API endpoints)
+   - `cities.types.ts` (Types and DTOs)
+   - `cities.controller.spec.ts` (Tests)
+3. Create the database schema if needed (e.g., `inventory/db/schemas/cities.schema.ts`)
+4. Implement the feature following the established patterns
+
+### Creating a New Subsystem
+
+1. Create a new directory in `apps/server/` for the subsystem (e.g., `logistics/`)
+2. Create a `db` directory with database configuration and schemas
+3. Add feature directories inside the subsystem
+4. Reuse the shared utilities from `server/shared/`
+
+## Important Guidelines
+
+1. Code Organization
+
+   - Maintain consistent file structure
+   - Follow naming conventions
+   - Keep responsibilities separated
+   - Document complex logic
+   - Use strict TypeScript types
+   - Handle errors consistently
+
+2. Code Quality
+
+   - Write unit tests for all features
+   - Maintain 80% or higher test coverage
+   - Use TypeScript strict mode
+   - Follow ESLint rules
+   - Use Prettier for formatting
+   - Review code before committing
+
+3. Performance
+
+   - Optimize database queries
+   - Use proper indexing
+   - Implement caching when necessary
+   - Handle pagination properly
+
+4. Security
+   - Validate all inputs
+   - Sanitize all outputs
+   - Use proper authentication
+   - Implement authorization
+   - Handle sensitive data appropriately
+   - Follow security best practices

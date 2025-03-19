@@ -5,8 +5,9 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "format:check": "turbo run format:check",
+    "check-types": "turbo run check-types",
+    "server:test": "turbo run test:encore --filter=ims-server"
   },
   "devDependencies": {
     "prettier": "^3.5.3",
@@ -14,9 +15,9 @@
     "typescript": "5.8.2"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
-  "packageManager": "yarn@4.7.0",
+  "packageManager": "npm@10.9.2",
   "workspaces": [
     "apps/*",
     "packages/*"

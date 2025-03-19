@@ -1,0 +1,122 @@
+---
+description: General patterns for TypeScript code
+globs: *.ts, *.tsx
+alwaysApply: false
+---
+
+# General TypeScript Patterns
+
+## General Rules
+
+1. Use TypeScript in strict mode (`"strict": true` in tsconfig.json)
+
+2. Follow consistent naming conventions:
+
+   - `camelCase` for variables, properties, and functions
+   - `PascalCase` for classes, interfaces, types, and enums
+   - `UPPER_SNAKE_CASE` for important constants
+
+3. Always document code with JSDoc, not only complex code:
+
+   - Functions and methods with descriptions, parameters, and return values
+   - Interfaces and types with property descriptions
+   - Classes with general description
+
+4. Avoid any/unknown types unless absolutely necessary
+
+5. Use explicit types to improve readability and assist inference
+
+6. Keep files modular and focused on a single responsibility
+
+7. Organize and group imports by source
+
+8. Use type declarations to improve readability
+
+## JSDoc Documentation Examples
+
+### Function Documentation
+
+```typescript
+/**
+ * Calculates the total of an order with taxes and discounts applied.
+ *
+ * @param items - List of products in the order
+ * @param taxRate - Tax rate as a decimal (e.g., 0.16 for 16%)
+ * @param discount - Optional discount as a decimal (e.g., 0.1 for 10%)
+ * @returns The calculated total with taxes and discounts
+ * @throws {ValidationError} If the tax rate or discount is invalid
+ */
+function calculateOrderTotal(items: OrderItem[], taxRate: number, discount?: number): number {
+  // Implementation...
+}
+```
+
+### Interface Documentation
+
+```typescript
+/**
+ * Represents a product in the inventory system.
+ */
+interface Product {
+  /**
+   * Unique identifier for the product
+   */
+  id: number;
+
+  /**
+   * Name of the product
+   */
+  name: string;
+
+  /**
+   * Unit price of the product
+   * @minimum 0
+   */
+  price: number;
+
+  /**
+   * Quantity available in inventory
+   * @default 0
+   */
+  stock: number;
+
+  /**
+   * Indicates if the product is active for sale
+   * @default true
+   */
+  active: boolean;
+}
+```
+
+## Best Practices
+
+### Typing
+
+- Use interfaces for objects and types for unions, intersections, and utility types
+- Leverage generics to create reusable code
+- Use conditional typing when appropriate
+- Prefer more specific types over generic types
+- Use explicit return types for public functions
+
+### Organization
+
+- Keep files a manageable size (< 300 lines)
+- Use named exports instead of default exports
+- Group related code in appropriate files
+- Separate business logic from UI components
+- Maintain a coherent folder structure
+
+### Validation and Security
+
+- Validate inputs at application boundaries
+- Use type assertions only when you have complete certainty
+- Prefer nullish coalescing (`??`) and optional chaining (`?.`) for handling null values
+- Avoid unsafe typing like `as any`
+
+### Technical Debt
+
+- Use `// TODO:` comments to mark future improvements
+- Avoid temporary solutions without documentation
+- Keep dependencies updated
+- Refactor duplicated code
+- Write tests for critical code

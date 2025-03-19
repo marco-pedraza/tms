@@ -1,0 +1,34 @@
+{
+  "name": "ims-server",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Encore + Drizzle Typescript Example",
+  "license": "MPL-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "encore run",
+    "test": "vitest run",
+    "test:encore": "encore test",
+    "lint": "eslint",
+    "format": "prettier --write .",
+    "format:check": "prettier . --check",
+    "db:generate": "drizzle-kit generate"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "*",
+    "@types/node": "^20.5.7",
+    "drizzle-kit": "^0.27.1",
+    "eslint": "^9.22.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.2.2",
+    "vitest": "^3.0.8"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.36.0",
+    "encore.dev": "^1.46.7",
+    "pg": "^8.13.1"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.13.0"
+  }
+}

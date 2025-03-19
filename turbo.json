@@ -22,6 +22,12 @@
     },
     "format:check": {
       "dependsOn": ["^format:check"]
+    },
+    "encore:gen-client": {
+      "dependsOn": ["^encore:gen-client"]
+    },
+    "encore:check": {
+      "dependsOn": ["^encore:check"]
     }
   }
 }

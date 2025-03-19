@@ -23,17 +23,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import client from '@/lib/imsClient';
+import { useQuery } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 
 export default function CountriesPage() {
+  const {
+    data: countriesData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['countries'],
+    queryFn: async () => await client.inventory.listCountries(),
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [data, setData] = useState<Country[]>(countries);
 
-  const filteredData = data.filter(
-    (country) =>
-      country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      country.code.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredData =
+    countriesData?.countries?.filter(
+      (country) =>
+        country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        country.code.toLowerCase().includes(searchTerm.toLowerCase()),
+    ) ?? [];
 
   const handleDelete = (id: string) => {
     setDeleteId(id);
@@ -76,7 +88,35 @@ export default function CountriesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.length > 0 ? (
+            {isLoading && (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="h-24 text-center place-items-center"
+                >
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                </TableCell>
+              </TableRow>
+            )}
+            {error && (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">
+                  Error loading countries
+                </TableCell>
+              </TableRow>
+            )}
+
+            {!isLoading && !error && filteredData.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">
+                  No countries found.
+                </TableCell>
+              </TableRow>
+            )}
+
+            {!isLoading &&
+              !error &&
+              filteredData.length > 0 &&
               filteredData.map((country) => (
                 <TableRow key={country.id}>
                   <TableCell className="font-medium">{country.name}</TableCell>
@@ -93,25 +133,18 @@ export default function CountriesPage() {
                     )}
                   </TableCell>
                   <TableCell>
-                    {new Date(country.created_at).toLocaleDateString()}
+                    {new Date(country.createdAt ?? '').toLocaleDateString()}
                   </TableCell>
                   <TableCell>
                     <ActionButtons
                       viewHref={`/countries/${country.id}`}
                       editHref={`/countries/${country.id}/edit`}
-                      onDelete={() => handleDelete(country.id)}
+                      onDelete={() => handleDelete(country.id.toString())}
                       small
                     />
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  No countries found.
-                </TableCell>
-              </TableRow>
-            )}
+              ))}
           </TableBody>
         </Table>
       </div>

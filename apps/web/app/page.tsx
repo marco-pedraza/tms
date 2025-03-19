@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
 import {
   Globe,
   Map,
@@ -9,7 +9,7 @@ import {
   Bus,
   Briefcase,
   Route,
-} from "lucide-react";
+} from 'lucide-react';
 
 export default function HomePage() {
   return (

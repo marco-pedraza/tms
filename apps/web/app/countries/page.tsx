@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { PageHeader, ActionButtons } from "@/components/ui-components";
-import { countries, type Country } from "@/lib/data";
+import { useState } from 'react';
+import { PageHeader, ActionButtons } from '@/components/ui-components';
+import { countries, type Country } from '@/lib/data';
 import {
   Table,
   TableBody,
@@ -10,9 +10,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+} from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,17 +22,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 
 export default function CountriesPage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [data, setData] = useState<Country[]>(countries);
 
   const filteredData = data.filter(
     (country) =>
       country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      country.code.toLowerCase().includes(searchTerm.toLowerCase())
+      country.code.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleDelete = (id: string) => {

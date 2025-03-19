@@ -11,7 +11,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/ui": "*",
+    "@radix-ui/react-slot": "^1.1.2",
     "@tailwindcss/postcss": "^4.0.14",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

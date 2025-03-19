@@ -15,7 +15,7 @@ import { parseApiError } from '../../shared/errors';
  * @throws {APIError} If the country creation fails
  */
 export const createCountry = api(
-  { method: 'POST', path: '/countries' },
+  { expose: true, method: 'POST', path: '/countries' },
   async (params: CreateCountryPayload): Promise<Country> => {
     try {
       return await countryHandler.create(params);
@@ -34,7 +34,7 @@ export const createCountry = api(
  * @throws {APIError} If the country is not found or retrieval fails
  */
 export const getCountry = api(
-  { method: 'GET', path: '/countries/:id' },
+  { expose: true, method: 'GET', path: '/countries/:id' },
   async ({ id }: { id: number }): Promise<Country> => {
     try {
       return await countryHandler.findOne(id);
@@ -51,7 +51,7 @@ export const getCountry = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listCountries = api(
-  { method: 'GET', path: '/countries' },
+  { expose: true, method: 'GET', path: '/countries' },
   async (): Promise<Countries> => {
     try {
       const countries = await countryHandler.findAll();
@@ -72,7 +72,7 @@ export const listCountries = api(
  * @throws {APIError} If the country is not found or update fails
  */
 export const updateCountry = api(
-  { method: 'PUT', path: '/countries/:id' },
+  { expose: true, method: 'PUT', path: '/countries/:id' },
   async ({
     id,
     ...data
@@ -94,7 +94,7 @@ export const updateCountry = api(
  * @throws {APIError} If the country is not found or deletion fails
  */
 export const deleteCountry = api(
-  { method: 'DELETE', path: '/countries/:id' },
+  { expose: true, method: 'DELETE', path: '/countries/:id' },
   async ({ id }: { id: number }): Promise<Country> => {
     try {
       return await countryHandler.delete(id);

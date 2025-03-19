@@ -2,9 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import { SideNav } from '@/components/side-nav';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-const queryClient = new QueryClient();
+import QueryClientProvider from '@/components/QueryClientProvider';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -29,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <QueryClientProvider client={queryClient}>
+        <QueryClientProvider>
           <div className="flex min-h-screen">
             <aside className="w-64 border-r bg-background">
               <SideNav />

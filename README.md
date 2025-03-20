@@ -1,84 +1,146 @@
-# Turborepo starter
+# IMS (Inventory Management System)
 
-This Turborepo starter is maintained by the Turborepo core team.
+This is a monorepo for the Inventory Management System, built using Turborepo with an Encore-powered backend API and a Next.js frontend.
 
-## Using this example
+## Tech Stack
 
-Run the following command:
+### Backend (apps/server)
 
-```sh
-npx create-turbo@latest
-```
+- [Encore](https://encore.dev) - Backend development platform
+- [Drizzle ORM](https://orm.drizzle.team) - TypeScript ORM
+- PostgreSQL - Database
+- Docker - Required for Encore local development
 
-## What's inside?
+### Frontend (apps/web)
 
-This Turborepo includes the following packages/apps:
+- [Next.js 15](https://nextjs.org) - React framework with App Router
+- React 19
 
-### Apps and Packages
+## Project Structure
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+This monorepo is powered by [Turborepo](https://turbo.build/repo) and follows its conventions:
 
 ```
-cd my-turborepo
-pnpm build
+├── apps/
+│   ├── server/        # Encore backend API
+│   └── web/           # Next.js frontend
+├── packages/          # Shared packages
+│   ├── eslint-config/ # Shared ESLint configurations
+│   ├── typescript-config/ # Shared TypeScript configurations
+│   └── ui/            # Shared UI components
+└── turbo.json         # Turborepo configuration
 ```
 
-### Develop
+## Prerequisites
 
-To develop all apps and packages, run the following command:
+- [Node.js](https://nodejs.org/) (v22 or later)
+- [npm](https://www.npmjs.com/) (v10.9.2 or later)
+- [Docker](https://www.docker.com/) (required for Encore local development)
+- [Encore CLI](https://encore.dev/docs/install)
 
-```
-cd my-turborepo
-pnpm dev
-```
+## Getting Started
 
-### Remote Caching
+### Installation
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+1. Clone the repository
+2. Install dependencies:
 
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
+```bash
+npm install
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+### Development
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+Run all applications in development mode:
 
+```bash
+npm run dev
 ```
-npx turbo link
+
+Run only the backend:
+
+```bash
+npm run dev -- --filter=ims-server
 ```
 
-## Useful Links
+Run only the frontend:
 
-Learn more about the power of Turborepo:
+```bash
+npm run dev -- --filter=web
+```
 
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)
+### Building
+
+Build all applications:
+
+```bash
+npm run build
+```
+
+### Testing
+
+Run backend tests:
+
+```bash
+npm run server:test
+```
+
+### Type Checking
+
+Check types across the project:
+
+```bash
+npm run check-types
+```
+
+### Linting
+
+Run linters across the project:
+
+```bash
+npm run lint
+```
+
+## Encore Backend
+
+The backend uses Encore, which requires Docker to run locally. Encore provides:
+
+- Automatic API documentation
+- Type-safe API endpoints
+- Integrated database migrations
+- Local development environment
+
+Before starting the backend, ensure Docker is running on your machine.
+
+### Encore Dashboard
+
+When running the backend, Encore provides a local dashboard at `http://localhost:9400/ims-server-pngi` where you can:
+
+- Test API endpoints
+- View logs
+- Inspect database schema
+- Generate client SDKs
+
+## Frontend
+
+The frontend is built with Next.js 15 and React 19. To access the application locally:
+
+1. Start the development server:
+   ```bash
+   npm run dev
+   ```
+2. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+## Turborepo Features
+
+This project leverages Turborepo's capabilities:
+
+- [Task orchestration](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
+- [Local and remote caching](https://turbo.build/repo/docs/core-concepts/caching)
+- [Filtering workspaces](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
+
+## Contributing
+
+1. Ensure your code passes all tests
+2. Follow the established code style and formatting
+3. Run type checking before pushing changes

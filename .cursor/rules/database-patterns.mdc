@@ -1,0 +1,105 @@
+---
+description: define how to manages database schemas
+globs: **/server/db/**
+alwaysApply: false
+---
+
+# Database Organization Patterns
+
+## Overview
+
+This document outlines the database structure and patterns in our application, following the Locality of Behavior (LoB) principle. Database schemas are co-located with their respective features, while shared database configuration is maintained at the root level.
+
+## Structure
+
+```
+apps/server/
+├── db/                       # Root-level database configuration
+│   ├── database.ts           # Database connection configuration
+│   ├── schema.ts             # Schema exports aggregation
+│   └── migrations/           # Database migrations
+└── [subsystem]/[feature]/    # Feature-specific schema placement
+    └── [feature].schema.ts   # Schema definition for each feature
+```
+
+## Core Components
+
+### Root-Level Configuration
+
+- **Database Connection** (`db/database.ts`): Connection setup and shared utilities
+- **Schema Aggregation** (`db/schema.ts`): Exports all schemas for migrations
+  ```typescript
+  export { countries } from '../inventory/countries/countries.schema';
+  export { states } from '../inventory/states/states.schema';
+  ```
+- **Migrations** (`db/migrations/`): Generated migration files
+
+### Feature-Level Schemas
+
+Each feature owns its schema definition file (`[feature].schema.ts`) located within the feature directory.
+
+## Implementation Patterns
+
+### 1. Schema Definition in Features
+
+```typescript
+// inventory/countries/countries.schema.ts
+import { pgTable, serial, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+
+export const countries = pgTable('countries', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  code: text('code').notNull().unique(),
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+```
+
+### 2. Schema References Between Features
+
+```typescript
+// inventory/states/states.schema.ts
+import { pgTable, serial, text, integer } from 'drizzle-orm/pg-core';
+import { countries } from '../countries/countries.schema';
+
+export const states = pgTable('states', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  countryId: integer('country_id').references(() => countries.id),
+  // ...
+});
+```
+
+### 3. Database Access in Handlers
+
+```typescript
+// inventory/countries/countries.handler.ts
+import { db } from '../../db/database';
+import { countries } from './countries.schema'; // Local schema import
+
+export class CountryHandler {
+  async findAll() {
+    return db.select().from(countries);
+  }
+}
+```
+
+## Key Principles
+
+1. **Locality of Behavior**: Schema definitions belong with the feature code that uses them
+2. **Direct Referencing**: Features import schemas from other features directly
+3. **Centralized Configuration**: Database setup and migrations managed at root level
+
+## Adding New Tables
+
+1. Create schema definition in the feature directory
+2. Export the schema in `db/schema.ts`
+3. Generate migrations
+
+## Best Practices
+
+- Use consistent naming (snake_case for DB, camelCase in TypeScript)
+- Define explicit relationships using foreign keys
+- Include standard fields (id, created_at, updated_at)
+- Export all schemas to the central schema.ts file

@@ -37,8 +37,8 @@ alwaysApply: false
 ## Implementation Example
 
 ```typescript
-import { db } from '../db/database';
-import { entities } from '../db/schemas/entities.schema';
+import { db } from '../../db/database';
+import { entities } from './entities.schema';
 import { eq, and, or, not } from 'drizzle-orm';
 import type { EntityDto, CreateEntityDto, UpdateEntityDto } from './entity.types';
 import { NotFoundError, ValidationError, DuplicateError } from '../../shared/errors';

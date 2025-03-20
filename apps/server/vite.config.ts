@@ -6,6 +6,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '~encore': path.resolve(__dirname, './encore.gen'),
+      '@/db': path.resolve(__dirname, './db'),
     },
   },
 });

@@ -3,29 +3,35 @@ description: Structure and patterns for features in Encore-based applications
 globs: **/server/**
 alwaysApply: false
 ---
-
 # Feature Structure Pattern
 
 ## Overview
 
-This document defines the standard structure and implementation patterns for features in our Encore-based application. The codebase is organized hierarchically with systems, subsystems, and features.
+This document defines the standard structure and implementation patterns for features in our Encore-based application. The codebase is organized hierarchically with systems, subsystems, and features. Following the Locality of Behavior (LoB) principle, each feature includes its own database schema alongside its business logic.
 
 ## Directory Structure
 
 ```
 apps/
 └── server/                   # Main system
+    ├── db/                   # Root-level database configuration and aggregation
+    │   ├── database.ts       # Database connection configuration
+    │   ├── schema.ts         # Schema exports aggregation
+    │   ├── migrations/       # Database migrations
+    │   └── schemas/          # Reserved for shared schemas (if needed)
     ├── inventory/            # Subsystem for inventory management
     │   ├── countries/        # Feature: countries management
     │   │   ├── countries.handler.ts          # Business logic (Handler)
     │   │   ├── countries.controller.ts       # API endpoints (Controller)
     │   │   ├── countries.types.ts            # Type definitions
+    │   │   ├── countries.schema.ts           # Database schema definition
     │   │   └── countries.controller.spec.ts  # Unit tests
-    │   ├── states/           # Feature: states management
-    │   │   └── ...
-    │   └── db/               # Database related code
-    │       ├── database.ts   # Database configuration
-    │       └── schemas/      # Database schemas
+    │   └── states/           # Feature: states management
+    │       ├── states.handler.ts
+    │       ├── states.controller.ts
+    │       ├── states.types.ts
+    │       ├── states.schema.ts
+    │       └── states.controller.spec.ts
     ├── users/                # Another subsystem
     │   └── ...
     └── shared/               # Utilities shared across subsystems
@@ -42,6 +48,7 @@ feature-name/                 # Example: countries/
 ├── feature-name.handler.ts           # Handler with business logic
 ├── feature-name.controller.ts        # Encore API endpoints
 ├── feature-name.types.ts             # Type definitions
+├── feature-name.schema.ts            # Database schema definition
 └── feature-name.controller.spec.ts   # Unit tests for controller
 ```
 
@@ -52,7 +59,7 @@ feature-name/                 # Example: countries/
 
 1. Each feature should be contained in its own directory inside the relevant subsystem
 2. All files in a feature should be prefixed with the feature name
-3. Keep feature-specific code within the feature directory
+3. Keep feature-specific code, including schema definitions, within the feature directory
 4. Maximum file size should not exceed 500 lines
 5. Use meaningful and descriptive names for all entities
 6. Follow TypeScript naming conventions strictly
@@ -65,6 +72,7 @@ For detailed documentation of each component, see:
 - [types-patterns.mdc](mdc:.cursor/rules/types-patterns.mdc) - Patterns for type definitions
 - [error-handling.mdc](mdc:.cursor/rules/error-handling.mdc) - Error handling
 - [testing-patterns.mdc](mdc:.cursor/rules/testing-patterns.mdc) - Testing standards and patterns
+- [database-patterns.mdc](mdc:.cursor/rules/database-patterns.mdc) - Database standars and patterns
 
 ## Creating New Features
 
@@ -75,16 +83,35 @@ For detailed documentation of each component, see:
    - `cities.handler.ts` (Handler)
    - `cities.controller.ts` (API endpoints)
    - `cities.types.ts` (Types and DTOs)
+   - `cities.schema.ts` (Database schema)
    - `cities.controller.spec.ts` (Tests)
-3. Create the database schema if needed (e.g., `inventory/db/schemas/cities.schema.ts`)
+3. Export the schema in the root `db/schema.ts` file
 4. Implement the feature following the established patterns
 
 ### Creating a New Subsystem
 
 1. Create a new directory in `apps/server/` for the subsystem (e.g., `logistics/`)
-2. Create a `db` directory with database configuration and schemas
-3. Add feature directories inside the subsystem
-4. Reuse the shared utilities from `server/shared/`
+2. Add feature directories inside the subsystem
+3. Reuse the shared utilities from `server/shared/`
+4. Utilize the root-level database configuration
+
+### Database Schema Best Practices
+
+1. **Schema Definition**:
+
+   - Define tables with clear, descriptive column names
+   - Use appropriate data types for columns
+   - Define relationships using foreign keys
+   - Document complex relationships or constraints
+
+2. **Schema References**:
+
+   - When referencing schemas from other features, import them directly
+   - Example: `import { countries } from '../countries/countries.schema';`
+
+3. **Schema Exports**:
+   - Export schema definitions for use in other features
+   - Add new schema exports to `db/schema.ts` for migration generation
 
 ## Important Guidelines
 
@@ -96,6 +123,7 @@ For detailed documentation of each component, see:
    - Document complex logic
    - Use strict TypeScript types
    - Handle errors consistently
+   - Follow Locality of Behavior by keeping related code together
 
 2. Code Quality
 

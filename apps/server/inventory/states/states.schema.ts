@@ -6,7 +6,7 @@ import {
   boolean,
   integer,
 } from 'drizzle-orm/pg-core';
-import { countries } from './countries.schema';
+import { countries } from '../countries/countries.schema';
 
 export const states = pgTable('states', {
   id: serial('id').primaryKey(),

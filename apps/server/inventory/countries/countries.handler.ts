@@ -1,5 +1,5 @@
-import { db } from '../db/database';
-import { countries } from '../db/schemas/countries.schema';
+import { db } from '@/db';
+import { countries } from './countries.schema';
 import { eq, and, or, not } from 'drizzle-orm';
 import type {
   CountryDto,

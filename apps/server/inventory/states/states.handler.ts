@@ -1,6 +1,6 @@
-import { db } from '../db/database';
-import { states } from '../db/schemas/states.schema';
-import { countries } from '../db/schemas/countries.schema';
+import { db } from '@/db';
+import { states } from './states.schema';
+import { countries } from '../countries/countries.schema';
 import { eq, and } from 'drizzle-orm';
 import { CreateStateDto, StateDto, UpdateStateDto } from './states.types';
 import {

@@ -15,6 +15,20 @@
       "when": 1741991537202,
       "tag": "0001_stiff_william_stryker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1742586650134,
+      "tag": "0002_brown_stepford_cuckoos",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1742588170595,
+      "tag": "0003_last_groot",
+      "breakpoints": true
     }
   ]
 }

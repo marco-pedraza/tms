@@ -33,6 +33,16 @@ export class DuplicateError extends Error {
 }
 
 /**
+ * Base error class for authentication errors
+ */
+export class AuthenticationError extends Error {
+  constructor(message: string = 'Authentication failed') {
+    super(message);
+    this.name = 'AuthenticationError';
+  }
+}
+
+/**
  * Maps domain-specific errors to APIError instances
  *
  * @param error - The error to parse
@@ -40,6 +50,7 @@ export class DuplicateError extends Error {
  * - NotFoundError -> ErrCode.NotFound
  * - ValidationError -> ErrCode.InvalidArgument
  * - DuplicateError -> ErrCode.AlreadyExists
+ * - AuthenticationError -> ErrCode.Unauthenticated
  * - Other errors -> ErrCode.Internal
  */
 export const parseApiError = (error: unknown) => {
@@ -51,6 +62,9 @@ export const parseApiError = (error: unknown) => {
   }
   if (error instanceof DuplicateError) {
     return new APIError(ErrCode.AlreadyExists, error.message);
+  }
+  if (error instanceof AuthenticationError) {
+    return new APIError(ErrCode.Unauthenticated, error.message);
   }
   return new APIError(ErrCode.Internal, 'Internal server error');
 };

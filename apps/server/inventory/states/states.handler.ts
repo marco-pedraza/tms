@@ -2,7 +2,12 @@ import { db } from '@/db';
 import { states } from './states.schema';
 import { countries } from '../countries/countries.schema';
 import { eq, and } from 'drizzle-orm';
-import { CreateStateDto, StateDto, UpdateStateDto } from './states.types';
+import {
+  CreateStatePayload,
+  State,
+  States,
+  UpdateStatePayload,
+} from './states.types';
 import {
   NotFoundError,
   ValidationError,
@@ -64,12 +69,12 @@ export class StateHandler {
   /**
    * Creates a new state in the database.
    * @param data - The state data to create
-   * @returns {Promise<StateDto>} The created state
+   * @returns {Promise<State>} The created state
    * @throws {NotFoundError} If the associated country does not exist
    * @throws {DuplicateError} If a state with the same name or code exists
    * @throws {ValidationError} If there's a validation error
    */
-  async create(data: CreateStateDto): Promise<StateDto> {
+  async create(data: CreateStatePayload): Promise<State> {
     try {
       await this.validateCountryExists(data.countryId);
       await this.validateUniqueState(data.name, data.code);
@@ -90,10 +95,10 @@ export class StateHandler {
   /**
    * Retrieves a state by its ID.
    * @param id - The ID of the state to retrieve
-   * @returns {Promise<StateDto>} The found state
+   * @returns {Promise<State>} The found state
    * @throws {NotFoundError} If the state does not exist
    */
-  async findOne(id: number): Promise<StateDto> {
+  async findOne(id: number): Promise<State> {
     const [state] = await db
       .select()
       .from(states)
@@ -111,13 +116,13 @@ export class StateHandler {
    * Updates an existing state.
    * @param id - The ID of the state to update
    * @param data - The state data to update
-   * @returns {Promise<StateDto>} The updated state
+   * @returns {Promise<State>} The updated state
    * @throws {NotFoundError} If the state does not exist
    * @throws {NotFoundError} If the new country ID does not exist
    * @throws {DuplicateError} If the new name or code conflicts with existing states
    * @throws {ValidationError} If there's a validation error
    */
-  async update(id: number, data: UpdateStateDto): Promise<StateDto> {
+  async update(id: number, data: UpdateStatePayload): Promise<State> {
     try {
       // Verify state exists
       const existingState = await this.findOne(id);
@@ -159,7 +164,7 @@ export class StateHandler {
    * @param id - The ID of the state to delete
    * @throws {NotFoundError} If the state does not exist
    */
-  async delete(id: number): Promise<StateDto> {
+  async delete(id: number): Promise<State> {
     // Verify state exists
     await this.findOne(id);
     const [deletedState] = await db
@@ -171,9 +176,9 @@ export class StateHandler {
 
   /**
    * Retrieves all states from the database.
-   * @returns {Promise<{ states: StateDto[] }>} An object containing an array of states
+   * @returns {Promise<States>} An object containing an array of states
    */
-  async findAll(): Promise<{ states: StateDto[] }> {
+  async findAll(): Promise<States> {
     const statesList = await db.select().from(states).orderBy(states.name);
     return {
       states: statesList,

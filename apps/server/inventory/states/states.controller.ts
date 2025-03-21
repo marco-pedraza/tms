@@ -1,22 +1,22 @@
 import { api } from 'encore.dev/api';
 import { stateHandler } from './states.handler';
 import {
-  CreateStateDto,
-  UpdateStateDto,
-  StateResponse,
-  StatesResponse,
+  CreateStatePayload,
+  UpdateStatePayload,
+  State,
+  States,
 } from './states.types';
 import { parseApiError } from '../../shared/errors';
 
 /**
  * Creates a new state.
  * @param params - The state data to create
- * @returns {Promise<StateResponse>} The created state
+ * @returns {Promise<State>} The created state
  * @throws {APIError} If the state creation fails
  */
 export const createState = api(
   { method: 'POST', path: '/states' },
-  async (params: CreateStateDto): Promise<StateResponse> => {
+  async (params: CreateStatePayload): Promise<State> => {
     try {
       return await stateHandler.create(params);
     } catch (error) {
@@ -30,12 +30,12 @@ export const createState = api(
  * Retrieves a state by its ID.
  * @param params - Object containing the state ID
  * @param params.id - The ID of the state to retrieve
- * @returns {Promise<StateResponse>} The found state
+ * @returns {Promise<State>} The found state
  * @throws {APIError} If the state is not found or retrieval fails
  */
 export const getState = api(
   { method: 'GET', path: '/states/:id' },
-  async ({ id }: { id: number }): Promise<StateResponse> => {
+  async ({ id }: { id: number }): Promise<State> => {
     try {
       return await stateHandler.findOne(id);
     } catch (error) {
@@ -47,15 +47,14 @@ export const getState = api(
 
 /**
  * Retrieves all states.
- * @returns {Promise<StatesResponse>} An object containing an array of states
+ * @returns {Promise<States>} An object containing an array of states
  * @throws {APIError} If the retrieval fails
  */
 export const listStates = api(
   { method: 'GET', path: '/states' },
-  async (): Promise<StatesResponse> => {
+  async (): Promise<States> => {
     try {
-      const { states } = await stateHandler.findAll();
-      return { states };
+      return await stateHandler.findAll();
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;
@@ -68,7 +67,7 @@ export const listStates = api(
  * @param params - Object containing the state ID and update data
  * @param params.id - The ID of the state to update
  * @param params.data - The state data to update
- * @returns {Promise<StateResponse>} The updated state
+ * @returns {Promise<State>} The updated state
  * @throws {APIError} If the state is not found or update fails
  */
 export const updateState = api(
@@ -76,7 +75,7 @@ export const updateState = api(
   async ({
     id,
     ...data
-  }: UpdateStateDto & { id: number }): Promise<StateResponse> => {
+  }: UpdateStatePayload & { id: number }): Promise<State> => {
     try {
       return await stateHandler.update(id, data);
     } catch (error) {
@@ -90,12 +89,12 @@ export const updateState = api(
  * Deletes a state by its ID.
  * @param params - Object containing the state ID
  * @param params.id - The ID of the state to delete
- * @returns {Promise<StateResponse>} The deleted state
+ * @returns {Promise<State>} The deleted state
  * @throws {APIError} If the state is not found or deletion fails
  */
 export const deleteState = api(
   { method: 'DELETE', path: '/states/:id' },
-  async ({ id }: { id: number }): Promise<StateResponse> => {
+  async ({ id }: { id: number }): Promise<State> => {
     try {
       return await stateHandler.delete(id);
     } catch (error) {

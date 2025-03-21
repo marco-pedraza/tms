@@ -24,23 +24,19 @@ export interface Country {
   updatedAt: Date | null;
 }
 
-export interface CountryDto extends Country {}
-
 /**
- * DTO for creating a new country
+ * Input for creating a new country
  */
-export interface CreateCountryDto {
+export interface CreateCountryPayload {
   /**
-   * The name of the country
+   * Name of the country
    * Must have at least 1 non-whitespace character
-   * Pattern ensures it contains at least one non-whitespace character
    */
   name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * The country code (e.g., "US", "MX", "CA")
+   * ISO country code (e.g., "US", "CA", "MX")
    * Must have at least 1 non-whitespace character
-   * Pattern ensures it contains at least one non-whitespace character
    */
   code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
@@ -51,11 +47,32 @@ export interface CreateCountryDto {
   active?: boolean;
 }
 
-export interface UpdateCountryDto extends Partial<CreateCountryDto> {}
+/**
+ * Input for updating a country
+ */
+export interface UpdateCountryPayload {
+  /**
+   * Name of the country
+   * Must have at least 1 non-whitespace character
+   */
+  name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
-// Response types
-export interface CountryResponse extends CountryDto {}
+  /**
+   * ISO country code (e.g., "US", "CA", "MX")
+   * Must have at least 1 non-whitespace character
+   */
+  code?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
-export interface CountriesResponse {
-  countries: CountryResponse[];
+  /**
+   * Whether the country is active
+   */
+  active?: boolean;
+}
+
+/**
+ * Response type for the list countries endpoint
+ */
+export interface Countries {
+  /** List of countries */
+  countries: Country[];
 }

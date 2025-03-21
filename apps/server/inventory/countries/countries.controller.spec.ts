@@ -59,6 +59,10 @@ describe('Countries Controller', () => {
       expect(response.countries).toBeDefined();
       expect(Array.isArray(response.countries)).toBe(true);
       expect(response.countries.length).toBeGreaterThan(0);
+      // Verify our test country is in the list
+      expect(
+        response.countries.some((country) => country.id === createdCountryId),
+      ).toBe(true);
     });
 
     test('should update a country', async () => {

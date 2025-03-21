@@ -88,7 +88,7 @@ export const parseApiError = (error: unknown): APIError => {
 In handlers, throw domain-specific errors that capture the nature of the problem:
 
 ```typescript
-async findOne(id: number): Promise<EntityDto> {
+async findOne(id: number): Promise<Entity> {
   const [entity] = await db.select().from(entities).where(eq(entities.id, id)).limit(1);
 
   if (!entity) {
@@ -114,7 +114,7 @@ In controllers, catch domain errors, parse them with `parseApiError`, and throw 
 ```typescript
 export const getEntity = api(
   { method: 'GET', path: '/entities/:id' },
-  async ({ id }: { id: number }): Promise<EntityResponse> => {
+  async ({ id }: { id: number }): Promise<Entity> => {
     try {
       return await entityHandler.findOne(id);
     } catch (error) {

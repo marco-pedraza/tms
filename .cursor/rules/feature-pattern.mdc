@@ -17,6 +17,7 @@ apps/
     ├── db/                   # Root-level database configuration and aggregation
     │   ├── database.ts       # Database connection configuration
     │   ├── schema.ts         # Schema exports aggregation
+    │   ├── index.ts          # Database exports aggregation
     │   ├── migrations/       # Database migrations
     │   └── schemas/          # Reserved for shared schemas (if needed)
     ├── inventory/            # Subsystem for inventory management
@@ -52,6 +53,14 @@ feature-name/                 # Example: countries/
 └── feature-name.controller.spec.ts   # Unit tests for controller
 ```
 
+## Type Structure
+
+Each feature should have the following type definitions:
+
+1. Base entity interface (e.g., `Country`, `State`)
+2. Creation payload (e.g., `CreateCountryPayload`, `CreateStatePayload`)
+3. Update payload (e.g., `UpdateCountryPayload`, `UpdateStatePayload`)
+4. List response (e.g., `Countries`, `States`)
 
 ## Specific Rules
 

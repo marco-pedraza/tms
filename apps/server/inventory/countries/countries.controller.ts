@@ -1,22 +1,22 @@
 import { api } from 'encore.dev/api';
 import { countryHandler } from './countries.handler';
 import type {
-  CreateCountryDto,
-  UpdateCountryDto,
-  CountryResponse,
-  CountriesResponse,
+  CreateCountryPayload,
+  UpdateCountryPayload,
+  Country,
+  Countries,
 } from './countries.types';
 import { parseApiError } from '../../shared/errors';
 
 /**
  * Creates a new country.
  * @param params - The country data to create
- * @returns {Promise<CountryResponse>} The created country
+ * @returns {Promise<Country>} The created country
  * @throws {APIError} If the country creation fails
  */
 export const createCountry = api(
   { method: 'POST', path: '/countries' },
-  async (params: CreateCountryDto): Promise<CountryResponse> => {
+  async (params: CreateCountryPayload): Promise<Country> => {
     try {
       return await countryHandler.create(params);
     } catch (error) {
@@ -30,12 +30,12 @@ export const createCountry = api(
  * Retrieves a country by its ID.
  * @param params - Object containing the country ID
  * @param params.id - The ID of the country to retrieve
- * @returns {Promise<CountryResponse>} The found country
+ * @returns {Promise<Country>} The found country
  * @throws {APIError} If the country is not found or retrieval fails
  */
 export const getCountry = api(
   { method: 'GET', path: '/countries/:id' },
-  async ({ id }: { id: number }): Promise<CountryResponse> => {
+  async ({ id }: { id: number }): Promise<Country> => {
     try {
       return await countryHandler.findOne(id);
     } catch (error) {
@@ -47,15 +47,15 @@ export const getCountry = api(
 
 /**
  * Retrieves all countries.
- * @returns {Promise<CountriesResponse>} An object containing an array of countries
+ * @returns {Promise<Countries>} List of all countries
  * @throws {APIError} If the retrieval fails
  */
 export const listCountries = api(
   { method: 'GET', path: '/countries' },
-  async (): Promise<CountriesResponse> => {
+  async (): Promise<Countries> => {
     try {
-      const { countries } = await countryHandler.findAll();
-      return { countries };
+      const countries = await countryHandler.findAll();
+      return countries;
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;
@@ -68,7 +68,7 @@ export const listCountries = api(
  * @param params - Object containing the country ID and update data
  * @param params.id - The ID of the country to update
  * @param params.data - The country data to update
- * @returns {Promise<CountryResponse>} The updated country
+ * @returns {Promise<Country>} The updated country
  * @throws {APIError} If the country is not found or update fails
  */
 export const updateCountry = api(
@@ -76,7 +76,7 @@ export const updateCountry = api(
   async ({
     id,
     ...data
-  }: UpdateCountryDto & { id: number }): Promise<CountryResponse> => {
+  }: UpdateCountryPayload & { id: number }): Promise<Country> => {
     try {
       return await countryHandler.update(id, data);
     } catch (error) {
@@ -90,12 +90,12 @@ export const updateCountry = api(
  * Deletes a country by its ID.
  * @param params - Object containing the country ID
  * @param params.id - The ID of the country to delete
- * @returns {Promise<CountryResponse>} The deleted country
+ * @returns {Promise<Country>} The deleted country
  * @throws {APIError} If the country is not found or deletion fails
  */
 export const deleteCountry = api(
   { method: 'DELETE', path: '/countries/:id' },
-  async ({ id }: { id: number }): Promise<CountryResponse> => {
+  async ({ id }: { id: number }): Promise<Country> => {
     try {
       return await countryHandler.delete(id);
     } catch (error) {

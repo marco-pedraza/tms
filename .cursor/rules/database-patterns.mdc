@@ -17,6 +17,7 @@ apps/server/
 ├── db/                       # Root-level database configuration
 │   ├── database.ts           # Database connection configuration
 │   ├── schema.ts             # Schema exports aggregation
+│   ├── index.ts              # Database exports aggregation
 │   └── migrations/           # Database migrations
 └── [subsystem]/[feature]/    # Feature-specific schema placement
     └── [feature].schema.ts   # Schema definition for each feature
@@ -75,7 +76,7 @@ export const states = pgTable('states', {
 
 ```typescript
 // inventory/countries/countries.handler.ts
-import { db } from '../../db/database';
+import { db } from '@/db';
 import { countries } from './countries.schema'; // Local schema import
 
 export class CountryHandler {

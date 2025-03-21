@@ -37,10 +37,10 @@ alwaysApply: false
 ## Implementation Example
 
 ```typescript
-import { db } from '../../db/database';
+import { db } from '@/db';
 import { entities } from './entities.schema';
 import { eq, and, or, not } from 'drizzle-orm';
-import type { EntityDto, CreateEntityDto, UpdateEntityDto } from './entity.types';
+import type { Entity, CreateEntityPayload, UpdateEntityPayload } from './entity.types';
 import { NotFoundError, ValidationError, DuplicateError } from '../../shared/errors';
 
 export class EntityHandler {
@@ -63,7 +63,7 @@ export class EntityHandler {
     }
   }
 
-  async create(data: CreateEntityDto): Promise<EntityDto> {
+  async create(data: CreateEntityPayload): Promise<Entity> {
     try {
       // Validate unique name
       await this.validateUniqueName(data.name);
@@ -81,7 +81,7 @@ export class EntityHandler {
     }
   }
 
-  async findOne(id: number): Promise<EntityDto> {
+  async findOne(id: number): Promise<Entity> {
     const [entity] = await db.select().from(entities).where(eq(entities.id, id)).limit(1);
 
     if (!entity) {
@@ -91,7 +91,7 @@ export class EntityHandler {
     return entity;
   }
 
-  async update(id: number, data: UpdateEntityDto): Promise<EntityDto> {
+  async update(id: number, data: UpdateEntityPayload): Promise<Entity> {
     try {
       // Verify entity exists
       await this.findOne(id);
@@ -119,14 +119,14 @@ export class EntityHandler {
     }
   }
 
-  async delete(id: number): Promise<EntityDto> {
+  async delete(id: number): Promise<Entity> {
     // Verify entity exists
     await this.findOne(id);
     const [deletedEntity] = await db.delete(entities).where(eq(entities.id, id)).returning();
     return deletedEntity;
   }
 
-  async findAll(): Promise<{ entities: EntityDto[] }> {
+  async findAll(): Promise<{ entities: Entity[] }> {
     const entitiesList = await db.select().from(entities).orderBy(entities.name);
     return {
       entities: entitiesList,

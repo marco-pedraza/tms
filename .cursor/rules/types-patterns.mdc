@@ -3,108 +3,117 @@ description: Patterns for type definitions in Encore applications
 globs: ['apps/server/*/*/*.types.ts']
 alwaysApply: false
 ---
+# Types Patterns
 
-# Patterns for Type Definitions
+## Rules for Type Definitions
 
-## Rules for Types
+1. Type structure should follow:
 
-1. Define clear and specific interfaces
+   - Base entity interfaces (e.g., `Country`, `State`)
+   - Creation payloads (e.g., `CreateCountryPayload`, `CreateStatePayload`)
+   - Update payloads (e.g., `UpdateCountryPayload`, `UpdateStatePayload`)
+   - List responses (e.g., `Countries`, `States`)
 
-2. Create DTOs manually instead of using Drizzle schema types directly:
+2. Use descriptive JSDoc comments for all types and properties
 
-   - Base interface for the entity (e.g., `Country`)
-   - `CreateEntityDto`: Required fields for creation
-   - `UpdateEntityDto`: Optional fields for updates (extends Partial<CreateEntityDto>)
-   - `EntityDto`: Complete entity representation
-   - `EntityResponse`: API response structure
+3. Include validation decorators from Encore for input types
 
-3. Use strict TypeScript types (avoid 'any')
+4. Keep types in `*.types.ts` files
 
-4. Document all interface properties with JSDoc
+5. Use consistent naming patterns across all features
 
-5. Use readonly where appropriate
-
-6. Keep DTOs focused and minimal
-
-7. Use Encore validators (MinLen, MatchesRegexp, etc.) for input validation
-
-## Implementation Example
+## Type Definitions Example
 
 ```typescript
+// API types
 import { MinLen, MatchesRegexp } from 'encore.dev/validate';
 
-// Base interface
-export interface Entity {
+/**
+ * Base interface representing a country entity
+ */
+export interface Country {
+  /** Unique identifier for the country */
   id: number;
+
+  /** Name of the country */
   name: string;
+
+  /** Whether the country is currently active in the system */
   active: boolean;
+
+  /** ISO country code (e.g., "US", "CA", "MX") */
+  code: string;
+
+  /** Timestamp when the country record was created */
   createdAt: Date | null;
+
+  /** Timestamp when the country record was last updated */
   updatedAt: Date | null;
 }
 
-export interface EntityDto extends Entity {}
-
 /**
- * DTO for creating a new entity
+ * Input for creating a new country
  */
-export interface CreateEntityDto {
+export interface CreateCountryPayload {
   /**
-   * The entity name
+   * Name of the country
    * Must have at least 1 non-whitespace character
    */
   name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * Whether the entity is active
+   * ISO country code (e.g., "US", "CA", "MX")
+   * Must have at least 1 non-whitespace character
+   */
+  code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Whether the country is active
    * @default true
    */
   active?: boolean;
 }
 
-export interface UpdateEntityDto extends Partial<CreateEntityDto> {}
+/**
+ * Input for updating a country
+ */
+export interface UpdateCountryPayload {
+  /**
+   * Name of the country
+   * Must have at least 1 non-whitespace character
+   */
+  name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
-// Response types
-export interface EntityResponse extends EntityDto {}
+  /**
+   * ISO country code (e.g., "US", "CA", "MX")
+   * Must have at least 1 non-whitespace character
+   */
+  code?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
-export interface EntitiesResponse {
-  entities: EntityResponse[];
+  /**
+   * Whether the country is active
+   */
+  active?: boolean;
 }
-```
 
-## Using Encore Validators
-
-Encore provides a set of validators that can be combined with TypeScript types for runtime validation:
-
-```typescript
-import { MinLen, MaxLen, MatchesRegexp, Min, Max, Email } from 'encore.dev/validate';
-
-interface UserCreateDto {
-  // Validate minimum length
-  username: string & MinLen<3>;
-
-  // Validate maximum length
-  bio: string & MaxLen<500>;
-
-  // Validate email format
-  email: string & Email;
-
-  // Validate numeric range
-  age: number & Min<18> & Max<120>;
-
-  // Validate with regular expression
-  password: string & MatchesRegexp<'^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$'>;
+/**
+ * Response type for the list countries endpoint
+ */
+export interface Countries {
+  /** List of countries */
+  countries: Country[];
 }
 ```
 
 ## Best Practices
 
-- Clear and descriptive interfaces
-- Separate DTOs for different operations
-- Required field documentation with JSDoc
-- Use Encore validators for validation
-- Strict TypeScript typing
-- Proper type exports
-- Consistent naming conventions
-- Avoid any/unknown types where possible
-- Define reusable types
-- Organize related types together
+- Use interfaces for objects
+- Use types for unions, intersections, or utility types
+- Include JSDoc comments for all types and properties
+- Apply validation decorators for API inputs
+- Maintain consistent naming conventions
+- Keep types focused and specific
+- Use TypeScript features appropriately
+- Export all types that might be reused elsewhere
+- Group related types together
+- Follow a consistent structure across all features

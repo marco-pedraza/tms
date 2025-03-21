@@ -2,9 +2,10 @@ import { db } from '@/db';
 import { countries } from './countries.schema';
 import { eq, and, or, not } from 'drizzle-orm';
 import type {
-  CountryDto,
-  CreateCountryDto,
-  UpdateCountryDto,
+  Country,
+  Countries,
+  CreateCountryPayload,
+  UpdateCountryPayload,
 } from './countries.types';
 import {
   NotFoundError,
@@ -13,7 +14,7 @@ import {
 } from '../../shared/errors';
 
 export class CountryHandler {
-  async create(data: CreateCountryDto): Promise<CountryDto> {
+  async create(data: CreateCountryPayload): Promise<Country> {
     try {
       const [country] = await db.insert(countries).values(data).returning();
       return country;
@@ -25,7 +26,7 @@ export class CountryHandler {
     }
   }
 
-  async findOne(id: number): Promise<CountryDto> {
+  async findOne(id: number): Promise<Country> {
     const [country] = await db
       .select()
       .from(countries)
@@ -39,7 +40,7 @@ export class CountryHandler {
     return country;
   }
 
-  async update(id: number, data: UpdateCountryDto): Promise<CountryDto> {
+  async update(id: number, data: UpdateCountryPayload): Promise<Country> {
     try {
       // Verify country exists
       await this.findOne(id);
@@ -84,7 +85,7 @@ export class CountryHandler {
     }
   }
 
-  async delete(id: number): Promise<CountryDto> {
+  async delete(id: number): Promise<Country> {
     // Verify country exists
     await this.findOne(id);
     const [deletedCountry] = await db
@@ -94,7 +95,7 @@ export class CountryHandler {
     return deletedCountry;
   }
 
-  async findAll(): Promise<{ countries: CountryDto[] }> {
+  async findAll(): Promise<Countries> {
     const countriesList = await db
       .select()
       .from(countries)

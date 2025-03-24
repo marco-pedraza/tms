@@ -28,6 +28,7 @@ describe('Users Controller', () => {
   let tenantId = 0;
   let departmentId = 0;
   let userId = 0;
+  let passwordUser = 0;
 
   const testTenant: CreateTenantPayload = {
     name: 'Test Tenant',
@@ -60,6 +61,9 @@ describe('Users Controller', () => {
   afterAll(async () => {
     if (userId > 0) {
       await deleteUser({ id: userId });
+    }
+    if (passwordUser > 0) {
+      await deleteUser({ id: passwordUser });
     }
     if (departmentId > 0) {
       await deleteDepartment({ id: departmentId });
@@ -371,6 +375,64 @@ describe('Users Controller', () => {
         expect(response.data.length).toBe(0);
         expect(response.pagination.totalCount).toBe(0);
       });
+    });
+  });
+
+  describe('changePassword', () => {
+    it('should create a test user for password tests', async () => {
+      const pwdTestUser = await createUser({
+        ...testUser,
+        username: 'pwdtestuser',
+        email: 'password@test.com',
+        tenantId,
+        departmentId,
+      });
+      
+      passwordUser = pwdTestUser.id;
+      expect(passwordUser).toBeGreaterThan(0);
+    });
+
+    it('should successfully change a user password with correct credentials', async () => {
+      const passwordData: ChangePasswordPayload = {
+        currentPassword: 'password123',
+        newPassword: 'newPassword456',
+      };
+
+      const result = await changePassword({
+        id: passwordUser,
+        ...passwordData,
+      });
+
+      expect(result.id).toBe(passwordUser);
+      expect(result).not.toHaveProperty('passwordHash');
+    });
+
+    it('should fail to change password with incorrect current password', async () => {
+      const passwordData: ChangePasswordPayload = {
+        currentPassword: 'wrongPassword',
+        newPassword: 'anotherPassword789',
+      };
+
+      await expect(
+        changePassword({
+          id: passwordUser,
+          ...passwordData,
+        })
+      ).rejects.toThrow();
+    });
+
+    it('should fail to change password for non-existent user', async () => {
+      const passwordData: ChangePasswordPayload = {
+        currentPassword: 'password123',
+        newPassword: 'newPassword456',
+      };
+
+      await expect(
+        changePassword({
+          id: 999999,
+          ...passwordData,
+        })
+      ).rejects.toThrow();
     });
   });
 });

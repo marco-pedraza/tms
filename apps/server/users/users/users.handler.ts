@@ -273,7 +273,9 @@ export class UserHandler {
    * @param params Pagination parameters
    * @returns Paginated users with metadata
    */
-  async findAllPaginated(params: PaginationParams = {}): Promise<PaginatedUsers> {
+  async findAllPaginated(
+    params: PaginationParams = {},
+  ): Promise<PaginatedUsers> {
     // Create base query with sorting
     const query = db
       .select()
@@ -285,7 +287,11 @@ export class UserHandler {
     const countQuery = db.select({ count: count() }).from(users);
 
     // Get paginated results
-    const result = await withPagination<typeof query, User>(query, countQuery, params);
+    const result = await withPagination<typeof query, User>(
+      query,
+      countQuery,
+      params,
+    );
 
     // Sanitize users in the result
     return {
@@ -319,7 +325,11 @@ export class UserHandler {
       .where(eq(users.tenantId, tenantId));
 
     // Get paginated results
-    const result = await withPagination<typeof query, User>(query, countQuery, params);
+    const result = await withPagination<typeof query, User>(
+      query,
+      countQuery,
+      params,
+    );
 
     // Sanitize users in the result
     return {

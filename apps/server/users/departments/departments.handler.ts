@@ -5,7 +5,6 @@ import { eq, and, not, asc, count } from 'drizzle-orm';
 import type {
   Department,
   Departments,
-  TenantDepartments,
   PaginatedDepartments,
   CreateDepartmentPayload,
   UpdateDepartmentPayload,
@@ -60,7 +59,9 @@ export class DepartmentHandler {
    * @param params Pagination parameters
    * @returns Paginated departments with metadata
    */
-  async findAllPaginated(params: PaginationParams = {}): Promise<PaginatedDepartments> {
+  async findAllPaginated(
+    params: PaginationParams = {},
+  ): Promise<PaginatedDepartments> {
     // Create base query with sorting
     const query = db
       .select()
@@ -81,7 +82,7 @@ export class DepartmentHandler {
    * @param tenantId - The tenant ID to filter departments by
    * @returns An object containing an array of tenant departments
    */
-  async findByTenant(tenantId: number): Promise<TenantDepartments> {
+  async findByTenant(tenantId: number): Promise<Departments> {
     const departmentsList = await db
       .select()
       .from(departments)

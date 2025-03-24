@@ -89,18 +89,9 @@ export interface UpdateDepartmentPayload {
 
 /**
  * Response for listing all departments
- * @deprecated Use PaginatedDepartments instead
  */
 export interface Departments {
   /** List of departments */
-  departments: Department[];
-}
-
-/**
- * Response for listing all departments for a tenant
- */
-export interface TenantDepartments {
-  /** List of departments for a specific tenant */
   departments: Department[];
 }
 

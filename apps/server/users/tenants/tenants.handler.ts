@@ -47,7 +47,9 @@ class TenantHandler {
    * @param params Pagination parameters
    * @returns Paginated tenants with metadata
    */
-  async findAllPaginated(params: PaginationParams = {}): Promise<PaginatedTenants> {
+  async findAllPaginated(
+    params: PaginationParams = {},
+  ): Promise<PaginatedTenants> {
     // Create base query with sorting
     const query = db
       .select()

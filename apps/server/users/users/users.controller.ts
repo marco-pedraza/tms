@@ -181,7 +181,10 @@ export const listTenantUsersWithPagination = api(
     ...paginationParams
   }: { tenantId: number } & PaginationParams): Promise<PaginatedUsers> => {
     try {
-      return await userHandler.findByTenantPaginated(tenantId, paginationParams);
+      return await userHandler.findByTenantPaginated(
+        tenantId,
+        paginationParams,
+      );
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;

@@ -1,4 +1,11 @@
-import { pgTable, text, timestamp, boolean, serial, integer } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  serial,
+  integer,
+} from 'drizzle-orm/pg-core';
 
 export const departments = pgTable('departments', {
   id: serial('id').primaryKey(),
@@ -9,4 +16,4 @@ export const departments = pgTable('departments', {
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
-}); 
+});

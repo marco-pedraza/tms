@@ -40,7 +40,7 @@ export class UserHandler {
   private async validateUniqueUserIdentifiers(
     username?: string,
     email?: string,
-    excludeId?: number
+    excludeId?: number,
   ): Promise<void> {
     if (!username && !email) return;
 
@@ -56,7 +56,11 @@ export class UserHandler {
       ? and(or(...conditions), not(eq(users.id, excludeId)))
       : or(...conditions);
 
-    const [existing] = await db.select().from(users).where(whereCondition).limit(1);
+    const [existing] = await db
+      .select()
+      .from(users)
+      .where(whereCondition)
+      .limit(1);
 
     if (existing) {
       if (existing.username === username) {
@@ -131,7 +135,11 @@ export class UserHandler {
    * @throws {NotFoundError} If user is not found
    */
   async findOne(id: number): Promise<SafeUser> {
-    const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
 
     if (!user) {
       throw new NotFoundError('User not found');
@@ -184,10 +192,14 @@ export class UserHandler {
    */
   async changePassword(
     id: number,
-    data: ChangePasswordPayload
+    data: ChangePasswordPayload,
   ): Promise<SafeUser> {
     // Get full user (with password) for verification
-    const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
 
     if (!user) {
       throw new NotFoundError('User not found');
@@ -233,7 +245,7 @@ export class UserHandler {
   async findAll(): Promise<Users> {
     const userList = await db.select().from(users);
     return {
-      users: userList.map(user => this.sanitizeUser(user)),
+      users: userList.map((user) => this.sanitizeUser(user)),
     };
   }
 
@@ -249,9 +261,9 @@ export class UserHandler {
       .where(eq(users.tenantId, tenantId));
 
     return {
-      users: userList.map(user => this.sanitizeUser(user)),
+      users: userList.map((user) => this.sanitizeUser(user)),
     };
   }
 }
 
-export const userHandler = new UserHandler(); 
+export const userHandler = new UserHandler();

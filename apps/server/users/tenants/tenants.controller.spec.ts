@@ -68,8 +68,8 @@ describe('Tenants Controller', () => {
 
       expect(Array.isArray(result.tenants)).toBe(true);
       expect(result.tenants.length).toBeGreaterThan(0);
-      
-      const foundTenant = result.tenants.find(t => t.id === tenantId);
+
+      const foundTenant = result.tenants.find((t) => t.id === tenantId);
       expect(foundTenant).toBeDefined();
       expect(foundTenant?.name).toBe(testTenant.name);
       expect(foundTenant?.code).toBe(testTenant.code);
@@ -94,7 +94,7 @@ describe('Tenants Controller', () => {
 
     it('should fail to update non-existent tenant', async () => {
       await expect(
-        updateTenant({ id: 999999, ...updateData })
+        updateTenant({ id: 999999, ...updateData }),
       ).rejects.toThrow();
     });
   });
@@ -115,4 +115,4 @@ describe('Tenants Controller', () => {
       tenantId = 0;
     });
   });
-}); 
+});

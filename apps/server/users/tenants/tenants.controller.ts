@@ -23,7 +23,7 @@ export const createTenant = api(
       const parsedError = parseApiError(error);
       throw parsedError;
     }
-  }
+  },
 );
 
 /**
@@ -42,7 +42,7 @@ export const getTenant = api(
       const parsedError = parseApiError(error);
       throw parsedError;
     }
-  }
+  },
 );
 
 /**
@@ -59,7 +59,7 @@ export const listTenants = api(
       const parsedError = parseApiError(error);
       throw parsedError;
     }
-  }
+  },
 );
 
 /**
@@ -81,7 +81,7 @@ export const updateTenant = api(
       const parsedError = parseApiError(error);
       throw parsedError;
     }
-  }
+  },
 );
 
 /**
@@ -100,5 +100,5 @@ export const deleteTenant = api(
       const parsedError = parseApiError(error);
       throw parsedError;
     }
-  }
-); 
+  },
+);

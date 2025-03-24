@@ -86,7 +86,8 @@ export interface CreateUserPayload {
    * Email address of the user
    * Must be a valid email format
    */
-  email: string & MatchesRegexp<'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'>;
+  email: string &
+    MatchesRegexp<'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'>;
 
   /**
    * Password for the user
@@ -148,7 +149,8 @@ export interface UpdateUserPayload {
    * Email address of the user
    * Must be a valid email format
    */
-  email?: string & MatchesRegexp<'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'>;
+  email?: string &
+    MatchesRegexp<'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'>;
 
   /**
    * First name of the user
@@ -210,4 +212,4 @@ export interface ChangePasswordPayload {
 export interface Users {
   /** List of users (without sensitive data) */
   users: SafeUser[];
-} 
+}

@@ -7,7 +7,10 @@ import {
   updateDepartment,
   deleteDepartment,
 } from './departments.controller';
-import type { CreateDepartmentPayload, UpdateDepartmentPayload } from './departments.types';
+import type {
+  CreateDepartmentPayload,
+  UpdateDepartmentPayload,
+} from './departments.types';
 import { createTenant, deleteTenant } from '../tenants/tenants.controller';
 import type { CreateTenantPayload } from '../tenants/tenants.types';
 
@@ -73,7 +76,7 @@ describe('Departments Controller', () => {
         createDepartment({
           ...testDepartment,
           tenantId,
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -100,8 +103,10 @@ describe('Departments Controller', () => {
 
       expect(Array.isArray(result.departments)).toBe(true);
       expect(result.departments.length).toBeGreaterThan(0);
-      
-      const foundDepartment = result.departments.find(d => d.id === departmentId);
+
+      const foundDepartment = result.departments.find(
+        (d) => d.id === departmentId,
+      );
       expect(foundDepartment).toBeDefined();
       expect(foundDepartment?.name).toBe(testDepartment.name);
       expect(foundDepartment?.code).toBe(testDepartment.code);
@@ -114,8 +119,10 @@ describe('Departments Controller', () => {
 
       expect(Array.isArray(result.departments)).toBe(true);
       expect(result.departments.length).toBeGreaterThan(0);
-      
-      const foundDepartment = result.departments.find(d => d.id === departmentId);
+
+      const foundDepartment = result.departments.find(
+        (d) => d.id === departmentId,
+      );
       expect(foundDepartment).toBeDefined();
       expect(foundDepartment?.name).toBe(testDepartment.name);
       expect(foundDepartment?.code).toBe(testDepartment.code);
@@ -135,7 +142,10 @@ describe('Departments Controller', () => {
     };
 
     it('should update an existing department', async () => {
-      const result = await updateDepartment({ id: departmentId, ...updateData });
+      const result = await updateDepartment({
+        id: departmentId,
+        ...updateData,
+      });
 
       expect(result.id).toBe(departmentId);
       expect(result.name).toBe(updateData.name);
@@ -147,7 +157,7 @@ describe('Departments Controller', () => {
 
     it('should fail to update non-existent department', async () => {
       await expect(
-        updateDepartment({ id: 999999, ...updateData })
+        updateDepartment({ id: 999999, ...updateData }),
       ).rejects.toThrow();
     });
   });
@@ -168,4 +178,4 @@ describe('Departments Controller', () => {
       departmentId = 0;
     });
   });
-}); 
+});

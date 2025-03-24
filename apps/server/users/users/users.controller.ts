@@ -91,7 +91,10 @@ export const listTenantUsers = api(
  */
 export const updateUser = api(
   { method: 'PUT', path: '/users/:id', expose: true },
-  async ({ id, ...data }: UpdateUserPayload & { id: number }): Promise<SafeUser> => {
+  async ({
+    id,
+    ...data
+  }: UpdateUserPayload & { id: number }): Promise<SafeUser> => {
     try {
       return await userHandler.update(id, data);
     } catch (error) {
@@ -112,7 +115,10 @@ export const updateUser = api(
  */
 export const changePassword = api(
   { method: 'POST', path: '/users/:id/change-password', expose: true },
-  async ({ id, ...data }: ChangePasswordPayload & { id: number }): Promise<SafeUser> => {
+  async ({
+    id,
+    ...data
+  }: ChangePasswordPayload & { id: number }): Promise<SafeUser> => {
     try {
       return await userHandler.changePassword(id, data);
     } catch (error) {
@@ -139,4 +145,4 @@ export const deleteUser = api(
       throw parsedError;
     }
   },
-); 
+);

@@ -128,20 +128,20 @@ export class DepartmentHandler {
         await this.validateUniqueDepartmentCode(
           existingDepartment.tenantId,
           data.code,
-          id
+          id,
         );
       }
 
       // If updating tenant, validate it exists
       if (data.tenantId) {
         await this.validateTenantExists(data.tenantId);
-        
+
         // If changing tenant AND keeping same code, make sure it doesn't conflict in new tenant
         if (data.tenantId !== existingDepartment.tenantId && !data.code) {
           await this.validateUniqueDepartmentCode(
             data.tenantId,
             existingDepartment.code,
-            id
+            id,
           );
         }
       }
@@ -154,10 +154,7 @@ export class DepartmentHandler {
 
       return updated;
     } catch (error) {
-      if (
-        error instanceof NotFoundError ||
-        error instanceof DuplicateError
-      ) {
+      if (error instanceof NotFoundError || error instanceof DuplicateError) {
         throw error;
       }
       if (error instanceof Error) {
@@ -176,14 +173,14 @@ export class DepartmentHandler {
   async delete(id: number): Promise<Department> {
     // Verify department exists
     await this.findOne(id);
-    
+
     // Note: This might fail if there are users assigned to this department
     // depending on your foreign key constraints
     const [deletedDepartment] = await db
       .delete(departments)
       .where(eq(departments.id, id))
       .returning();
-      
+
     return deletedDepartment;
   }
 
@@ -198,13 +195,13 @@ export class DepartmentHandler {
   private async validateUniqueDepartmentCode(
     tenantId: number,
     code: string,
-    excludeId?: number
+    excludeId?: number,
   ): Promise<void> {
     const whereCondition = excludeId
       ? and(
           eq(departments.tenantId, tenantId),
           eq(departments.code, code),
-          not(eq(departments.id, excludeId))
+          not(eq(departments.id, excludeId)),
         )
       : and(eq(departments.tenantId, tenantId), eq(departments.code, code));
 
@@ -215,7 +212,9 @@ export class DepartmentHandler {
       .limit(1);
 
     if (existing) {
-      throw new DuplicateError('A department with this code already exists for this tenant');
+      throw new DuplicateError(
+        'A department with this code already exists for this tenant',
+      );
     }
   }
 
@@ -238,4 +237,4 @@ export class DepartmentHandler {
   }
 }
 
-export const departmentHandler = new DepartmentHandler(); 
+export const departmentHandler = new DepartmentHandler();

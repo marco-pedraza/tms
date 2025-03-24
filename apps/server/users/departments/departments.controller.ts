@@ -24,7 +24,7 @@ export const createDepartment = api(
       const parsedError = parseApiError(error);
       throw parsedError;
     }
-  }
+  },
 );
 
 /**
@@ -43,7 +43,7 @@ export const getDepartment = api(
       const parsedError = parseApiError(error);
       throw parsedError;
     }
-  }
+  },
 );
 
 /**
@@ -60,7 +60,7 @@ export const listDepartments = api(
       const parsedError = parseApiError(error);
       throw parsedError;
     }
-  }
+  },
 );
 
 /**
@@ -79,7 +79,7 @@ export const listTenantDepartments = api(
       const parsedError = parseApiError(error);
       throw parsedError;
     }
-  }
+  },
 );
 
 /**
@@ -101,7 +101,7 @@ export const updateDepartment = api(
       const parsedError = parseApiError(error);
       throw parsedError;
     }
-  }
+  },
 );
 
 /**
@@ -120,5 +120,5 @@ export const deleteDepartment = api(
       const parsedError = parseApiError(error);
       throw parsedError;
     }
-  }
-); 
+  },
+);

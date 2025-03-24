@@ -10,7 +10,10 @@ import {
 import type { CreateUserPayload, UpdateUserPayload } from './users.types';
 import { createTenant, deleteTenant } from '../tenants/tenants.controller';
 import type { CreateTenantPayload } from '../tenants/tenants.types';
-import { createDepartment, deleteDepartment } from '../departments/departments.controller';
+import {
+  createDepartment,
+  deleteDepartment,
+} from '../departments/departments.controller';
 import type { CreateDepartmentPayload } from '../departments/departments.types';
 
 describe('Users Controller', () => {
@@ -112,7 +115,7 @@ describe('Users Controller', () => {
           tenantId,
           departmentId,
           username: 'different',
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -144,8 +147,8 @@ describe('Users Controller', () => {
 
       expect(Array.isArray(result.users)).toBe(true);
       expect(result.users.length).toBeGreaterThan(0);
-      
-      const foundUser = result.users.find(u => u.id === userId);
+
+      const foundUser = result.users.find((u) => u.id === userId);
       expect(foundUser).toBeDefined();
       expect(foundUser?.firstName).toBe(testUser.firstName);
       expect(foundUser?.lastName).toBe(testUser.lastName);
@@ -160,8 +163,8 @@ describe('Users Controller', () => {
 
       expect(Array.isArray(result.users)).toBe(true);
       expect(result.users.length).toBeGreaterThan(0);
-      
-      const foundUser = result.users.find(u => u.id === userId);
+
+      const foundUser = result.users.find((u) => u.id === userId);
       expect(foundUser).toBeDefined();
       expect(foundUser?.firstName).toBe(testUser.firstName);
       expect(foundUser?.lastName).toBe(testUser.lastName);
@@ -202,9 +205,7 @@ describe('Users Controller', () => {
     });
 
     it('should fail to update non-existent user', async () => {
-      await expect(
-        updateUser({ id: 999999, ...updateData })
-      ).rejects.toThrow();
+      await expect(updateUser({ id: 999999, ...updateData })).rejects.toThrow();
     });
   });
 
@@ -226,4 +227,4 @@ describe('Users Controller', () => {
       userId = 0;
     });
   });
-}); 
+});

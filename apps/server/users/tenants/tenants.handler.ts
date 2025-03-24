@@ -1,11 +1,11 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../../db';
 import { tenants } from './tenants.schema';
-import type { 
-  Tenant, 
-  CreateTenantPayload, 
-  UpdateTenantPayload, 
-  Tenants 
+import type {
+  Tenant,
+  CreateTenantPayload,
+  UpdateTenantPayload,
+  Tenants,
 } from './tenants.types';
 import { NotFoundError, DuplicateError } from '../../shared/errors';
 
@@ -21,11 +21,11 @@ class TenantHandler {
    */
   async findOne(id: number): Promise<Tenant> {
     const result = await db.select().from(tenants).where(eq(tenants.id, id));
-    
+
     if (result.length === 0) {
       throw new NotFoundError(`Tenant with ID ${id} not found`);
     }
-    
+
     return result[0];
   }
 
@@ -44,12 +44,15 @@ class TenantHandler {
    * @returns The found tenant or null if not found
    */
   async findByCode(code: string): Promise<Tenant | null> {
-    const result = await db.select().from(tenants).where(eq(tenants.code, code));
-    
+    const result = await db
+      .select()
+      .from(tenants)
+      .where(eq(tenants.code, code));
+
     if (result.length === 0) {
       return null;
     }
-    
+
     return result[0];
   }
 
@@ -62,21 +65,18 @@ class TenantHandler {
   async create(data: CreateTenantPayload): Promise<Tenant> {
     // Check if tenant with the same code already exists
     await this.validateUniqueCode(data.code);
-    
+
     const now = new Date();
-    
+
     const newTenant = {
       ...data,
       isActive: true,
       createdAt: now,
       updatedAt: now,
     };
-    
-    const [tenant] = await db
-      .insert(tenants)
-      .values(newTenant)
-      .returning();
-    
+
+    const [tenant] = await db.insert(tenants).values(newTenant).returning();
+
     return tenant;
   }
 
@@ -91,23 +91,23 @@ class TenantHandler {
   async update(id: number, data: UpdateTenantPayload): Promise<Tenant> {
     // Check if tenant exists
     const existingTenant = await this.findOne(id);
-    
+
     // Check if updating code and if it's already in use
     if (data.code && data.code !== existingTenant.code) {
       await this.validateUniqueCode(data.code);
     }
-    
+
     const updatedData = {
       ...data,
       updatedAt: new Date(),
     };
-    
+
     const [updatedTenant] = await db
       .update(tenants)
       .set(updatedData)
       .where(eq(tenants.id, id))
       .returning();
-    
+
     return updatedTenant;
   }
 
@@ -120,9 +120,9 @@ class TenantHandler {
   async delete(id: number): Promise<Tenant> {
     // Check if tenant exists
     const existingTenant = await this.findOne(id);
-    
+
     await db.delete(tenants).where(eq(tenants.id, id));
-    
+
     return existingTenant;
   }
 
@@ -133,11 +133,11 @@ class TenantHandler {
    */
   private async validateUniqueCode(code: string): Promise<void> {
     const existingTenant = await this.findByCode(code);
-    
+
     if (existingTenant) {
       throw new DuplicateError(`Tenant with code ${code} already exists`);
     }
   }
 }
 
-export const tenantHandler = new TenantHandler(); 
+export const tenantHandler = new TenantHandler();

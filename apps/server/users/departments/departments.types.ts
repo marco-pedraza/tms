@@ -99,4 +99,4 @@ export interface Departments {
 export interface TenantDepartments {
   /** List of departments for a specific tenant */
   departments: Department[];
-} 
+}

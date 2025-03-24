@@ -67,4 +67,4 @@ export interface UpdateTenantPayload {
  */
 export interface Tenants {
   tenants: Tenant[];
-} 
+}

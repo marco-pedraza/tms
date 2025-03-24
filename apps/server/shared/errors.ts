@@ -52,5 +52,6 @@ export const parseApiError = (error: unknown) => {
   if (error instanceof DuplicateError) {
     return new APIError(ErrCode.AlreadyExists, error.message);
   }
+
   return new APIError(ErrCode.Internal, 'Internal server error');
 };

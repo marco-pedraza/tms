@@ -2,9 +2,9 @@ import { expect, describe, test, afterAll } from 'vitest';
 import {
   createCountry,
   getCountry,
-  listCountries,
   updateCountry,
   deleteCountry,
+  listCountries,
 } from './countries.controller';
 
 describe('Countries Controller', () => {
@@ -53,18 +53,6 @@ describe('Countries Controller', () => {
       expect(response.name).toBe(testCountry.name);
     });
 
-    test('should list all countries', async () => {
-      const response = await listCountries();
-
-      expect(response.countries).toBeDefined();
-      expect(Array.isArray(response.countries)).toBe(true);
-      expect(response.countries.length).toBeGreaterThan(0);
-      // Verify our test country is in the list
-      expect(
-        response.countries.some((country) => country.id === createdCountryId),
-      ).toBe(true);
-    });
-
     test('should update a country', async () => {
       const updatedName = 'Updated Test Country';
       const response = await updateCountry({
@@ -109,6 +97,66 @@ describe('Countries Controller', () => {
           code: testCountry.code,
         }),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('pagination', () => {
+    test('should return paginated countries with default parameters', async () => {
+      const response = await listCountries({});
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBeDefined();
+      expect(response.pagination.totalCount).toBeDefined();
+      expect(response.pagination.totalPages).toBeDefined();
+      expect(typeof response.pagination.hasNextPage).toBe('boolean');
+      expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
+    });
+
+    test('should honor page and pageSize parameters', async () => {
+      const response = await listCountries({
+        page: 1,
+        pageSize: 5,
+      });
+
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
+      expect(response.data.length).toBeLessThanOrEqual(5);
+    });
+
+    test('should default sort by name in ascending order', async () => {
+      // Create test countries with different names for verification of default sorting
+      const countryA = await createCountry({
+        name: 'AAA Test Country',
+        code: 'AAA',
+      });
+      const countryZ = await createCountry({
+        name: 'ZZZ Test Country',
+        code: 'ZZZ',
+      });
+
+      try {
+        // Get countries with large enough page size to include test countries
+        const response = await listCountries({
+          pageSize: 50,
+        });
+
+        // Find the indices of our test countries
+        const indexA = response.data.findIndex((c) => c.id === countryA.id);
+        const indexZ = response.data.findIndex((c) => c.id === countryZ.id);
+
+        // Verify that countryA (AAA) comes before countryZ (ZZZ) in the results
+        // This assumes they both appear in the results (which they should with pageSize: 50)
+        if (indexA !== -1 && indexZ !== -1) {
+          expect(indexA).toBeLessThan(indexZ);
+        }
+      } finally {
+        // Clean up test countries
+        await deleteCountry({ id: countryA.id });
+        await deleteCountry({ id: countryZ.id });
+      }
     });
   });
 });

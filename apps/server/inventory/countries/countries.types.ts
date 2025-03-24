@@ -1,5 +1,6 @@
 // API types
 import { MinLen, MatchesRegexp } from 'encore.dev/validate';
+import { PaginatedResult } from '../../shared/types';
 
 /**
  * Base interface representing a country entity
@@ -76,3 +77,8 @@ export interface Countries {
   /** List of countries */
   countries: Country[];
 }
+
+/**
+ * Paginated response type for the list countries endpoint
+ */
+export type PaginatedCountries = PaginatedResult<Country>;

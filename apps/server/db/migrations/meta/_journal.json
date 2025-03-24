@@ -22,6 +22,13 @@
       "when": 1742836022743,
       "tag": "0002_black_susan_delgado",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1742860444623,
+      "tag": "0003_soft_shiva",
+      "breakpoints": true
     }
   ]
 }

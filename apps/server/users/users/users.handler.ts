@@ -1,7 +1,7 @@
 import { db } from '@/db';
 import { users } from './users.schema';
 import { eq, and, or, not, asc, count } from 'drizzle-orm';
-import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 import type {
   User,
   SafeUser,
@@ -22,14 +22,33 @@ import { withPagination } from '../../shared/bd-utils';
 
 export class UserHandler {
   /**
-   * Hashes a password using SHA-256 with a salt
+   * The number of salt rounds for bcrypt hashing
+   * @private
+   */
+  private readonly SALT_ROUNDS = 10;
+
+  /**
+   * Hashes a password using bcrypt
    * @param password - The plain text password to hash
    * @returns The hashed password
    * @private
    */
-  private hashPassword(password: string): string {
-    // In a real app, use a more secure password hashing algorithm like bcrypt
-    return crypto.createHash('sha256').update(password).digest('hex');
+  private async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, this.SALT_ROUNDS);
+  }
+
+  /**
+   * Compares a plain text password with a hashed password
+   * @param plainTextPassword - The plain text password to check
+   * @param hashedPassword - The hashed password to compare against
+   * @returns True if the passwords match, false otherwise
+   * @private
+   */
+  private async comparePassword(
+    plainTextPassword: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
+    return bcrypt.compare(plainTextPassword, hashedPassword);
   }
 
   /**
@@ -99,7 +118,7 @@ export class UserHandler {
       await this.validateUniqueUserIdentifiers(data.username, data.email);
 
       // Hash the password
-      const passwordHash = this.hashPassword(data.password);
+      const passwordHash = await this.hashPassword(data.password);
 
       const userData = {
         tenantId: data.tenantId,
@@ -194,13 +213,17 @@ export class UserHandler {
       }
 
       // Verify current password
-      const hashedCurrentPassword = this.hashPassword(data.currentPassword);
-      if (hashedCurrentPassword !== user.passwordHash) {
+      const passwordMatches = await this.comparePassword(
+        data.currentPassword,
+        user.passwordHash
+      );
+      
+      if (!passwordMatches) {
         throw new AuthenticationError('Current password is incorrect');
       }
 
       // Hash and set new password
-      const passwordHash = this.hashPassword(data.newPassword);
+      const passwordHash = await this.hashPassword(data.newPassword);
       const [updated] = await db
         .update(users)
         .set({ passwordHash, updatedAt: new Date() })

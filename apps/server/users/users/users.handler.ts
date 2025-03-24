@@ -215,9 +215,9 @@ export class UserHandler {
       // Verify current password
       const passwordMatches = await this.comparePassword(
         data.currentPassword,
-        user.passwordHash
+        user.passwordHash,
       );
-      
+
       if (!passwordMatches) {
         throw new AuthenticationError('Current password is incorrect');
       }
@@ -357,7 +357,7 @@ export class UserHandler {
 
     // Pagination needs a count query
     const countQuery = db.select({ count: count() }).from(users);
-    
+
     // Add tenant filter to count query if provided
     if (tenantId !== undefined) {
       countQuery.where(eq(users.tenantId, tenantId));

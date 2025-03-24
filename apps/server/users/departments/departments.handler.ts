@@ -143,10 +143,7 @@ export class DepartmentHandler {
    * @throws {ValidationError} If the department data is invalid
    * @throws {DuplicateError} If updating would create a duplicate code within the tenant
    */
-  async update(
-    id: number,
-    data: UpdateDepartmentPayload,
-  ): Promise<Department> {
+  async update(id: number, data: UpdateDepartmentPayload): Promise<Department> {
     return this.handleErrors(async () => {
       // Verify department exists and get its tenant
       const existingDepartment = await this.findOne(id);

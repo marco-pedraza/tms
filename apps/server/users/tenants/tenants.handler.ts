@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import { eq } from 'drizzle-orm';
 import { db } from '../../db';
 import { tenants } from './tenants.schema';
@@ -20,7 +19,7 @@ class TenantHandler {
    * @returns The found tenant
    * @throws {NotFoundError} If the tenant is not found
    */
-  async findOne(id: string): Promise<Tenant> {
+  async findOne(id: number): Promise<Tenant> {
     const result = await db.select().from(tenants).where(eq(tenants.id, id));
     
     if (result.length === 0) {
@@ -64,20 +63,21 @@ class TenantHandler {
     // Check if tenant with the same code already exists
     await this.validateUniqueCode(data.code);
     
-    const id = uuidv4();
     const now = new Date();
     
     const newTenant = {
-      id,
       ...data,
       isActive: true,
       createdAt: now,
       updatedAt: now,
     };
     
-    await db.insert(tenants).values(newTenant);
+    const [tenant] = await db
+      .insert(tenants)
+      .values(newTenant)
+      .returning();
     
-    return newTenant;
+    return tenant;
   }
 
   /**
@@ -88,7 +88,7 @@ class TenantHandler {
    * @throws {NotFoundError} If the tenant is not found
    * @throws {DuplicateError} If updating the code to one that already exists
    */
-  async update(id: string, data: UpdateTenantPayload): Promise<Tenant> {
+  async update(id: number, data: UpdateTenantPayload): Promise<Tenant> {
     // Check if tenant exists
     const existingTenant = await this.findOne(id);
     
@@ -97,15 +97,16 @@ class TenantHandler {
       await this.validateUniqueCode(data.code);
     }
     
-    const updatedTenant = {
-      ...existingTenant,
+    const updatedData = {
       ...data,
       updatedAt: new Date(),
     };
     
-    await db.update(tenants)
-      .set(updatedTenant)
-      .where(eq(tenants.id, id));
+    const [updatedTenant] = await db
+      .update(tenants)
+      .set(updatedData)
+      .where(eq(tenants.id, id))
+      .returning();
     
     return updatedTenant;
   }
@@ -116,7 +117,7 @@ class TenantHandler {
    * @returns The deleted tenant
    * @throws {NotFoundError} If the tenant is not found
    */
-  async delete(id: string): Promise<Tenant> {
+  async delete(id: number): Promise<Tenant> {
     // Check if tenant exists
     const existingTenant = await this.findOne(id);
     

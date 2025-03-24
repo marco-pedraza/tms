@@ -6,13 +6,13 @@ import { MinLen, MatchesRegexp } from 'encore.dev/validate';
  */
 export interface User {
   /** Unique identifier for the user */
-  id: string;
+  id: number;
 
   /** ID of the tenant this user belongs to */
-  tenantId: string;
+  tenantId: number;
 
   /** ID of the department this user belongs to */
-  departmentId: string;
+  departmentId: number;
 
   /** Username for login */
   username: string;
@@ -68,15 +68,13 @@ export type SafeUser = Omit<User, 'passwordHash'>;
 export interface CreateUserPayload {
   /**
    * ID of the tenant this user belongs to
-   * Must have at least 1 non-whitespace character
    */
-  tenantId: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  tenantId: number;
 
   /**
    * ID of the department this user belongs to
-   * Must have at least 1 non-whitespace character
    */
-  departmentId: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  departmentId: number;
 
   /**
    * Username for login
@@ -143,9 +141,8 @@ export interface CreateUserPayload {
 export interface UpdateUserPayload {
   /**
    * ID of the department this user belongs to
-   * Must have at least 1 non-whitespace character
    */
-  departmentId?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  departmentId?: number;
 
   /**
    * Email address of the user

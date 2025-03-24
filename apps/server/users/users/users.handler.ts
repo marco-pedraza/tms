@@ -2,7 +2,6 @@ import { db } from '@/db';
 import { users } from './users.schema';
 import { eq, and, or, not } from 'drizzle-orm';
 import crypto from 'crypto';
-import { v4 as uuidv4 } from 'uuid';
 import type {
   User,
   SafeUser,
@@ -41,7 +40,7 @@ export class UserHandler {
   private async validateUniqueUserIdentifiers(
     username?: string,
     email?: string,
-    excludeId?: string
+    excludeId?: number
   ): Promise<void> {
     if (!username && !email) return;
 
@@ -92,14 +91,10 @@ export class UserHandler {
       // Validate unique username and email
       await this.validateUniqueUserIdentifiers(data.username, data.email);
 
-      // Generate UUID for the user
-      const id = uuidv4();
-
       // Hash the password
       const passwordHash = this.hashPassword(data.password);
 
       const userData = {
-        id,
         tenantId: data.tenantId,
         departmentId: data.departmentId,
         username: data.username,
@@ -135,7 +130,7 @@ export class UserHandler {
    * @returns The found user (without sensitive data)
    * @throws {NotFoundError} If user is not found
    */
-  async findOne(id: string): Promise<SafeUser> {
+  async findOne(id: number): Promise<SafeUser> {
     const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
 
     if (!user) {
@@ -152,7 +147,7 @@ export class UserHandler {
    * @returns The updated user (without sensitive data)
    * @throws {NotFoundError|ValidationError|DuplicateError} If user not found, validation fails, or duplicate found
    */
-  async update(id: string, data: UpdateUserPayload): Promise<SafeUser> {
+  async update(id: number, data: UpdateUserPayload): Promise<SafeUser> {
     try {
       // Verify user exists
       await this.findOne(id);
@@ -188,7 +183,7 @@ export class UserHandler {
    * @throws {NotFoundError|AuthenticationError} If user not found or current password is incorrect
    */
   async changePassword(
-    id: string,
+    id: number,
     data: ChangePasswordPayload
   ): Promise<SafeUser> {
     // Get full user (with password) for verification
@@ -221,7 +216,7 @@ export class UserHandler {
    * @returns The deleted user (without sensitive data)
    * @throws {NotFoundError} If user not found
    */
-  async delete(id: string): Promise<SafeUser> {
+  async delete(id: number): Promise<SafeUser> {
     // Verify user exists
     await this.findOne(id);
     const [deletedUser] = await db
@@ -236,13 +231,25 @@ export class UserHandler {
    * @returns An object containing an array of all users (without sensitive data)
    */
   async findAll(): Promise<Users> {
-    const usersList = await db
+    const userList = await db.select().from(users);
+    return {
+      users: userList.map(user => this.sanitizeUser(user)),
+    };
+  }
+
+  /**
+   * Finds all users for a specific tenant
+   * @param tenantId - The tenant ID to filter by
+   * @returns List of users for the tenant (without sensitive data)
+   */
+  async findByTenant(tenantId: number): Promise<Users> {
+    const userList = await db
       .select()
       .from(users)
-      .orderBy(users.firstName, users.lastName);
+      .where(eq(users.tenantId, tenantId));
 
     return {
-      users: usersList.map(this.sanitizeUser),
+      users: userList.map(user => this.sanitizeUser(user)),
     };
   }
 }

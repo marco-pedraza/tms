@@ -36,7 +36,7 @@ export const createDepartment = api(
  */
 export const getDepartment = api(
   { method: 'GET', path: '/departments/:id', expose: true },
-  async ({ id }: { id: string }): Promise<Department> => {
+  async ({ id }: { id: number }): Promise<Department> => {
     try {
       return await departmentHandler.findOne(id);
     } catch (error) {
@@ -72,7 +72,7 @@ export const listDepartments = api(
  */
 export const listTenantDepartments = api(
   { method: 'GET', path: '/tenants/:tenantId/departments', expose: true },
-  async ({ tenantId }: { tenantId: string }): Promise<TenantDepartments> => {
+  async ({ tenantId }: { tenantId: number }): Promise<TenantDepartments> => {
     try {
       return await departmentHandler.findByTenant(tenantId);
     } catch (error) {
@@ -94,7 +94,7 @@ export const updateDepartment = api(
   async ({
     id,
     ...data
-  }: UpdateDepartmentPayload & { id: string }): Promise<Department> => {
+  }: UpdateDepartmentPayload & { id: number }): Promise<Department> => {
     try {
       return await departmentHandler.update(id, data);
     } catch (error) {
@@ -113,7 +113,7 @@ export const updateDepartment = api(
  */
 export const deleteDepartment = api(
   { method: 'DELETE', path: '/departments/:id', expose: true },
-  async ({ id }: { id: string }): Promise<Department> => {
+  async ({ id }: { id: number }): Promise<Department> => {
     try {
       return await departmentHandler.delete(id);
     } catch (error) {

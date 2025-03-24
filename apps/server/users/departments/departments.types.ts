@@ -1,15 +1,14 @@
 // API types
-import { MinLen, MatchesRegexp } from 'encore.dev/validate';
 
 /**
  * Represents a department entity
  */
 export interface Department {
   /** Unique identifier for the department */
-  id: string;
+  id: number;
 
   /** ID of the tenant this department belongs to */
-  tenantId: string;
+  tenantId: number;
 
   /** Name of the department */
   name: string;
@@ -37,7 +36,7 @@ export interface CreateDepartmentPayload {
   /**
    * ID of the tenant this department belongs to
    */
-  tenantId: string;
+  tenantId: number;
 
   /**
    * Name of the department

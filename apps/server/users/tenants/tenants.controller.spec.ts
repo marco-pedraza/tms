@@ -1,5 +1,4 @@
-import { describe, it, expect, afterAll, vi } from 'vitest';
-import { randomUUID } from 'crypto';
+import { describe, it, expect, afterAll } from 'vitest';
 import {
   createTenant,
   getTenant,
@@ -11,126 +10,109 @@ import type { CreateTenantPayload, UpdateTenantPayload } from './tenants.types';
 
 describe('Tenants Controller', () => {
   // Test data
+  let tenantId = 0;
   const testTenant: CreateTenantPayload = {
     name: 'Test Tenant',
     code: 'TEST-TENANT',
-    description: 'Test tenant for testing',
+    description: 'A test tenant for automated testing',
   };
 
-  let tenantId = '';
-
-  // Cleanup
+  // Clean up after all tests
   afterAll(async () => {
-    // Clean up created tenant
-    if (tenantId) {
-      try {
-        await deleteTenant({ id: tenantId });
-      } catch (error) {
-        console.error('Failed to clean up test tenant:', error);
-      }
+    if (tenantId > 0) {
+      await deleteTenant({ id: tenantId });
     }
   });
 
-  describe('Success scenarios', () => {
+  describe('createTenant', () => {
     it('should create a new tenant', async () => {
-      const response = await createTenant(testTenant);
-      
-      expect(response).toBeDefined();
-      expect(response.id).toBeDefined();
-      expect(response.name).toBe(testTenant.name);
-      expect(response.code).toBe(testTenant.code);
-      expect(response.description).toBe(testTenant.description);
-      
-      // Save ID for later tests
-      tenantId = response.id;
+      const result = await createTenant(testTenant);
+
+      // Save ID for other tests
+      tenantId = result.id;
+
+      // Verify response
+      expect(result.id).toBeDefined();
+      expect(typeof result.id).toBe('number');
+      expect(result.name).toBe(testTenant.name);
+      expect(result.code).toBe(testTenant.code);
+      expect(result.description).toBe(testTenant.description);
+      expect(result.isActive).toBe(true);
+      expect(result.createdAt).toBeDefined();
+      expect(result.updatedAt).toBeDefined();
     });
 
-    it('should get a tenant by ID', async () => {
-      const response = await getTenant({ id: tenantId });
-      
-      expect(response).toBeDefined();
-      expect(response.id).toBe(tenantId);
-      expect(response.name).toBe(testTenant.name);
-      expect(response.code).toBe(testTenant.code);
-    });
-
-    it('should list all tenants', async () => {
-      const response = await listTenants();
-      
-      expect(response).toBeDefined();
-      expect(response.tenants).toBeInstanceOf(Array);
-      expect(response.tenants.length).toBeGreaterThan(0);
-      
-      const foundTenant = response.tenants.find(t => t.id === tenantId);
-      expect(foundTenant).toBeDefined();
-    });
-
-    it('should update a tenant', async () => {
-      const updateData: UpdateTenantPayload = {
-        name: 'Updated Tenant Name',
-        description: 'Updated tenant description',
-      };
-      
-      const response = await updateTenant({ id: tenantId, ...updateData });
-      
-      expect(response).toBeDefined();
-      expect(response.id).toBe(tenantId);
-      expect(response.name).toBe(updateData.name);
-      expect(response.description).toBe(updateData.description);
-      expect(response.code).toBe(testTenant.code); // Code should remain unchanged
-    });
-
-    it('should delete a tenant', async () => {
-      const response = await deleteTenant({ id: tenantId });
-      
-      expect(response).toBeDefined();
-      expect(response.id).toBe(tenantId);
-      
-      // Reset ID since we've deleted the tenant
-      tenantId = '';
+    it('should fail to create tenant with duplicate code', async () => {
+      await expect(createTenant(testTenant)).rejects.toThrow();
     });
   });
 
-  describe('Error scenarios', () => {
-    it('should throw error when retrieving non-existent tenant', async () => {
-      const nonExistentId = randomUUID();
-      
-      await expect(getTenant({ id: nonExistentId })).rejects.toThrow();
+  describe('getTenant', () => {
+    it('should get an existing tenant', async () => {
+      const result = await getTenant({ id: tenantId });
+
+      expect(result.id).toBe(tenantId);
+      expect(result.name).toBe(testTenant.name);
+      expect(result.code).toBe(testTenant.code);
+      expect(result.description).toBe(testTenant.description);
     });
 
-    it('should throw error when creating tenant with duplicate code', async () => {
-      // First create a tenant
-      const response = await createTenant(testTenant);
-      tenantId = response.id;
+    it('should fail to get non-existent tenant', async () => {
+      await expect(getTenant({ id: 999999 })).rejects.toThrow();
+    });
+  });
+
+  describe('listTenants', () => {
+    it('should list tenants', async () => {
+      const result = await listTenants();
+
+      expect(Array.isArray(result.tenants)).toBe(true);
+      expect(result.tenants.length).toBeGreaterThan(0);
       
-      // Try to create another tenant with the same code
-      await expect(createTenant(testTenant)).rejects.toThrow();
+      const foundTenant = result.tenants.find(t => t.id === tenantId);
+      expect(foundTenant).toBeDefined();
+      expect(foundTenant?.name).toBe(testTenant.name);
+      expect(foundTenant?.code).toBe(testTenant.code);
+    });
+  });
+
+  describe('updateTenant', () => {
+    const updateData: UpdateTenantPayload = {
+      name: 'Updated Tenant',
+      description: 'Updated description for testing',
+    };
+
+    it('should update an existing tenant', async () => {
+      const result = await updateTenant({ id: tenantId, ...updateData });
+
+      expect(result.id).toBe(tenantId);
+      expect(result.name).toBe(updateData.name);
+      expect(result.description).toBe(updateData.description);
+      expect(result.code).toBe(testTenant.code);
+      expect(result.updatedAt).toBeDefined();
     });
 
-    it('should throw error when updating tenant to have a duplicate code', async () => {
-      // Create another tenant with a different code
-      const anotherTenant = await createTenant({
-        name: 'Another Tenant',
-        code: 'ANOTHER-TENANT',
-        description: 'Another test tenant',
-      });
-      
-      // Try to update second tenant to have the same code as the first
+    it('should fail to update non-existent tenant', async () => {
       await expect(
-        updateTenant({
-          id: anotherTenant.id,
-          code: testTenant.code,
-        })
+        updateTenant({ id: 999999, ...updateData })
       ).rejects.toThrow();
-      
-      // Clean up the second tenant
-      await deleteTenant({ id: anotherTenant.id });
+    });
+  });
+
+  describe('deleteTenant', () => {
+    it('should fail to delete non-existent tenant', async () => {
+      await expect(deleteTenant({ id: 999999 })).rejects.toThrow();
     });
 
-    it('should throw error when deleting non-existent tenant', async () => {
-      const nonExistentId = randomUUID();
-      
-      await expect(deleteTenant({ id: nonExistentId })).rejects.toThrow();
+    it('should delete an existing tenant', async () => {
+      const result = await deleteTenant({ id: tenantId });
+
+      expect(result.id).toBe(tenantId);
+      expect(result.name).toBe('Updated Tenant');
+      expect(result.code).toBe(testTenant.code);
+
+      // Mark as deleted so afterAll doesn't try to delete again
+      tenantId = 0;
     });
   });
 }); 

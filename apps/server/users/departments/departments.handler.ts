@@ -2,7 +2,6 @@ import { db } from '../../db';
 import { departments } from './departments.schema';
 import { tenants } from '../tenants/tenants.schema';
 import { eq, and, not } from 'drizzle-orm';
-import { v4 as uuidv4 } from 'uuid';
 import type {
   Department,
   Departments,
@@ -23,7 +22,7 @@ export class DepartmentHandler {
    * @returns The found department
    * @throws {NotFoundError} If department is not found
    */
-  async findOne(id: string): Promise<Department> {
+  async findOne(id: number): Promise<Department> {
     const [department] = await db
       .select()
       .from(departments)
@@ -56,12 +55,8 @@ export class DepartmentHandler {
    * Finds all departments for a specific tenant
    * @param tenantId - The tenant ID to filter departments by
    * @returns An object containing an array of tenant departments
-   * @throws {NotFoundError} If the tenant does not exist
    */
-  async findByTenant(tenantId: string): Promise<TenantDepartments> {
-    // Validate tenant exists
-    await this.validateTenantExists(tenantId);
-    
+  async findByTenant(tenantId: number): Promise<TenantDepartments> {
     const departmentsList = await db
       .select()
       .from(departments)
@@ -89,11 +84,7 @@ export class DepartmentHandler {
       // Check if department code already exists for this tenant
       await this.validateUniqueDepartmentCode(data.tenantId, data.code);
 
-      // Generate UUID for the department
-      const id = uuidv4();
-
       const departmentData = {
-        id,
         tenantId: data.tenantId,
         name: data.name,
         code: data.code,
@@ -127,7 +118,7 @@ export class DepartmentHandler {
    * @throws {ValidationError} If the department data is invalid
    * @throws {DuplicateError} If updating would create a duplicate code within the tenant
    */
-  async update(id: string, data: UpdateDepartmentPayload): Promise<Department> {
+  async update(id: number, data: UpdateDepartmentPayload): Promise<Department> {
     try {
       // Verify department exists and get its tenant
       const existingDepartment = await this.findOne(id);
@@ -182,7 +173,7 @@ export class DepartmentHandler {
    * @returns The deleted department
    * @throws {NotFoundError} If the department is not found
    */
-  async delete(id: string): Promise<Department> {
+  async delete(id: number): Promise<Department> {
     // Verify department exists
     await this.findOne(id);
     
@@ -205,9 +196,9 @@ export class DepartmentHandler {
    * @private
    */
   private async validateUniqueDepartmentCode(
-    tenantId: string,
+    tenantId: number,
     code: string,
-    excludeId?: string
+    excludeId?: number
   ): Promise<void> {
     const whereCondition = excludeId
       ? and(
@@ -234,7 +225,7 @@ export class DepartmentHandler {
    * @param tenantId - The tenant ID to validate
    * @throws {NotFoundError} If the tenant does not exist
    */
-  private async validateTenantExists(tenantId: string): Promise<void> {
+  private async validateTenantExists(tenantId: number): Promise<void> {
     const result = await db
       .select({ id: tenants.id })
       .from(tenants)

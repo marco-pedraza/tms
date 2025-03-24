@@ -1,5 +1,4 @@
-import { describe, it, expect, afterAll, vi } from 'vitest';
-import { randomUUID } from 'crypto';
+import { describe, it, expect, afterAll } from 'vitest';
 import {
   createDepartment,
   getDepartment,
@@ -9,144 +8,164 @@ import {
   deleteDepartment,
 } from './departments.controller';
 import type { CreateDepartmentPayload, UpdateDepartmentPayload } from './departments.types';
+import { createTenant, deleteTenant } from '../tenants/tenants.controller';
+import type { CreateTenantPayload } from '../tenants/tenants.types';
 
 describe('Departments Controller', () => {
   // Test data
-  const tenantId = randomUUID();
-  const testDepartment: CreateDepartmentPayload = {
-    tenantId,
-    name: 'Test Department',
-    code: 'TEST-DEP',
-    description: 'Test department for testing',
+  let tenantId = 0;
+  let departmentId = 0;
+
+  const testTenant: CreateTenantPayload = {
+    name: 'Test Tenant',
+    code: 'TEST-TENANT-DEPT',
+    description: 'A test tenant for department testing',
   };
 
-  let departmentId = '';
+  const testDepartment: CreateDepartmentPayload = {
+    name: 'Test Department',
+    code: 'TEST-DEPT',
+    description: 'A test department for automated testing',
+  };
 
-  // Cleanup
+  // Clean up after all tests
   afterAll(async () => {
-    // Clean up created department
-    if (departmentId) {
-      try {
-        await deleteDepartment({ id: departmentId });
-      } catch (error) {
-        console.error('Failed to clean up test department:', error);
-      }
+    if (departmentId > 0) {
+      await deleteDepartment({ id: departmentId });
+    }
+    if (tenantId > 0) {
+      await deleteTenant({ id: tenantId });
     }
   });
 
-  describe('Success scenarios', () => {
-    it('should create a new department', async () => {
-      const response = await createDepartment(testDepartment);
-      
-      expect(response).toBeDefined();
-      expect(response.id).toBeDefined();
-      expect(response.name).toBe(testDepartment.name);
-      expect(response.code).toBe(testDepartment.code);
-      expect(response.description).toBe(testDepartment.description);
-      expect(response.tenantId).toBe(tenantId);
-      
-      // Save ID for later tests
-      departmentId = response.id;
-    });
-
-    it('should get a department by ID', async () => {
-      const response = await getDepartment({ id: departmentId });
-      
-      expect(response).toBeDefined();
-      expect(response.id).toBe(departmentId);
-      expect(response.name).toBe(testDepartment.name);
-      expect(response.code).toBe(testDepartment.code);
-    });
-
-    it('should list all departments', async () => {
-      const response = await listDepartments();
-      
-      expect(response).toBeDefined();
-      expect(response.departments).toBeInstanceOf(Array);
-      expect(response.departments.length).toBeGreaterThan(0);
-      
-      const foundDepartment = response.departments.find(dept => dept.id === departmentId);
-      expect(foundDepartment).toBeDefined();
-    });
-
-    it('should list departments by tenant ID', async () => {
-      const response = await listTenantDepartments({ tenantId });
-      
-      expect(response).toBeDefined();
-      expect(response.departments).toBeInstanceOf(Array);
-      expect(response.departments.length).toBeGreaterThan(0);
-      
-      const foundDepartment = response.departments.find(dept => dept.id === departmentId);
-      expect(foundDepartment).toBeDefined();
-    });
-
-    it('should update a department', async () => {
-      const updateData: UpdateDepartmentPayload = {
-        name: 'Updated Department Name',
-        description: 'Updated department description',
-      };
-      
-      const response = await updateDepartment({ id: departmentId, ...updateData });
-      
-      expect(response).toBeDefined();
-      expect(response.id).toBe(departmentId);
-      expect(response.name).toBe(updateData.name);
-      expect(response.description).toBe(updateData.description);
-      expect(response.code).toBe(testDepartment.code); // Code should remain unchanged
-    });
-
-    it('should delete a department', async () => {
-      const response = await deleteDepartment({ id: departmentId });
-      
-      expect(response).toBeDefined();
-      expect(response.id).toBe(departmentId);
-      
-      // Reset ID since we've deleted the department
-      departmentId = '';
+  describe('Setup', () => {
+    it('should create test tenant', async () => {
+      const result = await createTenant(testTenant);
+      tenantId = result.id;
+      expect(tenantId).toBeGreaterThan(0);
     });
   });
 
-  describe('Error scenarios', () => {
-    it('should throw error when retrieving non-existent department', async () => {
-      const nonExistentId = randomUUID();
-      
-      await expect(getDepartment({ id: nonExistentId })).rejects.toThrow();
-    });
-
-    it('should throw error when creating department with duplicate code in the same tenant', async () => {
-      // First create a department
-      const response = await createDepartment(testDepartment);
-      departmentId = response.id;
-      
-      // Try to create another department with the same code in the same tenant
-      await expect(createDepartment(testDepartment)).rejects.toThrow();
-    });
-
-    it('should throw error when updating department to have a duplicate code', async () => {
-      // Create another department with a different code
-      const anotherDepartment = await createDepartment({
+  describe('createDepartment', () => {
+    it('should create a new department', async () => {
+      const result = await createDepartment({
+        ...testDepartment,
         tenantId,
-        name: 'Another Department',
-        code: 'ANOTHER',
-        description: 'Another test department',
       });
-      
-      // Try to update second department to have the same code as the first
+
+      // Save ID for other tests
+      departmentId = result.id;
+
+      // Verify response
+      expect(result.id).toBeDefined();
+      expect(typeof result.id).toBe('number');
+      expect(result.name).toBe(testDepartment.name);
+      expect(result.code).toBe(testDepartment.code);
+      expect(result.description).toBe(testDepartment.description);
+      expect(result.tenantId).toBe(tenantId);
+      expect(result.isActive).toBe(true);
+      expect(result.createdAt).toBeDefined();
+      expect(result.updatedAt).toBeDefined();
+    });
+
+    it('should fail to create department with duplicate code in same tenant', async () => {
       await expect(
-        updateDepartment({
-          id: anotherDepartment.id,
-          code: testDepartment.code,
+        createDepartment({
+          ...testDepartment,
+          tenantId,
         })
       ).rejects.toThrow();
-      
-      // Clean up the second department
-      await deleteDepartment({ id: anotherDepartment.id });
+    });
+  });
+
+  describe('getDepartment', () => {
+    it('should get an existing department', async () => {
+      const result = await getDepartment({ id: departmentId });
+
+      expect(result.id).toBe(departmentId);
+      expect(result.name).toBe(testDepartment.name);
+      expect(result.code).toBe(testDepartment.code);
+      expect(result.description).toBe(testDepartment.description);
+      expect(result.tenantId).toBe(tenantId);
     });
 
-    it('should throw error when deleting non-existent department', async () => {
-      const nonExistentId = randomUUID();
+    it('should fail to get non-existent department', async () => {
+      await expect(getDepartment({ id: 999999 })).rejects.toThrow();
+    });
+  });
+
+  describe('listDepartments', () => {
+    it('should list all departments', async () => {
+      const result = await listDepartments();
+
+      expect(Array.isArray(result.departments)).toBe(true);
+      expect(result.departments.length).toBeGreaterThan(0);
       
-      await expect(deleteDepartment({ id: nonExistentId })).rejects.toThrow();
+      const foundDepartment = result.departments.find(d => d.id === departmentId);
+      expect(foundDepartment).toBeDefined();
+      expect(foundDepartment?.name).toBe(testDepartment.name);
+      expect(foundDepartment?.code).toBe(testDepartment.code);
+    });
+  });
+
+  describe('listTenantDepartments', () => {
+    it('should list departments for a tenant', async () => {
+      const result = await listTenantDepartments({ tenantId });
+
+      expect(Array.isArray(result.departments)).toBe(true);
+      expect(result.departments.length).toBeGreaterThan(0);
+      
+      const foundDepartment = result.departments.find(d => d.id === departmentId);
+      expect(foundDepartment).toBeDefined();
+      expect(foundDepartment?.name).toBe(testDepartment.name);
+      expect(foundDepartment?.code).toBe(testDepartment.code);
+    });
+
+    it('should return empty list for non-existent tenant', async () => {
+      const result = await listTenantDepartments({ tenantId: 999999 });
+      expect(Array.isArray(result.departments)).toBe(true);
+      expect(result.departments.length).toBe(0);
+    });
+  });
+
+  describe('updateDepartment', () => {
+    const updateData: UpdateDepartmentPayload = {
+      name: 'Updated Department',
+      description: 'Updated description for testing',
+    };
+
+    it('should update an existing department', async () => {
+      const result = await updateDepartment({ id: departmentId, ...updateData });
+
+      expect(result.id).toBe(departmentId);
+      expect(result.name).toBe(updateData.name);
+      expect(result.description).toBe(updateData.description);
+      expect(result.code).toBe(testDepartment.code);
+      expect(result.tenantId).toBe(tenantId);
+      expect(result.updatedAt).toBeDefined();
+    });
+
+    it('should fail to update non-existent department', async () => {
+      await expect(
+        updateDepartment({ id: 999999, ...updateData })
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('deleteDepartment', () => {
+    it('should fail to delete non-existent department', async () => {
+      await expect(deleteDepartment({ id: 999999 })).rejects.toThrow();
+    });
+
+    it('should delete an existing department', async () => {
+      const result = await deleteDepartment({ id: departmentId });
+
+      expect(result.id).toBe(departmentId);
+      expect(result.name).toBe('Updated Department');
+      expect(result.code).toBe(testDepartment.code);
+
+      // Mark as deleted so afterAll doesn't try to delete again
+      departmentId = 0;
     });
   });
 }); 

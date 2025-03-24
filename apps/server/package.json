@@ -24,6 +24,7 @@
     "vitest": "^3.0.8"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "drizzle-orm": "^0.36.0",
     "encore.dev": "^1.46.9",
     "pg": "^8.13.1"

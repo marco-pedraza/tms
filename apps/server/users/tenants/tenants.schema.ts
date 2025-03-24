@@ -1,10 +1,10 @@
-import { pgTable, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, serial } from 'drizzle-orm/pg-core';
 
 /**
  * Schema for the tenants table
  */
 export const tenants = pgTable('tenants', {
-  id: text('id').primaryKey(),
+  id: serial('id').primaryKey(),
   name: text('name').notNull(),
   code: text('code').notNull().unique(),
   description: text('description'),

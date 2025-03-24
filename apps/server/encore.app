@@ -1,4 +1,4 @@
 {
-	"id":   "ims-server-pngi",
+	"id":   "server-nest-8sci",
 	"lang": "typescript",
 }

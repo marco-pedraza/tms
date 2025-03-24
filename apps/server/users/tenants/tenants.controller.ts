@@ -35,7 +35,7 @@ export const createTenant = api(
  */
 export const getTenant = api(
   { method: 'GET', path: '/tenants/:id', expose: true },
-  async ({ id }: { id: string }): Promise<Tenant> => {
+  async ({ id }: { id: number }): Promise<Tenant> => {
     try {
       return await tenantHandler.findOne(id);
     } catch (error) {
@@ -74,7 +74,7 @@ export const updateTenant = api(
   async ({
     id,
     ...data
-  }: UpdateTenantPayload & { id: string }): Promise<Tenant> => {
+  }: UpdateTenantPayload & { id: number }): Promise<Tenant> => {
     try {
       return await tenantHandler.update(id, data);
     } catch (error) {
@@ -93,7 +93,7 @@ export const updateTenant = api(
  */
 export const deleteTenant = api(
   { method: 'DELETE', path: '/tenants/:id', expose: true },
-  async ({ id }: { id: string }): Promise<Tenant> => {
+  async ({ id }: { id: number }): Promise<Tenant> => {
     try {
       return await tenantHandler.delete(id);
     } catch (error) {

@@ -1,10 +1,8 @@
-import { MinLen, MatchesRegexp } from 'encore.dev/validate';
-
 /**
  * Represents a tenant entity
  */
 export interface Tenant {
-  id: string;
+  id: number;
   name: string;
   code: string;
   description?: string | null;

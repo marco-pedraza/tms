@@ -10,6 +10,8 @@
     "server:test": "turbo run test:encore --filter=ims-server"
   },
   "devDependencies": {
+    "debug": "^4.4.0",
+    "minimatch": "^10.0.1",
     "prettier": "^3.5.3",
     "turbo": "^2.4.4",
     "typescript": "5.8.2"

@@ -102,7 +102,7 @@ export class UserHandler {
    */
   private sanitizeUser(user: User): SafeUser {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { _, ...safeUser } = user;
+    const { passwordHash, ...safeUser } = user;
     return safeUser;
   }
 

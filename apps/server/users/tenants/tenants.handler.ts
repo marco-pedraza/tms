@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, asc, count } from 'drizzle-orm';
 import { db } from '../../db';
 import { tenants } from './tenants.schema';
 import type {
@@ -6,8 +6,11 @@ import type {
   CreateTenantPayload,
   UpdateTenantPayload,
   Tenants,
+  PaginatedTenants,
 } from './tenants.types';
 import { NotFoundError, DuplicateError } from '../../shared/errors';
+import { PaginationParams } from '../../shared/types';
+import { withPagination } from '../../shared/bd-utils';
 
 /**
  * Handler for tenant operations
@@ -31,11 +34,32 @@ class TenantHandler {
 
   /**
    * Find all tenants
+   * @deprecated Use findAllPaginated instead
    * @returns All tenants
    */
   async findAll(): Promise<Tenants> {
     const result = await db.select().from(tenants);
     return { tenants: result };
+  }
+
+  /**
+   * Find all tenants with pagination
+   * @param params Pagination parameters
+   * @returns Paginated tenants with metadata
+   */
+  async findAllPaginated(params: PaginationParams = {}): Promise<PaginatedTenants> {
+    // Create base query with sorting
+    const query = db
+      .select()
+      .from(tenants)
+      .orderBy(asc(tenants.name))
+      .$dynamic();
+
+    // Pagination needs a count query
+    const countQuery = db.select({ count: count() }).from(tenants);
+
+    // Apply pagination and get results with metadata
+    return withPagination<typeof query, Tenant>(query, countQuery, params);
   }
 
   /**

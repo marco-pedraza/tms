@@ -1,5 +1,6 @@
 // API types
 import { MinLen, MatchesRegexp } from 'encore.dev/validate';
+import { PaginatedResult } from '../../shared/types';
 
 /**
  * Base interface representing a user entity
@@ -213,3 +214,8 @@ export interface Users {
   /** List of users (without sensitive data) */
   users: SafeUser[];
 }
+
+/**
+ * Paginated response type for the list users endpoint
+ */
+export type PaginatedUsers = PaginatedResult<SafeUser>;

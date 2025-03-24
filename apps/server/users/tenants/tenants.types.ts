@@ -1,3 +1,5 @@
+import { PaginatedResult } from '../../shared/types';
+
 /**
  * Represents a tenant entity
  */
@@ -68,3 +70,8 @@ export interface UpdateTenantPayload {
 export interface Tenants {
   tenants: Tenant[];
 }
+
+/**
+ * Paginated response type for the list tenants endpoint
+ */
+export type PaginatedTenants = PaginatedResult<Tenant>;

@@ -5,8 +5,10 @@ import type {
   UpdateTenantPayload,
   Tenant,
   Tenants,
+  PaginatedTenants,
 } from './tenants.types';
 import { parseApiError } from '../../shared/errors';
+import { PaginationParams } from '../../shared/types';
 
 /**
  * Creates a new tenant.
@@ -47,6 +49,7 @@ export const getTenant = api(
 
 /**
  * Retrieves all tenants.
+ * @deprecated Use listTenantsWithPagination instead
  * @returns {Promise<Tenants>} List of all tenants
  * @throws {APIError} If the retrieval fails
  */
@@ -55,6 +58,24 @@ export const listTenants = api(
   async (): Promise<Tenants> => {
     try {
       return await tenantHandler.findAll();
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);
+
+/**
+ * Retrieves tenants with pagination.
+ * @param params - Pagination parameters
+ * @returns {Promise<PaginatedTenants>} Paginated list of tenants
+ * @throws {APIError} If retrieval fails
+ */
+export const listTenantsWithPagination = api(
+  { method: 'GET', path: '/tenants/paginated', expose: true },
+  async (params: PaginationParams): Promise<PaginatedTenants> => {
+    try {
+      return await tenantHandler.findAllPaginated(params);
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;

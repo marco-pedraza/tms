@@ -3,11 +3,18 @@ import {
   createUser,
   getUser,
   listUsers,
+  listUsersWithPagination,
   listTenantUsers,
+  listTenantUsersWithPagination,
   updateUser,
+  changePassword,
   deleteUser,
 } from './users.controller';
-import type { CreateUserPayload, UpdateUserPayload } from './users.types';
+import type {
+  CreateUserPayload,
+  UpdateUserPayload,
+  ChangePasswordPayload,
+} from './users.types';
 import { createTenant, deleteTenant } from '../tenants/tenants.controller';
 import type { CreateTenantPayload } from '../tenants/tenants.types';
 import {
@@ -225,6 +232,145 @@ describe('Users Controller', () => {
 
       // Mark as deleted so afterAll doesn't try to delete again
       userId = 0;
+    });
+  });
+
+  describe('pagination', () => {
+    let userA: { id: number };
+    let userZ: { id: number };
+
+    afterAll(async () => {
+      // Clean up test users
+      if (userA?.id) {
+        await deleteUser({ id: userA.id });
+      }
+      if (userZ?.id) {
+        await deleteUser({ id: userZ.id });
+      }
+    });
+
+    it('should return paginated users with default parameters', async () => {
+      const response = await listUsersWithPagination({});
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBeDefined();
+      expect(response.pagination.totalCount).toBeDefined();
+      expect(response.pagination.totalPages).toBeDefined();
+      expect(typeof response.pagination.hasNextPage).toBe('boolean');
+      expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
+
+      // Verify sensitive data is not included
+      response.data.forEach((user) => {
+        expect(user).not.toHaveProperty('passwordHash');
+      });
+    });
+
+    it('should honor page and pageSize parameters', async () => {
+      const response = await listUsersWithPagination({
+        page: 1,
+        pageSize: 5,
+      });
+
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
+      expect(response.data.length).toBeLessThanOrEqual(5);
+
+      // Verify sensitive data is not included
+      response.data.forEach((user) => {
+        expect(user).not.toHaveProperty('passwordHash');
+      });
+    });
+
+    it('should default sort by lastName, firstName in ascending order', async () => {
+      // Create test users with different names for verification of default sorting
+      userA = await createUser({
+        ...testUser,
+        username: 'aaa_user',
+        email: 'aaa@example.com',
+        firstName: 'AAA',
+        lastName: 'Test',
+        tenantId,
+        departmentId,
+      });
+      userZ = await createUser({
+        ...testUser,
+        username: 'zzz_user',
+        email: 'zzz@example.com',
+        firstName: 'ZZZ',
+        lastName: 'Test',
+        tenantId,
+        departmentId,
+      });
+
+      // Get users with large enough page size to include test users
+      const response = await listUsersWithPagination({
+        pageSize: 50,
+      });
+
+      // Find the indices of our test users
+      const indexA = response.data.findIndex((u) => u.id === userA.id);
+      const indexZ = response.data.findIndex((u) => u.id === userZ.id);
+
+      // Verify that userA (AAA) comes before userZ (ZZZ) in the results
+      if (indexA !== -1 && indexZ !== -1) {
+        expect(indexA).toBeLessThan(indexZ);
+      }
+    });
+
+    describe('tenant users pagination', () => {
+      it('should return paginated tenant users with default parameters', async () => {
+        const response = await listTenantUsersWithPagination({
+          tenantId,
+        });
+
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(response.pagination).toBeDefined();
+        expect(response.pagination.currentPage).toBe(1);
+        expect(response.pagination.pageSize).toBeDefined();
+        expect(response.pagination.totalCount).toBeDefined();
+        expect(response.pagination.totalPages).toBeDefined();
+        expect(typeof response.pagination.hasNextPage).toBe('boolean');
+        expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
+
+        // Verify we only get users for the specified tenant
+        response.data.forEach((user) => {
+          expect(user.tenantId).toBe(tenantId);
+          expect(user).not.toHaveProperty('passwordHash');
+        });
+      });
+
+      it('should honor page and pageSize parameters for tenant users', async () => {
+        const response = await listTenantUsersWithPagination({
+          tenantId,
+          page: 1,
+          pageSize: 5,
+        });
+
+        expect(response.pagination.currentPage).toBe(1);
+        expect(response.pagination.pageSize).toBe(5);
+        expect(response.data.length).toBeLessThanOrEqual(5);
+
+        // Verify we only get users for the specified tenant
+        response.data.forEach((user) => {
+          expect(user.tenantId).toBe(tenantId);
+          expect(user).not.toHaveProperty('passwordHash');
+        });
+      });
+
+      it('should return empty paginated result for non-existent tenant', async () => {
+        const response = await listTenantUsersWithPagination({
+          tenantId: 999999,
+        });
+
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(response.data.length).toBe(0);
+        expect(response.pagination.totalCount).toBe(0);
+      });
     });
   });
 });

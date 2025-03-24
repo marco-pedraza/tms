@@ -6,8 +6,10 @@ import type {
   ChangePasswordPayload,
   SafeUser,
   Users,
+  PaginatedUsers,
 } from './users.types';
 import { parseApiError } from '../../shared/errors';
+import { PaginationParams } from '../../shared/types';
 
 /**
  * Creates a new user.
@@ -140,6 +142,46 @@ export const deleteUser = api(
   async ({ id }: { id: number }): Promise<SafeUser> => {
     try {
       return await userHandler.delete(id);
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);
+
+/**
+ * Retrieves users with pagination.
+ * @param params - Pagination parameters
+ * @returns {Promise<PaginatedUsers>} Paginated list of users
+ * @throws {APIError} If retrieval fails
+ */
+export const listUsersWithPagination = api(
+  { method: 'GET', path: '/users/paginated', expose: true },
+  async (params: PaginationParams): Promise<PaginatedUsers> => {
+    try {
+      return await userHandler.findAllPaginated(params);
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);
+
+/**
+ * Retrieves users for a specific tenant with pagination.
+ * @param params - Object containing the tenant ID and pagination parameters
+ * @param params.tenantId - The ID of the tenant to retrieve users for
+ * @returns {Promise<PaginatedUsers>} Paginated list of users for the tenant
+ * @throws {APIError} If retrieval fails
+ */
+export const listTenantUsersWithPagination = api(
+  { method: 'GET', path: '/tenants/:tenantId/users/paginated', expose: true },
+  async ({
+    tenantId,
+    ...paginationParams
+  }: { tenantId: number } & PaginationParams): Promise<PaginatedUsers> => {
+    try {
+      return await userHandler.findByTenantPaginated(tenantId, paginationParams);
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;

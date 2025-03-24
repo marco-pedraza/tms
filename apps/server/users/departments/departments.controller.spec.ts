@@ -3,7 +3,9 @@ import {
   createDepartment,
   getDepartment,
   listDepartments,
+  listDepartmentsWithPagination,
   listTenantDepartments,
+  listTenantDepartmentsWithPagination,
   updateDepartment,
   deleteDepartment,
 } from './departments.controller';
@@ -176,6 +178,127 @@ describe('Departments Controller', () => {
 
       // Mark as deleted so afterAll doesn't try to delete again
       departmentId = 0;
+    });
+  });
+
+  describe('pagination', () => {
+    let departmentA: { id: number };
+    let departmentZ: { id: number };
+
+    afterAll(async () => {
+      // Clean up test departments
+      if (departmentA?.id) {
+        await deleteDepartment({ id: departmentA.id });
+      }
+      if (departmentZ?.id) {
+        await deleteDepartment({ id: departmentZ.id });
+      }
+    });
+
+    it('should return paginated departments with default parameters', async () => {
+      const response = await listDepartmentsWithPagination({});
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBeDefined();
+      expect(response.pagination.totalCount).toBeDefined();
+      expect(response.pagination.totalPages).toBeDefined();
+      expect(typeof response.pagination.hasNextPage).toBe('boolean');
+      expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
+    });
+
+    it('should honor page and pageSize parameters', async () => {
+      const response = await listDepartmentsWithPagination({
+        page: 1,
+        pageSize: 5,
+      });
+
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
+      expect(response.data.length).toBeLessThanOrEqual(5);
+    });
+
+    it('should default sort by name in ascending order', async () => {
+      // Create test departments with different names for verification of default sorting
+      departmentA = await createDepartment({
+        ...testDepartment,
+        name: 'AAA Test Department',
+        code: 'AAA-DEPT',
+        tenantId,
+      });
+      departmentZ = await createDepartment({
+        ...testDepartment,
+        name: 'ZZZ Test Department',
+        code: 'ZZZ-DEPT',
+        tenantId,
+      });
+
+      // Get departments with large enough page size to include test departments
+      const response = await listDepartmentsWithPagination({
+        pageSize: 50,
+      });
+
+      // Find the indices of our test departments
+      const indexA = response.data.findIndex((d) => d.id === departmentA.id);
+      const indexZ = response.data.findIndex((d) => d.id === departmentZ.id);
+
+      // Verify that departmentA (AAA) comes before departmentZ (ZZZ) in the results
+      if (indexA !== -1 && indexZ !== -1) {
+        expect(indexA).toBeLessThan(indexZ);
+      }
+    });
+
+    describe('tenant departments pagination', () => {
+      it('should return paginated tenant departments with default parameters', async () => {
+        const response = await listTenantDepartmentsWithPagination({
+          tenantId,
+        });
+
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(response.pagination).toBeDefined();
+        expect(response.pagination.currentPage).toBe(1);
+        expect(response.pagination.pageSize).toBeDefined();
+        expect(response.pagination.totalCount).toBeDefined();
+        expect(response.pagination.totalPages).toBeDefined();
+        expect(typeof response.pagination.hasNextPage).toBe('boolean');
+        expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
+
+        // Verify we only get departments for the specified tenant
+        response.data.forEach((department) => {
+          expect(department.tenantId).toBe(tenantId);
+        });
+      });
+
+      it('should honor page and pageSize parameters for tenant departments', async () => {
+        const response = await listTenantDepartmentsWithPagination({
+          tenantId,
+          page: 1,
+          pageSize: 5,
+        });
+
+        expect(response.pagination.currentPage).toBe(1);
+        expect(response.pagination.pageSize).toBe(5);
+        expect(response.data.length).toBeLessThanOrEqual(5);
+
+        // Verify we only get departments for the specified tenant
+        response.data.forEach((department) => {
+          expect(department.tenantId).toBe(tenantId);
+        });
+      });
+
+      it('should return empty paginated result for non-existent tenant', async () => {
+        const response = await listTenantDepartmentsWithPagination({
+          tenantId: 999999,
+        });
+
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(response.data.length).toBe(0);
+        expect(response.pagination.totalCount).toBe(0);
+      });
     });
   });
 });

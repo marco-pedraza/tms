@@ -6,8 +6,10 @@ import type {
   Department,
   Departments,
   TenantDepartments,
+  PaginatedDepartments,
 } from './departments.types';
 import { parseApiError } from '../../shared/errors';
+import { PaginationParams } from '../../shared/types';
 
 /**
  * Creates a new department.
@@ -48,6 +50,7 @@ export const getDepartment = api(
 
 /**
  * Retrieves all departments.
+ * @deprecated Use listDepartmentsWithPagination instead
  * @returns {Promise<Departments>} List of all departments
  * @throws {APIError} If the retrieval fails
  */
@@ -64,7 +67,26 @@ export const listDepartments = api(
 );
 
 /**
+ * Retrieves departments with pagination.
+ * @param params - Pagination parameters
+ * @returns {Promise<PaginatedDepartments>} Paginated list of departments
+ * @throws {APIError} If retrieval fails
+ */
+export const listDepartmentsWithPagination = api(
+  { method: 'GET', path: '/departments/paginated', expose: true },
+  async (params: PaginationParams): Promise<PaginatedDepartments> => {
+    try {
+      return await departmentHandler.findAllPaginated(params);
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);
+
+/**
  * Retrieves all departments for a specific tenant.
+ * @deprecated Use listTenantDepartmentsWithPagination instead
  * @param params - Object containing the tenant ID
  * @param params.tenantId - The ID of the tenant to retrieve departments for
  * @returns {Promise<TenantDepartments>} List of departments for the tenant
@@ -75,6 +97,28 @@ export const listTenantDepartments = api(
   async ({ tenantId }: { tenantId: number }): Promise<TenantDepartments> => {
     try {
       return await departmentHandler.findByTenant(tenantId);
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);
+
+/**
+ * Retrieves departments for a specific tenant with pagination.
+ * @param params - Object containing the tenant ID and pagination parameters
+ * @param params.tenantId - The ID of the tenant to retrieve departments for
+ * @returns {Promise<PaginatedDepartments>} Paginated list of departments for the tenant
+ * @throws {APIError} If retrieval fails
+ */
+export const listTenantDepartmentsWithPagination = api(
+  { method: 'GET', path: '/tenants/:tenantId/departments/paginated', expose: true },
+  async ({
+    tenantId,
+    ...paginationParams
+  }: { tenantId: number } & PaginationParams): Promise<PaginatedDepartments> => {
+    try {
+      return await departmentHandler.findByTenantPaginated(tenantId, paginationParams);
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;

@@ -1,11 +1,12 @@
 import { db } from '@/db';
 import { users } from './users.schema';
-import { eq, and, or, not } from 'drizzle-orm';
+import { eq, and, or, not, asc, count } from 'drizzle-orm';
 import crypto from 'crypto';
 import type {
   User,
   SafeUser,
   Users,
+  PaginatedUsers,
   CreateUserPayload,
   UpdateUserPayload,
   ChangePasswordPayload,
@@ -16,6 +17,8 @@ import {
   DuplicateError,
   AuthenticationError,
 } from '../../shared/errors';
+import { PaginationParams } from '../../shared/types';
+import { withPagination } from '../../shared/bd-utils';
 
 export class UserHandler {
   /**
@@ -262,6 +265,66 @@ export class UserHandler {
 
     return {
       users: userList.map((user) => this.sanitizeUser(user)),
+    };
+  }
+
+  /**
+   * Finds all users with pagination
+   * @param params Pagination parameters
+   * @returns Paginated users with metadata
+   */
+  async findAllPaginated(params: PaginationParams = {}): Promise<PaginatedUsers> {
+    // Create base query with sorting
+    const query = db
+      .select()
+      .from(users)
+      .orderBy(asc(users.lastName), asc(users.firstName))
+      .$dynamic();
+
+    // Pagination needs a count query
+    const countQuery = db.select({ count: count() }).from(users);
+
+    // Get paginated results
+    const result = await withPagination<typeof query, User>(query, countQuery, params);
+
+    // Sanitize users in the result
+    return {
+      data: result.data.map((user) => this.sanitizeUser(user)),
+      pagination: result.pagination,
+    };
+  }
+
+  /**
+   * Finds all users for a specific tenant with pagination
+   * @param tenantId - The tenant ID to filter by
+   * @param params - Pagination parameters
+   * @returns Paginated users with metadata
+   */
+  async findByTenantPaginated(
+    tenantId: number,
+    params: PaginationParams = {},
+  ): Promise<PaginatedUsers> {
+    // Create base query with sorting and tenant filter
+    const query = db
+      .select()
+      .from(users)
+      .where(eq(users.tenantId, tenantId))
+      .orderBy(asc(users.lastName), asc(users.firstName))
+      .$dynamic();
+
+    // Pagination needs a count query
+    const countQuery = db
+      .select({ count: count() })
+      .from(users)
+      .where(eq(users.tenantId, tenantId));
+
+    // Get paginated results
+    const result = await withPagination<typeof query, User>(query, countQuery, params);
+
+    // Sanitize users in the result
+    return {
+      data: result.data.map((user) => this.sanitizeUser(user)),
+      pagination: result.pagination,
     };
   }
 }

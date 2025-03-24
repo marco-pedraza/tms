@@ -1,11 +1,12 @@
 import { db } from '../../db';
 import { departments } from './departments.schema';
 import { tenants } from '../tenants/tenants.schema';
-import { eq, and, not } from 'drizzle-orm';
+import { eq, and, not, asc, count } from 'drizzle-orm';
 import type {
   Department,
   Departments,
   TenantDepartments,
+  PaginatedDepartments,
   CreateDepartmentPayload,
   UpdateDepartmentPayload,
 } from './departments.types';
@@ -14,6 +15,8 @@ import {
   ValidationError,
   DuplicateError,
 } from '../../shared/errors';
+import { PaginationParams } from '../../shared/types';
+import { withPagination } from '../../shared/bd-utils';
 
 export class DepartmentHandler {
   /**
@@ -38,6 +41,7 @@ export class DepartmentHandler {
 
   /**
    * Finds all departments
+   * @deprecated Use findAllPaginated instead
    * @returns An object containing an array of all departments
    */
   async findAll(): Promise<Departments> {
@@ -52,7 +56,28 @@ export class DepartmentHandler {
   }
 
   /**
+   * Finds all departments with pagination
+   * @param params Pagination parameters
+   * @returns Paginated departments with metadata
+   */
+  async findAllPaginated(params: PaginationParams = {}): Promise<PaginatedDepartments> {
+    // Create base query with sorting
+    const query = db
+      .select()
+      .from(departments)
+      .orderBy(asc(departments.name))
+      .$dynamic();
+
+    // Pagination needs a count query
+    const countQuery = db.select({ count: count() }).from(departments);
+
+    // Apply pagination and get results with metadata
+    return withPagination<typeof query, Department>(query, countQuery, params);
+  }
+
+  /**
    * Finds all departments for a specific tenant
+   * @deprecated Use findByTenantPaginated instead
    * @param tenantId - The tenant ID to filter departments by
    * @returns An object containing an array of tenant departments
    */
@@ -66,6 +91,34 @@ export class DepartmentHandler {
     return {
       departments: departmentsList,
     };
+  }
+
+  /**
+   * Finds all departments for a specific tenant with pagination
+   * @param tenantId - The tenant ID to filter departments by
+   * @param params - Pagination parameters
+   * @returns Paginated departments with metadata
+   */
+  async findByTenantPaginated(
+    tenantId: number,
+    params: PaginationParams = {},
+  ): Promise<PaginatedDepartments> {
+    // Create base query with sorting and tenant filter
+    const query = db
+      .select()
+      .from(departments)
+      .where(eq(departments.tenantId, tenantId))
+      .orderBy(asc(departments.name))
+      .$dynamic();
+
+    // Pagination needs a count query
+    const countQuery = db
+      .select({ count: count() })
+      .from(departments)
+      .where(eq(departments.tenantId, tenantId));
+
+    // Apply pagination and get results with metadata
+    return withPagination<typeof query, Department>(query, countQuery, params);
   }
 
   /**

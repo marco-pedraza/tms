@@ -3,6 +3,7 @@ import {
   createTenant,
   getTenant,
   listTenants,
+  listTenantsWithPagination,
   updateTenant,
   deleteTenant,
 } from './tenants.controller';
@@ -113,6 +114,67 @@ describe('Tenants Controller', () => {
 
       // Mark as deleted so afterAll doesn't try to delete again
       tenantId = 0;
+    });
+  });
+
+  describe('pagination', () => {
+    it('should return paginated tenants with default parameters', async () => {
+      const response = await listTenantsWithPagination({});
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBeDefined();
+      expect(response.pagination.totalCount).toBeDefined();
+      expect(response.pagination.totalPages).toBeDefined();
+      expect(typeof response.pagination.hasNextPage).toBe('boolean');
+      expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
+    });
+
+    it('should honor page and pageSize parameters', async () => {
+      const response = await listTenantsWithPagination({
+        page: 1,
+        pageSize: 5,
+      });
+
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
+      expect(response.data.length).toBeLessThanOrEqual(5);
+    });
+
+    it('should default sort by name in ascending order', async () => {
+      // Create test tenants with different names for verification of default sorting
+      const tenantA = await createTenant({
+        ...testTenant,
+        name: 'AAA Test Tenant',
+        code: 'AAA',
+      });
+      const tenantZ = await createTenant({
+        ...testTenant,
+        name: 'ZZZ Test Tenant',
+        code: 'ZZZ',
+      });
+
+      try {
+        // Get tenants with large enough page size to include test tenants
+        const response = await listTenantsWithPagination({
+          pageSize: 50,
+        });
+
+        // Find the indices of our test tenants
+        const indexA = response.data.findIndex((t) => t.id === tenantA.id);
+        const indexZ = response.data.findIndex((t) => t.id === tenantZ.id);
+
+        // Verify that tenantA (AAA) comes before tenantZ (ZZZ) in the results
+        if (indexA !== -1 && indexZ !== -1) {
+          expect(indexA).toBeLessThan(indexZ);
+        }
+      } finally {
+        // Clean up test tenants
+        await deleteTenant({ id: tenantA.id });
+        await deleteTenant({ id: tenantZ.id });
+      }
     });
   });
 });

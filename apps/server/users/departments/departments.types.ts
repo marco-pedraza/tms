@@ -1,3 +1,5 @@
+import { PaginatedResult } from '../../shared/types';
+
 // API types
 
 /**
@@ -87,6 +89,7 @@ export interface UpdateDepartmentPayload {
 
 /**
  * Response for listing all departments
+ * @deprecated Use PaginatedDepartments instead
  */
 export interface Departments {
   /** List of departments */
@@ -100,3 +103,8 @@ export interface TenantDepartments {
   /** List of departments for a specific tenant */
   departments: Department[];
 }
+
+/**
+ * Paginated response type for the list departments endpoint
+ */
+export type PaginatedDepartments = PaginatedResult<Department>;

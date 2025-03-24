@@ -4,9 +4,10 @@ import type {
   CreateCountryPayload,
   UpdateCountryPayload,
   Country,
-  Countries,
+  PaginatedCountries,
 } from './countries.types';
 import { parseApiError } from '../../shared/errors';
+import { PaginationParams } from '../../shared/types';
 
 /**
  * Creates a new country.
@@ -46,16 +47,16 @@ export const getCountry = api(
 );
 
 /**
- * Retrieves all countries.
- * @returns {Promise<Countries>} List of all countries
- * @throws {APIError} If the retrieval fails
+ * Retrieves countries with pagination.
+ * @param params - Pagination parameters
+ * @returns {Promise<PaginatedCountries>} Paginated list of countries
+ * @throws {APIError} If retrieval fails
  */
 export const listCountries = api(
-  { expose: true, method: 'GET', path: '/countries' },
-  async (): Promise<Countries> => {
+  { expose: true, method: 'GET', path: '/countries/paginated' },
+  async (params: PaginationParams): Promise<PaginatedCountries> => {
     try {
-      const countries = await countryHandler.findAll();
-      return countries;
+      return await countryHandler.findAll(params);
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;

@@ -108,14 +108,23 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves all countries.
-         * @returns {Promise<Countries>} List of all countries
-         * @throws {APIError} If the retrieval fails
+         * Retrieves countries with pagination.
+         * @param params - Pagination parameters
+         * @returns {Promise<PaginatedCountries>} Paginated list of countries
+         * @throws {APIError} If retrieval fails
          */
-        public async listCountries(): Promise<countries.Countries> {
+        public async listCountries(params: shared.PaginationParams): Promise<countries.PaginatedCountries> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                page:          params.page === undefined ? undefined : String(params.page),
+                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
+                sortBy:        params.sortBy,
+                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
+            })
+
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/countries`)
-            return await resp.json() as countries.Countries
+            const resp = await this.baseClient.callTypedAPI("GET", `/countries/paginated`, undefined, {query})
+            return await resp.json() as countries.PaginatedCountries
         }
 
         /**
@@ -152,13 +161,6 @@ export namespace inventory {
 }
 
 export namespace countries {
-    export interface Countries {
-        /**
-         * List of countries
-         */
-        countries: Country[]
-    }
-
     export interface Country {
         /**
          * Unique identifier for the country
@@ -209,6 +211,67 @@ export namespace countries {
          * @default true
          */
         active?: boolean
+    }
+
+    export interface PaginatedCountries {
+        data: Country[]
+        pagination: shared.PaginationMeta
+    }
+}
+
+export namespace shared {
+    export interface PaginationMeta {
+        /**
+         * Current page number (1-based)
+         */
+        currentPage: number
+
+        /**
+         * Number of items per page
+         */
+        pageSize: number
+
+        /**
+         * Total number of items across all pages
+         */
+        totalCount: number
+
+        /**
+         * Total number of pages
+         */
+        totalPages: number
+
+        /**
+         * Whether there is a next page available
+         */
+        hasNextPage: boolean
+
+        /**
+         * Whether there is a previous page available
+         */
+        hasPreviousPage: boolean
+    }
+
+    export interface PaginationParams {
+        /**
+         * Page number (1-based)
+         */
+        page?: number
+
+        /**
+         * Number of items per page
+         */
+        pageSize?: number
+
+        /**
+         * Column to sort by
+         */
+        sortBy?: string
+
+        /**
+         * Sort direction
+         */
+        sortDirection?: "asc" | "desc"
     }
 }
 

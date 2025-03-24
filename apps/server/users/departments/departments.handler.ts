@@ -62,18 +62,9 @@ export class DepartmentHandler {
   async findAllPaginated(
     params: PaginationParams = {},
   ): Promise<PaginatedDepartments> {
-    // Create base query with sorting
-    const query = db
-      .select()
-      .from(departments)
-      .orderBy(asc(departments.name))
-      .$dynamic();
-
-    // Pagination needs a count query
-    const countQuery = db.select({ count: count() }).from(departments);
-
-    // Apply pagination and get results with metadata
-    return withPagination<typeof query, Department>(query, countQuery, params);
+    return this.getPaginatedDepartments({
+      params,
+    });
   }
 
   /**
@@ -104,22 +95,10 @@ export class DepartmentHandler {
     tenantId: number,
     params: PaginationParams = {},
   ): Promise<PaginatedDepartments> {
-    // Create base query with sorting and tenant filter
-    const query = db
-      .select()
-      .from(departments)
-      .where(eq(departments.tenantId, tenantId))
-      .orderBy(asc(departments.name))
-      .$dynamic();
-
-    // Pagination needs a count query
-    const countQuery = db
-      .select({ count: count() })
-      .from(departments)
-      .where(eq(departments.tenantId, tenantId));
-
-    // Apply pagination and get results with metadata
-    return withPagination<typeof query, Department>(query, countQuery, params);
+    return this.getPaginatedDepartments({
+      tenantId,
+      params,
+    });
   }
 
   /**
@@ -131,7 +110,7 @@ export class DepartmentHandler {
    * @throws {NotFoundError} If the tenant does not exist
    */
   async create(data: CreateDepartmentPayload): Promise<Department> {
-    try {
+    return this.handleErrors(async () => {
       // Validate tenant exists
       await this.validateTenantExists(data.tenantId);
 
@@ -152,15 +131,7 @@ export class DepartmentHandler {
         .returning();
 
       return department;
-    } catch (error) {
-      if (error instanceof DuplicateError || error instanceof NotFoundError) {
-        throw error;
-      }
-      if (error instanceof Error) {
-        throw new ValidationError(error.message);
-      }
-      throw error;
-    }
+    });
   }
 
   /**
@@ -172,8 +143,11 @@ export class DepartmentHandler {
    * @throws {ValidationError} If the department data is invalid
    * @throws {DuplicateError} If updating would create a duplicate code within the tenant
    */
-  async update(id: number, data: UpdateDepartmentPayload): Promise<Department> {
-    try {
+  async update(
+    id: number,
+    data: UpdateDepartmentPayload,
+  ): Promise<Department> {
+    return this.handleErrors(async () => {
       // Verify department exists and get its tenant
       const existingDepartment = await this.findOne(id);
 
@@ -207,15 +181,7 @@ export class DepartmentHandler {
         .returning();
 
       return updated;
-    } catch (error) {
-      if (error instanceof NotFoundError || error instanceof DuplicateError) {
-        throw error;
-      }
-      if (error instanceof Error) {
-        throw new ValidationError(error.message);
-      }
-      throw error;
-    }
+    });
   }
 
   /**
@@ -236,6 +202,66 @@ export class DepartmentHandler {
       .returning();
 
     return deletedDepartment;
+  }
+
+  /**
+   * Generic error handler for domain operations
+   * @param operation - The operation to perform
+   * @returns The result of the operation
+   * @throws {NotFoundError|DuplicateError|ValidationError} Depending on the error that occurs
+   * @private
+   */
+  private async handleErrors<T>(operation: () => Promise<T>): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      if (error instanceof NotFoundError || error instanceof DuplicateError) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw new ValidationError(error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Builds and executes paginated department queries
+   * @param options - Options for pagination query
+   * @param options.tenantId - Optional tenant ID to filter by
+   * @param options.params - Pagination parameters
+   * @returns Paginated departments with metadata
+   * @private
+   */
+  private async getPaginatedDepartments({
+    tenantId,
+    params = {},
+  }: {
+    tenantId?: number;
+    params?: PaginationParams;
+  }): Promise<PaginatedDepartments> {
+    // Create base query with sorting
+    const query = db
+      .select()
+      .from(departments)
+      .orderBy(asc(departments.name))
+      .$dynamic();
+
+    // Add tenant filter if provided
+    if (tenantId !== undefined) {
+      query.where(eq(departments.tenantId, tenantId));
+    }
+
+    // Pagination needs a count query
+    const countQuery = db.select({ count: count() }).from(departments);
+
+    // Add tenant filter to count query if provided
+    if (tenantId !== undefined) {
+      countQuery.where(eq(departments.tenantId, tenantId));
+    }
+
+    // Apply pagination and get results with metadata
+    return withPagination<typeof query, Department>(query, countQuery, params);
   }
 
   /**

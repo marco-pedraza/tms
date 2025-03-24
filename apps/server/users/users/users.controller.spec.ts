@@ -387,7 +387,7 @@ describe('Users Controller', () => {
         tenantId,
         departmentId,
       });
-      
+
       passwordUser = pwdTestUser.id;
       expect(passwordUser).toBeGreaterThan(0);
     });
@@ -417,7 +417,7 @@ describe('Users Controller', () => {
         changePassword({
           id: passwordUser,
           ...passwordData,
-        })
+        }),
       ).rejects.toThrow();
     });
 
@@ -431,7 +431,7 @@ describe('Users Controller', () => {
         changePassword({
           id: 999999,
           ...passwordData,
-        })
+        }),
       ).rejects.toThrow();
     });
   });

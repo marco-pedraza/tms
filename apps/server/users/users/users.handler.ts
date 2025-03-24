@@ -94,7 +94,7 @@ export class UserHandler {
    * @throws {ValidationError|DuplicateError} If validation fails or duplicate is found
    */
   async create(data: CreateUserPayload): Promise<SafeUser> {
-    try {
+    return this.handleErrors(async () => {
       // Validate unique username and email
       await this.validateUniqueUserIdentifiers(data.username, data.email);
 
@@ -120,15 +120,7 @@ export class UserHandler {
 
       const [user] = await db.insert(users).values(userData).returning();
       return this.sanitizeUser(user);
-    } catch (error) {
-      if (error instanceof DuplicateError) {
-        throw error;
-      }
-      if (error instanceof Error) {
-        throw new ValidationError(error.message);
-      }
-      throw error;
-    }
+    });
   }
 
   /**
@@ -159,7 +151,7 @@ export class UserHandler {
    * @throws {NotFoundError|ValidationError|DuplicateError} If user not found, validation fails, or duplicate found
    */
   async update(id: number, data: UpdateUserPayload): Promise<SafeUser> {
-    try {
+    return this.handleErrors(async () => {
       // Verify user exists
       await this.findOne(id);
 
@@ -175,15 +167,7 @@ export class UserHandler {
         .returning();
 
       return this.sanitizeUser(updated);
-    } catch (error) {
-      if (error instanceof NotFoundError || error instanceof DuplicateError) {
-        throw error;
-      }
-      if (error instanceof Error) {
-        throw new ValidationError(error.message);
-      }
-      throw error;
-    }
+    });
   }
 
   /**
@@ -197,32 +181,34 @@ export class UserHandler {
     id: number,
     data: ChangePasswordPayload,
   ): Promise<SafeUser> {
-    // Get full user (with password) for verification
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, id))
-      .limit(1);
+    return this.handleErrors(async () => {
+      // Get full user (with password) for verification
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, id))
+        .limit(1);
 
-    if (!user) {
-      throw new NotFoundError('User not found');
-    }
+      if (!user) {
+        throw new NotFoundError('User not found');
+      }
 
-    // Verify current password
-    const hashedCurrentPassword = this.hashPassword(data.currentPassword);
-    if (hashedCurrentPassword !== user.passwordHash) {
-      throw new AuthenticationError('Current password is incorrect');
-    }
+      // Verify current password
+      const hashedCurrentPassword = this.hashPassword(data.currentPassword);
+      if (hashedCurrentPassword !== user.passwordHash) {
+        throw new AuthenticationError('Current password is incorrect');
+      }
 
-    // Hash and set new password
-    const passwordHash = this.hashPassword(data.newPassword);
-    const [updated] = await db
-      .update(users)
-      .set({ passwordHash, updatedAt: new Date() })
-      .where(eq(users.id, id))
-      .returning();
+      // Hash and set new password
+      const passwordHash = this.hashPassword(data.newPassword);
+      const [updated] = await db
+        .update(users)
+        .set({ passwordHash, updatedAt: new Date() })
+        .where(eq(users.id, id))
+        .returning();
 
-    return this.sanitizeUser(updated);
+      return this.sanitizeUser(updated);
+    });
   }
 
   /**
@@ -243,6 +229,7 @@ export class UserHandler {
 
   /**
    * Finds all users
+   * @deprecated Use findAllPaginated instead
    * @returns An object containing an array of all users (without sensitive data)
    */
   async findAll(): Promise<Users> {
@@ -254,6 +241,7 @@ export class UserHandler {
 
   /**
    * Finds all users for a specific tenant
+   * @deprecated Use findByTenantPaginated instead
    * @param tenantId - The tenant ID to filter by
    * @returns List of users for the tenant (without sensitive data)
    */
@@ -276,28 +264,7 @@ export class UserHandler {
   async findAllPaginated(
     params: PaginationParams = {},
   ): Promise<PaginatedUsers> {
-    // Create base query with sorting
-    const query = db
-      .select()
-      .from(users)
-      .orderBy(asc(users.lastName), asc(users.firstName))
-      .$dynamic();
-
-    // Pagination needs a count query
-    const countQuery = db.select({ count: count() }).from(users);
-
-    // Get paginated results
-    const result = await withPagination<typeof query, User>(
-      query,
-      countQuery,
-      params,
-    );
-
-    // Sanitize users in the result
-    return {
-      data: result.data.map((user) => this.sanitizeUser(user)),
-      pagination: result.pagination,
-    };
+    return this.getPaginatedUsers({ params });
   }
 
   /**
@@ -310,19 +277,68 @@ export class UserHandler {
     tenantId: number,
     params: PaginationParams = {},
   ): Promise<PaginatedUsers> {
-    // Create base query with sorting and tenant filter
+    return this.getPaginatedUsers({ tenantId, params });
+  }
+
+  /**
+   * Generic error handler for domain operations
+   * @param operation - The operation to perform
+   * @returns The result of the operation
+   * @throws {NotFoundError|DuplicateError|ValidationError|AuthenticationError} Depending on the error that occurs
+   * @private
+   */
+  private async handleErrors<T>(operation: () => Promise<T>): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      if (
+        error instanceof NotFoundError ||
+        error instanceof DuplicateError ||
+        error instanceof AuthenticationError
+      ) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw new ValidationError(error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Builds and executes paginated user queries
+   * @param options - Options for pagination query
+   * @param options.tenantId - Optional tenant ID to filter by
+   * @param options.params - Pagination parameters
+   * @returns Paginated users with metadata
+   * @private
+   */
+  private async getPaginatedUsers({
+    tenantId,
+    params = {},
+  }: {
+    tenantId?: number;
+    params?: PaginationParams;
+  }): Promise<PaginatedUsers> {
+    // Create base query with sorting
     const query = db
       .select()
       .from(users)
-      .where(eq(users.tenantId, tenantId))
       .orderBy(asc(users.lastName), asc(users.firstName))
       .$dynamic();
 
+    // Add tenant filter if provided
+    if (tenantId !== undefined) {
+      query.where(eq(users.tenantId, tenantId));
+    }
+
     // Pagination needs a count query
-    const countQuery = db
-      .select({ count: count() })
-      .from(users)
-      .where(eq(users.tenantId, tenantId));
+    const countQuery = db.select({ count: count() }).from(users);
+    
+    // Add tenant filter to count query if provided
+    if (tenantId !== undefined) {
+      countQuery.where(eq(users.tenantId, tenantId));
+    }
 
     // Get paginated results
     const result = await withPagination<typeof query, User>(

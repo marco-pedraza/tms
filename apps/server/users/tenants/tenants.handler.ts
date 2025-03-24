@@ -8,7 +8,11 @@ import type {
   Tenants,
   PaginatedTenants,
 } from './tenants.types';
-import { NotFoundError, DuplicateError } from '../../shared/errors';
+import {
+  NotFoundError,
+  DuplicateError,
+  ValidationError,
+} from '../../shared/errors';
 import { PaginationParams } from '../../shared/types';
 import { withPagination } from '../../shared/bd-utils';
 
@@ -50,18 +54,7 @@ class TenantHandler {
   async findAllPaginated(
     params: PaginationParams = {},
   ): Promise<PaginatedTenants> {
-    // Create base query with sorting
-    const query = db
-      .select()
-      .from(tenants)
-      .orderBy(asc(tenants.name))
-      .$dynamic();
-
-    // Pagination needs a count query
-    const countQuery = db.select({ count: count() }).from(tenants);
-
-    // Apply pagination and get results with metadata
-    return withPagination<typeof query, Tenant>(query, countQuery, params);
+    return this.getPaginatedTenants(params);
   }
 
   /**
@@ -87,23 +80,26 @@ class TenantHandler {
    * @param data - The tenant data
    * @returns The created tenant
    * @throws {DuplicateError} If a tenant with the same code already exists
+   * @throws {ValidationError} If validation fails for any other reason
    */
   async create(data: CreateTenantPayload): Promise<Tenant> {
-    // Check if tenant with the same code already exists
-    await this.validateUniqueCode(data.code);
+    return this.handleErrors(async () => {
+      // Check if tenant with the same code already exists
+      await this.validateUniqueCode(data.code);
 
-    const now = new Date();
+      const now = new Date();
 
-    const newTenant = {
-      ...data,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    };
+      const newTenant = {
+        ...data,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      };
 
-    const [tenant] = await db.insert(tenants).values(newTenant).returning();
+      const [tenant] = await db.insert(tenants).values(newTenant).returning();
 
-    return tenant;
+      return tenant;
+    });
   }
 
   /**
@@ -113,28 +109,31 @@ class TenantHandler {
    * @returns The updated tenant
    * @throws {NotFoundError} If the tenant is not found
    * @throws {DuplicateError} If updating the code to one that already exists
+   * @throws {ValidationError} If validation fails for any other reason
    */
   async update(id: number, data: UpdateTenantPayload): Promise<Tenant> {
-    // Check if tenant exists
-    const existingTenant = await this.findOne(id);
+    return this.handleErrors(async () => {
+      // Check if tenant exists
+      const existingTenant = await this.findOne(id);
 
-    // Check if updating code and if it's already in use
-    if (data.code && data.code !== existingTenant.code) {
-      await this.validateUniqueCode(data.code);
-    }
+      // Check if updating code and if it's already in use
+      if (data.code && data.code !== existingTenant.code) {
+        await this.validateUniqueCode(data.code);
+      }
 
-    const updatedData = {
-      ...data,
-      updatedAt: new Date(),
-    };
+      const updatedData = {
+        ...data,
+        updatedAt: new Date(),
+      };
 
-    const [updatedTenant] = await db
-      .update(tenants)
-      .set(updatedData)
-      .where(eq(tenants.id, id))
-      .returning();
+      const [updatedTenant] = await db
+        .update(tenants)
+        .set(updatedData)
+        .where(eq(tenants.id, id))
+        .returning();
 
-    return updatedTenant;
+      return updatedTenant;
+    });
   }
 
   /**
@@ -145,17 +144,65 @@ class TenantHandler {
    */
   async delete(id: number): Promise<Tenant> {
     // Check if tenant exists
-    const existingTenant = await this.findOne(id);
+    await this.findOne(id);
 
-    await db.delete(tenants).where(eq(tenants.id, id));
+    const [deletedTenant] = await db
+      .delete(tenants)
+      .where(eq(tenants.id, id))
+      .returning();
 
-    return existingTenant;
+    return deletedTenant;
+  }
+
+  /**
+   * Generic error handler for domain operations
+   * @param operation - The operation to perform
+   * @returns The result of the operation
+   * @throws {NotFoundError|DuplicateError|ValidationError} Depending on the error that occurs
+   * @private
+   */
+  private async handleErrors<T>(operation: () => Promise<T>): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      if (error instanceof NotFoundError || error instanceof DuplicateError) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw new ValidationError(error.message);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Builds and executes paginated tenant queries
+   * @param params - Pagination parameters
+   * @returns Paginated tenants with metadata
+   * @private
+   */
+  private async getPaginatedTenants(
+    params: PaginationParams = {},
+  ): Promise<PaginatedTenants> {
+    // Create base query with sorting
+    const query = db
+      .select()
+      .from(tenants)
+      .orderBy(asc(tenants.name))
+      .$dynamic();
+
+    // Pagination needs a count query
+    const countQuery = db.select({ count: count() }).from(tenants);
+
+    // Apply pagination and get results with metadata
+    return withPagination<typeof query, Tenant>(query, countQuery, params);
   }
 
   /**
    * Validate that the tenant code is unique
    * @param code - The code to validate
    * @throws {DuplicateError} If a tenant with the same code already exists
+   * @private
    */
   private async validateUniqueCode(code: string): Promise<void> {
     const existingTenant = await this.findByCode(code);

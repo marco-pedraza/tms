@@ -116,7 +116,11 @@ export default function CountriesTable() {
   const router = useRouter();
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['countries'],
-    queryFn: async () => await client.inventory.listCountries(),
+    queryFn: async () =>
+      await client.inventory.listCountries({
+        page: 1,
+        pageSize: 10,
+      }),
   });
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -144,7 +148,7 @@ export default function CountriesTable() {
   return (
     <>
       <DataTable
-        data={data?.countries ?? []}
+        data={data?.data ?? []}
         columns={columns}
         isLoading={isLoading}
         hasError={!!error}

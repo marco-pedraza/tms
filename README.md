@@ -125,11 +125,17 @@ When running the backend, Encore provides a local dashboard at `http://localhost
 
 The frontend is built with Next.js 15 and React 19. To access the application locally:
 
-1. Start the development server:
+1. Configure the env.local file
+
+   ```bash
+   NEXT_PUBLIC_IMS_API_URL=http://localhost:4000
+   ```
+
+2. Start the development server:
    ```bash
    npm run dev
    ```
-2. Open [http://localhost:3000](http://localhost:3000) in your browser
+3. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ## Turborepo Features
 

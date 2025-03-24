@@ -33,13 +33,18 @@ export default function CountriesPage() {
     error,
   } = useQuery({
     queryKey: ['countries'],
-    queryFn: async () => await client.inventory.listCountries(),
+    queryFn: async () =>
+      await client.inventory.listCountries({
+        page: 1,
+        pageSize: 10,
+        sortBy: 'name',
+        sortDirection: 'asc',
+      }),
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
-
   const filteredData =
-    countriesData?.countries?.filter(
+    countriesData?.data?.filter(
       (country) =>
         country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         country.code.toLowerCase().includes(searchTerm.toLowerCase()),

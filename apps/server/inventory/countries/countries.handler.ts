@@ -1,17 +1,19 @@
 import { db } from '@/db';
 import { countries } from './countries.schema';
-import { eq, and, or, not } from 'drizzle-orm';
+import { eq, and, or, not, asc, count } from 'drizzle-orm';
 import type {
   Country,
-  Countries,
   CreateCountryPayload,
   UpdateCountryPayload,
+  PaginatedCountries,
 } from './countries.types';
 import {
   NotFoundError,
   ValidationError,
   DuplicateError,
 } from '../../shared/errors';
+import { PaginationParams } from '../../shared/types';
+import { withPagination } from '../../shared/bd-utils';
 
 export class CountryHandler {
   async create(data: CreateCountryPayload): Promise<Country> {
@@ -95,15 +97,24 @@ export class CountryHandler {
     return deletedCountry;
   }
 
-  async findAll(): Promise<Countries> {
-    const countriesList = await db
+  /**
+   * Retrieves countries with pagination
+   * @param params Pagination parameters
+   * @returns Paginated countries with metadata
+   */
+  async findAll(params: PaginationParams = {}): Promise<PaginatedCountries> {
+    // Crear la consulta base con ordenamiento
+    const query = db
       .select()
       .from(countries)
-      .orderBy(countries.name);
+      .orderBy(asc(countries.name))
+      .$dynamic();
 
-    return {
-      countries: countriesList,
-    };
+    // Pagination needs a count query
+    const countQuery = db.select({ count: count() }).from(countries);
+
+    // Aplicar paginación y obtener resultados con metadatos
+    return withPagination<typeof query, Country>(query, countQuery, params);
   }
 }
 

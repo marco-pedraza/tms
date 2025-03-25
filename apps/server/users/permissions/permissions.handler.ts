@@ -152,7 +152,9 @@ class PermissionHandler extends BaseHandler<
       }
       // If there's an error checking for uniqueness, log it and rethrow as a more specific error
       console.error('Error checking permission code uniqueness:', error);
-      throw new Error(`Failed to validate permission code uniqueness: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to validate permission code uniqueness: ${(error as Error).message}`,
+      );
     }
   }
 }

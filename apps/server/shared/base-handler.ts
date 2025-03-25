@@ -164,9 +164,13 @@ export class BaseHandler<T, CreateT, UpdateT> {
 
       return Number(result.count) > 0;
     } catch (error) {
-      console.error(`Error checking if field exists: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(
+        `Error checking if field exists: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       // Re-throw a more specific error instead of a generic one
-      throw new Error(`Failed to check if ${this.entityName} exists: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to check if ${this.entityName} exists: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 }

@@ -18,7 +18,7 @@ import {
   AuthenticationError,
 } from '../../shared/errors';
 import { PaginationParams } from '../../shared/types';
-import { withPagination } from '../../shared/bd-utils';
+import { withPagination } from '../../shared/db-utils';
 
 export class UserHandler {
   /**

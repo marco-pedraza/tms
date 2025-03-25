@@ -19,13 +19,18 @@ import {
 } from '../../shared/errors';
 import { PaginationParams } from '../../shared/types';
 import { withPagination } from '../../shared/db-utils';
+import { BaseHandler } from '../../shared/base-handler';
 
-export class UserHandler {
+export class UserHandler extends BaseHandler<User, CreateUserPayload, UpdateUserPayload> {
   /**
    * The number of salt rounds for bcrypt hashing
    * @private
    */
   private readonly SALT_ROUNDS = 10;
+
+  constructor() {
+    super(users, 'User');
+  }
 
   /**
    * Hashes a password using bcrypt
@@ -113,7 +118,7 @@ export class UserHandler {
    * @throws {ValidationError|DuplicateError} If validation fails or duplicate is found
    */
   async create(data: CreateUserPayload): Promise<SafeUser> {
-    return this.handleErrors(async () => {
+    try {
       // Validate unique username and email
       await this.validateUniqueUserIdentifiers(data.username, data.email);
 
@@ -135,11 +140,21 @@ export class UserHandler {
         lastLogin: null,
         isActive: data.isActive ?? true,
         isSystemAdmin: data.isSystemAdmin ?? false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
-      const [user] = await db.insert(users).values(userData).returning();
+      const user = await super.create(userData);
       return this.sanitizeUser(user);
-    });
+    } catch (error) {
+      if (error instanceof DuplicateError) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw new ValidationError(error.message);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -149,16 +164,7 @@ export class UserHandler {
    * @throws {NotFoundError} If user is not found
    */
   async findOne(id: number): Promise<SafeUser> {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, id))
-      .limit(1);
-
-    if (!user) {
-      throw new NotFoundError('User not found');
-    }
-
+    const user = await super.findOne(id);
     return this.sanitizeUser(user);
   }
 
@@ -170,7 +176,7 @@ export class UserHandler {
    * @throws {NotFoundError|ValidationError|DuplicateError} If user not found, validation fails, or duplicate found
    */
   async update(id: number, data: UpdateUserPayload): Promise<SafeUser> {
-    return this.handleErrors(async () => {
+    try {
       // Verify user exists
       await this.findOne(id);
 
@@ -179,14 +185,17 @@ export class UserHandler {
         await this.validateUniqueUserIdentifiers(undefined, data.email, id);
       }
 
-      const [updated] = await db
-        .update(users)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(users.id, id))
-        .returning();
-
-      return this.sanitizeUser(updated);
-    });
+      const updatedUser = await super.update(id, data);
+      return this.sanitizeUser(updatedUser);
+    } catch (error) {
+      if (error instanceof NotFoundError || error instanceof DuplicateError) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw new ValidationError(error.message);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -200,7 +209,7 @@ export class UserHandler {
     id: number,
     data: ChangePasswordPayload,
   ): Promise<SafeUser> {
-    return this.handleErrors(async () => {
+    try {
       // Get full user (with password) for verification
       const [user] = await db
         .select()
@@ -231,7 +240,19 @@ export class UserHandler {
         .returning();
 
       return this.sanitizeUser(updated);
-    });
+    } catch (error) {
+      if (
+        error instanceof NotFoundError ||
+        error instanceof DuplicateError ||
+        error instanceof AuthenticationError
+      ) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw new ValidationError(error.message);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -241,12 +262,7 @@ export class UserHandler {
    * @throws {NotFoundError} If user not found
    */
   async delete(id: number): Promise<SafeUser> {
-    // Verify user exists
-    await this.findOne(id);
-    const [deletedUser] = await db
-      .delete(users)
-      .where(eq(users.id, id))
-      .returning();
+    const deletedUser = await super.delete(id);
     return this.sanitizeUser(deletedUser);
   }
 
@@ -256,7 +272,7 @@ export class UserHandler {
    * @returns An object containing an array of all users (without sensitive data)
    */
   async findAll(): Promise<Users> {
-    const userList = await db.select().from(users);
+    const userList = await super.findAll();
     return {
       users: userList.map((user) => this.sanitizeUser(user)),
     };
@@ -301,31 +317,6 @@ export class UserHandler {
     params: PaginationParams = {},
   ): Promise<PaginatedUsers> {
     return this.getPaginatedUsers({ tenantId, params });
-  }
-
-  /**
-   * Generic error handler for domain operations
-   * @param operation - The operation to perform
-   * @returns The result of the operation
-   * @throws {NotFoundError|DuplicateError|ValidationError|AuthenticationError} Depending on the error that occurs
-   * @private
-   */
-  private async handleErrors<T>(operation: () => Promise<T>): Promise<T> {
-    try {
-      return await operation();
-    } catch (error) {
-      if (
-        error instanceof NotFoundError ||
-        error instanceof DuplicateError ||
-        error instanceof AuthenticationError
-      ) {
-        throw error;
-      }
-      if (error instanceof Error) {
-        throw new ValidationError(error.message);
-      }
-      throw error;
-    }
   }
 
   /**

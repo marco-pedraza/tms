@@ -16,26 +16,14 @@ import {
 } from '../../shared/errors';
 import { PaginationParams } from '../../shared/types';
 import { withPagination } from '../../shared/db-utils';
+import { BaseHandler } from '../../shared/base-handler';
 
-export class DepartmentHandler {
-  /**
-   * Finds a department by ID
-   * @param id - The department ID to find
-   * @returns The found department
-   * @throws {NotFoundError} If department is not found
-   */
-  async findOne(id: number): Promise<Department> {
-    const [department] = await db
-      .select()
-      .from(departments)
-      .where(eq(departments.id, id))
-      .limit(1);
-
-    if (!department) {
-      throw new NotFoundError('Department not found');
-    }
-
-    return department;
+/**
+ * Handler for department operations
+ */
+export class DepartmentHandler extends BaseHandler<Department, CreateDepartmentPayload, UpdateDepartmentPayload> {
+  constructor() {
+    super(departments, 'Department');
   }
 
   /**
@@ -44,11 +32,7 @@ export class DepartmentHandler {
    * @returns An object containing an array of all departments
    */
   async findAll(): Promise<Departments> {
-    const departmentsList = await db
-      .select()
-      .from(departments)
-      .orderBy(departments.name);
-
+    const departmentsList = await super.findAll();
     return {
       departments: departmentsList,
     };
@@ -110,7 +94,7 @@ export class DepartmentHandler {
    * @throws {NotFoundError} If the tenant does not exist
    */
   async create(data: CreateDepartmentPayload): Promise<Department> {
-    return this.handleErrors(async () => {
+    try {
       // Validate tenant exists
       await this.validateTenantExists(data.tenantId);
 
@@ -122,16 +106,21 @@ export class DepartmentHandler {
         name: data.name,
         code: data.code,
         description: data.description || null,
-        isActive: data.isActive ?? true,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
-      const [department] = await db
-        .insert(departments)
-        .values(departmentData)
-        .returning();
-
-      return department;
-    });
+      return await super.create(departmentData);
+    } catch (error) {
+      if (error instanceof NotFoundError || error instanceof DuplicateError) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw new ValidationError(error.message);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -144,7 +133,7 @@ export class DepartmentHandler {
    * @throws {DuplicateError} If updating would create a duplicate code within the tenant
    */
   async update(id: number, data: UpdateDepartmentPayload): Promise<Department> {
-    return this.handleErrors(async () => {
+    try {
       // Verify department exists and get its tenant
       const existingDepartment = await this.findOne(id);
 
@@ -171,46 +160,7 @@ export class DepartmentHandler {
         }
       }
 
-      const [updated] = await db
-        .update(departments)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(departments.id, id))
-        .returning();
-
-      return updated;
-    });
-  }
-
-  /**
-   * Deletes a department
-   * @param id - The department ID to delete
-   * @returns The deleted department
-   * @throws {NotFoundError} If the department is not found
-   */
-  async delete(id: number): Promise<Department> {
-    // Verify department exists
-    await this.findOne(id);
-
-    // Note: This might fail if there are users assigned to this department
-    // depending on your foreign key constraints
-    const [deletedDepartment] = await db
-      .delete(departments)
-      .where(eq(departments.id, id))
-      .returning();
-
-    return deletedDepartment;
-  }
-
-  /**
-   * Generic error handler for domain operations
-   * @param operation - The operation to perform
-   * @returns The result of the operation
-   * @throws {NotFoundError|DuplicateError|ValidationError} Depending on the error that occurs
-   * @private
-   */
-  private async handleErrors<T>(operation: () => Promise<T>): Promise<T> {
-    try {
-      return await operation();
+      return await super.update(id, data);
     } catch (error) {
       if (error instanceof NotFoundError || error instanceof DuplicateError) {
         throw error;

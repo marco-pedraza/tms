@@ -49,7 +49,6 @@ export const getDepartment = api(
 
 /**
  * Retrieves all departments.
- * @deprecated Use listDepartmentsWithPagination instead
  * @returns {Promise<Departments>} List of all departments
  * @throws {APIError} If the retrieval fails
  */
@@ -85,7 +84,6 @@ export const listDepartmentsWithPagination = api(
 
 /**
  * Retrieves all departments for a specific tenant.
- * @deprecated Use listTenantDepartmentsWithPagination instead
  * @param params - Object containing the tenant ID
  * @param params.tenantId - The ID of the tenant to retrieve departments for
  * @returns {Promise<Departments>} List of departments for the tenant

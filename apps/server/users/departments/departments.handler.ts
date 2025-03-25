@@ -28,7 +28,6 @@ export class DepartmentHandler extends BaseHandler<Department, CreateDepartmentP
 
   /**
    * Finds all departments
-   * @deprecated Use findAllPaginated instead
    * @returns An object containing an array of all departments
    */
   async findAll(): Promise<Departments> {
@@ -53,7 +52,6 @@ export class DepartmentHandler extends BaseHandler<Department, CreateDepartmentP
 
   /**
    * Finds all departments for a specific tenant
-   * @deprecated Use findByTenantPaginated instead
    * @param tenantId - The tenant ID to filter departments by
    * @returns An object containing an array of tenant departments
    */

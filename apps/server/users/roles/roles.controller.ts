@@ -72,7 +72,6 @@ export const getRoleWithPermissions = api(
 
 /**
  * Retrieves all roles.
- * @deprecated Use listRolesWithPagination instead
  * @returns {Promise<Roles>} List of all roles
  * @throws {APIError} If the retrieval fails
  */
@@ -90,7 +89,6 @@ export const listRoles = api(
 
 /**
  * Retrieves all roles with their permissions.
- * @deprecated Use listRolesWithPermissionsAndPagination instead
  * @returns {Promise<RolesWithPermissions>} List of all roles with permissions
  * @throws {APIError} If the retrieval fails
  */

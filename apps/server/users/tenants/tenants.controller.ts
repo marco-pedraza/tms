@@ -49,7 +49,6 @@ export const getTenant = api(
 
 /**
  * Retrieves all tenants.
- * @deprecated Use listTenantsWithPagination instead
  * @returns {Promise<Tenants>} List of all tenants
  * @throws {APIError} If the retrieval fails
  */

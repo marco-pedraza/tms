@@ -268,7 +268,6 @@ export class UserHandler extends BaseHandler<User, CreateUserPayload, UpdateUser
 
   /**
    * Finds all users
-   * @deprecated Use findAllPaginated instead
    * @returns An object containing an array of all users (without sensitive data)
    */
   async findAll(): Promise<Users> {
@@ -280,7 +279,6 @@ export class UserHandler extends BaseHandler<User, CreateUserPayload, UpdateUser
 
   /**
    * Finds all users for a specific tenant
-   * @deprecated Use findByTenantPaginated instead
    * @param tenantId - The tenant ID to filter by
    * @returns List of users for the tenant (without sensitive data)
    */

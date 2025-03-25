@@ -27,7 +27,6 @@ class TenantHandler extends BaseHandler<Tenant, CreateTenantPayload, UpdateTenan
 
   /**
    * Find all tenants
-   * @deprecated Use findAllPaginated instead
    * @returns All tenants
    */
   async findAll(): Promise<Tenants> {

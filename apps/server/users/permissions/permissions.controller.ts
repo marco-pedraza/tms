@@ -49,7 +49,6 @@ export const getPermission = api(
 
 /**
  * Retrieves all permissions.
- * @deprecated Use listPermissionsWithPagination instead
  * @returns {Promise<Permissions>} List of all permissions
  * @throws {APIError} If the retrieval fails
  */

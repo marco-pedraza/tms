@@ -21,7 +21,11 @@ import { BaseHandler } from '../../shared/base-handler';
 /**
  * Handler for department operations
  */
-export class DepartmentHandler extends BaseHandler<Department, CreateDepartmentPayload, UpdateDepartmentPayload> {
+export class DepartmentHandler extends BaseHandler<
+  Department,
+  CreateDepartmentPayload,
+  UpdateDepartmentPayload
+> {
   constructor() {
     super(departments, 'Department');
   }

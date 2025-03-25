@@ -61,7 +61,9 @@ describe('User Permissions Controller', () => {
         roles: [mockRole],
       };
 
-      vi.mocked(userPermissionsHandler.getUserWithRoles).mockResolvedValue(mockUserWithRoles);
+      vi.mocked(userPermissionsHandler.getUserWithRoles).mockResolvedValue(
+        mockUserWithRoles,
+      );
 
       const result = await getUserWithRoles({ userId: 1 });
 
@@ -122,21 +124,29 @@ describe('User Permissions Controller', () => {
         effectivePermissions: [mockPermission],
       };
 
-      vi.mocked(userPermissionsHandler.getUserWithPermissions).mockResolvedValue(mockUserWithPermissions);
+      vi.mocked(
+        userPermissionsHandler.getUserWithPermissions,
+      ).mockResolvedValue(mockUserWithPermissions);
 
       const result = await getUserWithPermissions({ userId: 1 });
 
-      expect(userPermissionsHandler.getUserWithPermissions).toHaveBeenCalledWith(1);
+      expect(
+        userPermissionsHandler.getUserWithPermissions,
+      ).toHaveBeenCalledWith(1);
       expect(result).toEqual(mockUserWithPermissions);
     });
 
     it('should handle not found error', async () => {
-      vi.mocked(userPermissionsHandler.getUserWithPermissions).mockRejectedValue(
-        new NotFoundError('User with id 1 not found'),
-      );
+      vi.mocked(
+        userPermissionsHandler.getUserWithPermissions,
+      ).mockRejectedValue(new NotFoundError('User with id 1 not found'));
 
-      await expect(getUserWithPermissions({ userId: 1 })).rejects.toThrow(APIError);
-      expect(userPermissionsHandler.getUserWithPermissions).toHaveBeenCalledWith(1);
+      await expect(getUserWithPermissions({ userId: 1 })).rejects.toThrow(
+        APIError,
+      );
+      expect(
+        userPermissionsHandler.getUserWithPermissions,
+      ).toHaveBeenCalledWith(1);
     });
   });
 
@@ -176,11 +186,15 @@ describe('User Permissions Controller', () => {
         roleIds: [1],
       };
 
-      vi.mocked(userPermissionsHandler.assignRoles).mockResolvedValue(mockUserWithRoles);
+      vi.mocked(userPermissionsHandler.assignRoles).mockResolvedValue(
+        mockUserWithRoles,
+      );
 
       const result = await assignRolesToUser(payload);
 
-      expect(userPermissionsHandler.assignRoles).toHaveBeenCalledWith(1, { roleIds: [1] });
+      expect(userPermissionsHandler.assignRoles).toHaveBeenCalledWith(1, {
+        roleIds: [1],
+      });
       expect(result).toEqual(mockUserWithRoles);
     });
 
@@ -195,7 +209,9 @@ describe('User Permissions Controller', () => {
       );
 
       await expect(assignRolesToUser(payload)).rejects.toThrow(APIError);
-      expect(userPermissionsHandler.assignRoles).toHaveBeenCalledWith(1, { roleIds: [1] });
+      expect(userPermissionsHandler.assignRoles).toHaveBeenCalledWith(1, {
+        roleIds: [1],
+      });
     });
   });
 
@@ -247,11 +263,15 @@ describe('User Permissions Controller', () => {
         permissionIds: [1],
       };
 
-      vi.mocked(userPermissionsHandler.assignPermissions).mockResolvedValue(mockUserWithPermissions);
+      vi.mocked(userPermissionsHandler.assignPermissions).mockResolvedValue(
+        mockUserWithPermissions,
+      );
 
       const result = await assignPermissionsToUser(payload);
 
-      expect(userPermissionsHandler.assignPermissions).toHaveBeenCalledWith(1, { permissionIds: [1] });
+      expect(userPermissionsHandler.assignPermissions).toHaveBeenCalledWith(1, {
+        permissionIds: [1],
+      });
       expect(result).toEqual(mockUserWithPermissions);
     });
 
@@ -266,28 +286,46 @@ describe('User Permissions Controller', () => {
       );
 
       await expect(assignPermissionsToUser(payload)).rejects.toThrow(APIError);
-      expect(userPermissionsHandler.assignPermissions).toHaveBeenCalledWith(1, { permissionIds: [1] });
+      expect(userPermissionsHandler.assignPermissions).toHaveBeenCalledWith(1, {
+        permissionIds: [1],
+      });
     });
   });
 
   describe('checkUserPermission', () => {
     it('should return true if a user has a permission', async () => {
-      vi.mocked(userPermissionsHandler.hasPermission).mockResolvedValue(undefined);
+      vi.mocked(userPermissionsHandler.hasPermission).mockResolvedValue(
+        undefined,
+      );
 
-      const result = await checkUserPermission({ userId: 1, permissionCode: 'TEST_PERMISSION' });
+      const result = await checkUserPermission({
+        userId: 1,
+        permissionCode: 'TEST_PERMISSION',
+      });
 
-      expect(userPermissionsHandler.hasPermission).toHaveBeenCalledWith(1, 'TEST_PERMISSION');
+      expect(userPermissionsHandler.hasPermission).toHaveBeenCalledWith(
+        1,
+        'TEST_PERMISSION',
+      );
       expect(result).toEqual({ hasPermission: true });
     });
 
     it('should return false if a user does not have a permission', async () => {
       vi.mocked(userPermissionsHandler.hasPermission).mockRejectedValue(
-        new UnauthorizedError('User lacks required permission: TEST_PERMISSION'),
+        new UnauthorizedError(
+          'User lacks required permission: TEST_PERMISSION',
+        ),
       );
 
-      const result = await checkUserPermission({ userId: 1, permissionCode: 'TEST_PERMISSION' });
+      const result = await checkUserPermission({
+        userId: 1,
+        permissionCode: 'TEST_PERMISSION',
+      });
 
-      expect(userPermissionsHandler.hasPermission).toHaveBeenCalledWith(1, 'TEST_PERMISSION');
+      expect(userPermissionsHandler.hasPermission).toHaveBeenCalledWith(
+        1,
+        'TEST_PERMISSION',
+      );
       expect(result).toEqual({ hasPermission: false });
     });
 
@@ -296,9 +334,15 @@ describe('User Permissions Controller', () => {
         new NotFoundError('User with id 1 not found'),
       );
 
-      const result = await checkUserPermission({ userId: 1, permissionCode: 'TEST_PERMISSION' });
+      const result = await checkUserPermission({
+        userId: 1,
+        permissionCode: 'TEST_PERMISSION',
+      });
 
-      expect(userPermissionsHandler.hasPermission).toHaveBeenCalledWith(1, 'TEST_PERMISSION');
+      expect(userPermissionsHandler.hasPermission).toHaveBeenCalledWith(
+        1,
+        'TEST_PERMISSION',
+      );
       expect(result).toEqual({ hasPermission: false });
     });
 
@@ -307,8 +351,13 @@ describe('User Permissions Controller', () => {
         new Error('Unexpected error'),
       );
 
-      await expect(checkUserPermission({ userId: 1, permissionCode: 'TEST_PERMISSION' })).rejects.toThrow(APIError);
-      expect(userPermissionsHandler.hasPermission).toHaveBeenCalledWith(1, 'TEST_PERMISSION');
+      await expect(
+        checkUserPermission({ userId: 1, permissionCode: 'TEST_PERMISSION' }),
+      ).rejects.toThrow(APIError);
+      expect(userPermissionsHandler.hasPermission).toHaveBeenCalledWith(
+        1,
+        'TEST_PERMISSION',
+      );
     });
   });
 
@@ -349,8 +398,10 @@ describe('User Permissions Controller', () => {
         new Error('Unexpected error'),
       );
 
-      await expect(checkUserRole({ userId: 1, roleId: 1 })).rejects.toThrow(APIError);
+      await expect(checkUserRole({ userId: 1, roleId: 1 })).rejects.toThrow(
+        APIError,
+      );
       expect(userPermissionsHandler.hasRole).toHaveBeenCalledWith(1, 1);
     });
   });
-}); 
+});

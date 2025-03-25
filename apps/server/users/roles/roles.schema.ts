@@ -20,7 +20,11 @@ export const roles = pgTable('roles', {
  */
 export const rolePermissions = pgTable('role_permissions', {
   id: serial('id').primaryKey(),
-  roleId: integer('role_id').notNull().references(() => roles.id, { onDelete: 'cascade' }),
-  permissionId: integer('permission_id').notNull().references(() => permissions.id, { onDelete: 'cascade' }),
+  roleId: integer('role_id')
+    .notNull()
+    .references(() => roles.id, { onDelete: 'cascade' }),
+  permissionId: integer('permission_id')
+    .notNull()
+    .references(() => permissions.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').defaultNow(),
-}); 
+});

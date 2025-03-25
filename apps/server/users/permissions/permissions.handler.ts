@@ -15,7 +15,11 @@ import { BaseHandler } from '../../shared/base-handler';
 /**
  * Handler for permission operations
  */
-class PermissionHandler extends BaseHandler<Permission, CreatePermissionPayload, UpdatePermissionPayload> {
+class PermissionHandler extends BaseHandler<
+  Permission,
+  CreatePermissionPayload,
+  UpdatePermissionPayload
+> {
   constructor() {
     super(permissions, 'Permission');
   }
@@ -84,7 +88,7 @@ class PermissionHandler extends BaseHandler<Permission, CreatePermissionPayload,
   async findAllPaginated(
     params: PaginationParams,
   ): Promise<PaginatedPermissions> {
-    return await super.findAllPaginated(params) as PaginatedPermissions;
+    return (await super.findAllPaginated(params)) as PaginatedPermissions;
   }
 
   /**
@@ -136,4 +140,4 @@ class PermissionHandler extends BaseHandler<Permission, CreatePermissionPayload,
   }
 }
 
-export const permissionHandler = new PermissionHandler(); 
+export const permissionHandler = new PermissionHandler();

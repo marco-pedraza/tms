@@ -73,4 +73,4 @@ export interface Permissions {
 /**
  * Paginated response type for the list permissions endpoint
  */
-export type PaginatedPermissions = PaginatedResult<Permission>; 
+export type PaginatedPermissions = PaginatedResult<Permission>;

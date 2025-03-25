@@ -18,12 +18,19 @@ import { PaginationParams } from '../../shared/types';
 import { Permission } from '../permissions/permissions.types';
 import { permissionHandler } from '../permissions/permissions.handler';
 import { BaseHandler } from '../../shared/base-handler';
-import { getRelatedEntities, updateManyToManyRelation } from '../../shared/db-utils';
+import {
+  getRelatedEntities,
+  updateManyToManyRelation,
+} from '../../shared/db-utils';
 
 /**
  * Handler for role operations
  */
-class RoleHandler extends BaseHandler<Role, CreateRolePayload, UpdateRolePayload> {
+class RoleHandler extends BaseHandler<
+  Role,
+  CreateRolePayload,
+  UpdateRolePayload
+> {
   constructor() {
     super(roles, 'Role');
   }
@@ -59,7 +66,7 @@ class RoleHandler extends BaseHandler<Role, CreateRolePayload, UpdateRolePayload
       rolePermissions,
       rolePermissions.roleId,
       id,
-      rolePermissions.permissionId
+      rolePermissions.permissionId,
     );
 
     return {
@@ -73,7 +80,9 @@ class RoleHandler extends BaseHandler<Role, CreateRolePayload, UpdateRolePayload
    * @param includePermissions - Whether to include permissions in the result
    * @returns All roles
    */
-  async findAll(includePermissions = false): Promise<Roles | RolesWithPermissions> {
+  async findAll(
+    includePermissions = false,
+  ): Promise<Roles | RolesWithPermissions> {
     const rolesList = await super.findAll();
 
     if (!includePermissions) {
@@ -152,7 +161,10 @@ class RoleHandler extends BaseHandler<Role, CreateRolePayload, UpdateRolePayload
    * @returns Updated role with permissions
    * @throws {NotFoundError} If the role is not found
    */
-  async update(id: number, data: UpdateRolePayload): Promise<RoleWithPermissions> {
+  async update(
+    id: number,
+    data: UpdateRolePayload,
+  ): Promise<RoleWithPermissions> {
     const role = await this.findOne(id);
 
     if (data.name && data.name !== role.name) {
@@ -204,7 +216,7 @@ class RoleHandler extends BaseHandler<Role, CreateRolePayload, UpdateRolePayload
       rolePermissions.roleId,
       id,
       rolePermissions.permissionId,
-      data.permissionIds
+      data.permissionIds,
     );
 
     return await this.findOneWithPermissions(id);
@@ -223,7 +235,11 @@ class RoleHandler extends BaseHandler<Role, CreateRolePayload, UpdateRolePayload
     excludeId?: number,
   ): Promise<void> {
     const query = excludeId
-      ? and(eq(roles.name, name), eq(roles.tenantId, tenantId), eq(roles.id, excludeId).not())
+      ? and(
+          eq(roles.name, name),
+          eq(roles.tenantId, tenantId),
+          eq(roles.id, excludeId).not(),
+        )
       : and(eq(roles.name, name), eq(roles.tenantId, tenantId));
 
     const [result] = await db
@@ -232,9 +248,11 @@ class RoleHandler extends BaseHandler<Role, CreateRolePayload, UpdateRolePayload
       .where(query);
 
     if (Number(result.count) > 0) {
-      throw new DuplicateError(`Role with name ${name} already exists in this tenant`);
+      throw new DuplicateError(
+        `Role with name ${name} already exists in this tenant`,
+      );
     }
   }
 }
 
-export const roleHandler = new RoleHandler(); 
+export const roleHandler = new RoleHandler();

@@ -21,7 +21,11 @@ import { PaginationParams } from '../../shared/types';
 import { withPagination } from '../../shared/db-utils';
 import { BaseHandler } from '../../shared/base-handler';
 
-export class UserHandler extends BaseHandler<User, CreateUserPayload, UpdateUserPayload> {
+export class UserHandler extends BaseHandler<
+  User,
+  CreateUserPayload,
+  UpdateUserPayload
+> {
   /**
    * The number of salt rounds for bcrypt hashing
    * @private

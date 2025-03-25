@@ -13,7 +13,10 @@ import { Role, RoleWithPermissions } from '../roles/roles.types';
 import { permissionHandler } from '../permissions/permissions.handler';
 import { roleHandler } from '../roles/roles.handler';
 import { userHandler } from '../users/users.handler';
-import { updateManyToManyRelation, getRelatedEntities } from '../../shared/db-utils';
+import {
+  updateManyToManyRelation,
+  getRelatedEntities,
+} from '../../shared/db-utils';
 
 /**
  * Handler for user permissions operations
@@ -45,7 +48,7 @@ class UserPermissionsHandler {
       userRoles.userId,
       userId,
       userRoles.roleId,
-      data.roleIds
+      data.roleIds,
     );
 
     return await this.getUserWithRoles(userId);
@@ -77,7 +80,7 @@ class UserPermissionsHandler {
       userPermissions.userId,
       userId,
       userPermissions.permissionId,
-      data.permissionIds
+      data.permissionIds,
     );
 
     return await this.getUserWithPermissions(userId);
@@ -91,7 +94,7 @@ class UserPermissionsHandler {
    */
   async getUserWithRoles(userId: number): Promise<UserWithRoles> {
     const user = await userHandler.findOne(userId);
-    
+
     // Create a safe user object without sensitive data
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...safeUser } = user;
@@ -101,7 +104,7 @@ class UserPermissionsHandler {
       userRoles,
       userRoles.userId,
       userId,
-      userRoles.roleId
+      userRoles.roleId,
     );
 
     return {
@@ -118,7 +121,7 @@ class UserPermissionsHandler {
    */
   async getUserWithPermissions(userId: number): Promise<UserWithPermissions> {
     const user = await userHandler.findOne(userId);
-    
+
     // Create a safe user object without sensitive data
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...safeUser } = user;
@@ -129,7 +132,7 @@ class UserPermissionsHandler {
       userPermissions,
       userPermissions.userId,
       userId,
-      userPermissions.permissionId
+      userPermissions.permissionId,
     );
 
     // Get roles with permissions
@@ -138,11 +141,11 @@ class UserPermissionsHandler {
       userRoles,
       userRoles.userId,
       userId,
-      userRoles.roleId
+      userRoles.roleId,
     );
 
     let rolesWithPermissions: RoleWithPermissions[] = [];
-    
+
     if (userRolesList.length > 0) {
       rolesWithPermissions = await Promise.all(
         userRolesList.map(async (role) => {
@@ -158,7 +161,9 @@ class UserPermissionsHandler {
     ];
 
     // Remove duplicates by ID
-    const uniquePermissions = [...new Map(allPermissions.map((p) => [p.id, p])).values()];
+    const uniquePermissions = [
+      ...new Map(allPermissions.map((p) => [p.id, p])).values(),
+    ];
 
     return {
       ...safeUser,
@@ -177,11 +182,15 @@ class UserPermissionsHandler {
   async hasPermission(userId: number, permissionCode: string): Promise<void> {
     try {
       const user = await this.getUserWithPermissions(userId);
-      
-      const hasPermission = user.effectivePermissions.some((p) => p.code === permissionCode);
-      
+
+      const hasPermission = user.effectivePermissions.some(
+        (p) => p.code === permissionCode,
+      );
+
       if (!hasPermission) {
-        throw new UnauthorizedError(`User lacks required permission: ${permissionCode}`);
+        throw new UnauthorizedError(
+          `User lacks required permission: ${permissionCode}`,
+        );
       }
     } catch (error) {
       if (error instanceof UnauthorizedError) {
@@ -200,11 +209,13 @@ class UserPermissionsHandler {
   async hasRole(userId: number, roleId: number): Promise<void> {
     try {
       const user = await this.getUserWithRoles(userId);
-      
+
       const hasRole = user.roles.some((r) => r.id === roleId);
-      
+
       if (!hasRole) {
-        throw new UnauthorizedError(`User lacks required role with ID: ${roleId}`);
+        throw new UnauthorizedError(
+          `User lacks required role with ID: ${roleId}`,
+        );
       }
     } catch (error) {
       if (error instanceof UnauthorizedError) {
@@ -215,4 +226,4 @@ class UserPermissionsHandler {
   }
 }
 
-export const userPermissionsHandler = new UserPermissionsHandler(); 
+export const userPermissionsHandler = new UserPermissionsHandler();

@@ -121,4 +121,4 @@ export const deletePermission = api(
       throw parsedError;
     }
   },
-); 
+);

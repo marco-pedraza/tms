@@ -79,7 +79,7 @@ export const listRoles = api(
   { method: 'GET', path: '/roles', expose: true },
   async (): Promise<Roles> => {
     try {
-      return await roleHandler.findAll(false) as Roles;
+      return (await roleHandler.findAll(false)) as Roles;
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;
@@ -96,7 +96,7 @@ export const listRolesWithPermissions = api(
   { method: 'GET', path: '/roles/with-permissions', expose: true },
   async (): Promise<RolesWithPermissions> => {
     try {
-      return await roleHandler.findAll(true) as RolesWithPermissions;
+      return (await roleHandler.findAll(true)) as RolesWithPermissions;
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;
@@ -115,7 +115,7 @@ export const listRolesByTenant = api(
   { method: 'GET', path: '/tenants/:tenantId/roles', expose: true },
   async ({ tenantId }: { tenantId: number }): Promise<Roles> => {
     try {
-      return await roleHandler.findAllByTenant(tenantId, false) as Roles;
+      return (await roleHandler.findAllByTenant(tenantId, false)) as Roles;
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;
@@ -131,10 +131,17 @@ export const listRolesByTenant = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listRolesByTenantWithPermissions = api(
-  { method: 'GET', path: '/tenants/:tenantId/roles/with-permissions', expose: true },
+  {
+    method: 'GET',
+    path: '/tenants/:tenantId/roles/with-permissions',
+    expose: true,
+  },
   async ({ tenantId }: { tenantId: number }): Promise<RolesWithPermissions> => {
     try {
-      return await roleHandler.findAllByTenant(tenantId, true) as RolesWithPermissions;
+      return (await roleHandler.findAllByTenant(
+        tenantId,
+        true,
+      )) as RolesWithPermissions;
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;
@@ -152,7 +159,10 @@ export const listRolesWithPagination = api(
   { method: 'GET', path: '/roles/paginated', expose: true },
   async (params: PaginationParams): Promise<PaginatedRoles> => {
     try {
-      return await roleHandler.findAllPaginated(params, false) as PaginatedRoles;
+      return (await roleHandler.findAllPaginated(
+        params,
+        false,
+      )) as PaginatedRoles;
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;
@@ -170,7 +180,10 @@ export const listRolesWithPermissionsAndPagination = api(
   { method: 'GET', path: '/roles/with-permissions/paginated', expose: true },
   async (params: PaginationParams): Promise<PaginatedRolesWithPermissions> => {
     try {
-      return await roleHandler.findAllPaginated(params, true) as PaginatedRolesWithPermissions;
+      return (await roleHandler.findAllPaginated(
+        params,
+        true,
+      )) as PaginatedRolesWithPermissions;
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;
@@ -213,7 +226,9 @@ export const assignPermissionsToRole = api(
   async ({
     id,
     ...data
-  }: AssignPermissionsToRolePayload & { id: number }): Promise<RoleWithPermissions> => {
+  }: AssignPermissionsToRolePayload & {
+    id: number;
+  }): Promise<RoleWithPermissions> => {
     try {
       return await roleHandler.assignPermissions(id, data);
     } catch (error) {
@@ -240,4 +255,4 @@ export const deleteRole = api(
       throw parsedError;
     }
   },
-); 
+);

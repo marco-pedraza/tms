@@ -20,7 +20,11 @@ import { BaseHandler } from '../../shared/base-handler';
 /**
  * Handler for tenant operations
  */
-class TenantHandler extends BaseHandler<Tenant, CreateTenantPayload, UpdateTenantPayload> {
+class TenantHandler extends BaseHandler<
+  Tenant,
+  CreateTenantPayload,
+  UpdateTenantPayload
+> {
   constructor() {
     super(tenants, 'Tenant');
   }

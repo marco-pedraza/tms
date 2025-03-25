@@ -84,7 +84,9 @@ describe('Role Controller', () => {
       };
 
       vi.mocked(roleHandler.create).mockRejectedValue(
-        new DuplicateError('Role with name Test Role already exists in this tenant'),
+        new DuplicateError(
+          'Role with name Test Role already exists in this tenant',
+        ),
       );
 
       await expect(createRole(payload)).rejects.toThrow(APIError);
@@ -226,7 +228,9 @@ describe('Role Controller', () => {
         ],
       };
 
-      vi.mocked(roleHandler.findAll).mockResolvedValue(mockRolesWithPermissions);
+      vi.mocked(roleHandler.findAll).mockResolvedValue(
+        mockRolesWithPermissions,
+      );
 
       const result = await listRolesWithPermissions();
 
@@ -301,7 +305,9 @@ describe('Role Controller', () => {
         ],
       };
 
-      vi.mocked(roleHandler.findAllByTenant).mockResolvedValue(mockRolesWithPermissions);
+      vi.mocked(roleHandler.findAllByTenant).mockResolvedValue(
+        mockRolesWithPermissions,
+      );
 
       const result = await listRolesByTenantWithPermissions({ tenantId: 1 });
 
@@ -341,11 +347,16 @@ describe('Role Controller', () => {
 
       const paginationParams = { page: 1, pageSize: 10 };
 
-      vi.mocked(roleHandler.findAllPaginated).mockResolvedValue(mockPaginatedRoles);
+      vi.mocked(roleHandler.findAllPaginated).mockResolvedValue(
+        mockPaginatedRoles,
+      );
 
       const result = await listRolesWithPagination(paginationParams);
 
-      expect(roleHandler.findAllPaginated).toHaveBeenCalledWith(paginationParams, false);
+      expect(roleHandler.findAllPaginated).toHaveBeenCalledWith(
+        paginationParams,
+        false,
+      );
       expect(result).toEqual(mockPaginatedRoles);
     });
   });
@@ -396,9 +407,13 @@ describe('Role Controller', () => {
         mockPaginatedRolesWithPermissions,
       );
 
-      const result = await listRolesWithPermissionsAndPagination(paginationParams);
+      const result =
+        await listRolesWithPermissionsAndPagination(paginationParams);
 
-      expect(roleHandler.findAllPaginated).toHaveBeenCalledWith(paginationParams, true);
+      expect(roleHandler.findAllPaginated).toHaveBeenCalledWith(
+        paginationParams,
+        true,
+      );
       expect(result).toEqual(mockPaginatedRolesWithPermissions);
     });
   });
@@ -486,11 +501,15 @@ describe('Role Controller', () => {
         permissionIds: [1],
       };
 
-      vi.mocked(roleHandler.assignPermissions).mockResolvedValue(mockRoleWithPermissions);
+      vi.mocked(roleHandler.assignPermissions).mockResolvedValue(
+        mockRoleWithPermissions,
+      );
 
       const result = await assignPermissionsToRole(payload);
 
-      expect(roleHandler.assignPermissions).toHaveBeenCalledWith(1, { permissionIds: [1] });
+      expect(roleHandler.assignPermissions).toHaveBeenCalledWith(1, {
+        permissionIds: [1],
+      });
       expect(result).toEqual(mockRoleWithPermissions);
     });
 
@@ -505,7 +524,9 @@ describe('Role Controller', () => {
       );
 
       await expect(assignPermissionsToRole(payload)).rejects.toThrow(APIError);
-      expect(roleHandler.assignPermissions).toHaveBeenCalledWith(1, { permissionIds: [1] });
+      expect(roleHandler.assignPermissions).toHaveBeenCalledWith(1, {
+        permissionIds: [1],
+      });
     });
   });
 
@@ -537,4 +558,4 @@ describe('Role Controller', () => {
       expect(roleHandler.delete).toHaveBeenCalledWith(1);
     });
   });
-}); 
+});

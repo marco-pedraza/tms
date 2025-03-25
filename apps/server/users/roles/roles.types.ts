@@ -109,4 +109,5 @@ export type PaginatedRoles = PaginatedResult<Role>;
 /**
  * Paginated response type for the list roles with permissions endpoint
  */
-export type PaginatedRolesWithPermissions = PaginatedResult<RoleWithPermissions>; 
+export type PaginatedRolesWithPermissions =
+  PaginatedResult<RoleWithPermissions>;

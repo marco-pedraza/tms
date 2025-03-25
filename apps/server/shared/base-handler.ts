@@ -163,4 +163,4 @@ export class BaseHandler<T, CreateT, UpdateT> {
 
     return Number(result.count) > 0;
   }
-} 
+}

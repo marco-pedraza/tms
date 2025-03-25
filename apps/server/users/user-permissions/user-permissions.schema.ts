@@ -9,8 +9,12 @@ import { permissions } from '../permissions/permissions.schema';
  */
 export const userRoles = pgTable('user_roles', {
   id: serial('id').primaryKey(),
-  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  roleId: integer('role_id').notNull().references(() => roles.id, { onDelete: 'cascade' }),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  roleId: integer('role_id')
+    .notNull()
+    .references(() => roles.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -20,7 +24,11 @@ export const userRoles = pgTable('user_roles', {
  */
 export const userPermissions = pgTable('user_permissions', {
   id: serial('id').primaryKey(),
-  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  permissionId: integer('permission_id').notNull().references(() => permissions.id, { onDelete: 'cascade' }),
+  userId: integer('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  permissionId: integer('permission_id')
+    .notNull()
+    .references(() => permissions.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').defaultNow(),
-}); 
+});

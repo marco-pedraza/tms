@@ -51,4 +51,4 @@ export interface UserWithPermissions extends SafeUser {
    * All effective permissions (combined from direct assignments and roles)
    */
   effectivePermissions: Permission[];
-} 
+}

@@ -77,9 +77,7 @@ export async function updateManyToManyRelation(
   targetIds: number[],
 ): Promise<void> {
   // Delete existing relations
-  await db
-    .delete(relationTable)
-    .where(eq(sourceField, sourceId));
+  await db.delete(relationTable).where(eq(sourceField, sourceId));
 
   // Add new relations if there are any
   if (targetIds.length > 0) {

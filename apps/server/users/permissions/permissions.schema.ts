@@ -11,4 +11,4 @@ export const permissions = pgTable('permissions', {
   description: text('description'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
-}); 
+});

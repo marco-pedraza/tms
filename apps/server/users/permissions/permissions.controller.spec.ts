@@ -63,7 +63,9 @@ describe('Permission Controller', () => {
       };
 
       vi.mocked(permissionHandler.create).mockRejectedValue(
-        new DuplicateError('Permission with code TEST_PERMISSION already exists'),
+        new DuplicateError(
+          'Permission with code TEST_PERMISSION already exists',
+        ),
       );
 
       await expect(createPermission(payload)).rejects.toThrow(APIError);
@@ -251,4 +253,4 @@ describe('Permission Controller', () => {
       expect(permissionHandler.delete).toHaveBeenCalledWith(1);
     });
   });
-}); 
+});

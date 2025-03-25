@@ -1,5 +1,7 @@
 import { PgSelect } from 'drizzle-orm/pg-core';
 import { PaginatedResult, PaginationMeta, PaginationParams } from './types';
+import { db } from '../db';
+import { eq, inArray } from 'drizzle-orm';
 
 const DEFAULT_PAGE_SIZE = 10;
 const DEFAULT_PAGE = 1;

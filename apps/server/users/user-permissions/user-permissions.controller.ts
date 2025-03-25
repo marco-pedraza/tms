@@ -7,6 +7,7 @@ import type {
   UserWithRoles,
 } from './user-permissions.types';
 import { parseApiError } from '../../shared/errors';
+import { ValidationError } from '../../shared/errors';
 
 //TODO Check if controllers can be switched to class, or handler to functions.
 
@@ -21,8 +22,15 @@ export const getUserWithRoles = api(
   { method: 'GET', path: '/users/:userId/roles', expose: true },
   async ({ userId }: { userId: number }): Promise<UserWithRoles> => {
     try {
+      // Validate userId first
+      if (!userId || isNaN(Number(userId))) {
+        throw new ValidationError('Invalid user ID provided');
+      }
+      
       return await userPermissionsHandler.getUserWithRoles(userId);
     } catch (error) {
+      // Add logging before parsing the error
+      console.error('Error in getUserWithRoles:', error);
       const parsedError = parseApiError(error);
       throw parsedError;
     }

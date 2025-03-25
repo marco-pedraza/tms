@@ -1,9 +1,7 @@
-import { db } from '../../db';
 import { NotFoundError, UnauthorizedError } from '../../shared/errors';
 import { userRoles, userPermissions } from './user-permissions.schema';
 import { roles } from '../roles/roles.schema';
 import { permissions } from '../permissions/permissions.schema';
-import { eq, inArray } from 'drizzle-orm';
 import type {
   AssignPermissionsToUserPayload,
   AssignRolesToUserPayload,
@@ -15,6 +13,7 @@ import { Role, RoleWithPermissions } from '../roles/roles.types';
 import { permissionHandler } from '../permissions/permissions.handler';
 import { roleHandler } from '../roles/roles.handler';
 import { userHandler } from '../users/users.handler';
+import { updateManyToManyRelation, getRelatedEntities } from '../../shared/db-utils';
 
 /**
  * Handler for user permissions operations
@@ -41,18 +40,13 @@ class UserPermissionsHandler {
       }),
     );
 
-    // Delete existing roles
-    await db.delete(userRoles).where(eq(userRoles.userId, userId));
-
-    // Add new roles
-    if (data.roleIds.length > 0) {
-      await db.insert(userRoles).values(
-        data.roleIds.map((roleId) => ({
-          userId,
-          roleId,
-        })),
-      );
-    }
+    await updateManyToManyRelation(
+      userRoles,
+      userRoles.userId,
+      userId,
+      userRoles.roleId,
+      data.roleIds
+    );
 
     return await this.getUserWithRoles(userId);
   }
@@ -78,18 +72,13 @@ class UserPermissionsHandler {
       }),
     );
 
-    // Delete existing direct permissions
-    await db.delete(userPermissions).where(eq(userPermissions.userId, userId));
-
-    // Add new direct permissions
-    if (data.permissionIds.length > 0) {
-      await db.insert(userPermissions).values(
-        data.permissionIds.map((permissionId) => ({
-          userId,
-          permissionId,
-        })),
-      );
-    }
+    await updateManyToManyRelation(
+      userPermissions,
+      userPermissions.userId,
+      userId,
+      userPermissions.permissionId,
+      data.permissionIds
+    );
 
     return await this.getUserWithPermissions(userId);
   }
@@ -107,20 +96,13 @@ class UserPermissionsHandler {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...safeUser } = user;
 
-    const userRolesList = await db
-      .select()
-      .from(userRoles)
-      .where(eq(userRoles.userId, userId));
-
-    let rolesList: Role[] = [];
-    
-    if (userRolesList.length > 0) {
-      const roleIds = userRolesList.map((ur) => ur.roleId);
-      rolesList = await db
-        .select()
-        .from(roles)
-        .where(inArray(roles.id, roleIds));
-    }
+    const rolesList = await getRelatedEntities<Role>(
+      roles,
+      userRoles,
+      userRoles.userId,
+      userId,
+      userRoles.roleId
+    );
 
     return {
       ...safeUser,
@@ -142,34 +124,29 @@ class UserPermissionsHandler {
     const { passwordHash, ...safeUser } = user;
 
     // Get direct permissions
-    const userPermissionsList = await db
-      .select()
-      .from(userPermissions)
-      .where(eq(userPermissions.userId, userId));
-
-    let directPermissionsList: Permission[] = [];
-    
-    if (userPermissionsList.length > 0) {
-      const permissionIds = userPermissionsList.map((up) => up.permissionId);
-      directPermissionsList = await db
-        .select()
-        .from(permissions)
-        .where(inArray(permissions.id, permissionIds));
-    }
+    const directPermissionsList = await getRelatedEntities<Permission>(
+      permissions,
+      userPermissions,
+      userPermissions.userId,
+      userId,
+      userPermissions.permissionId
+    );
 
     // Get roles with permissions
-    const userRolesList = await db
-      .select()
-      .from(userRoles)
-      .where(eq(userRoles.userId, userId));
+    const userRolesList = await getRelatedEntities<Role>(
+      roles,
+      userRoles,
+      userRoles.userId,
+      userId,
+      userRoles.roleId
+    );
 
     let rolesWithPermissions: RoleWithPermissions[] = [];
     
     if (userRolesList.length > 0) {
-      const roleIds = userRolesList.map((ur) => ur.roleId);
       rolesWithPermissions = await Promise.all(
-        roleIds.map(async (roleId) => {
-          return await roleHandler.findOneWithPermissions(roleId);
+        userRolesList.map(async (role) => {
+          return await roleHandler.findOneWithPermissions(role.id);
         }),
       );
     }

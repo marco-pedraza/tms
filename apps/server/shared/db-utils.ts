@@ -56,3 +56,70 @@ export async function withPagination<T extends PgSelect, TRecord>(
     pagination: paginationMeta,
   };
 }
+
+/**
+ * Utility functions for handling entity relationships
+ */
+
+/**
+ * Updates a many-to-many relationship between entities
+ * @param relationTable - The join table for the relationship
+ * @param sourceField - The field in the join table that references the source entity
+ * @param sourceId - The ID of the source entity
+ * @param targetField - The field in the join table that references the target entity
+ * @param targetIds - The IDs of the target entities to assign
+ */
+export async function updateManyToManyRelation(
+  relationTable: unknown,
+  sourceField: unknown,
+  sourceId: number,
+  targetField: unknown,
+  targetIds: number[],
+): Promise<void> {
+  // Delete existing relations
+  await db
+    .delete(relationTable)
+    .where(eq(sourceField, sourceId));
+
+  // Add new relations if there are any
+  if (targetIds.length > 0) {
+    await db.insert(relationTable).values(
+      targetIds.map((targetId) => ({
+        [sourceField.name]: sourceId,
+        [targetField.name]: targetId,
+      })),
+    );
+  }
+}
+
+/**
+ * Gets related entities from a join table
+ * @param targetTable - The table of the target entities
+ * @param relationTable - The join table for the relationship
+ * @param sourceField - The field in the join table that references the source entity
+ * @param sourceId - The ID of the source entity
+ * @param targetField - The field in the join table that references the target entity
+ * @returns The related entities
+ */
+export async function getRelatedEntities<T>(
+  targetTable: unknown,
+  relationTable: unknown,
+  sourceField: unknown,
+  sourceId: number,
+  targetField: unknown,
+): Promise<T[]> {
+  const relations = await db
+    .select()
+    .from(relationTable)
+    .where(eq(sourceField, sourceId));
+
+  if (relations.length === 0) {
+    return [];
+  }
+
+  const targetIds = relations.map((relation) => relation[targetField.name]);
+  return await db
+    .select()
+    .from(targetTable)
+    .where(inArray(targetTable.id, targetIds));
+}

@@ -1,5 +1,5 @@
 import { db } from '../../db';
-import { NotFoundError, ValidationError, DuplicateError } from '../../shared/errors';
+import { NotFoundError, DuplicateError } from '../../shared/errors';
 import { permissions } from './permissions.schema';
 import { eq } from 'drizzle-orm';
 import type {
@@ -10,11 +10,16 @@ import type {
   PaginatedPermissions,
 } from './permissions.types';
 import { PaginationParams } from '../../shared/types';
+import { BaseHandler } from '../../shared/base-handler';
 
 /**
  * Handler for permission operations
  */
-class PermissionHandler {
+class PermissionHandler extends BaseHandler<Permission, CreatePermissionPayload, UpdatePermissionPayload> {
+  constructor() {
+    super(permissions, 'Permission');
+  }
+
   /**
    * Creates a new permission
    * @param data - Permission data to create
@@ -22,24 +27,8 @@ class PermissionHandler {
    * @throws {DuplicateError} If a permission with the same code already exists
    */
   async create(data: CreatePermissionPayload): Promise<Permission> {
-    try {
-      await this.validateUniqueCode(data.code);
-
-      const [permission] = await db
-        .insert(permissions)
-        .values(data)
-        .returning();
-
-      return permission;
-    } catch (error) {
-      if (error instanceof DuplicateError) {
-        throw error;
-      }
-
-      throw new ValidationError(
-        `Failed to create permission: ${(error as Error).message}`,
-      );
-    }
+    await this.validateUniqueCode(data.code);
+    return super.create(data);
   }
 
   /**
@@ -69,11 +58,7 @@ class PermissionHandler {
    * @throws {NotFoundError} If the permission is not found
    */
   async findByCode(code: string): Promise<Permission> {
-    const [permission] = await db
-      .select()
-      .from(permissions)
-      .where(eq(permissions.code, code))
-      .limit(1);
+    const permission = await this.findByField(permissions.code, code);
 
     if (!permission) {
       throw new NotFoundError(`Permission with code ${code} not found`);
@@ -87,7 +72,7 @@ class PermissionHandler {
    * @returns All permissions
    */
   async findAll(): Promise<Permissions> {
-    const result = await db.select().from(permissions);
+    const result = await super.findAll();
     return { permissions: result };
   }
 
@@ -99,28 +84,7 @@ class PermissionHandler {
   async findAllPaginated(
     params: PaginationParams,
   ): Promise<PaginatedPermissions> {
-    const { page = 1, pageSize = 10 } = params;
-    const offset = (page - 1) * pageSize;
-
-    const [{ count }] = await db
-      .select({ count: db.fn.count(permissions.id) })
-      .from(permissions);
-
-    const result = await db
-      .select()
-      .from(permissions)
-      .limit(pageSize)
-      .offset(offset);
-
-    return {
-      data: result,
-      pagination: {
-        page,
-        pageSize,
-        totalItems: Number(count),
-        totalPages: Math.ceil(Number(count) / pageSize),
-      },
-    };
+    return await super.findAllPaginated(params) as PaginatedPermissions;
   }
 
   /**
@@ -165,13 +129,8 @@ class PermissionHandler {
    * @throws {DuplicateError} If a permission with the same code already exists
    */
   private async validateUniqueCode(code: string): Promise<void> {
-    const [existing] = await db
-      .select()
-      .from(permissions)
-      .where(eq(permissions.code, code))
-      .limit(1);
-
-    if (existing) {
+    const exists = await this.existsByField(permissions.code, code);
+    if (exists) {
       throw new DuplicateError(`Permission with code ${code} already exists`);
     }
   }

@@ -1,8 +1,8 @@
 import { db } from '../../db';
-import { NotFoundError, ValidationError, DuplicateError } from '../../shared/errors';
+import { DuplicateError } from '../../shared/errors';
 import { roles, rolePermissions } from './roles.schema';
 import { permissions } from '../permissions/permissions.schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import type {
   Role,
   RoleWithPermissions,
@@ -17,11 +17,17 @@ import type {
 import { PaginationParams } from '../../shared/types';
 import { Permission } from '../permissions/permissions.types';
 import { permissionHandler } from '../permissions/permissions.handler';
+import { BaseHandler } from '../../shared/base-handler';
+import { getRelatedEntities, updateManyToManyRelation } from '../../shared/db-utils';
 
 /**
  * Handler for role operations
  */
-class RoleHandler {
+class RoleHandler extends BaseHandler<Role, CreateRolePayload, UpdateRolePayload> {
+  constructor() {
+    super(roles, 'Role');
+  }
+
   /**
    * Creates a new role
    * @param data - Role data to create
@@ -30,41 +36,14 @@ class RoleHandler {
   async create(data: CreateRolePayload): Promise<RoleWithPermissions> {
     const { permissionIds, ...roleData } = data;
 
-    try {
-      await this.validateUniqueName(roleData.name, roleData.tenantId);
+    await this.validateUniqueName(roleData.name, roleData.tenantId);
+    const role = await super.create(roleData);
 
-      const [role] = await db.insert(roles).values(roleData).returning();
-
-      if (permissionIds && permissionIds.length > 0) {
-        await this.assignPermissions(role.id, { permissionIds });
-      }
-
-      return await this.findOneWithPermissions(role.id);
-    } catch (error) {
-      if (error instanceof DuplicateError) {
-        throw error;
-      }
-
-      throw new ValidationError(
-        `Failed to create role: ${(error as Error).message}`,
-      );
-    }
-  }
-
-  /**
-   * Finds a role by ID
-   * @param id - ID of the role to find
-   * @returns Found role
-   * @throws {NotFoundError} If the role is not found
-   */
-  async findOne(id: number): Promise<Role> {
-    const [role] = await db.select().from(roles).where(eq(roles.id, id)).limit(1);
-
-    if (!role) {
-      throw new NotFoundError(`Role with id ${id} not found`);
+    if (permissionIds && permissionIds.length > 0) {
+      await this.assignPermissions(role.id, { permissionIds });
     }
 
-    return role;
+    return await this.findOneWithPermissions(role.id);
   }
 
   /**
@@ -75,20 +54,13 @@ class RoleHandler {
    */
   async findOneWithPermissions(id: number): Promise<RoleWithPermissions> {
     const role = await this.findOne(id);
-    const rolePermissionsList = await db
-      .select()
-      .from(rolePermissions)
-      .where(eq(rolePermissions.roleId, id));
-
-    let permissionList: Permission[] = [];
-    
-    if (rolePermissionsList.length > 0) {
-      const permissionIds = rolePermissionsList.map((rp) => rp.permissionId);
-      permissionList = await db
-        .select()
-        .from(permissions)
-        .where(inArray(permissions.id, permissionIds));
-    }
+    const permissionList = await getRelatedEntities<Permission>(
+      permissions,
+      rolePermissions,
+      rolePermissions.roleId,
+      id,
+      rolePermissions.permissionId
+    );
 
     return {
       ...role,
@@ -102,7 +74,7 @@ class RoleHandler {
    * @returns All roles
    */
   async findAll(includePermissions = false): Promise<Roles | RolesWithPermissions> {
-    const rolesList = await db.select().from(roles);
+    const rolesList = await super.findAll();
 
     if (!includePermissions) {
       return { roles: rolesList };
@@ -155,41 +127,21 @@ class RoleHandler {
     params: PaginationParams,
     includePermissions = false,
   ): Promise<PaginatedRoles | PaginatedRolesWithPermissions> {
-    const { page = 1, pageSize = 10 } = params;
-    const offset = (page - 1) * pageSize;
-
-    const [{ count }] = await db
-      .select({ count: db.fn.count(roles.id) })
-      .from(roles);
-
-    const result = await db.select().from(roles).limit(pageSize).offset(offset);
+    const result = await super.findAllPaginated(params);
 
     if (!includePermissions) {
-      return {
-        data: result,
-        pagination: {
-          page,
-          pageSize,
-          totalItems: Number(count),
-          totalPages: Math.ceil(Number(count) / pageSize),
-        },
-      };
+      return result as PaginatedRoles;
     }
 
     const rolesWithPermissions = await Promise.all(
-      result.map(async (role) => {
+      result.data.map(async (role) => {
         return await this.findOneWithPermissions(role.id);
       }),
     );
 
     return {
       data: rolesWithPermissions,
-      pagination: {
-        page,
-        pageSize,
-        totalItems: Number(count),
-        totalPages: Math.ceil(Number(count) / pageSize),
-      },
+      pagination: result.pagination,
     };
   }
 
@@ -207,11 +159,7 @@ class RoleHandler {
       await this.validateUniqueName(data.name, role.tenantId, id);
     }
 
-    await db
-      .update(roles)
-      .set({ ...data, updatedAt: new Date() })
-      .where(eq(roles.id, id));
-
+    await super.update(id, data);
     return await this.findOneWithPermissions(id);
   }
 
@@ -251,18 +199,13 @@ class RoleHandler {
       }),
     );
 
-    // Delete existing permissions
-    await db.delete(rolePermissions).where(eq(rolePermissions.roleId, id));
-
-    // Add new permissions
-    if (data.permissionIds.length > 0) {
-      await db.insert(rolePermissions).values(
-        data.permissionIds.map((permissionId) => ({
-          roleId: id,
-          permissionId,
-        })),
-      );
-    }
+    await updateManyToManyRelation(
+      rolePermissions,
+      rolePermissions.roleId,
+      id,
+      rolePermissions.permissionId,
+      data.permissionIds
+    );
 
     return await this.findOneWithPermissions(id);
   }
@@ -270,30 +213,26 @@ class RoleHandler {
   /**
    * Validates that a role name is unique within a tenant
    * @param name - Name to validate
-   * @param tenantId - Tenant ID
-   * @param excludeId - Role ID to exclude from validation
-   * @throws {DuplicateError} If a role with the same name already exists in the tenant
+   * @param tenantId - ID of the tenant
+   * @param excludeId - Optional ID to exclude from the check
+   * @throws {DuplicateError} If a role with the same name already exists
    */
   private async validateUniqueName(
     name: string,
     tenantId: number,
     excludeId?: number,
   ): Promise<void> {
-    let query = db
-      .select()
+    const query = excludeId
+      ? and(eq(roles.name, name), eq(roles.tenantId, tenantId), eq(roles.id, excludeId).not())
+      : and(eq(roles.name, name), eq(roles.tenantId, tenantId));
+
+    const [result] = await db
+      .select({ count: db.fn.count(roles.id) })
       .from(roles)
-      .where(and(eq(roles.name, name), eq(roles.tenantId, tenantId)));
+      .where(query);
 
-    if (excludeId) {
-      query = query.where(eq(roles.id, excludeId).invert());
-    }
-
-    const [existing] = await query.limit(1);
-
-    if (existing) {
-      throw new DuplicateError(
-        `Role with name ${name} already exists in this tenant`,
-      );
+    if (Number(result.count) > 0) {
+      throw new DuplicateError(`Role with name ${name} already exists in this tenant`);
     }
   }
 }

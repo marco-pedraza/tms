@@ -1,4 +1,4 @@
-import { eq, asc, count } from 'drizzle-orm';
+import { asc, count } from 'drizzle-orm';
 import { db } from '../../db';
 import { tenants } from './tenants.schema';
 import type {
@@ -15,25 +15,14 @@ import {
 } from '../../shared/errors';
 import { PaginationParams } from '../../shared/types';
 import { withPagination } from '../../shared/db-utils';
+import { BaseHandler } from '../../shared/base-handler';
 
 /**
  * Handler for tenant operations
  */
-class TenantHandler {
-  /**
-   * Find a tenant by ID
-   * @param id - The ID of the tenant to find
-   * @returns The found tenant
-   * @throws {NotFoundError} If the tenant is not found
-   */
-  async findOne(id: number): Promise<Tenant> {
-    const result = await db.select().from(tenants).where(eq(tenants.id, id));
-
-    if (result.length === 0) {
-      throw new NotFoundError(`Tenant with ID ${id} not found`);
-    }
-
-    return result[0];
+class TenantHandler extends BaseHandler<Tenant, CreateTenantPayload, UpdateTenantPayload> {
+  constructor() {
+    super(tenants, 'Tenant');
   }
 
   /**
@@ -42,7 +31,7 @@ class TenantHandler {
    * @returns All tenants
    */
   async findAll(): Promise<Tenants> {
-    const result = await db.select().from(tenants);
+    const result = await super.findAll();
     return { tenants: result };
   }
 
@@ -63,16 +52,7 @@ class TenantHandler {
    * @returns The found tenant or null if not found
    */
   async findByCode(code: string): Promise<Tenant | null> {
-    const result = await db
-      .select()
-      .from(tenants)
-      .where(eq(tenants.code, code));
-
-    if (result.length === 0) {
-      return null;
-    }
-
-    return result[0];
+    return this.findByField(tenants.code, code);
   }
 
   /**
@@ -83,7 +63,7 @@ class TenantHandler {
    * @throws {ValidationError} If validation fails for any other reason
    */
   async create(data: CreateTenantPayload): Promise<Tenant> {
-    return this.handleErrors(async () => {
+    try {
       // Check if tenant with the same code already exists
       await this.validateUniqueCode(data.code);
 
@@ -96,10 +76,16 @@ class TenantHandler {
         updatedAt: now,
       };
 
-      const [tenant] = await db.insert(tenants).values(newTenant).returning();
-
-      return tenant;
-    });
+      return await super.create(newTenant);
+    } catch (error) {
+      if (error instanceof DuplicateError) {
+        throw error;
+      }
+      if (error instanceof Error) {
+        throw new ValidationError(error.message);
+      }
+      throw error;
+    }
   }
 
   /**
@@ -112,7 +98,7 @@ class TenantHandler {
    * @throws {ValidationError} If validation fails for any other reason
    */
   async update(id: number, data: UpdateTenantPayload): Promise<Tenant> {
-    return this.handleErrors(async () => {
+    try {
       // Check if tenant exists
       const existingTenant = await this.findOne(id);
 
@@ -121,49 +107,7 @@ class TenantHandler {
         await this.validateUniqueCode(data.code);
       }
 
-      const updatedData = {
-        ...data,
-        updatedAt: new Date(),
-      };
-
-      const [updatedTenant] = await db
-        .update(tenants)
-        .set(updatedData)
-        .where(eq(tenants.id, id))
-        .returning();
-
-      return updatedTenant;
-    });
-  }
-
-  /**
-   * Delete a tenant
-   * @param id - The ID of the tenant to delete
-   * @returns The deleted tenant
-   * @throws {NotFoundError} If the tenant is not found
-   */
-  async delete(id: number): Promise<Tenant> {
-    // Check if tenant exists
-    await this.findOne(id);
-
-    const [deletedTenant] = await db
-      .delete(tenants)
-      .where(eq(tenants.id, id))
-      .returning();
-
-    return deletedTenant;
-  }
-
-  /**
-   * Generic error handler for domain operations
-   * @param operation - The operation to perform
-   * @returns The result of the operation
-   * @throws {NotFoundError|DuplicateError|ValidationError} Depending on the error that occurs
-   * @private
-   */
-  private async handleErrors<T>(operation: () => Promise<T>): Promise<T> {
-    try {
-      return await operation();
+      return await super.update(id, data);
     } catch (error) {
       if (error instanceof NotFoundError || error instanceof DuplicateError) {
         throw error;

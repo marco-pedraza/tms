@@ -10,6 +10,8 @@ import type {
 import { parseApiError } from '../../shared/errors';
 import { PaginationParams } from '../../shared/types';
 
+//TODO Check if controllers can be switched to class, or handler to functions.
+
 /**
  * Creates a new permission.
  * @param params - The permission data to create

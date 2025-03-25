@@ -8,6 +8,8 @@ import type {
 } from './user-permissions.types';
 import { parseApiError } from '../../shared/errors';
 
+//TODO Check if controllers can be switched to class, or handler to functions.
+
 /**
  * Retrieves a user with their assigned roles.
  * @param params - Object containing the user ID

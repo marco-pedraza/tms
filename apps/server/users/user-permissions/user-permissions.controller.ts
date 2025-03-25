@@ -98,6 +98,7 @@ export const assignPermissionsToUser = api(
  * @param params.userId - The ID of the user
  * @param params.permissionCode - The code of the permission to check
  * @returns {Promise<{hasPermission: boolean}>} Whether the user has the permission
+ * @throws {APIError} If permission check fails or the user is unauthorized
  */
 export const checkUserPermission = api(
   { method: 'GET', path: '/users/:userId/permissions/:permissionCode/check', expose: true },
@@ -109,12 +110,48 @@ export const checkUserPermission = api(
     permissionCode: string;
   }): Promise<{hasPermission: boolean}> => {
     try {
-      const hasPermission = await userPermissionsHandler.hasPermission(
-        userId,
-        permissionCode,
-      );
-      return { hasPermission };
+      await userPermissionsHandler.hasPermission(userId, permissionCode);
+      return { hasPermission: true };
     } catch (error) {
+      // If it's an UnauthorizedError or NotFoundError, return false without throwing
+      // For other errors, rethrow as APIError
+      if (error instanceof Error && 
+         (error.name === 'UnauthorizedError' || error.name === 'NotFoundError')) {
+        return { hasPermission: false };
+      }
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);
+
+/**
+ * Checks if a user has a specific role.
+ * @param params - Object containing the user ID and role ID
+ * @param params.userId - The ID of the user
+ * @param params.roleId - The ID of the role to check
+ * @returns {Promise<{hasRole: boolean}>} Whether the user has the role
+ * @throws {APIError} If role check fails or the user is unauthorized
+ */
+export const checkUserRole = api(
+  { method: 'GET', path: '/users/:userId/roles/:roleId/check', expose: true },
+  async ({
+    userId,
+    roleId,
+  }: {
+    userId: number;
+    roleId: number;
+  }): Promise<{hasRole: boolean}> => {
+    try {
+      await userPermissionsHandler.hasRole(userId, roleId);
+      return { hasRole: true };
+    } catch (error) {
+      // If it's an UnauthorizedError or NotFoundError, return false without throwing
+      // For other errors, rethrow as APIError
+      if (error instanceof Error && 
+         (error.name === 'UnauthorizedError' || error.name === 'NotFoundError')) {
+        return { hasRole: false };
+      }
       const parsedError = parseApiError(error);
       throw parsedError;
     }

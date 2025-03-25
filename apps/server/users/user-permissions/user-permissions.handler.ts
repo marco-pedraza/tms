@@ -1,9 +1,8 @@
 import { db } from '../../db';
-import { NotFoundError, ValidationError } from '../../shared/errors';
+import { NotFoundError, UnauthorizedError } from '../../shared/errors';
 import { userRoles, userPermissions } from './user-permissions.schema';
-import { roles, rolePermissions } from '../roles/roles.schema';
+import { roles } from '../roles/roles.schema';
 import { permissions } from '../permissions/permissions.schema';
-import { users } from '../users/users.schema';
 import { eq, inArray } from 'drizzle-orm';
 import type {
   AssignPermissionsToUserPayload,
@@ -32,7 +31,8 @@ class UserPermissionsHandler {
     userId: number,
     data: AssignRolesToUserPayload,
   ): Promise<UserWithRoles> {
-    const user = await userHandler.findOne(userId);
+    // Validate user exists
+    await userHandler.findOne(userId);
 
     // Validate all roles exist
     await Promise.all(
@@ -68,7 +68,8 @@ class UserPermissionsHandler {
     userId: number,
     data: AssignPermissionsToUserPayload,
   ): Promise<UserWithPermissions> {
-    const user = await userHandler.findOne(userId);
+    // Validate user exists
+    await userHandler.findOne(userId);
 
     // Validate all permissions exist
     await Promise.all(
@@ -101,6 +102,9 @@ class UserPermissionsHandler {
    */
   async getUserWithRoles(userId: number): Promise<UserWithRoles> {
     const user = await userHandler.findOne(userId);
+    
+    // Create a safe user object without sensitive data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...safeUser } = user;
 
     const userRolesList = await db
@@ -132,6 +136,9 @@ class UserPermissionsHandler {
    */
   async getUserWithPermissions(userId: number): Promise<UserWithPermissions> {
     const user = await userHandler.findOne(userId);
+    
+    // Create a safe user object without sensitive data
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...safeUser } = user;
 
     // Get direct permissions
@@ -188,15 +195,22 @@ class UserPermissionsHandler {
    * Checks if a user has a specific permission
    * @param userId - ID of the user
    * @param permissionCode - Permission code to check
-   * @returns Whether the user has the permission
+   * @throws {UnauthorizedError} If the user doesn't have the required permission
    */
-  async hasPermission(userId: number, permissionCode: string): Promise<boolean> {
+  async hasPermission(userId: number, permissionCode: string): Promise<void> {
     try {
       const user = await this.getUserWithPermissions(userId);
       
-      return user.effectivePermissions.some((p) => p.code === permissionCode);
+      const hasPermission = user.effectivePermissions.some((p) => p.code === permissionCode);
+      
+      if (!hasPermission) {
+        throw new UnauthorizedError(`User lacks required permission: ${permissionCode}`);
+      }
     } catch (error) {
-      return false;
+      if (error instanceof UnauthorizedError) {
+        throw error;
+      }
+      throw new NotFoundError(`User with id ${userId} not found`);
     }
   }
 
@@ -204,15 +218,22 @@ class UserPermissionsHandler {
    * Checks if a user has a role
    * @param userId - ID of the user
    * @param roleId - Role ID to check
-   * @returns Whether the user has the role
+   * @throws {UnauthorizedError} If the user doesn't have the required role
    */
-  async hasRole(userId: number, roleId: number): Promise<boolean> {
+  async hasRole(userId: number, roleId: number): Promise<void> {
     try {
       const user = await this.getUserWithRoles(userId);
       
-      return user.roles.some((r) => r.id === roleId);
+      const hasRole = user.roles.some((r) => r.id === roleId);
+      
+      if (!hasRole) {
+        throw new UnauthorizedError(`User lacks required role with ID: ${roleId}`);
+      }
     } catch (error) {
-      return false;
+      if (error instanceof UnauthorizedError) {
+        throw error;
+      }
+      throw new NotFoundError(`User with id ${userId} not found`);
     }
   }
 }

@@ -31,8 +31,16 @@ class PermissionHandler extends BaseHandler<
    * @throws {DuplicateError} If a permission with the same code already exists
    */
   async create(data: CreatePermissionPayload): Promise<Permission> {
-    await this.validateUniqueCode(data.code);
-    return super.create(data);
+    try {
+      await this.validateUniqueCode(data.code);
+      return super.create(data);
+    } catch (error) {
+      if (error instanceof DuplicateError) {
+        throw error;
+      }
+      console.error('Error creating permission:', error);
+      throw error;
+    }
   }
 
   /**
@@ -133,9 +141,18 @@ class PermissionHandler extends BaseHandler<
    * @throws {DuplicateError} If a permission with the same code already exists
    */
   private async validateUniqueCode(code: string): Promise<void> {
-    const exists = await this.existsByField(permissions.code, code);
-    if (exists) {
-      throw new DuplicateError(`Permission with code ${code} already exists`);
+    try {
+      const exists = await this.existsByField(permissions.code, code);
+      if (exists) {
+        throw new DuplicateError(`Permission with code ${code} already exists`);
+      }
+    } catch (error) {
+      if (error instanceof DuplicateError) {
+        throw error;
+      }
+      // If there's an error checking for uniqueness, log it and rethrow as a more specific error
+      console.error('Error checking permission code uniqueness:', error);
+      throw new Error(`Failed to validate permission code uniqueness: ${(error as Error).message}`);
     }
   }
 }

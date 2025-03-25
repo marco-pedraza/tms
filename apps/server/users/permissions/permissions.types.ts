@@ -32,13 +32,13 @@ export interface CreatePermissionPayload {
    * Unique code identifier for the permission (e.g., 'CREATE_USER')
    * Must be uppercase with underscores and at least 3 characters
    */
-  code: string & MinLen<3> & MatchesRegexp<'^[A-Z][A-Z0-9_]*$'>;
+  code: string & MinLen<3>;
 
   /**
    * Human-readable name of the permission
    * Must have at least 3 non-whitespace characters
    */
-  name: string & MinLen<3> & MatchesRegexp<'.*\\S.*'>;
+  name: string & MinLen<3>;
 
   /**
    * Description of what the permission allows

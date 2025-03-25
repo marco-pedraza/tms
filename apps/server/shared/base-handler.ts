@@ -1,6 +1,6 @@
 import { db } from '../db';
 import { NotFoundError, ValidationError } from './errors';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, count } from 'drizzle-orm';
 import type { PaginationParams } from './types';
 
 /**
@@ -51,8 +51,8 @@ export class BaseHandler<T, CreateT, UpdateT> {
     const { page = 1, pageSize = 10 } = params;
     const offset = (page - 1) * pageSize;
 
-    const [{ count }] = await db
-      .select({ count: db.fn.count(this.table.id) })
+    const [{ count: totalCount }] = await db
+      .select({ count: count() })
       .from(this.table);
 
     const result = await db
@@ -66,8 +66,8 @@ export class BaseHandler<T, CreateT, UpdateT> {
       pagination: {
         page,
         pageSize,
-        totalItems: Number(count),
-        totalPages: Math.ceil(Number(count) / pageSize),
+        totalItems: Number(totalCount),
+        totalPages: Math.ceil(Number(totalCount) / pageSize),
       },
     };
   }
@@ -152,15 +152,21 @@ export class BaseHandler<T, CreateT, UpdateT> {
     value: V,
     excludeId?: number,
   ): Promise<boolean> {
-    const query = excludeId
-      ? and(eq(field, value), eq(this.table.id, excludeId).not())
-      : eq(field, value);
+    try {
+      const query = excludeId
+        ? and(eq(field, value), eq(this.table.id, excludeId).not())
+        : eq(field, value);
 
-    const [result] = await db
-      .select({ count: db.fn.count(this.table.id) })
-      .from(this.table)
-      .where(query);
+      const [result] = await db
+        .select({ count: count() })
+        .from(this.table)
+        .where(query);
 
-    return Number(result.count) > 0;
+      return Number(result.count) > 0;
+    } catch (error) {
+      console.error(`Error checking if field exists: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Re-throw a more specific error instead of a generic one
+      throw new Error(`Failed to check if ${this.entityName} exists: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 }

@@ -177,3 +177,41 @@ export const checkUserRole = api(
     }
   },
 );
+
+/**
+ * Retrieves a user with their effective permissions (combined from direct assignments and roles).
+ * @param params - Object containing the user ID
+ * @param params.userId - The ID of the user to retrieve
+ * @returns {Promise<UserWithPermissions>} The user with their effective permissions
+ * @throws {APIError} If the user is not found or retrieval fails
+ */
+export const getUserPermissions = api(
+  { method: 'GET', path: '/users/:userId/effective-permissions', expose: true },
+  async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
+    try {
+      return await userPermissionsHandler.getUserWithEffectivePermissions(userId);
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);
+
+/**
+ * Retrieves a user with their roles.
+ * @param params - Object containing the user ID
+ * @param params.userId - The ID of the user to retrieve
+ * @returns {Promise<UserWithRoles>} The user with their roles
+ * @throws {APIError} If the user is not found or retrieval fails
+ */
+export const getUserRoles = api(
+  { method: 'GET', path: '/users/:userId/assigned-roles', expose: true },
+  async ({ userId }: { userId: number }): Promise<UserWithRoles> => {
+    try {
+      return await userPermissionsHandler.getUserWithRoles(userId);
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);

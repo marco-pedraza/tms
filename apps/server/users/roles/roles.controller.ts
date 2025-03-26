@@ -26,8 +26,10 @@ export const createRole = api(
   { method: 'POST', path: '/roles', expose: true },
   async (params: CreateRolePayload): Promise<RoleWithPermissions> => {
     try {
+      console.log('Creating role with params:', JSON.stringify(params));
       return await roleHandler.create(params);
     } catch (error) {
+      console.error('Error creating role:', error);
       const parsedError = parseApiError(error);
       throw parsedError;
     }
@@ -252,6 +254,48 @@ export const deleteRole = api(
   async ({ id }: { id: number }): Promise<Role> => {
     try {
       return await roleHandler.delete(id);
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);
+
+/**
+ * Alias for listRolesByTenant to match test case naming.
+ * @param params - Object containing the tenant ID
+ * @param params.tenantId - The ID of the tenant
+ * @returns {Promise<Roles>} List of all roles for the tenant
+ * @throws {APIError} If the retrieval fails
+ */
+export const listTenantRoles = api(
+  { method: 'GET', path: '/tenants/:tenantId/roles-alias', expose: true },
+  async ({ tenantId }: { tenantId: number }): Promise<Roles> => {
+    try {
+      return (await roleHandler.findAllByTenant(tenantId, false)) as Roles;
+    } catch (error) {
+      const parsedError = parseApiError(error);
+      throw parsedError;
+    }
+  },
+);
+
+/**
+ * Retrieves tenant roles with pagination.
+ * @param params - Object containing pagination parameters and tenant ID
+ * @param params.tenantId - The ID of the tenant
+ * @returns {Promise<PaginatedRoles>} Paginated list of tenant roles
+ * @throws {APIError} If retrieval fails
+ */
+export const listTenantRolesWithPagination = api(
+  { method: 'GET', path: '/tenants/:tenantId/roles/paginated', expose: true },
+  async ({ tenantId, ...paginationParams }: PaginationParams & { tenantId: number }): Promise<PaginatedRoles> => {
+    try {
+      return (await roleHandler.findAllByTenantPaginated(
+        tenantId,
+        paginationParams,
+        false
+      )) as PaginatedRoles;
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;

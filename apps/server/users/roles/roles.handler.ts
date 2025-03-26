@@ -2,7 +2,7 @@ import { db } from '../../db';
 import { DuplicateError } from '../../shared/errors';
 import { roles, rolePermissions } from './roles.schema';
 import { permissions } from '../permissions/permissions.schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, not } from 'drizzle-orm';
 import type {
   Role,
   RoleWithPermissions,
@@ -22,6 +22,7 @@ import {
   getRelatedEntities,
   updateManyToManyRelation,
 } from '../../shared/db-utils';
+import { count } from 'drizzle-orm';
 
 /**
  * Handler for role operations
@@ -43,14 +44,23 @@ class RoleHandler extends BaseHandler<
   async create(data: CreateRolePayload): Promise<RoleWithPermissions> {
     const { permissionIds, ...roleData } = data;
 
-    await this.validateUniqueName(roleData.name, roleData.tenantId);
-    const role = await super.create(roleData);
+    console.log('Creating role in handler with data:', JSON.stringify(roleData));
+    
+    try {
+      await this.validateUniqueName(roleData.name, roleData.tenantId);
+      const role = await super.create(roleData);
+      console.log('Created role:', JSON.stringify(role));
 
-    if (permissionIds && permissionIds.length > 0) {
-      await this.assignPermissions(role.id, { permissionIds });
+      if (permissionIds && permissionIds.length > 0) {
+        console.log('Assigning permissions to role:', permissionIds);
+        await this.assignPermissions(role.id, { permissionIds });
+      }
+
+      return await this.findOneWithPermissions(role.id);
+    } catch (error) {
+      console.error('Error in create role handler:', error);
+      throw error;
     }
-
-    return await this.findOneWithPermissions(role.id);
   }
 
   /**
@@ -234,24 +244,100 @@ class RoleHandler extends BaseHandler<
     tenantId: number,
     excludeId?: number,
   ): Promise<void> {
-    const query = excludeId
-      ? and(
+    try {
+      let query;
+      if (excludeId) {
+        query = and(
           eq(roles.name, name),
           eq(roles.tenantId, tenantId),
-          eq(roles.id, excludeId).not(),
-        )
-      : and(eq(roles.name, name), eq(roles.tenantId, tenantId));
+          not(eq(roles.id, excludeId))
+        );
+      } else {
+        query = and(eq(roles.name, name), eq(roles.tenantId, tenantId));
+      }
 
-    const [result] = await db
-      .select({ count: db.fn.count(roles.id) })
-      .from(roles)
-      .where(query);
+      const [result] = await db
+        .select({ count: count() })
+        .from(roles)
+        .where(query);
 
-    if (Number(result.count) > 0) {
-      throw new DuplicateError(
-        `Role with name ${name} already exists in this tenant`,
-      );
+      if (Number(result.count) > 0) {
+        throw new DuplicateError(
+          `Role with name ${name} already exists in this tenant`,
+        );
+      }
+    } catch (error) {
+      if (error instanceof DuplicateError) {
+        throw error;
+      }
+      console.error('Error validating unique name:', error);
+      throw new Error(`Failed to validate role name uniqueness: ${(error as Error).message}`);
     }
+  }
+
+  /**
+   * Finds all roles for a tenant with pagination
+   * @param tenantId - ID of the tenant
+   * @param params - Pagination parameters
+   * @param includePermissions - Whether to include permissions in the result
+   * @returns Paginated roles for the tenant
+   */
+  async findAllByTenantPaginated(
+    tenantId: number,
+    params: PaginationParams,
+    includePermissions = false
+  ): Promise<PaginatedRoles | PaginatedRolesWithPermissions> {
+    const { page = 1, pageSize = 10 } = params;
+    const offset = (page - 1) * pageSize;
+
+    // Count total tenant roles
+    const [{ count: totalCount }] = await db
+      .select({ count: count() })
+      .from(roles)
+      .where(eq(roles.tenantId, tenantId));
+
+    // Get paginated tenant roles
+    const rolesList = await db
+      .select()
+      .from(roles)
+      .where(eq(roles.tenantId, tenantId))
+      .limit(pageSize)
+      .offset(offset);
+
+    const totalItems = Number(totalCount);
+    const totalPages = Math.ceil(totalItems / pageSize);
+
+    if (!includePermissions) {
+      return {
+        data: rolesList,
+        pagination: {
+          currentPage: page,
+          pageSize,
+          totalCount: totalItems,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1
+        },
+      };
+    }
+
+    const rolesWithPermissions = await Promise.all(
+      rolesList.map(async (role) => {
+        return await this.findOneWithPermissions(role.id);
+      })
+    );
+
+    return {
+      data: rolesWithPermissions,
+      pagination: {
+        currentPage: page,
+        pageSize,
+        totalCount: totalItems,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1
+      },
+    };
   }
 }
 

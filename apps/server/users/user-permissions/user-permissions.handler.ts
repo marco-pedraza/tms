@@ -174,6 +174,17 @@ class UserPermissionsHandler {
   }
 
   /**
+   * Gets a user with their effective permissions
+   * @param userId - ID of the user
+   * @returns User with effective permissions
+   * @throws {NotFoundError} If the user is not found
+   */
+  async getUserWithEffectivePermissions(userId: number): Promise<UserWithPermissions> {
+    // This is essentially the same as getUserWithPermissions
+    return this.getUserWithPermissions(userId);
+  }
+
+  /**
    * Checks if a user has a specific permission
    * @param userId - ID of the user
    * @param permissionCode - Permission code to check

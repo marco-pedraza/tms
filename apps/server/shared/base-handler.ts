@@ -61,13 +61,18 @@ export class BaseHandler<T, CreateT, UpdateT> {
       .limit(pageSize)
       .offset(offset);
 
+    const totalItems = Number(totalCount);
+    const totalPages = Math.ceil(totalItems / pageSize);
+
     return {
       data: result,
       pagination: {
-        page,
+        currentPage: page,
         pageSize,
-        totalItems: Number(totalCount),
-        totalPages: Math.ceil(Number(totalCount) / pageSize),
+        totalCount: totalItems,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1
       },
     };
   }

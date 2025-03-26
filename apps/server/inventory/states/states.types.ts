@@ -1,5 +1,6 @@
 // Base interface
 import { MinLen, MatchesRegexp, Min } from 'encore.dev/validate';
+import { PaginatedResult } from '../../shared/types';
 
 /**
  * Base interface representing a state entity
@@ -91,3 +92,8 @@ export interface States {
   /** List of states */
   states: State[];
 }
+
+/**
+ * Paginated response type for the list states endpoint
+ */
+export type PaginatedStates = PaginatedResult<State>;

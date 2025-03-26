@@ -5,6 +5,7 @@ import {
   updateCountry,
   deleteCountry,
   listCountries,
+  listCountriesPaginated,
 } from './countries.controller';
 
 describe('Countries Controller', () => {
@@ -102,7 +103,7 @@ describe('Countries Controller', () => {
 
   describe('pagination', () => {
     test('should return paginated countries with default parameters', async () => {
-      const response = await listCountries({});
+      const response = await listCountriesPaginated({});
 
       expect(response.data).toBeDefined();
       expect(Array.isArray(response.data)).toBe(true);
@@ -116,7 +117,7 @@ describe('Countries Controller', () => {
     });
 
     test('should honor page and pageSize parameters', async () => {
-      const response = await listCountries({
+      const response = await listCountriesPaginated({
         page: 1,
         pageSize: 5,
       });
@@ -139,7 +140,7 @@ describe('Countries Controller', () => {
 
       try {
         // Get countries with large enough page size to include test countries
-        const response = await listCountries({
+        const response = await listCountriesPaginated({
           pageSize: 50,
         });
 
@@ -157,6 +158,16 @@ describe('Countries Controller', () => {
         await deleteCountry({ id: countryA.id });
         await deleteCountry({ id: countryZ.id });
       }
+    });
+
+    test('should return non-paginated list for dropdowns', async () => {
+      const response = await listCountries();
+
+      expect(response.countries).toBeDefined();
+      expect(Array.isArray(response.countries)).toBe(true);
+      expect(response.countries.length).toBeGreaterThan(0);
+      // No pagination info should be present
+      expect((response as any).pagination).toBeUndefined();
     });
   });
 });

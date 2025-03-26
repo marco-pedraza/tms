@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "drizzle-orm": "^0.36.0",
-    "encore.dev": "^1.46.12",
+    "encore.dev": "^1.46.13",
     "pg": "^8.13.1"
   },
   "optionalDependencies": {

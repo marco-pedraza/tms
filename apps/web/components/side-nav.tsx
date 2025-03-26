@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from 'next/link';
 import {
   Globe,
   Map,
@@ -7,7 +7,7 @@ import {
   Bus,
   Briefcase,
   Route,
-} from "lucide-react";
+} from 'lucide-react';
 
 export function SideNav() {
   return (

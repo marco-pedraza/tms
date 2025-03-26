@@ -7,7 +7,9 @@
     "lint": "turbo run lint",
     "format:check": "turbo run format:check",
     "check-types": "turbo run check-types",
-    "server:test": "turbo run test:encore --filter=ims-server"
+    "server:test": "turbo run test:encore --filter=ims-server",
+    "encore:gen-client": "turbo run ims-server#encore:gen-client",
+    "encore:check": "turbo run ims-server#encore:check"
   },
   "devDependencies": {
     "prettier": "^3.5.3",

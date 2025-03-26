@@ -84,12 +84,27 @@ export async function updateManyToManyRelation(
   // Add new relations if there are any
   if (targetIds.length > 0) {
     await db.insert(relationTable).values(
-      targetIds.map((targetId) => ({
-        [sourceField.name]: sourceId,
-        [targetField.name]: targetId,
-      })),
+      targetIds.map((targetId) => {
+        // Convert field names to camelCase if they come in snake_case
+        const sourceFieldName = toCamelCase(sourceField.name);
+        const targetFieldName = toCamelCase(targetField.name);
+        
+        return {
+          [sourceFieldName]: sourceId,
+          [targetFieldName]: targetId,
+        };
+      }),
     );
   }
+}
+
+/**
+ * Convert a string from snake_case to camelCase
+ * @param str - The string to convert
+ * @returns The camelCase version of the string
+ */
+function toCamelCase(str: string): string {
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
 /**
@@ -117,7 +132,9 @@ export async function getRelatedEntities<T>(
     return [];
   }
 
-  const targetIds = relations.map((relation) => relation[targetField.name]);
+  // Convert targetField name to camelCase for consistent access
+  const targetFieldName = toCamelCase(targetField.name);
+  const targetIds = relations.map((relation) => relation[targetFieldName]);
   return await db
     .select()
     .from(targetTable)

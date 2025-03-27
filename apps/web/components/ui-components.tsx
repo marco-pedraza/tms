@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { PlusCircle, ArrowLeft, Pencil, Trash2 } from "lucide-react";
-import Link from "next/link";
+import { Button } from '@/components/ui/button';
+import { PlusCircle, ArrowLeft, Pencil, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 
 interface PageHeaderProps {
   title: string;
@@ -16,7 +16,7 @@ export function PageHeader({
   title,
   description,
   createHref,
-  createLabel = "Create New",
+  createLabel = 'Create New',
   backHref,
 }: PageHeaderProps) {
   return (
@@ -59,7 +59,7 @@ export function ActionButtons({
   onDelete,
   small = false,
 }: ActionButtonsProps) {
-  const size = small ? "sm" : "default";
+  const size = small ? 'sm' : 'default';
 
   return (
     <div className="flex gap-2">

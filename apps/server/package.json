@@ -12,7 +12,9 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier . --check",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "encore:gen-client": "encore gen client --lang typescript --output ../../packages/ims-client/index.ts",
+    "encore:check": "encore check"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",

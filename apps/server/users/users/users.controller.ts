@@ -10,10 +10,7 @@ import type {
 } from './users.types';
 import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
-import {
-  comparePasswords,
-  hashPassword,
-} from '../../shared/auth-utils';
+import { comparePasswords, hashPassword } from '../../shared/auth-utils';
 import { ValidationError } from '../../shared/errors';
 
 const withErrorHandling = createControllerErrorHandler('UsersController');

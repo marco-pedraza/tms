@@ -10,7 +10,9 @@ import { tenants } from '../tenants/tenants.schema';
 
 export const departments = pgTable('departments', {
   id: serial('id').primaryKey(),
-  tenantId: integer('tenant_id').notNull().references(() => tenants.id),
+  tenantId: integer('tenant_id')
+    .notNull()
+    .references(() => tenants.id),
   name: text('name').notNull(),
   code: text('code').notNull(),
   description: text('description'),

@@ -12,8 +12,12 @@ import { tenants } from '../tenants/tenants.schema';
 
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
-  tenantId: integer('tenant_id').notNull().references(() => tenants.id),
-  departmentId: integer('department_id').notNull().references(() => departments.id),
+  tenantId: integer('tenant_id')
+    .notNull()
+    .references(() => tenants.id),
+  departmentId: integer('department_id')
+    .notNull()
+    .references(() => departments.id),
   username: text('username').notNull().unique(),
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),

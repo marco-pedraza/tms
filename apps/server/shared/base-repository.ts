@@ -33,6 +33,13 @@ type UniqueFieldConfig<TTable extends TableWithId> = {
    * The value to check for uniqueness
    */
   value: unknown;
+  /**
+   * Optional scope for the uniqueness check
+   */
+  scope?: {
+    field: TableColumn<TTable>;
+    value: unknown;
+  };
 };
 
 /**
@@ -208,10 +215,7 @@ export const createBaseRepository = <
    * @param {V} value - The value to search for
    * @returns {Promise<T | null>} The found entity or null if not found
    */
-  const findByField = async (
-    field: PgColumn,
-    value: unknown,
-  ): Promise<T | null> => {
+  const findBy = async (field: PgColumn, value: unknown): Promise<T | null> => {
     const [entity] = await db
       .select()
       .from(table)
@@ -219,6 +223,51 @@ export const createBaseRepository = <
       .limit(1);
 
     return entity as T | null;
+  };
+
+  /**
+   * Finds entities by a specific field value with pagination
+   * @param {PgColumn} field - The field to search by
+   * @param {unknown} value - The value to search for
+   * @param {PaginationParams} params - Pagination parameters (page and pageSize)
+   * @returns {Promise<Object>} Paginated results with data and pagination metadata
+   */
+  const findByPaginated = async (
+    field: PgColumn,
+    value: unknown,
+    params: PaginationParams = {},
+  ): Promise<{
+    data: T[];
+    pagination: PaginationMetadata;
+  }> => {
+    const { page = 1, pageSize = 10 } = params;
+    const offset = (page - 1) * pageSize;
+
+    const [{ count: totalCount }] = await db
+      .select({ count: count() })
+      .from(table)
+      .where(eq(field, value));
+
+    const result = await db
+      .select()
+      .from(table)
+      .where(eq(field, value))
+      .limit(pageSize)
+      .offset(offset);
+
+    const totalPages = Math.ceil(Number(totalCount) / pageSize);
+
+    return {
+      data: result as T[],
+      pagination: {
+        currentPage: page,
+        pageSize,
+        totalCount: Number(totalCount),
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   };
 
   /**
@@ -230,7 +279,7 @@ export const createBaseRepository = <
    * @param {number} [excludeId] - Optional ID to exclude from the check
    * @returns {Promise<boolean>} True if an entity exists with the field value
    */
-  const existsByField = async (
+  const existsBy = async (
     field: PgColumn,
     value: unknown,
     excludeId?: number,
@@ -266,7 +315,12 @@ export const createBaseRepository = <
     excludeId?: number,
     errorMessage?: string,
   ): Promise<void> => {
-    const conditions = fields.map(({ field, value }) => eq(field, value));
+    const conditions = fields.map(({ field, value, scope }) => {
+      const fieldCondition = eq(field, value);
+      return scope
+        ? and(fieldCondition, eq(scope.field, scope.value))
+        : fieldCondition;
+    });
 
     const query = excludeId
       ? and(or(...conditions), not(eq(table.id, excludeId)))
@@ -289,8 +343,9 @@ export const createBaseRepository = <
     update,
     delete: deleteOne,
     deleteAll,
-    findByField,
-    existsByField,
+    findBy,
+    findByPaginated,
+    existsBy,
     validateUniqueness,
   };
 };

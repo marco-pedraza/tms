@@ -1,14 +1,16 @@
 import { api } from 'encore.dev/api';
-import { departmentHandler } from './departments.handler';
+import { departmentRepository } from './departments.repository';
 import type {
   CreateDepartmentPayload,
   UpdateDepartmentPayload,
   Department,
-  Departments,
   PaginatedDepartments,
+  Departments,
 } from './departments.types';
-import { parseApiError } from '../../shared/errors';
+import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
+
+const withErrorHandling = createControllerErrorHandler('DepartmentsController');
 
 /**
  * Creates a new department.
@@ -19,12 +21,9 @@ import { PaginationParams } from '../../shared/types';
 export const createDepartment = api(
   { method: 'POST', path: '/departments', expose: true },
   async (params: CreateDepartmentPayload): Promise<Department> => {
-    try {
-      return await departmentHandler.create(params);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('createDepartment', () =>
+      departmentRepository.create(params),
+    );
   },
 );
 
@@ -38,30 +37,24 @@ export const createDepartment = api(
 export const getDepartment = api(
   { method: 'GET', path: '/departments/:id', expose: true },
   async ({ id }: { id: number }): Promise<Department> => {
-    try {
-      return await departmentHandler.findOne(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('getDepartment', () =>
+      departmentRepository.findOne(id),
+    );
   },
 );
 
 /**
  * Retrieves all departments.
- * @deprecated Use listDepartmentsWithPagination instead
  * @returns {Promise<Departments>} List of all departments
- * @throws {APIError} If the retrieval fails
+ * @throws {APIError} If retrieval fails
  */
 export const listDepartments = api(
   { method: 'GET', path: '/departments', expose: true },
   async (): Promise<Departments> => {
-    try {
-      return await departmentHandler.findAll();
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listDepartments', async () => {
+      const departments = await departmentRepository.findAll();
+      return { departments };
+    });
   },
 );
 
@@ -74,39 +67,32 @@ export const listDepartments = api(
 export const listDepartmentsWithPagination = api(
   { method: 'GET', path: '/departments/paginated', expose: true },
   async (params: PaginationParams): Promise<PaginatedDepartments> => {
-    try {
-      return await departmentHandler.findAllPaginated(params);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listDepartmentsWithPagination', () =>
+      departmentRepository.findAllPaginated(params),
+    );
   },
 );
 
 /**
  * Retrieves all departments for a specific tenant.
- * @deprecated Use listTenantDepartmentsWithPagination instead
  * @param params - Object containing the tenant ID
- * @param params.tenantId - The ID of the tenant to retrieve departments for
+ * @param params.tenantId - The ID of the tenant to get departments for
  * @returns {Promise<Departments>} List of departments for the tenant
- * @throws {APIError} If the retrieval fails
+ * @throws {APIError} If retrieval fails
  */
 export const listTenantDepartments = api(
   { method: 'GET', path: '/tenants/:tenantId/departments', expose: true },
   async ({ tenantId }: { tenantId: number }): Promise<Departments> => {
-    try {
-      return await departmentHandler.findByTenant(tenantId);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listTenantDepartments', () =>
+      departmentRepository.findByTenant(tenantId),
+    );
   },
 );
 
 /**
- * Retrieves departments for a specific tenant with pagination.
+ * Retrieves paginated departments for a specific tenant.
  * @param params - Object containing the tenant ID and pagination parameters
- * @param params.tenantId - The ID of the tenant to retrieve departments for
+ * @param params.tenantId - The ID of the tenant to get departments for
  * @returns {Promise<PaginatedDepartments>} Paginated list of departments for the tenant
  * @throws {APIError} If retrieval fails
  */
@@ -122,15 +108,9 @@ export const listTenantDepartmentsWithPagination = api(
   }: {
     tenantId: number;
   } & PaginationParams): Promise<PaginatedDepartments> => {
-    try {
-      return await departmentHandler.findByTenantPaginated(
-        tenantId,
-        paginationParams,
-      );
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listTenantDepartmentsWithPagination', () =>
+      departmentRepository.findByTenantPaginated(tenantId, paginationParams),
+    );
   },
 );
 
@@ -147,12 +127,9 @@ export const updateDepartment = api(
     id,
     ...data
   }: UpdateDepartmentPayload & { id: number }): Promise<Department> => {
-    try {
-      return await departmentHandler.update(id, data);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('updateDepartment', () =>
+      departmentRepository.update(id, data),
+    );
   },
 );
 
@@ -166,11 +143,8 @@ export const updateDepartment = api(
 export const deleteDepartment = api(
   { method: 'DELETE', path: '/departments/:id', expose: true },
   async ({ id }: { id: number }): Promise<Department> => {
-    try {
-      return await departmentHandler.delete(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('deleteDepartment', () =>
+      departmentRepository.delete(id),
+    );
   },
 );

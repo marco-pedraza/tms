@@ -31,6 +31,7 @@ describe('Departments Controller', () => {
     name: 'Test Department',
     code: 'TEST-DEPT',
     description: 'A test department for automated testing',
+    tenantId,
   };
 
   // Clean up after all tests
@@ -47,6 +48,7 @@ describe('Departments Controller', () => {
     it('should create test tenant', async () => {
       const result = await createTenant(testTenant);
       tenantId = result.id;
+      testDepartment.tenantId = tenantId;
       expect(tenantId).toBeGreaterThan(0);
     });
   });

@@ -86,16 +86,37 @@ describe('States Controller', () => {
       expect(response.countryId).toBe(testState.countryId);
     });
 
-    test('should list all states', async () => {
-      const response = await listStates();
+    test('should retrieve paginated states', async () => {
+      const result = await listStatesPaginated({ page: 1, pageSize: 10 });
 
-      expect(response.states).toBeDefined();
-      expect(Array.isArray(response.states)).toBe(true);
-      expect(response.states.length).toBeGreaterThan(0);
-      // Verify our test state is in the list
-      expect(response.states.some((state) => state.id === createdStateId)).toBe(
+      // Check the structure of the response
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.pagination).toBeDefined();
+      expect(typeof result.pagination.currentPage).toBe('number');
+      expect(typeof result.pagination.pageSize).toBe('number');
+      expect(typeof result.pagination.totalCount).toBe('number');
+      expect(typeof result.pagination.totalPages).toBe('number');
+      expect(typeof result.pagination.hasNextPage).toBe('boolean');
+      expect(typeof result.pagination.hasPreviousPage).toBe('boolean');
+
+      // We should at least find our test state
+      expect(result.data.some((state) => state.id === createdStateId)).toBe(
         true,
       );
+
+      // Pagination values should make sense
+      expect(result.pagination.currentPage).toBe(1);
+      expect(result.pagination.pageSize).toBe(10);
+      expect(result.pagination.totalCount).toBeGreaterThanOrEqual(1);
+    });
+
+    test('pagination should respect pageSize parameter', async () => {
+      // Request with a small page size
+      const result = await listStatesPaginated({ page: 1, pageSize: 1 });
+
+      expect(result.data.length).toBeLessThanOrEqual(1);
+      expect(result.pagination.pageSize).toBe(1);
     });
 
     test('should update a state', async () => {

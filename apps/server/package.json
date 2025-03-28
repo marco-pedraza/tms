@@ -26,9 +26,11 @@
     "vitest": "^3.0.8"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "drizzle-orm": "^0.36.0",
-    "encore.dev": "^1.46.13",
-    "pg": "^8.13.1"
+    "encore.dev": "^1.46.14",
+    "pg": "^8.13.1",
+    "object-assign": "^4.1.1"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.13.0"

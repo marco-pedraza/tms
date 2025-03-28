@@ -3,11 +3,14 @@ import {
   createTenant,
   getTenant,
   listTenants,
-  listTenantsWithPagination,
   updateTenant,
   deleteTenant,
 } from './tenants.controller';
-import type { CreateTenantPayload, UpdateTenantPayload } from './tenants.types';
+import type {
+  CreateTenantPayload,
+  UpdateTenantPayload,
+  Tenant,
+} from './tenants.types';
 
 describe('Tenants Controller', () => {
   // Test data
@@ -21,7 +24,11 @@ describe('Tenants Controller', () => {
   // Clean up after all tests
   afterAll(async () => {
     if (tenantId > 0) {
-      await deleteTenant({ id: tenantId });
+      try {
+        await deleteTenant({ id: tenantId });
+      } catch (error) {
+        console.log('Error cleaning up test tenant:', error);
+      }
     }
   });
 
@@ -64,16 +71,33 @@ describe('Tenants Controller', () => {
   });
 
   describe('listTenants', () => {
-    it('should list tenants', async () => {
-      const result = await listTenants();
+    it('should list tenants with default pagination', async () => {
+      const result = await listTenants({});
 
-      expect(Array.isArray(result.tenants)).toBe(true);
-      expect(result.tenants.length).toBeGreaterThan(0);
+      expect(result.data).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.length).toBeGreaterThan(0);
+      expect(result.pagination).toBeDefined();
+      expect(result.pagination.currentPage).toBe(1);
+      expect(result.pagination.pageSize).toBeDefined();
+      expect(result.pagination.totalCount).toBeDefined();
+      expect(result.pagination.totalPages).toBeDefined();
 
-      const foundTenant = result.tenants.find((t) => t.id === tenantId);
+      const foundTenant = result.data.find((t: Tenant) => t.id === tenantId);
       expect(foundTenant).toBeDefined();
       expect(foundTenant?.name).toBe(testTenant.name);
       expect(foundTenant?.code).toBe(testTenant.code);
+    });
+
+    it('should honor page and pageSize parameters', async () => {
+      const response = await listTenants({
+        page: 1,
+        pageSize: 5,
+      });
+
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
+      expect(response.data.length).toBeLessThanOrEqual(5);
     });
   });
 
@@ -117,54 +141,33 @@ describe('Tenants Controller', () => {
     });
   });
 
-  describe('pagination', () => {
-    it('should return paginated tenants with default parameters', async () => {
-      const response = await listTenantsWithPagination({});
-
-      expect(response.data).toBeDefined();
-      expect(Array.isArray(response.data)).toBe(true);
-      expect(response.pagination).toBeDefined();
-      expect(response.pagination.currentPage).toBe(1);
-      expect(response.pagination.pageSize).toBeDefined();
-      expect(response.pagination.totalCount).toBeDefined();
-      expect(response.pagination.totalPages).toBeDefined();
-      expect(typeof response.pagination.hasNextPage).toBe('boolean');
-      expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
-    });
-
-    it('should honor page and pageSize parameters', async () => {
-      const response = await listTenantsWithPagination({
-        page: 1,
-        pageSize: 5,
-      });
-
-      expect(response.pagination.currentPage).toBe(1);
-      expect(response.pagination.pageSize).toBe(5);
-      expect(response.data.length).toBeLessThanOrEqual(5);
-    });
-
-    it('should default sort by name in ascending order', async () => {
+  describe('sorting', () => {
+    it('should return tenants sorted by name in ascending order', async () => {
       // Create test tenants with different names for verification of default sorting
       const tenantA = await createTenant({
         ...testTenant,
         name: 'AAA Test Tenant',
-        code: 'AAA',
+        code: 'AAA-TEST',
       });
       const tenantZ = await createTenant({
         ...testTenant,
         name: 'ZZZ Test Tenant',
-        code: 'ZZZ',
+        code: 'ZZZ-TEST',
       });
 
       try {
         // Get tenants with large enough page size to include test tenants
-        const response = await listTenantsWithPagination({
+        const response = await listTenants({
           pageSize: 50,
         });
 
         // Find the indices of our test tenants
-        const indexA = response.data.findIndex((t) => t.id === tenantA.id);
-        const indexZ = response.data.findIndex((t) => t.id === tenantZ.id);
+        const indexA = response.data.findIndex(
+          (t: Tenant) => t.id === tenantA.id,
+        );
+        const indexZ = response.data.findIndex(
+          (t: Tenant) => t.id === tenantZ.id,
+        );
 
         // Verify that tenantA (AAA) comes before tenantZ (ZZZ) in the results
         if (indexA !== -1 && indexZ !== -1) {

@@ -52,10 +52,7 @@ export const createUserRepository = () => {
     const user = await baseRepository.create({
       ...data,
       passwordHash: await hashPassword(data.password),
-      isActive: data.isActive ?? true,
       isSystemAdmin: data.isSystemAdmin ?? false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     });
 
     return omitPasswordHash(user);
@@ -86,6 +83,7 @@ export const createUserRepository = () => {
 
   const findAll = async (): Promise<SafeUser[]> => {
     const users = await baseRepository.findAll();
+    // TODO check if excluded fields can be added to base repository for db to handle this instead.
     return users.map(omitPasswordHash);
   };
 

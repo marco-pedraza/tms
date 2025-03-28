@@ -7,14 +7,12 @@ import type {
   Users,
   PaginatedUsers,
   ChangePasswordPayload,
-  User,
 } from './users.types';
 import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
 import {
   comparePasswords,
   hashPassword,
-  omitPasswordHash,
 } from '../../shared/auth-utils';
 import { ValidationError } from '../../shared/errors';
 
@@ -206,12 +204,9 @@ export const changePassword = api(
       }
 
       const passwordHash = await hashPassword(data.newPassword);
-      const updatedUser = await userRepository.update(id, {
-        updatedAt: new Date(),
+      return await userRepository.update(id, {
         passwordHash,
       } as UpdateUserPayload);
-
-      return omitPasswordHash(updatedUser as User);
     });
   },
 );

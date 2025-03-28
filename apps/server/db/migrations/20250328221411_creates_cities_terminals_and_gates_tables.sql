@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS "departments" (
+CREATE TABLE "departments" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"tenant_id" integer NOT NULL,
 	"name" text NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS "departments" (
 	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "tenants" (
+CREATE TABLE "tenants" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
 	"code" text NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS "tenants" (
 	CONSTRAINT "tenants_code_unique" UNIQUE("code")
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "users" (
+CREATE TABLE "users" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"tenant_id" integer NOT NULL,
 	"department_id" integer NOT NULL,
@@ -41,3 +41,7 @@ CREATE TABLE IF NOT EXISTS "users" (
 	CONSTRAINT "users_username_unique" UNIQUE("username"),
 	CONSTRAINT "users_email_unique" UNIQUE("email")
 );
+--> statement-breakpoint
+ALTER TABLE "departments" ADD CONSTRAINT "departments_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_department_id_departments_id_fk" FOREIGN KEY ("department_id") REFERENCES "public"."departments"("id") ON DELETE no action ON UPDATE no action;

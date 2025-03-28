@@ -30,12 +30,7 @@ export const createTenantRepository = () => {
 
   const create = async (data: CreateTenantPayload): Promise<Tenant> => {
     await validateUniqueCode(data.code);
-    return baseRepository.create({
-      ...data,
-      isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+    return baseRepository.create(data);
   };
 
   const update = async (

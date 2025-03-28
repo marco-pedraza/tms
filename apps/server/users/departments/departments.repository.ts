@@ -44,12 +44,7 @@ export const createDepartmentRepository = () => {
 
   const create = async (data: CreateDepartmentPayload): Promise<Department> => {
     await validateUniqueCode(data.code, data.tenantId);
-    return baseRepository.create({
-      ...data,
-      isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+    return baseRepository.create(data);
   };
 
   const update = async (
@@ -71,11 +66,7 @@ export const createDepartmentRepository = () => {
   const findAllPaginated = async (
     params: PaginationParams = {},
   ): Promise<PaginatedDepartments> => {
-    const { data, pagination } = await baseRepository.findAllPaginated(params);
-    return {
-      data,
-      pagination,
-    };
+    return baseRepository.findAllPaginated(params);
   };
 
   const findByTenant = async (tenantId: number): Promise<Departments> => {

@@ -21,10 +21,12 @@ export const createTenantRepository = () => {
   >(tenants, 'Tenant');
 
   const validateUniqueCode = async (code: string, excludeId?: number) => {
+    const errorMessage = `Tenant with code ${code} already exists`;
+
     await baseRepository.validateUniqueness(
       [{ field: tenants.code, value: code }],
       excludeId,
-      `Tenant with code ${code} already exists`,
+      errorMessage,
     );
   };
 

@@ -26,6 +26,8 @@ export const createDepartmentRepository = () => {
     tenantId: number,
     excludeId?: number,
   ) => {
+    const errorMessage = `Department with code ${code} already exists in this tenant`;
+
     await baseRepository.validateUniqueness(
       [
         {
@@ -38,7 +40,7 @@ export const createDepartmentRepository = () => {
         },
       ],
       excludeId,
-      `Department with code ${code} already exists in this tenant`,
+      errorMessage,
     );
   };
 

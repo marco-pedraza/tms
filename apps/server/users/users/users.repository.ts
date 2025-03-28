@@ -11,6 +11,9 @@ import { createBaseRepository } from '../../shared/base-repository';
 import { PaginationParams } from '../../shared/types';
 import { hashPassword, omitPasswordHash } from '../../shared/auth-utils';
 
+const DUPLICATE_ERROR_MESSAGE =
+  'User with this username or email already exists';
+
 export const createUserRepository = () => {
   const baseRepository = createBaseRepository<
     User,
@@ -42,7 +45,7 @@ export const createUserRepository = () => {
         },
       ],
       excludeId,
-      'User with this username or email already exists',
+      DUPLICATE_ERROR_MESSAGE,
     );
   };
 

@@ -19,10 +19,8 @@ export const createUserRepository = () => {
     User,
     CreateUserPayload & {
       passwordHash: string;
-      isActive: boolean;
+      isActive?: boolean;
       isSystemAdmin: boolean;
-      createdAt: Date;
-      updatedAt: Date;
     },
     UpdateUserPayload & { updatedAt: Date },
     typeof users
@@ -56,6 +54,7 @@ export const createUserRepository = () => {
       ...data,
       passwordHash: await hashPassword(data.password),
       isSystemAdmin: data.isSystemAdmin ?? false,
+      isActive: data.isActive ?? true,
     });
 
     return omitPasswordHash(user);

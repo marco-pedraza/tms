@@ -5,7 +5,7 @@
 
 import { db } from '../db';
 import { NotFoundError, ValidationError, DuplicateError } from './errors';
-import { eq, and, count, not, or } from 'drizzle-orm';
+import { eq, and, count, not, or, asc, desc } from 'drizzle-orm';
 import type { PaginationParams } from './types';
 import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 
@@ -104,11 +104,59 @@ export const createBaseRepository = <
 
   /**
    * Retrieves all entities from the table
+   * @param {Object} options - Additional options for the query
+   * @param {Array<{field: PgColumn; direction: 'asc' | 'desc'}>} [options.orderBy] - Fields to order by
    * @returns {Promise<T[]>} Array of all entities
    */
-  const findAll = async (): Promise<T[]> => {
-    const entities = await db.select().from(table);
+  const findAll = async (options?: {
+    orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
+  }): Promise<T[]> => {
+    const query = db.select().from(table);
+
+    // Apply order if provided
+    if (options?.orderBy?.length) {
+      const orderByList = options.orderBy.map((order) =>
+        order.direction === 'asc' ? asc(order.field) : desc(order.field),
+      );
+      const result = await query.orderBy(...orderByList);
+      return result as T[];
+    }
+
+    // Execute query without ordering
+    const entities = await query;
     return entities as T[];
+  };
+
+  /**
+   * Retrieves all entities filtered by a specific field value
+   * @param {PgColumn} field - The field to filter by
+   * @param {unknown} value - The value to filter for
+   * @param {Object} options - Additional options for the query
+   * @param {Array<{field: PgColumn; direction: 'asc' | 'desc'}>} [options.orderBy] - Fields to order by
+   * @returns {Promise<T[]>} Array of filtered entities
+   */
+  const findAllBy = async (
+    field: PgColumn,
+    value: unknown,
+    options?: {
+      orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
+    },
+  ): Promise<T[]> => {
+    // Create query with filter
+    const query = db.select().from(table).where(eq(field, value));
+
+    // Apply order if provided
+    if (options?.orderBy?.length) {
+      const orderByList = options.orderBy.map((order) =>
+        order.direction === 'asc' ? asc(order.field) : desc(order.field),
+      );
+      const result = await query.orderBy(...orderByList);
+      return result as T[];
+    }
+
+    // Execute query without ordering
+    const result = await query;
+    return result as T[];
   };
 
   /**
@@ -338,6 +386,7 @@ export const createBaseRepository = <
   return {
     findOne,
     findAll,
+    findAllBy,
     findAllPaginated,
     create,
     update,

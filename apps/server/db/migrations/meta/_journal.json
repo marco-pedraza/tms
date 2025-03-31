@@ -36,6 +36,20 @@
       "when": 1743441489048,
       "tag": "20250331171809_creates_permissions_roles_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1743451692865,
+      "tag": "20250331200812_clear_darkhawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1743451744589,
+      "tag": "20250331200904_creates_transporters_and_buslines_tables",
+      "breakpoints": true
     }
   ]
 }

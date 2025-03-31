@@ -55,7 +55,7 @@ describe('Terminals Controller', () => {
     // Create a temporary country
     const country = await createCountry({
       name: 'Test Country for Terminals',
-      code: 'TCT',
+      code: 'TCTER',
       active: true,
     });
     countryId = country.id;
@@ -63,7 +63,7 @@ describe('Terminals Controller', () => {
     // Create a temporary state using the country
     const state = await createState({
       name: 'Test State for Terminals',
-      code: 'TST',
+      code: 'TSTER',
       countryId: countryId,
       active: true,
     });

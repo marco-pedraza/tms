@@ -1,13 +1,16 @@
 import { api } from 'encore.dev/api';
-import { countryHandler } from './countries.handler';
+import { countryRepository } from './countries.repository';
 import type {
   CreateCountryPayload,
   UpdateCountryPayload,
   Country,
+  Countries,
   PaginatedCountries,
 } from './countries.types';
-import { parseApiError } from '../../shared/errors';
+import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
+
+const withErrorHandling = createControllerErrorHandler('CountriesController');
 
 /**
  * Creates a new country.
@@ -16,14 +19,11 @@ import { PaginationParams } from '../../shared/types';
  * @throws {APIError} If the country creation fails
  */
 export const createCountry = api(
-  { method: 'POST', path: '/countries' },
+  { expose: true, method: 'POST', path: '/countries' },
   async (params: CreateCountryPayload): Promise<Country> => {
-    try {
-      return await countryHandler.create(params);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('createCountry', () =>
+      countryRepository.create(params),
+    );
   },
 );
 
@@ -35,32 +35,38 @@ export const createCountry = api(
  * @throws {APIError} If the country is not found or retrieval fails
  */
 export const getCountry = api(
-  { method: 'GET', path: '/countries/:id' },
+  { expose: true, method: 'GET', path: '/countries/:id' },
   async ({ id }: { id: number }): Promise<Country> => {
-    try {
-      return await countryHandler.findOne(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('getCountry', () => countryRepository.findOne(id));
   },
 );
 
 /**
- * Retrieves countries with pagination.
+ * Retrieves all countries without pagination (useful for dropdowns).
+ * @returns {Promise<Countries>} An object containing an array of countries
+ * @throws {APIError} If retrieval fails
+ */
+export const listCountries = api(
+  { method: 'GET', path: '/countries' },
+  async (): Promise<Countries> => {
+    return withErrorHandling('listCountries', () =>
+      countryRepository.findAll(),
+    );
+  },
+);
+
+/**
+ * Retrieves countries with pagination (useful for tables).
  * @param params - Pagination parameters
  * @returns {Promise<PaginatedCountries>} Paginated list of countries
  * @throws {APIError} If retrieval fails
  */
-export const listCountries = api(
-  { method: 'GET', path: '/countries/paginated' },
+export const listCountriesPaginated = api(
+  { expose: true, method: 'GET', path: '/countries/paginated' },
   async (params: PaginationParams): Promise<PaginatedCountries> => {
-    try {
-      return await countryHandler.findAll(params);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listCountriesPaginated', () =>
+      countryRepository.findAllPaginated(params),
+    );
   },
 );
 
@@ -73,17 +79,14 @@ export const listCountries = api(
  * @throws {APIError} If the country is not found or update fails
  */
 export const updateCountry = api(
-  { method: 'PUT', path: '/countries/:id' },
+  { expose: true, method: 'PUT', path: '/countries/:id' },
   async ({
     id,
     ...data
   }: UpdateCountryPayload & { id: number }): Promise<Country> => {
-    try {
-      return await countryHandler.update(id, data);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('updateCountry', () =>
+      countryRepository.update(id, data),
+    );
   },
 );
 
@@ -95,13 +98,10 @@ export const updateCountry = api(
  * @throws {APIError} If the country is not found or deletion fails
  */
 export const deleteCountry = api(
-  { method: 'DELETE', path: '/countries/:id' },
+  { expose: true, method: 'DELETE', path: '/countries/:id' },
   async ({ id }: { id: number }): Promise<Country> => {
-    try {
-      return await countryHandler.delete(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('deleteCountry', () =>
+      countryRepository.delete(id),
+    );
   },
 );

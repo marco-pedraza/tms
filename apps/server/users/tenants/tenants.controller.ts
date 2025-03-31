@@ -1,16 +1,15 @@
 import { api } from 'encore.dev/api';
-import { tenantHandler } from './tenants.handler';
+import { tenantRepository } from './tenants.repository';
 import type {
   CreateTenantPayload,
   UpdateTenantPayload,
   Tenant,
-  Tenants,
   PaginatedTenants,
 } from './tenants.types';
-import { parseApiError } from '../../shared/errors';
+import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
 
-//TODO Check if controllers can be switched to class, or handler to functions.
+const withErrorHandling = createControllerErrorHandler('TenantsController');
 
 /**
  * Creates a new tenant.
@@ -21,12 +20,9 @@ import { PaginationParams } from '../../shared/types';
 export const createTenant = api(
   { method: 'POST', path: '/tenants', expose: true },
   async (params: CreateTenantPayload): Promise<Tenant> => {
-    try {
-      return await tenantHandler.create(params);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('createTenant', () =>
+      tenantRepository.create(params),
+    );
   },
 );
 
@@ -40,29 +36,7 @@ export const createTenant = api(
 export const getTenant = api(
   { method: 'GET', path: '/tenants/:id', expose: true },
   async ({ id }: { id: number }): Promise<Tenant> => {
-    try {
-      return await tenantHandler.findOne(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
-  },
-);
-
-/**
- * Retrieves all tenants.
- * @returns {Promise<Tenants>} List of all tenants
- * @throws {APIError} If the retrieval fails
- */
-export const listTenants = api(
-  { method: 'GET', path: '/tenants', expose: true },
-  async (): Promise<Tenants> => {
-    try {
-      return await tenantHandler.findAll();
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('getTenant', () => tenantRepository.findOne(id));
   },
 );
 
@@ -72,15 +46,12 @@ export const listTenants = api(
  * @returns {Promise<PaginatedTenants>} Paginated list of tenants
  * @throws {APIError} If retrieval fails
  */
-export const listTenantsWithPagination = api(
-  { method: 'GET', path: '/tenants/paginated', expose: true },
+export const listTenants = api(
+  { method: 'GET', path: '/tenants', expose: true },
   async (params: PaginationParams): Promise<PaginatedTenants> => {
-    try {
-      return await tenantHandler.findAllPaginated(params);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listTenants', () =>
+      tenantRepository.findAllPaginated(params),
+    );
   },
 );
 
@@ -97,12 +68,9 @@ export const updateTenant = api(
     id,
     ...data
   }: UpdateTenantPayload & { id: number }): Promise<Tenant> => {
-    try {
-      return await tenantHandler.update(id, data);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('updateTenant', () =>
+      tenantRepository.update(id, data),
+    );
   },
 );
 
@@ -116,11 +84,6 @@ export const updateTenant = api(
 export const deleteTenant = api(
   { method: 'DELETE', path: '/tenants/:id', expose: true },
   async ({ id }: { id: number }): Promise<Tenant> => {
-    try {
-      return await tenantHandler.delete(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('deleteTenant', () => tenantRepository.delete(id));
   },
 );

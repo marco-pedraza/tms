@@ -19,8 +19,15 @@
     {
       "idx": 2,
       "version": "7",
-      "when": 1742836022743,
-      "tag": "0002_black_susan_delgado",
+      "when": 1743192644897,
+      "tag": "20250328201044_creates_cities_terminals_and_gates_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1743204093024,
+      "tag": "20250328232133_creates_users_tenant_and_deparments_tables",
       "breakpoints": true
     },
     {

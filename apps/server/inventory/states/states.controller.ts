@@ -1,12 +1,16 @@
 import { api } from 'encore.dev/api';
-import { stateHandler } from './states.handler';
+import { stateRepository } from './states.repository';
 import {
   CreateStatePayload,
   UpdateStatePayload,
   State,
   States,
+  PaginatedStates,
 } from './states.types';
-import { parseApiError } from '../../shared/errors';
+import { createControllerErrorHandler } from '../../shared/controller-utils';
+import { PaginationParams } from '../../shared/types';
+
+const withErrorHandling = createControllerErrorHandler('StatesController');
 
 /**
  * Creates a new state.
@@ -17,12 +21,9 @@ import { parseApiError } from '../../shared/errors';
 export const createState = api(
   { method: 'POST', path: '/states' },
   async (params: CreateStatePayload): Promise<State> => {
-    try {
-      return await stateHandler.create(params);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('createState', () =>
+      stateRepository.create(params),
+    );
   },
 );
 
@@ -36,29 +37,34 @@ export const createState = api(
 export const getState = api(
   { method: 'GET', path: '/states/:id' },
   async ({ id }: { id: number }): Promise<State> => {
-    try {
-      return await stateHandler.findOne(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('getState', () => stateRepository.findOne(id));
   },
 );
 
 /**
- * Retrieves all states.
+ * Retrieves all states without pagination (useful for dropdowns).
  * @returns {Promise<States>} An object containing an array of states
  * @throws {APIError} If the retrieval fails
  */
 export const listStates = api(
   { method: 'GET', path: '/states' },
   async (): Promise<States> => {
-    try {
-      return await stateHandler.findAll();
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listStates', () => stateRepository.findAll());
+  },
+);
+
+/**
+ * Retrieves states with pagination (useful for tables).
+ * @param params - Pagination parameters
+ * @returns {Promise<PaginatedStates>} Paginated list of states
+ * @throws {APIError} If retrieval fails
+ */
+export const listStatesPaginated = api(
+  { method: 'GET', path: '/states/paginated' },
+  async (params: PaginationParams): Promise<PaginatedStates> => {
+    return withErrorHandling('listStatesPaginated', () =>
+      stateRepository.listPaginated(params),
+    );
   },
 );
 
@@ -76,12 +82,9 @@ export const updateState = api(
     id,
     ...data
   }: UpdateStatePayload & { id: number }): Promise<State> => {
-    try {
-      return await stateHandler.update(id, data);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('updateState', () =>
+      stateRepository.update(id, data),
+    );
   },
 );
 
@@ -95,11 +98,6 @@ export const updateState = api(
 export const deleteState = api(
   { method: 'DELETE', path: '/states/:id' },
   async ({ id }: { id: number }): Promise<State> => {
-    try {
-      return await stateHandler.delete(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('deleteState', () => stateRepository.delete(id));
   },
 );

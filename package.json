@@ -7,9 +7,12 @@
     "lint": "turbo run lint",
     "format:check": "turbo run format:check",
     "check-types": "turbo run check-types",
-    "server:test": "turbo run test:encore --filter=ims-server"
+    "server:test": "turbo run test:encore --filter=ims-server",
+    "encore:gen-client": "turbo run ims-server#encore:gen-client",
+    "encore:check": "turbo run ims-server#encore:check"
   },
   "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
     "debug": "^4.4.0",
     "minimatch": "^10.0.1",
     "prettier": "^3.5.3",
@@ -23,5 +26,8 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "bcrypt": "^5.1.1"
+  }
 }

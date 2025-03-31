@@ -20,8 +20,10 @@ import {
 
 // Error message constants
 const ERROR_MESSAGES = {
-  PERMISSION_REQUIRED: (code: string) => `User lacks required permission: ${code}`,
-  ROLE_REQUIRED: (roleId: number) => `User lacks required role with ID: ${roleId}`,
+  PERMISSION_REQUIRED: (code: string) =>
+    `User lacks required permission: ${code}`,
+  ROLE_REQUIRED: (roleId: number) =>
+    `User lacks required role with ID: ${roleId}`,
   USER_NOT_FOUND: (userId: number) => `User with id ${userId} not found`,
 };
 
@@ -127,7 +129,9 @@ export const createUserPermissionsRepository = () => {
    * @returns User with permissions
    * @throws {NotFoundError} If the user is not found
    */
-  const getUserWithPermissions = async (userId: number): Promise<UserWithPermissions> => {
+  const getUserWithPermissions = async (
+    userId: number,
+  ): Promise<UserWithPermissions> => {
     const user = await userRepository.findOne(userId);
 
     // Create a safe user object without sensitive data
@@ -163,13 +167,12 @@ export const createUserPermissionsRepository = () => {
     }
 
     // Extract all permissions from roles
-    const rolesPermissions = rolesWithPermissions.flatMap((role) => role.permissions);
+    const rolesPermissions = rolesWithPermissions.flatMap(
+      (role) => role.permissions,
+    );
 
     // Calculate effective permissions (direct + from roles, removing duplicates)
-    const allPermissions = [
-      ...directPermissionsList,
-      ...rolesPermissions,
-    ];
+    const allPermissions = [...directPermissionsList, ...rolesPermissions];
 
     // Remove duplicates by ID
     const uniquePermissions = [
@@ -191,7 +194,10 @@ export const createUserPermissionsRepository = () => {
    * @param permissionCode - Permission code to check
    * @throws {UnauthorizedError} If the user doesn't have the required permission
    */
-  const hasPermission = async (userId: number, permissionCode: string): Promise<void> => {
+  const hasPermission = async (
+    userId: number,
+    permissionCode: string,
+  ): Promise<void> => {
     try {
       const user = await getUserWithPermissions(userId);
 
@@ -201,7 +207,7 @@ export const createUserPermissionsRepository = () => {
 
       if (!hasRequiredPermission) {
         throw new UnauthorizedError(
-          ERROR_MESSAGES.PERMISSION_REQUIRED(permissionCode)
+          ERROR_MESSAGES.PERMISSION_REQUIRED(permissionCode),
         );
       }
     } catch (error) {
@@ -225,9 +231,7 @@ export const createUserPermissionsRepository = () => {
       const hasRole = user.roles.some((r) => r.id === roleId);
 
       if (!hasRole) {
-        throw new UnauthorizedError(
-          ERROR_MESSAGES.ROLE_REQUIRED(roleId)
-        );
+        throw new UnauthorizedError(ERROR_MESSAGES.ROLE_REQUIRED(roleId));
       }
     } catch (error) {
       if (error instanceof UnauthorizedError) {
@@ -243,9 +247,9 @@ export const createUserPermissionsRepository = () => {
     getUserWithRoles,
     getUserWithPermissions,
     hasPermission,
-    hasRole
+    hasRole,
   };
 };
 
 // Export the user permissions repository instance
-export const userPermissionsRepository = createUserPermissionsRepository(); 
+export const userPermissionsRepository = createUserPermissionsRepository();

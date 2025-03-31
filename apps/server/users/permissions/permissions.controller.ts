@@ -21,8 +21,8 @@ const withErrorHandling = createControllerErrorHandler('PermissionsController');
 export const createPermission = api(
   { method: 'POST', path: '/permissions', expose: true },
   async (params: CreatePermissionPayload): Promise<Permission> => {
-    return withErrorHandling('createPermission', () => 
-      permissionRepository.create(params)
+    return withErrorHandling('createPermission', () =>
+      permissionRepository.create(params),
     );
   },
 );
@@ -38,7 +38,7 @@ export const getPermission = api(
   { method: 'GET', path: '/permissions/:id', expose: true },
   async ({ id }: { id: number }): Promise<Permission> => {
     return withErrorHandling('getPermission', () =>
-      permissionRepository.findOne(id)
+      permissionRepository.findOne(id),
     );
   },
 );
@@ -52,7 +52,7 @@ export const listPermissions = api(
   { method: 'GET', path: '/permissions', expose: true },
   async (): Promise<Permissions> => {
     return withErrorHandling('listPermissions', () =>
-      permissionRepository.findAll()
+      permissionRepository.findAll(),
     );
   },
 );
@@ -67,7 +67,7 @@ export const listPermissionsWithPagination = api(
   { method: 'GET', path: '/permissions/paginated', expose: true },
   async (params: PaginationParams): Promise<PaginatedPermissions> => {
     return withErrorHandling('listPermissionsWithPagination', () =>
-      permissionRepository.findAllPaginated(params)
+      permissionRepository.findAllPaginated(params),
     );
   },
 );
@@ -86,7 +86,7 @@ export const updatePermission = api(
     ...data
   }: UpdatePermissionPayload & { id: number }): Promise<Permission> => {
     return withErrorHandling('updatePermission', () =>
-      permissionRepository.update(id, data)
+      permissionRepository.update(id, data),
     );
   },
 );
@@ -102,7 +102,7 @@ export const deletePermission = api(
   { method: 'DELETE', path: '/permissions/:id', expose: true },
   async ({ id }: { id: number }): Promise<Permission> => {
     return withErrorHandling('deletePermission', () =>
-      permissionRepository.delete(id)
+      permissionRepository.delete(id),
     );
   },
 );

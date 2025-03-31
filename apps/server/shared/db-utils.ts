@@ -88,7 +88,7 @@ export async function updateManyToManyRelation(
         // Convert field names to camelCase if they come in snake_case
         const sourceFieldName = toCamelCase(sourceField.name);
         const targetFieldName = toCamelCase(targetField.name);
-        
+
         return {
           [sourceFieldName]: sourceId,
           [targetFieldName]: targetId,

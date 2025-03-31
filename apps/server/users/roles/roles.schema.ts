@@ -9,7 +9,9 @@ export const roles = pgTable('roles', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   description: text('description'),
-  tenantId: integer('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  tenantId: integer('tenant_id')
+    .notNull()
+    .references(() => tenants.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

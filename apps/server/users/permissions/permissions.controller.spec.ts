@@ -7,7 +7,10 @@ import {
   updatePermission,
   deletePermission,
 } from './permissions.controller';
-import type { CreatePermissionPayload, UpdatePermissionPayload } from './permissions.types';
+import type {
+  CreatePermissionPayload,
+  UpdatePermissionPayload,
+} from './permissions.types';
 import { permissionRepository } from './permissions.repository';
 
 describe('Permissions Controller', () => {
@@ -70,7 +73,9 @@ describe('Permissions Controller', () => {
       expect(Array.isArray(result.permissions)).toBe(true);
       expect(result.permissions.length).toBeGreaterThan(0);
 
-      const foundPermission = result.permissions.find((p) => p.id === permissionId);
+      const foundPermission = result.permissions.find(
+        (p) => p.id === permissionId,
+      );
       expect(foundPermission).toBeDefined();
       expect(foundPermission?.name).toBe(testPermission.name);
       expect(foundPermission?.code).toBe(testPermission.code);
@@ -84,7 +89,10 @@ describe('Permissions Controller', () => {
     };
 
     it('should update an existing permission', async () => {
-      const result = await updatePermission({ id: permissionId, ...updateData });
+      const result = await updatePermission({
+        id: permissionId,
+        ...updateData,
+      });
 
       expect(result.id).toBe(permissionId);
       expect(result.name).toBe(updateData.name);
@@ -184,4 +192,4 @@ describe('Permissions Controller', () => {
       }
     });
   });
-}); 
+});

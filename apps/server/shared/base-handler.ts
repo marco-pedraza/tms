@@ -72,7 +72,7 @@ export class BaseHandler<T, CreateT, UpdateT> {
         totalCount: totalItems,
         totalPages,
         hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1
+        hasPreviousPage: page > 1,
       },
     };
   }

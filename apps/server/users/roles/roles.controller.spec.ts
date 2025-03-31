@@ -14,7 +14,10 @@ import {
 import type { CreateRolePayload, UpdateRolePayload } from './roles.types';
 import { createTenant, deleteTenant } from '../tenants/tenants.controller';
 import type { CreateTenantPayload } from '../tenants/tenants.types';
-import { createPermission, deletePermission } from '../permissions/permissions.controller';
+import {
+  createPermission,
+  deletePermission,
+} from '../permissions/permissions.controller';
 import type { CreatePermissionPayload } from '../permissions/permissions.types';
 
 describe('Roles Controller', () => {
@@ -69,7 +72,7 @@ describe('Roles Controller', () => {
       const result = await createTenant(testTenant);
       tenantId = result.id;
       expect(tenantId).toBeGreaterThan(0);
-      
+
       // Update the test role with the tenant ID
       testRole.tenantId = tenantId;
     });
@@ -114,13 +117,15 @@ describe('Roles Controller', () => {
 
       try {
         // Verify the role was created with permissions
-        const roleDetail = await getRoleWithPermissions({ id: roleWithPermsId });
+        const roleDetail = await getRoleWithPermissions({
+          id: roleWithPermsId,
+        });
         expect(roleDetail.id).toBe(roleWithPermsId);
         expect(roleDetail.permissions).toBeDefined();
         expect(roleDetail.permissions.length).toBe(2);
-        
+
         // Check that both permissions are assigned
-        const permissionIds = roleDetail.permissions.map(p => p.id);
+        const permissionIds = roleDetail.permissions.map((p) => p.id);
         expect(permissionIds).toContain(permissionId1);
         expect(permissionIds).toContain(permissionId2);
       } finally {
@@ -195,9 +200,7 @@ describe('Roles Controller', () => {
     });
 
     it('should fail to update non-existent role', async () => {
-      await expect(
-        updateRole({ id: 999999, ...updateData }),
-      ).rejects.toThrow();
+      await expect(updateRole({ id: 999999, ...updateData })).rejects.toThrow();
     });
   });
 
@@ -211,9 +214,9 @@ describe('Roles Controller', () => {
       expect(result.id).toBe(roleId);
       expect(result.permissions).toBeDefined();
       expect(result.permissions.length).toBe(2);
-      
+
       // Check that both permissions are assigned
-      const permissionIds = result.permissions.map(p => p.id);
+      const permissionIds = result.permissions.map((p) => p.id);
       expect(permissionIds).toContain(permissionId1);
       expect(permissionIds).toContain(permissionId2);
     });
@@ -236,9 +239,9 @@ describe('Roles Controller', () => {
       expect(result.name).toBe('Updated Role');
       expect(result.permissions).toBeDefined();
       expect(result.permissions.length).toBe(2);
-      
+
       // Check that both permissions are assigned
-      const permissionIds = result.permissions.map(p => p.id);
+      const permissionIds = result.permissions.map((p) => p.id);
       expect(permissionIds).toContain(permissionId1);
       expect(permissionIds).toContain(permissionId2);
     });
@@ -338,4 +341,4 @@ describe('Roles Controller', () => {
       expect(response.pagination.currentPage).toBe(1);
     });
   });
-}); 
+});

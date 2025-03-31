@@ -11,11 +11,17 @@ import type {
 } from './user-permissions.types';
 import { createTenant, deleteTenant } from '../tenants/tenants.controller';
 import type { CreateTenantPayload } from '../tenants/tenants.types';
-import { createDepartment, deleteDepartment } from '../departments/departments.controller';
+import {
+  createDepartment,
+  deleteDepartment,
+} from '../departments/departments.controller';
 import type { CreateDepartmentPayload } from '../departments/departments.types';
 import { createUser, deleteUser } from '../users/users.controller';
 import type { CreateUserPayload } from '../users/users.types';
-import { createPermission, deletePermission } from '../permissions/permissions.controller';
+import {
+  createPermission,
+  deletePermission,
+} from '../permissions/permissions.controller';
 import type { CreatePermissionPayload } from '../permissions/permissions.types';
 import { createRole, deleteRole } from '../roles/roles.controller';
 import type { CreateRolePayload } from '../roles/roles.types';
@@ -101,7 +107,7 @@ describe('User Permissions Controller', () => {
       const result = await createTenant(testTenant);
       tenantId = result.id;
       expect(tenantId).toBeGreaterThan(0);
-      
+
       // Update test data with the tenant ID
       testUser.tenantId = tenantId;
       testRole.tenantId = tenantId;
@@ -114,7 +120,7 @@ describe('User Permissions Controller', () => {
       });
       departmentId = result.id;
       expect(departmentId).toBeGreaterThan(0);
-      
+
       // Update test user with the department ID
       testUser.departmentId = departmentId;
     });
@@ -156,9 +162,9 @@ describe('User Permissions Controller', () => {
       expect(result.id).toBe(userId);
       expect(result.directPermissions).toBeDefined();
       expect(result.directPermissions.length).toBe(2);
-      
+
       // Check that both permissions are assigned
-      const permissionIds = result.directPermissions.map(p => p.id);
+      const permissionIds = result.directPermissions.map((p) => p.id);
       expect(permissionIds).toContain(permissionId1);
       expect(permissionIds).toContain(permissionId2);
     });
@@ -199,17 +205,17 @@ describe('User Permissions Controller', () => {
       expect(result.directPermissions).toBeDefined();
       expect(result.directPermissions.length).toBe(1);
       expect(result.directPermissions[0].id).toBe(permissionId1);
-      
+
       // No role permissions yet
       expect(result.roles).toBeDefined();
       expect(result.roles.length).toBe(0);
-      
+
       // Effective permissions should match direct permissions at this point
       expect(result.effectivePermissions).toBeDefined();
       expect(result.effectivePermissions.length).toBe(1);
       expect(result.effectivePermissions[0].id).toBe(permissionId1);
     });
-    
+
     it('should fail to get permissions for non-existent user', async () => {
       await expect(getUserPermissions({ userId: 999999 })).rejects.toThrow();
     });
@@ -289,7 +295,7 @@ describe('User Permissions Controller', () => {
       expect(result.roles.length).toBe(1);
       expect(result.roles[0].id).toBe(roleId);
     });
-    
+
     it('should fail to get roles for non-existent user', async () => {
       await expect(getUserRoles({ userId: 999999 })).rejects.toThrow();
     });
@@ -299,35 +305,37 @@ describe('User Permissions Controller', () => {
     it('should combine permissions from roles and direct assignments', async () => {
       // First, assign permission to the role
       await assignPermissionsToRole();
-      
+
       // Then check that the user has permissions from both direct assignment and role
       const result = await getUserPermissions({ userId });
-      
+
       // Direct permissions should still be the same
       expect(result.directPermissions.length).toBe(1);
       expect(result.directPermissions[0].id).toBe(permissionId1);
-      
+
       // Role should have the second permission
       expect(result.roles.length).toBe(1);
       expect(result.roles[0].permissions.length).toBe(1);
       expect(result.roles[0].permissions[0].id).toBe(permissionId2);
-      
+
       // Effective permissions should have both permissions
       expect(result.effectivePermissions.length).toBe(2);
-      const effectivePermIds = result.effectivePermissions.map(p => p.id);
+      const effectivePermIds = result.effectivePermissions.map((p) => p.id);
       expect(effectivePermIds).toContain(permissionId1);
       expect(effectivePermIds).toContain(permissionId2);
     });
-    
+
     // Helper function to assign permissions to the role
     async function assignPermissionsToRole() {
       // Import the actual assignPermissionsToRole here to avoid adding it to the imports
-      const { assignPermissionsToRole } = await import('../roles/roles.controller');
-      
+      const { assignPermissionsToRole } = await import(
+        '../roles/roles.controller'
+      );
+
       await assignPermissionsToRole({
         id: roleId,
         permissionIds: [permissionId2], // Assign the second permission to the role
       });
     }
   });
-}); 
+});

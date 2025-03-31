@@ -9,7 +9,9 @@ import type {
 import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { ValidationError } from '../../shared/errors';
 
-const withErrorHandling = createControllerErrorHandler('UserPermissionsController');
+const withErrorHandling = createControllerErrorHandler(
+  'UserPermissionsController',
+);
 
 /**
  * Retrieves a user with their assigned roles.
@@ -25,9 +27,9 @@ export const getUserWithRoles = api(
     if (!userId || isNaN(Number(userId))) {
       throw new ValidationError('Invalid user ID provided');
     }
-    
+
     return withErrorHandling('getUserWithRoles', () =>
-      userPermissionsRepository.getUserWithRoles(userId)
+      userPermissionsRepository.getUserWithRoles(userId),
     );
   },
 );
@@ -43,7 +45,7 @@ export const getUserWithPermissions = api(
   { method: 'GET', path: '/users/:userId/permissions', expose: true },
   async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
     return withErrorHandling('getUserWithPermissions', () =>
-      userPermissionsRepository.getUserWithPermissions(userId)
+      userPermissionsRepository.getUserWithPermissions(userId),
     );
   },
 );
@@ -63,7 +65,7 @@ export const assignRolesToUser = api(
     ...data
   }: AssignRolesToUserPayload & { userId: number }): Promise<UserWithRoles> => {
     return withErrorHandling('assignRolesToUser', () =>
-      userPermissionsRepository.assignRoles(userId, data)
+      userPermissionsRepository.assignRoles(userId, data),
     );
   },
 );
@@ -85,7 +87,7 @@ export const assignPermissionsToUser = api(
     userId: number;
   }): Promise<UserWithPermissions> => {
     return withErrorHandling('assignPermissionsToUser', () =>
-      userPermissionsRepository.assignPermissions(userId, data)
+      userPermissionsRepository.assignPermissions(userId, data),
     );
   },
 );
@@ -175,7 +177,7 @@ export const getUserPermissions = api(
   { method: 'GET', path: '/users/:userId/effective-permissions', expose: true },
   async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
     return withErrorHandling('getUserPermissions', () =>
-      userPermissionsRepository.getUserWithEffectivePermissions(userId)
+      userPermissionsRepository.getUserWithEffectivePermissions(userId),
     );
   },
 );
@@ -191,7 +193,7 @@ export const getUserRoles = api(
   { method: 'GET', path: '/users/:userId/assigned-roles', expose: true },
   async ({ userId }: { userId: number }): Promise<UserWithRoles> => {
     return withErrorHandling('getUserRoles', () =>
-      userPermissionsRepository.getUserWithRoles(userId)
+      userPermissionsRepository.getUserWithRoles(userId),
     );
   },
 );

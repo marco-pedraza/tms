@@ -25,14 +25,13 @@ import {
 import { count } from 'drizzle-orm';
 
 // Error message constants
-const ERROR_ROLE_NAME_EXISTS = (name: string) => 
+const ERROR_ROLE_NAME_EXISTS = (name: string) =>
   `Role with name ${name} already exists in this tenant`;
-const ERROR_VALIDATE_NAME_UNIQUENESS = (errorMsg: string) => 
+const ERROR_VALIDATE_NAME_UNIQUENESS = (errorMsg: string) =>
   `Failed to validate role name uniqueness: ${errorMsg}`;
-const ERROR_PERMISSION_NOT_FOUND = (id: number) => 
+const ERROR_PERMISSION_NOT_FOUND = (id: number) =>
   `Permission with id ${id} not found`;
-const ERROR_ROLE_NOT_FOUND = (id: number) => 
-  `Role with id ${id} not found`;
+const ERROR_ROLE_NOT_FOUND = (id: number) => `Role with id ${id} not found`;
 
 /**
  * Creates a repository for managing role entities
@@ -64,7 +63,7 @@ export const createRoleRepository = () => {
         query = and(
           eq(roles.name, name),
           eq(roles.tenantId, tenantId),
-          not(eq(roles.id, excludeId))
+          not(eq(roles.id, excludeId)),
         );
       } else {
         query = and(eq(roles.name, name), eq(roles.tenantId, tenantId));
@@ -76,9 +75,7 @@ export const createRoleRepository = () => {
         .where(query);
 
       if (Number(result.count) > 0) {
-        throw new DuplicateError(
-          ERROR_ROLE_NAME_EXISTS(name),
-        );
+        throw new DuplicateError(ERROR_ROLE_NAME_EXISTS(name));
       }
     } catch (error) {
       if (error instanceof DuplicateError) {
@@ -94,9 +91,11 @@ export const createRoleRepository = () => {
    * @returns Created role with permissions
    */
   // TODO Add transaction capabilities to base repository to be able to do a whole transaction with the create role and assign permissions
-  const create = async (data: CreateRolePayload): Promise<RoleWithPermissions> => {
+  const create = async (
+    data: CreateRolePayload,
+  ): Promise<RoleWithPermissions> => {
     const { permissionIds, ...roleData } = data;
-    
+
     await validateUniqueName(roleData.name, roleData.tenantId);
     const role = await baseRepository.create(roleData);
 
@@ -112,7 +111,9 @@ export const createRoleRepository = () => {
    * @param id - ID of the role to find
    * @returns Found role with permissions
    */
-  const findOneWithPermissions = async (id: number): Promise<RoleWithPermissions> => {
+  const findOneWithPermissions = async (
+    id: number,
+  ): Promise<RoleWithPermissions> => {
     const role = await baseRepository.findOne(id);
     const permissionList = await getRelatedEntities<Permission>(
       permissions,
@@ -274,10 +275,14 @@ export const createRoleRepository = () => {
   const findAllByTenantPaginated = async (
     tenantId: number,
     params: PaginationParams,
-    includePermissions = false
+    includePermissions = false,
   ): Promise<PaginatedRoles | PaginatedRolesWithPermissions> => {
     // Use the base repository's findByPaginated method which handles pagination logic
-    const result = await baseRepository.findByPaginated(roles.tenantId, tenantId, params);
+    const result = await baseRepository.findByPaginated(
+      roles.tenantId,
+      tenantId,
+      params,
+    );
 
     if (!includePermissions) {
       return result as PaginatedRoles;
@@ -286,7 +291,7 @@ export const createRoleRepository = () => {
     const rolesWithPermissions = await Promise.all(
       result.data.map(async (role) => {
         return await findOneWithPermissions(role.id);
-      })
+      }),
     );
 
     return {
@@ -295,12 +300,11 @@ export const createRoleRepository = () => {
     };
   };
 
-
   const deleteRole = async (id: number): Promise<Role> => {
     try {
       // Use the findOne method to verify the role exists before deletion
       const role = await baseRepository.findOne(id);
-      
+
       // Role permissions will be automatically deleted due to CASCADE
       return baseRepository.delete(id);
     } catch (error) {
@@ -326,4 +330,4 @@ export const createRoleRepository = () => {
 };
 
 // Export the role repository instance
-export const roleRepository = createRoleRepository(); 
+export const roleRepository = createRoleRepository();

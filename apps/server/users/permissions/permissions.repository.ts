@@ -58,11 +58,11 @@ export const createPermissionRepository = () => {
    */
   const findByCode = async (code: string): Promise<Permission> => {
     const permission = await baseRepository.findBy(permissions.code, code);
-    
+
     if (!permission) {
       throw new Error(`Permission with code ${code} not found`);
     }
-    
+
     return permission;
   };
 
@@ -83,7 +83,9 @@ export const createPermissionRepository = () => {
   const findAllPaginated = async (
     params: PaginationParams = {},
   ): Promise<PaginatedPermissions> => {
-    return baseRepository.findAllPaginated(params) as Promise<PaginatedPermissions>;
+    return baseRepository.findAllPaginated(
+      params,
+    ) as Promise<PaginatedPermissions>;
   };
 
   return {
@@ -96,4 +98,4 @@ export const createPermissionRepository = () => {
 };
 
 // Export the permission repository instance
-export const permissionRepository = createPermissionRepository(); 
+export const permissionRepository = createPermissionRepository();

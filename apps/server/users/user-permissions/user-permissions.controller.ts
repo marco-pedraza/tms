@@ -177,7 +177,7 @@ export const getUserPermissions = api(
   { method: 'GET', path: '/users/:userId/effective-permissions', expose: true },
   async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
     return withErrorHandling('getUserPermissions', () =>
-      userPermissionsRepository.getUserWithEffectivePermissions(userId),
+      userPermissionsRepository.getUserWithPermissions(userId),
     );
   },
 );

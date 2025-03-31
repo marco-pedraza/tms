@@ -3,45 +3,74 @@ description: define how to manages database schemas
 globs: **/server/db/**
 alwaysApply: false
 ---
-
 # Database Organization Patterns
 
 ## Overview
 
-This document outlines the database structure and patterns in our application, following the Locality of Behavior (LoB) principle. Database schemas are co-located with their respective features, while shared database configuration is maintained at the root level.
+This document outlines the database structure and patterns in our application, following the Repository pattern and Locality of Behavior (LoB) principle. Database schemas are co-located with their respective features, while shared database configuration and base repository implementations are maintained at the root level.
 
-## Structure
+## Directory Structure
 
 ```
 apps/server/
 ├── db/                       # Root-level database configuration
-│   ├── database.ts           # Database connection configuration
-│   ├── schema.ts             # Schema exports aggregation
-│   ├── index.ts              # Database exports aggregation
-│   └── migrations/           # Database migrations
-└── [subsystem]/[feature]/    # Feature-specific schema placement
-    └── [feature].schema.ts   # Schema definition for each feature
+│   ├── database.ts          # Database connection configuration
+│   ├── schema.ts            # Schema exports aggregation
+│   ├── index.ts             # Database exports aggregation
+│   └── migrations/          # Database migrations
+├── shared/                  # Shared utilities
+│   └── base-repository.ts   # Base repository implementation
+└── [subsystem]/[feature]/   # Feature-specific implementations
+    ├── [feature].schema.ts  # Schema definition
+    └── [feature].repository.ts # Repository implementation
 ```
 
 ## Core Components
 
-### Root-Level Configuration
+### 1. Base Repository Implementation
 
-- **Database Connection** (`db/database.ts`): Connection setup and shared utilities
-- **Schema Aggregation** (`db/schema.ts`): Exports all schemas for migrations
-  ```typescript
-  export { countries } from '../inventory/countries/countries.schema';
-  export { states } from '../inventory/states/states.schema';
-  ```
-- **Migrations** (`db/migrations/`): Generated migration files
+```typescript
+// shared/base-repository.ts
+import { db } from '../db';
+import type { PgTable } from 'drizzle-orm/pg-core';
+import { NotFoundError, DuplicateError } from '../shared/errors';
+import { eq } from 'drizzle-orm';
 
-### Feature-Level Schemas
+export const createBaseRepository = <
+  TEntity,
+  TCreatePayload,
+  TUpdatePayload,
+  TSchema extends PgTable,
+>(
+  schema: TSchema,
+  entityName: string
+) => {
+  const findOne = async (id: number): Promise<TEntity> => {
+    const [entity] = await db.select().from(schema).where(eq(schema.id, id)).limit(1);
 
-Each feature owns its schema definition file (`[feature].schema.ts`) located within the feature directory.
+    if (!entity) {
+      throw new NotFoundError(`${entityName} not found`);
+    }
 
-## Implementation Patterns
+    return entity as TEntity;
+  };
 
-### 1. Schema Definition in Features
+  const create = async (data: TCreatePayload): Promise<TEntity> => {
+    const [entity] = await db.insert(schema).values(data).returning();
+    return entity as TEntity;
+  };
+
+  // ... other base operations
+
+  return {
+    findOne,
+    create,
+    // ... other operations
+  };
+};
+```
+
+### 2. Feature Schema Definition
 
 ```typescript
 // inventory/countries/countries.schema.ts
@@ -57,50 +86,124 @@ export const countries = pgTable('countries', {
 });
 ```
 
-### 2. Schema References Between Features
+### 3. Feature Repository Implementation
 
 ```typescript
-// inventory/states/states.schema.ts
-import { pgTable, serial, text, integer } from 'drizzle-orm/pg-core';
-import { countries } from '../countries/countries.schema';
+// inventory/countries/countries.repository.ts
+import { countries } from './countries.schema';
+import type {
+  Country,
+  CreateCountryPayload,
+  UpdateCountryPayload,
+  Countries,
+} from './countries.types';
+import { createBaseRepository } from '../../shared/base-repository';
 
-export const states = pgTable('states', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  countryId: integer('country_id').references(() => countries.id),
-  // ...
-});
-```
+export const createCountryRepository = () => {
+  const baseRepository = createBaseRepository<
+    Country,
+    CreateCountryPayload,
+    UpdateCountryPayload,
+    typeof countries
+  >(countries, 'Country');
 
-### 3. Database Access in Handlers
+  const validateUniqueNameAndCode = async (
+    name: string,
+    code: string,
+    excludeId?: number
+  ): Promise<void> => {
+    await baseRepository.validateUniqueness(
+      [
+        { field: countries.name, value: name },
+        { field: countries.code, value: code },
+      ],
+      excludeId,
+      'Country with this name or code already exists'
+    );
+  };
 
-```typescript
-// inventory/countries/countries.handler.ts
-import { db } from '@/db';
-import { countries } from './countries.schema'; // Local schema import
+  const create = async (data: CreateCountryPayload): Promise<Country> => {
+    await validateUniqueNameAndCode(data.name, data.code);
+    return baseRepository.create(data);
+  };
 
-export class CountryHandler {
-  async findAll() {
-    return db.select().from(countries);
-  }
-}
+  return {
+    ...baseRepository,
+    create,
+    // ... other extended operations
+  };
+};
+
+// Export the repository instance
+export const countryRepository = createCountryRepository();
 ```
 
 ## Key Principles
 
-1. **Locality of Behavior**: Schema definitions belong with the feature code that uses them
-2. **Direct Referencing**: Features import schemas from other features directly
-3. **Centralized Configuration**: Database setup and migrations managed at root level
+1. **Repository Pattern**
 
-## Adding New Tables
+   - Use base repository for common CRUD operations
+   - Extend base repository for feature-specific operations
+   - Keep database access isolated in repositories
 
-1. Create schema definition in the feature directory
-2. Export the schema in `db/schema.ts`
-3. Generate migrations
+2. **Locality of Behavior**
+
+   - Schema definitions belong with their feature
+   - Repositories are co-located with their schemas
+   - Direct schema references between features
+
+3. **Type Safety**
+   - Use TypeScript generics for type safety
+   - Define clear interfaces for entities and payloads
+   - Leverage Drizzle ORM for type inference
 
 ## Best Practices
 
-- Use consistent naming (snake_case for DB, camelCase in TypeScript)
-- Define explicit relationships using foreign keys
-- Include standard fields (id, created_at, updated_at)
-- Export all schemas to the central schema.ts file
+1. **Schema Design**
+
+   - Use consistent naming (snake_case for DB, camelCase in code)
+   - Include standard fields (id, created_at, updated_at)
+   - Define explicit relationships with foreign keys
+   - Use appropriate column types and constraints
+
+2. **Repository Implementation**
+
+   - Extend base repository for custom needs
+   - Implement feature-specific validations
+   - Handle transactions when needed
+   - Use meaningful error messages
+
+3. **Code Organization**
+
+   - Export schemas to central schema.ts
+   - Keep repositories focused and single-purpose
+   - Document complex queries or validations
+   - Follow consistent naming patterns
+
+4. **Performance**
+   - Use appropriate indexes
+   - Optimize queries for common operations
+   - Handle bulk operations efficiently
+   - Consider pagination for large datasets
+
+## Adding New Features
+
+1. Create schema definition in feature directory
+2. Export schema in `db/schema.ts`
+3. Create repository extending base repository
+4. Generate and run migrations
+5. Implement feature-specific operations
+
+## Migration Management
+
+1. **Generation**
+
+   - Use Drizzle Kit for migration generation
+   - Review generated migrations carefully
+   - Add meaningful migration names
+
+2. **Deployment**
+   - Test migrations in development first
+   - Have rollback plans for complex migrations
+   - Consider data migration needs
+   - Deploy during low-traffic periods

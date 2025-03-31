@@ -12,7 +12,7 @@ alwaysApply: false
    - Define API routes and endpoints
    - Handle request/response transformation
    - Manage error handling through the shared `parseApiError` utility
-   - Call handler methods
+   - Call repository methods directly for CRUD operations
 
 2. No business logic in controllers
 
@@ -43,6 +43,17 @@ alwaysApply: false
 ## Implementation Example
 
 ```typescript
+import { api } from 'encore.dev';
+import { APIError } from 'encore.dev/api';
+import { parseApiError } from '../../shared/errors';
+import { countryRepository } from './countries.repository';
+import type {
+  Country,
+  Countries,
+  CreateCountryPayload,
+  UpdateCountryPayload,
+} from './countries.types';
+
 /**
  * Creates a new country.
  * @param params - The country data to create
@@ -53,7 +64,7 @@ export const createCountry = api(
   { method: 'POST', path: '/countries' },
   async (params: CreateCountryPayload): Promise<Country> => {
     try {
-      return await countryHandler.create(params);
+      return await countryRepository.create(params);
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;
@@ -72,7 +83,7 @@ export const getCountry = api(
   { method: 'GET', path: '/countries/:id' },
   async ({ id }: { id: number }): Promise<Country> => {
     try {
-      return await countryHandler.findOne(id);
+      return await countryRepository.findOne(id);
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;
@@ -89,7 +100,7 @@ export const listCountries = api(
   { method: 'GET', path: '/countries' },
   async (): Promise<Countries> => {
     try {
-      return await countryHandler.findAll();
+      return await countryRepository.findAll();
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;
@@ -109,7 +120,7 @@ export const updateCountry = api(
   { method: 'PUT', path: '/countries/:id' },
   async ({ id, ...data }: UpdateCountryPayload & { id: number }): Promise<Country> => {
     try {
-      return await countryHandler.update(id, data);
+      return await countryRepository.update(id, data);
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;
@@ -128,7 +139,7 @@ export const deleteCountry = api(
   { method: 'DELETE', path: '/countries/:id' },
   async ({ id }: { id: number }): Promise<Country> => {
     try {
-      return await countryHandler.delete(id);
+      return await countryRepository.delete(id);
     } catch (error) {
       const parsedError = parseApiError(error);
       throw parsedError;
@@ -139,15 +150,106 @@ export const deleteCountry = api(
 
 ## Best Practices
 
-- Route definition and error transformation only
-- No business logic
-- Consistent naming for endpoints (createEntity, getEntity, etc.)
-- Use of handlers as singletons
-- Strong typing with payload types
-- Use of shared error handling
-- Request validation
-- Response transformation
-- Consistent error handling
-- Homogeneous code structure
-- Document parameters and responses
-- Maintain simplicity
+1. **Direct Repository Usage**
+
+   - Call repository methods directly for CRUD operations
+   - No need for intermediate handlers unless complex business logic is required
+   - Use repository instances as singletons
+
+2. **Error Handling**
+
+   - Use the shared `parseApiError` utility consistently
+   - Wrap all repository calls in try/catch blocks
+   - Transform domain errors to appropriate API errors
+
+3. **Request/Response**
+
+   - Strong typing with payload types
+   - Clear parameter documentation
+   - Consistent response structures
+   - Proper validation handling
+
+4. **Code Structure**
+
+   - Keep controllers thin
+   - No business logic
+   - Consistent naming for endpoints
+   - Clear documentation
+   - Homogeneous code structure
+
+5. **When to Add a Handler**
+   - Only add a handler when complex business logic is needed
+   - Examples of when to use a handler:
+     - Operations involving multiple repositories
+     - Complex data transformations
+     - Integration with external services
+     - Complex business rules processing
+
+## Testing
+
+1. **Unit Tests**
+   - Mock repository calls
+   - Test error handling
+   - Verify correct API error mapping
+   - Test request/response transformation
+
+```typescript
+import { countryRepository } from './countries.repository';
+import { createCountry } from './countries.controller';
+
+jest.mock('./countries.repository');
+
+describe('Country Controller', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('createCountry', () => {
+    it('should create a country successfully', async () => {
+      const mockCountry = { id: 1, name: 'Test', code: 'TST' };
+      (countryRepository.create as jest.Mock).mockResolvedValue(mockCountry);
+
+      const result = await createCountry({ name: 'Test', code: 'TST' });
+
+      expect(result).toEqual(mockCountry);
+      expect(countryRepository.create).toHaveBeenCalledWith({
+        name: 'Test',
+        code: 'TST',
+      });
+    });
+
+    it('should handle validation errors', async () => {
+      const errorMessage = 'Country with this code already exists';
+      (countryRepository.create as jest.Mock).mockRejectedValue(new Error(errorMessage));
+
+      await expect(createCountry({ name: 'Test', code: 'TST' })).rejects.toThrow();
+    });
+  });
+});
+```
+
+## Common Patterns
+
+1. **Route Organization**
+
+   - Group related endpoints together
+   - Use consistent route naming
+   - Follow REST conventions
+
+2. **Parameter Handling**
+
+   - Validate required parameters
+   - Use proper types for parameters
+   - Document parameter constraints
+
+3. **Response Formatting**
+
+   - Consistent response structures
+   - Proper error responses
+   - Clear success messages
+
+4. **Documentation**
+   - Clear endpoint descriptions
+   - Parameter documentation
+   - Response type documentation
+   - Error scenarios documentation

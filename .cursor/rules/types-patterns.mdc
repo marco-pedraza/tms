@@ -13,6 +13,7 @@ alwaysApply: false
    - Creation payloads (e.g., `CreateCountryPayload`, `CreateStatePayload`)
    - Update payloads (e.g., `UpdateCountryPayload`, `UpdateStatePayload`)
    - List responses (e.g., `Countries`, `States`)
+   - Paginated responses (e.g., `PaginatedCountries`, `PaginatedStates`)
 
 2. Use descriptive JSDoc comments for all types and properties
 
@@ -25,8 +26,8 @@ alwaysApply: false
 ## Type Definitions Example
 
 ```typescript
-// API types
 import { MinLen, MatchesRegexp } from 'encore.dev/validate';
+import { PaginatedResult } from '../../shared/types';
 
 /**
  * Base interface representing a country entity
@@ -103,17 +104,89 @@ export interface Countries {
   /** List of countries */
   countries: Country[];
 }
-```
+
+/**
+ * Response type for paginated country list
+ */
+export type PaginatedCountries = PaginatedResult<Country>;
+
+/**
+ * Shared pagination types
+ */
+export interface PaginationParams {
+  /** Page number (1-based) */
+  page?: number;
+  /** Number of items per page */
+  pageSize?: number;
+  /** Column to sort by */
+  sortBy?: string;
+  /** Sort direction */
+  sortDirection?: 'asc' | 'desc';
+}
+
+/**
+ * Pagination metadata
+ */
+export interface PaginationMeta {
+  /** Current page number (1-based) */
+  currentPage: number;
+  /** Number of items per page */
+  pageSize: number;
+  /** Total number of items across all pages */
+  totalCount: number;
+  /** Total number of pages */
+  totalPages: number;
+  /** Whether there is a next page available */
+  hasNextPage: boolean;
+  /** Whether there is a previous page available */
+  hasPreviousPage: boolean;
+}
 
 ## Best Practices
 
-- Use interfaces for objects
-- Use types for unions, intersections, or utility types
-- Include JSDoc comments for all types and properties
-- Apply validation decorators for API inputs
-- Maintain consistent naming conventions
-- Keep types focused and specific
-- Use TypeScript features appropriately
-- Export all types that might be reused elsewhere
-- Group related types together
-- Follow a consistent structure across all features
+1. **Type Organization**
+   - Group related types together
+   - Use interfaces for objects
+   - Use types for unions and intersections
+   - Keep types focused and specific
+   - Place shared types in `shared/types.ts`
+
+2. **Documentation**
+   - Include JSDoc comments for all types
+   - Document validation rules
+   - Explain complex type relationships
+   - Add examples for non-obvious usage
+
+3. **Naming Conventions**
+   - Use PascalCase for type names
+   - Use consistent suffixes:
+     - `Payload` for input DTOs
+     - `Meta` for metadata types
+     - `Params` for parameter types
+     - `Paginated` prefix for paginated results
+
+4. **Type Safety**
+   - Use strict types
+   - Avoid any type
+   - Leverage TypeScript features
+   - Use generics appropriately (e.g., `PaginatedResult<T>`)
+
+5. **Validation**
+   - Apply validation decorators from Encore
+   - Define clear constraints
+   - Document validation rules
+   - Use shared validation types
+
+6. **Reusability**
+   - Create generic types for common patterns (e.g., `PaginatedResult<T>`)
+   - Share common interfaces in `shared/types.ts`
+   - Use type composition
+   - Export reusable types
+
+7. **Maintenance**
+   - Keep types up to date
+   - Remove unused types
+   - Document breaking changes
+   - Version types appropriately
+```
+

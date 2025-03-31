@@ -7,7 +7,7 @@ alwaysApply: false
 
 ## Overview
 
-This document defines the standard structure and implementation patterns for features in our Encore-based application. The codebase is organized hierarchically with systems, subsystems, and features. Following the Locality of Behavior (LoB) principle, each feature includes its own database schema alongside its business logic.
+This document defines the standard structure and implementation patterns for features in our Encore-based application. The codebase is organized hierarchically with systems, subsystems, and features. Following the Locality of Behavior (LoB) principle, each feature includes its own database schema alongside its data access layer.
 
 ## Directory Structure
 
@@ -17,18 +17,18 @@ apps/
     ├── db/                   # Root-level database configuration and aggregation
     │   ├── database.ts       # Database connection configuration
     │   ├── schema.ts         # Schema exports aggregation
-    │   ├── index.ts          # Database exports aggregation
+    │   ├── index.ts         # Database exports aggregation
     │   ├── migrations/       # Database migrations
     │   └── schemas/          # Reserved for shared schemas (if needed)
     ├── inventory/            # Subsystem for inventory management
     │   ├── countries/        # Feature: countries management
-    │   │   ├── countries.handler.ts          # Business logic (Handler)
+    │   │   ├── countries.repository.ts       # Data access layer (Repository)
     │   │   ├── countries.controller.ts       # API endpoints (Controller)
     │   │   ├── countries.types.ts            # Type definitions
     │   │   ├── countries.schema.ts           # Database schema definition
     │   │   └── countries.controller.spec.ts  # Unit tests
     │   └── states/           # Feature: states management
-    │       ├── states.handler.ts
+    │       ├── states.repository.ts
     │       ├── states.controller.ts
     │       ├── states.types.ts
     │       ├── states.schema.ts
@@ -37,7 +37,8 @@ apps/
     │   └── ...
     └── shared/               # Utilities shared across subsystems
         ├── errors.ts         # Centralized error handling
-        └── validators.ts     # Shared validation utilities
+        ├── validators.ts     # Shared validation utilities
+        └── base-repository.ts # Base repository implementation
 ```
 
 ## Feature Structure
@@ -46,12 +47,36 @@ Each feature follows this structure:
 
 ```
 feature-name/                 # Example: countries/
-├── feature-name.handler.ts           # Handler with business logic
+├── feature-name.repository.ts        # Data access layer (Repository)
 ├── feature-name.controller.ts        # Encore API endpoints
 ├── feature-name.types.ts             # Type definitions
 ├── feature-name.schema.ts            # Database schema definition
 └── feature-name.controller.spec.ts   # Unit tests for controller
 ```
+
+## Repository Pattern
+
+The Repository pattern is used for features that primarily deal with CRUD operations. This pattern:
+
+1. **Encapsulates Data Access**: All database operations are contained within the repository
+2. **Provides Clean API**: Offers a clear interface for data operations
+3. **Handles Validation**: Manages data validation and uniqueness constraints
+4. **Reuses Common Logic**: Extends from base repository for standard CRUD operations
+
+### Repository as Primary Pattern
+
+The Repository pattern should be the default choice for all features. Most features will only need a repository since they primarily deal with CRUD operations and data validation.
+
+### When to Add a Handler
+
+Handlers are optional and should only be added when:
+
+- Complex business logic that goes beyond CRUD operations is needed
+- Operations need to coordinate multiple repositories
+- Feature requires orchestration of multiple services or external integrations
+- There's significant data transformation or business rules processing
+
+In most cases, a repository alone is sufficient. Only create a handler when there's a clear need for complex business logic that can't be handled appropriately in the repository layer.
 
 ## Type Structure
 
@@ -61,6 +86,7 @@ Each feature should have the following type definitions:
 2. Creation payload (e.g., `CreateCountryPayload`, `CreateStatePayload`)
 3. Update payload (e.g., `UpdateCountryPayload`, `UpdateStatePayload`)
 4. List response (e.g., `Countries`, `States`)
+5. Repository interface (e.g., `CountryRepository`, `StateRepository`)
 
 ## Specific Rules
 
@@ -72,16 +98,17 @@ Each feature should have the following type definitions:
 4. Maximum file size should not exceed 500 lines
 5. Use meaningful and descriptive names for all entities
 6. Follow TypeScript naming conventions strictly
+7. Extend from base repository for common CRUD operations
+8. Implement feature-specific validations in the repository
 
 For detailed documentation of each component, see:
 
 - [typescript-patterns.mdc](mdc:.cursor/rules/typescript-patterns.mdc) - General TypeScript patterns
-- [handler-patterns.mdc](mdc:.cursor/rules/handler-patterns.mdc) - Patterns for handlers
 - [controller-patterns.mdc](mdc:.cursor/rules/controller-patterns.mdc) - Patterns for controllers
 - [types-patterns.mdc](mdc:.cursor/rules/types-patterns.mdc) - Patterns for type definitions
 - [error-handling.mdc](mdc:.cursor/rules/error-handling.mdc) - Error handling
 - [testing-patterns.mdc](mdc:.cursor/rules/testing-patterns.mdc) - Testing standards and patterns
-- [database-patterns.mdc](mdc:.cursor/rules/database-patterns.mdc) - Database standars and patterns
+- [database-patterns.mdc](mdc:.cursor/rules/database-patterns.mdc) - - Database standards and patterns
 
 ## Creating New Features
 
@@ -89,7 +116,7 @@ For detailed documentation of each component, see:
 
 1. Create a new directory with the feature name inside the subsystem (e.g., `inventory/cities/`)
 2. Create the standard feature files with appropriate naming:
-   - `cities.handler.ts` (Handler)
+   - `cities.repository.ts` (Repository)
    - `cities.controller.ts` (API endpoints)
    - `cities.types.ts` (Types and DTOs)
    - `cities.schema.ts` (Database schema)
@@ -103,6 +130,25 @@ For detailed documentation of each component, see:
 2. Add feature directories inside the subsystem
 3. Reuse the shared utilities from `server/shared/`
 4. Utilize the root-level database configuration
+
+### Repository Implementation Best Practices
+
+1. **Base Repository Usage**:
+
+   - Extend from base repository for common CRUD operations
+   - Override methods only when custom behavior is needed
+   - Implement feature-specific validations
+
+2. **Validation Rules**:
+
+   - Implement uniqueness constraints
+   - Add field-level validations
+   - Handle complex validation scenarios
+
+3. **Error Handling**:
+   - Use standard error types from shared error utilities
+   - Provide clear error messages
+   - Handle edge cases appropriately
 
 ### Database Schema Best Practices
 
@@ -157,3 +203,4 @@ For detailed documentation of each component, see:
    - Implement authorization
    - Handle sensitive data appropriately
    - Follow security best practices
+

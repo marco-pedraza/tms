@@ -1,5 +1,5 @@
 import { db } from '../../db';
-import { DuplicateError } from '../../shared/errors';
+import { DuplicateError, NotFoundError } from '../../shared/errors';
 import { roles, rolePermissions } from './roles.schema';
 import { permissions } from '../permissions/permissions.schema';
 import { eq, and, not } from 'drizzle-orm';
@@ -23,6 +23,16 @@ import {
   updateManyToManyRelation,
 } from '../../shared/db-utils';
 import { count } from 'drizzle-orm';
+
+// Error message constants
+const ERROR_ROLE_NAME_EXISTS = (name: string) => 
+  `Role with name ${name} already exists in this tenant`;
+const ERROR_VALIDATE_NAME_UNIQUENESS = (errorMsg: string) => 
+  `Failed to validate role name uniqueness: ${errorMsg}`;
+const ERROR_PERMISSION_NOT_FOUND = (id: number) => 
+  `Permission with id ${id} not found`;
+const ERROR_ROLE_NOT_FOUND = (id: number) => 
+  `Role with id ${id} not found`;
 
 /**
  * Creates a repository for managing role entities
@@ -67,14 +77,14 @@ export const createRoleRepository = () => {
 
       if (Number(result.count) > 0) {
         throw new DuplicateError(
-          `Role with name ${name} already exists in this tenant`,
+          ERROR_ROLE_NAME_EXISTS(name),
         );
       }
     } catch (error) {
       if (error instanceof DuplicateError) {
         throw error;
       }
-      throw new Error(`Failed to validate role name uniqueness: ${(error as Error).message}`);
+      throw new Error(ERROR_VALIDATE_NAME_UNIQUENESS((error as Error).message));
     }
   };
 
@@ -231,7 +241,14 @@ export const createRoleRepository = () => {
     // Validate all permissions exist
     await Promise.all(
       data.permissionIds.map(async (permissionId) => {
-        await permissionRepository.findOne(permissionId);
+        try {
+          await permissionRepository.findOne(permissionId);
+        } catch (error) {
+          if (error instanceof NotFoundError) {
+            throw new NotFoundError(ERROR_PERMISSION_NOT_FOUND(permissionId));
+          }
+          throw error;
+        }
       }),
     );
 
@@ -258,65 +275,39 @@ export const createRoleRepository = () => {
     params: PaginationParams,
     includePermissions = false
   ): Promise<PaginatedRoles | PaginatedRolesWithPermissions> => {
-    const { page = 1, pageSize = 10 } = params;
-    const offset = (page - 1) * pageSize;
-
-    // Count total tenant roles
-    const [{ count: totalCount }] = await db
-      .select({ count: count() })
-      .from(roles)
-      .where(eq(roles.tenantId, tenantId));
-
-    // Get paginated tenant roles
-    const rolesList = await db
-      .select()
-      .from(roles)
-      .where(eq(roles.tenantId, tenantId))
-      .limit(pageSize)
-      .offset(offset);
-
-    const totalItems = Number(totalCount);
-    const totalPages = Math.ceil(totalItems / pageSize);
+    // Use the base repository's findByPaginated method which handles pagination logic
+    const result = await baseRepository.findByPaginated(roles.tenantId, tenantId, params);
 
     if (!includePermissions) {
-      return {
-        data: rolesList,
-        pagination: {
-          currentPage: page,
-          pageSize,
-          totalCount: totalItems,
-          totalPages,
-          hasNextPage: page < totalPages,
-          hasPreviousPage: page > 1
-        },
-      };
+      return result as PaginatedRoles;
     }
 
     const rolesWithPermissions = await Promise.all(
-      rolesList.map(async (role) => {
+      result.data.map(async (role) => {
         return await findOneWithPermissions(role.id);
       })
     );
 
     return {
       data: rolesWithPermissions,
-      pagination: {
-        currentPage: page,
-        pageSize,
-        totalCount: totalItems,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1
-      },
+      pagination: result.pagination,
     };
   };
 
+
   const deleteRole = async (id: number): Promise<Role> => {
-    // Use the findOne method to verify the role exists before deletion
-    const role = await baseRepository.findOne(id);
-    
-    // Role permissions will be automatically deleted due to CASCADE
-    return baseRepository.delete(id);
+    try {
+      // Use the findOne method to verify the role exists before deletion
+      const role = await baseRepository.findOne(id);
+      
+      // Role permissions will be automatically deleted due to CASCADE
+      return baseRepository.delete(id);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw new NotFoundError(ERROR_ROLE_NOT_FOUND(id));
+      }
+      throw error;
+    }
   };
 
   return {

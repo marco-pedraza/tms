@@ -42,6 +42,7 @@ describe('User Permissions Controller', () => {
   };
 
   const testDepartment: CreateDepartmentPayload = {
+    tenantId: 0, // Will be set after tenant creation
     name: 'Test Department',
     code: 'TEST-DEPT-UPER',
     description: 'A test department for user permissions testing',

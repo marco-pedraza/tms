@@ -17,6 +17,7 @@ import {
   updateManyToManyRelation,
   getRelatedEntities,
 } from '../../shared/db-utils';
+import { omitPasswordHash } from '../../shared/auth-utils';
 
 // Error message constants
 const ERROR_MESSAGES = {
@@ -106,8 +107,7 @@ export const createUserPermissionsRepository = () => {
     const user = await userRepository.findOne(userId);
 
     // Create a safe user object without sensitive data
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, ...safeUser } = user;
+    const safeUser = omitPasswordHash(user);
 
     const rolesList = await getRelatedEntities<Role>(
       roles,
@@ -135,8 +135,7 @@ export const createUserPermissionsRepository = () => {
     const user = await userRepository.findOne(userId);
 
     // Create a safe user object without sensitive data
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, ...safeUser } = user;
+    const safeUser = omitPasswordHash(user);
 
     // Get direct permissions
     const directPermissionsList = await getRelatedEntities<Permission>(

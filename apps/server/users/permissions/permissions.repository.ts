@@ -8,7 +8,7 @@ import type {
 } from './permissions.types';
 import { createBaseRepository } from '../../shared/base-repository';
 import { PaginationParams } from '../../shared/types';
-import { DuplicateError } from '../../shared/errors';
+import { NotFoundError } from '../../shared/errors';
 
 const DEFAULT_ERROR_MESSAGE = 'Permission with this code already exists';
 
@@ -25,29 +25,16 @@ export const createPermissionRepository = () => {
   >(permissions, 'Permission');
 
   /**
-   * Validates that a permission code is unique
-   * @param code - The code to validate
-   * @throws {DuplicateError} If a permission with the same code already exists
-   */
-  const validateUniqueCode = async (code: string): Promise<void> => {
-    try {
-      await baseRepository.validateUniqueness(
-        [{ field: permissions.code, value: code }],
-        undefined,
-        DEFAULT_ERROR_MESSAGE,
-      );
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  /**
    * Creates a new permission with code validation
    * @param data - The permission data to create
    * @returns The created permission
    */
   const create = async (data: CreatePermissionPayload): Promise<Permission> => {
-    await validateUniqueCode(data.code);
+    await baseRepository.validateUniqueness(
+      [{ field: permissions.code, value: data.code }],
+      undefined,
+      DEFAULT_ERROR_MESSAGE,
+    );
     return baseRepository.create(data);
   };
 
@@ -55,12 +42,13 @@ export const createPermissionRepository = () => {
    * Finds a permission by code
    * @param code - The code of the permission to find
    * @returns The found permission
+   * @throws {NotFoundError} If the permission is not found
    */
   const findByCode = async (code: string): Promise<Permission> => {
     const permission = await baseRepository.findBy(permissions.code, code);
 
     if (!permission) {
-      throw new Error(`Permission with code ${code} not found`);
+      throw new NotFoundError(`Permission with code ${code} not found`);
     }
 
     return permission;
@@ -71,8 +59,7 @@ export const createPermissionRepository = () => {
    * @returns List of all permissions
    */
   const findAll = async (): Promise<Permissions> => {
-    const result = await baseRepository.findAll();
-    return { permissions: result };
+    return { permissions: await baseRepository.findAll() };
   };
 
   /**

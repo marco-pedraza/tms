@@ -46,46 +46,6 @@ export const createRoleRepository = () => {
   >(roles, 'Role');
 
   /**
-   * Validates that a role name is unique within a tenant
-   * @param name - Name to validate
-   * @param tenantId - ID of the tenant
-   * @param excludeId - Optional ID to exclude from the check
-   * @throws {DuplicateError} If a role with the same name already exists
-   */
-  const validateUniqueName = async (
-    name: string,
-    tenantId: number,
-    excludeId?: number,
-  ): Promise<void> => {
-    try {
-      let query;
-      if (excludeId) {
-        query = and(
-          eq(roles.name, name),
-          eq(roles.tenantId, tenantId),
-          not(eq(roles.id, excludeId)),
-        );
-      } else {
-        query = and(eq(roles.name, name), eq(roles.tenantId, tenantId));
-      }
-
-      const [result] = await db
-        .select({ count: count() })
-        .from(roles)
-        .where(query);
-
-      if (Number(result.count) > 0) {
-        throw new DuplicateError(ERROR_ROLE_NAME_EXISTS(name));
-      }
-    } catch (error) {
-      if (error instanceof DuplicateError) {
-        throw error;
-      }
-      throw new Error(ERROR_VALIDATE_NAME_UNIQUENESS((error as Error).message));
-    }
-  };
-
-  /**
    * Creates a new role
    * @param data - Role data to create
    * @returns Created role with permissions
@@ -96,7 +56,20 @@ export const createRoleRepository = () => {
   ): Promise<RoleWithPermissions> => {
     const { permissionIds, ...roleData } = data;
 
-    await validateUniqueName(roleData.name, roleData.tenantId);
+    await baseRepository.validateUniqueness(
+      [
+        {
+          field: roles.name,
+          value: roleData.name,
+          scope: {
+            field: roles.tenantId,
+            value: roleData.tenantId,
+          },
+        },
+      ],
+      undefined,
+      ERROR_ROLE_NAME_EXISTS(roleData.name),
+    );
     const role = await baseRepository.create(roleData);
 
     if (permissionIds && permissionIds.length > 0) {
@@ -221,7 +194,20 @@ export const createRoleRepository = () => {
     const role = await baseRepository.findOne(id);
 
     if (data.name && data.name !== role.name) {
-      await validateUniqueName(data.name, role.tenantId, id);
+      await baseRepository.validateUniqueness(
+        [
+          {
+            field: roles.name,
+            value: data.name,
+            scope: {
+              field: roles.tenantId,
+              value: role.tenantId,
+            },
+          },
+        ],
+        id,
+        ERROR_ROLE_NAME_EXISTS(data.name),
+      );
     }
 
     await baseRepository.update(id, data);
@@ -242,6 +228,7 @@ export const createRoleRepository = () => {
 
     // Validate all permissions exist
     await Promise.all(
+      // TODO fix n+1 query with improved base repository
       data.permissionIds.map(async (permissionId) => {
         try {
           await permissionRepository.findOne(permissionId);
@@ -288,6 +275,7 @@ export const createRoleRepository = () => {
       return result as PaginatedRoles;
     }
 
+    // TODO fix using db operations inside map with improved base repository
     const rolesWithPermissions = await Promise.all(
       result.data.map(async (role) => {
         return await findOneWithPermissions(role.id);
@@ -303,7 +291,7 @@ export const createRoleRepository = () => {
   const deleteRole = async (id: number): Promise<Role> => {
     try {
       // Use the findOne method to verify the role exists before deletion
-      const role = await baseRepository.findOne(id);
+      await baseRepository.findOne(id);
 
       // Role permissions will be automatically deleted due to CASCADE
       return baseRepository.delete(id);

@@ -48,7 +48,23 @@ export interface UserWithPermissions extends SafeUser {
   roles: RoleWithPermissions[];
 
   /**
+   * Permissions that came from roles only
+   */
+  rolesPermissions: Permission[];
+
+  /**
    * All effective permissions (combined from direct assignments and roles)
    */
   effectivePermissions: Permission[];
+}
+
+/**
+ * Simplified interface for a user with only a flat list of permissions
+ * without separating role-based and direct permissions
+ */
+export interface UserWithFlatPermissions extends SafeUser {
+  /**
+   * All unique permissions the user has (combined from direct assignments and roles)
+   */
+  permissions: Permission[];
 }

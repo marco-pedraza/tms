@@ -18,6 +18,13 @@ import {
   getRelatedEntities,
 } from '../../shared/db-utils';
 
+// Error message constants
+const ERROR_MESSAGES = {
+  PERMISSION_REQUIRED: (code: string) => `User lacks required permission: ${code}`,
+  ROLE_REQUIRED: (roleId: number) => `User lacks required role with ID: ${roleId}`,
+  USER_NOT_FOUND: (userId: number) => `User with id ${userId} not found`,
+};
+
 /**
  * Creates a repository for managing user permissions and roles operations
  * @returns {Object} An object containing user-permissions operations
@@ -155,10 +162,13 @@ export const createUserPermissionsRepository = () => {
       );
     }
 
+    // Extract all permissions from roles
+    const rolesPermissions = rolesWithPermissions.flatMap((role) => role.permissions);
+
     // Calculate effective permissions (direct + from roles, removing duplicates)
     const allPermissions = [
       ...directPermissionsList,
-      ...rolesWithPermissions.flatMap((role) => role.permissions),
+      ...rolesPermissions,
     ];
 
     // Remove duplicates by ID
@@ -171,18 +181,8 @@ export const createUserPermissionsRepository = () => {
       directPermissions: directPermissionsList,
       roles: rolesWithPermissions,
       effectivePermissions: uniquePermissions,
+      rolesPermissions,
     };
-  };
-
-  /**
-   * Gets a user with their effective permissions
-   * @param userId - ID of the user
-   * @returns User with effective permissions
-   * @throws {NotFoundError} If the user is not found
-   */
-  const getUserWithEffectivePermissions = async (userId: number): Promise<UserWithPermissions> => {
-    // This is essentially the same as getUserWithPermissions
-    return getUserWithPermissions(userId);
   };
 
   /**
@@ -195,20 +195,20 @@ export const createUserPermissionsRepository = () => {
     try {
       const user = await getUserWithPermissions(userId);
 
-      const hasPermission = user.effectivePermissions.some(
+      const hasRequiredPermission = user.effectivePermissions.some(
         (p) => p.code === permissionCode,
       );
 
-      if (!hasPermission) {
+      if (!hasRequiredPermission) {
         throw new UnauthorizedError(
-          `User lacks required permission: ${permissionCode}`,
+          ERROR_MESSAGES.PERMISSION_REQUIRED(permissionCode)
         );
       }
     } catch (error) {
       if (error instanceof UnauthorizedError) {
         throw error;
       }
-      throw new NotFoundError(`User with id ${userId} not found`);
+      throw new NotFoundError(ERROR_MESSAGES.USER_NOT_FOUND(userId));
     }
   };
 
@@ -226,14 +226,14 @@ export const createUserPermissionsRepository = () => {
 
       if (!hasRole) {
         throw new UnauthorizedError(
-          `User lacks required role with ID: ${roleId}`,
+          ERROR_MESSAGES.ROLE_REQUIRED(roleId)
         );
       }
     } catch (error) {
       if (error instanceof UnauthorizedError) {
         throw error;
       }
-      throw new NotFoundError(`User with id ${userId} not found`);
+      throw new NotFoundError(ERROR_MESSAGES.USER_NOT_FOUND(userId));
     }
   };
 
@@ -242,7 +242,6 @@ export const createUserPermissionsRepository = () => {
     assignPermissions,
     getUserWithRoles,
     getUserWithPermissions,
-    getUserWithEffectivePermissions,
     hasPermission,
     hasRole
   };

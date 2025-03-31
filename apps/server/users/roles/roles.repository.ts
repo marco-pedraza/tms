@@ -93,6 +93,7 @@ export const createRoleRepository = () => {
    * @param data - Role data to create
    * @returns Created role with permissions
    */
+  // TODO Add transaction capabilities to base repository to be able to do a whole transaction with the create role and assign permissions
   const create = async (data: CreateRolePayload): Promise<RoleWithPermissions> => {
     const { permissionIds, ...roleData } = data;
     

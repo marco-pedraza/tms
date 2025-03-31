@@ -5,148 +5,209 @@ alwaysApply: false
 ---
 # Handler Patterns
 
+## Overview
+
+Handlers in our Encore application are optional service layers that encapsulate complex business logic. They are used when operations require more than simple CRUD operations, which are handled directly by repositories.
+
+## When to Use Handlers
+
+1. **Use Handlers When:**
+
+   - Complex business logic is required
+   - Multiple repositories need to be coordinated
+   - Additional validations beyond basic CRUD are needed
+   - Operations involve multiple steps or transactions
+   - Business rules need to be enforced
+
+2. **Skip Handlers When:**
+   - Only basic CRUD operations are needed
+   - No complex business logic is involved
+   - Single repository operations are sufficient
+
 ## Rules for Handlers
 
 1. Handlers should contain:
 
-   - All business logic
-   - Data validation
-   - Database operations
-   - Domain-specific operations
+   - Complex business logic
+   - Multi-step operations
+   - Cross-repository operations
+   - Advanced validation rules
+   - Domain-specific business rules
 
-2. Keep methods small and focused (max 30 lines)
+2. Handlers should NOT:
 
-3. Use clear method naming:
+   - Directly access the database (use repositories instead)
+   - Duplicate repository logic
+   - Handle basic CRUD operations
 
-   - `create*` for creation operations
-   - `find*` for retrieval operations
-   - `update*` for update operations
-   - `delete*` for deletion operations
-   - `validate*` for validation methods
+3. Keep methods focused and descriptive:
 
-4. Implement private validation methods for repetitive validations
+   - Use clear method naming that describes the business operation
+   - Keep methods small and single-purpose
+   - Document complex business rules with JSDoc
 
-5. Handle all database errors appropriately
+4. Error handling:
 
-6. Document all business logic with JSDoc
+   - Use appropriate error classes from shared error utilities
+   - Add context to repository errors when needed
+   - Handle business rule violations explicitly
 
-7. Use appropriate error classes from shared error utilities
-
-8. Export the handler as a singleton instance
+5. Export the handler as a singleton instance using a factory function
 
 ## Implementation Example
 
 ```typescript
-import { db } from '@/db';
-import { entities } from './entities.schema';
-import { eq, and, or, not } from 'drizzle-orm';
-import type { Entity, CreateEntityPayload, UpdateEntityPayload } from './entity.types';
-import { NotFoundError, ValidationError, DuplicateError } from '../../shared/errors';
+import { NotFoundError, ValidationError } from '../../shared/errors';
+import { createProductRepository } from '../products/product.repository';
+import { createInventoryRepository } from '../inventory/inventory.repository';
+import type { CreateOrderPayload, Order, OrderItem } from './order.types';
 
-export class EntityHandler {
+/**
+ * Creates a handler for managing orders with complex business logic
+ * @returns {Object} An object containing order-specific operations
+ */
+export const createOrderHandler = () => {
+  const productRepository = createProductRepository();
+  const inventoryRepository = createInventoryRepository();
+
   /**
-   * Validates that the entity name is unique
-   * @param name - The name to check for uniqueness
-   * @param excludeId - Optional ID to exclude from the check (for updates)
-   * @throws {DuplicateError} If the name is already in use
-   * @private
+   * Validates order items availability
+   * @param items Order items to validate
+   * @throws {ValidationError} If products are not available
    */
-  private async validateUniqueName(name: string, excludeId?: number): Promise<void> {
-    const whereCondition = excludeId
-      ? and(eq(entities.name, name), not(eq(entities.id, excludeId)))
-      : eq(entities.name, name);
+  const validateOrderItems = async (items: OrderItem[]): Promise<void> => {
+    for (const item of items) {
+      // Check product exists
+      const product = await productRepository.findOne(item.productId);
 
-    const [existing] = await db.select().from(entities).where(whereCondition).limit(1);
+      // Check inventory level
+      const inventory = await inventoryRepository.findByProductId(item.productId);
 
-    if (existing) {
-      throw new DuplicateError('An entity with this name already exists');
-    }
-  }
-
-  async create(data: CreateEntityPayload): Promise<Entity> {
-    try {
-      // Validate unique name
-      await this.validateUniqueName(data.name);
-
-      const [entity] = await db.insert(entities).values(data).returning();
-      return entity;
-    } catch (error) {
-      if (error instanceof DuplicateError) {
-        throw error;
+      if (!inventory || inventory.quantity < item.quantity) {
+        throw new ValidationError(`Insufficient stock for product: ${product.name}`);
       }
+    }
+  };
+
+  /**
+   * Updates inventory levels for ordered items
+   * @param items Items to update inventory for
+   * @param trx Transaction instance
+   */
+  const updateInventoryLevels = async (items: OrderItem[], trx?: unknown): Promise<void> => {
+    for (const item of items) {
+      await inventoryRepository.decrementStock(item.productId, item.quantity, trx);
+    }
+  };
+
+  /**
+   * Creates a new order with inventory validation and stock updates
+   * @param data Order creation payload
+   * @throws {ValidationError} If products are not available
+   * @returns Created order
+   */
+  const createOrder = async (data: CreateOrderPayload): Promise<Order> => {
+    try {
+      // Validate all products exist and have sufficient stock
+      await validateOrderItems(data.items);
+
+      // Start transaction for order creation and inventory updates
+      const order = await orderRepository.transaction(async (trx) => {
+        // Create the order
+        const newOrder = await orderRepository.create(data, trx);
+
+        // Update inventory for each item
+        await updateInventoryLevels(data.items, trx);
+
+        return newOrder;
+      });
+
+      return order;
+    } catch (error) {
       if (error instanceof Error) {
         throw new ValidationError(error.message);
       }
       throw error;
     }
-  }
+  };
 
-  async findOne(id: number): Promise<Entity> {
-    const [entity] = await db.select().from(entities).where(eq(entities.id, id)).limit(1);
+  /**
+   * Cancels an order and restores inventory
+   */
+  const cancelOrder = async (orderId: number): Promise<Order> => {
+    const order = await orderRepository.findOne(orderId);
 
-    if (!entity) {
-      throw new NotFoundError('Entity not found');
+    if (order.status === 'CANCELLED') {
+      throw new ValidationError('Order is already cancelled');
     }
 
-    return entity;
-  }
-
-  async update(id: number, data: UpdateEntityPayload): Promise<Entity> {
-    try {
-      // Verify entity exists
-      await this.findOne(id);
-
-      // Check for duplicates if updating the name
-      if (data.name) {
-        await this.validateUniqueName(data.name, id);
-      }
-
-      const [updated] = await db
-        .update(entities)
-        .set({ ...data, updatedAt: new Date() })
-        .where(eq(entities.id, id))
-        .returning();
-
-      return updated;
-    } catch (error) {
-      if (error instanceof NotFoundError || error instanceof DuplicateError) {
-        throw error;
-      }
-      if (error instanceof Error) {
-        throw new ValidationError(error.message);
-      }
-      throw error;
+    if (order.status === 'DELIVERED') {
+      throw new ValidationError('Cannot cancel a delivered order');
     }
-  }
 
-  async delete(id: number): Promise<Entity> {
-    // Verify entity exists
-    await this.findOne(id);
-    const [deletedEntity] = await db.delete(entities).where(eq(entities.id, id)).returning();
-    return deletedEntity;
-  }
+    return orderRepository.transaction(async (trx) => {
+      // Update order status
+      const cancelledOrder = await orderRepository.update(orderId, { status: 'CANCELLED' }, trx);
 
-  async findAll(): Promise<{ entities: Entity[] }> {
-    const entitiesList = await db.select().from(entities).orderBy(entities.name);
-    return {
-      entities: entitiesList,
-    };
-  }
-}
+      // Restore inventory levels
+      for (const item of order.items) {
+        await inventoryRepository.incrementStock(item.productId, item.quantity, trx);
+      }
 
-// Export as singleton
-export const entityHandler = new EntityHandler();
+      return cancelledOrder;
+    });
+  };
+
+  return {
+    createOrder,
+    cancelOrder,
+  };
+};
+
+// Export the handler instance
+export const orderHandler = createOrderHandler();
 ```
 
 ## Best Practices
 
-- Contain all business logic
-- Implement private validation methods for reusable validations
-- Direct ORM access
-- Domain-specific error handling
-- Concise and focused methods
-- Clear documentation with JSDoc
-- Proper transaction handling
-- Consistent error throwing
-- Clear separation of concerns
-- Avoid duplicated logic
+1. **Functional Approach**
+
+   - Use factory functions to create handlers
+   - Keep helper functions inside the closure
+   - Return only the public interface
+   - Maintain clean separation of concerns
+
+2. **Business Logic Focus**
+
+   - Implement complex business rules
+   - Handle multi-step operations
+   - Coordinate between multiple repositories
+   - Manage transactions when needed
+
+3. **Error Handling**
+
+   - Use domain-specific errors
+   - Add context to repository errors
+   - Handle business rule violations
+   - Maintain transaction integrity
+
+4. **Code Organization**
+
+   - Keep methods focused
+   - Use clear naming
+   - Document complex logic
+   - Follow single responsibility principle
+
+5. **Testing**
+
+   - Mock repository dependencies
+   - Test business rules thoroughly
+   - Cover error scenarios
+   - Verify transaction rollbacks
+
+6. **Performance**
+   - Use transactions appropriately
+   - Optimize database operations
+   - Handle bulk operations efficiently
+   - Consider caching when needed
+

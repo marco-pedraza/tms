@@ -6,3 +6,9 @@ export { gates } from '../inventory/gates/gates.schema';
 export { users } from '../users/users/users.schema';
 export { departments } from '../users/departments/departments.schema';
 export { tenants } from '../users/tenants/tenants.schema';
+export { permissions } from '../users/permissions/permissions.schema';
+export { roles, rolePermissions } from '../users/roles/roles.schema';
+export {
+  userRoles,
+  userPermissions,
+} from '../users/user-permissions/user-permissions.schema';

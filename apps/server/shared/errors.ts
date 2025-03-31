@@ -43,6 +43,16 @@ export class AuthenticationError extends Error {
 }
 
 /**
+ * Base error class for authorization errors (lack of permissions)
+ */
+export class UnauthorizedError extends Error {
+  constructor(message: string = 'Access denied: insufficient permissions') {
+    super(message);
+    this.name = 'UnauthorizedError';
+  }
+}
+
+/**
  * Maps domain-specific errors to APIError instances
  *
  * @param error - The error to parse
@@ -51,6 +61,7 @@ export class AuthenticationError extends Error {
  * - ValidationError -> ErrCode.InvalidArgument
  * - DuplicateError -> ErrCode.AlreadyExists
  * - AuthenticationError -> ErrCode.Unauthenticated
+ * - UnauthorizedError -> ErrCode.PermissionDenied
  * - Other errors -> ErrCode.Internal
  */
 export const parseApiError = (error: unknown) => {
@@ -65,6 +76,9 @@ export const parseApiError = (error: unknown) => {
   }
   if (error instanceof AuthenticationError) {
     return new APIError(ErrCode.Unauthenticated, error.message);
+  }
+  if (error instanceof UnauthorizedError) {
+    return new APIError(ErrCode.PermissionDenied, error.message);
   }
   return new APIError(ErrCode.Internal, 'Internal server error');
 };

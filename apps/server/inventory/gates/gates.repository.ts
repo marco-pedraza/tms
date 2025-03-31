@@ -10,7 +10,7 @@ import { terminalRepository } from '../terminals/terminals.repository';
 import { PaginationParams } from '../../shared/types';
 import { eq, count } from 'drizzle-orm';
 import { db } from '../../db';
-import { withPagination } from '../../shared/bd-utils';
+import { withPagination } from '../../shared/db-utils';
 
 /**
  * Creates a repository for managing gate entities

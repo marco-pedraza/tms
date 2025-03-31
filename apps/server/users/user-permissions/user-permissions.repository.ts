@@ -10,18 +10,19 @@ import type {
 } from './user-permissions.types';
 import { Permission } from '../permissions/permissions.types';
 import { Role, RoleWithPermissions } from '../roles/roles.types';
-import { permissionHandler } from '../permissions/permissions.handler';
-import { roleHandler } from '../roles/roles.handler';
-import { userHandler } from '../users/users.handler';
+import { permissionRepository } from '../permissions/permissions.repository';
+import { roleRepository } from '../roles/roles.repository';
+import { userRepository } from '../users/users.repository';
 import {
   updateManyToManyRelation,
   getRelatedEntities,
 } from '../../shared/db-utils';
 
 /**
- * Handler for user permissions operations
+ * Creates a repository for managing user permissions and roles operations
+ * @returns {Object} An object containing user-permissions operations
  */
-class UserPermissionsHandler {
+export const createUserPermissionsRepository = () => {
   /**
    * Assigns roles to a user
    * @param userId - ID of the user
@@ -29,17 +30,17 @@ class UserPermissionsHandler {
    * @returns User with roles
    * @throws {NotFoundError} If the user or any role is not found
    */
-  async assignRoles(
+  const assignRoles = async (
     userId: number,
     data: AssignRolesToUserPayload,
-  ): Promise<UserWithRoles> {
+  ): Promise<UserWithRoles> => {
     // Validate user exists
-    await userHandler.findOne(userId);
+    await userRepository.findOne(userId);
 
     // Validate all roles exist
     await Promise.all(
       data.roleIds.map(async (roleId) => {
-        await roleHandler.findOne(roleId);
+        await roleRepository.findOne(roleId);
       }),
     );
 
@@ -51,8 +52,8 @@ class UserPermissionsHandler {
       data.roleIds,
     );
 
-    return await this.getUserWithRoles(userId);
-  }
+    return getUserWithRoles(userId);
+  };
 
   /**
    * Assigns permissions directly to a user
@@ -61,17 +62,17 @@ class UserPermissionsHandler {
    * @returns User with permissions
    * @throws {NotFoundError} If the user or any permission is not found
    */
-  async assignPermissions(
+  const assignPermissions = async (
     userId: number,
     data: AssignPermissionsToUserPayload,
-  ): Promise<UserWithPermissions> {
+  ): Promise<UserWithPermissions> => {
     // Validate user exists
-    await userHandler.findOne(userId);
+    await userRepository.findOne(userId);
 
     // Validate all permissions exist
     await Promise.all(
       data.permissionIds.map(async (permissionId) => {
-        await permissionHandler.findOne(permissionId);
+        await permissionRepository.findOne(permissionId);
       }),
     );
 
@@ -83,8 +84,8 @@ class UserPermissionsHandler {
       data.permissionIds,
     );
 
-    return await this.getUserWithPermissions(userId);
-  }
+    return getUserWithPermissions(userId);
+  };
 
   /**
    * Gets a user with their assigned roles
@@ -92,8 +93,8 @@ class UserPermissionsHandler {
    * @returns User with roles
    * @throws {NotFoundError} If the user is not found
    */
-  async getUserWithRoles(userId: number): Promise<UserWithRoles> {
-    const user = await userHandler.findOne(userId);
+  const getUserWithRoles = async (userId: number): Promise<UserWithRoles> => {
+    const user = await userRepository.findOne(userId);
 
     // Create a safe user object without sensitive data
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -111,7 +112,7 @@ class UserPermissionsHandler {
       ...safeUser,
       roles: rolesList,
     };
-  }
+  };
 
   /**
    * Gets a user with their assigned permissions
@@ -119,8 +120,8 @@ class UserPermissionsHandler {
    * @returns User with permissions
    * @throws {NotFoundError} If the user is not found
    */
-  async getUserWithPermissions(userId: number): Promise<UserWithPermissions> {
-    const user = await userHandler.findOne(userId);
+  const getUserWithPermissions = async (userId: number): Promise<UserWithPermissions> => {
+    const user = await userRepository.findOne(userId);
 
     // Create a safe user object without sensitive data
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -149,7 +150,7 @@ class UserPermissionsHandler {
     if (userRolesList.length > 0) {
       rolesWithPermissions = await Promise.all(
         userRolesList.map(async (role) => {
-          return await roleHandler.findOneWithPermissions(role.id);
+          return await roleRepository.findOneWithPermissions(role.id);
         }),
       );
     }
@@ -171,7 +172,7 @@ class UserPermissionsHandler {
       roles: rolesWithPermissions,
       effectivePermissions: uniquePermissions,
     };
-  }
+  };
 
   /**
    * Gets a user with their effective permissions
@@ -179,10 +180,10 @@ class UserPermissionsHandler {
    * @returns User with effective permissions
    * @throws {NotFoundError} If the user is not found
    */
-  async getUserWithEffectivePermissions(userId: number): Promise<UserWithPermissions> {
+  const getUserWithEffectivePermissions = async (userId: number): Promise<UserWithPermissions> => {
     // This is essentially the same as getUserWithPermissions
-    return this.getUserWithPermissions(userId);
-  }
+    return getUserWithPermissions(userId);
+  };
 
   /**
    * Checks if a user has a specific permission
@@ -190,9 +191,9 @@ class UserPermissionsHandler {
    * @param permissionCode - Permission code to check
    * @throws {UnauthorizedError} If the user doesn't have the required permission
    */
-  async hasPermission(userId: number, permissionCode: string): Promise<void> {
+  const hasPermission = async (userId: number, permissionCode: string): Promise<void> => {
     try {
-      const user = await this.getUserWithPermissions(userId);
+      const user = await getUserWithPermissions(userId);
 
       const hasPermission = user.effectivePermissions.some(
         (p) => p.code === permissionCode,
@@ -209,7 +210,7 @@ class UserPermissionsHandler {
       }
       throw new NotFoundError(`User with id ${userId} not found`);
     }
-  }
+  };
 
   /**
    * Checks if a user has a role
@@ -217,9 +218,9 @@ class UserPermissionsHandler {
    * @param roleId - Role ID to check
    * @throws {UnauthorizedError} If the user doesn't have the required role
    */
-  async hasRole(userId: number, roleId: number): Promise<void> {
+  const hasRole = async (userId: number, roleId: number): Promise<void> => {
     try {
-      const user = await this.getUserWithRoles(userId);
+      const user = await getUserWithRoles(userId);
 
       const hasRole = user.roles.some((r) => r.id === roleId);
 
@@ -234,7 +235,18 @@ class UserPermissionsHandler {
       }
       throw new NotFoundError(`User with id ${userId} not found`);
     }
-  }
-}
+  };
 
-export const userPermissionsHandler = new UserPermissionsHandler();
+  return {
+    assignRoles,
+    assignPermissions,
+    getUserWithRoles,
+    getUserWithPermissions,
+    getUserWithEffectivePermissions,
+    hasPermission,
+    hasRole
+  };
+};
+
+// Export the user permissions repository instance
+export const userPermissionsRepository = createUserPermissionsRepository(); 

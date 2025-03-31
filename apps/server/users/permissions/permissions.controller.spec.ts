@@ -8,6 +8,7 @@ import {
   deletePermission,
 } from './permissions.controller';
 import type { CreatePermissionPayload, UpdatePermissionPayload } from './permissions.types';
+import { permissionRepository } from './permissions.repository';
 
 describe('Permissions Controller', () => {
   // Test data

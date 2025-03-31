@@ -1,5 +1,5 @@
 import { api } from 'encore.dev/api';
-import { permissionHandler } from './permissions.handler';
+import { permissionRepository } from './permissions.repository';
 import type {
   CreatePermissionPayload,
   UpdatePermissionPayload,
@@ -7,10 +7,10 @@ import type {
   Permissions,
   PaginatedPermissions,
 } from './permissions.types';
-import { parseApiError } from '../../shared/errors';
+import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
 
-//TODO Check if controllers can be switched to class, or handler to functions.
+const withErrorHandling = createControllerErrorHandler('PermissionsController');
 
 /**
  * Creates a new permission.
@@ -21,12 +21,9 @@ import { PaginationParams } from '../../shared/types';
 export const createPermission = api(
   { method: 'POST', path: '/permissions', expose: true },
   async (params: CreatePermissionPayload): Promise<Permission> => {
-    try {
-      return await permissionHandler.create(params);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('createPermission', () => 
+      permissionRepository.create(params)
+    );
   },
 );
 
@@ -40,12 +37,9 @@ export const createPermission = api(
 export const getPermission = api(
   { method: 'GET', path: '/permissions/:id', expose: true },
   async ({ id }: { id: number }): Promise<Permission> => {
-    try {
-      return await permissionHandler.findOne(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('getPermission', () =>
+      permissionRepository.findOne(id)
+    );
   },
 );
 
@@ -57,12 +51,9 @@ export const getPermission = api(
 export const listPermissions = api(
   { method: 'GET', path: '/permissions', expose: true },
   async (): Promise<Permissions> => {
-    try {
-      return await permissionHandler.findAll();
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listPermissions', () =>
+      permissionRepository.findAll()
+    );
   },
 );
 
@@ -75,12 +66,9 @@ export const listPermissions = api(
 export const listPermissionsWithPagination = api(
   { method: 'GET', path: '/permissions/paginated', expose: true },
   async (params: PaginationParams): Promise<PaginatedPermissions> => {
-    try {
-      return await permissionHandler.findAllPaginated(params);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listPermissionsWithPagination', () =>
+      permissionRepository.findAllPaginated(params)
+    );
   },
 );
 
@@ -97,12 +85,9 @@ export const updatePermission = api(
     id,
     ...data
   }: UpdatePermissionPayload & { id: number }): Promise<Permission> => {
-    try {
-      return await permissionHandler.update(id, data);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('updatePermission', () =>
+      permissionRepository.update(id, data)
+    );
   },
 );
 
@@ -116,11 +101,8 @@ export const updatePermission = api(
 export const deletePermission = api(
   { method: 'DELETE', path: '/permissions/:id', expose: true },
   async ({ id }: { id: number }): Promise<Permission> => {
-    try {
-      return await permissionHandler.delete(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('deletePermission', () =>
+      permissionRepository.delete(id)
+    );
   },
 );

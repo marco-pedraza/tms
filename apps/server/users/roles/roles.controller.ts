@@ -1,5 +1,5 @@
 import { api } from 'encore.dev/api';
-import { roleHandler } from './roles.handler';
+import { roleRepository } from './roles.repository';
 import type {
   CreateRolePayload,
   UpdateRolePayload,
@@ -11,10 +11,10 @@ import type {
   PaginatedRolesWithPermissions,
   AssignPermissionsToRolePayload,
 } from './roles.types';
-import { parseApiError } from '../../shared/errors';
+import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
 
-//TODO Check if controllers can be switched to class, or handler to functions.
+const withErrorHandling = createControllerErrorHandler('RolesController');
 
 /**
  * Creates a new role.
@@ -25,14 +25,9 @@ import { PaginationParams } from '../../shared/types';
 export const createRole = api(
   { method: 'POST', path: '/roles', expose: true },
   async (params: CreateRolePayload): Promise<RoleWithPermissions> => {
-    try {
-      console.log('Creating role with params:', JSON.stringify(params));
-      return await roleHandler.create(params);
-    } catch (error) {
-      console.error('Error creating role:', error);
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('createRole', () => 
+      roleRepository.create(params)
+    );
   },
 );
 
@@ -46,12 +41,9 @@ export const createRole = api(
 export const getRole = api(
   { method: 'GET', path: '/roles/:id', expose: true },
   async ({ id }: { id: number }): Promise<Role> => {
-    try {
-      return await roleHandler.findOne(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('getRole', () =>
+      roleRepository.findOne(id)
+    );
   },
 );
 
@@ -65,12 +57,9 @@ export const getRole = api(
 export const getRoleWithPermissions = api(
   { method: 'GET', path: '/roles/:id/with-permissions', expose: true },
   async ({ id }: { id: number }): Promise<RoleWithPermissions> => {
-    try {
-      return await roleHandler.findOneWithPermissions(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('getRoleWithPermissions', () =>
+      roleRepository.findOneWithPermissions(id)
+    );
   },
 );
 
@@ -82,12 +71,9 @@ export const getRoleWithPermissions = api(
 export const listRoles = api(
   { method: 'GET', path: '/roles', expose: true },
   async (): Promise<Roles> => {
-    try {
-      return (await roleHandler.findAll(false)) as Roles;
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listRoles', () =>
+      roleRepository.findAll(false) as Promise<Roles>
+    );
   },
 );
 
@@ -99,12 +85,9 @@ export const listRoles = api(
 export const listRolesWithPermissions = api(
   { method: 'GET', path: '/roles/with-permissions', expose: true },
   async (): Promise<RolesWithPermissions> => {
-    try {
-      return (await roleHandler.findAll(true)) as RolesWithPermissions;
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listRolesWithPermissions', () =>
+      roleRepository.findAll(true) as Promise<RolesWithPermissions>
+    );
   },
 );
 
@@ -118,12 +101,9 @@ export const listRolesWithPermissions = api(
 export const listRolesByTenant = api(
   { method: 'GET', path: '/tenants/:tenantId/roles', expose: true },
   async ({ tenantId }: { tenantId: number }): Promise<Roles> => {
-    try {
-      return (await roleHandler.findAllByTenant(tenantId, false)) as Roles;
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listRolesByTenant', () =>
+      roleRepository.findAllByTenant(tenantId, false) as Promise<Roles>
+    );
   },
 );
 
@@ -141,15 +121,9 @@ export const listRolesByTenantWithPermissions = api(
     expose: true,
   },
   async ({ tenantId }: { tenantId: number }): Promise<RolesWithPermissions> => {
-    try {
-      return (await roleHandler.findAllByTenant(
-        tenantId,
-        true,
-      )) as RolesWithPermissions;
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listRolesByTenantWithPermissions', () =>
+      roleRepository.findAllByTenant(tenantId, true) as Promise<RolesWithPermissions>
+    );
   },
 );
 
@@ -162,15 +136,9 @@ export const listRolesByTenantWithPermissions = api(
 export const listRolesWithPagination = api(
   { method: 'GET', path: '/roles/paginated', expose: true },
   async (params: PaginationParams): Promise<PaginatedRoles> => {
-    try {
-      return (await roleHandler.findAllPaginated(
-        params,
-        false,
-      )) as PaginatedRoles;
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listRolesWithPagination', () =>
+      roleRepository.findAllPaginated(params, false) as Promise<PaginatedRoles>
+    );
   },
 );
 
@@ -183,15 +151,9 @@ export const listRolesWithPagination = api(
 export const listRolesWithPermissionsAndPagination = api(
   { method: 'GET', path: '/roles/with-permissions/paginated', expose: true },
   async (params: PaginationParams): Promise<PaginatedRolesWithPermissions> => {
-    try {
-      return (await roleHandler.findAllPaginated(
-        params,
-        true,
-      )) as PaginatedRolesWithPermissions;
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listRolesWithPermissionsAndPagination', () =>
+      roleRepository.findAllPaginated(params, true) as Promise<PaginatedRolesWithPermissions>
+    );
   },
 );
 
@@ -208,12 +170,9 @@ export const updateRole = api(
     id,
     ...data
   }: UpdateRolePayload & { id: number }): Promise<RoleWithPermissions> => {
-    try {
-      return await roleHandler.update(id, data);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('updateRole', () =>
+      roleRepository.update(id, data)
+    );
   },
 );
 
@@ -233,12 +192,9 @@ export const assignPermissionsToRole = api(
   }: AssignPermissionsToRolePayload & {
     id: number;
   }): Promise<RoleWithPermissions> => {
-    try {
-      return await roleHandler.assignPermissions(id, data);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('assignPermissionsToRole', () =>
+      roleRepository.assignPermissions(id, data)
+    );
   },
 );
 
@@ -252,12 +208,53 @@ export const assignPermissionsToRole = api(
 export const deleteRole = api(
   { method: 'DELETE', path: '/roles/:id', expose: true },
   async ({ id }: { id: number }): Promise<Role> => {
-    try {
-      return await roleHandler.delete(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('deleteRole', () =>
+      roleRepository.delete(id)
+    );
+  },
+);
+
+/**
+ * Retrieves roles for a tenant with pagination.
+ * @param params - Object containing the tenant ID and pagination parameters
+ * @param params.tenantId - The ID of the tenant
+ * @returns {Promise<PaginatedRoles>} Paginated list of roles for the tenant
+ * @throws {APIError} If retrieval fails
+ */
+export const listRolesByTenantWithPagination = api(
+  { method: 'GET', path: '/tenants/:tenantId/roles/paginated', expose: true },
+  async ({
+    tenantId,
+    ...params
+  }: PaginationParams & { tenantId: number }): Promise<PaginatedRoles> => {
+    return withErrorHandling('listRolesByTenantWithPagination', () =>
+      roleRepository.findAllByTenantPaginated(tenantId, params, false) as Promise<PaginatedRoles>
+    );
+  },
+);
+
+/**
+ * Retrieves roles for a tenant with permissions and pagination.
+ * @param params - Object containing the tenant ID and pagination parameters
+ * @param params.tenantId - The ID of the tenant
+ * @returns {Promise<PaginatedRolesWithPermissions>} Paginated list of roles for the tenant with permissions
+ * @throws {APIError} If retrieval fails
+ */
+export const listRolesByTenantWithPermissionsAndPagination = api(
+  {
+    method: 'GET',
+    path: '/tenants/:tenantId/roles/with-permissions/paginated',
+    expose: true,
+  },
+  async ({
+    tenantId,
+    ...params
+  }: PaginationParams & {
+    tenantId: number;
+  }): Promise<PaginatedRolesWithPermissions> => {
+    return withErrorHandling('listRolesByTenantWithPermissionsAndPagination', () =>
+      roleRepository.findAllByTenantPaginated(tenantId, params, true) as Promise<PaginatedRolesWithPermissions>
+    );
   },
 );
 
@@ -271,34 +268,24 @@ export const deleteRole = api(
 export const listTenantRoles = api(
   { method: 'GET', path: '/tenants/:tenantId/roles-alias', expose: true },
   async ({ tenantId }: { tenantId: number }): Promise<Roles> => {
-    try {
-      return (await roleHandler.findAllByTenant(tenantId, false)) as Roles;
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listTenantRoles', () =>
+      roleRepository.findAllByTenant(tenantId, false) as Promise<Roles>
+    );
   },
 );
 
 /**
- * Retrieves tenant roles with pagination.
+ * Alias for listRolesByTenantWithPagination to match test case naming.
  * @param params - Object containing pagination parameters and tenant ID
  * @param params.tenantId - The ID of the tenant
  * @returns {Promise<PaginatedRoles>} Paginated list of tenant roles
  * @throws {APIError} If retrieval fails
  */
 export const listTenantRolesWithPagination = api(
-  { method: 'GET', path: '/tenants/:tenantId/roles/paginated', expose: true },
+  { method: 'GET', path: '/tenants/:tenantId/roles-paginated', expose: true },
   async ({ tenantId, ...paginationParams }: PaginationParams & { tenantId: number }): Promise<PaginatedRoles> => {
-    try {
-      return (await roleHandler.findAllByTenantPaginated(
-        tenantId,
-        paginationParams,
-        false
-      )) as PaginatedRoles;
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('listTenantRolesWithPagination', () =>
+      roleRepository.findAllByTenantPaginated(tenantId, paginationParams, false) as Promise<PaginatedRoles>
+    );
   },
 );

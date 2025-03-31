@@ -1,15 +1,15 @@
 import { api } from 'encore.dev/api';
-import { userPermissionsHandler } from './user-permissions.handler';
+import { userPermissionsRepository } from './user-permissions.repository';
 import type {
   AssignPermissionsToUserPayload,
   AssignRolesToUserPayload,
   UserWithPermissions,
   UserWithRoles,
 } from './user-permissions.types';
-import { parseApiError } from '../../shared/errors';
+import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { ValidationError } from '../../shared/errors';
 
-//TODO Check if controllers can be switched to class, or handler to functions.
+const withErrorHandling = createControllerErrorHandler('UserPermissionsController');
 
 /**
  * Retrieves a user with their assigned roles.
@@ -21,19 +21,14 @@ import { ValidationError } from '../../shared/errors';
 export const getUserWithRoles = api(
   { method: 'GET', path: '/users/:userId/roles', expose: true },
   async ({ userId }: { userId: number }): Promise<UserWithRoles> => {
-    try {
-      // Validate userId first
-      if (!userId || isNaN(Number(userId))) {
-        throw new ValidationError('Invalid user ID provided');
-      }
-      
-      return await userPermissionsHandler.getUserWithRoles(userId);
-    } catch (error) {
-      // Add logging before parsing the error
-      console.error('Error in getUserWithRoles:', error);
-      const parsedError = parseApiError(error);
-      throw parsedError;
+    // Validate userId first
+    if (!userId || isNaN(Number(userId))) {
+      throw new ValidationError('Invalid user ID provided');
     }
+    
+    return withErrorHandling('getUserWithRoles', () =>
+      userPermissionsRepository.getUserWithRoles(userId)
+    );
   },
 );
 
@@ -47,12 +42,9 @@ export const getUserWithRoles = api(
 export const getUserWithPermissions = api(
   { method: 'GET', path: '/users/:userId/permissions', expose: true },
   async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
-    try {
-      return await userPermissionsHandler.getUserWithPermissions(userId);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('getUserWithPermissions', () =>
+      userPermissionsRepository.getUserWithPermissions(userId)
+    );
   },
 );
 
@@ -70,12 +62,9 @@ export const assignRolesToUser = api(
     userId,
     ...data
   }: AssignRolesToUserPayload & { userId: number }): Promise<UserWithRoles> => {
-    try {
-      return await userPermissionsHandler.assignRoles(userId, data);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('assignRolesToUser', () =>
+      userPermissionsRepository.assignRoles(userId, data)
+    );
   },
 );
 
@@ -95,12 +84,9 @@ export const assignPermissionsToUser = api(
   }: AssignPermissionsToUserPayload & {
     userId: number;
   }): Promise<UserWithPermissions> => {
-    try {
-      return await userPermissionsHandler.assignPermissions(userId, data);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('assignPermissionsToUser', () =>
+      userPermissionsRepository.assignPermissions(userId, data)
+    );
   },
 );
 
@@ -125,21 +111,21 @@ export const checkUserPermission = api(
     userId: number;
     permissionCode: string;
   }): Promise<{ hasPermission: boolean }> => {
-    try {
-      await userPermissionsHandler.hasPermission(userId, permissionCode);
-      return { hasPermission: true };
-    } catch (error) {
-      // If it's an UnauthorizedError or NotFoundError, return false without throwing
-      // For other errors, rethrow as APIError
-      if (
-        error instanceof Error &&
-        (error.name === 'UnauthorizedError' || error.name === 'NotFoundError')
-      ) {
-        return { hasPermission: false };
+    return withErrorHandling('checkUserPermission', async () => {
+      try {
+        await userPermissionsRepository.hasPermission(userId, permissionCode);
+        return { hasPermission: true };
+      } catch (error) {
+        // If it's an UnauthorizedError or NotFoundError, return false without throwing
+        if (
+          error instanceof Error &&
+          (error.name === 'UnauthorizedError' || error.name === 'NotFoundError')
+        ) {
+          return { hasPermission: false };
+        }
+        throw error;
       }
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    });
   },
 );
 
@@ -160,21 +146,21 @@ export const checkUserRole = api(
     userId: number;
     roleId: number;
   }): Promise<{ hasRole: boolean }> => {
-    try {
-      await userPermissionsHandler.hasRole(userId, roleId);
-      return { hasRole: true };
-    } catch (error) {
-      // If it's an UnauthorizedError or NotFoundError, return false without throwing
-      // For other errors, rethrow as APIError
-      if (
-        error instanceof Error &&
-        (error.name === 'UnauthorizedError' || error.name === 'NotFoundError')
-      ) {
-        return { hasRole: false };
+    return withErrorHandling('checkUserRole', async () => {
+      try {
+        await userPermissionsRepository.hasRole(userId, roleId);
+        return { hasRole: true };
+      } catch (error) {
+        // If it's an UnauthorizedError or NotFoundError, return false without throwing
+        if (
+          error instanceof Error &&
+          (error.name === 'UnauthorizedError' || error.name === 'NotFoundError')
+        ) {
+          return { hasRole: false };
+        }
+        throw error;
       }
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    });
   },
 );
 
@@ -188,12 +174,9 @@ export const checkUserRole = api(
 export const getUserPermissions = api(
   { method: 'GET', path: '/users/:userId/effective-permissions', expose: true },
   async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
-    try {
-      return await userPermissionsHandler.getUserWithEffectivePermissions(userId);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('getUserPermissions', () =>
+      userPermissionsRepository.getUserWithEffectivePermissions(userId)
+    );
   },
 );
 
@@ -207,11 +190,8 @@ export const getUserPermissions = api(
 export const getUserRoles = api(
   { method: 'GET', path: '/users/:userId/assigned-roles', expose: true },
   async ({ userId }: { userId: number }): Promise<UserWithRoles> => {
-    try {
-      return await userPermissionsHandler.getUserWithRoles(userId);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
+    return withErrorHandling('getUserRoles', () =>
+      userPermissionsRepository.getUserWithRoles(userId)
+    );
   },
 );

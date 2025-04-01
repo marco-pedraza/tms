@@ -1,14 +1,11 @@
 import { hash, compare } from 'bcrypt';
 import type { User, SafeUser } from '../users/users/users.types';
-import { secret } from 'encore.dev/config';
 import jwt from 'jsonwebtoken';
 import type { JwtPayload } from '../users/auth/auth.types';
 
 const SALT_ROUNDS = 10;
 
-// JWT configuration
-// In a production environment, these should be stored in environment variables
-const JWT_SECRET = secret('JWT_SECRET');
+// JWT configuration constants
 const ACCESS_TOKEN_EXPIRY = '30m'; // 30 minutes
 const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
 
@@ -48,9 +45,10 @@ export const omitPasswordHash = (user: User): SafeUser => {
 /**
  * Generates a JWT access token for the given user
  * @param user User to generate token for
+ * @param secretKey JWT secret key
  * @returns JWT access token
  */
-export const generateAccessToken = async (user: User): Promise<string> => {
+export const generateAccessToken = async (user: User, secretKey: string): Promise<string> => {
   const payload: JwtPayload = {
     sub: user.id,
     tenantId: user.tenantId,
@@ -59,16 +57,16 @@ export const generateAccessToken = async (user: User): Promise<string> => {
     type: 'access',
   };
 
-  const secretKey = await JWT_SECRET.get();
   return jwt.sign(payload, secretKey, { expiresIn: ACCESS_TOKEN_EXPIRY });
 };
 
 /**
  * Generates a JWT refresh token for the given user
  * @param user User to generate token for
+ * @param secretKey JWT secret key
  * @returns JWT refresh token
  */
-export const generateRefreshToken = async (user: User): Promise<string> => {
+export const generateRefreshToken = async (user: User, secretKey: string): Promise<string> => {
   const payload: JwtPayload = {
     sub: user.id,
     tenantId: user.tenantId,
@@ -77,7 +75,6 @@ export const generateRefreshToken = async (user: User): Promise<string> => {
     type: 'refresh',
   };
 
-  const secretKey = await JWT_SECRET.get();
   return jwt.sign(payload, secretKey, { expiresIn: REFRESH_TOKEN_EXPIRY });
 };
 
@@ -85,15 +82,16 @@ export const generateRefreshToken = async (user: User): Promise<string> => {
  * Verifies a JWT token and returns the decoded payload
  * @param token JWT token to verify
  * @param expectedType Expected token type ('access' or 'refresh')
+ * @param secretKey JWT secret key
  * @returns Decoded JWT payload if valid
  * @throws Error if token is invalid or expired
  */
 export const verifyToken = async (
   token: string,
   expectedType: 'access' | 'refresh',
+  secretKey: string,
 ): Promise<JwtPayload> => {
   try {
-    const secretKey = await JWT_SECRET.get();
     const decoded = jwt.verify(token, secretKey) as JwtPayload;
     
     // Verify token type

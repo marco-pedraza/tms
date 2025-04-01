@@ -1,3 +1,4 @@
+import { secret } from 'encore.dev/config';
 import { userRepository } from '../users/users.repository';
 import { authRepository } from './auth.repository';
 import { 
@@ -19,6 +20,10 @@ import {
   NotFoundError
 } from '../../shared/errors';
 import { User } from '../users/users.types';
+
+// JWT configuration
+// In a production environment, these should be stored in environment variables
+const JWT_SECRET = secret('JWT_SECRET');
 
 /**
  * Creates auth use cases to handle authentication business logic
@@ -55,9 +60,12 @@ export const createAuthUseCases = () => {
       throw new AuthenticationError('Invalid username or password');
     }
     
+    // Get JWT secret
+    const secretKey = await JWT_SECRET.get();
+    
     // Generate tokens
-    const accessToken = await generateAccessToken(user);
-    const refreshToken = await generateRefreshToken(user);
+    const accessToken = await generateAccessToken(user, secretKey);
+    const refreshToken = await generateRefreshToken(user, secretKey);
     
     // Save refresh token to database
     await authRepository.saveRefreshToken(user, refreshToken);
@@ -90,8 +98,11 @@ export const createAuthUseCases = () => {
     const { refreshToken: token } = params;
     
     try {
+      // Get JWT secret
+      const secretKey = await JWT_SECRET.get();
+      
       // Verify refresh token
-      const decoded = await verifyToken(token, 'refresh');
+      const decoded = await verifyToken(token, 'refresh', secretKey);
       
       // Check if token is in database and not revoked
       const isValid = await authRepository.isRefreshTokenValid(token);
@@ -103,18 +114,22 @@ export const createAuthUseCases = () => {
       // Find user
       const user = await userRepository.findOneWithPassword(decoded.sub);
       
+      // Generate new refresh token
+      const newRefreshToken = await generateRefreshToken(user, secretKey);
+      
       // Rotate refresh token (revoke old one and create new one)
-      const { token: newRefreshToken } = await authRepository.rotateRefreshToken(
+      const { token: rotatedToken } = await authRepository.rotateRefreshToken(
         token,
-        user
+        user,
+        newRefreshToken
       );
       
       // Generate new access token
-      const newAccessToken = await generateAccessToken(user);
+      const newAccessToken = await generateAccessToken(user, secretKey);
       
       return {
         accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
+        refreshToken: rotatedToken,
       };
     } catch {
       throw new AuthenticationError('Invalid refresh token');
@@ -174,7 +189,8 @@ export const createAuthUseCases = () => {
    * @returns Generated refresh token
    */
   const generateNewRefreshToken = async (user: User): Promise<string> => {
-    return generateRefreshToken(user);
+    const secretKey = await JWT_SECRET.get();
+    return generateRefreshToken(user, secretKey);
   };
 
   /**
@@ -187,7 +203,8 @@ export const createAuthUseCases = () => {
     token: string,
     expectedType: 'access' | 'refresh'
   ): Promise<JwtPayload> => {
-    return verifyToken(token, expectedType);
+    const secretKey = await JWT_SECRET.get();
+    return verifyToken(token, expectedType, secretKey);
   };
 
   return {

@@ -9,7 +9,6 @@ import {
 } from './auth.types';
 import { NotFoundError } from '../../shared/errors';
 import { createBaseRepository } from '../../shared/base-repository';
-import { generateRefreshToken } from '../../shared/auth-utils';
 
 export const createAuthRepository = () => {
   // Create base repository for refresh tokens
@@ -97,13 +96,15 @@ export const createAuthRepository = () => {
   /**
    * Replaces a refresh token with a new one
    * @param oldToken Old refresh token to replace
-   * @param user User to generate new token for
+   * @param user User the token belongs to
+   * @param newToken New refresh token to save
    * @returns New refresh token and record
    * @throws {NotFoundError} If the old token is not found or is revoked
    */
   const rotateRefreshToken = async (
     oldToken: string,
     user: User,
+    newToken: string,
   ): Promise<{ token: string; record: RefreshToken }> => {
     // Check if old token exists and is valid
     const tokenRecord = await findRefreshToken(oldToken);
@@ -120,8 +121,7 @@ export const createAuthRepository = () => {
     // Revoke old token
     await revokeRefreshToken(oldToken);
     
-    // We need to create a new token
-    const newToken = await generateRefreshToken(user);
+    // Save the new token
     const newRecord = await saveRefreshToken(user, newToken);
     
     return { token: newToken, record: newRecord };

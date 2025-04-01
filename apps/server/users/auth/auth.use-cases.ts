@@ -22,7 +22,6 @@ import {
 import { User } from '../users/users.types';
 
 // JWT configuration
-// In a production environment, these should be stored in environment variables
 const JWT_SECRET = secret('JWT_SECRET');
 
 /**
@@ -61,11 +60,10 @@ export const createAuthUseCases = () => {
     }
     
     // Get JWT secret
-    const secretKey = await JWT_SECRET.get();
     
     // Generate tokens
-    const accessToken = await generateAccessToken(user, secretKey);
-    const refreshToken = await generateRefreshToken(user, secretKey);
+    const accessToken = await generateAccessToken(user, JWT_SECRET);
+    const refreshToken = await generateRefreshToken(user, JWT_SECRET);
     
     // Save refresh token to database
     await authRepository.saveRefreshToken(user, refreshToken);
@@ -97,12 +95,9 @@ export const createAuthUseCases = () => {
   ): Promise<Omit<LoginResponse, 'user'>> => {
     const { refreshToken: token } = params;
     
-    try {
-      // Get JWT secret
-      const secretKey = await JWT_SECRET.get();
-      
+    try {      
       // Verify refresh token
-      const decoded = await verifyToken(token, 'refresh', secretKey);
+      const decoded = await verifyToken(token, 'refresh', JWT_SECRET);
       
       // Check if token is in database and not revoked
       const isValid = await authRepository.isRefreshTokenValid(token);
@@ -115,7 +110,7 @@ export const createAuthUseCases = () => {
       const user = await userRepository.findOneWithPassword(decoded.sub);
       
       // Generate new refresh token
-      const newRefreshToken = await generateRefreshToken(user, secretKey);
+      const newRefreshToken = await generateRefreshToken(user, JWT_SECRET);
       
       // Rotate refresh token (revoke old one and create new one)
       const { token: rotatedToken } = await authRepository.rotateRefreshToken(
@@ -125,7 +120,7 @@ export const createAuthUseCases = () => {
       );
       
       // Generate new access token
-      const newAccessToken = await generateAccessToken(user, secretKey);
+      const newAccessToken = await generateAccessToken(user, JWT_SECRET);
       
       return {
         accessToken: newAccessToken,
@@ -189,8 +184,7 @@ export const createAuthUseCases = () => {
    * @returns Generated refresh token
    */
   const generateNewRefreshToken = async (user: User): Promise<string> => {
-    const secretKey = await JWT_SECRET.get();
-    return generateRefreshToken(user, secretKey);
+    return generateRefreshToken(user, JWT_SECRET);
   };
 
   /**
@@ -203,8 +197,7 @@ export const createAuthUseCases = () => {
     token: string,
     expectedType: 'access' | 'refresh'
   ): Promise<JwtPayload> => {
-    const secretKey = await JWT_SECRET.get();
-    return verifyToken(token, expectedType, secretKey);
+    return verifyToken(token, expectedType, JWT_SECRET);
   };
 
   return {

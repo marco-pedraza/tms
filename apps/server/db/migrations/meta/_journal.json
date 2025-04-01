@@ -54,8 +54,8 @@
     {
       "idx": 7,
       "version": "7",
-      "when": 1743539922225,
-      "tag": "20250401203842_creates_refresh_tokens_table",
+      "when": 1743542335527,
+      "tag": "20250401211855_creates_refresh_tokens_table",
       "breakpoints": true
     }
   ]

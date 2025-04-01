@@ -184,7 +184,7 @@ describe('Auth Controller', () => {
   });
 
   describe('refreshToken', () => {
-    it.skip('should refresh a valid token', async () => {
+    it('should refresh a valid token', async () => {
       // Skip if no refresh token from login test
       if (!refreshTokenString) {
         return;
@@ -224,7 +224,7 @@ describe('Auth Controller', () => {
   });
 
   describe('logout', () => {
-    it.skip('should log out a user with valid refresh token', async () => {
+    it('should log out a user with valid refresh token', async () => {
       // Skip if no refresh token from previous tests
       if (!refreshTokenString) {
         return;
@@ -241,7 +241,7 @@ describe('Auth Controller', () => {
       expect(result.message).toBe('Logged out successfully');
     });
 
-    it.skip('should not fail with invalid refresh token', async () => {
+    it('should not fail with invalid refresh token', async () => {
       const logoutData: LogoutPayload = {
         refreshToken: 'invalid-token',
       };
@@ -256,7 +256,7 @@ describe('Auth Controller', () => {
   });
 
   describe('revokeAllTokens', () => {
-    it.skip('should revoke all tokens for a user', async () => {
+    it('should revoke all tokens for a user', async () => {
       // First login to create a token
       await login(loginPayload);
       

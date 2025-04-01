@@ -16,6 +16,7 @@ import { createTenant, deleteTenant } from '../tenants/tenants.controller';
 import type { CreateTenantPayload } from '../tenants/tenants.types';
 import { createDepartment, deleteDepartment } from '../departments/departments.controller';
 import type { CreateDepartmentPayload } from '../departments/departments.types';
+import { authRepository } from './auth.repository';
 
 describe('Auth Controller', () => {
   // Test data
@@ -82,15 +83,56 @@ describe('Auth Controller', () => {
   });
 
   afterAll(async () => {
-    // Clean up
-    if (userId > 0) {
-      await deleteUser({ id: userId });
-    }
-    if (departmentId > 0) {
-      await deleteDepartment({ id: departmentId });
-    }
-    if (tenantId > 0) {
-      await deleteTenant({ id: tenantId });
+    try {
+      // Clean up in the correct order to respect foreign key constraints
+      
+      // 1. First revoke all refresh tokens for the user
+      if (userId > 0) {
+        try {
+          await revokeAllTokens({ userId });
+          
+          // Try to directly delete tokens from repository
+          const tokens = await authRepository.findAllBy('userId', userId, { orderBy: [] });
+          for (const token of tokens) {
+            try {
+              await authRepository.delete(token.id);
+            } catch (e) {
+              // Ignore errors
+            }
+          }
+        } catch (error) {
+          // Ignore errors
+        }
+      }
+      
+      // 2. Now delete the user
+      if (userId > 0) {
+        try {
+          await deleteUser({ id: userId });
+        } catch (error) {
+          // Ignore errors
+        }
+      }
+      
+      // 3. Delete the department
+      if (departmentId > 0) {
+        try {
+          await deleteDepartment({ id: departmentId });
+        } catch (error) {
+          // Ignore errors
+        }
+      }
+      
+      // 4. Delete the tenant
+      if (tenantId > 0) {
+        try {
+          await deleteTenant({ id: tenantId });
+        } catch (error) {
+          // Ignore errors
+        }
+      }
+    } catch (error) {
+      // Ignore errors
     }
   });
 

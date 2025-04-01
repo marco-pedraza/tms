@@ -1,3 +1,4 @@
+import { secret } from 'encore.dev/config';
 import { userRepository } from '../users/users.repository';
 import { authRepository } from './auth.repository';
 import { comparePasswords } from '../../shared/auth-utils';
@@ -15,10 +16,10 @@ import {
   NotFoundError
 } from '../../shared/errors';
 import { User } from '../users/users.types';
-import { JWT_SECRET } from '../encore.secrets';
 
 // JWT configuration
 // In a production environment, these should be stored in environment variables
+const JWT_SECRET = secret('JWT_SECRET');
 const ACCESS_TOKEN_EXPIRY = '30m'; // 30 minutes
 const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
 

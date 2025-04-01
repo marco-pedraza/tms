@@ -23,6 +23,17 @@ import { User } from '../users/users.types';
 
 // JWT configuration
 const JWT_SECRET = secret('JWT_SECRET')();
+const ACCESS_TOKEN_EXPIRY = secret('ACCESS_TOKEN_EXPIRY')();
+const REFRESH_TOKEN_EXPIRY = secret('REFRESH_TOKEN_EXPIRY')();
+
+// Error message constants
+const ERROR_MESSAGES = {
+  INVALID_CREDENTIALS: 'Invalid username or password',
+  ACCOUNT_INACTIVE: 'Account is inactive',
+  INVALID_REFRESH_TOKEN: 'Invalid refresh token',
+  INVALID_USER_ID: 'Invalid user ID',
+  LOGOUT_SUCCESS: 'Logged out successfully',
+};
 
 /**
  * Creates auth use cases to handle authentication business logic
@@ -44,24 +55,24 @@ export const createAuthUseCases = () => {
     const user = await userRepository.findByUsername(username);
 
     if (!user) {
-      throw new AuthenticationError('Invalid username or password');
+      throw new AuthenticationError(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
 
     // Check if user is active
     if (!user.isActive) {
-      throw new AuthenticationError('Account is inactive');
+      throw new AuthenticationError(ERROR_MESSAGES.ACCOUNT_INACTIVE);
     }
 
     // Verify password
     const passwordValid = await comparePasswords(password, user.passwordHash);
 
     if (!passwordValid) {
-      throw new AuthenticationError('Invalid username or password');
+      throw new AuthenticationError(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
 
     // Generate tokens
-    const accessToken = await generateAccessToken(user, JWT_SECRET);
-    const refreshToken = await generateRefreshToken(user, JWT_SECRET);
+    const accessToken = await generateAccessToken(user, JWT_SECRET, ACCESS_TOKEN_EXPIRY);
+    const refreshToken = await generateRefreshToken(user, JWT_SECRET, REFRESH_TOKEN_EXPIRY);
 
     // Save refresh token to database
     await authRepository.saveRefreshToken(user, refreshToken);
@@ -101,14 +112,14 @@ export const createAuthUseCases = () => {
       const isValid = await authRepository.isRefreshTokenValid(token);
 
       if (!isValid) {
-        throw new AuthenticationError('Invalid refresh token');
+        throw new AuthenticationError(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
       }
 
       // Find user
       const user = await userRepository.findOneWithPassword(decoded.sub);
 
       // Generate new refresh token
-      const newRefreshToken = await generateRefreshToken(user, JWT_SECRET);
+      const newRefreshToken = await generateRefreshToken(user, JWT_SECRET, REFRESH_TOKEN_EXPIRY);
 
       // Rotate refresh token (revoke old one and create new one)
       const { token: rotatedToken } = await authRepository.rotateRefreshToken(
@@ -118,14 +129,14 @@ export const createAuthUseCases = () => {
       );
 
       // Generate new access token
-      const newAccessToken = await generateAccessToken(user, JWT_SECRET);
+      const newAccessToken = await generateAccessToken(user, JWT_SECRET, ACCESS_TOKEN_EXPIRY);
 
       return {
         accessToken: newAccessToken,
         refreshToken: rotatedToken,
       };
     } catch {
-      throw new AuthenticationError('Invalid refresh token');
+      throw new AuthenticationError(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
     }
   };
 
@@ -142,11 +153,11 @@ export const createAuthUseCases = () => {
     try {
       // Revoke the refresh token
       await authRepository.revokeRefreshToken(refreshToken);
-      return { message: 'Logged out successfully' };
+      return { message: ERROR_MESSAGES.LOGOUT_SUCCESS };
     } catch (error) {
       if (error instanceof NotFoundError) {
         // Return success even if token not found to prevent leak of information
-        return { message: 'Logged out successfully' };
+        return { message: ERROR_MESSAGES.LOGOUT_SUCCESS };
       }
       throw error;
     }
@@ -164,7 +175,7 @@ export const createAuthUseCases = () => {
   ): Promise<{ count: number }> => {
     // Validate userId
     if (!userId || isNaN(Number(userId))) {
-      throw new ValidationError('Invalid user ID');
+      throw new ValidationError(ERROR_MESSAGES.INVALID_USER_ID);
     }
 
     // Check if user exists
@@ -182,7 +193,7 @@ export const createAuthUseCases = () => {
    * @returns Generated refresh token
    */
   const generateNewRefreshToken = async (user: User): Promise<string> => {
-    return generateRefreshToken(user, JWT_SECRET);
+    return generateRefreshToken(user, JWT_SECRET, REFRESH_TOKEN_EXPIRY);
   };
 
   /**

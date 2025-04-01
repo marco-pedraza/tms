@@ -5,10 +5,6 @@ import type { JwtPayload } from '../users/auth/auth.types';
 
 const SALT_ROUNDS = 10;
 
-// JWT configuration constants
-const ACCESS_TOKEN_EXPIRY = '30m'; // 30 minutes
-const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
-
 /**
  * Hashes a plain text password
  * @param password Plain text password to hash
@@ -46,11 +42,13 @@ export const omitPasswordHash = (user: User): SafeUser => {
  * Generates a JWT access token for the given user
  * @param user User to generate token for
  * @param secretKey JWT secret key
+ * @param expiresIn Token expiry time
  * @returns JWT access token
  */
 export const generateAccessToken = async (
   user: User,
   secretKey: string,
+  expiresIn: string,
 ): Promise<string> => {
   const payload: JwtPayload = {
     sub: user.id,
@@ -60,18 +58,20 @@ export const generateAccessToken = async (
     type: 'access',
   };
 
-  return jwt.sign(payload, secretKey, { expiresIn: ACCESS_TOKEN_EXPIRY });
+  return jwt.sign(payload, secretKey, { expiresIn });
 };
 
 /**
  * Generates a JWT refresh token for the given user
  * @param user User to generate token for
  * @param secretKey JWT secret key
+ * @param expiresIn Token expiry time
  * @returns JWT refresh token
  */
 export const generateRefreshToken = async (
   user: User,
   secretKey: string,
+  expiresIn: string,
 ): Promise<string> => {
   const payload: JwtPayload = {
     sub: user.id,
@@ -81,7 +81,7 @@ export const generateRefreshToken = async (
     type: 'refresh',
   };
 
-  return jwt.sign(payload, secretKey, { expiresIn: REFRESH_TOKEN_EXPIRY });
+  return jwt.sign(payload, secretKey, { expiresIn });
 };
 
 /**

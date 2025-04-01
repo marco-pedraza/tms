@@ -10,6 +10,13 @@ import {
 import { NotFoundError } from '../../shared/errors';
 import { createBaseRepository } from '../../shared/base-repository';
 
+// Error message constants
+const ERROR_MESSAGES = {
+  REFRESH_TOKEN_NOT_FOUND: 'Refresh token not found',
+  INVALID_OR_REVOKED_TOKEN: 'Invalid or revoked refresh token',
+  TOKEN_WRONG_USER: 'Refresh token does not belong to this user',
+};
+
 export const createAuthRepository = () => {
   // Create base repository for refresh tokens
   const baseRepository = createBaseRepository<
@@ -64,7 +71,7 @@ export const createAuthRepository = () => {
     const tokenRecord = await findRefreshToken(token);
 
     if (!tokenRecord) {
-      throw new NotFoundError('Refresh token not found');
+      throw new NotFoundError(ERROR_MESSAGES.REFRESH_TOKEN_NOT_FOUND);
     }
 
     return baseRepository.update(tokenRecord.id, { isRevoked: true });
@@ -108,12 +115,12 @@ export const createAuthRepository = () => {
     const tokenRecord = await findRefreshToken(oldToken);
 
     if (!tokenRecord || tokenRecord.isRevoked) {
-      throw new NotFoundError('Invalid or revoked refresh token');
+      throw new NotFoundError(ERROR_MESSAGES.INVALID_OR_REVOKED_TOKEN);
     }
 
     // Check if token belongs to the user
     if (tokenRecord.userId !== user.id) {
-      throw new NotFoundError('Refresh token does not belong to this user');
+      throw new NotFoundError(ERROR_MESSAGES.TOKEN_WRONG_USER);
     }
 
     // Revoke old token

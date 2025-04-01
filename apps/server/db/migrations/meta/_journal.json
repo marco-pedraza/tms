@@ -50,6 +50,13 @@
       "when": 1743451744589,
       "tag": "20250331200904_creates_transporters_and_buslines_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1743539922225,
+      "tag": "20250401203842_creates_refresh_tokens_table",
+      "breakpoints": true
     }
   ]
 }

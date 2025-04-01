@@ -15,3 +15,4 @@ export {
   userRoles,
   userPermissions,
 } from '../users/user-permissions/user-permissions.schema';
+export { refreshTokens } from '../users/auth/auth.schema';

@@ -185,8 +185,8 @@ export const changePassword = api(
     id,
     ...data
   }: ChangePasswordPayload & { id: number }): Promise<SafeUser> => {
-    return withErrorHandling('changePassword', () => 
-      userUseCases.changePassword(id, data)
+    return withErrorHandling('changePassword', () =>
+      userUseCases.changePassword(id, data),
     );
   },
 );

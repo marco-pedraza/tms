@@ -11,7 +11,10 @@ const DEFAULT_SALT_ROUNDS = 10;
  * @param saltRounds Optional number of salt rounds, defaults to 10
  * @returns Promise resolving to the hashed password
  */
-export const hashPassword = async (password: string, saltRounds?: number): Promise<string> => {
+export const hashPassword = async (
+  password: string,
+  saltRounds?: number,
+): Promise<string> => {
   return hash(password, saltRounds || DEFAULT_SALT_ROUNDS);
 };
 

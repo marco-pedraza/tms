@@ -71,8 +71,16 @@ export const createAuthUseCases = () => {
     }
 
     // Generate tokens
-    const accessToken = await generateAccessToken(user, JWT_SECRET, ACCESS_TOKEN_EXPIRY);
-    const refreshToken = await generateRefreshToken(user, JWT_SECRET, REFRESH_TOKEN_EXPIRY);
+    const accessToken = await generateAccessToken(
+      user,
+      JWT_SECRET,
+      ACCESS_TOKEN_EXPIRY,
+    );
+    const refreshToken = await generateRefreshToken(
+      user,
+      JWT_SECRET,
+      REFRESH_TOKEN_EXPIRY,
+    );
 
     // Save refresh token to database
     await authRepository.saveRefreshToken(user, refreshToken);
@@ -119,7 +127,11 @@ export const createAuthUseCases = () => {
       const user = await userRepository.findOneWithPassword(decoded.sub);
 
       // Generate new refresh token
-      const newRefreshToken = await generateRefreshToken(user, JWT_SECRET, REFRESH_TOKEN_EXPIRY);
+      const newRefreshToken = await generateRefreshToken(
+        user,
+        JWT_SECRET,
+        REFRESH_TOKEN_EXPIRY,
+      );
 
       // Rotate refresh token (revoke old one and create new one)
       const { token: rotatedToken } = await authRepository.rotateRefreshToken(
@@ -129,7 +141,11 @@ export const createAuthUseCases = () => {
       );
 
       // Generate new access token
-      const newAccessToken = await generateAccessToken(user, JWT_SECRET, ACCESS_TOKEN_EXPIRY);
+      const newAccessToken = await generateAccessToken(
+        user,
+        JWT_SECRET,
+        ACCESS_TOKEN_EXPIRY,
+      );
 
       return {
         accessToken: newAccessToken,

@@ -56,4 +56,4 @@ export const createUserUseCases = () => {
   };
 };
 
-export const userUseCases = createUserUseCases(); 
+export const userUseCases = createUserUseCases();

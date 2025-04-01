@@ -22,7 +22,7 @@ import {
 import { User } from '../users/users.types';
 
 // JWT configuration
-const JWT_SECRET = secret('JWT_SECRET');
+const JWT_SECRET = secret('JWT_SECRET')();
 
 /**
  * Creates auth use cases to handle authentication business logic
@@ -58,9 +58,7 @@ export const createAuthUseCases = () => {
     if (!passwordValid) {
       throw new AuthenticationError('Invalid username or password');
     }
-    
-    // Get JWT secret
-    
+
     // Generate tokens
     const accessToken = await generateAccessToken(user, JWT_SECRET);
     const refreshToken = await generateRefreshToken(user, JWT_SECRET);

@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll, beforeAll } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll, beforeEach, afterEach } from 'vitest';
 import {
   login,
   refreshToken,
@@ -19,12 +19,7 @@ import type { CreateDepartmentPayload } from '../departments/departments.types';
 import { authRepository } from './auth.repository';
 
 describe('Auth Controller', () => {
-  // Test data
-  let tenantId = 0;
-  let departmentId = 0;
-  let userId = 0;
-  let refreshTokenString = '';
-
+  // Test data for reuse
   const testTenant: CreateTenantPayload = {
     name: 'Test Tenant Auth',
     code: 'TEST-TENANT-AUTH',
@@ -57,86 +52,91 @@ describe('Auth Controller', () => {
     password: 'password123',
   };
 
-  // Setup and teardown
-  beforeAll(async () => {
-    // Create tenant
-    const tenant = await createTenant(testTenant);
-    tenantId = tenant.id;
-    expect(tenantId).toBeGreaterThan(0);
-
-    // Create department
-    const department = await createDepartment({
-      ...testDepartment,
-      tenantId,
-    });
-    departmentId = department.id;
-    expect(departmentId).toBeGreaterThan(0);
-
-    // Create test user
-    const user = await createUser({
-      ...testUser,
-      tenantId,
-      departmentId,
-    });
-    userId = user.id;
-    expect(userId).toBeGreaterThan(0);
-  });
-
-  afterAll(async () => {
-    try {
-      // Clean up in the correct order to respect foreign key constraints
-      
-      // 1. First revoke all refresh tokens for the user
-      if (userId > 0) {
-        try {
-          await revokeAllTokens({ userId });
-          
-          // Try to directly delete tokens from repository
-          const tokens = await authRepository.findAllBy('userId', userId, { orderBy: [] });
-          for (const token of tokens) {
-            try {
-              await authRepository.delete(token.id);
-            } catch (e) {
-              // Ignore errors
-            }
-          }
-        } catch (error) {
-          // Ignore errors
-        }
-      }
-      
-      // 2. Now delete the user
-      if (userId > 0) {
-        try {
-          await deleteUser({ id: userId });
-        } catch (error) {
-          // Ignore errors
-        }
-      }
-      
-      // 3. Delete the department
-      if (departmentId > 0) {
-        try {
-          await deleteDepartment({ id: departmentId });
-        } catch (error) {
-          // Ignore errors
-        }
-      }
-      
-      // 4. Delete the tenant
-      if (tenantId > 0) {
-        try {
-          await deleteTenant({ id: tenantId });
-        } catch (error) {
-          // Ignore errors
-        }
-      }
-    } catch (error) {
-      // Ignore errors
-    }
-  });
-
   describe('login', () => {
+    // Setup for login tests
+    let tenantId = 0;
+    let departmentId = 0;
+    let userId = 0;
+    let refreshTokenString = '';
+
+    beforeAll(async () => {
+      // Create tenant
+      const tenant = await createTenant(testTenant);
+      tenantId = tenant.id;
+      expect(tenantId).toBeGreaterThan(0);
+
+      // Create department
+      const department = await createDepartment({
+        ...testDepartment,
+        tenantId,
+      });
+      departmentId = department.id;
+      expect(departmentId).toBeGreaterThan(0);
+
+      // Create test user
+      const user = await createUser({
+        ...testUser,
+        tenantId,
+        departmentId,
+      });
+      userId = user.id;
+      expect(userId).toBeGreaterThan(0);
+    });
+
+    afterAll(async () => {
+      try {
+        // Clean up in the correct order to respect foreign key constraints
+        
+        // 1. First revoke all refresh tokens for the user
+        if (userId > 0) {
+          try {
+            await revokeAllTokens({ userId });
+            
+            // Try to directly delete tokens from repository
+            const tokens = await authRepository.findAllBy('userId', userId, { orderBy: [] });
+            for (const token of tokens) {
+              try {
+                await authRepository.delete(token.id);
+              } catch (e) {
+                // Ignore errors
+              }
+            }
+          } catch (error) {
+            // Ignore errors
+          }
+        }
+        
+        // 2. Now delete the user
+        if (userId > 0) {
+          try {
+            await deleteUser({ id: userId });
+          } catch (error) {
+            // Ignore errors
+          }
+        }
+        
+        // 3. Delete the department
+        if (departmentId > 0) {
+          try {
+            await deleteDepartment({ id: departmentId });
+          } catch (error) {
+            // Ignore errors
+          }
+        }
+        
+        // 4. Delete the tenant
+        if (tenantId > 0) {
+          try {
+            await deleteTenant({ id: tenantId });
+          } catch (error) {
+            // Ignore errors
+          }
+        }
+      } catch (error) {
+        // Ignore errors
+      }
+    });
+
     it('should authenticate a user with valid credentials', async () => {
       const result = await login(loginPayload);
 
@@ -184,11 +184,79 @@ describe('Auth Controller', () => {
   });
 
   describe('refreshToken', () => {
+    // Setup for refresh token tests
+    let tenantId = 0;
+    let departmentId = 0;
+    let userId = 0;
+    let refreshTokenString = '';
+
+    beforeAll(async () => {
+      // Create tenant
+      const tenant = await createTenant({
+        ...testTenant,
+        code: `${testTenant.code}-REFRESH`,
+      });
+      tenantId = tenant.id;
+      
+      // Create department
+      const department = await createDepartment({
+        ...testDepartment,
+        code: `${testDepartment.code}-REFRESH`,
+        tenantId,
+      });
+      departmentId = department.id;
+      
+      // Create test user
+      const user = await createUser({
+        ...testUser,
+        username: `${testUser.username}_refresh`,
+        email: `refresh.${testUser.email}`,
+        tenantId,
+        departmentId,
+      });
+      userId = user.id;
+      
+      // Login to get refresh token
+      const result = await login({
+        username: `${testUser.username}_refresh`,
+        password: testUser.password,
+      });
+      
+      refreshTokenString = result.refreshToken;
+      
+      // Add a small delay to ensure token is properly saved and validated
+      await new Promise(resolve => setTimeout(resolve, 500));
+    });
+
+    afterAll(async () => {
+      try {
+        // Clean up in the correct order
+        if (userId > 0) {
+          try {
+            await revokeAllTokens({ userId });
+            const tokens = await authRepository.findAllBy('userId', userId, { orderBy: [] });
+            for (const token of tokens) {
+              try {
+                await authRepository.delete(token.id);
+              } catch (e) {}
+            }
+          } catch (error) {}
+        }
+        
+        if (userId > 0) try { await deleteUser({ id: userId }); } catch (error) {}
+        if (departmentId > 0) try { await deleteDepartment({ id: departmentId }); } catch (error) {}
+        if (tenantId > 0) try { await deleteTenant({ id: tenantId }); } catch (error) {}
+      } catch (error) {}
+    });
+
     it('should refresh a valid token', async () => {
       // Skip if no refresh token from login test
       if (!refreshTokenString) {
         return;
       }
+
+      // Add a small delay to ensure token is ready for refresh
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const refreshData: RefreshTokenPayload = {
         refreshToken: refreshTokenString,
@@ -212,6 +280,9 @@ describe('Auth Controller', () => {
 
       // Save new refresh token for logout test
       refreshTokenString = result.refreshToken;
+      
+      // Add a small delay before the test completes
+      await new Promise(resolve => setTimeout(resolve, 500));
     });
 
     it('should fail with invalid refresh token', async () => {
@@ -224,6 +295,68 @@ describe('Auth Controller', () => {
   });
 
   describe('logout', () => {
+    // Setup for logout tests
+    let tenantId = 0;
+    let departmentId = 0;
+    let userId = 0;
+    let refreshTokenString = '';
+
+    beforeAll(async () => {
+      // Create tenant
+      const tenant = await createTenant({
+        ...testTenant,
+        code: `${testTenant.code}-LOGOUT`,
+      });
+      tenantId = tenant.id;
+      
+      // Create department
+      const department = await createDepartment({
+        ...testDepartment,
+        code: `${testDepartment.code}-LOGOUT`,
+        tenantId,
+      });
+      departmentId = department.id;
+      
+      // Create test user
+      const user = await createUser({
+        ...testUser,
+        username: `${testUser.username}_logout`,
+        email: `logout.${testUser.email}`,
+        tenantId,
+        departmentId,
+      });
+      userId = user.id;
+      
+      // Login to get refresh token
+      const result = await login({
+        username: `${testUser.username}_logout`,
+        password: testUser.password,
+      });
+      
+      refreshTokenString = result.refreshToken;
+    });
+
+    afterAll(async () => {
+      try {
+        // Clean up in the correct order
+        if (userId > 0) {
+          try {
+            await revokeAllTokens({ userId });
+            const tokens = await authRepository.findAllBy('userId', userId, { orderBy: [] });
+            for (const token of tokens) {
+              try {
+                await authRepository.delete(token.id);
+              } catch (e) {}
+            }
+          } catch (error) {}
+        }
+        
+        if (userId > 0) try { await deleteUser({ id: userId }); } catch (error) {}
+        if (departmentId > 0) try { await deleteDepartment({ id: departmentId }); } catch (error) {}
+        if (tenantId > 0) try { await deleteTenant({ id: tenantId }); } catch (error) {}
+      } catch (error) {}
+    });
+
     it('should log out a user with valid refresh token', async () => {
       // Skip if no refresh token from previous tests
       if (!refreshTokenString) {
@@ -256,9 +389,64 @@ describe('Auth Controller', () => {
   });
 
   describe('revokeAllTokens', () => {
+    // Setup for revoke tokens tests
+    let tenantId = 0;
+    let departmentId = 0;
+    let userId = 0;
+
+    beforeAll(async () => {
+      // Create tenant
+      const tenant = await createTenant({
+        ...testTenant,
+        code: `${testTenant.code}-REVOKE`,
+      });
+      tenantId = tenant.id;
+      
+      // Create department
+      const department = await createDepartment({
+        ...testDepartment,
+        code: `${testDepartment.code}-REVOKE`,
+        tenantId,
+      });
+      departmentId = department.id;
+      
+      // Create test user
+      const user = await createUser({
+        ...testUser,
+        username: `${testUser.username}_revoke`,
+        email: `revoke.${testUser.email}`,
+        tenantId,
+        departmentId,
+      });
+      userId = user.id;
+    });
+
+    afterAll(async () => {
+      try {
+        // Clean up in the correct order
+        if (userId > 0) {
+          try {
+            const tokens = await authRepository.findAllBy('userId', userId, { orderBy: [] });
+            for (const token of tokens) {
+              try {
+                await authRepository.delete(token.id);
+              } catch (e) {}
+            }
+          } catch (error) {}
+        }
+        
+        if (userId > 0) try { await deleteUser({ id: userId }); } catch (error) {}
+        if (departmentId > 0) try { await deleteDepartment({ id: departmentId }); } catch (error) {}
+        if (tenantId > 0) try { await deleteTenant({ id: tenantId }); } catch (error) {}
+      } catch (error) {}
+    });
+
     it('should revoke all tokens for a user', async () => {
       // First login to create a token
-      await login(loginPayload);
+      await login({
+        username: `${testUser.username}_revoke`,
+        password: testUser.password,
+      });
       
       // Then revoke all tokens
       const result = await revokeAllTokens({ userId });

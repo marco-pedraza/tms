@@ -1,8 +1,8 @@
 import { db } from '../../db';
-import { DuplicateError, NotFoundError } from '../../shared/errors';
+import { NotFoundError } from '../../shared/errors';
 import { roles, rolePermissions } from './roles.schema';
 import { permissions } from '../permissions/permissions.schema';
-import { eq, and, not } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type {
   Role,
   RoleWithPermissions,
@@ -22,13 +22,10 @@ import {
   getRelatedEntities,
   updateManyToManyRelation,
 } from '../../shared/db-utils';
-import { count } from 'drizzle-orm';
 
 // Error message constants
 const ERROR_ROLE_NAME_EXISTS = (name: string) =>
   `Role with name ${name} already exists in this tenant`;
-const ERROR_VALIDATE_NAME_UNIQUENESS = (errorMsg: string) =>
-  `Failed to validate role name uniqueness: ${errorMsg}`;
 const ERROR_PERMISSION_NOT_FOUND = (id: number) =>
   `Permission with id ${id} not found`;
 const ERROR_ROLE_NOT_FOUND = (id: number) => `Role with id ${id} not found`;

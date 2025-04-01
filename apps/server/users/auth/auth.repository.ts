@@ -1,0 +1,151 @@
+import { refreshTokens } from './auth.schema';
+import { User } from '../users/users.types';
+import jwt from 'jsonwebtoken';
+import { 
+  JwtPayload, 
+  RefreshToken, 
+  CreateRefreshToken, 
+  UpdateRefreshToken 
+} from './auth.types';
+import { NotFoundError } from '../../shared/errors';
+import { createBaseRepository } from '../../shared/base-repository';
+import { authUseCases } from './auth.use-cases';
+
+export const createAuthRepository = () => {
+  // Create base repository for refresh tokens
+  const baseRepository = createBaseRepository<
+    RefreshToken,
+    CreateRefreshToken,
+    UpdateRefreshToken,
+    typeof refreshTokens
+  >(refreshTokens, 'RefreshToken');
+
+  /**
+   * Saves a refresh token to the database
+   * @param user User the token belongs to
+   * @param token JWT refresh token
+   * @returns The saved token record
+   */
+  const saveRefreshToken = async (
+    user: User,
+    token: string,
+  ): Promise<RefreshToken> => {
+    // Decode token to get expiration
+    const decoded = jwt.decode(token) as JwtPayload;
+    const expiresAt = decoded.exp
+      ? new Date(decoded.exp * 1000)
+      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Default to 7 days
+
+    return baseRepository.create({
+      userId: user.id,
+      token,
+      expiresAt,
+      isRevoked: false,
+    });
+  };
+
+  /**
+   * Finds a refresh token by its token string
+   * @param token JWT refresh token
+   * @returns The token record if found
+   */
+  const findRefreshToken = async (
+    token: string,
+  ): Promise<RefreshToken | null> => {
+    return baseRepository.findBy(refreshTokens.token, token);
+  };
+
+  /**
+   * Revokes a refresh token
+   * @param token JWT refresh token
+   * @returns The updated token record
+   * @throws {NotFoundError} If the token is not found
+   */
+  const revokeRefreshToken = async (token: string): Promise<RefreshToken> => {
+    const tokenRecord = await findRefreshToken(token);
+    
+    if (!tokenRecord) {
+      throw new NotFoundError('Refresh token not found');
+    }
+
+    return baseRepository.update(tokenRecord.id, { isRevoked: true });
+  };
+
+  /**
+   * Revokes all refresh tokens for a user
+   * @param userId User ID
+   * @returns Number of tokens revoked
+   */
+  const revokeAllUserTokens = async (userId: number): Promise<number> => {
+    const tokensToRevoke = await baseRepository.findAllBy(
+      refreshTokens.userId,
+      userId,
+      { orderBy: [] }
+    );
+    
+    // Only update tokens that are not already revoked
+    const updatePromises = tokensToRevoke
+      .filter(token => !token.isRevoked)
+      .map(token => 
+        baseRepository.update(token.id, { isRevoked: true })
+      );
+    
+    const results = await Promise.all(updatePromises);
+    return results.length;
+  };
+
+  /**
+   * Replaces a refresh token with a new one
+   * @param oldToken Old refresh token to replace
+   * @param user User to generate new token for
+   * @returns New refresh token and record
+   * @throws {NotFoundError} If the old token is not found or is revoked
+   */
+  const rotateRefreshToken = async (
+    oldToken: string,
+    user: User,
+  ): Promise<{ token: string; record: RefreshToken }> => {
+    // Check if old token exists and is valid
+    const tokenRecord = await findRefreshToken(oldToken);
+    
+    if (!tokenRecord || tokenRecord.isRevoked) {
+      throw new NotFoundError('Invalid or revoked refresh token');
+    }
+    
+    // Check if token belongs to the user
+    if (tokenRecord.userId !== user.id) {
+      throw new NotFoundError('Refresh token does not belong to this user');
+    }
+    
+    // Revoke old token
+    await revokeRefreshToken(oldToken);
+    
+    // We need to create a new token
+    const newToken = await authUseCases.generateNewRefreshToken(user);
+    const newRecord = await saveRefreshToken(user, newToken);
+    
+    return { token: newToken, record: newRecord };
+  };
+  
+  /**
+   * Checks if a refresh token is valid (exists and not revoked)
+   * @param token JWT refresh token
+   * @returns Whether the token is valid
+   */
+  const isRefreshTokenValid = async (token: string): Promise<boolean> => {
+    const tokenRecord = await findRefreshToken(token);
+    return !!tokenRecord && !tokenRecord.isRevoked;
+  };
+
+  return {
+    ...baseRepository,
+    saveRefreshToken,
+    findRefreshToken,
+    revokeRefreshToken,
+    revokeAllUserTokens,
+    rotateRefreshToken,
+    isRefreshTokenValid,
+  };
+};
+
+export const authRepository = createAuthRepository(); 

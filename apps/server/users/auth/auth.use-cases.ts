@@ -1,8 +1,11 @@
-import { secret } from 'encore.dev/config';
 import { userRepository } from '../users/users.repository';
 import { authRepository } from './auth.repository';
-import { comparePasswords } from '../../shared/auth-utils';
-import jwt from 'jsonwebtoken';
+import { 
+  comparePasswords,
+  generateAccessToken,
+  generateRefreshToken,
+  verifyToken
+} from '../../shared/auth-utils';
 import type { 
   LoginPayload, 
   LoginResponse, 
@@ -17,85 +20,11 @@ import {
 } from '../../shared/errors';
 import { User } from '../users/users.types';
 
-// JWT configuration
-// In a production environment, these should be stored in environment variables
-const JWT_SECRET = secret('JWT_SECRET');
-const ACCESS_TOKEN_EXPIRY = '30m'; // 30 minutes
-const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
-
 /**
  * Creates auth use cases to handle authentication business logic
  * @returns Object containing authentication use cases
  */
 export const createAuthUseCases = () => {
-  /**
-   * Generates a JWT access token for the given user
-   * @param user User to generate token for
-   * @returns JWT access token
-   */
-  const generateAccessToken = async (user: User): Promise<string> => {
-    const payload: JwtPayload = {
-      sub: user.id,
-      tenantId: user.tenantId,
-      username: user.username,
-      isSystemAdmin: user.isSystemAdmin,
-      type: 'access',
-    };
-
-    const secretKey = await JWT_SECRET.get();
-    return jwt.sign(payload, secretKey, { expiresIn: ACCESS_TOKEN_EXPIRY });
-  };
-
-  /**
-   * Generates a JWT refresh token for the given user
-   * @param user User to generate token for
-   * @returns JWT refresh token
-   */
-  const generateRefreshToken = async (user: User): Promise<string> => {
-    const payload: JwtPayload = {
-      sub: user.id,
-      tenantId: user.tenantId,
-      username: user.username,
-      isSystemAdmin: user.isSystemAdmin,
-      type: 'refresh',
-    };
-
-    const secretKey = await JWT_SECRET.get();
-    return jwt.sign(payload, secretKey, { expiresIn: REFRESH_TOKEN_EXPIRY });
-  };
-
-  /**
-   * Verifies a JWT token and returns the decoded payload
-   * @param token JWT token to verify
-   * @param expectedType Expected token type ('access' or 'refresh')
-   * @returns Decoded JWT payload if valid
-   * @throws Error if token is invalid or expired
-   */
-  const verifyToken = async (
-    token: string,
-    expectedType: 'access' | 'refresh',
-  ): Promise<JwtPayload> => {
-    try {
-      const secretKey = await JWT_SECRET.get();
-      const decoded = jwt.verify(token, secretKey) as JwtPayload;
-      
-      // Verify token type
-      if (decoded.type !== expectedType) {
-        throw new Error(`Invalid token type. Expected ${expectedType} token.`);
-      }
-      
-      return decoded;
-    } catch (error) {
-      if (error instanceof jwt.TokenExpiredError) {
-        throw new Error('Token expired');
-      }
-      if (error instanceof jwt.JsonWebTokenError) {
-        throw new Error('Invalid token');
-      }
-      throw error;
-    }
-  };
-
   /**
    * Authenticates a user and generates JWT tokens
    * @param credentials User login credentials

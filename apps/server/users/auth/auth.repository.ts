@@ -9,7 +9,7 @@ import {
 } from './auth.types';
 import { NotFoundError } from '../../shared/errors';
 import { createBaseRepository } from '../../shared/base-repository';
-import { authUseCases } from './auth.use-cases';
+import { generateRefreshToken } from '../../shared/auth-utils';
 
 export const createAuthRepository = () => {
   // Create base repository for refresh tokens
@@ -121,7 +121,7 @@ export const createAuthRepository = () => {
     await revokeRefreshToken(oldToken);
     
     // We need to create a new token
-    const newToken = await authUseCases.generateNewRefreshToken(user);
+    const newToken = await generateRefreshToken(user);
     const newRecord = await saveRefreshToken(user, newToken);
     
     return { token: newToken, record: newRecord };

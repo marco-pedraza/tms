@@ -1,11 +1,11 @@
 import { refreshTokens } from './auth.schema';
 import { User } from '../users/users.types';
 import jwt from 'jsonwebtoken';
-import { 
-  JwtPayload, 
-  RefreshToken, 
-  CreateRefreshToken, 
-  UpdateRefreshToken 
+import {
+  JwtPayload,
+  RefreshToken,
+  CreateRefreshToken,
+  UpdateRefreshToken,
 } from './auth.types';
 import { NotFoundError } from '../../shared/errors';
 import { createBaseRepository } from '../../shared/base-repository';
@@ -62,7 +62,7 @@ export const createAuthRepository = () => {
    */
   const revokeRefreshToken = async (token: string): Promise<RefreshToken> => {
     const tokenRecord = await findRefreshToken(token);
-    
+
     if (!tokenRecord) {
       throw new NotFoundError('Refresh token not found');
     }
@@ -79,16 +79,14 @@ export const createAuthRepository = () => {
     const tokensToRevoke = await baseRepository.findAllBy(
       refreshTokens.userId,
       userId,
-      { orderBy: [] }
+      { orderBy: [] },
     );
-    
+
     // Only update tokens that are not already revoked
     const updatePromises = tokensToRevoke
-      .filter(token => !token.isRevoked)
-      .map(token => 
-        baseRepository.update(token.id, { isRevoked: true })
-      );
-    
+      .filter((token) => !token.isRevoked)
+      .map((token) => baseRepository.update(token.id, { isRevoked: true }));
+
     const results = await Promise.all(updatePromises);
     return results.length;
   };
@@ -108,25 +106,25 @@ export const createAuthRepository = () => {
   ): Promise<{ token: string; record: RefreshToken }> => {
     // Check if old token exists and is valid
     const tokenRecord = await findRefreshToken(oldToken);
-    
+
     if (!tokenRecord || tokenRecord.isRevoked) {
       throw new NotFoundError('Invalid or revoked refresh token');
     }
-    
+
     // Check if token belongs to the user
     if (tokenRecord.userId !== user.id) {
       throw new NotFoundError('Refresh token does not belong to this user');
     }
-    
+
     // Revoke old token
     await revokeRefreshToken(oldToken);
-    
+
     // Save the new token
     const newRecord = await saveRefreshToken(user, newToken);
-    
+
     return { token: newToken, record: newRecord };
   };
-  
+
   /**
    * Checks if a refresh token is valid (exists and not revoked)
    * @param token JWT refresh token
@@ -148,4 +146,4 @@ export const createAuthRepository = () => {
   };
 };
 
-export const authRepository = createAuthRepository(); 
+export const authRepository = createAuthRepository();

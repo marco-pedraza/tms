@@ -1,9 +1,9 @@
 import { api } from 'encore.dev/api';
-import type { 
-  LoginPayload, 
-  LoginResponse, 
+import type {
+  LoginPayload,
+  LoginResponse,
   RefreshTokenPayload,
-  LogoutPayload
+  LogoutPayload,
 } from './auth.types';
 import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { authUseCases } from './auth.use-cases';
@@ -19,8 +19,10 @@ const withErrorHandling = createControllerErrorHandler('AuthController');
 export const login = api(
   { method: 'POST', path: '/auth/login', expose: true },
   async (params: LoginPayload): Promise<LoginResponse> => {
-    return withErrorHandling('login', () => authUseCases.authenticateUser(params));
-  }
+    return withErrorHandling('login', () =>
+      authUseCases.authenticateUser(params),
+    );
+  },
 );
 
 /**
@@ -32,8 +34,10 @@ export const login = api(
 export const refreshToken = api(
   { method: 'POST', path: '/auth/refresh-token', expose: true },
   async (params: RefreshTokenPayload): Promise<Omit<LoginResponse, 'user'>> => {
-    return withErrorHandling('refreshToken', () => authUseCases.refreshUserToken(params));
-  }
+    return withErrorHandling('refreshToken', () =>
+      authUseCases.refreshUserToken(params),
+    );
+  },
 );
 
 /**
@@ -46,7 +50,7 @@ export const logout = api(
   { method: 'POST', path: '/auth/logout', expose: true },
   async (params: LogoutPayload): Promise<{ message: string }> => {
     return withErrorHandling('logout', () => authUseCases.logoutUser(params));
-  }
+  },
 );
 
 /**
@@ -58,6 +62,8 @@ export const logout = api(
 export const revokeAllTokens = api(
   { method: 'POST', path: '/auth/revoke-all/:userId', expose: true },
   async ({ userId }: { userId: number }): Promise<{ count: number }> => {
-    return withErrorHandling('revokeAllTokens', () => authUseCases.revokeAllUserTokens(userId));
-  }
-); 
+    return withErrorHandling('revokeAllTokens', () =>
+      authUseCases.revokeAllUserTokens(userId),
+    );
+  },
+);

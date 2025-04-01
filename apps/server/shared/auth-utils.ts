@@ -48,7 +48,10 @@ export const omitPasswordHash = (user: User): SafeUser => {
  * @param secretKey JWT secret key
  * @returns JWT access token
  */
-export const generateAccessToken = async (user: User, secretKey: string): Promise<string> => {
+export const generateAccessToken = async (
+  user: User,
+  secretKey: string,
+): Promise<string> => {
   const payload: JwtPayload = {
     sub: user.id,
     tenantId: user.tenantId,
@@ -66,7 +69,10 @@ export const generateAccessToken = async (user: User, secretKey: string): Promis
  * @param secretKey JWT secret key
  * @returns JWT refresh token
  */
-export const generateRefreshToken = async (user: User, secretKey: string): Promise<string> => {
+export const generateRefreshToken = async (
+  user: User,
+  secretKey: string,
+): Promise<string> => {
   const payload: JwtPayload = {
     sub: user.id,
     tenantId: user.tenantId,
@@ -93,12 +99,12 @@ export const verifyToken = async (
 ): Promise<JwtPayload> => {
   try {
     const decoded = jwt.verify(token, secretKey) as JwtPayload;
-    
+
     // Verify token type
     if (decoded.type !== expectedType) {
       throw new Error(`Invalid token type. Expected ${expectedType} token.`);
     }
-    
+
     return decoded;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {

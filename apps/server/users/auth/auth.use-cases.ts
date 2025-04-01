@@ -1,23 +1,23 @@
 import { secret } from 'encore.dev/config';
 import { userRepository } from '../users/users.repository';
 import { authRepository } from './auth.repository';
-import { 
+import {
   comparePasswords,
   generateAccessToken,
   generateRefreshToken,
-  verifyToken
+  verifyToken,
 } from '../../shared/auth-utils';
-import type { 
-  LoginPayload, 
-  LoginResponse, 
+import type {
+  LoginPayload,
+  LoginResponse,
   RefreshTokenPayload,
   LogoutPayload,
-  JwtPayload
+  JwtPayload,
 } from './auth.types';
-import { 
-  AuthenticationError, 
+import {
+  AuthenticationError,
   ValidationError,
-  NotFoundError
+  NotFoundError,
 } from '../../shared/errors';
 import { User } from '../users/users.types';
 
@@ -36,25 +36,25 @@ export const createAuthUseCases = () => {
    * @throws {AuthenticationError} If credentials are invalid
    */
   const authenticateUser = async (
-    credentials: LoginPayload
+    credentials: LoginPayload,
   ): Promise<LoginResponse> => {
     const { username, password } = credentials;
 
     // Find user by username
     const user = await userRepository.findByUsername(username);
-    
+
     if (!user) {
       throw new AuthenticationError('Invalid username or password');
     }
-    
+
     // Check if user is active
     if (!user.isActive) {
       throw new AuthenticationError('Account is inactive');
     }
-    
+
     // Verify password
     const passwordValid = await comparePasswords(password, user.passwordHash);
-    
+
     if (!passwordValid) {
       throw new AuthenticationError('Invalid username or password');
     }
@@ -62,15 +62,15 @@ export const createAuthUseCases = () => {
     // Generate tokens
     const accessToken = await generateAccessToken(user, JWT_SECRET);
     const refreshToken = await generateRefreshToken(user, JWT_SECRET);
-    
+
     // Save refresh token to database
     await authRepository.saveRefreshToken(user, refreshToken);
-    
+
     // Update last login timestamp
     await userRepository.update(user.id, {
       lastLogin: new Date(),
     });
-    
+
     // Return user data and tokens
     return {
       user: {
@@ -89,37 +89,37 @@ export const createAuthUseCases = () => {
    * @throws {AuthenticationError} If refresh token is invalid
    */
   const refreshUserToken = async (
-    params: RefreshTokenPayload
+    params: RefreshTokenPayload,
   ): Promise<Omit<LoginResponse, 'user'>> => {
     const { refreshToken: token } = params;
-    
-    try {      
+
+    try {
       // Verify refresh token
       const decoded = await verifyToken(token, 'refresh', JWT_SECRET);
-      
+
       // Check if token is in database and not revoked
       const isValid = await authRepository.isRefreshTokenValid(token);
-      
+
       if (!isValid) {
         throw new AuthenticationError('Invalid refresh token');
       }
-      
+
       // Find user
       const user = await userRepository.findOneWithPassword(decoded.sub);
-      
+
       // Generate new refresh token
       const newRefreshToken = await generateRefreshToken(user, JWT_SECRET);
-      
+
       // Rotate refresh token (revoke old one and create new one)
       const { token: rotatedToken } = await authRepository.rotateRefreshToken(
         token,
         user,
-        newRefreshToken
+        newRefreshToken,
       );
-      
+
       // Generate new access token
       const newAccessToken = await generateAccessToken(user, JWT_SECRET);
-      
+
       return {
         accessToken: newAccessToken,
         refreshToken: rotatedToken,
@@ -135,10 +135,10 @@ export const createAuthUseCases = () => {
    * @returns Success message
    */
   const logoutUser = async (
-    params: LogoutPayload
+    params: LogoutPayload,
   ): Promise<{ message: string }> => {
     const { refreshToken } = params;
-    
+
     try {
       // Revoke the refresh token
       await authRepository.revokeRefreshToken(refreshToken);
@@ -160,19 +160,19 @@ export const createAuthUseCases = () => {
    * @throws {NotFoundError} If user does not exist
    */
   const revokeAllUserTokens = async (
-    userId: number
+    userId: number,
   ): Promise<{ count: number }> => {
     // Validate userId
     if (!userId || isNaN(Number(userId))) {
       throw new ValidationError('Invalid user ID');
     }
-    
+
     // Check if user exists
     await userRepository.findOne(userId);
-    
+
     // Revoke all tokens
     const count = await authRepository.revokeAllUserTokens(userId);
-    
+
     return { count };
   };
 
@@ -193,7 +193,7 @@ export const createAuthUseCases = () => {
    */
   const verifyAuthToken = async (
     token: string,
-    expectedType: 'access' | 'refresh'
+    expectedType: 'access' | 'refresh',
   ): Promise<JwtPayload> => {
     return verifyToken(token, expectedType, JWT_SECRET);
   };
@@ -208,4 +208,4 @@ export const createAuthUseCases = () => {
   };
 };
 
-export const authUseCases = createAuthUseCases(); 
+export const authUseCases = createAuthUseCases();

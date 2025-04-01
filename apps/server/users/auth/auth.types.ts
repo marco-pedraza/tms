@@ -24,12 +24,12 @@ export interface LoginResponse {
    * User data without sensitive information
    */
   user: SafeUser;
-  
+
   /**
    * JWT access token
    */
   accessToken: string;
-  
+
   /**
    * JWT refresh token
    */
@@ -44,32 +44,32 @@ export interface JwtPayload {
    * User ID
    */
   sub: number;
-  
+
   /**
    * Tenant ID
    */
   tenantId: number;
-  
+
   /**
    * Username
    */
   username: string;
-  
+
   /**
    * Whether user is a system admin
    */
   isSystemAdmin: boolean;
-  
+
   /**
    * Token type: 'access' or 'refresh'
    */
   type: 'access' | 'refresh';
-  
+
   /**
    * Issued at timestamp
    */
   iat?: number;
-  
+
   /**
    * Expiration timestamp
    */
@@ -104,27 +104,27 @@ export interface RefreshToken {
    * Unique identifier for the refresh token
    */
   id: number;
-  
+
   /**
    * User ID the token belongs to
    */
   userId: number;
-  
+
   /**
    * JWT refresh token string
    */
   token: string;
-  
+
   /**
    * Timestamp when the token expires
    */
   expiresAt: Date;
-  
+
   /**
    * Whether the token has been revoked
    */
   isRevoked: boolean;
-  
+
   /**
    * Timestamp when the token was created
    */
@@ -139,17 +139,17 @@ export interface CreateRefreshToken {
    * User ID the token belongs to
    */
   userId: number;
-  
+
   /**
    * JWT refresh token string
    */
   token: string;
-  
+
   /**
    * Timestamp when the token expires
    */
   expiresAt: Date;
-  
+
   /**
    * Whether the token is revoked
    * @default false
@@ -165,4 +165,4 @@ export interface UpdateRefreshToken {
    * Whether the token is revoked
    */
   isRevoked?: boolean;
-} 
+}

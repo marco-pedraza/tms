@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll, beforeAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   login,
   refreshToken,
@@ -14,7 +14,10 @@ import { createUser, deleteUser } from '../users/users.controller';
 import type { CreateUserPayload } from '../users/users.types';
 import { createTenant, deleteTenant } from '../tenants/tenants.controller';
 import type { CreateTenantPayload } from '../tenants/tenants.types';
-import { createDepartment, deleteDepartment } from '../departments/departments.controller';
+import {
+  createDepartment,
+  deleteDepartment,
+} from '../departments/departments.controller';
 import type { CreateDepartmentPayload } from '../departments/departments.types';
 import { authRepository } from './auth.repository';
 
@@ -57,6 +60,9 @@ describe('Auth Controller', () => {
     let tenantId = 0;
     let departmentId = 0;
     let userId = 0;
+    // This variable is necessary for storing the token during tests
+    // even though it might appear unused in this specific scope
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let refreshTokenString = '';
 
     beforeAll(async () => {
@@ -86,53 +92,55 @@ describe('Auth Controller', () => {
     afterAll(async () => {
       try {
         // Clean up in the correct order to respect foreign key constraints
-        
+
         // 1. First revoke all refresh tokens for the user
         if (userId > 0) {
           try {
             await revokeAllTokens({ userId });
-            
+
             // Try to directly delete tokens from repository
-            const tokens = await authRepository.findAllBy('userId', userId, { orderBy: [] });
+            const tokens = await authRepository.findAllBy('userId', userId, {
+              orderBy: [],
+            });
             for (const token of tokens) {
               try {
                 await authRepository.delete(token.id);
-              } catch (e) {
+              } catch {
                 // Ignore errors
               }
             }
-          } catch (error) {
+          } catch {
             // Ignore errors
           }
         }
-        
+
         // 2. Now delete the user
         if (userId > 0) {
           try {
             await deleteUser({ id: userId });
-          } catch (error) {
+          } catch {
             // Ignore errors
           }
         }
-        
+
         // 3. Delete the department
         if (departmentId > 0) {
           try {
             await deleteDepartment({ id: departmentId });
-          } catch (error) {
+          } catch {
             // Ignore errors
           }
         }
-        
+
         // 4. Delete the tenant
         if (tenantId > 0) {
           try {
             await deleteTenant({ id: tenantId });
-          } catch (error) {
+          } catch {
             // Ignore errors
           }
         }
-      } catch (error) {
+      } catch {
         // Ignore errors
       }
     });
@@ -145,7 +153,7 @@ describe('Auth Controller', () => {
       expect(result.user).toBeDefined();
       expect(result.accessToken).toBeDefined();
       expect(result.refreshToken).toBeDefined();
-      
+
       // Verify user data
       expect(result.user.id).toBe(userId);
       expect(result.user.username).toBe(testUser.username);
@@ -153,7 +161,7 @@ describe('Auth Controller', () => {
       expect(result.user.lastName).toBe(testUser.lastName);
       expect(result.user.email).toBe(testUser.email);
       expect(result.user.passwordHash).toBeUndefined();
-      
+
       // JWT tokens
       expect(typeof result.accessToken).toBe('string');
       expect(result.accessToken.length).toBeGreaterThan(20);
@@ -169,7 +177,7 @@ describe('Auth Controller', () => {
         login({
           username: loginPayload.username,
           password: 'wrongpassword',
-        })
+        }),
       ).rejects.toThrow();
     });
 
@@ -178,7 +186,7 @@ describe('Auth Controller', () => {
         login({
           username: 'nonexistentuser',
           password: loginPayload.password,
-        })
+        }),
       ).rejects.toThrow();
     });
   });
@@ -197,7 +205,7 @@ describe('Auth Controller', () => {
         code: `${testTenant.code}-REFRESH`,
       });
       tenantId = tenant.id;
-      
+
       // Create department
       const department = await createDepartment({
         ...testDepartment,
@@ -205,7 +213,7 @@ describe('Auth Controller', () => {
         tenantId,
       });
       departmentId = department.id;
-      
+
       // Create test user
       const user = await createUser({
         ...testUser,
@@ -215,17 +223,17 @@ describe('Auth Controller', () => {
         departmentId,
       });
       userId = user.id;
-      
+
       // Login to get refresh token
       const result = await login({
         username: `${testUser.username}_refresh`,
         password: testUser.password,
       });
-      
+
       refreshTokenString = result.refreshToken;
-      
+
       // Add a small delay to ensure token is properly saved and validated
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     });
 
     afterAll(async () => {
@@ -234,19 +242,42 @@ describe('Auth Controller', () => {
         if (userId > 0) {
           try {
             await revokeAllTokens({ userId });
-            const tokens = await authRepository.findAllBy('userId', userId, { orderBy: [] });
+            const tokens = await authRepository.findAllBy('userId', userId, {
+              orderBy: [],
+            });
             for (const token of tokens) {
               try {
                 await authRepository.delete(token.id);
-              } catch (e) {}
+              } catch {
+                // Ignore errors
+              }
             }
-          } catch (error) {}
+          } catch {
+            // Ignore errors
+          }
         }
-        
-        if (userId > 0) try { await deleteUser({ id: userId }); } catch (error) {}
-        if (departmentId > 0) try { await deleteDepartment({ id: departmentId }); } catch (error) {}
-        if (tenantId > 0) try { await deleteTenant({ id: tenantId }); } catch (error) {}
-      } catch (error) {}
+
+        if (userId > 0)
+          try {
+            await deleteUser({ id: userId });
+          } catch {
+            /* Ignore errors */
+          }
+        if (departmentId > 0)
+          try {
+            await deleteDepartment({ id: departmentId });
+          } catch {
+            /* Ignore errors */
+          }
+        if (tenantId > 0)
+          try {
+            await deleteTenant({ id: tenantId });
+          } catch {
+            /* Ignore errors */
+          }
+      } catch {
+        // Ignore errors
+      }
     });
 
     it('should refresh a valid token', async () => {
@@ -256,7 +287,7 @@ describe('Auth Controller', () => {
       }
 
       // Add a small delay to ensure token is ready for refresh
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const refreshData: RefreshTokenPayload = {
         refreshToken: refreshTokenString,
@@ -268,21 +299,21 @@ describe('Auth Controller', () => {
       expect(result).toBeDefined();
       expect(result.accessToken).toBeDefined();
       expect(result.refreshToken).toBeDefined();
-      
+
       // JWT tokens
       expect(typeof result.accessToken).toBe('string');
       expect(result.accessToken.length).toBeGreaterThan(20);
       expect(typeof result.refreshToken).toBe('string');
       expect(result.refreshToken.length).toBeGreaterThan(20);
-      
+
       // Tokens should be different
       expect(result.refreshToken).not.toBe(refreshTokenString);
 
       // Save new refresh token for logout test
       refreshTokenString = result.refreshToken;
-      
+
       // Add a small delay before the test completes
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     });
 
     it('should fail with invalid refresh token', async () => {
@@ -308,7 +339,7 @@ describe('Auth Controller', () => {
         code: `${testTenant.code}-LOGOUT`,
       });
       tenantId = tenant.id;
-      
+
       // Create department
       const department = await createDepartment({
         ...testDepartment,
@@ -316,7 +347,7 @@ describe('Auth Controller', () => {
         tenantId,
       });
       departmentId = department.id;
-      
+
       // Create test user
       const user = await createUser({
         ...testUser,
@@ -326,13 +357,13 @@ describe('Auth Controller', () => {
         departmentId,
       });
       userId = user.id;
-      
+
       // Login to get refresh token
       const result = await login({
         username: `${testUser.username}_logout`,
         password: testUser.password,
       });
-      
+
       refreshTokenString = result.refreshToken;
     });
 
@@ -342,19 +373,42 @@ describe('Auth Controller', () => {
         if (userId > 0) {
           try {
             await revokeAllTokens({ userId });
-            const tokens = await authRepository.findAllBy('userId', userId, { orderBy: [] });
+            const tokens = await authRepository.findAllBy('userId', userId, {
+              orderBy: [],
+            });
             for (const token of tokens) {
               try {
                 await authRepository.delete(token.id);
-              } catch (e) {}
+              } catch {
+                // Ignore errors
+              }
             }
-          } catch (error) {}
+          } catch {
+            // Ignore errors
+          }
         }
-        
-        if (userId > 0) try { await deleteUser({ id: userId }); } catch (error) {}
-        if (departmentId > 0) try { await deleteDepartment({ id: departmentId }); } catch (error) {}
-        if (tenantId > 0) try { await deleteTenant({ id: tenantId }); } catch (error) {}
-      } catch (error) {}
+
+        if (userId > 0)
+          try {
+            await deleteUser({ id: userId });
+          } catch {
+            /* Ignore errors */
+          }
+        if (departmentId > 0)
+          try {
+            await deleteDepartment({ id: departmentId });
+          } catch {
+            /* Ignore errors */
+          }
+        if (tenantId > 0)
+          try {
+            await deleteTenant({ id: tenantId });
+          } catch {
+            /* Ignore errors */
+          }
+      } catch {
+        // Ignore errors
+      }
     });
 
     it('should log out a user with valid refresh token', async () => {
@@ -381,7 +435,7 @@ describe('Auth Controller', () => {
 
       // Should not throw error for security reasons
       const result = await logout(logoutData);
-      
+
       // Should still return success message
       expect(result).toBeDefined();
       expect(result.message).toBe('Logged out successfully');
@@ -401,7 +455,7 @@ describe('Auth Controller', () => {
         code: `${testTenant.code}-REVOKE`,
       });
       tenantId = tenant.id;
-      
+
       // Create department
       const department = await createDepartment({
         ...testDepartment,
@@ -409,7 +463,7 @@ describe('Auth Controller', () => {
         tenantId,
       });
       departmentId = department.id;
-      
+
       // Create test user
       const user = await createUser({
         ...testUser,
@@ -426,19 +480,42 @@ describe('Auth Controller', () => {
         // Clean up in the correct order
         if (userId > 0) {
           try {
-            const tokens = await authRepository.findAllBy('userId', userId, { orderBy: [] });
+            const tokens = await authRepository.findAllBy('userId', userId, {
+              orderBy: [],
+            });
             for (const token of tokens) {
               try {
                 await authRepository.delete(token.id);
-              } catch (e) {}
+              } catch {
+                // Ignore errors
+              }
             }
-          } catch (error) {}
+          } catch {
+            // Ignore errors
+          }
         }
-        
-        if (userId > 0) try { await deleteUser({ id: userId }); } catch (error) {}
-        if (departmentId > 0) try { await deleteDepartment({ id: departmentId }); } catch (error) {}
-        if (tenantId > 0) try { await deleteTenant({ id: tenantId }); } catch (error) {}
-      } catch (error) {}
+
+        if (userId > 0)
+          try {
+            await deleteUser({ id: userId });
+          } catch {
+            /* Ignore errors */
+          }
+        if (departmentId > 0)
+          try {
+            await deleteDepartment({ id: departmentId });
+          } catch {
+            /* Ignore errors */
+          }
+        if (tenantId > 0)
+          try {
+            await deleteTenant({ id: tenantId });
+          } catch {
+            /* Ignore errors */
+          }
+      } catch {
+        // Ignore errors
+      }
     });
 
     it('should revoke all tokens for a user', async () => {
@@ -447,7 +524,7 @@ describe('Auth Controller', () => {
         username: `${testUser.username}_revoke`,
         password: testUser.password,
       });
-      
+
       // Then revoke all tokens
       const result = await revokeAllTokens({ userId });
 
@@ -464,4 +541,4 @@ describe('Auth Controller', () => {
       await expect(revokeAllTokens({ userId: NaN })).rejects.toThrow();
     });
   });
-}); 
+});

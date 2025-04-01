@@ -3,15 +3,16 @@ import type { User, SafeUser } from '../users/users/users.types';
 import jwt from 'jsonwebtoken';
 import type { JwtPayload } from '../users/auth/auth.types';
 
-const SALT_ROUNDS = 10;
+const DEFAULT_SALT_ROUNDS = 10;
 
 /**
  * Hashes a plain text password
  * @param password Plain text password to hash
+ * @param saltRounds Optional number of salt rounds, defaults to 10
  * @returns Promise resolving to the hashed password
  */
-export const hashPassword = async (password: string): Promise<string> => {
-  return hash(password, SALT_ROUNDS);
+export const hashPassword = async (password: string, saltRounds?: number): Promise<string> => {
+  return hash(password, saltRounds || DEFAULT_SALT_ROUNDS);
 };
 
 /**

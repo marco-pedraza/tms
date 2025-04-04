@@ -9,6 +9,8 @@ import type {
 } from './departments.types';
 import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
+import { getAuthData } from '~encore/auth';
+import { currentRequest } from 'encore.dev';
 
 const withErrorHandling = createControllerErrorHandler('DepartmentsController');
 
@@ -49,7 +51,7 @@ export const getDepartment = api(
  * @throws {APIError} If retrieval fails
  */
 export const listDepartments = api(
-  { method: 'GET', path: '/departments', expose: true },
+  { method: 'GET', path: '/departments', expose: true, auth: true },
   async (): Promise<Departments> => {
     return withErrorHandling('listDepartments', async () => {
       const departments = await departmentRepository.findAll();

@@ -53,6 +53,7 @@ export const usersMiddleware = middleware(
         );
       }
 
+      req.data.currentUser = user;
       return await next(req);
     }
   );

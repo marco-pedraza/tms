@@ -81,7 +81,12 @@ export const listDepartmentsWithPagination = api(
  * @throws {APIError} If retrieval fails
  */
 export const listTenantDepartments = api(
-  { method: 'GET', path: '/tenants/:tenantId/departments', expose: true, auth: true },
+  {
+    method: 'GET',
+    path: '/tenants/:tenantId/departments',
+    expose: true,
+    auth: true,
+  },
   async ({ tenantId }: { tenantId: number }): Promise<Departments> => {
     return withErrorHandling('listTenantDepartments', () =>
       departmentRepository.findByTenant(tenantId),

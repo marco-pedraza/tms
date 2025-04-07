@@ -121,7 +121,12 @@ export const listTenantUsersWithPagination = api(
  * @throws {APIError} If retrieval fails
  */
 export const listDepartmentUsers = api(
-  { method: 'GET', path: '/departments/:departmentId/users', expose: true, auth: true },
+  {
+    method: 'GET',
+    path: '/departments/:departmentId/users',
+    expose: true,
+    auth: true,
+  },
   async ({ departmentId }: { departmentId: number }): Promise<Users> => {
     return withErrorHandling('listDepartmentUsers', () =>
       userRepository.findByDepartment(departmentId),

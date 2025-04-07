@@ -28,10 +28,7 @@ export const auth = authHandler<AuthParams, AuthData>(async (params) => {
   // Validate auth header format
   const [scheme, token] = authHeader.split(' ');
   if (!scheme || !token || scheme.toLowerCase() !== 'bearer') {
-    throw new APIError(
-      ErrCode.Unauthenticated,
-      INVALID_TOKEN_ERROR
-    );
+    throw new APIError(ErrCode.Unauthenticated, INVALID_TOKEN_ERROR);
   }
 
   try {
@@ -39,7 +36,7 @@ export const auth = authHandler<AuthParams, AuthData>(async (params) => {
     const user = await authUseCases.validateTokenAndUser(token, 'access');
 
     return {
-      userID: user.id.toString()
+      userID: user.id.toString(),
     };
   } catch {
     throw new APIError(ErrCode.Unauthenticated, INVALID_TOKEN_ERROR);

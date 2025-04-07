@@ -51,7 +51,12 @@ export const getRole = api(
  * @throws {APIError} If the role is not found or retrieval fails
  */
 export const getRoleWithPermissions = api(
-  { method: 'GET', path: '/roles/:id/with-permissions', expose: true, auth: true },
+  {
+    method: 'GET',
+    path: '/roles/:id/with-permissions',
+    expose: true,
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<RoleWithPermissions> => {
     return withErrorHandling('getRoleWithPermissions', () =>
       roleRepository.findOneWithPermissions(id),
@@ -159,7 +164,12 @@ export const listRolesWithPagination = api(
  * @throws {APIError} If retrieval fails
  */
 export const listRolesWithPermissionsAndPagination = api(
-  { method: 'GET', path: '/roles/with-permissions/paginated', expose: true, auth: true },
+  {
+    method: 'GET',
+    path: '/roles/with-permissions/paginated',
+    expose: true,
+    auth: true,
+  },
   async (params: PaginationParams): Promise<PaginatedRolesWithPermissions> => {
     return withErrorHandling(
       'listRolesWithPermissionsAndPagination',
@@ -235,7 +245,12 @@ export const deleteRole = api(
  * @throws {APIError} If retrieval fails
  */
 export const listRolesByTenantWithPagination = api(
-  { method: 'GET', path: '/tenants/:tenantId/roles/paginated', expose: true, auth: true },
+  {
+    method: 'GET',
+    path: '/tenants/:tenantId/roles/paginated',
+    expose: true,
+    auth: true,
+  },
   async ({
     tenantId,
     ...params
@@ -292,7 +307,12 @@ export const listRolesByTenantWithPermissionsAndPagination = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listTenantRoles = api(
-  { method: 'GET', path: '/tenants/:tenantId/roles-alias', expose: true, auth: true },
+  {
+    method: 'GET',
+    path: '/tenants/:tenantId/roles-alias',
+    expose: true,
+    auth: true,
+  },
   async ({ tenantId }: { tenantId: number }): Promise<Roles> => {
     return withErrorHandling(
       'listTenantRoles',
@@ -309,7 +329,12 @@ export const listTenantRoles = api(
  * @throws {APIError} If retrieval fails
  */
 export const listTenantRolesWithPagination = api(
-  { method: 'GET', path: '/tenants/:tenantId/roles-paginated', expose: true, auth: true },
+  {
+    method: 'GET',
+    path: '/tenants/:tenantId/roles-paginated',
+    expose: true,
+    auth: true,
+  },
   async ({
     tenantId,
     ...paginationParams

@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import client from '@/lib/imsClient';
 import { useQuery } from '@tanstack/react-query';
-import { Row, type ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -68,7 +68,7 @@ const countriesColumnsFactory = (
   {
     id: 'actions',
     header: 'Actions',
-    cell: ({ row }: { row: Row<Country> }) => {
+    cell: ({ row }) => {
       const record = row.original;
       return (
         <div className="flex items-center justify-end gap-2">
@@ -108,7 +108,6 @@ const countriesColumnsFactory = (
         </div>
       );
     },
-    size: 150,
   },
 ];
 
@@ -116,11 +115,7 @@ export default function CountriesTable() {
   const router = useRouter();
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['countries'],
-    queryFn: async () =>
-      await client.inventory.listCountries({
-        page: 1,
-        pageSize: 10,
-      }),
+    queryFn: async () => await client.inventory.listCountries({}),
   });
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -143,6 +138,10 @@ export default function CountriesTable() {
     router.push(`/countries/${id}`);
   };
 
+  const onAdd = () => {
+    router.push('/countries/new');
+  };
+
   const columns = countriesColumnsFactory(handleDelete, handleEdit, handleView);
 
   return (
@@ -152,8 +151,8 @@ export default function CountriesTable() {
         columns={columns}
         isLoading={isLoading}
         hasError={!!error}
-        onRetry={() => refetch()}
-        onAdd={() => router.push('/countries/new')}
+        onRetry={refetch}
+        onAdd={onAdd}
       />
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>

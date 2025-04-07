@@ -7,6 +7,7 @@ import type {
 } from './auth.types';
 import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { authUseCases } from './auth.use-cases';
+import { SafeUser } from '../users/users.types';
 
 const withErrorHandling = createControllerErrorHandler('AuthController');
 
@@ -64,6 +65,21 @@ export const revokeAllTokens = api(
   async ({ userId }: { userId: number }): Promise<{ count: number }> => {
     return withErrorHandling('revokeAllTokens', () =>
       authUseCases.revokeAllUserTokens(userId),
+    );
+  },
+);
+
+/**
+ * Validates a token and returns the associated user
+ * @param params Token and type of token to validate
+ * @returns User information if token is valid
+ * @throws {APIError} If token is invalid or user is inactive
+ */
+export const validateToken = api(
+  { method: 'POST', path: '/auth/validate-token' },
+  async (params: { token: string; tokenType: 'access' | 'refresh' }): Promise<SafeUser> => {
+    return withErrorHandling('validateToken', () =>
+      authUseCases.validateTokenAndUser(params.token, params.tokenType)
     );
   },
 );

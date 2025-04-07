@@ -9,8 +9,6 @@ import type {
 } from './departments.types';
 import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
-import { getAuthData } from '~encore/auth';
-import { currentRequest } from 'encore.dev';
 
 const withErrorHandling = createControllerErrorHandler('DepartmentsController');
 

@@ -1,7 +1,5 @@
 import { Header, Gateway, APIError, ErrCode } from 'encore.dev/api';
 import { authHandler } from 'encore.dev/auth';
-import { authUseCases } from '../users/auth/auth.use-cases';
-import { AuthenticationError } from '../shared/errors';
 import { users } from "~encore/clients";
 
 interface AuthParams {
@@ -12,18 +10,19 @@ interface AuthData {
   userID: string;
 }
 
+// Centralized error message for authentication failures
+const INVALID_TOKEN_ERROR = 'Invalid token';
+
 /**
  * Authentication handler that validates the Authorization header and returns the user data.
  * The header should be in the format "Bearer <token>" where token is a valid JWT.
  */
 export const auth = authHandler<AuthParams, AuthData>(async (params) => {
-  const test = await users.listUsers();
-  console.log({ test: test.users });
   const authHeader = params.authorization;
 
   // Validate auth header exists
   if (!authHeader) {
-    throw new APIError(ErrCode.Unauthenticated, 'Missing authorization header');
+    throw new APIError(ErrCode.Unauthenticated, INVALID_TOKEN_ERROR);
   }
 
   // Validate auth header format
@@ -31,29 +30,19 @@ export const auth = authHandler<AuthParams, AuthData>(async (params) => {
   if (!scheme || !token || scheme.toLowerCase() !== 'bearer') {
     throw new APIError(
       ErrCode.Unauthenticated,
-      "Invalid authorization header format. Expected 'Bearer <token>'",
+      INVALID_TOKEN_ERROR
     );
   }
 
   try {
-    // Verify the token and check user status with the use case
-    const user = await authUseCases.validateTokenAndUser(token, 'access');
+    // Verify the token and check user status using the users client
+    const user = await users.validateToken({ token, tokenType: 'access' });
 
     return {
       userID: user.id.toString()
     };
-  } catch (error) {
-    if (error instanceof APIError) {
-      throw error;
-    }
-    if (error instanceof AuthenticationError) {
-      throw new APIError(ErrCode.Unauthenticated, error.message);
-    }
-    throw new APIError(
-      ErrCode.Unauthenticated,
-      'Authentication failed: ' +
-        (error instanceof Error ? error.message : 'Invalid token'),
-    );
+  } catch {
+    throw new APIError(ErrCode.Unauthenticated, INVALID_TOKEN_ERROR);
   }
 });
 

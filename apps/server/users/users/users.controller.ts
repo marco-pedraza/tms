@@ -21,7 +21,7 @@ const withErrorHandling = createControllerErrorHandler('UsersController');
  * @throws {APIError} If the user creation fails
  */
 export const createUser = api(
-  { method: 'POST', path: '/users', expose: true },
+  { method: 'POST', path: '/users', expose: true, auth: true },
   async (params: CreateUserPayload): Promise<SafeUser> => {
     return withErrorHandling('createUser', () => userRepository.create(params));
   },
@@ -35,7 +35,7 @@ export const createUser = api(
  * @throws {APIError} If the user is not found
  */
 export const getUser = api(
-  { method: 'GET', path: '/users/:id', expose: true },
+  { method: 'GET', path: '/users/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<SafeUser> => {
     return withErrorHandling('getUser', () => userRepository.findOne(id));
   },
@@ -47,7 +47,7 @@ export const getUser = api(
  * @throws {APIError} If retrieval fails
  */
 export const listUsers = api(
-  { method: 'GET', path: '/users', expose: true },
+  { method: 'GET', path: '/users', expose: true, auth: true },
   async (): Promise<Users> => {
     return withErrorHandling('listUsers', async () => {
       const users = await userRepository.findAll();
@@ -63,7 +63,7 @@ export const listUsers = api(
  * @throws {APIError} If retrieval fails
  */
 export const listUsersWithPagination = api(
-  { method: 'GET', path: '/users/paginated', expose: true },
+  { method: 'GET', path: '/users/paginated', expose: true, auth: true },
   async (params: PaginationParams): Promise<PaginatedUsers> => {
     return withErrorHandling('listUsersWithPagination', () =>
       userRepository.findAllPaginated(params),
@@ -79,7 +79,7 @@ export const listUsersWithPagination = api(
  * @throws {APIError} If retrieval fails
  */
 export const listTenantUsers = api(
-  { method: 'GET', path: '/tenants/:tenantId/users', expose: true },
+  { method: 'GET', path: '/tenants/:tenantId/users', expose: true, auth: true },
   async ({ tenantId }: { tenantId: number }): Promise<Users> => {
     return withErrorHandling('listTenantUsers', () =>
       userRepository.findByTenant(tenantId),
@@ -99,6 +99,7 @@ export const listTenantUsersWithPagination = api(
     method: 'GET',
     path: '/tenants/:tenantId/users/paginated',
     expose: true,
+    auth: true,
   },
   async ({
     tenantId,
@@ -120,7 +121,7 @@ export const listTenantUsersWithPagination = api(
  * @throws {APIError} If retrieval fails
  */
 export const listDepartmentUsers = api(
-  { method: 'GET', path: '/departments/:departmentId/users', expose: true },
+  { method: 'GET', path: '/departments/:departmentId/users', expose: true, auth: true },
   async ({ departmentId }: { departmentId: number }): Promise<Users> => {
     return withErrorHandling('listDepartmentUsers', () =>
       userRepository.findByDepartment(departmentId),
@@ -140,6 +141,7 @@ export const listDepartmentUsersWithPagination = api(
     method: 'GET',
     path: '/departments/:departmentId/users/paginated',
     expose: true,
+    auth: true,
   },
   async ({
     departmentId,
@@ -161,7 +163,7 @@ export const listDepartmentUsersWithPagination = api(
  * @throws {APIError} If the user is not found or update fails
  */
 export const updateUser = api(
-  { method: 'PUT', path: '/users/:id', expose: true },
+  { method: 'PUT', path: '/users/:id', expose: true, auth: true },
   async ({
     id,
     ...data
@@ -180,7 +182,7 @@ export const updateUser = api(
  * @throws {APIError} If the user is not found, current password is invalid, or update fails
  */
 export const changePassword = api(
-  { method: 'PUT', path: '/users/:id/password', expose: true },
+  { method: 'PUT', path: '/users/:id/password', expose: true, auth: true },
   async ({
     id,
     ...data
@@ -199,7 +201,7 @@ export const changePassword = api(
  * @throws {APIError} If the user is not found or deletion fails
  */
 export const deleteUser = api(
-  { method: 'DELETE', path: '/users/:id', expose: true },
+  { method: 'DELETE', path: '/users/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<SafeUser> => {
     return withErrorHandling('deleteUser', async () => {
       return userRepository.delete(id);

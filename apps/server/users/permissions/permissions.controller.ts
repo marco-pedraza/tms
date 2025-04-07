@@ -19,7 +19,7 @@ const withErrorHandling = createControllerErrorHandler('PermissionsController');
  * @throws {APIError} If the permission creation fails
  */
 export const createPermission = api(
-  { method: 'POST', path: '/permissions', expose: true },
+  { method: 'POST', path: '/permissions', expose: true, auth: true },
   async (params: CreatePermissionPayload): Promise<Permission> => {
     return withErrorHandling('createPermission', () =>
       permissionRepository.create(params),
@@ -35,7 +35,7 @@ export const createPermission = api(
  * @throws {APIError} If the permission is not found or retrieval fails
  */
 export const getPermission = api(
-  { method: 'GET', path: '/permissions/:id', expose: true },
+  { method: 'GET', path: '/permissions/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Permission> => {
     return withErrorHandling('getPermission', () =>
       permissionRepository.findOne(id),
@@ -49,7 +49,7 @@ export const getPermission = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listPermissions = api(
-  { method: 'GET', path: '/permissions', expose: true },
+  { method: 'GET', path: '/permissions', expose: true, auth: true },
   async (): Promise<Permissions> => {
     return withErrorHandling('listPermissions', () =>
       permissionRepository.findAll(),
@@ -64,7 +64,7 @@ export const listPermissions = api(
  * @throws {APIError} If retrieval fails
  */
 export const listPermissionsWithPagination = api(
-  { method: 'GET', path: '/permissions/paginated', expose: true },
+  { method: 'GET', path: '/permissions/paginated', expose: true, auth: true },
   async (params: PaginationParams): Promise<PaginatedPermissions> => {
     return withErrorHandling('listPermissionsWithPagination', () =>
       permissionRepository.findAllPaginated(params),
@@ -80,7 +80,7 @@ export const listPermissionsWithPagination = api(
  * @throws {APIError} If the permission is not found or update fails
  */
 export const updatePermission = api(
-  { method: 'PUT', path: '/permissions/:id', expose: true },
+  { method: 'PUT', path: '/permissions/:id', expose: true, auth: true },
   async ({
     id,
     ...data
@@ -99,7 +99,7 @@ export const updatePermission = api(
  * @throws {APIError} If the permission is not found or deletion fails
  */
 export const deletePermission = api(
-  { method: 'DELETE', path: '/permissions/:id', expose: true },
+  { method: 'DELETE', path: '/permissions/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Permission> => {
     return withErrorHandling('deletePermission', () =>
       permissionRepository.delete(id),

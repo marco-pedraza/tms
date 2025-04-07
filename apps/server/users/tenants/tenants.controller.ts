@@ -18,7 +18,7 @@ const withErrorHandling = createControllerErrorHandler('TenantsController');
  * @throws {APIError} If the tenant creation fails
  */
 export const createTenant = api(
-  { method: 'POST', path: '/tenants', expose: true },
+  { method: 'POST', path: '/tenants', expose: true, auth: true },
   async (params: CreateTenantPayload): Promise<Tenant> => {
     return withErrorHandling('createTenant', () =>
       tenantRepository.create(params),
@@ -34,7 +34,7 @@ export const createTenant = api(
  * @throws {APIError} If the tenant is not found or retrieval fails
  */
 export const getTenant = api(
-  { method: 'GET', path: '/tenants/:id', expose: true },
+  { method: 'GET', path: '/tenants/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Tenant> => {
     return withErrorHandling('getTenant', () => tenantRepository.findOne(id));
   },
@@ -47,7 +47,7 @@ export const getTenant = api(
  * @throws {APIError} If retrieval fails
  */
 export const listTenants = api(
-  { method: 'GET', path: '/tenants', expose: true },
+  { method: 'GET', path: '/tenants', expose: true, auth: true },
   async (params: PaginationParams): Promise<PaginatedTenants> => {
     return withErrorHandling('listTenants', () =>
       tenantRepository.findAllPaginated(params),
@@ -63,7 +63,7 @@ export const listTenants = api(
  * @throws {APIError} If the tenant is not found or update fails
  */
 export const updateTenant = api(
-  { method: 'PUT', path: '/tenants/:id', expose: true },
+  { method: 'PUT', path: '/tenants/:id', expose: true, auth: true },
   async ({
     id,
     ...data
@@ -82,7 +82,7 @@ export const updateTenant = api(
  * @throws {APIError} If the tenant is not found or deletion fails
  */
 export const deleteTenant = api(
-  { method: 'DELETE', path: '/tenants/:id', expose: true },
+  { method: 'DELETE', path: '/tenants/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Tenant> => {
     return withErrorHandling('deleteTenant', () => tenantRepository.delete(id));
   },

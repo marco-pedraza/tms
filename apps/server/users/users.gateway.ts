@@ -1,6 +1,6 @@
 import { Header, Gateway, APIError, ErrCode } from 'encore.dev/api';
 import { authHandler } from 'encore.dev/auth';
-import { users } from "~encore/clients";
+import { authUseCases } from './auth/auth.use-cases';
 
 interface AuthParams {
   authorization: Header<'Authorization'>;
@@ -36,7 +36,7 @@ export const auth = authHandler<AuthParams, AuthData>(async (params) => {
 
   try {
     // Verify the token and check user status using the users client
-    const user = await users.validateToken({ token, tokenType: 'access' });
+    const user = await authUseCases.validateTokenAndUser(token, 'access');
 
     return {
       userID: user.id.toString()

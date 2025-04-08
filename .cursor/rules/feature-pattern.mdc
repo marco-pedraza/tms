@@ -3,6 +3,7 @@ description: Structure and patterns for features in Encore-based applications
 globs: **/server/**
 alwaysApply: false
 ---
+
 # Feature Structure Pattern
 
 ## Overview

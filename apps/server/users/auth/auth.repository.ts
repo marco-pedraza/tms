@@ -17,6 +17,9 @@ const ERROR_MESSAGES = {
   TOKEN_WRONG_USER: 'Refresh token does not belong to this user',
 };
 
+// Default refresh token expiry in milliseconds
+const DEFAULT_REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000;
+
 export const createAuthRepository = () => {
   // Create base repository for refresh tokens
   const baseRepository = createBaseRepository<
@@ -40,7 +43,7 @@ export const createAuthRepository = () => {
     const decoded = jwt.decode(token) as JwtPayload;
     const expiresAt = decoded.exp
       ? new Date(decoded.exp * 1000)
-      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Default to 7 days
+      : new Date(Date.now() + DEFAULT_REFRESH_TOKEN_EXPIRY);
 
     return baseRepository.create({
       userId: user.id,

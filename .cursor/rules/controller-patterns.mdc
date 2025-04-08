@@ -153,7 +153,7 @@ export const deleteCountry = api(
 1. **Direct Repository Usage**
 
    - Call repository methods directly for CRUD operations
-   - No need for intermediate handlers unless complex business logic is required
+   - No need for intermediate use cases unless complex business logic is required
    - Use repository instances as singletons
 
 2. **Error Handling**
@@ -177,9 +177,9 @@ export const deleteCountry = api(
    - Clear documentation
    - Homogeneous code structure
 
-5. **When to Add a Handler**
-   - Only add a handler when complex business logic is needed
-   - Examples of when to use a handler:
+5. **When to Add a Use Case**
+   - Only add a use case when complex business logic is needed
+   - Examples of when to use a use case:
      - Operations involving multiple repositories
      - Complex data transformations
      - Integration with external services

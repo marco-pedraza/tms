@@ -33,8 +33,9 @@ export const usersMiddleware = middleware(
       throw APIError.unauthenticated(ERROR_MESSAGES.AUTH_REQUIRED);
     }
 
+    // TODO add drizzles 'with' when importing schema
     const user = await userPermissionsRepository.getUserWithPermissions(
-      auth.userID,
+      Number(auth.userID),
     );
 
     // Get the current service and endpoint from the request

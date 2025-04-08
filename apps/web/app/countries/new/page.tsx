@@ -1,36 +1,17 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/ui-components';
-import imsClient from '@/lib/imsClient';
-import CountryForm, { CountryFormValues } from '@/app/countries/country-form';
+import CountryForm from '@/app/countries/country-form';
+import { useCountryMutations } from '../hooks/use-country-mutations';
 
 export default function NewCountryPage() {
-  const queryClient = useQueryClient();
-  const router = useRouter();
-
-  const createCountryMutation = useMutation({
-    mutationFn: async (values: CountryFormValues) =>
-      await imsClient.inventory.createCountry(values),
-    onSuccess: (data) => {
-      toast.success('País creado correctamente');
-      queryClient.invalidateQueries({ queryKey: ['countries'] });
-      router.push(`/countries/${data.id}`);
-    },
-    onError: (error) => {
-      toast.error('No pudimos crear el país', {
-        description: error.message,
-      });
-    },
-  });
+  const { createCountry } = useCountryMutations();
 
   return (
     <div>
       <PageHeader title="Nuevo país" backHref="/countries" />
       <CountryForm
-        onSubmit={createCountryMutation.mutateAsync}
+        onSubmit={createCountry.mutateWithToast}
         submitButtonText="Crear"
       />
     </div>

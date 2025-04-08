@@ -1,6 +1,7 @@
 'use client';
 
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,8 +27,9 @@ interface CountryFormProps {
 function CountryForm({
   defaultValues,
   onSubmit,
-  submitButtonText = 'Crear',
+  submitButtonText,
 }: CountryFormProps) {
+  const { t } = useTranslation(['countries', 'common']);
   const form = useForm({
     defaultValues: defaultValues ?? {
       name: '',
@@ -52,19 +54,19 @@ function CountryForm({
     >
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>Información del país</CardTitle>
+          <CardTitle>{t('countries:form.title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <form.Field name="name">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="name">Nombre</Label>
+                <Label htmlFor="name">{t('countries:form.name')}</Label>
                 <Input
                   id={field.name}
                   name={field.name}
                   value={field.state.value ?? ''}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Ej: México"
+                  placeholder={t('countries:form.placeholders.name')}
                 />
               </div>
             )}
@@ -73,17 +75,17 @@ function CountryForm({
           <form.Field name="code">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="code">Código</Label>
+                <Label htmlFor="code">{t('countries:form.code')}</Label>
                 <Input
                   id={field.name}
                   name={field.name}
                   value={field.state.value ?? ''}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="Ej: MX"
+                  placeholder={t('countries:form.placeholders.code')}
                   maxLength={2}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Usa el código ISO 3166-1 alpha-2 (2 letras)
+                  {t('countries:form.codeHelp')}
                 </p>
               </div>
             )}
@@ -97,7 +99,7 @@ function CountryForm({
                   checked={field.state.value ?? false}
                   onCheckedChange={(checked) => field.handleChange(checked)}
                 />
-                <Label htmlFor={field.name}>Activo</Label>
+                <Label htmlFor={field.name}>{t('countries:form.active')}</Label>
               </div>
             )}
           </form.Field>
@@ -109,7 +111,7 @@ function CountryForm({
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="submit" disabled={!canSubmit || isSubmitting}>
                   {isSubmitting && <Loader2 className="animate-spin" />}
-                  {submitButtonText}
+                  {submitButtonText || t('countries:actions.create')}
                 </Button>
               </div>
             )}

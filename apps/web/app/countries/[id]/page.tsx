@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useRouter } from 'next/navigation';
 import { PageHeader, ActionButtons } from '@/components/ui-components';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,7 @@ import { isAPIError } from '@repo/ims-client';
 import NotFound from '@/components/ui-components/not-found';
 
 export default function CountryDetailsPage() {
+  const { t } = useTranslation(['countries', 'common']);
   const params = useParams();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -38,17 +40,11 @@ export default function CountryDetailsPage() {
   });
 
   const deleteCountryMutation = useMutation({
-    mutationFn: async () => await imsClient.inventory.deleteCountry(countryId),
-    onSuccess: () => {
-      toast.success('País eliminado correctamente');
+    mutationFn: async () => {
+      const result = await imsClient.inventory.deleteCountry(countryId);
       queryClient.invalidateQueries({ queryKey: ['countries'] });
       router.replace('/countries');
-    },
-    onError: (error) => {
-      toast.error('No pudimos eliminar el país', {
-        description: error.message,
-      });
-      setIsDeleteDialogOpen(false);
+      return result;
     },
   });
 
@@ -57,33 +53,37 @@ export default function CountryDetailsPage() {
   };
 
   const confirmDelete = () => {
-    deleteCountryMutation.mutate();
+    toast.promise(deleteCountryMutation.mutateAsync(), {
+      loading: t('countries:messages.delete.loading'),
+      success: t('countries:messages.delete.success'),
+      error: t('countries:messages.delete.error'),
+    });
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>{t('common:states.loading')}</div>;
   }
 
   if (error && isAPIError(error) && error.code === 'not_found') {
     return (
       <NotFound
-        title="País no encontrado"
-        description="No pudimos encontrar el país que buscas. Es posible que haya sido eliminado o que no exista."
+        title={t('countries:errors.notFound.title')}
+        description={t('countries:errors.notFound.description')}
         backHref="/countries"
-        backLabel="Volver a países"
+        backLabel={t('countries:actions.backToList')}
       />
     );
   }
 
   if (!country) {
-    return <div>Error inesperado</div>;
+    return <div>{t('common:errors.unexpected')}</div>;
   }
 
   return (
     <div>
       <PageHeader
         title={country.name}
-        description="Detalles del país"
+        description={t('countries:details.description')}
         backHref="/countries"
       />
 
@@ -97,25 +97,25 @@ export default function CountryDetailsPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Información Básica</CardTitle>
+            <CardTitle>{t('countries:details.basicInfo')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
-              <dt className="font-medium">Nombre:</dt>
+              <dt className="font-medium">{t('countries:form.name')}:</dt>
               <dd>{country.name}</dd>
 
-              <dt className="font-medium">Código:</dt>
+              <dt className="font-medium">{t('countries:form.code')}:</dt>
               <dd>{country.code}</dd>
 
-              <dt className="font-medium">Estado:</dt>
+              <dt className="font-medium">{t('countries:form.status')}:</dt>
               <dd>
                 {country.active ? (
                   <Badge variant="outline" className="bg-green-100">
-                    Activo
+                    {t('common:status.active')}
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="bg-red-100">
-                    Inactivo
+                    {t('common:status.inactive')}
                   </Badge>
                 )}
               </dd>
@@ -125,17 +125,17 @@ export default function CountryDetailsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Información del Sistema</CardTitle>
+            <CardTitle>{t('countries:details.systemInfo')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
-              <dt className="font-medium">ID:</dt>
+              <dt className="font-medium">{t('common:fields.id')}:</dt>
               <dd>{country.id}</dd>
 
-              <dt className="font-medium">Creado:</dt>
+              <dt className="font-medium">{t('common:fields.createdAt')}:</dt>
               <dd>{new Date(country.createdAt ?? '').toLocaleString()}</dd>
 
-              <dt className="font-medium">Última Actualización:</dt>
+              <dt className="font-medium">{t('common:fields.updatedAt')}:</dt>
               <dd>{new Date(country.updatedAt ?? '').toLocaleString()}</dd>
             </dl>
           </CardContent>
@@ -148,19 +148,20 @@ export default function CountryDetailsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('countries:messages.delete.confirm')}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. Se eliminará permanentemente el
-              país y todos los datos asociados.
+              {t('countries:messages.delete.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('common:actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground"
             >
-              Eliminar
+              {t('common:actions.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

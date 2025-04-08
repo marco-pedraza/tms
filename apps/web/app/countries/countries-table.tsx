@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
@@ -32,84 +33,88 @@ const countriesColumnsFactory = (
   getViewHref: (id: string) => string,
   onDelete: (id: string) => void,
   onEdit: (id: string) => void,
-): ColumnDef<Country>[] => [
-  {
-    accessorKey: 'name',
-    header: 'Name',
-    cell: ({ row }) => (
-      <div className="font-medium">{row.getValue('name')}</div>
-    ),
-  },
-  {
-    accessorKey: 'code',
-    header: 'Code',
-  },
-  {
-    accessorKey: 'active',
-    header: 'Status',
-    cell: ({ row }) => {
-      const active = row.getValue('active');
-      return active ? (
-        <Badge variant="outline" className="bg-green-100">
-          Active
-        </Badge>
-      ) : (
-        <Badge variant="outline" className="bg-red-100">
-          Inactive
-        </Badge>
-      );
+  t: (key: string) => string,
+): ColumnDef<Country>[] => {
+  return [
+    {
+      accessorKey: 'name',
+      header: t('form.name'),
+      cell: ({ row }) => (
+        <div className="font-medium">{row.getValue('name')}</div>
+      ),
     },
-  },
-  {
-    accessorKey: 'createdAt',
-    header: 'Created',
-    cell: ({ row }) => {
-      return new Date(row.getValue('createdAt') ?? '').toLocaleDateString();
+    {
+      accessorKey: 'code',
+      header: t('form.code'),
     },
-  },
-  {
-    id: 'actions',
-    header: 'Actions',
-    cell: ({ row }) => {
-      const record = row.original;
-      return (
-        <div className="flex items-center justify-end gap-2">
-          <Link href={getViewHref(record.id.toString())}>
-            <Button variant="ghost" size="sm">
-              View
-            </Button>
-          </Link>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">More actions</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => onEdit(record.id.toString())}
-              >
-                Edit
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => onDelete(record.id.toString())}
-              >
-                Delete
-              </Button>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      );
+    {
+      accessorKey: 'active',
+      header: t('form.status'),
+      cell: ({ row }) => {
+        const active = row.getValue('active');
+        return active ? (
+          <Badge variant="outline" className="bg-green-100">
+            {t('common:status.active')}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="bg-red-100">
+            {t('common:status.inactive')}
+          </Badge>
+        );
+      },
     },
-  },
-];
+    {
+      accessorKey: 'createdAt',
+      header: t('common:fields.createdAt'),
+      cell: ({ row }) => {
+        return new Date(row.getValue('createdAt') ?? '').toLocaleDateString();
+      },
+    },
+    {
+      id: 'actions',
+      header: t('common:fields.actions'),
+      cell: ({ row }) => {
+        const record = row.original;
+        return (
+          <div className="flex items-center justify-end gap-2">
+            <Link href={getViewHref(record.id.toString())}>
+              <Button variant="ghost" size="sm">
+                {t('common:actions.view')}
+              </Button>
+            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">{t('common:actions.more')}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => onEdit(record.id.toString())}
+                >
+                  {t('common:actions.edit')}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => onDelete(record.id.toString())}
+                >
+                  {t('common:actions.delete')}
+                </Button>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      },
+    },
+  ];
+};
 
 export default function CountriesTable() {
+  const { t } = useTranslation(['countries', 'common']);
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data, isLoading, error, refetch } = useQuery({
@@ -119,17 +124,11 @@ export default function CountriesTable() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const deleteCountryMutation = useMutation({
-    mutationFn: async (id: number) => await client.inventory.deleteCountry(id),
-    onSuccess: () => {
-      toast.success('País eliminado correctamente');
+    mutationFn: async (id: number) => {
+      const result = await client.inventory.deleteCountry(id);
       queryClient.invalidateQueries({ queryKey: ['countries'] });
       setDeleteId(null);
-    },
-    onError: (error) => {
-      toast.error('No pudimos eliminar el país', {
-        description: error.message,
-      });
-      setDeleteId(null);
+      return result;
     },
   });
 
@@ -139,7 +138,11 @@ export default function CountriesTable() {
 
   const confirmDelete = () => {
     if (deleteId) {
-      deleteCountryMutation.mutate(parseInt(deleteId, 10));
+      toast.promise(deleteCountryMutation.mutateAsync(parseInt(deleteId, 10)), {
+        loading: t('messages.delete.loading'),
+        success: t('messages.delete.success'),
+        error: t('messages.delete.error'),
+      });
     }
   };
 
@@ -159,6 +162,7 @@ export default function CountriesTable() {
     getViewHref,
     handleDelete,
     handleEdit,
+    t,
   );
 
   return (
@@ -174,19 +178,18 @@ export default function CountriesTable() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogTitle>{t('messages.delete.confirm')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. Se eliminará permanentemente el
-              país y todos los datos asociados.
+              {t('messages.delete.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground"
             >
-              Eliminar
+              {t('actions.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -19,7 +19,7 @@ const withErrorHandling = createControllerErrorHandler('DepartmentsController');
  * @throws {APIError} If the department creation fails
  */
 export const createDepartment = api(
-  { method: 'POST', path: '/departments', expose: true },
+  { method: 'POST', path: '/departments', expose: true, auth: true },
   async (params: CreateDepartmentPayload): Promise<Department> => {
     return withErrorHandling('createDepartment', () =>
       departmentRepository.create(params),
@@ -35,7 +35,7 @@ export const createDepartment = api(
  * @throws {APIError} If the department is not found or retrieval fails
  */
 export const getDepartment = api(
-  { method: 'GET', path: '/departments/:id', expose: true },
+  { method: 'GET', path: '/departments/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Department> => {
     return withErrorHandling('getDepartment', () =>
       departmentRepository.findOne(id),
@@ -49,7 +49,7 @@ export const getDepartment = api(
  * @throws {APIError} If retrieval fails
  */
 export const listDepartments = api(
-  { method: 'GET', path: '/departments', expose: true },
+  { method: 'GET', path: '/departments', expose: true, auth: true },
   async (): Promise<Departments> => {
     return withErrorHandling('listDepartments', async () => {
       const departments = await departmentRepository.findAll();
@@ -65,7 +65,7 @@ export const listDepartments = api(
  * @throws {APIError} If retrieval fails
  */
 export const listDepartmentsWithPagination = api(
-  { method: 'GET', path: '/departments/paginated', expose: true },
+  { method: 'GET', path: '/departments/paginated', expose: true, auth: true },
   async (params: PaginationParams): Promise<PaginatedDepartments> => {
     return withErrorHandling('listDepartmentsWithPagination', () =>
       departmentRepository.findAllPaginated(params),
@@ -81,7 +81,12 @@ export const listDepartmentsWithPagination = api(
  * @throws {APIError} If retrieval fails
  */
 export const listTenantDepartments = api(
-  { method: 'GET', path: '/tenants/:tenantId/departments', expose: true },
+  {
+    method: 'GET',
+    path: '/tenants/:tenantId/departments',
+    expose: true,
+    auth: true,
+  },
   async ({ tenantId }: { tenantId: number }): Promise<Departments> => {
     return withErrorHandling('listTenantDepartments', () =>
       departmentRepository.findByTenant(tenantId),
@@ -101,6 +106,7 @@ export const listTenantDepartmentsWithPagination = api(
     method: 'GET',
     path: '/tenants/:tenantId/departments/paginated',
     expose: true,
+    auth: true,
   },
   async ({
     tenantId,
@@ -122,7 +128,7 @@ export const listTenantDepartmentsWithPagination = api(
  * @throws {APIError} If the department is not found or update fails
  */
 export const updateDepartment = api(
-  { method: 'PUT', path: '/departments/:id', expose: true },
+  { method: 'PUT', path: '/departments/:id', expose: true, auth: true },
   async ({
     id,
     ...data
@@ -141,7 +147,7 @@ export const updateDepartment = api(
  * @throws {APIError} If the department is not found or deletion fails
  */
 export const deleteDepartment = api(
-  { method: 'DELETE', path: '/departments/:id', expose: true },
+  { method: 'DELETE', path: '/departments/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Department> => {
     return withErrorHandling('deleteDepartment', () =>
       departmentRepository.delete(id),

@@ -14,7 +14,8 @@
     "format:check": "prettier . --check",
     "db:generate": "drizzle-kit generate",
     "encore:gen-client": "encore gen client --lang typescript --output ../../packages/ims-client/index.ts",
-    "encore:check": "encore check"
+    "encore:check": "encore check",
+    "seed:permissions": "encore exec -- npx tsx db/scripts/seed-permissions.ts"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
@@ -22,17 +23,19 @@
     "drizzle-kit": "^0.27.1",
     "eslint": "^9.22.0",
     "prettier": "^3.5.3",
-    "typescript": "^5.2.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3",
     "vitest": "^3.0.8"
   },
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.9",
     "bcrypt": "^5.1.1",
     "drizzle-orm": "^0.36.0",
     "encore.dev": "^1.46.17",
+    "glob": "^10.4.5",
     "pg": "^8.13.1",
     "object-assign": "^4.1.1",
-    "jsonwebtoken": "^9.0.2",
-    "@types/jsonwebtoken": "^9.0.9"
+    "jsonwebtoken": "^9.0.2"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.13.0"

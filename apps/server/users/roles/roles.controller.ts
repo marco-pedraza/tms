@@ -23,7 +23,7 @@ const withErrorHandling = createControllerErrorHandler('RolesController');
  * @throws {APIError} If the role creation fails
  */
 export const createRole = api(
-  { method: 'POST', path: '/roles', expose: true },
+  { method: 'POST', path: '/roles', expose: true, auth: true },
   async (params: CreateRolePayload): Promise<RoleWithPermissions> => {
     return withErrorHandling('createRole', () => roleRepository.create(params));
   },
@@ -37,7 +37,7 @@ export const createRole = api(
  * @throws {APIError} If the role is not found or retrieval fails
  */
 export const getRole = api(
-  { method: 'GET', path: '/roles/:id', expose: true },
+  { method: 'GET', path: '/roles/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Role> => {
     return withErrorHandling('getRole', () => roleRepository.findOne(id));
   },
@@ -51,7 +51,12 @@ export const getRole = api(
  * @throws {APIError} If the role is not found or retrieval fails
  */
 export const getRoleWithPermissions = api(
-  { method: 'GET', path: '/roles/:id/with-permissions', expose: true },
+  {
+    method: 'GET',
+    path: '/roles/:id/with-permissions',
+    expose: true,
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<RoleWithPermissions> => {
     return withErrorHandling('getRoleWithPermissions', () =>
       roleRepository.findOneWithPermissions(id),
@@ -65,7 +70,7 @@ export const getRoleWithPermissions = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listRoles = api(
-  { method: 'GET', path: '/roles', expose: true },
+  { method: 'GET', path: '/roles', expose: true, auth: true },
   async (): Promise<Roles> => {
     return withErrorHandling(
       'listRoles',
@@ -80,7 +85,7 @@ export const listRoles = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listRolesWithPermissions = api(
-  { method: 'GET', path: '/roles/with-permissions', expose: true },
+  { method: 'GET', path: '/roles/with-permissions', expose: true, auth: true },
   async (): Promise<RolesWithPermissions> => {
     return withErrorHandling(
       'listRolesWithPermissions',
@@ -97,7 +102,7 @@ export const listRolesWithPermissions = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listRolesByTenant = api(
-  { method: 'GET', path: '/tenants/:tenantId/roles', expose: true },
+  { method: 'GET', path: '/tenants/:tenantId/roles', expose: true, auth: true },
   async ({ tenantId }: { tenantId: number }): Promise<Roles> => {
     return withErrorHandling(
       'listRolesByTenant',
@@ -118,6 +123,7 @@ export const listRolesByTenantWithPermissions = api(
     method: 'GET',
     path: '/tenants/:tenantId/roles/with-permissions',
     expose: true,
+    auth: true,
   },
   async ({ tenantId }: { tenantId: number }): Promise<RolesWithPermissions> => {
     return withErrorHandling(
@@ -138,7 +144,7 @@ export const listRolesByTenantWithPermissions = api(
  * @throws {APIError} If retrieval fails
  */
 export const listRolesWithPagination = api(
-  { method: 'GET', path: '/roles/paginated', expose: true },
+  { method: 'GET', path: '/roles/paginated', expose: true, auth: true },
   async (params: PaginationParams): Promise<PaginatedRoles> => {
     return withErrorHandling(
       'listRolesWithPagination',
@@ -158,7 +164,12 @@ export const listRolesWithPagination = api(
  * @throws {APIError} If retrieval fails
  */
 export const listRolesWithPermissionsAndPagination = api(
-  { method: 'GET', path: '/roles/with-permissions/paginated', expose: true },
+  {
+    method: 'GET',
+    path: '/roles/with-permissions/paginated',
+    expose: true,
+    auth: true,
+  },
   async (params: PaginationParams): Promise<PaginatedRolesWithPermissions> => {
     return withErrorHandling(
       'listRolesWithPermissionsAndPagination',
@@ -179,7 +190,7 @@ export const listRolesWithPermissionsAndPagination = api(
  * @throws {APIError} If the role is not found or update fails
  */
 export const updateRole = api(
-  { method: 'PUT', path: '/roles/:id', expose: true },
+  { method: 'PUT', path: '/roles/:id', expose: true, auth: true },
   async ({
     id,
     ...data
@@ -199,7 +210,7 @@ export const updateRole = api(
  * @throws {APIError} If the role is not found or assignment fails
  */
 export const assignPermissionsToRole = api(
-  { method: 'POST', path: '/roles/:id/permissions', expose: true },
+  { method: 'POST', path: '/roles/:id/permissions', expose: true, auth: true },
   async ({
     id,
     ...data
@@ -220,7 +231,7 @@ export const assignPermissionsToRole = api(
  * @throws {APIError} If the role is not found or deletion fails
  */
 export const deleteRole = api(
-  { method: 'DELETE', path: '/roles/:id', expose: true },
+  { method: 'DELETE', path: '/roles/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Role> => {
     return withErrorHandling('deleteRole', () => roleRepository.delete(id));
   },
@@ -234,7 +245,12 @@ export const deleteRole = api(
  * @throws {APIError} If retrieval fails
  */
 export const listRolesByTenantWithPagination = api(
-  { method: 'GET', path: '/tenants/:tenantId/roles/paginated', expose: true },
+  {
+    method: 'GET',
+    path: '/tenants/:tenantId/roles/paginated',
+    expose: true,
+    auth: true,
+  },
   async ({
     tenantId,
     ...params
@@ -263,6 +279,7 @@ export const listRolesByTenantWithPermissionsAndPagination = api(
     method: 'GET',
     path: '/tenants/:tenantId/roles/with-permissions/paginated',
     expose: true,
+    auth: true,
   },
   async ({
     tenantId,
@@ -290,7 +307,12 @@ export const listRolesByTenantWithPermissionsAndPagination = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listTenantRoles = api(
-  { method: 'GET', path: '/tenants/:tenantId/roles-alias', expose: true },
+  {
+    method: 'GET',
+    path: '/tenants/:tenantId/roles-alias',
+    expose: true,
+    auth: true,
+  },
   async ({ tenantId }: { tenantId: number }): Promise<Roles> => {
     return withErrorHandling(
       'listTenantRoles',
@@ -307,7 +329,12 @@ export const listTenantRoles = api(
  * @throws {APIError} If retrieval fails
  */
 export const listTenantRolesWithPagination = api(
-  { method: 'GET', path: '/tenants/:tenantId/roles-paginated', expose: true },
+  {
+    method: 'GET',
+    path: '/tenants/:tenantId/roles-paginated',
+    expose: true,
+    auth: true,
+  },
   async ({
     tenantId,
     ...paginationParams

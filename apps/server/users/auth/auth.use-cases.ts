@@ -225,6 +225,35 @@ export const createAuthUseCases = () => {
     return verifyToken(token, expectedType, JWT_SECRET);
   };
 
+  /**
+   * Verifies a token and checks if the corresponding user exists and is active
+   * @param token JWT token to verify
+   * @param expectedType Type of token to expect
+   * @returns User object without sensitive data if token is valid
+   * @throws {AuthenticationError} If token is invalid or user is not found/inactive
+   */
+  const validateTokenAndUser = async (
+    token: string,
+    expectedType: 'access' | 'refresh',
+  ): Promise<SafeUser> => {
+    // Verify token
+    const decoded = await verifyToken(token, expectedType, JWT_SECRET);
+
+    // Check if user exists and is active
+    const user = await userRepository.findOne(decoded.sub);
+
+    if (!user) {
+      throw new AuthenticationError('User not found');
+    }
+
+    if (!user.isActive) {
+      throw new AuthenticationError('User account is inactive');
+    }
+
+    // Return the user object (without password hash)
+    return user;
+  };
+
   return {
     authenticateUser,
     refreshUserToken,
@@ -232,6 +261,7 @@ export const createAuthUseCases = () => {
     revokeAllUserTokens,
     generateNewRefreshToken,
     verifyAuthToken,
+    validateTokenAndUser,
   };
 };
 

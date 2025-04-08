@@ -60,7 +60,12 @@ export const logout = api(
  * @throws {APIError} If operation fails
  */
 export const revokeAllTokens = api(
-  { method: 'POST', path: '/auth/revoke-all/:userId', expose: true },
+  {
+    method: 'POST',
+    path: '/auth/revoke-all/:userId',
+    expose: true,
+    auth: true,
+  },
   async ({ userId }: { userId: number }): Promise<{ count: number }> => {
     return withErrorHandling('revokeAllTokens', () =>
       authUseCases.revokeAllUserTokens(userId),

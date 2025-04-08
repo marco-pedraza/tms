@@ -155,7 +155,6 @@ describe('Users Controller', () => {
   describe('listUsers', () => {
     it('should list all users', async () => {
       const result = await listUsers();
-
       expect(Array.isArray(result.users)).toBe(true);
       expect(result.users.length).toBeGreaterThan(0);
 

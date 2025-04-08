@@ -21,7 +21,7 @@ const withErrorHandling = createControllerErrorHandler(
  * @throws {APIError} If the user is not found or retrieval fails
  */
 export const getUserWithRoles = api(
-  { method: 'GET', path: '/users/:userId/roles', expose: true },
+  { method: 'GET', path: '/users/:userId/roles', expose: true, auth: true },
   async ({ userId }: { userId: number }): Promise<UserWithRoles> => {
     // Validate userId first
     if (!userId || isNaN(Number(userId))) {
@@ -42,7 +42,12 @@ export const getUserWithRoles = api(
  * @throws {APIError} If the user is not found or retrieval fails
  */
 export const getUserWithPermissions = api(
-  { method: 'GET', path: '/users/:userId/permissions', expose: true },
+  {
+    method: 'GET',
+    path: '/users/:userId/permissions',
+    expose: true,
+    auth: true,
+  },
   async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
     return withErrorHandling('getUserWithPermissions', () =>
       userPermissionsRepository.getUserWithPermissions(userId),
@@ -59,7 +64,7 @@ export const getUserWithPermissions = api(
  * @throws {APIError} If the user is not found or assignment fails
  */
 export const assignRolesToUser = api(
-  { method: 'POST', path: '/users/:userId/roles', expose: true },
+  { method: 'POST', path: '/users/:userId/roles', expose: true, auth: true },
   async ({
     userId,
     ...data
@@ -79,7 +84,12 @@ export const assignRolesToUser = api(
  * @throws {APIError} If the user is not found or assignment fails
  */
 export const assignPermissionsToUser = api(
-  { method: 'POST', path: '/users/:userId/permissions', expose: true },
+  {
+    method: 'POST',
+    path: '/users/:userId/permissions',
+    expose: true,
+    auth: true,
+  },
   async ({
     userId,
     ...data
@@ -105,6 +115,7 @@ export const checkUserPermission = api(
     method: 'GET',
     path: '/users/:userId/permissions/:permissionCode/check',
     expose: true,
+    auth: true,
   },
   async ({
     userId,
@@ -140,7 +151,12 @@ export const checkUserPermission = api(
  * @throws {APIError} If role check fails or the user is unauthorized
  */
 export const checkUserRole = api(
-  { method: 'GET', path: '/users/:userId/roles/:roleId/check', expose: true },
+  {
+    method: 'GET',
+    path: '/users/:userId/roles/:roleId/check',
+    expose: true,
+    auth: true,
+  },
   async ({
     userId,
     roleId,
@@ -174,7 +190,12 @@ export const checkUserRole = api(
  * @throws {APIError} If the user is not found or retrieval fails
  */
 export const getUserPermissions = api(
-  { method: 'GET', path: '/users/:userId/effective-permissions', expose: true },
+  {
+    method: 'GET',
+    path: '/users/:userId/effective-permissions',
+    expose: true,
+    auth: true,
+  },
   async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
     return withErrorHandling('getUserPermissions', () =>
       userPermissionsRepository.getUserWithPermissions(userId),
@@ -190,7 +211,12 @@ export const getUserPermissions = api(
  * @throws {APIError} If the user is not found or retrieval fails
  */
 export const getUserRoles = api(
-  { method: 'GET', path: '/users/:userId/assigned-roles', expose: true },
+  {
+    method: 'GET',
+    path: '/users/:userId/assigned-roles',
+    expose: true,
+    auth: true,
+  },
   async ({ userId }: { userId: number }): Promise<UserWithRoles> => {
     return withErrorHandling('getUserRoles', () =>
       userPermissionsRepository.getUserWithRoles(userId),

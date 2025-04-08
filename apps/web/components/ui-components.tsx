@@ -21,18 +21,22 @@ export function PageHeader({
 }: PageHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-6">
-      <div>
-        <div className="flex items-center gap-2">
-          {backHref && (
-            <Link href={backHref}>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            </Link>
+      <div className="flex gap-2">
+        {backHref && (
+          <Link href={backHref}>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+        )}
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">{title}</h1>
+          </div>
+          {description && (
+            <p className="text-muted-foreground">{description}</p>
           )}
-          <h1 className="text-2xl font-bold">{title}</h1>
         </div>
-        {description && <p className="text-muted-foreground">{description}</p>}
       </div>
       {createHref && (
         <Link href={createHref}>

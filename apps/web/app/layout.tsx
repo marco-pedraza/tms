@@ -3,6 +3,7 @@ import localFont from 'next/font/local';
 import './globals.css';
 import { SideNav } from '@/components/side-nav';
 import QueryClientProvider from '@/components/query-client-provider';
+import { Toaster } from '@/components/ui/sonner';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -34,6 +35,7 @@ export default function RootLayout({
             </aside>
             <main className="flex-1 p-6">{children}</main>
           </div>
+          <Toaster richColors />
         </QueryClientProvider>
       </body>
     </html>

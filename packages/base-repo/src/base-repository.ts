@@ -4,12 +4,13 @@
  */
 
 import { NotFoundError, DuplicateError } from './errors';
-import { eq, and, count, not, or, asc, desc } from 'drizzle-orm';
+import { eq, and, count, not, or } from 'drizzle-orm';
 import type {
   PaginationParams,
   PaginationMeta,
   TableWithId,
   UniqueFieldConfig,
+  BaseRepository,
 } from './types';
 import { PgColumn } from 'drizzle-orm/pg-core';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
@@ -17,6 +18,7 @@ import {
   handlePostgresError,
   isApplicationError,
 } from './postgres-error-handler';
+import { createPaginationMeta, applyOrdering } from './query-utils';
 
 /**
  * Creates a base repository with CRUD operations for a database entity
@@ -37,56 +39,8 @@ export const createBaseRepository = <
   db: NodePgDatabase<Record<string, never>>,
   table: TTable,
   entityName: string,
-) => {
+): BaseRepository<T, CreateT, UpdateT, TTable> => {
   type TableInsert = TTable extends { $inferInsert: infer U } ? U : never;
-
-  /**
-   * Applies ordering to a query if ordering options are provided
-   * @param query - The database query to apply ordering to
-   * @param orderBy - Optional ordering configuration
-   * @returns The query with ordering applied
-   */
-  const applyOrdering = <Q extends object>(
-    query: Q,
-    orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>,
-  ): Q => {
-    if (!orderBy?.length || !('orderBy' in query)) {
-      return query;
-    }
-
-    const orderByList = orderBy.map((order) =>
-      order.direction === 'asc' ? asc(order.field) : desc(order.field),
-    );
-
-    // We need to assert this since TypeScript doesn't know the shape of Q
-    return (query as Record<string, (...args: unknown[]) => Q>).orderBy(
-      ...orderByList,
-    );
-  };
-
-  /**
-   * Creates pagination metadata based on query results
-   * @param totalCount - Total count of records
-   * @param page - Current page number
-   * @param pageSize - Number of items per page
-   * @returns Pagination metadata object
-   */
-  const createPaginationMeta = (
-    totalCount: number,
-    page: number,
-    pageSize: number,
-  ): PaginationMeta => {
-    const totalPages = Math.ceil(Number(totalCount) / pageSize);
-
-    return {
-      currentPage: page,
-      pageSize,
-      totalCount: Number(totalCount),
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1,
-    };
-  };
 
   /**
    * Finds an entity by its ID
@@ -96,11 +50,8 @@ export const createBaseRepository = <
    */
   const findOne = async (id: number): Promise<T> => {
     try {
-      const [entity] = await db
-        .select()
-        .from(table)
-        .where(eq(table.id, id))
-        .limit(1);
+      const query = db.select().from(table);
+      const [entity] = await query.where(eq(table.id, id)).limit(1);
 
       if (!entity) {
         throw new NotFoundError(`${entityName} with id ${id} not found`);
@@ -125,9 +76,9 @@ export const createBaseRepository = <
     orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
   }): Promise<T[]> => {
     try {
-      const query = db.select().from(table);
-      const finalQuery = applyOrdering(query, options?.orderBy);
-      const entities = await finalQuery;
+      let query = db.select().from(table);
+      query = applyOrdering(query, options?.orderBy);
+      const entities = await query;
       return entities as T[];
     } catch (error) {
       throw handlePostgresError(error, entityName, 'findAll');
@@ -150,10 +101,12 @@ export const createBaseRepository = <
     },
   ): Promise<T[]> => {
     try {
-      const query = db.select().from(table).where(eq(field, value));
-      const finalQuery = applyOrdering(query, options?.orderBy);
-      const result = await finalQuery;
-      return result as T[];
+      let query = db.select().from(table);
+      // @ts-expect-error - Drizzle query builder method typing
+      query = query.where(eq(field, value));
+      query = applyOrdering(query, options?.orderBy);
+      const entities = await query;
+      return entities as T[];
     } catch (error) {
       throw handlePostgresError(error, entityName, 'findAllBy');
     }
@@ -174,10 +127,12 @@ export const createBaseRepository = <
       const { page = 1, pageSize = 10 } = params;
       const offset = (page - 1) * pageSize;
 
-      const result = await db.select({ count: count() }).from(table);
-      const totalCount = result[0]?.count ?? 0;
+      const countQuery = db.select({ count: count() }).from(table);
+      const [countResult] = await countQuery;
+      const totalCount = countResult?.count ?? 0;
 
-      const data = await db.select().from(table).limit(pageSize).offset(offset);
+      const dataQuery = db.select().from(table);
+      const data = await dataQuery.limit(pageSize).offset(offset);
 
       return {
         data: data as T[],
@@ -221,11 +176,11 @@ export const createBaseRepository = <
       // Verificar existencia
       await findOne(id);
 
-      const [entity] = await db
+      const [entity] = (await db
         .update(table)
         .set(data as TableInsert)
         .where(eq(table.id, id))
-        .returning();
+        .returning()) as Array<Record<string, unknown>>;
 
       return entity as T;
     } catch (error) {
@@ -283,13 +238,9 @@ export const createBaseRepository = <
    */
   const findBy = async (field: PgColumn, value: unknown): Promise<T | null> => {
     try {
-      const [entity] = await db
-        .select()
-        .from(table)
-        .where(eq(field, value))
-        .limit(1);
-
-      return entity as T | null;
+      const query = db.select().from(table);
+      const [entity] = await query.where(eq(field, value)).limit(1);
+      return entity ? (entity as T) : null;
     } catch (error) {
       throw handlePostgresError(error, entityName, 'findBy');
     }
@@ -314,18 +265,21 @@ export const createBaseRepository = <
       const { page = 1, pageSize = 10 } = params;
       const offset = (page - 1) * pageSize;
 
-      const result = await db
+      const countQuery = db
         .select({ count: count() })
         .from(table)
         .where(eq(field, value));
-      const totalCount = result[0]?.count ?? 0;
+      const [countResult] = await countQuery;
+      const totalCount = countResult?.count ?? 0;
 
-      const data = await db
+      const dataQuery = db
         .select()
         .from(table)
         .where(eq(field, value))
         .limit(pageSize)
         .offset(offset);
+
+      const data = await dataQuery;
 
       return {
         data: data as T[],
@@ -439,7 +393,7 @@ export const createBaseRepository = <
     }
   };
 
-  return {
+  const repository: BaseRepository<T, CreateT, UpdateT, TTable> = {
     findOne,
     findAll,
     findAllBy,
@@ -453,5 +407,11 @@ export const createBaseRepository = <
     existsBy,
     validateUniqueness,
     validateRelationExists,
+    __internal: {
+      db,
+      table,
+    },
   };
+
+  return repository;
 };

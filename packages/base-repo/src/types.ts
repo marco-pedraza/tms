@@ -1,4 +1,18 @@
+import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
+import { SQL } from 'drizzle-orm';
+
+/**
+ * Type for the database query builder
+ * This encapsulates NodePgDatabase to avoid Symbol.iterator TypeScript errors
+ */
+export type DrizzleDB = NodePgDatabase<Record<string, never>>;
+
+/**
+ * Type for query results from Drizzle operations
+ * Used to provide a specific type for query operations
+ */
+export type DrizzleQueryResult<T> = T;
 
 /**
  * Generic type for paginated results
@@ -72,3 +86,123 @@ export type UniqueFieldConfig<TTable extends TableWithId> = {
     value: unknown;
   };
 };
+
+/**
+ * Represents a scope function that returns an SQL condition
+ * @template TTable - The database table type
+ */
+export type ScopeFunction<TTable extends TableWithId> = (
+  table: TTable,
+  db: DrizzleDB,
+) => SQL<unknown>;
+
+/**
+ * Collection of named scope functions
+ * @template TTable - The database table type
+ */
+export type ScopesConfig<TTable extends TableWithId> = {
+  [key: string]:
+    | ScopeFunction<TTable>
+    | ((...params: unknown[]) => ScopeFunction<TTable>);
+};
+
+/**
+ * Type for scope parameters - either a string name or an array with name and parameters
+ */
+export type ScopeParams = string | [string, ...unknown[]];
+
+/**
+ * Interface representing the base repository
+ * @template T - The entity type
+ * @template CreateT - The type for creating a new entity
+ * @template UpdateT - The type for updating an existing entity
+ * @template TTable - The database table type
+ */
+export interface BaseRepository<
+  T,
+  CreateT,
+  UpdateT,
+  TTable extends TableWithId,
+> {
+  findOne(id: number): Promise<T>;
+  findAll(options?: {
+    orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
+  }): Promise<T[]>;
+  findAllBy(
+    field: PgColumn,
+    value: unknown,
+    options?: {
+      orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
+    },
+  ): Promise<T[]>;
+  findAllPaginated(params?: PaginationParams): Promise<{
+    data: T[];
+    pagination: PaginationMeta;
+  }>;
+  create(data: CreateT): Promise<T>;
+  update(id: number, data: UpdateT): Promise<T>;
+  delete(id: number): Promise<T>;
+  deleteAll(): Promise<number>;
+  findBy(field: PgColumn, value: unknown): Promise<T | null>;
+  findByPaginated(
+    field: PgColumn,
+    value: unknown,
+    params?: PaginationParams,
+  ): Promise<{
+    data: T[];
+    pagination: PaginationMeta;
+  }>;
+  existsBy(
+    field: PgColumn,
+    value: unknown,
+    excludeId?: number,
+  ): Promise<boolean>;
+  validateUniqueness?(
+    fields: UniqueFieldConfig<TTable>[],
+    excludeId?: number,
+    errorMessage?: string,
+  ): Promise<void>;
+  validateRelationExists?(
+    relatedTable: TableWithId,
+    relationId: number,
+    relationName?: string,
+  ): Promise<void>;
+  // Internal state we need to access
+  __internal?: {
+    /**
+     * Database connection instance
+     * Using a specific DrizzleDB type instead of any to maintain type safety
+     */
+    db: DrizzleDB;
+    /**
+     * Table definition for the entity
+     */
+    table: TTable;
+  };
+}
+
+/**
+ * Base repository enhanced with scoping capabilities
+ * @template T - The entity type
+ * @template CreateT - The type for creating a new entity
+ * @template UpdateT - The type for updating an existing entity
+ * @template TTable - The database table type
+ */
+export interface ScopedRepository<
+  T,
+  CreateT,
+  UpdateT,
+  TTable extends TableWithId,
+> extends BaseRepository<T, CreateT, UpdateT, TTable> {
+  scope(
+    scopeParams: ScopeParams,
+  ): ScopedRepository<T, CreateT, UpdateT, TTable>;
+}
+
+/**
+ * Internal state for the scoped repository
+ * @template TTable - The database table type
+ */
+export interface ScopeState<TTable extends TableWithId> {
+  conditions: SQL<unknown>[];
+}

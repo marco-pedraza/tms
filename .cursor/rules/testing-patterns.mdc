@@ -224,3 +224,6 @@ Because of this architecture:
    - Clean up all created data
    - Keep track of IDs for cleanup
    - Avoid test data pollution
+
+7. **Test execution**
+   - Always run tests with npm run server:test command

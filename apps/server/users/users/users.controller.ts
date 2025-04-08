@@ -10,8 +10,7 @@ import type {
 } from './users.types';
 import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
-import { comparePasswords, hashPassword } from '../../shared/auth-utils';
-import { ValidationError } from '../../shared/errors';
+import { userUseCases } from './users.use-cases';
 
 const withErrorHandling = createControllerErrorHandler('UsersController');
 
@@ -186,25 +185,9 @@ export const changePassword = api(
     id,
     ...data
   }: ChangePasswordPayload & { id: number }): Promise<SafeUser> => {
-    return withErrorHandling('changePassword', async () => {
-      const user = await userRepository.findOneWithPassword(id);
-      if (!user) {
-        throw new ValidationError('User not found');
-      }
-
-      const isValid = await comparePasswords(
-        data.currentPassword,
-        user.passwordHash,
-      );
-      if (!isValid) {
-        throw new ValidationError('Current password is invalid');
-      }
-
-      const passwordHash = await hashPassword(data.newPassword);
-      return await userRepository.update(id, {
-        passwordHash,
-      } as UpdateUserPayload);
-    });
+    return withErrorHandling('changePassword', () =>
+      userUseCases.changePassword(id, data),
+    );
   },
 );
 

@@ -28,9 +28,11 @@
   "dependencies": {
     "bcrypt": "^5.1.1",
     "drizzle-orm": "^0.36.0",
-    "encore.dev": "^1.46.16",
+    "encore.dev": "^1.46.17",
     "pg": "^8.13.1",
-    "object-assign": "^4.1.1"
+    "object-assign": "^4.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "@types/jsonwebtoken": "^9.0.9"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.13.0"

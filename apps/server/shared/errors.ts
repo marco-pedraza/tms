@@ -80,5 +80,5 @@ export const parseApiError = (error: unknown) => {
   if (error instanceof UnauthorizedError) {
     return new APIError(ErrCode.PermissionDenied, error.message);
   }
-  return new APIError(ErrCode.Internal, 'Internal server error');
+  return new APIError(ErrCode.Internal, error.message);
 };

@@ -43,6 +43,31 @@ export const omitPasswordHash = (user: User): SafeUser => {
 };
 
 /**
+ * Generates a JWT token for the given user
+ * @param user User to generate token for
+ * @param tokenType Type of token ('access' or 'refresh')
+ * @param secretKey JWT secret key
+ * @param expiresIn Token expiry time
+ * @returns JWT token
+ */
+const generateToken = async (
+  user: User,
+  tokenType: 'access' | 'refresh',
+  secretKey: string,
+  expiresIn: string,
+): Promise<string> => {
+  const payload: JwtPayload = {
+    sub: user.id,
+    tenantId: user.tenantId,
+    username: user.username,
+    isSystemAdmin: user.isSystemAdmin,
+    type: tokenType,
+  };
+
+  return jwt.sign(payload, secretKey, { expiresIn });
+};
+
+/**
  * Generates a JWT access token for the given user
  * @param user User to generate token for
  * @param secretKey JWT secret key
@@ -54,15 +79,7 @@ export const generateAccessToken = async (
   secretKey: string,
   expiresIn: string,
 ): Promise<string> => {
-  const payload: JwtPayload = {
-    sub: user.id,
-    tenantId: user.tenantId,
-    username: user.username,
-    isSystemAdmin: user.isSystemAdmin,
-    type: 'access',
-  };
-
-  return jwt.sign(payload, secretKey, { expiresIn });
+  return generateToken(user, 'access', secretKey, expiresIn);
 };
 
 /**
@@ -77,15 +94,7 @@ export const generateRefreshToken = async (
   secretKey: string,
   expiresIn: string,
 ): Promise<string> => {
-  const payload: JwtPayload = {
-    sub: user.id,
-    tenantId: user.tenantId,
-    username: user.username,
-    isSystemAdmin: user.isSystemAdmin,
-    type: 'refresh',
-  };
-
-  return jwt.sign(payload, secretKey, { expiresIn });
+  return generateToken(user, 'refresh', secretKey, expiresIn);
 };
 
 /**

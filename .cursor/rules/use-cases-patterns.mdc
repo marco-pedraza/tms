@@ -1,17 +1,17 @@
 ---
 description: Patterns for services in Encore applications
-globs: *.handler.ts
+globs: *.use-cases.ts
 alwaysApply: false
 ---
-# Handler Patterns
+# Use Case Patterns
 
 ## Overview
 
-Handlers in our Encore application are optional service layers that encapsulate complex business logic. They are used when operations require more than simple CRUD operations, which are handled directly by repositories.
+Use cases in our Encore application are optional service layers that encapsulate complex business logic. They are used when operations require more than simple CRUD operations, which are handled directly by repositories.
 
-## When to Use Handlers
+## When to Use Use Cases
 
-1. **Use Handlers When:**
+1. **Use Use Cases When:**
 
    - Complex business logic is required
    - Multiple repositories need to be coordinated
@@ -19,14 +19,14 @@ Handlers in our Encore application are optional service layers that encapsulate 
    - Operations involve multiple steps or transactions
    - Business rules need to be enforced
 
-2. **Skip Handlers When:**
+2. **Skip Use Cases When:**
    - Only basic CRUD operations are needed
    - No complex business logic is involved
    - Single repository operations are sufficient
 
-## Rules for Handlers
+## Rules for Use Cases
 
-1. Handlers should contain:
+1. Use cases should contain:
 
    - Complex business logic
    - Multi-step operations
@@ -34,7 +34,7 @@ Handlers in our Encore application are optional service layers that encapsulate 
    - Advanced validation rules
    - Domain-specific business rules
 
-2. Handlers should NOT:
+2. Use cases should NOT:
 
    - Directly access the database (use repositories instead)
    - Duplicate repository logic
@@ -52,7 +52,7 @@ Handlers in our Encore application are optional service layers that encapsulate 
    - Add context to repository errors when needed
    - Handle business rule violations explicitly
 
-5. Export the handler as a singleton instance using a factory function
+5. Export the use case as a singleton instance using a factory function
 
 ## Implementation Example
 
@@ -63,10 +63,10 @@ import { createInventoryRepository } from '../inventory/inventory.repository';
 import type { CreateOrderPayload, Order, OrderItem } from './order.types';
 
 /**
- * Creates a handler for managing orders with complex business logic
+ * Creates a use case for managing orders with complex business logic
  * @returns {Object} An object containing order-specific operations
  */
-export const createOrderHandler = () => {
+export const createOrderUseCase = () => {
   const productRepository = createProductRepository();
   const inventoryRepository = createInventoryRepository();
 
@@ -164,15 +164,15 @@ export const createOrderHandler = () => {
   };
 };
 
-// Export the handler instance
-export const orderHandler = createOrderHandler();
+// Export the use case instance
+export const orderUseCase = createOrderUseCase();
 ```
 
 ## Best Practices
 
 1. **Functional Approach**
 
-   - Use factory functions to create handlers
+   - Use factory functions to create use cases
    - Keep helper functions inside the closure
    - Return only the public interface
    - Maintain clean separation of concerns
@@ -210,4 +210,3 @@ export const orderHandler = createOrderHandler();
    - Optimize database operations
    - Handle bulk operations efficiently
    - Consider caching when needed
-

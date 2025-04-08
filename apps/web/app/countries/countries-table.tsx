@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
@@ -13,116 +14,123 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import client from '@/lib/imsClient';
-import { useQuery } from '@tanstack/react-query';
-import { Row, type ColumnDef } from '@tanstack/react-table';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { type ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
 import type { countries } from '@repo/ims-client';
 import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DropdownMenuContent } from '@/components/ui/dropdown-menu';
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 type Country = countries.Country;
 
 const countriesColumnsFactory = (
+  getViewHref: (id: string) => string,
   onDelete: (id: string) => void,
   onEdit: (id: string) => void,
-  onView: (id: string) => void,
-): ColumnDef<Country>[] => [
-  {
-    accessorKey: 'name',
-    header: 'Name',
-    cell: ({ row }) => (
-      <div className="font-medium">{row.getValue('name')}</div>
-    ),
-  },
-  {
-    accessorKey: 'code',
-    header: 'Code',
-  },
-  {
-    accessorKey: 'active',
-    header: 'Status',
-    cell: ({ row }) => {
-      const active = row.getValue('active');
-      return active ? (
-        <Badge variant="outline" className="bg-green-100">
-          Active
-        </Badge>
-      ) : (
-        <Badge variant="outline" className="bg-red-100">
-          Inactive
-        </Badge>
-      );
+  t: (key: string) => string,
+): ColumnDef<Country>[] => {
+  return [
+    {
+      accessorKey: 'name',
+      header: t('form.name'),
+      cell: ({ row }) => (
+        <div className="font-medium">{row.getValue('name')}</div>
+      ),
     },
-  },
-  {
-    accessorKey: 'createdAt',
-    header: 'Created',
-    cell: ({ row }) => {
-      return new Date(row.getValue('createdAt') ?? '').toLocaleDateString();
+    {
+      accessorKey: 'code',
+      header: t('form.code'),
     },
-  },
-  {
-    id: 'actions',
-    header: 'Actions',
-    cell: ({ row }: { row: Row<Country> }) => {
-      const record = row.original;
-      return (
-        <div className="flex items-center justify-end gap-2">
-          <Button
-            key="view"
-            variant="ghost"
-            size="sm"
-            onClick={() => onView(record.id.toString())}
-          >
-            View
-          </Button>
-          <Button
-            key="edit"
-            variant="ghost"
-            size="sm"
-            onClick={() => onEdit(record.id.toString())}
-          >
-            Edit
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">More actions</span>
+    {
+      accessorKey: 'active',
+      header: t('form.status'),
+      cell: ({ row }) => {
+        const active = row.getValue('active');
+        return active ? (
+          <Badge variant="outline" className="bg-green-100">
+            {t('common:status.active')}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="bg-red-100">
+            {t('common:status.inactive')}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: 'createdAt',
+      header: t('common:fields.createdAt'),
+      cell: ({ row }) => {
+        return new Date(row.getValue('createdAt') ?? '').toLocaleDateString();
+      },
+    },
+    {
+      id: 'actions',
+      header: t('common:fields.actions'),
+      cell: ({ row }) => {
+        const record = row.original;
+        return (
+          <div className="flex items-center justify-end gap-2">
+            <Link href={getViewHref(record.id.toString())}>
+              <Button variant="ghost" size="sm">
+                {t('common:actions.view')}
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => onDelete(record.id.toString())}
-              >
-                Delete
-              </Button>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      );
+            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">{t('common:actions.more')}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => onEdit(record.id.toString())}
+                >
+                  {t('common:actions.edit')}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => onDelete(record.id.toString())}
+                >
+                  {t('common:actions.delete')}
+                </Button>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      },
     },
-    size: 150,
-  },
-];
+  ];
+};
 
 export default function CountriesTable() {
+  const { t } = useTranslation(['countries', 'common']);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['countries'],
-    queryFn: async () =>
-      await client.inventory.listCountries({
-        page: 1,
-        pageSize: 10,
-      }),
+    queryFn: async () => await client.inventory.listCountries({}),
   });
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const deleteCountryMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const result = await client.inventory.deleteCountry(id);
+      queryClient.invalidateQueries({ queryKey: ['countries'] });
+      setDeleteId(null);
+      return result;
+    },
+  });
 
   const handleDelete = (id: string) => {
     setDeleteId(id);
@@ -130,20 +138,32 @@ export default function CountriesTable() {
 
   const confirmDelete = () => {
     if (deleteId) {
-      // @todo implement delete
-      setDeleteId(null);
+      toast.promise(deleteCountryMutation.mutateAsync(parseInt(deleteId, 10)), {
+        loading: t('messages.delete.loading'),
+        success: t('messages.delete.success'),
+        error: t('messages.delete.error'),
+      });
     }
+  };
+
+  const getViewHref = (id: string) => {
+    return `/countries/${id}`;
   };
 
   const handleEdit = (id: string) => {
     router.push(`/countries/${id}/edit`);
   };
 
-  const handleView = (id: string) => {
-    router.push(`/countries/${id}`);
+  const onAdd = () => {
+    router.push('/countries/new');
   };
 
-  const columns = countriesColumnsFactory(handleDelete, handleEdit, handleView);
+  const columns = countriesColumnsFactory(
+    getViewHref,
+    handleDelete,
+    handleEdit,
+    t,
+  );
 
   return (
     <>
@@ -152,25 +172,24 @@ export default function CountriesTable() {
         columns={columns}
         isLoading={isLoading}
         hasError={!!error}
-        onRetry={() => refetch()}
-        onAdd={() => router.push('/countries/new')}
+        onRetry={refetch}
+        onAdd={onAdd}
       />
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t('messages.delete.confirm')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              country and all associated data.
+              {t('messages.delete.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground"
             >
-              Delete
+              {t('actions.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

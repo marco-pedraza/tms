@@ -133,13 +133,13 @@ export const createEntity = api(
 );
 ```
 
-### 3. In Handlers (When Used)
+### 3. In Use Cases (When Used)
 
-Handlers add business context to errors:
+Use cases add business context to errors:
 
 ```typescript
-// feature/handler.ts
-export const createFeatureHandler = () => {
+// feature/usecase.ts
+export const createFeatureUseCase = () => {
   const processComplexOperation = async (data: ComplexPayload) => {
     try {
       // Validate business rules
@@ -206,7 +206,7 @@ export const createFeatureHandler = () => {
    - Return appropriate status codes
    - Keep error responses consistent
 
-5. **Handler Layer**
+5. **Use Case Layer**
 
    - Add business context to errors
    - Handle complex validation errors
@@ -219,4 +219,3 @@ export const createFeatureHandler = () => {
    - Use consistent error patterns
    - Document error scenarios
    - Test error cases thoroughly
-

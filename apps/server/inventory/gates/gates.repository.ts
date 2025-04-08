@@ -5,11 +5,11 @@ import type {
   UpdateGatePayload,
   PaginatedGates,
 } from './gates.types';
-import { createBaseRepository } from '../../shared/base-repository';
+import { createBaseRepository } from '@repo/base-repo';
 import { terminalRepository } from '../terminals/terminals.repository';
 import { PaginationParams } from '../../shared/types';
 import { eq, count } from 'drizzle-orm';
-import { db } from '../../db';
+import { db } from '@/db';
 import { withPagination } from '../../shared/db-utils';
 
 /**
@@ -22,36 +22,24 @@ export const createGateRepository = () => {
     CreateGatePayload,
     UpdateGatePayload,
     typeof gates
-  >(gates, 'Gate');
+  >(db, gates, 'Gate');
 
   /**
-   * Validates that a terminal exists in the database
-   * @param terminalId - The ID of the terminal to validate
-   */
-  const validateTerminalExists = async (terminalId: number): Promise<void> => {
-    await terminalRepository.findOne(terminalId);
-  };
-
-  /**
-   * Creates a new gate with terminal validation
+   * Creates a new gate
    * @param data - The gate data to create
    * @returns The created gate
    */
   const create = async (data: CreateGatePayload): Promise<Gate> => {
-    await validateTerminalExists(data.terminalId);
     return baseRepository.create(data);
   };
 
   /**
-   * Updates a gate with validations
+   * Updates a gate
    * @param id - The ID of the gate to update
    * @param data - The gate data to update
    * @returns The updated gate
    */
   const update = async (id: number, data: UpdateGatePayload): Promise<Gate> => {
-    if (data.terminalId) {
-      await validateTerminalExists(data.terminalId);
-    }
     return baseRepository.update(id, data);
   };
 
@@ -63,11 +51,7 @@ export const createGateRepository = () => {
   const listPaginated = async (
     params: PaginationParams = {},
   ): Promise<PaginatedGates> => {
-    return baseRepository.findAllPaginated({
-      ...params,
-      sortBy: params.sortBy || 'id',
-      sortDirection: params.sortDirection || 'asc',
-    });
+    return baseRepository.findAllPaginated(params);
   };
 
   /**
@@ -80,9 +64,6 @@ export const createGateRepository = () => {
     terminalId: number,
     params: PaginationParams = {},
   ): Promise<PaginatedGates> => {
-    // Validate that the terminal exists
-    await validateTerminalExists(terminalId);
-
     // Create the base query with terminal filter
     const query = db
       .select()

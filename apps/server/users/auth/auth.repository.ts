@@ -7,8 +7,9 @@ import {
   CreateRefreshToken,
   UpdateRefreshToken,
 } from './auth.types';
-import { NotFoundError } from '../../shared/errors';
-import { createBaseRepository } from '../../shared/base-repository';
+import { NotFoundError, ValidationError } from '../../shared/errors';
+import { createBaseRepository } from '@repo/base-repo';
+import { db } from '@/db';
 
 // Error message constants
 const ERROR_MESSAGES = {
@@ -27,7 +28,7 @@ export const createAuthRepository = () => {
     CreateRefreshToken,
     UpdateRefreshToken,
     typeof refreshTokens
-  >(refreshTokens, 'RefreshToken');
+  >(db, refreshTokens, 'RefreshToken');
 
   /**
    * Saves a refresh token to the database
@@ -40,7 +41,10 @@ export const createAuthRepository = () => {
     token: string,
   ): Promise<RefreshToken> => {
     // Decode token to get expiration
-    const decoded = jwt.decode(token) as JwtPayload;
+    const decoded = jwt.decode(token);
+    if (!decoded || typeof decoded === 'string' || !('exp' in decoded)) {
+      throw new ValidationError('Invalid token format');
+    }
     const expiresAt = decoded.exp
       ? new Date(decoded.exp * 1000)
       : new Date(Date.now() + DEFAULT_REFRESH_TOKEN_EXPIRY);

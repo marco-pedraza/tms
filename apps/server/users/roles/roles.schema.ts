@@ -1,20 +1,39 @@
-import { pgTable, serial, text, timestamp, integer } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  integer,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 import { permissions } from '../permissions/permissions.schema';
 import { tenants } from '../tenants/tenants.schema';
 /**
  * Schema for the roles table
  * Represents roles that can be assigned to users and contain multiple permissions
  */
-export const roles = pgTable('roles', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  description: text('description'),
-  tenantId: integer('tenant_id')
-    .notNull()
-    .references(() => tenants.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
+export const roles = pgTable(
+  'roles',
+  {
+    id: serial('id').primaryKey(),
+    name: text('name').notNull(),
+    description: text('description'),
+    tenantId: integer('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => {
+    return {
+      // Add a composite unique constraint on name + tenantId
+      namePerTenantIdx: uniqueIndex('roles_name_tenant_id_idx').on(
+        table.name,
+        table.tenantId,
+      ),
+    };
+  },
+);
 
 /**
  * Schema for the role_permissions junction table

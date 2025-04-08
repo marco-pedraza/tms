@@ -6,11 +6,10 @@ import type {
   Permissions,
   PaginatedPermissions,
 } from './permissions.types';
-import { createBaseRepository } from '../../shared/base-repository';
+import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-import { NotFoundError } from '../../shared/errors';
-
-const DEFAULT_ERROR_MESSAGE = 'Permission with this code already exists';
+import { NotFoundError } from '@repo/base-repo';
+import { db } from '@/db';
 
 /**
  * Creates a repository for managing permission entities
@@ -22,19 +21,14 @@ export const createPermissionRepository = () => {
     CreatePermissionPayload,
     UpdatePermissionPayload,
     typeof permissions
-  >(permissions, 'Permission');
+  >(db, permissions, 'Permission');
 
   /**
-   * Creates a new permission with code validation
+   * Creates a new permission
    * @param data - The permission data to create
    * @returns The created permission
    */
   const create = async (data: CreatePermissionPayload): Promise<Permission> => {
-    await baseRepository.validateUniqueness(
-      [{ field: permissions.code, value: data.code }],
-      undefined,
-      DEFAULT_ERROR_MESSAGE,
-    );
     return baseRepository.create(data);
   };
 
@@ -70,9 +64,7 @@ export const createPermissionRepository = () => {
   const findAllPaginated = async (
     params: PaginationParams = {},
   ): Promise<PaginatedPermissions> => {
-    return baseRepository.findAllPaginated(
-      params,
-    ) as Promise<PaginatedPermissions>;
+    return baseRepository.findAllPaginated(params);
   };
 
   return {

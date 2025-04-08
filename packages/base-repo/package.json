@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
+    "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -11,8 +12,14 @@
     "format:check": "prettier . --check"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
+  "files": [
+    "dist"
+  ],
   "devDependencies": {
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
@@ -20,7 +27,9 @@
     "@types/pg": "^8.11.11",
     "drizzle-kit": "^0.27.1",
     "eslint": "^9.22.0",
+    "load-tsconfig": "^0.2.5",
     "prettier": "^3.5.3",
+    "tsup": "^8.0.2",
     "typescript": "^5.2.2",
     "vitest": "^3.0.8"
   },

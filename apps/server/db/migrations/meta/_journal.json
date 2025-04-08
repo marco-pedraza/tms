@@ -54,8 +54,15 @@
     {
       "idx": 7,
       "version": "7",
-      "when": 1743542335527,
-      "tag": "20250401211855_creates_refresh_tokens_table",
+      "when": 1743639209209,
+      "tag": "20250403001329_creates_unique_contraints_for_departments",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1743640083246,
+      "tag": "20250403002803_creates_unique_contraints_for_roles",
       "breakpoints": true
     }
   ]

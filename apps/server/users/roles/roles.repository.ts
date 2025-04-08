@@ -1,5 +1,5 @@
-import { db } from '../../db';
-import { NotFoundError } from '../../shared/errors';
+import { db } from '@/db';
+import { NotFoundError } from '@repo/base-repo';
 import { roles, rolePermissions } from './roles.schema';
 import { permissions } from '../permissions/permissions.schema';
 import { eq } from 'drizzle-orm';
@@ -17,15 +17,13 @@ import type {
 import { PaginationParams } from '../../shared/types';
 import { Permission } from '../permissions/permissions.types';
 import { permissionRepository } from '../permissions/permissions.repository';
-import { createBaseRepository } from '../../shared/base-repository';
+import { createBaseRepository } from '@repo/base-repo';
 import {
   getRelatedEntities,
   updateManyToManyRelation,
 } from '../../shared/db-utils';
 
 // Error message constants
-const ERROR_ROLE_NAME_EXISTS = (name: string) =>
-  `Role with name ${name} already exists in this tenant`;
 const ERROR_PERMISSION_NOT_FOUND = (id: number) =>
   `Permission with id ${id} not found`;
 const ERROR_ROLE_NOT_FOUND = (id: number) => `Role with id ${id} not found`;
@@ -40,7 +38,7 @@ export const createRoleRepository = () => {
     CreateRolePayload,
     UpdateRolePayload,
     typeof roles
-  >(roles, 'Role');
+  >(db, roles, 'Role');
 
   /**
    * Creates a new role
@@ -53,20 +51,7 @@ export const createRoleRepository = () => {
   ): Promise<RoleWithPermissions> => {
     const { permissionIds, ...roleData } = data;
 
-    await baseRepository.validateUniqueness(
-      [
-        {
-          field: roles.name,
-          value: roleData.name,
-          scope: {
-            field: roles.tenantId,
-            value: roleData.tenantId,
-          },
-        },
-      ],
-      undefined,
-      ERROR_ROLE_NAME_EXISTS(roleData.name),
-    );
+    // The unique constraint will handle the uniqueness validation
     const role = await baseRepository.create(roleData);
 
     if (permissionIds && permissionIds.length > 0) {
@@ -188,25 +173,7 @@ export const createRoleRepository = () => {
     id: number,
     data: UpdateRolePayload,
   ): Promise<RoleWithPermissions> => {
-    const role = await baseRepository.findOne(id);
-
-    if (data.name && data.name !== role.name) {
-      await baseRepository.validateUniqueness(
-        [
-          {
-            field: roles.name,
-            value: data.name,
-            scope: {
-              field: roles.tenantId,
-              value: role.tenantId,
-            },
-          },
-        ],
-        id,
-        ERROR_ROLE_NAME_EXISTS(data.name),
-      );
-    }
-
+    // The database constraint will validate uniqueness
     await baseRepository.update(id, data);
     return findOneWithPermissions(id);
   };

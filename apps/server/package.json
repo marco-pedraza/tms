@@ -6,8 +6,10 @@
   "license": "MPL-2.0",
   "type": "module",
   "scripts": {
+    "preinstall": "cd ../../packages/base-repo && npm run build",
     "dev": "encore run",
     "test": "vitest run",
+    "prebuild": "npm install --install-links",
     "test:encore": "encore test",
     "lint": "eslint",
     "format": "prettier --write .",
@@ -28,9 +30,10 @@
     "vitest": "^3.0.8"
   },
   "dependencies": {
-    "@types/jsonwebtoken": "^9.0.9",
+    "@repo/base-repo": "file:../../packages/base-repo",
     "bcrypt": "^5.1.1",
     "drizzle-orm": "^0.36.0",
+    "@types/jsonwebtoken": "^9.0.9",
     "encore.dev": "^1.46.17",
     "glob": "^10.4.5",
     "pg": "^8.13.1",

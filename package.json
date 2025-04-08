@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:base-repo": "cd packages/base-repo && npm run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format:check": "turbo run format:check",
@@ -16,6 +17,7 @@
     "debug": "^4.4.0",
     "minimatch": "^10.0.1",
     "prettier": "^3.5.3",
+    "tsup": "^8.4.0",
     "turbo": "^2.4.4",
     "typescript": "5.8.2"
   },

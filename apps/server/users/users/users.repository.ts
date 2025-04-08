@@ -7,13 +7,11 @@ import type {
   PaginatedUsers,
   Users,
 } from './users.types';
-import { createBaseRepository } from '../../shared/base-repository';
+import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
 import { hashPassword, omitPasswordHash } from '../../shared/auth-utils';
+import { db } from '@/db';
 import { secret } from 'encore.dev/config';
-
-const DUPLICATE_ERROR_MESSAGE =
-  'User with this username or email already exists';
 
 // Get salt rounds from Encore secret
 const SALT_ROUNDS = parseInt(secret('SALT_ROUNDS')());
@@ -28,32 +26,9 @@ export const createUserRepository = () => {
     },
     UpdateUserPayload & { updatedAt: Date },
     typeof users
-  >(users, 'User');
-
-  const validateUniqueFields = async (
-    username: string,
-    email: string,
-    excludeId?: number,
-  ) => {
-    await baseRepository.validateUniqueness(
-      [
-        {
-          field: users.username,
-          value: username,
-        },
-        {
-          field: users.email,
-          value: email,
-        },
-      ],
-      excludeId,
-      DUPLICATE_ERROR_MESSAGE,
-    );
-  };
+  >(db, users, 'User');
 
   const create = async (data: CreateUserPayload): Promise<SafeUser> => {
-    await validateUniqueFields(data.username, data.email);
-
     const user = await baseRepository.create({
       ...data,
       passwordHash: await hashPassword(data.password, SALT_ROUNDS),
@@ -68,12 +43,6 @@ export const createUserRepository = () => {
     id: number,
     data: UpdateUserPayload,
   ): Promise<SafeUser> => {
-    const existing = await baseRepository.findOne(id);
-
-    if (data.email && data.email !== existing.email) {
-      await validateUniqueFields(existing.username, data.email, id);
-    }
-
     const user = await baseRepository.update(id, {
       ...data,
       updatedAt: new Date(),
@@ -178,7 +147,6 @@ export const createUserRepository = () => {
     findByUsername,
     findByEmail,
     findOneWithPassword,
-    validateUniqueFields,
     delete: delete_,
   };
 };

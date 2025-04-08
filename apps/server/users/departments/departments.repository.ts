@@ -6,46 +6,19 @@ import type {
   PaginatedDepartments,
   Departments,
 } from './departments.types';
-import { createBaseRepository } from '../../shared/base-repository';
+import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
+import { db } from '@/db';
 
 export const createDepartmentRepository = () => {
   const baseRepository = createBaseRepository<
     Department,
-    CreateDepartmentPayload & {
-      isActive: boolean;
-      createdAt: Date;
-      updatedAt: Date;
-    },
-    UpdateDepartmentPayload & { updatedAt: Date },
+    CreateDepartmentPayload,
+    UpdateDepartmentPayload,
     typeof departments
-  >(departments, 'Department');
-
-  const validateUniqueCode = async (
-    code: string,
-    tenantId: number,
-    excludeId?: number,
-  ) => {
-    const errorMessage = `Department with code ${code} already exists in this tenant`;
-
-    await baseRepository.validateUniqueness(
-      [
-        {
-          field: departments.code,
-          value: code,
-          scope: {
-            field: departments.tenantId,
-            value: tenantId,
-          },
-        },
-      ],
-      excludeId,
-      errorMessage,
-    );
-  };
+  >(db, departments, 'Department');
 
   const create = async (data: CreateDepartmentPayload): Promise<Department> => {
-    await validateUniqueCode(data.code, data.tenantId);
     return baseRepository.create(data);
   };
 
@@ -53,16 +26,7 @@ export const createDepartmentRepository = () => {
     id: number,
     data: UpdateDepartmentPayload,
   ): Promise<Department> => {
-    const existing = await baseRepository.findOne(id);
-
-    if (data.code) {
-      await validateUniqueCode(data.code, existing.tenantId, id);
-    }
-
-    return baseRepository.update(id, {
-      ...data,
-      updatedAt: new Date(),
-    });
+    return baseRepository.update(id, data);
   };
 
   const findAllPaginated = async (
@@ -93,7 +57,6 @@ export const createDepartmentRepository = () => {
     create,
     update,
     findAllPaginated,
-    validateUniqueCode,
     findByTenant,
     findByTenantPaginated,
   };

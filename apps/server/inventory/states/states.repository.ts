@@ -6,11 +6,9 @@ import {
   UpdateStatePayload,
   PaginatedStates,
 } from './states.types';
-import { createBaseRepository } from '../../shared/base-repository';
-import { countryRepository } from '../countries/countries.repository';
+import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-
-const DEFAULT_ERROR_MESSAGE = 'State with this name or code already exists';
+import { db } from '@/db';
 
 /**
  * Creates a repository for managing state entities
@@ -22,51 +20,19 @@ export const createStateRepository = () => {
     CreateStatePayload,
     UpdateStatePayload,
     typeof states
-  >(states, 'State');
+  >(db, states, 'State');
 
   /**
-   * Validates that a country exists in the database
-   * @param countryId - The ID of the country to validate
-   * @throws {NotFoundError} If the country does not exist
-   */
-  const validateCountryExists = async (countryId: number): Promise<void> => {
-    await countryRepository.findOne(countryId);
-  };
-
-  /**
-   * Validates that state name and code are unique
-   * @param name - State name to validate
-   * @param code - State code to validate
-   * @param excludeId - Optional ID to exclude from validation
-   */
-  const validateStateUniqueness = async (
-    name: string,
-    code: string,
-    excludeId?: number,
-  ): Promise<void> => {
-    await baseRepository.validateUniqueness(
-      [
-        { field: states.name, value: name },
-        { field: states.code, value: code },
-      ],
-      excludeId,
-      DEFAULT_ERROR_MESSAGE,
-    );
-  };
-
-  /**
-   * Creates a new state with country validation
+   * Creates a new state
    * @param data - The state data to create
    * @returns {Promise<State>} The created state
    */
   const create = async (data: CreateStatePayload): Promise<State> => {
-    await validateCountryExists(data.countryId);
-    await validateStateUniqueness(data.name, data.code);
     return baseRepository.create(data);
   };
 
   /**
-   * Updates a state with country and uniqueness validation
+   * Updates a state
    * @param id - The ID of the state to update
    * @param data - The state data to update
    * @returns {Promise<State>} The updated state
@@ -75,20 +41,6 @@ export const createStateRepository = () => {
     id: number,
     data: UpdateStatePayload,
   ): Promise<State> => {
-    const existingState = await baseRepository.findOne(id);
-
-    if (data.countryId) {
-      await validateCountryExists(data.countryId);
-    }
-
-    if (data.name || data.code) {
-      await validateStateUniqueness(
-        data.name || existingState.name,
-        data.code || existingState.code,
-        id,
-      );
-    }
-
     return baseRepository.update(id, data);
   };
 
@@ -100,15 +52,11 @@ export const createStateRepository = () => {
   const listPaginated = async (
     params: PaginationParams,
   ): Promise<PaginatedStates> => {
-    return baseRepository.findAllPaginated({
-      ...params,
-      sortBy: params.sortBy || 'name',
-      sortDirection: params.sortDirection || 'asc',
-    });
+    return baseRepository.findAllPaginated(params);
   };
 
   /**
-   * Retrieves all states (deprecated: use listPaginated instead)
+   * Retrieves all states
    * @returns {Promise<States>} Object containing array of states
    */
   const findAll = async (): Promise<States> => {

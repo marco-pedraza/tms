@@ -5,9 +5,8 @@ import type {
   UpdateCountryPayload,
   Countries,
 } from './countries.types';
-import { createBaseRepository } from '../../shared/base-repository';
-
-const DEFAULT_ERROR_MESSAGE = 'Country with this name or code already exists';
+import { createBaseRepository } from '@repo/base-repo';
+import { db } from '@/db';
 
 /**
  * Creates a repository for managing country entities
@@ -19,42 +18,19 @@ export const createCountryRepository = () => {
     CreateCountryPayload,
     UpdateCountryPayload,
     typeof countries
-  >(countries, 'Country');
+  >(db, countries, 'Country');
 
   /**
-   * Validates that both country name and code are unique
-   * @param {string} name - The country name to validate
-   * @param {string} code - The country code to validate
-   * @param {number} [excludeId] - Optional ID to exclude from validation (for updates)
-   * @throws {DuplicateError} If either name or code is already in use
-   */
-  const validateUniqueNameAndCode = async (
-    name: string,
-    code: string,
-    excludeId?: number,
-  ): Promise<void> => {
-    await baseRepository.validateUniqueness(
-      [
-        { field: countries.name, value: name },
-        { field: countries.code, value: code },
-      ],
-      excludeId,
-      DEFAULT_ERROR_MESSAGE,
-    );
-  };
-
-  /**
-   * Creates a new country with unique name and code validation
+   * Creates a new country
    * @param {CreateCountryPayload} data - The country data to create
    * @returns {Promise<Country>} The created country
    */
   const create = async (data: CreateCountryPayload): Promise<Country> => {
-    await validateUniqueNameAndCode(data.name, data.code);
     return baseRepository.create(data);
   };
 
   /**
-   * Updates a country with unique name and code validation
+   * Updates a country
    * @param {number} id - The ID of the country to update
    * @param {UpdateCountryPayload} data - The country data to update
    * @returns {Promise<Country>} The updated country
@@ -63,9 +39,6 @@ export const createCountryRepository = () => {
     id: number,
     data: UpdateCountryPayload,
   ): Promise<Country> => {
-    if (data.name || data.code) {
-      await validateUniqueNameAndCode(data.name || '', data.code || '', id);
-    }
     return baseRepository.update(id, data);
   };
 

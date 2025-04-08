@@ -5,8 +5,9 @@ import type {
   UpdateTenantPayload,
   PaginatedTenants,
 } from './tenants.types';
-import { createBaseRepository } from '../../shared/base-repository';
+import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
+import { db } from '@/db';
 
 export const createTenantRepository = () => {
   const baseRepository = createBaseRepository<
@@ -18,31 +19,21 @@ export const createTenantRepository = () => {
     },
     UpdateTenantPayload & { updatedAt: Date },
     typeof tenants
-  >(tenants, 'Tenant');
-
-  const validateUniqueCode = async (code: string, excludeId?: number) => {
-    const errorMessage = `Tenant with code ${code} already exists`;
-
-    await baseRepository.validateUniqueness(
-      [{ field: tenants.code, value: code }],
-      excludeId,
-      errorMessage,
-    );
-  };
+  >(db, tenants, 'Tenant');
 
   const create = async (data: CreateTenantPayload): Promise<Tenant> => {
-    await validateUniqueCode(data.code);
-    return baseRepository.create(data);
+    return baseRepository.create({
+      ...data,
+      isActive: data.isActive ?? true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
   };
 
   const update = async (
     id: number,
     data: UpdateTenantPayload,
   ): Promise<Tenant> => {
-    if (data.code) {
-      await validateUniqueCode(data.code, id);
-    }
-
     return baseRepository.update(id, {
       ...data,
       updatedAt: new Date(),
@@ -63,7 +54,6 @@ export const createTenantRepository = () => {
     ...baseRepository,
     create,
     update,
-    validateUniqueCode,
     findAllPaginated,
   };
 };

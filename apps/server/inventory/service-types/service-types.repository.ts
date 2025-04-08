@@ -5,10 +5,9 @@ import type {
   UpdateServiceTypePayload,
   PaginatedServiceTypes,
 } from './service-types.types';
-import { createBaseRepository } from '../../shared/base-repository';
+import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-
-const DUPLICATE_ERROR_MESSAGE = 'Service type with this name already exists';
+import { db } from '@/db';
 
 export const createServiceTypeRepository = () => {
   const baseRepository = createBaseRepository<
@@ -16,26 +15,11 @@ export const createServiceTypeRepository = () => {
     CreateServiceTypePayload,
     UpdateServiceTypePayload,
     typeof serviceTypes
-  >(serviceTypes, 'Service Type');
-
-  const validateUniqueName = async (name: string, excludeId?: number) => {
-    await baseRepository.validateUniqueness(
-      [
-        {
-          field: serviceTypes.name,
-          value: name,
-        },
-      ],
-      excludeId,
-      DUPLICATE_ERROR_MESSAGE,
-    );
-  };
+  >(db, serviceTypes, 'Service Type');
 
   const create = async (
     data: CreateServiceTypePayload,
   ): Promise<ServiceType> => {
-    await validateUniqueName(data.name);
-
     return baseRepository.create({
       ...data,
       active: data.active,
@@ -46,12 +30,6 @@ export const createServiceTypeRepository = () => {
     id: number,
     data: UpdateServiceTypePayload,
   ): Promise<ServiceType> => {
-    const existing = await baseRepository.findOne(id);
-
-    if (data.name && data.name !== existing.name) {
-      await validateUniqueName(data.name, id);
-    }
-
     return baseRepository.update(id, data);
   };
 
@@ -85,7 +63,6 @@ export const createServiceTypeRepository = () => {
     findAll,
     findAllActive,
     findAllPaginated,
-    validateUniqueName,
   };
 };
 

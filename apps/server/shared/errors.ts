@@ -1,36 +1,10 @@
 import { APIError, ErrCode } from 'encore.dev/api';
-
-/**
- * Base error class for resources not found
- */
-export class NotFoundError extends Error {
-  constructor(message: string = 'Resource not found') {
-    super(message);
-    this.name = 'NotFoundError';
-  }
-}
-
-/**
- * Base error class for validation errors
- */
-export class ValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ValidationError';
-  }
-}
-
-/**
- * Base error class for duplicate resource errors
- */
-export class DuplicateError extends Error {
-  constructor(
-    message: string = 'Resource with this name or code already exists',
-  ) {
-    super(message);
-    this.name = 'DuplicateError';
-  }
-}
+import {
+  NotFoundError,
+  ValidationError,
+  DuplicateError,
+  ForeignKeyError,
+} from '@repo/base-repo';
 
 /**
  * Base error class for authentication errors
@@ -60,6 +34,7 @@ export class UnauthorizedError extends Error {
  * - NotFoundError -> ErrCode.NotFound
  * - ValidationError -> ErrCode.InvalidArgument
  * - DuplicateError -> ErrCode.AlreadyExists
+ * - ForeignKeyError -> ErrCode.NotFound (maps to NotFound for consistent API behavior)
  * - AuthenticationError -> ErrCode.Unauthenticated
  * - UnauthorizedError -> ErrCode.PermissionDenied
  * - Other errors -> ErrCode.Internal
@@ -74,11 +49,21 @@ export const parseApiError = (error: unknown) => {
   if (error instanceof DuplicateError) {
     return new APIError(ErrCode.AlreadyExists, error.message);
   }
+  if (error instanceof ForeignKeyError) {
+    // Map foreign key errors to NotFound for consistent API behavior
+    return new APIError(ErrCode.NotFound, error.message);
+  }
   if (error instanceof AuthenticationError) {
     return new APIError(ErrCode.Unauthenticated, error.message);
   }
   if (error instanceof UnauthorizedError) {
     return new APIError(ErrCode.PermissionDenied, error.message);
   }
-  return new APIError(ErrCode.Internal, error.message);
+  return new APIError(
+    ErrCode.Internal,
+    error instanceof Error ? error.message : 'An unexpected error occurred',
+  );
 };
+
+// Re-export errors from @repo/base-repo to maintain backward compatibility
+export { NotFoundError, ValidationError, DuplicateError, ForeignKeyError };

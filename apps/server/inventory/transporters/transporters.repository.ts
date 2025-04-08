@@ -5,11 +5,9 @@ import type {
   UpdateTransporterPayload,
   PaginatedTransporters,
 } from './transporters.types';
-import { createBaseRepository } from '../../shared/base-repository';
+import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-
-const DUPLICATE_ERROR_MESSAGE =
-  'Transporter with this name or code already exists';
+import { db } from '@/db';
 
 export const createTransporterRepository = () => {
   const baseRepository = createBaseRepository<
@@ -17,34 +15,11 @@ export const createTransporterRepository = () => {
     CreateTransporterPayload,
     UpdateTransporterPayload,
     typeof transporters
-  >(transporters, 'Transporter');
-
-  const validateUniqueFields = async (
-    name: string,
-    code: string,
-    excludeId?: number,
-  ) => {
-    await baseRepository.validateUniqueness(
-      [
-        {
-          field: transporters.name,
-          value: name,
-        },
-        {
-          field: transporters.code,
-          value: code,
-        },
-      ],
-      excludeId,
-      DUPLICATE_ERROR_MESSAGE,
-    );
-  };
+  >(db, transporters, 'Transporter');
 
   const create = async (
     data: CreateTransporterPayload,
   ): Promise<Transporter> => {
-    await validateUniqueFields(data.name, data.code);
-
     return baseRepository.create(data);
   };
 
@@ -52,19 +27,6 @@ export const createTransporterRepository = () => {
     id: number,
     data: UpdateTransporterPayload,
   ): Promise<Transporter> => {
-    const existing = await baseRepository.findOne(id);
-
-    if (
-      (data.name && data.name !== existing.name) ||
-      (data.code && data.code !== existing.code)
-    ) {
-      await validateUniqueFields(
-        data.name || existing.name,
-        data.code || existing.code,
-        id,
-      );
-    }
-
     return baseRepository.update(id, data);
   };
 
@@ -93,7 +55,6 @@ export const createTransporterRepository = () => {
     findOne,
     findAll,
     findAllPaginated,
-    validateUniqueFields,
     delete: delete_,
   };
 };

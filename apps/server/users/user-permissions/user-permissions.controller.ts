@@ -7,7 +7,7 @@ import type {
   UserWithRoles,
 } from './user-permissions.types';
 import { createControllerErrorHandler } from '../../shared/controller-utils';
-import { ValidationError } from '../../shared/errors';
+import { ValidationError } from '@repo/base-repo';
 
 const withErrorHandling = createControllerErrorHandler(
   'UserPermissionsController',

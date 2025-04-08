@@ -5,12 +5,9 @@ import type {
   UpdateBusLinePayload,
   PaginatedBusLines,
 } from './bus-lines.types';
-import { createBaseRepository } from '../../shared/base-repository';
+import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-import { transporterRepository } from '../transporters/transporters.repository';
-import { serviceTypeRepository } from '../service-types/service-types.repository';
-
-const DUPLICATE_ERROR_MESSAGE = 'Bus line with this code already exists';
+import { db } from '@/db';
 
 export const createBusLineRepository = () => {
   const baseRepository = createBaseRepository<
@@ -18,34 +15,9 @@ export const createBusLineRepository = () => {
     CreateBusLinePayload,
     UpdateBusLinePayload,
     typeof busLines
-  >(busLines, 'Bus Line');
-
-  const validateUniqueCode = async (code: string, excludeId?: number) => {
-    await baseRepository.validateUniqueness(
-      [
-        {
-          field: busLines.code,
-          value: code,
-        },
-      ],
-      excludeId,
-      DUPLICATE_ERROR_MESSAGE,
-    );
-  };
-
-  const validateTransporter = async (transporterId: number): Promise<void> => {
-    await transporterRepository.findOne(transporterId);
-  };
-
-  const validateServiceType = async (serviceTypeId: number): Promise<void> => {
-    await serviceTypeRepository.findOne(serviceTypeId);
-  };
+  >(db, busLines, 'Bus Line');
 
   const create = async (data: CreateBusLinePayload): Promise<BusLine> => {
-    await validateUniqueCode(data.code);
-    await validateTransporter(data.transporterId);
-    await validateServiceType(data.serviceTypeId);
-
     return baseRepository.create({
       ...data,
       active: data.active,
@@ -56,20 +28,6 @@ export const createBusLineRepository = () => {
     id: number,
     data: UpdateBusLinePayload,
   ): Promise<BusLine> => {
-    const existing = await baseRepository.findOne(id);
-
-    if (data.code && data.code !== existing.code) {
-      await validateUniqueCode(data.code, id);
-    }
-
-    if (data.transporterId) {
-      await validateTransporter(data.transporterId);
-    }
-
-    if (data.serviceTypeId) {
-      await validateServiceType(data.serviceTypeId);
-    }
-
     return baseRepository.update(id, data);
   };
 
@@ -94,9 +52,6 @@ export const createBusLineRepository = () => {
     findOne,
     findAll,
     findAllPaginated,
-    validateUniqueCode,
-    validateTransporter,
-    validateServiceType,
   };
 };
 

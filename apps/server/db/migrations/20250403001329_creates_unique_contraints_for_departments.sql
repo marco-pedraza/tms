@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS "departments_code_tenant_id_idx" ON "departments" USING btree ("code","tenant_id");

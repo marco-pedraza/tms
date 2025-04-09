@@ -17,34 +17,32 @@ export const createTransporterRepository = () => {
     typeof transporters
   >(db, transporters, 'Transporter');
 
-  const create = async (
-    data: CreateTransporterPayload,
-  ): Promise<Transporter> => {
+  const create = (data: CreateTransporterPayload): Promise<Transporter> => {
     return baseRepository.create(data);
   };
 
-  const update = async (
+  const update = (
     id: number,
     data: UpdateTransporterPayload,
   ): Promise<Transporter> => {
     return baseRepository.update(id, data);
   };
 
-  const findOne = async (id: number): Promise<Transporter> => {
+  const findOne = (id: number): Promise<Transporter> => {
     return baseRepository.findOne(id);
   };
 
-  const findAll = async (): Promise<Transporter[]> => {
+  const findAll = (): Promise<Transporter[]> => {
     return baseRepository.findAll();
   };
 
-  const findAllPaginated = async (
+  const findAllPaginated = (
     params: PaginationParams = {},
   ): Promise<PaginatedTransporters> => {
     return baseRepository.findAllPaginated(params);
   };
 
-  const delete_ = async (id: number): Promise<Transporter> => {
+  const delete_ = (id: number): Promise<Transporter> => {
     return baseRepository.delete(id);
   };
 

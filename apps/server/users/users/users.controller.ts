@@ -23,7 +23,9 @@ const withErrorHandling = createControllerErrorHandler('UsersController');
 export const createUser = api(
   { method: 'POST', path: '/users', expose: true, auth: true },
   async (params: CreateUserPayload): Promise<SafeUser> => {
-    return withErrorHandling('createUser', () => userRepository.create(params));
+    return await withErrorHandling('createUser', () =>
+      userRepository.create(params),
+    );
   },
 );
 
@@ -37,7 +39,7 @@ export const createUser = api(
 export const getUser = api(
   { method: 'GET', path: '/users/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<SafeUser> => {
-    return withErrorHandling('getUser', () => userRepository.findOne(id));
+    return await withErrorHandling('getUser', () => userRepository.findOne(id));
   },
 );
 
@@ -49,7 +51,7 @@ export const getUser = api(
 export const listUsers = api(
   { method: 'GET', path: '/users', expose: true, auth: true },
   async (): Promise<Users> => {
-    return withErrorHandling('listUsers', async () => {
+    return await withErrorHandling('listUsers', async () => {
       const users = await userRepository.findAll();
       return { users };
     });
@@ -65,7 +67,7 @@ export const listUsers = api(
 export const listUsersWithPagination = api(
   { method: 'GET', path: '/users/paginated', expose: true, auth: true },
   async (params: PaginationParams): Promise<PaginatedUsers> => {
-    return withErrorHandling('listUsersWithPagination', () =>
+    return await withErrorHandling('listUsersWithPagination', () =>
       userRepository.findAllPaginated(params),
     );
   },
@@ -81,7 +83,7 @@ export const listUsersWithPagination = api(
 export const listTenantUsers = api(
   { method: 'GET', path: '/tenants/:tenantId/users', expose: true, auth: true },
   async ({ tenantId }: { tenantId: number }): Promise<Users> => {
-    return withErrorHandling('listTenantUsers', () =>
+    return await withErrorHandling('listTenantUsers', () =>
       userRepository.findByTenant(tenantId),
     );
   },
@@ -107,7 +109,7 @@ export const listTenantUsersWithPagination = api(
   }: {
     tenantId: number;
   } & PaginationParams): Promise<PaginatedUsers> => {
-    return withErrorHandling('listTenantUsersWithPagination', () =>
+    return await withErrorHandling('listTenantUsersWithPagination', () =>
       userRepository.findByTenantPaginated(tenantId, paginationParams),
     );
   },
@@ -128,7 +130,7 @@ export const listDepartmentUsers = api(
     auth: true,
   },
   async ({ departmentId }: { departmentId: number }): Promise<Users> => {
-    return withErrorHandling('listDepartmentUsers', () =>
+    return await withErrorHandling('listDepartmentUsers', () =>
       userRepository.findByDepartment(departmentId),
     );
   },
@@ -154,7 +156,7 @@ export const listDepartmentUsersWithPagination = api(
   }: {
     departmentId: number;
   } & PaginationParams): Promise<PaginatedUsers> => {
-    return withErrorHandling('listDepartmentUsersWithPagination', () =>
+    return await withErrorHandling('listDepartmentUsersWithPagination', () =>
       userRepository.findByDepartmentPaginated(departmentId, paginationParams),
     );
   },
@@ -173,7 +175,7 @@ export const updateUser = api(
     id,
     ...data
   }: UpdateUserPayload & { id: number }): Promise<SafeUser> => {
-    return withErrorHandling('updateUser', () =>
+    return await withErrorHandling('updateUser', () =>
       userRepository.update(id, data),
     );
   },
@@ -192,7 +194,7 @@ export const changePassword = api(
     id,
     ...data
   }: ChangePasswordPayload & { id: number }): Promise<SafeUser> => {
-    return withErrorHandling('changePassword', () =>
+    return await withErrorHandling('changePassword', () =>
       userUseCases.changePassword(id, data),
     );
   },
@@ -208,8 +210,8 @@ export const changePassword = api(
 export const deleteUser = api(
   { method: 'DELETE', path: '/users/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<SafeUser> => {
-    return withErrorHandling('deleteUser', async () => {
-      return userRepository.delete(id);
+    return await withErrorHandling('deleteUser', async () => {
+      return await userRepository.delete(id);
     });
   },
 );

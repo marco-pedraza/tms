@@ -12,32 +12,20 @@ import { db } from '@/db';
 export const createTenantRepository = () => {
   const baseRepository = createBaseRepository<
     Tenant,
-    CreateTenantPayload & {
-      isActive: boolean;
-      createdAt: Date;
-      updatedAt: Date;
-    },
-    UpdateTenantPayload & { updatedAt: Date },
+    CreateTenantPayload,
+    UpdateTenantPayload,
     typeof tenants
   >(db, tenants, 'Tenant');
 
   const create = async (data: CreateTenantPayload): Promise<Tenant> => {
-    return baseRepository.create({
-      ...data,
-      isActive: data.isActive ?? true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+    return await baseRepository.create(data);
   };
 
   const update = async (
     id: number,
     data: UpdateTenantPayload,
   ): Promise<Tenant> => {
-    return baseRepository.update(id, {
-      ...data,
-      updatedAt: new Date(),
-    });
+    return await baseRepository.update(id, data);
   };
 
   const findAllPaginated = async (

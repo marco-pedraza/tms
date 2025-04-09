@@ -36,7 +36,7 @@ export const createUserRepository = () => {
       isActive: data.isActive ?? true,
     });
 
-    return omitPasswordHash(user);
+    return await Promise.resolve(omitPasswordHash(user));
   };
 
   const update = async (
@@ -48,35 +48,35 @@ export const createUserRepository = () => {
       updatedAt: new Date(),
     });
 
-    return omitPasswordHash(user);
+    return await Promise.resolve(omitPasswordHash(user));
   };
 
   const findOne = async (id: number): Promise<SafeUser> => {
     const user = await baseRepository.findOne(id);
-    return omitPasswordHash(user);
+    return await Promise.resolve(omitPasswordHash(user));
   };
 
   const findAll = async (): Promise<SafeUser[]> => {
     const users = await baseRepository.findAll();
     // TODO check if excluded fields can be added to base repository for db to handle this instead.
-    return users.map(omitPasswordHash);
+    return await Promise.resolve(users.map(omitPasswordHash));
   };
 
   const findAllPaginated = async (
     params: PaginationParams = {},
   ): Promise<PaginatedUsers> => {
     const { data, pagination } = await baseRepository.findAllPaginated(params);
-    return {
+    return await Promise.resolve({
       data: data.map(omitPasswordHash),
       pagination,
-    };
+    });
   };
 
   const findByTenant = async (tenantId: number): Promise<Users> => {
     const result =
       (await baseRepository.findBy(users.tenantId, tenantId)) || [];
     const userList = Array.isArray(result) ? result : [result];
-    return { users: userList.map(omitPasswordHash) };
+    return await Promise.resolve({ users: userList.map(omitPasswordHash) });
   };
 
   const findByTenantPaginated = async (
@@ -88,17 +88,17 @@ export const createUserRepository = () => {
       tenantId,
       params,
     );
-    return {
+    return await Promise.resolve({
       data: result.data.map(omitPasswordHash),
       pagination: result.pagination,
-    };
+    });
   };
 
   const findByDepartment = async (departmentId: number): Promise<Users> => {
     const result =
       (await baseRepository.findBy(users.departmentId, departmentId)) || [];
     const userList = Array.isArray(result) ? result : [result];
-    return { users: userList.map(omitPasswordHash) };
+    return await Promise.resolve({ users: userList.map(omitPasswordHash) });
   };
 
   const findByDepartmentPaginated = async (
@@ -110,27 +110,27 @@ export const createUserRepository = () => {
       departmentId,
       params,
     );
-    return {
+    return await Promise.resolve({
       data: result.data.map(omitPasswordHash),
       pagination: result.pagination,
-    };
+    });
   };
 
   const findByUsername = async (username: string): Promise<User | null> => {
-    return baseRepository.findBy(users.username, username);
+    return await baseRepository.findBy(users.username, username);
   };
 
   const findByEmail = async (email: string): Promise<User | null> => {
-    return baseRepository.findBy(users.email, email);
+    return await baseRepository.findBy(users.email, email);
   };
 
   const findOneWithPassword = async (id: number): Promise<User> => {
-    return baseRepository.findOne(id);
+    return await baseRepository.findOne(id);
   };
 
   const delete_ = async (id: number): Promise<SafeUser> => {
     const user = await baseRepository.delete(id);
-    return omitPasswordHash(user);
+    return await Promise.resolve(omitPasswordHash(user));
   };
 
   return {

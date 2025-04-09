@@ -21,7 +21,7 @@ const withErrorHandling = createControllerErrorHandler('CountriesController');
 export const createCountry = api(
   { expose: true, method: 'POST', path: '/countries' },
   async (params: CreateCountryPayload): Promise<Country> => {
-    return withErrorHandling('createCountry', () =>
+    return await withErrorHandling('createCountry', () =>
       countryRepository.create(params),
     );
   },
@@ -37,7 +37,9 @@ export const createCountry = api(
 export const getCountry = api(
   { expose: true, method: 'GET', path: '/countries/:id' },
   async ({ id }: { id: number }): Promise<Country> => {
-    return withErrorHandling('getCountry', () => countryRepository.findOne(id));
+    return await withErrorHandling('getCountry', () =>
+      countryRepository.findOne(id),
+    );
   },
 );
 
@@ -49,7 +51,7 @@ export const getCountry = api(
 export const listCountries = api(
   { method: 'GET', path: '/countries' },
   async (): Promise<Countries> => {
-    return withErrorHandling('listCountries', () =>
+    return await withErrorHandling('listCountries', () =>
       countryRepository.findAll(),
     );
   },
@@ -64,7 +66,7 @@ export const listCountries = api(
 export const listCountriesPaginated = api(
   { expose: true, method: 'GET', path: '/countries/paginated' },
   async (params: PaginationParams): Promise<PaginatedCountries> => {
-    return withErrorHandling('listCountriesPaginated', () =>
+    return await withErrorHandling('listCountriesPaginated', () =>
       countryRepository.findAllPaginated(params),
     );
   },
@@ -84,7 +86,7 @@ export const updateCountry = api(
     id,
     ...data
   }: UpdateCountryPayload & { id: number }): Promise<Country> => {
-    return withErrorHandling('updateCountry', () =>
+    return await withErrorHandling('updateCountry', () =>
       countryRepository.update(id, data),
     );
   },
@@ -100,7 +102,7 @@ export const updateCountry = api(
 export const deleteCountry = api(
   { expose: true, method: 'DELETE', path: '/countries/:id' },
   async ({ id }: { id: number }): Promise<Country> => {
-    return withErrorHandling('deleteCountry', () =>
+    return await withErrorHandling('deleteCountry', () =>
       countryRepository.delete(id),
     );
   },

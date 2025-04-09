@@ -29,7 +29,7 @@ export const createPermissionRepository = () => {
    * @returns The created permission
    */
   const create = async (data: CreatePermissionPayload): Promise<Permission> => {
-    return baseRepository.create(data);
+    return await baseRepository.create(data);
   };
 
   /**
@@ -53,7 +53,8 @@ export const createPermissionRepository = () => {
    * @returns List of all permissions
    */
   const findAll = async (): Promise<Permissions> => {
-    return { permissions: await baseRepository.findAll() };
+    const allPermissions = await baseRepository.findAll();
+    return { permissions: allPermissions };
   };
 
   /**
@@ -64,7 +65,7 @@ export const createPermissionRepository = () => {
   const findAllPaginated = async (
     params: PaginationParams = {},
   ): Promise<PaginatedPermissions> => {
-    return baseRepository.findAllPaginated(params);
+    return await baseRepository.findAllPaginated(params);
   };
 
   return {

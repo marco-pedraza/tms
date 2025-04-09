@@ -209,7 +209,7 @@ export const createAuthUseCases = () => {
    * @returns Generated refresh token
    */
   const generateNewRefreshToken = async (user: User): Promise<string> => {
-    return generateRefreshToken(user, JWT_SECRET, REFRESH_TOKEN_EXPIRY);
+    return await generateRefreshToken(user, JWT_SECRET, REFRESH_TOKEN_EXPIRY);
   };
 
   /**
@@ -222,7 +222,7 @@ export const createAuthUseCases = () => {
     token: string,
     expectedType: 'access' | 'refresh',
   ): Promise<JwtPayload> => {
-    return verifyToken(token, expectedType, JWT_SECRET);
+    return await verifyToken(token, expectedType, JWT_SECRET);
   };
 
   /**

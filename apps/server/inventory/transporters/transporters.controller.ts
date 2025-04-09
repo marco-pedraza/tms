@@ -20,8 +20,8 @@ const withErrorHandling = createControllerErrorHandler('TransporterController');
 export const createTransporter = api(
   { method: 'POST', path: '/transporters' },
   async (params: CreateTransporterPayload): Promise<Transporter> => {
-    return withErrorHandling('createTransporter', async () => {
-      return transporterRepository.create(params);
+    return await withErrorHandling('createTransporter', async () => {
+      return await transporterRepository.create(params);
     });
   },
 );
@@ -36,8 +36,8 @@ export const createTransporter = api(
 export const getTransporter = api(
   { method: 'GET', path: '/transporters/:id', expose: true },
   async ({ id }: { id: number }): Promise<Transporter> => {
-    return withErrorHandling('getTransporter', async () => {
-      return transporterRepository.findOne(id);
+    return await withErrorHandling('getTransporter', async () => {
+      return await transporterRepository.findOne(id);
     });
   },
 );
@@ -51,8 +51,8 @@ export const getTransporter = api(
 export const listTransporters = api(
   { method: 'GET', path: '/transporters', expose: true },
   async (params: PaginationParams): Promise<PaginatedTransporters> => {
-    return withErrorHandling('listTransporters', async () => {
-      return transporterRepository.findAllPaginated(params);
+    return await withErrorHandling('listTransporters', async () => {
+      return await transporterRepository.findAllPaginated(params);
     });
   },
 );
@@ -70,8 +70,8 @@ export const updateTransporter = api(
     id,
     ...data
   }: UpdateTransporterPayload & { id: number }): Promise<Transporter> => {
-    return withErrorHandling('updateTransporter', async () => {
-      return transporterRepository.update(id, data);
+    return await withErrorHandling('updateTransporter', async () => {
+      return await transporterRepository.update(id, data);
     });
   },
 );
@@ -86,8 +86,8 @@ export const updateTransporter = api(
 export const deleteTransporter = api(
   { method: 'DELETE', path: '/transporters/:id', expose: true },
   async ({ id }: { id: number }): Promise<Transporter> => {
-    return withErrorHandling('deleteTransporter', async () => {
-      return transporterRepository.delete(id);
+    return await withErrorHandling('deleteTransporter', async () => {
+      return await transporterRepository.delete(id);
     });
   },
 );

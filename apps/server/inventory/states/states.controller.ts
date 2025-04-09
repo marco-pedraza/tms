@@ -21,7 +21,7 @@ const withErrorHandling = createControllerErrorHandler('StatesController');
 export const createState = api(
   { method: 'POST', path: '/states' },
   async (params: CreateStatePayload): Promise<State> => {
-    return withErrorHandling('createState', () =>
+    return await withErrorHandling('createState', () =>
       stateRepository.create(params),
     );
   },
@@ -37,7 +37,9 @@ export const createState = api(
 export const getState = api(
   { method: 'GET', path: '/states/:id' },
   async ({ id }: { id: number }): Promise<State> => {
-    return withErrorHandling('getState', () => stateRepository.findOne(id));
+    return await withErrorHandling('getState', () =>
+      stateRepository.findOne(id),
+    );
   },
 );
 
@@ -49,7 +51,9 @@ export const getState = api(
 export const listStates = api(
   { method: 'GET', path: '/states' },
   async (): Promise<States> => {
-    return withErrorHandling('listStates', () => stateRepository.findAll());
+    return await withErrorHandling('listStates', () =>
+      stateRepository.findAll(),
+    );
   },
 );
 
@@ -62,7 +66,7 @@ export const listStates = api(
 export const listStatesPaginated = api(
   { method: 'GET', path: '/states/paginated' },
   async (params: PaginationParams): Promise<PaginatedStates> => {
-    return withErrorHandling('listStatesPaginated', () =>
+    return await withErrorHandling('listStatesPaginated', () =>
       stateRepository.listPaginated(params),
     );
   },
@@ -82,7 +86,7 @@ export const updateState = api(
     id,
     ...data
   }: UpdateStatePayload & { id: number }): Promise<State> => {
-    return withErrorHandling('updateState', () =>
+    return await withErrorHandling('updateState', () =>
       stateRepository.update(id, data),
     );
   },
@@ -98,6 +102,8 @@ export const updateState = api(
 export const deleteState = api(
   { method: 'DELETE', path: '/states/:id' },
   async ({ id }: { id: number }): Promise<State> => {
-    return withErrorHandling('deleteState', () => stateRepository.delete(id));
+    return await withErrorHandling('deleteState', () =>
+      stateRepository.delete(id),
+    );
   },
 );

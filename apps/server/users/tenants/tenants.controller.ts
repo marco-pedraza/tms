@@ -20,7 +20,7 @@ const withErrorHandling = createControllerErrorHandler('TenantsController');
 export const createTenant = api(
   { method: 'POST', path: '/tenants', expose: true, auth: true },
   async (params: CreateTenantPayload): Promise<Tenant> => {
-    return withErrorHandling('createTenant', () =>
+    return await withErrorHandling('createTenant', () =>
       tenantRepository.create(params),
     );
   },
@@ -36,7 +36,9 @@ export const createTenant = api(
 export const getTenant = api(
   { method: 'GET', path: '/tenants/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Tenant> => {
-    return withErrorHandling('getTenant', () => tenantRepository.findOne(id));
+    return await withErrorHandling('getTenant', () =>
+      tenantRepository.findOne(id),
+    );
   },
 );
 
@@ -49,7 +51,7 @@ export const getTenant = api(
 export const listTenants = api(
   { method: 'GET', path: '/tenants', expose: true, auth: true },
   async (params: PaginationParams): Promise<PaginatedTenants> => {
-    return withErrorHandling('listTenants', () =>
+    return await withErrorHandling('listTenants', () =>
       tenantRepository.findAllPaginated(params),
     );
   },
@@ -68,7 +70,7 @@ export const updateTenant = api(
     id,
     ...data
   }: UpdateTenantPayload & { id: number }): Promise<Tenant> => {
-    return withErrorHandling('updateTenant', () =>
+    return await withErrorHandling('updateTenant', () =>
       tenantRepository.update(id, data),
     );
   },
@@ -84,6 +86,8 @@ export const updateTenant = api(
 export const deleteTenant = api(
   { method: 'DELETE', path: '/tenants/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Tenant> => {
-    return withErrorHandling('deleteTenant', () => tenantRepository.delete(id));
+    return await withErrorHandling('deleteTenant', () =>
+      tenantRepository.delete(id),
+    );
   },
 );

@@ -254,7 +254,8 @@ describe('States Controller', () => {
         true,
       );
       // No pagination info should be present
-      expect((response as any).pagination).toBeUndefined();
+      // @ts-expect-error - pagination property check is expected to be undefined
+      expect(response.pagination).toBeUndefined();
     });
   });
 });

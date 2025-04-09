@@ -27,7 +27,7 @@ export const createCityRepository = () => {
    * @returns The created city
    */
   const create = async (data: CreateCityPayload): Promise<City> => {
-    return baseRepository.create(data);
+    return await baseRepository.create(data);
   };
 
   /**
@@ -37,7 +37,7 @@ export const createCityRepository = () => {
    * @returns The updated city
    */
   const update = async (id: number, data: UpdateCityPayload): Promise<City> => {
-    return baseRepository.update(id, data);
+    return await baseRepository.update(id, data);
   };
 
   /**
@@ -48,7 +48,7 @@ export const createCityRepository = () => {
   const listPaginated = async (
     params: PaginationParams = {},
   ): Promise<PaginatedCities> => {
-    return baseRepository.findAllPaginated(params);
+    return await baseRepository.findAllPaginated(params);
   };
 
   return {

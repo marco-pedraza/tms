@@ -6,7 +6,6 @@ import type {
   PaginatedGates,
 } from './gates.types';
 import { createBaseRepository } from '@repo/base-repo';
-import { terminalRepository } from '../terminals/terminals.repository';
 import { PaginationParams } from '../../shared/types';
 import { eq, count } from 'drizzle-orm';
 import { db } from '@/db';
@@ -30,7 +29,7 @@ export const createGateRepository = () => {
    * @returns The created gate
    */
   const create = async (data: CreateGatePayload): Promise<Gate> => {
-    return baseRepository.create(data);
+    return await baseRepository.create(data);
   };
 
   /**
@@ -40,7 +39,7 @@ export const createGateRepository = () => {
    * @returns The updated gate
    */
   const update = async (id: number, data: UpdateGatePayload): Promise<Gate> => {
-    return baseRepository.update(id, data);
+    return await baseRepository.update(id, data);
   };
 
   /**
@@ -51,7 +50,7 @@ export const createGateRepository = () => {
   const listPaginated = async (
     params: PaginationParams = {},
   ): Promise<PaginatedGates> => {
-    return baseRepository.findAllPaginated(params);
+    return await baseRepository.findAllPaginated(params);
   };
 
   /**
@@ -78,7 +77,7 @@ export const createGateRepository = () => {
       .where(eq(gates.terminalId, terminalId));
 
     // Apply pagination and get results with metadata
-    return withPagination<typeof query, Gate>(query, countQuery, params);
+    return await withPagination<typeof query, Gate>(query, countQuery, params);
   };
 
   return {

@@ -28,7 +28,7 @@ export const getUserWithRoles = api(
       throw new ValidationError('Invalid user ID provided');
     }
 
-    return withErrorHandling('getUserWithRoles', () =>
+    return await withErrorHandling('getUserWithRoles', () =>
       userPermissionsRepository.getUserWithRoles(userId),
     );
   },
@@ -49,7 +49,7 @@ export const getUserWithPermissions = api(
     auth: true,
   },
   async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
-    return withErrorHandling('getUserWithPermissions', () =>
+    return await withErrorHandling('getUserWithPermissions', () =>
       userPermissionsRepository.getUserWithPermissions(userId),
     );
   },
@@ -69,7 +69,7 @@ export const assignRolesToUser = api(
     userId,
     ...data
   }: AssignRolesToUserPayload & { userId: number }): Promise<UserWithRoles> => {
-    return withErrorHandling('assignRolesToUser', () =>
+    return await withErrorHandling('assignRolesToUser', () =>
       userPermissionsRepository.assignRoles(userId, data),
     );
   },
@@ -96,7 +96,7 @@ export const assignPermissionsToUser = api(
   }: AssignPermissionsToUserPayload & {
     userId: number;
   }): Promise<UserWithPermissions> => {
-    return withErrorHandling('assignPermissionsToUser', () =>
+    return await withErrorHandling('assignPermissionsToUser', () =>
       userPermissionsRepository.assignPermissions(userId, data),
     );
   },
@@ -124,7 +124,7 @@ export const checkUserPermission = api(
     userId: number;
     permissionCode: string;
   }): Promise<{ hasPermission: boolean }> => {
-    return withErrorHandling('checkUserPermission', async () => {
+    return await withErrorHandling('checkUserPermission', async () => {
       try {
         await userPermissionsRepository.hasPermission(userId, permissionCode);
         return { hasPermission: true };
@@ -164,7 +164,7 @@ export const checkUserRole = api(
     userId: number;
     roleId: number;
   }): Promise<{ hasRole: boolean }> => {
-    return withErrorHandling('checkUserRole', async () => {
+    return await withErrorHandling('checkUserRole', async () => {
       try {
         await userPermissionsRepository.hasRole(userId, roleId);
         return { hasRole: true };
@@ -197,7 +197,7 @@ export const getUserPermissions = api(
     auth: true,
   },
   async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
-    return withErrorHandling('getUserPermissions', () =>
+    return await withErrorHandling('getUserPermissions', () =>
       userPermissionsRepository.getUserWithPermissions(userId),
     );
   },
@@ -218,7 +218,7 @@ export const getUserRoles = api(
     auth: true,
   },
   async ({ userId }: { userId: number }): Promise<UserWithRoles> => {
-    return withErrorHandling('getUserRoles', () =>
+    return await withErrorHandling('getUserRoles', () =>
       userPermissionsRepository.getUserWithRoles(userId),
     );
   },

@@ -18,31 +18,36 @@ export const createBusLineRepository = () => {
   >(db, busLines, 'Bus Line');
 
   const create = async (data: CreateBusLinePayload): Promise<BusLine> => {
-    return baseRepository.create({
+    const result = await baseRepository.create({
       ...data,
       active: data.active,
     });
+    return result;
   };
 
   const update = async (
     id: number,
     data: UpdateBusLinePayload,
   ): Promise<BusLine> => {
-    return baseRepository.update(id, data);
+    const result = await baseRepository.update(id, data);
+    return result;
   };
 
   const findOne = async (id: number): Promise<BusLine> => {
-    return baseRepository.findOne(id);
+    const result = await baseRepository.findOne(id);
+    return result;
   };
 
   const findAll = async (): Promise<BusLine[]> => {
-    return baseRepository.findAll();
+    const result = await baseRepository.findAll();
+    return result;
   };
 
   const findAllPaginated = async (
     params: PaginationParams = {},
   ): Promise<PaginatedBusLines> => {
-    return baseRepository.findAllPaginated(params);
+    const result = await baseRepository.findAllPaginated(params);
+    return result;
   };
 
   return {

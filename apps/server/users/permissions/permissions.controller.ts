@@ -21,7 +21,7 @@ const withErrorHandling = createControllerErrorHandler('PermissionsController');
 export const createPermission = api(
   { method: 'POST', path: '/permissions', expose: true, auth: true },
   async (params: CreatePermissionPayload): Promise<Permission> => {
-    return withErrorHandling('createPermission', () =>
+    return await withErrorHandling('createPermission', () =>
       permissionRepository.create(params),
     );
   },
@@ -37,7 +37,7 @@ export const createPermission = api(
 export const getPermission = api(
   { method: 'GET', path: '/permissions/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Permission> => {
-    return withErrorHandling('getPermission', () =>
+    return await withErrorHandling('getPermission', () =>
       permissionRepository.findOne(id),
     );
   },
@@ -51,7 +51,7 @@ export const getPermission = api(
 export const listPermissions = api(
   { method: 'GET', path: '/permissions', expose: true, auth: true },
   async (): Promise<Permissions> => {
-    return withErrorHandling('listPermissions', () =>
+    return await withErrorHandling('listPermissions', () =>
       permissionRepository.findAll(),
     );
   },
@@ -66,7 +66,7 @@ export const listPermissions = api(
 export const listPermissionsWithPagination = api(
   { method: 'GET', path: '/permissions/paginated', expose: true, auth: true },
   async (params: PaginationParams): Promise<PaginatedPermissions> => {
-    return withErrorHandling('listPermissionsWithPagination', () =>
+    return await withErrorHandling('listPermissionsWithPagination', () =>
       permissionRepository.findAllPaginated(params),
     );
   },
@@ -85,7 +85,7 @@ export const updatePermission = api(
     id,
     ...data
   }: UpdatePermissionPayload & { id: number }): Promise<Permission> => {
-    return withErrorHandling('updatePermission', () =>
+    return await withErrorHandling('updatePermission', () =>
       permissionRepository.update(id, data),
     );
   },
@@ -101,7 +101,7 @@ export const updatePermission = api(
 export const deletePermission = api(
   { method: 'DELETE', path: '/permissions/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Permission> => {
-    return withErrorHandling('deletePermission', () =>
+    return await withErrorHandling('deletePermission', () =>
       permissionRepository.delete(id),
     );
   },

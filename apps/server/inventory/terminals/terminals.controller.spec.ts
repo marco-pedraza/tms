@@ -310,6 +310,7 @@ describe('Terminals Controller', () => {
     test('should fail to create terminal with missing required fields', async () => {
       // Missing required field: name
       try {
+        // @ts-expect-error - Testing validation by intentionally omitting required 'name' field
         await createTerminal({
           address: '123 Missing Name Street',
           cityId: cityId,
@@ -318,7 +319,7 @@ describe('Terminals Controller', () => {
           code: 'MISSING-NAME',
           slug: 'missing-name',
           active: true,
-        } as any); // Using 'as any' to bypass TypeScript checking for test
+        });
         expect(true).toBe(false); // Should not reach here
       } catch (error) {
         expect(error).toBeDefined();
@@ -326,6 +327,7 @@ describe('Terminals Controller', () => {
 
       // Missing required field: latitude
       try {
+        // @ts-expect-error - Testing validation by intentionally omitting required 'latitude' field
         await createTerminal({
           name: 'Missing Coordinates Terminal',
           address: '123 Missing Coords Street',
@@ -334,7 +336,7 @@ describe('Terminals Controller', () => {
           code: 'MISSING-COORDS',
           slug: 'missing-coordinates',
           active: true,
-        } as any);
+        });
         expect(true).toBe(false); // Should not reach here
       } catch (error) {
         expect(error).toBeDefined();

@@ -26,7 +26,7 @@ export const createCountryRepository = () => {
    * @returns {Promise<Country>} The created country
    */
   const create = async (data: CreateCountryPayload): Promise<Country> => {
-    return baseRepository.create(data);
+    return await baseRepository.create(data);
   };
 
   /**
@@ -39,7 +39,7 @@ export const createCountryRepository = () => {
     id: number,
     data: UpdateCountryPayload,
   ): Promise<Country> => {
-    return baseRepository.update(id, data);
+    return await baseRepository.update(id, data);
   };
 
   /**

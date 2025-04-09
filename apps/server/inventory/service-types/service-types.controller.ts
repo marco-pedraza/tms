@@ -25,8 +25,8 @@ export const createServiceType = api(
     path: '/service-types',
   },
   async (payload: CreateServiceTypePayload): Promise<ServiceType> => {
-    return handleServiceTypeError('createServiceType', async () => {
-      return serviceTypeRepository.create(payload);
+    return await handleServiceTypeError('createServiceType', async () => {
+      return await serviceTypeRepository.create(payload);
     });
   },
 );
@@ -42,8 +42,8 @@ export const getServiceType = api(
     path: '/service-types/:id',
   },
   async ({ id }: { id: number }): Promise<ServiceType> => {
-    return handleServiceTypeError('getServiceType', async () => {
-      return serviceTypeRepository.findOne(id);
+    return await handleServiceTypeError('getServiceType', async () => {
+      return await serviceTypeRepository.findOne(id);
     });
   },
 );
@@ -58,7 +58,7 @@ export const listServiceTypes = api(
     path: '/service-types',
   },
   async (): Promise<ServiceTypes> => {
-    return handleServiceTypeError('listServiceTypes', async () => {
+    return await handleServiceTypeError('listServiceTypes', async () => {
       const serviceTypes = await serviceTypeRepository.findAllActive();
       return { serviceTypes };
     });
@@ -76,9 +76,12 @@ export const listServiceTypesPaginated = api(
     path: '/service-types/paginated',
   },
   async (params: PaginationParams): Promise<PaginatedServiceTypes> => {
-    return handleServiceTypeError('listServiceTypesPaginated', async () => {
-      return serviceTypeRepository.findAllPaginated(params);
-    });
+    return await handleServiceTypeError(
+      'listServiceTypesPaginated',
+      async () => {
+        return await serviceTypeRepository.findAllPaginated(params);
+      },
+    );
   },
 );
 
@@ -96,8 +99,8 @@ export const updateServiceType = api(
     id,
     ...payload
   }: { id: number } & UpdateServiceTypePayload): Promise<ServiceType> => {
-    return handleServiceTypeError('updateServiceType', async () => {
-      return serviceTypeRepository.update(id, payload);
+    return await handleServiceTypeError('updateServiceType', async () => {
+      return await serviceTypeRepository.update(id, payload);
     });
   },
 );
@@ -113,8 +116,8 @@ export const deleteServiceType = api(
     path: '/service-types/:id',
   },
   async ({ id }: { id: number }): Promise<ServiceType> => {
-    return handleServiceTypeError('deleteServiceType', async () => {
-      return serviceTypeRepository.delete(id);
+    return await handleServiceTypeError('deleteServiceType', async () => {
+      return await serviceTypeRepository.delete(id);
     });
   },
 );

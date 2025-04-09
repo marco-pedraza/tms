@@ -20,7 +20,9 @@ const withErrorHandling = createControllerErrorHandler('CitiesController');
 export const createCity = api(
   { method: 'POST', path: '/cities' },
   async (params: CreateCityPayload): Promise<City> => {
-    return withErrorHandling('createCity', () => cityRepository.create(params));
+    return await withErrorHandling('createCity', () =>
+      cityRepository.create(params),
+    );
   },
 );
 
@@ -34,7 +36,7 @@ export const createCity = api(
 export const getCity = api(
   { method: 'GET', path: '/cities/:id', expose: true },
   async ({ id }: { id: number }): Promise<City> => {
-    return withErrorHandling('getCity', () => cityRepository.findOne(id));
+    return await withErrorHandling('getCity', () => cityRepository.findOne(id));
   },
 );
 
@@ -47,7 +49,7 @@ export const getCity = api(
 export const listCities = api(
   { method: 'GET', path: '/cities', expose: true },
   async (params: PaginationParams): Promise<PaginatedCities> => {
-    return withErrorHandling('listCities', () =>
+    return await withErrorHandling('listCities', () =>
       cityRepository.findAllPaginated(params),
     );
   },
@@ -66,7 +68,7 @@ export const updateCity = api(
     id,
     ...data
   }: UpdateCityPayload & { id: number }): Promise<City> => {
-    return withErrorHandling('updateCity', () =>
+    return await withErrorHandling('updateCity', () =>
       cityRepository.update(id, data),
     );
   },
@@ -82,6 +84,8 @@ export const updateCity = api(
 export const deleteCity = api(
   { method: 'DELETE', path: '/cities/:id', expose: true },
   async ({ id }: { id: number }): Promise<City> => {
-    return withErrorHandling('deleteCity', () => cityRepository.delete(id));
+    return await withErrorHandling('deleteCity', () =>
+      cityRepository.delete(id),
+    );
   },
 );

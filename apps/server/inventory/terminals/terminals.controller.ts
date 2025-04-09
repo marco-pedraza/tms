@@ -20,7 +20,7 @@ const withErrorHandling = createControllerErrorHandler('TerminalsController');
 export const createTerminal = api(
   { method: 'POST', path: '/terminals' },
   async (params: CreateTerminalPayload): Promise<Terminal> => {
-    return withErrorHandling('createTerminal', () =>
+    return await withErrorHandling('createTerminal', () =>
       terminalRepository.create(params),
     );
   },
@@ -36,7 +36,7 @@ export const createTerminal = api(
 export const getTerminal = api(
   { method: 'GET', path: '/terminals/:id', expose: true },
   async ({ id }: { id: number }): Promise<Terminal> => {
-    return withErrorHandling('getTerminal', () =>
+    return await withErrorHandling('getTerminal', () =>
       terminalRepository.findOne(id),
     );
   },
@@ -51,7 +51,7 @@ export const getTerminal = api(
 export const listTerminals = api(
   { method: 'GET', path: '/terminals', expose: true },
   async (params: PaginationParams): Promise<PaginatedTerminals> => {
-    return withErrorHandling('listTerminals', () =>
+    return await withErrorHandling('listTerminals', () =>
       terminalRepository.findAllPaginated(params),
     );
   },
@@ -70,7 +70,7 @@ export const updateTerminal = api(
     id,
     ...data
   }: UpdateTerminalPayload & { id: number }): Promise<Terminal> => {
-    return withErrorHandling('updateTerminal', () =>
+    return await withErrorHandling('updateTerminal', () =>
       terminalRepository.update(id, data),
     );
   },
@@ -86,7 +86,7 @@ export const updateTerminal = api(
 export const deleteTerminal = api(
   { method: 'DELETE', path: '/terminals/:id', expose: true },
   async ({ id }: { id: number }): Promise<Terminal> => {
-    return withErrorHandling('deleteTerminal', () =>
+    return await withErrorHandling('deleteTerminal', () =>
       terminalRepository.delete(id),
     );
   },

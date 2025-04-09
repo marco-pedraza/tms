@@ -23,8 +23,8 @@ export const createBusLine = api(
     path: '/bus-lines',
   },
   async (payload: CreateBusLinePayload): Promise<BusLine> => {
-    return withErrorHandling('createBusLine', async () => {
-      return busLineRepository.create(payload);
+    return await withErrorHandling('createBusLine', async () => {
+      return await busLineRepository.create(payload);
     });
   },
 );
@@ -40,8 +40,8 @@ export const getBusLine = api(
     path: '/bus-lines/:id',
   },
   async ({ id }: { id: number }): Promise<BusLine> => {
-    return withErrorHandling('getBusLine', async () => {
-      return busLineRepository.findOne(id);
+    return await withErrorHandling('getBusLine', async () => {
+      return await busLineRepository.findOne(id);
     });
   },
 );
@@ -56,7 +56,7 @@ export const listBusLines = api(
     path: '/bus-lines',
   },
   async (): Promise<BusLines> => {
-    return withErrorHandling('listBusLines', async () => {
+    return await withErrorHandling('listBusLines', async () => {
       const busLines = await busLineRepository.findAll();
       return { busLines };
     });
@@ -74,8 +74,8 @@ export const listBusLinesPaginated = api(
     path: '/bus-lines/paginated',
   },
   async (params: PaginationParams): Promise<PaginatedBusLines> => {
-    return withErrorHandling('listBusLinesPaginated', async () => {
-      return busLineRepository.findAllPaginated(params);
+    return await withErrorHandling('listBusLinesPaginated', async () => {
+      return await busLineRepository.findAllPaginated(params);
     });
   },
 );
@@ -94,8 +94,8 @@ export const updateBusLine = api(
     id,
     ...payload
   }: { id: number } & UpdateBusLinePayload): Promise<BusLine> => {
-    return withErrorHandling('updateBusLine', async () => {
-      return busLineRepository.update(id, payload);
+    return await withErrorHandling('updateBusLine', async () => {
+      return await busLineRepository.update(id, payload);
     });
   },
 );
@@ -111,8 +111,8 @@ export const deleteBusLine = api(
     path: '/bus-lines/:id',
   },
   async ({ id }: { id: number }): Promise<BusLine> => {
-    return withErrorHandling('deleteBusLine', async () => {
-      return busLineRepository.delete(id);
+    return await withErrorHandling('deleteBusLine', async () => {
+      return await busLineRepository.delete(id);
     });
   },
 );

@@ -15,7 +15,7 @@ export const hashPassword = async (
   password: string,
   saltRounds?: number,
 ): Promise<string> => {
-  return hash(password, saltRounds || DEFAULT_SALT_ROUNDS);
+  return await hash(password, saltRounds || DEFAULT_SALT_ROUNDS);
 };
 
 /**
@@ -28,7 +28,7 @@ export const comparePasswords = async (
   password: string,
   hashedPassword: string,
 ): Promise<boolean> => {
-  return compare(password, hashedPassword);
+  return await compare(password, hashedPassword);
 };
 
 /**
@@ -64,7 +64,7 @@ const generateToken = async (
     type: tokenType,
   };
 
-  return jwt.sign(payload, secretKey, { expiresIn });
+  return await Promise.resolve(jwt.sign(payload, secretKey, { expiresIn }));
 };
 
 /**
@@ -79,7 +79,7 @@ export const generateAccessToken = async (
   secretKey: string,
   expiresIn: string,
 ): Promise<string> => {
-  return generateToken(user, 'access', secretKey, expiresIn);
+  return await generateToken(user, 'access', secretKey, expiresIn);
 };
 
 /**
@@ -94,7 +94,7 @@ export const generateRefreshToken = async (
   secretKey: string,
   expiresIn: string,
 ): Promise<string> => {
-  return generateToken(user, 'refresh', secretKey, expiresIn);
+  return await generateToken(user, 'refresh', secretKey, expiresIn);
 };
 
 /**
@@ -111,7 +111,9 @@ export const verifyToken = async (
   secretKey: string,
 ): Promise<JwtPayload> => {
   try {
-    const decoded = jwt.verify(token, secretKey) as JwtPayload;
+    const decoded = (await Promise.resolve(
+      jwt.verify(token, secretKey),
+    )) as JwtPayload;
 
     // Verify token type
     if (decoded.type !== expectedType) {

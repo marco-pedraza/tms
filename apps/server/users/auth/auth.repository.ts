@@ -2,7 +2,6 @@ import { refreshTokens } from './auth.schema';
 import { User } from '../users/users.types';
 import jwt from 'jsonwebtoken';
 import {
-  JwtPayload,
   RefreshToken,
   CreateRefreshToken,
   UpdateRefreshToken,
@@ -49,7 +48,7 @@ export const createAuthRepository = () => {
       ? new Date(decoded.exp * 1000)
       : new Date(Date.now() + DEFAULT_REFRESH_TOKEN_EXPIRY);
 
-    return baseRepository.create({
+    return await baseRepository.create({
       userId: user.id,
       token,
       expiresAt,
@@ -65,7 +64,7 @@ export const createAuthRepository = () => {
   const findRefreshToken = async (
     token: string,
   ): Promise<RefreshToken | null> => {
-    return baseRepository.findBy(refreshTokens.token, token);
+    return await baseRepository.findBy(refreshTokens.token, token);
   };
 
   /**
@@ -81,7 +80,7 @@ export const createAuthRepository = () => {
       throw new NotFoundError(ERROR_MESSAGES.REFRESH_TOKEN_NOT_FOUND);
     }
 
-    return baseRepository.update(tokenRecord.id, { isRevoked: true });
+    return await baseRepository.update(tokenRecord.id, { isRevoked: true });
   };
 
   /**
@@ -146,7 +145,7 @@ export const createAuthRepository = () => {
    */
   const isRefreshTokenValid = async (token: string): Promise<boolean> => {
     const tokenRecord = await findRefreshToken(token);
-    return !!tokenRecord && !tokenRecord.isRevoked;
+    return await Promise.resolve(!!tokenRecord && !tokenRecord.isRevoked);
   };
 
   return {

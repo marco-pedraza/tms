@@ -28,7 +28,7 @@ export const createStateRepository = () => {
    * @returns {Promise<State>} The created state
    */
   const create = async (data: CreateStatePayload): Promise<State> => {
-    return baseRepository.create(data);
+    return await baseRepository.create(data);
   };
 
   /**
@@ -41,7 +41,7 @@ export const createStateRepository = () => {
     id: number,
     data: UpdateStatePayload,
   ): Promise<State> => {
-    return baseRepository.update(id, data);
+    return await baseRepository.update(id, data);
   };
 
   /**
@@ -52,7 +52,7 @@ export const createStateRepository = () => {
   const listPaginated = async (
     params: PaginationParams,
   ): Promise<PaginatedStates> => {
-    return baseRepository.findAllPaginated(params);
+    return await baseRepository.findAllPaginated(params);
   };
 
   /**

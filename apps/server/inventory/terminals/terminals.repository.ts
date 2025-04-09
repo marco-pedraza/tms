@@ -6,7 +6,6 @@ import type {
   PaginatedTerminals,
 } from './terminals.types';
 import { createBaseRepository } from '@repo/base-repo';
-import { cityRepository } from '../cities/cities.repository';
 import { PaginationParams } from '../../shared/types';
 import { db } from '@/db';
 
@@ -28,7 +27,7 @@ export const createTerminalRepository = () => {
    * @returns The created terminal
    */
   const create = async (data: CreateTerminalPayload): Promise<Terminal> => {
-    return baseRepository.create(data);
+    return await baseRepository.create(data);
   };
 
   /**
@@ -41,7 +40,7 @@ export const createTerminalRepository = () => {
     id: number,
     data: UpdateTerminalPayload,
   ): Promise<Terminal> => {
-    return baseRepository.update(id, data);
+    return await baseRepository.update(id, data);
   };
 
   /**
@@ -52,7 +51,7 @@ export const createTerminalRepository = () => {
   const listPaginated = async (
     params: PaginationParams = {},
   ): Promise<PaginatedTerminals> => {
-    return baseRepository.findAllPaginated(params);
+    return await baseRepository.findAllPaginated(params);
   };
 
   return {

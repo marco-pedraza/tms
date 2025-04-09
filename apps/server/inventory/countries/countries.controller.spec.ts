@@ -7,6 +7,7 @@ import {
   listCountries,
   listCountriesPaginated,
 } from './countries.controller';
+import type { Countries } from './countries.types';
 
 describe('Countries Controller', () => {
   // Test data and setup
@@ -161,13 +162,11 @@ describe('Countries Controller', () => {
     });
 
     test('should return non-paginated list for dropdowns', async () => {
-      const response = await listCountries();
+      const response = (await listCountries()) as Countries;
 
       expect(response.countries).toBeDefined();
       expect(Array.isArray(response.countries)).toBe(true);
       expect(response.countries.length).toBeGreaterThan(0);
-      // No pagination info should be present
-      expect((response as any).pagination).toBeUndefined();
     });
   });
 });

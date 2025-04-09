@@ -4,6 +4,6 @@ import { config } from '@repo/eslint-config/base';
 export default [
   ...config,
   {
-    ignores: ['**/.turbo/**', '**/encore.gen/**'],
+    ignores: ['**/.turbo/**', '**/encore.gen/**', '**/.encore/**'],
   },
 ];

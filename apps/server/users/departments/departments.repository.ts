@@ -19,20 +19,20 @@ export const createDepartmentRepository = () => {
   >(db, departments, 'Department');
 
   const create = async (data: CreateDepartmentPayload): Promise<Department> => {
-    return baseRepository.create(data);
+    return await baseRepository.create(data);
   };
 
   const update = async (
     id: number,
     data: UpdateDepartmentPayload,
   ): Promise<Department> => {
-    return baseRepository.update(id, data);
+    return await baseRepository.update(id, data);
   };
 
   const findAllPaginated = async (
     params: PaginationParams = {},
   ): Promise<PaginatedDepartments> => {
-    return baseRepository.findAllPaginated(params);
+    return await baseRepository.findAllPaginated(params);
   };
 
   const findByTenant = async (tenantId: number): Promise<Departments> => {
@@ -45,7 +45,7 @@ export const createDepartmentRepository = () => {
     tenantId: number,
     params: PaginationParams = {},
   ): Promise<PaginatedDepartments> => {
-    return baseRepository.findByPaginated(
+    return await baseRepository.findByPaginated(
       departments.tenantId,
       tenantId,
       params,

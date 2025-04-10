@@ -9,35 +9,56 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useForm } from '@tanstack/react-form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useQuery } from '@tanstack/react-query';
+import imsClient from '@/lib/imsClient';
+import type { countries } from '@repo/ims-client';
 
-const editCountrySchema = z.object({
+type Country = countries.Country;
+
+const editStateSchema = z.object({
   name: z.string().min(1),
-  code: z.string().min(2).max(2),
+  code: z.string().min(2).max(3),
+  countryId: z.number().min(1),
   active: z.boolean(),
 });
 
-export type CountryFormValues = z.infer<typeof editCountrySchema>;
+export type StateFormValues = z.infer<typeof editStateSchema>;
 
-interface CountryFormProps {
-  defaultValues?: CountryFormValues;
-  onSubmit: (values: CountryFormValues) => Promise<unknown>;
+interface StateFormProps {
+  defaultValues?: StateFormValues;
+  onSubmit: (values: StateFormValues) => Promise<unknown>;
   submitButtonText?: string;
 }
 
-function CountryForm({
+function StateForm({
   defaultValues,
   onSubmit,
   submitButtonText,
-}: CountryFormProps) {
-  const { t } = useTranslation(['countries', 'common']);
+}: StateFormProps) {
+  const { t } = useTranslation(['states', 'common']);
+
+  // Fetch countries for the dropdown
+  const { data: countriesData } = useQuery({
+    queryKey: ['countries'],
+    queryFn: async () => await imsClient.inventory.listCountries(),
+  });
+
   const form = useForm({
     defaultValues: defaultValues ?? {
       name: '',
       code: '',
+      countryId: 0,
       active: false,
     },
     validators: {
-      onChange: editCountrySchema,
+      onChange: editStateSchema,
     },
     onSubmit: (values) => {
       onSubmit(values.value);
@@ -54,7 +75,7 @@ function CountryForm({
     >
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>{t('countries:form.title')}</CardTitle>
+          <CardTitle>{t('states:form.title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <form.Field name="name">
@@ -66,7 +87,7 @@ function CountryForm({
                   name={field.name}
                   value={field.state.value ?? ''}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={t('countries:form.placeholders.name')}
+                  placeholder={t('states:form.placeholders.name')}
                 />
               </div>
             )}
@@ -81,12 +102,42 @@ function CountryForm({
                   name={field.name}
                   value={field.state.value ?? ''}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={t('countries:form.placeholders.code')}
-                  maxLength={2}
+                  placeholder={t('states:form.placeholders.code')}
+                  maxLength={3}
                 />
                 <p className="text-sm text-muted-foreground">
-                  {t('countries:form.codeHelp')}
+                  {t('states:form.codeHelp')}
                 </p>
+              </div>
+            )}
+          </form.Field>
+
+          <form.Field name="countryId">
+            {(field) => (
+              <div className="space-y-2">
+                <Label htmlFor="countryId">{t('states:form.country')}</Label>
+                <Select
+                  value={field.state.value?.toString() ?? ''}
+                  onValueChange={(value) =>
+                    field.handleChange(parseInt(value, 10))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={t('states:form.placeholders.country')}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countriesData?.countries?.map((country: Country) => (
+                      <SelectItem
+                        key={country.id}
+                        value={country.id.toString()}
+                      >
+                        {country.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
           </form.Field>
@@ -111,7 +162,7 @@ function CountryForm({
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="submit" disabled={!canSubmit || isSubmitting}>
                   {isSubmitting && <Loader2 className="animate-spin" />}
-                  {submitButtonText || t('common:actions.create')}
+                  {submitButtonText ?? t('common:actions.create')}
                 </Button>
               </div>
             )}
@@ -122,4 +173,4 @@ function CountryForm({
   );
 }
 
-export default CountryForm;
+export default StateForm;

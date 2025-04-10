@@ -49,7 +49,7 @@ export const getCountry = api(
  * @throws {APIError} If retrieval fails
  */
 export const listCountries = api(
-  { method: 'GET', path: '/countries' },
+  { expose: true, method: 'GET', path: '/countries' },
   async (): Promise<Countries> => {
     return await withErrorHandling('listCountries', () =>
       countryRepository.findAll(),

@@ -1,0 +1,51 @@
+export default {
+  title: 'Estados',
+  description:
+    'Administra información de estados para el Sistema de Inventario de Autobuses',
+  actions: {
+    create: 'Crear Estado',
+    update: 'Actualizar Estado',
+    backToList: 'Volver a estados',
+  },
+  form: {
+    title: 'Información del estado',
+    placeholders: {
+      name: 'Ej: Jalisco',
+      code: 'Ej: JAL',
+      country: 'Selecciona un país',
+    },
+    codeHelp: 'Usa un código de 2-3 letras para identificar el estado',
+    country: 'País',
+  },
+  details: {
+    description: 'Detalles del estado',
+  },
+  edit: {
+    title: 'Editar Estado',
+    description: 'Actualiza la información del estado',
+  },
+  errors: {
+    notFound: {
+      title: 'Estado no encontrado',
+      description:
+        'No pudimos encontrar el estado que buscas. Es posible que haya sido eliminado o que no exista.',
+    },
+  },
+  messages: {
+    create: {
+      loading: 'Creando estado...',
+      success: 'Estado creado correctamente',
+      error: 'No pudimos crear el estado',
+    },
+    update: {
+      loading: 'Actualizando estado...',
+      success: 'Estado actualizado correctamente',
+      error: 'No pudimos actualizar el estado',
+    },
+    delete: {
+      loading: 'Eliminando estado...',
+      success: 'Estado eliminado correctamente',
+      error: 'No pudimos eliminar el estado',
+    },
+  },
+} as const;

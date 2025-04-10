@@ -19,7 +19,7 @@ const withErrorHandling = createControllerErrorHandler('StatesController');
  * @throws {APIError} If the state creation fails
  */
 export const createState = api(
-  { method: 'POST', path: '/states' },
+  { method: 'POST', path: '/states', expose: true },
   async (params: CreateStatePayload): Promise<State> => {
     return await withErrorHandling('createState', () =>
       stateRepository.create(params),
@@ -35,7 +35,7 @@ export const createState = api(
  * @throws {APIError} If the state is not found or retrieval fails
  */
 export const getState = api(
-  { method: 'GET', path: '/states/:id' },
+  { method: 'GET', path: '/states/:id', expose: true },
   async ({ id }: { id: number }): Promise<State> => {
     return await withErrorHandling('getState', () =>
       stateRepository.findOne(id),
@@ -49,7 +49,7 @@ export const getState = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listStates = api(
-  { method: 'GET', path: '/states' },
+  { method: 'GET', path: '/states', expose: true },
   async (): Promise<States> => {
     return await withErrorHandling('listStates', () =>
       stateRepository.findAll(),
@@ -64,7 +64,7 @@ export const listStates = api(
  * @throws {APIError} If retrieval fails
  */
 export const listStatesPaginated = api(
-  { method: 'GET', path: '/states/paginated' },
+  { method: 'GET', path: '/states/paginated', expose: true },
   async (params: PaginationParams): Promise<PaginatedStates> => {
     return await withErrorHandling('listStatesPaginated', () =>
       stateRepository.listPaginated(params),
@@ -81,7 +81,7 @@ export const listStatesPaginated = api(
  * @throws {APIError} If the state is not found or update fails
  */
 export const updateState = api(
-  { method: 'PUT', path: '/states/:id' },
+  { method: 'PUT', path: '/states/:id', expose: true },
   async ({
     id,
     ...data
@@ -100,7 +100,7 @@ export const updateState = api(
  * @throws {APIError} If the state is not found or deletion fails
  */
 export const deleteState = api(
-  { method: 'DELETE', path: '/states/:id' },
+  { method: 'DELETE', path: '/states/:id', expose: true },
   async ({ id }: { id: number }): Promise<State> => {
     return await withErrorHandling('deleteState', () =>
       stateRepository.delete(id),

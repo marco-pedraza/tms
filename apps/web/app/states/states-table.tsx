@@ -18,23 +18,23 @@ import { useQuery } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table';
 import { Button } from '@/components/ui/button';
-import type { countries } from '@repo/ims-client';
+import type { states } from '@repo/ims-client';
 import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DropdownMenuContent } from '@/components/ui/dropdown-menu';
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCountryMutations } from '@/app/countries/hooks/use-country-mutations';
+import { useStateMutations } from '@/app/states/hooks/use-state-mutations';
 
-type Country = countries.Country;
+type State = states.State;
 
-const countriesColumnsFactory = (
+const statesColumnsFactory = (
   getViewHref: (id: string) => string,
   onDelete: (id: string) => void,
   onEdit: (id: string) => void,
   t: (key: string) => string,
-): ColumnDef<Country>[] => {
+): ColumnDef<State>[] => {
   return [
     {
       accessorKey: 'name',
@@ -93,14 +93,18 @@ const countriesColumnsFactory = (
                 <Button
                   variant="ghost"
                   className="w-full justify-start"
-                  onClick={() => onEdit(record.id.toString())}
+                  onClick={() => {
+                    onEdit(record.id.toString());
+                  }}
                 >
                   {t('common:actions.edit')}
                 </Button>
                 <Button
                   variant="ghost"
                   className="w-full justify-start"
-                  onClick={() => onDelete(record.id.toString())}
+                  onClick={() => {
+                    onDelete(record.id.toString());
+                  }}
                 >
                   {t('common:actions.delete')}
                 </Button>
@@ -113,21 +117,21 @@ const countriesColumnsFactory = (
   ];
 };
 
-export default function CountriesTable() {
-  const { t } = useTranslation(['countries', 'common']);
+export default function StatesTable() {
+  const { t } = useTranslation(['states', 'common']);
   const router = useRouter();
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const { deleteCountry } = useCountryMutations();
+  const { deleteState } = useStateMutations();
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['countries'],
-    queryFn: async () => await client.inventory.listCountriesPaginated({}),
+    queryKey: ['states'],
+    queryFn: async () => await client.inventory.listStatesPaginated({}),
   });
 
   const handleDelete = (id: string) => {
     const numericId = parseInt(id);
     if (isNaN(numericId)) {
-      console.error('Invalid country ID:', id);
+      console.error('Invalid state ID:', id);
       return;
     }
     setDeleteId(numericId);
@@ -135,23 +139,23 @@ export default function CountriesTable() {
 
   const confirmDelete = () => {
     if (!deleteId) return;
-    deleteCountry.mutateWithToast(deleteId);
+    deleteState.mutateWithToast(deleteId);
     setDeleteId(null);
   };
 
   const getViewHref = (id: string) => {
-    return `/countries/${id}`;
+    return `/states/${id}`;
   };
 
   const handleEdit = (id: string) => {
-    router.push(`/countries/${id}/edit`);
+    router.push(`/states/${id}/edit`);
   };
 
   const onAdd = () => {
-    router.push('/countries/new');
+    router.push('/states/new');
   };
 
-  const columns = countriesColumnsFactory(
+  const columns = statesColumnsFactory(
     getViewHref,
     handleDelete,
     handleEdit,
@@ -168,7 +172,12 @@ export default function CountriesTable() {
         onRetry={refetch}
         onAdd={onAdd}
       />
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+      <AlertDialog
+        open={!!deleteId}
+        onOpenChange={() => {
+          setDeleteId(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>

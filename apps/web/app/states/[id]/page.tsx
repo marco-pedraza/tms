@@ -16,26 +16,45 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import imsClient from '@/lib/imsClient';
 import { isAPIError } from '@repo/ims-client';
+import type { states } from '@repo/ims-client';
 import NotFound from '@/components/ui-components/not-found';
-import { useCountryMutations } from '@/app/countries/hooks/use-country-mutations';
+import { useStateMutations } from '@/app/states/hooks/use-state-mutations';
 
-export default function CountryDetailsPage() {
-  const { t } = useTranslation(['countries', 'common']);
+type State = states.State;
+
+export default function StateDetailsPage() {
+  const { t } = useTranslation(['states', 'common']);
   const params = useParams();
+  const queryClient = useQueryClient();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const countryId = parseInt(params.id as string, 10);
-  const { deleteCountry } = useCountryMutations();
+  const stateId = parseInt(params.id as string, 10);
+  const { deleteState } = useStateMutations();
 
   const {
-    data: country,
-    isLoading,
-    error,
+    data: state,
+    isLoading: isLoadingState,
+    error: stateError,
   } = useQuery({
-    queryKey: ['countries', countryId],
-    queryFn: async () => await imsClient.inventory.getCountry(countryId),
+    queryKey: ['state', stateId],
+    queryFn: async () => await imsClient.inventory.getState(stateId),
+    initialData: () =>
+      queryClient
+        .getQueryData<states.PaginatedStates>(['states'])
+        ?.data.find((state) => state.id === stateId),
+    initialDataUpdatedAt: () =>
+      queryClient.getQueryState<State[]>(['states'])?.dataUpdatedAt,
+  });
+
+  const { data: country, isLoading: isLoadingCountry } = useQuery({
+    queryKey: ['country', state?.countryId],
+    queryFn: async () => {
+      if (!state?.countryId) return null;
+      return await imsClient.inventory.getCountry(state.countryId);
+    },
+    enabled: !!state?.countryId,
   });
 
   const handleDelete = () => {
@@ -43,40 +62,40 @@ export default function CountryDetailsPage() {
   };
 
   const confirmDelete = () => {
-    deleteCountry.mutateWithToast(countryId);
+    deleteState.mutateWithToast(stateId);
     setIsDeleteDialogOpen(false);
   };
 
-  if (isLoading) {
+  if (isLoadingState || isLoadingCountry) {
     return <div>{t('common:states.loading')}</div>;
   }
 
-  if (error && isAPIError(error) && error.code === 'not_found') {
+  if (stateError && isAPIError(stateError) && stateError.code === 'not_found') {
     return (
       <NotFound
-        title={t('countries:errors.notFound.title')}
-        description={t('countries:errors.notFound.description')}
-        backHref="/countries"
-        backLabel={t('countries:actions.backToList')}
+        title={t('states:errors.notFound.title')}
+        description={t('states:errors.notFound.description')}
+        backHref="/states"
+        backLabel={t('states:actions.backToList')}
       />
     );
   }
 
-  if (!country) {
+  if (!state) {
     return <div>{t('common:errors.unexpected')}</div>;
   }
 
   return (
     <div>
       <PageHeader
-        title={country.name}
-        description={t('countries:details.description')}
-        backHref="/countries"
+        title={state.name}
+        description={t('states:details.description')}
+        backHref="/states"
       />
 
       <div className="flex justify-end mb-6">
         <ActionButtons
-          editHref={`/countries/${country.id}/edit`}
+          editHref={`/states/${state.id}/edit`}
           onDelete={handleDelete}
         />
       </div>
@@ -89,14 +108,25 @@ export default function CountryDetailsPage() {
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
               <dt className="font-medium">{t('common:fields.name')}:</dt>
-              <dd>{country.name}</dd>
+              <dd>{state.name}</dd>
 
               <dt className="font-medium">{t('common:fields.code')}:</dt>
-              <dd>{country.code}</dd>
+              <dd>{state.code}</dd>
+
+              <dt className="font-medium">{t('states:form.country')}:</dt>
+              <dd>
+                {country ? (
+                  <span>
+                    {country.name} ({country.code})
+                  </span>
+                ) : (
+                  state.countryId
+                )}
+              </dd>
 
               <dt className="font-medium">{t('common:fields.status')}:</dt>
               <dd>
-                {country.active ? (
+                {state.active ? (
                   <Badge variant="outline" className="bg-green-100">
                     {t('common:status.active')}
                   </Badge>
@@ -117,13 +147,13 @@ export default function CountryDetailsPage() {
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
               <dt className="font-medium">{t('common:fields.id')}:</dt>
-              <dd>{country.id}</dd>
+              <dd>{state.id}</dd>
 
               <dt className="font-medium">{t('common:fields.createdAt')}:</dt>
-              <dd>{new Date(country.createdAt ?? '').toLocaleString()}</dd>
+              <dd>{new Date(state.createdAt ?? '').toLocaleString()}</dd>
 
               <dt className="font-medium">{t('common:fields.updatedAt')}:</dt>
-              <dd>{new Date(country.updatedAt ?? '').toLocaleString()}</dd>
+              <dd>{new Date(state.updatedAt ?? '').toLocaleString()}</dd>
             </dl>
           </CardContent>
         </Card>

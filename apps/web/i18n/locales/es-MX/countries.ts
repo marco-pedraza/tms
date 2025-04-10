@@ -4,14 +4,11 @@ export default {
     'Administra información de países para el Sistema de Inventario de Autobuses',
   actions: {
     create: 'Crear País',
+    update: 'Actualizar País',
     backToList: 'Volver a países',
   },
   form: {
     title: 'Información del país',
-    name: 'Nombre',
-    code: 'Código',
-    active: 'Activo',
-    status: 'Estado',
     placeholders: {
       name: 'Ej: México',
       code: 'Ej: MX',
@@ -20,8 +17,10 @@ export default {
   },
   details: {
     description: 'Detalles del país',
-    basicInfo: 'Información Básica',
-    systemInfo: 'Información del Sistema',
+  },
+  edit: {
+    title: 'Editar País',
+    description: 'Actualiza la información del país',
   },
   errors: {
     notFound: {
@@ -45,9 +44,6 @@ export default {
       loading: 'Eliminando país...',
       success: 'País eliminado correctamente',
       error: 'No pudimos eliminar el país',
-      confirm: '¿Estás seguro?',
-      description:
-        'Esta acción no se puede deshacer. Se eliminará permanentemente el país y todos los datos asociados.',
     },
   },
 } as const;

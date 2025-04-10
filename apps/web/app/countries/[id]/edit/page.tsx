@@ -1,13 +1,13 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { useParams } from 'next/navigation';
 import { PageHeader } from '@/components/ui-components';
 import { Params } from 'next/dist/server/request/params';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import imsClient from '@/lib/imsClient';
 import type { countries } from '@repo/ims-client';
 import CountryForm, { CountryFormValues } from '@/app/countries/country-form';
+import { useCountryMutations } from '@/app/countries/hooks/use-country-mutations';
 
 interface EditCountryPageParams extends Params {
   id: string;
@@ -19,38 +19,23 @@ const isNumber = (value: string) => {
 
 export default function EditCountryPage() {
   const params = useParams<EditCountryPageParams>();
-  const router = useRouter();
-  const countryId = params.id;
+  const countryId = parseInt(params.id);
   const queryClient = useQueryClient();
+  const { updateCountry } = useCountryMutations();
   const { data, status, error } = useQuery({
     queryKey: ['country', countryId],
-    enabled: isNumber(countryId),
-    queryFn: () => imsClient.inventory.getCountry(Number(countryId)),
+    enabled: isNumber(params.id),
+    queryFn: () => imsClient.inventory.getCountry(countryId),
     initialData: () =>
       queryClient
         ?.getQueryData<countries.PaginatedCountries>(['countries'])
-        ?.data.find((country) => country.id === Number(countryId)),
+        ?.data.find((country) => country.id === countryId),
     initialDataUpdatedAt: () =>
       queryClient?.getQueryState<countries.Country[]>(['countries'])
         ?.dataUpdatedAt,
   });
 
-  const updateCountryMutation = useMutation({
-    mutationFn: async (values: CountryFormValues) =>
-      await imsClient.inventory.updateCountry(Number(countryId), values),
-    onSuccess: () => {
-      toast.success('País actualizado correctamente');
-      queryClient.invalidateQueries({ queryKey: ['countries'] });
-      router.push(`/countries/${countryId}`);
-    },
-    onError: (error) => {
-      toast.error('No pudimos actualizar el país', {
-        description: error.message,
-      });
-    },
-  });
-
-  if (!isNumber(countryId)) {
+  if (!isNumber(params.id)) {
     return <div>Invalid country ID</div>;
   }
 
@@ -62,6 +47,10 @@ export default function EditCountryPage() {
     return <div>Error: {error.message}</div>;
   }
 
+  const handleSubmit = (values: CountryFormValues) => {
+    return updateCountry.mutateWithToast({ id: countryId, values });
+  };
+
   return (
     <div>
       <PageHeader
@@ -71,7 +60,7 @@ export default function EditCountryPage() {
       />
       <CountryForm
         defaultValues={data}
-        onSubmit={updateCountryMutation.mutateAsync}
+        onSubmit={handleSubmit}
         submitButtonText="Actualizar"
       />
     </div>

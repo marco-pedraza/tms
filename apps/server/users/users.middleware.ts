@@ -1,11 +1,8 @@
-import {
-  APIError,
-  middleware,
-  MiddlewareRequest,
-  APICallMeta,
-} from 'encore.dev/api';
+import { middleware, MiddlewareRequest, APICallMeta } from 'encore.dev/api';
 import { getAuthData } from '~encore/auth';
 import { userPermissionsRepository } from './user-permissions/user-permissions.repository';
+import { errors } from '../shared/errors';
+
 /**
  * Error messages for authorization failures
  */
@@ -30,7 +27,7 @@ export const usersMiddleware = middleware(
 
     // Check basic authentication
     if (!auth || !auth.userID) {
-      throw APIError.unauthenticated(ERROR_MESSAGES.AUTH_REQUIRED);
+      throw errors.unauthenticated(ERROR_MESSAGES.AUTH_REQUIRED);
     }
 
     // TODO add drizzles 'with' when importing schema
@@ -56,7 +53,7 @@ export const usersMiddleware = middleware(
     );
 
     if (!hasPermission) {
-      throw APIError.permissionDenied(
+      throw errors.permissionDenied(
         ERROR_MESSAGES.PERMISSION_DENIED(requiredPermission),
       );
     }

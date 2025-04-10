@@ -167,6 +167,8 @@ describe('Countries Controller', () => {
       expect(response.countries).toBeDefined();
       expect(Array.isArray(response.countries)).toBe(true);
       expect(response.countries.length).toBeGreaterThan(0);
+      // No pagination info should be present
+      expect((response as unknown).pagination).toBeUndefined();
     });
   });
 });

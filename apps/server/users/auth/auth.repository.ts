@@ -6,7 +6,7 @@ import {
   CreateRefreshToken,
   UpdateRefreshToken,
 } from './auth.types';
-import { NotFoundError, ValidationError } from '../../shared/errors';
+import { errors } from '../../shared/errors';
 import { createBaseRepository } from '@repo/base-repo';
 import { db } from '@/db';
 
@@ -34,6 +34,7 @@ export const createAuthRepository = () => {
    * @param user User the token belongs to
    * @param token JWT refresh token
    * @returns The saved token record
+   * @throws {APIError} If token is in invalid format
    */
   const saveRefreshToken = async (
     user: User,
@@ -42,7 +43,7 @@ export const createAuthRepository = () => {
     // Decode token to get expiration
     const decoded = jwt.decode(token);
     if (!decoded || typeof decoded === 'string' || !('exp' in decoded)) {
-      throw new ValidationError('Invalid token format');
+      throw errors.invalidArgument('Invalid token format');
     }
     const expiresAt = decoded.exp
       ? new Date(decoded.exp * 1000)
@@ -71,13 +72,13 @@ export const createAuthRepository = () => {
    * Revokes a refresh token
    * @param token JWT refresh token
    * @returns The updated token record
-   * @throws {NotFoundError} If the token is not found
+   * @throws {APIError} If the token is not found
    */
   const revokeRefreshToken = async (token: string): Promise<RefreshToken> => {
     const tokenRecord = await findRefreshToken(token);
 
     if (!tokenRecord) {
-      throw new NotFoundError(ERROR_MESSAGES.REFRESH_TOKEN_NOT_FOUND);
+      throw errors.notFound(ERROR_MESSAGES.REFRESH_TOKEN_NOT_FOUND);
     }
 
     return await baseRepository.update(tokenRecord.id, { isRevoked: true });
@@ -110,7 +111,7 @@ export const createAuthRepository = () => {
    * @param user User the token belongs to
    * @param newToken New refresh token to save
    * @returns New refresh token and record
-   * @throws {NotFoundError} If the old token is not found or is revoked
+   * @throws {APIError} If the old token is not found, is revoked, or belongs to a different user
    */
   const rotateRefreshToken = async (
     oldToken: string,
@@ -121,12 +122,12 @@ export const createAuthRepository = () => {
     const tokenRecord = await findRefreshToken(oldToken);
 
     if (!tokenRecord || tokenRecord.isRevoked) {
-      throw new NotFoundError(ERROR_MESSAGES.INVALID_OR_REVOKED_TOKEN);
+      throw errors.notFound(ERROR_MESSAGES.INVALID_OR_REVOKED_TOKEN);
     }
 
     // Check if token belongs to the user
     if (tokenRecord.userId !== user.id) {
-      throw new NotFoundError(ERROR_MESSAGES.TOKEN_WRONG_USER);
+      throw errors.permissionDenied(ERROR_MESSAGES.TOKEN_WRONG_USER);
     }
 
     // Revoke old token

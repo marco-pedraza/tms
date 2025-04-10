@@ -1,10 +1,79 @@
-import { APIError, ErrCode } from 'encore.dev/api';
+import { APIError } from 'encore.dev/api';
 import {
   NotFoundError,
   ValidationError,
   DuplicateError,
   ForeignKeyError,
 } from '@repo/base-repo';
+
+/**
+ * Utility for standardized API error creation
+ */
+export const errors = {
+  notFound: (message = 'Resource not found', details?: unknown) =>
+    APIError.notFound(message).withDetails(details),
+
+  invalidArgument: (message = 'Invalid argument provided', details?: unknown) =>
+    APIError.invalidArgument(message).withDetails(details),
+
+  alreadyExists: (
+    message = 'Resource with this name or code already exists',
+    details?: unknown,
+  ) => APIError.alreadyExists(message).withDetails(details),
+
+  unauthenticated: (message = 'Authentication failed', details?: unknown) =>
+    APIError.unauthenticated(message).withDetails(details),
+
+  permissionDenied: (message = 'Access denied', details?: unknown) =>
+    APIError.permissionDenied(message).withDetails(details),
+
+  canceled: (message = 'Operation was canceled', details?: unknown) =>
+    APIError.canceled(message).withDetails(details),
+
+  unknown: (message = 'An unknown error occurred', details?: unknown) =>
+    APIError.unknown(message).withDetails(details),
+
+  deadlineExceeded: (
+    message = 'Operation deadline exceeded',
+    details?: unknown,
+  ) => APIError.deadlineExceeded(message).withDetails(details),
+
+  resourceExhausted: (
+    message = 'Resource has been exhausted',
+    details?: unknown,
+  ) => APIError.resourceExhausted(message).withDetails(details),
+
+  failedPrecondition: (
+    message = 'Operation failed due to failed precondition',
+    details?: unknown,
+  ) => APIError.failedPrecondition(message).withDetails(details),
+
+  aborted: (message = 'Operation was aborted', details?: unknown) =>
+    APIError.aborted(message).withDetails(details),
+
+  outOfRange: (
+    message = 'Operation was attempted past valid range',
+    details?: unknown,
+  ) => APIError.outOfRange(message).withDetails(details),
+
+  unimplemented: (
+    message = 'Operation is not implemented',
+    details?: unknown,
+  ) => APIError.unimplemented(message).withDetails(details),
+
+  internal: (message = 'Internal server error', details?: unknown) =>
+    APIError.internal(message).withDetails(details),
+
+  unavailable: (
+    message = 'Service is currently unavailable',
+    details?: unknown,
+  ) => APIError.unavailable(message).withDetails(details),
+
+  dataLoss: (
+    message = 'Unrecoverable data loss or corruption',
+    details?: unknown,
+  ) => APIError.dataLoss(message).withDetails(details),
+};
 
 /**
  * Base error class for authentication errors
@@ -31,36 +100,35 @@ export class UnauthorizedError extends Error {
  *
  * @param error - The error to parse
  * @returns {APIError} An APIError with the appropriate error code and message
- * - NotFoundError -> ErrCode.NotFound
- * - ValidationError -> ErrCode.InvalidArgument
- * - DuplicateError -> ErrCode.AlreadyExists
- * - ForeignKeyError -> ErrCode.NotFound (maps to NotFound for consistent API behavior)
- * - AuthenticationError -> ErrCode.Unauthenticated
- * - UnauthorizedError -> ErrCode.PermissionDenied
- * - Other errors -> ErrCode.Internal
+ * - NotFoundError -> notFound
+ * - ValidationError -> invalidArgument
+ * - DuplicateError -> alreadyExists
+ * - ForeignKeyError -> notFound (maps to NotFound for consistent API behavior)
+ * - AuthenticationError -> unauthenticated
+ * - UnauthorizedError -> permissionDenied
+ * - Other errors -> internal
  */
 export const parseApiError = (error: unknown) => {
   if (error instanceof NotFoundError) {
-    return new APIError(ErrCode.NotFound, error.message);
+    return errors.notFound(error.message);
   }
   if (error instanceof ValidationError) {
-    return new APIError(ErrCode.InvalidArgument, error.message);
+    return errors.invalidArgument(error.message);
   }
   if (error instanceof DuplicateError) {
-    return new APIError(ErrCode.AlreadyExists, error.message);
+    return errors.alreadyExists(error.message);
   }
   if (error instanceof ForeignKeyError) {
     // Map foreign key errors to NotFound for consistent API behavior
-    return new APIError(ErrCode.NotFound, error.message);
+    return errors.notFound(error.message);
   }
   if (error instanceof AuthenticationError) {
-    return new APIError(ErrCode.Unauthenticated, error.message);
+    return errors.unauthenticated(error.message);
   }
   if (error instanceof UnauthorizedError) {
-    return new APIError(ErrCode.PermissionDenied, error.message);
+    return errors.permissionDenied(error.message);
   }
-  return new APIError(
-    ErrCode.Internal,
+  return errors.internal(
     error instanceof Error ? error.message : 'An unexpected error occurred',
   );
 };

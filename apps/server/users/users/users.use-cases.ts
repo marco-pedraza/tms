@@ -6,7 +6,7 @@ import type {
   ChangePasswordPayload,
 } from './users.types';
 import { comparePasswords, hashPassword } from '../../shared/auth-utils';
-import { ValidationError } from '../../shared/errors';
+import { errors } from '../../shared/errors';
 
 const SALT_ROUNDS = parseInt(secret('SALT_ROUNDS')());
 
@@ -26,7 +26,7 @@ export const createUserUseCases = () => {
    * @param id The ID of the user
    * @param data Password change payload
    * @returns Updated user (without password hash)
-   * @throws {ValidationError} If user not found or current password is invalid
+   * @throws {APIError} If user not found or current password is invalid
    */
   const changePassword = async (
     id: number,
@@ -34,7 +34,7 @@ export const createUserUseCases = () => {
   ): Promise<SafeUser> => {
     const user = await userRepository.findOneWithPassword(id);
     if (!user) {
-      throw new ValidationError(ERROR_MESSAGES.USER_NOT_FOUND);
+      throw errors.notFound(ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
     const isValid = await comparePasswords(
@@ -42,7 +42,7 @@ export const createUserUseCases = () => {
       user.passwordHash,
     );
     if (!isValid) {
-      throw new ValidationError(ERROR_MESSAGES.INVALID_PASSWORD);
+      throw errors.invalidArgument(ERROR_MESSAGES.INVALID_PASSWORD);
     }
 
     const passwordHash = await hashPassword(data.newPassword, SALT_ROUNDS);

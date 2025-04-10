@@ -35,6 +35,13 @@ export function createControllerErrorHandler(controller: string) {
       return result;
     } catch (error) {
       logControllerError(logger, error, controller, operation);
+
+      // If the error is already an APIError (from errors), rethrow it directly
+      if (error instanceof Error && error.name === 'APIError') {
+        throw error;
+      }
+
+      // Otherwise, parse it to the appropriate APIError
       throw parseApiError(error);
     }
   };

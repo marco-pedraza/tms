@@ -22,6 +22,7 @@ import {
   getRelatedEntities,
   updateManyToManyRelation,
 } from '../../shared/db-utils';
+import { errors } from '../../shared/errors';
 
 // Error message constants
 const ERROR_PERMISSION_NOT_FOUND = (id: number) =>
@@ -183,6 +184,7 @@ export const createRoleRepository = () => {
    * @param id - ID of the role
    * @param data - Permission IDs to assign
    * @returns Role with updated permissions
+   * @throws {APIError} If role or permissions not found
    */
   const assignPermissions = async (
     id: number,
@@ -198,7 +200,7 @@ export const createRoleRepository = () => {
           await permissionRepository.findOne(permissionId);
         } catch (error) {
           if (error instanceof NotFoundError) {
-            throw new NotFoundError(ERROR_PERMISSION_NOT_FOUND(permissionId));
+            throw errors.notFound(ERROR_PERMISSION_NOT_FOUND(permissionId));
           }
           throw error;
         }
@@ -252,6 +254,12 @@ export const createRoleRepository = () => {
     };
   };
 
+  /**
+   * Deletes a role
+   * @param id - ID of the role to delete
+   * @returns The deleted role
+   * @throws {APIError} If role not found
+   */
   const deleteRole = async (id: number): Promise<Role> => {
     try {
       // Use the findOne method to verify the role exists before deletion
@@ -261,7 +269,7 @@ export const createRoleRepository = () => {
       return baseRepository.delete(id);
     } catch (error) {
       if (error instanceof NotFoundError) {
-        throw new NotFoundError(ERROR_ROLE_NOT_FOUND(id));
+        throw errors.notFound(ERROR_ROLE_NOT_FOUND(id));
       }
       throw error;
     }

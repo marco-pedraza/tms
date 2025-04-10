@@ -8,7 +8,7 @@ import type {
 } from './permissions.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-import { NotFoundError } from '@repo/base-repo';
+import { errors } from '../../shared/errors';
 import { db } from '@/db';
 
 /**
@@ -36,13 +36,13 @@ export const createPermissionRepository = () => {
    * Finds a permission by code
    * @param code - The code of the permission to find
    * @returns The found permission
-   * @throws {NotFoundError} If the permission is not found
+   * @throws {APIError} If the permission is not found
    */
   const findByCode = async (code: string): Promise<Permission> => {
     const permission = await baseRepository.findBy(permissions.code, code);
 
     if (!permission) {
-      throw new NotFoundError(`Permission with code ${code} not found`);
+      throw errors.notFound(`Permission with code ${code} not found`);
     }
 
     return permission;

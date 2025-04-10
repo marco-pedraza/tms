@@ -1,4 +1,4 @@
-import { NotFoundError, UnauthorizedError } from '../../shared/errors';
+import { errors } from '../../shared/errors';
 import { userRoles, userPermissions } from './user-permissions.schema';
 import { roles } from '../roles/roles.schema';
 import { permissions } from '../permissions/permissions.schema';
@@ -38,7 +38,7 @@ export const createUserPermissionsRepository = () => {
    * @param userId - ID of the user
    * @param data - Role IDs to assign
    * @returns User with roles
-   * @throws {NotFoundError} If the user or any role is not found
+   * @throws {APIError} If the user or any role is not found
    */
   const assignRoles = async (
     userId: number,
@@ -70,7 +70,7 @@ export const createUserPermissionsRepository = () => {
    * @param userId - ID of the user
    * @param data - Permission IDs to assign
    * @returns User with permissions
-   * @throws {NotFoundError} If the user or any permission is not found
+   * @throws {APIError} If the user or any permission is not found
    */
   const assignPermissions = async (
     userId: number,
@@ -101,7 +101,7 @@ export const createUserPermissionsRepository = () => {
    * Gets a user with their assigned roles
    * @param userId - ID of the user
    * @returns User with roles
-   * @throws {NotFoundError} If the user is not found
+   * @throws {APIError} If the user is not found
    */
   const getUserWithRoles = async (userId: number): Promise<UserWithRoles> => {
     const user = await userRepository.findOne(userId);
@@ -127,7 +127,7 @@ export const createUserPermissionsRepository = () => {
    * Gets a user with their assigned permissions
    * @param userId - ID of the user
    * @returns User with permissions
-   * @throws {NotFoundError} If the user is not found
+   * @throws {APIError} If the user is not found
    */
   const getUserWithPermissions = async (
     userId: number,
@@ -191,7 +191,7 @@ export const createUserPermissionsRepository = () => {
    * Checks if a user has a specific permission
    * @param userId - ID of the user
    * @param permissionCode - Permission code to check
-   * @throws {UnauthorizedError} If the user doesn't have the required permission
+   * @throws {APIError} If the user doesn't have the required permission
    */
   const hasPermission = async (
     userId: number,
@@ -205,15 +205,15 @@ export const createUserPermissionsRepository = () => {
       );
 
       if (!hasRequiredPermission) {
-        throw new UnauthorizedError(
+        throw errors.permissionDenied(
           ERROR_MESSAGES.PERMISSION_REQUIRED(permissionCode),
         );
       }
     } catch (error) {
-      if (error instanceof UnauthorizedError) {
+      if (error instanceof Error && error.name === 'APIError') {
         throw error;
       }
-      throw new NotFoundError(ERROR_MESSAGES.USER_NOT_FOUND(userId));
+      throw errors.notFound(ERROR_MESSAGES.USER_NOT_FOUND(userId));
     }
   };
 
@@ -221,7 +221,7 @@ export const createUserPermissionsRepository = () => {
    * Checks if a user has a role
    * @param userId - ID of the user
    * @param roleId - Role ID to check
-   * @throws {UnauthorizedError} If the user doesn't have the required role
+   * @throws {APIError} If the user doesn't have the required role
    */
   const hasRole = async (userId: number, roleId: number): Promise<void> => {
     try {
@@ -230,13 +230,13 @@ export const createUserPermissionsRepository = () => {
       const hasRole = user.roles.some((r) => r.id === roleId);
 
       if (!hasRole) {
-        throw new UnauthorizedError(ERROR_MESSAGES.ROLE_REQUIRED(roleId));
+        throw errors.permissionDenied(ERROR_MESSAGES.ROLE_REQUIRED(roleId));
       }
     } catch (error) {
-      if (error instanceof UnauthorizedError) {
+      if (error instanceof Error && error.name === 'APIError') {
         throw error;
       }
-      throw new NotFoundError(ERROR_MESSAGES.USER_NOT_FOUND(userId));
+      throw errors.notFound(ERROR_MESSAGES.USER_NOT_FOUND(userId));
     }
   };
 

@@ -1,6 +1,7 @@
-import { Header, Gateway, APIError, ErrCode } from 'encore.dev/api';
+import { Header, Gateway } from 'encore.dev/api';
 import { authHandler } from 'encore.dev/auth';
 import { authUseCases } from './auth/auth.use-cases';
+import { errors } from '../shared/errors';
 
 interface AuthParams {
   authorization: Header<'Authorization'>;
@@ -22,13 +23,13 @@ export const auth = authHandler<AuthParams, AuthData>(async (params) => {
 
   // Validate auth header exists
   if (!authHeader) {
-    throw new APIError(ErrCode.Unauthenticated, INVALID_TOKEN_ERROR);
+    throw errors.unauthenticated(INVALID_TOKEN_ERROR);
   }
 
   // Validate auth header format
   const [scheme, token] = authHeader.split(' ');
   if (!scheme || !token || scheme.toLowerCase() !== 'bearer') {
-    throw new APIError(ErrCode.Unauthenticated, INVALID_TOKEN_ERROR);
+    throw errors.unauthenticated(INVALID_TOKEN_ERROR);
   }
 
   try {
@@ -39,7 +40,7 @@ export const auth = authHandler<AuthParams, AuthData>(async (params) => {
       userID: user.id.toString(),
     };
   } catch {
-    throw new APIError(ErrCode.Unauthenticated, INVALID_TOKEN_ERROR);
+    throw errors.unauthenticated(INVALID_TOKEN_ERROR);
   }
 });
 

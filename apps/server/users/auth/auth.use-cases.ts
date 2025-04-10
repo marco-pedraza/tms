@@ -14,12 +14,7 @@ import type {
   LogoutPayload,
   JwtPayload,
 } from './auth.types';
-import {
-  AuthenticationError,
-  ValidationError,
-  NotFoundError,
-} from '../../shared/errors';
-import { User } from '../users/users.types';
+import { errors } from '../../shared/errors';
 
 // JWT configuration
 const JWT_SECRET = secret('JWT_SECRET')();
@@ -44,7 +39,7 @@ export const createAuthUseCases = () => {
    * Authenticates a user and generates JWT tokens
    * @param credentials User login credentials
    * @returns User data and authentication tokens
-   * @throws {AuthenticationError} If credentials are invalid
+   * @throws {APIError} If credentials are invalid
    */
   const authenticateUser = async (
     credentials: LoginPayload,
@@ -55,19 +50,19 @@ export const createAuthUseCases = () => {
     const user = await userRepository.findByUsername(username);
 
     if (!user) {
-      throw new AuthenticationError(ERROR_MESSAGES.INVALID_CREDENTIALS);
+      throw errors.unauthenticated(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
 
     // Check if user is active
     if (!user.isActive) {
-      throw new AuthenticationError(ERROR_MESSAGES.ACCOUNT_INACTIVE);
+      throw errors.unauthenticated(ERROR_MESSAGES.ACCOUNT_INACTIVE);
     }
 
     // Verify password
     const passwordValid = await comparePasswords(password, user.passwordHash);
 
     if (!passwordValid) {
-      throw new AuthenticationError(ERROR_MESSAGES.INVALID_CREDENTIALS);
+      throw errors.unauthenticated(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
 
     // Generate tokens
@@ -105,7 +100,7 @@ export const createAuthUseCases = () => {
    * Refreshes an access token using a valid refresh token
    * @param params Refresh token data
    * @returns New access and refresh tokens
-   * @throws {AuthenticationError} If refresh token is invalid
+   * @throws {APIError} If refresh token is invalid
    */
   const refreshUserToken = async (
     params: RefreshTokenPayload,
@@ -120,7 +115,7 @@ export const createAuthUseCases = () => {
       const isValid = await authRepository.isRefreshTokenValid(token);
 
       if (!isValid) {
-        throw new AuthenticationError(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
+        throw errors.unauthenticated(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
       }
 
       // Find user
@@ -152,7 +147,7 @@ export const createAuthUseCases = () => {
         refreshToken: rotatedToken,
       };
     } catch {
-      throw new AuthenticationError(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
+      throw errors.unauthenticated(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
     }
   };
 
@@ -170,12 +165,8 @@ export const createAuthUseCases = () => {
       // Revoke the refresh token
       await authRepository.revokeRefreshToken(refreshToken);
       return { message: ERROR_MESSAGES.LOGOUT_SUCCESS };
-    } catch (error) {
-      if (error instanceof NotFoundError) {
-        // Return success even if token not found to prevent leak of information
-        return { message: ERROR_MESSAGES.LOGOUT_SUCCESS };
-      }
-      throw error;
+    } catch {
+      return { message: ERROR_MESSAGES.LOGOUT_SUCCESS };
     }
   };
 
@@ -183,15 +174,14 @@ export const createAuthUseCases = () => {
    * Revokes all refresh tokens for a user
    * @param userId User ID
    * @returns Number of tokens revoked
-   * @throws {ValidationError} If userId is invalid
-   * @throws {NotFoundError} If user does not exist
+   * @throws {APIError} If userId is invalid or user doesn't exist
    */
   const revokeAllUserTokens = async (
     userId: number,
   ): Promise<{ count: number }> => {
     // Validate userId
     if (!userId || isNaN(Number(userId))) {
-      throw new ValidationError(ERROR_MESSAGES.INVALID_USER_ID);
+      throw errors.invalidArgument(ERROR_MESSAGES.INVALID_USER_ID);
     }
 
     // Check if user exists
@@ -201,15 +191,6 @@ export const createAuthUseCases = () => {
     const count = await authRepository.revokeAllUserTokens(userId);
 
     return { count };
-  };
-
-  /**
-   * Generate a new refresh token for a user
-   * @param user User to generate token for
-   * @returns Generated refresh token
-   */
-  const generateNewRefreshToken = async (user: User): Promise<string> => {
-    return await generateRefreshToken(user, JWT_SECRET, REFRESH_TOKEN_EXPIRY);
   };
 
   /**
@@ -230,7 +211,7 @@ export const createAuthUseCases = () => {
    * @param token JWT token to verify
    * @param expectedType Type of token to expect
    * @returns User object without sensitive data if token is valid
-   * @throws {AuthenticationError} If token is invalid or user is not found/inactive
+   * @throws {APIError} If token is invalid or user is not found/inactive
    */
   const validateTokenAndUser = async (
     token: string,
@@ -243,11 +224,11 @@ export const createAuthUseCases = () => {
     const user = await userRepository.findOne(decoded.sub);
 
     if (!user) {
-      throw new AuthenticationError('User not found');
+      throw errors.unauthenticated('User not found');
     }
 
     if (!user.isActive) {
-      throw new AuthenticationError('User account is inactive');
+      throw errors.unauthenticated('User account is inactive');
     }
 
     // Return the user object (without password hash)
@@ -259,7 +240,6 @@ export const createAuthUseCases = () => {
     refreshUserToken,
     logoutUser,
     revokeAllUserTokens,
-    generateNewRefreshToken,
     verifyAuthToken,
     validateTokenAndUser,
   };

@@ -5,6 +5,7 @@ import {
   DuplicateError,
   ForeignKeyError,
 } from '@repo/base-repo';
+import { InvalidStateTransitionError } from '@repo/state-machine';
 
 /**
  * Utility for standardized API error creation
@@ -106,9 +107,11 @@ export class UnauthorizedError extends Error {
  * - ForeignKeyError -> notFound (maps to NotFound for consistent API behavior)
  * - AuthenticationError -> unauthenticated
  * - UnauthorizedError -> permissionDenied
+ * - InvalidStatusTransitionError -> failedPrecondition
+ * - InvalidStateTransitionError -> failedPrecondition
  * - Other errors -> internal
  */
-export const parseApiError = (error: unknown) => {
+export const parseApiError = (error: unknown): APIError => {
   if (error instanceof NotFoundError) {
     return errors.notFound(error.message);
   }
@@ -127,6 +130,9 @@ export const parseApiError = (error: unknown) => {
   }
   if (error instanceof UnauthorizedError) {
     return errors.permissionDenied(error.message);
+  }
+  if (error instanceof InvalidStateTransitionError) {
+    return errors.failedPrecondition(error.message);
   }
   return errors.internal(
     error instanceof Error ? error.message : 'An unexpected error occurred',

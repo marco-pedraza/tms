@@ -6,7 +6,7 @@
   "license": "MPL-2.0",
   "type": "module",
   "scripts": {
-    "preinstall": "cd ../../packages/base-repo && npm run build",
+    "preinstall": "cd ../../packages/base-repo && npm run build && cd ../../packages/state-machine && npm run build",
     "dev": "encore run",
     "test": "vitest run",
     "prebuild": "npm install --install-links",
@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@repo/base-repo": "file:../../packages/base-repo",
+    "@repo/state-machine": "file:../../packages/state-machine",
     "bcrypt": "^5.1.1",
     "drizzle-orm": "^0.36.0",
     "@types/jsonwebtoken": "^9.0.9",

@@ -1,6 +1,6 @@
 {
-  "id": "5e20dad3-139d-4108-95a1-188e0cd52a1b",
-  "prevId": "45247ddc-78e7-4a68-81a1-c7690c5d73af",
+  "id": "6c6c205a-536f-4d07-bbe5-b1fa8a175f96",
+  "prevId": "8eaee2c3-99b1-4720-9579-bcf1d8d13823",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -348,7 +348,29 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "departments_code_tenant_id_idx": {
+          "name": "departments_code_tenant_id_idx",
+          "columns": [
+            {
+              "expression": "code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "tenant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "departments_tenant_id_tenants_id_fk": {
           "name": "departments_tenant_id_tenants_id_fk",
@@ -366,6 +388,275 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.drivers": {
+      "name": "drivers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "driver_key": {
+          "name": "driver_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "rfc": {
+          "name": "rfc",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "curp": {
+          "name": "curp",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "imss": {
+          "name": "imss",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "civil_status": {
+          "name": "civil_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dependents": {
+          "name": "dependents",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address_street": {
+          "name": "address_street",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address_neighborhood": {
+          "name": "address_neighborhood",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address_city": {
+          "name": "address_city",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address_state": {
+          "name": "address_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "postal_code": {
+          "name": "postal_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "phone_number": {
+          "name": "phone_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "driver_type": {
+          "name": "driver_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "office_code": {
+          "name": "office_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "office_location": {
+          "name": "office_location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "hire_date": {
+          "name": "hire_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status_date": {
+          "name": "status_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "federal_license": {
+          "name": "federal_license",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "federal_license_expiry": {
+          "name": "federal_license_expiry",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state_license": {
+          "name": "state_license",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state_license_expiry": {
+          "name": "state_license_expiry",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "credit_card": {
+          "name": "credit_card",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "credit_card_expiry": {
+          "name": "credit_card_expiry",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "company": {
+          "name": "company",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "transporter_id": {
+          "name": "transporter_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bus_line_id": {
+          "name": "bus_line_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "drivers_transporter_id_transporters_id_fk": {
+          "name": "drivers_transporter_id_transporters_id_fk",
+          "tableFrom": "drivers",
+          "tableTo": "transporters",
+          "columnsFrom": [
+            "transporter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "drivers_bus_line_id_bus_lines_id_fk": {
+          "name": "drivers_bus_line_id_bus_lines_id_fk",
+          "tableFrom": "drivers",
+          "tableTo": "bus_lines",
+          "columnsFrom": [
+            "bus_line_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "drivers_driver_key_unique": {
+          "name": "drivers_driver_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "driver_key"
+          ]
+        },
+        "drivers_rfc_unique": {
+          "name": "drivers_rfc_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "rfc"
+          ]
+        },
+        "drivers_curp_unique": {
+          "name": "drivers_curp_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "curp"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -670,7 +961,29 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "roles_name_tenant_id_idx": {
+          "name": "roles_name_tenant_id_idx",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "tenant_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "roles_tenant_id_tenants_id_fk": {
           "name": "roles_tenant_id_tenants_id_fk",

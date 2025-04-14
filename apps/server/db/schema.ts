@@ -16,3 +16,4 @@ export {
   userPermissions,
 } from '../users/user-permissions/user-permissions.schema';
 export { refreshTokens } from '../users/auth/auth.schema';
+export { drivers } from '../inventory/drivers/drivers.schema';

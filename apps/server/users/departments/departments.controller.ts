@@ -7,10 +7,7 @@ import type {
   PaginatedDepartments,
   Departments,
 } from './departments.types';
-import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
-
-const withErrorHandling = createControllerErrorHandler('DepartmentsController');
 
 /**
  * Creates a new department.
@@ -21,9 +18,7 @@ const withErrorHandling = createControllerErrorHandler('DepartmentsController');
 export const createDepartment = api(
   { method: 'POST', path: '/departments', expose: true, auth: true },
   async (params: CreateDepartmentPayload): Promise<Department> => {
-    return await withErrorHandling('createDepartment', () =>
-      departmentRepository.create(params),
-    );
+    return await departmentRepository.create(params);
   },
 );
 
@@ -37,9 +32,7 @@ export const createDepartment = api(
 export const getDepartment = api(
   { method: 'GET', path: '/departments/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Department> => {
-    return await withErrorHandling('getDepartment', () =>
-      departmentRepository.findOne(id),
-    );
+    return await departmentRepository.findOne(id);
   },
 );
 
@@ -51,10 +44,8 @@ export const getDepartment = api(
 export const listDepartments = api(
   { method: 'GET', path: '/departments', expose: true, auth: true },
   async (): Promise<Departments> => {
-    return await withErrorHandling('listDepartments', async () => {
-      const departments = await departmentRepository.findAll();
-      return { departments };
-    });
+    const departments = await departmentRepository.findAll();
+    return { departments };
   },
 );
 
@@ -67,9 +58,7 @@ export const listDepartments = api(
 export const listDepartmentsWithPagination = api(
   { method: 'GET', path: '/departments/paginated', expose: true, auth: true },
   async (params: PaginationParams): Promise<PaginatedDepartments> => {
-    return await withErrorHandling('listDepartmentsWithPagination', () =>
-      departmentRepository.findAllPaginated(params),
-    );
+    return await departmentRepository.findAllPaginated(params);
   },
 );
 
@@ -88,9 +77,7 @@ export const listTenantDepartments = api(
     auth: true,
   },
   async ({ tenantId }: { tenantId: number }): Promise<Departments> => {
-    return await withErrorHandling('listTenantDepartments', () =>
-      departmentRepository.findByTenant(tenantId),
-    );
+    return await departmentRepository.findByTenant(tenantId);
   },
 );
 
@@ -114,8 +101,9 @@ export const listTenantDepartmentsWithPagination = api(
   }: {
     tenantId: number;
   } & PaginationParams): Promise<PaginatedDepartments> => {
-    return await withErrorHandling('listTenantDepartmentsWithPagination', () =>
-      departmentRepository.findByTenantPaginated(tenantId, paginationParams),
+    return await departmentRepository.findByTenantPaginated(
+      tenantId,
+      paginationParams,
     );
   },
 );
@@ -133,9 +121,7 @@ export const updateDepartment = api(
     id,
     ...data
   }: UpdateDepartmentPayload & { id: number }): Promise<Department> => {
-    return await withErrorHandling('updateDepartment', () =>
-      departmentRepository.update(id, data),
-    );
+    return await departmentRepository.update(id, data);
   },
 );
 
@@ -149,8 +135,6 @@ export const updateDepartment = api(
 export const deleteDepartment = api(
   { method: 'DELETE', path: '/departments/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Department> => {
-    return await withErrorHandling('deleteDepartment', () =>
-      departmentRepository.delete(id),
-    );
+    return await departmentRepository.delete(id);
   },
 );

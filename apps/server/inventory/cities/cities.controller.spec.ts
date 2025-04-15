@@ -49,7 +49,16 @@ describe('Cities Controller', () => {
         createdCityIds.splice(index, 1);
       }
     } catch (error) {
-      console.log(`Error cleaning up city (ID: ${id}):`, error);
+      // Don't log not found errors in test mode as they're expected during cleanup
+      if (!(error instanceof Error && error.message.includes('not found'))) {
+        console.log(`Error cleaning up city (ID: ${id}):`, error);
+      }
+
+      // Always remove from tracking even if delete failed
+      const index = createdCityIds.indexOf(id);
+      if (index > -1) {
+        createdCityIds.splice(index, 1);
+      }
     }
   };
 

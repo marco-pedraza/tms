@@ -7,10 +7,7 @@ import {
   States,
   PaginatedStates,
 } from './states.types';
-import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
-
-const withErrorHandling = createControllerErrorHandler('StatesController');
 
 /**
  * Creates a new state.
@@ -21,9 +18,7 @@ const withErrorHandling = createControllerErrorHandler('StatesController');
 export const createState = api(
   { method: 'POST', path: '/states', expose: true },
   async (params: CreateStatePayload): Promise<State> => {
-    return await withErrorHandling('createState', () =>
-      stateRepository.create(params),
-    );
+    return await stateRepository.create(params);
   },
 );
 
@@ -37,9 +32,7 @@ export const createState = api(
 export const getState = api(
   { method: 'GET', path: '/states/:id', expose: true },
   async ({ id }: { id: number }): Promise<State> => {
-    return await withErrorHandling('getState', () =>
-      stateRepository.findOne(id),
-    );
+    return await stateRepository.findOne(id);
   },
 );
 
@@ -51,9 +44,7 @@ export const getState = api(
 export const listStates = api(
   { method: 'GET', path: '/states', expose: true },
   async (): Promise<States> => {
-    return await withErrorHandling('listStates', () =>
-      stateRepository.findAll(),
-    );
+    return await stateRepository.findAll();
   },
 );
 
@@ -66,9 +57,7 @@ export const listStates = api(
 export const listStatesPaginated = api(
   { method: 'GET', path: '/states/paginated', expose: true },
   async (params: PaginationParams): Promise<PaginatedStates> => {
-    return await withErrorHandling('listStatesPaginated', () =>
-      stateRepository.listPaginated(params),
-    );
+    return await stateRepository.listPaginated(params);
   },
 );
 
@@ -86,9 +75,7 @@ export const updateState = api(
     id,
     ...data
   }: UpdateStatePayload & { id: number }): Promise<State> => {
-    return await withErrorHandling('updateState', () =>
-      stateRepository.update(id, data),
-    );
+    return await stateRepository.update(id, data);
   },
 );
 
@@ -102,8 +89,6 @@ export const updateState = api(
 export const deleteState = api(
   { method: 'DELETE', path: '/states/:id', expose: true },
   async ({ id }: { id: number }): Promise<State> => {
-    return await withErrorHandling('deleteState', () =>
-      stateRepository.delete(id),
-    );
+    return await stateRepository.delete(id);
   },
 );

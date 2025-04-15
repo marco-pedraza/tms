@@ -7,10 +7,7 @@ import type {
   CreateBusLinePayload,
   UpdateBusLinePayload,
 } from './bus-lines.types';
-import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
-
-const withErrorHandling = createControllerErrorHandler('BusLineController');
 
 /**
  * Creates a new bus line
@@ -23,9 +20,7 @@ export const createBusLine = api(
     path: '/bus-lines',
   },
   async (payload: CreateBusLinePayload): Promise<BusLine> => {
-    return await withErrorHandling('createBusLine', async () => {
-      return await busLineRepository.create(payload);
-    });
+    return await busLineRepository.create(payload);
   },
 );
 
@@ -40,9 +35,7 @@ export const getBusLine = api(
     path: '/bus-lines/:id',
   },
   async ({ id }: { id: number }): Promise<BusLine> => {
-    return await withErrorHandling('getBusLine', async () => {
-      return await busLineRepository.findOne(id);
-    });
+    return await busLineRepository.findOne(id);
   },
 );
 
@@ -56,10 +49,8 @@ export const listBusLines = api(
     path: '/bus-lines',
   },
   async (): Promise<BusLines> => {
-    return await withErrorHandling('listBusLines', async () => {
-      const busLines = await busLineRepository.findAll();
-      return { busLines };
-    });
+    const busLines = await busLineRepository.findAll();
+    return { busLines };
   },
 );
 
@@ -74,9 +65,7 @@ export const listBusLinesPaginated = api(
     path: '/bus-lines/paginated',
   },
   async (params: PaginationParams): Promise<PaginatedBusLines> => {
-    return await withErrorHandling('listBusLinesPaginated', async () => {
-      return await busLineRepository.findAllPaginated(params);
-    });
+    return await busLineRepository.findAllPaginated(params);
   },
 );
 
@@ -94,9 +83,7 @@ export const updateBusLine = api(
     id,
     ...payload
   }: { id: number } & UpdateBusLinePayload): Promise<BusLine> => {
-    return await withErrorHandling('updateBusLine', async () => {
-      return await busLineRepository.update(id, payload);
-    });
+    return await busLineRepository.update(id, payload);
   },
 );
 
@@ -111,8 +98,6 @@ export const deleteBusLine = api(
     path: '/bus-lines/:id',
   },
   async ({ id }: { id: number }): Promise<BusLine> => {
-    return await withErrorHandling('deleteBusLine', async () => {
-      return await busLineRepository.delete(id);
-    });
+    return await busLineRepository.delete(id);
   },
 );

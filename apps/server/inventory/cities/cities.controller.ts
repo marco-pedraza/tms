@@ -7,10 +7,7 @@ import type {
   PaginatedCities,
   Cities,
 } from './cities.types';
-import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
-
-const withErrorHandling = createControllerErrorHandler('CitiesController');
 
 /**
  * Creates a new city.
@@ -21,9 +18,7 @@ const withErrorHandling = createControllerErrorHandler('CitiesController');
 export const createCity = api(
   { method: 'POST', path: '/cities', expose: true },
   async (params: CreateCityPayload): Promise<City> => {
-    return await withErrorHandling('createCity', () =>
-      cityRepository.create(params),
-    );
+    return await cityRepository.create(params);
   },
 );
 
@@ -37,7 +32,7 @@ export const createCity = api(
 export const getCity = api(
   { method: 'GET', path: '/cities/:id', expose: true },
   async ({ id }: { id: number }): Promise<City> => {
-    return await withErrorHandling('getCity', () => cityRepository.findOne(id));
+    return await cityRepository.findOne(id);
   },
 );
 
@@ -63,9 +58,7 @@ export const listCities = api(
 export const listCitiesPaginated = api(
   { method: 'GET', path: '/cities/paginated', expose: true },
   async (params: PaginationParams): Promise<PaginatedCities> => {
-    return await withErrorHandling('listCitiesPaginated', () =>
-      cityRepository.findAllPaginated(params),
-    );
+    return await cityRepository.findAllPaginated(params);
   },
 );
 
@@ -82,9 +75,7 @@ export const updateCity = api(
     id,
     ...data
   }: UpdateCityPayload & { id: number }): Promise<City> => {
-    return await withErrorHandling('updateCity', () =>
-      cityRepository.update(id, data),
-    );
+    return await cityRepository.update(id, data);
   },
 );
 
@@ -98,8 +89,6 @@ export const updateCity = api(
 export const deleteCity = api(
   { method: 'DELETE', path: '/cities/:id', expose: true },
   async ({ id }: { id: number }): Promise<City> => {
-    return await withErrorHandling('deleteCity', () =>
-      cityRepository.delete(id),
-    );
+    return await cityRepository.delete(id);
   },
 );

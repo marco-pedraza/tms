@@ -6,10 +6,7 @@ import type {
   Transporter,
   PaginatedTransporters,
 } from './transporters.types';
-import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
-
-const withErrorHandling = createControllerErrorHandler('TransporterController');
 
 /**
  * Creates a new transporter.
@@ -20,9 +17,7 @@ const withErrorHandling = createControllerErrorHandler('TransporterController');
 export const createTransporter = api(
   { method: 'POST', path: '/transporters' },
   async (params: CreateTransporterPayload): Promise<Transporter> => {
-    return await withErrorHandling('createTransporter', async () => {
-      return await transporterRepository.create(params);
-    });
+    return await transporterRepository.create(params);
   },
 );
 
@@ -36,9 +31,7 @@ export const createTransporter = api(
 export const getTransporter = api(
   { method: 'GET', path: '/transporters/:id', expose: true },
   async ({ id }: { id: number }): Promise<Transporter> => {
-    return await withErrorHandling('getTransporter', async () => {
-      return await transporterRepository.findOne(id);
-    });
+    return await transporterRepository.findOne(id);
   },
 );
 
@@ -51,9 +44,7 @@ export const getTransporter = api(
 export const listTransporters = api(
   { method: 'GET', path: '/transporters', expose: true },
   async (params: PaginationParams): Promise<PaginatedTransporters> => {
-    return await withErrorHandling('listTransporters', async () => {
-      return await transporterRepository.findAllPaginated(params);
-    });
+    return await transporterRepository.findAllPaginated(params);
   },
 );
 
@@ -70,9 +61,7 @@ export const updateTransporter = api(
     id,
     ...data
   }: UpdateTransporterPayload & { id: number }): Promise<Transporter> => {
-    return await withErrorHandling('updateTransporter', async () => {
-      return await transporterRepository.update(id, data);
-    });
+    return await transporterRepository.update(id, data);
   },
 );
 
@@ -86,8 +75,6 @@ export const updateTransporter = api(
 export const deleteTransporter = api(
   { method: 'DELETE', path: '/transporters/:id', expose: true },
   async ({ id }: { id: number }): Promise<Transporter> => {
-    return await withErrorHandling('deleteTransporter', async () => {
-      return await transporterRepository.delete(id);
-    });
+    return await transporterRepository.delete(id);
   },
 );

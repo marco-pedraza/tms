@@ -6,10 +6,7 @@ import type {
   Terminal,
   PaginatedTerminals,
 } from './terminals.types';
-import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
-
-const withErrorHandling = createControllerErrorHandler('TerminalsController');
 
 /**
  * Creates a new terminal.
@@ -20,9 +17,7 @@ const withErrorHandling = createControllerErrorHandler('TerminalsController');
 export const createTerminal = api(
   { method: 'POST', path: '/terminals' },
   async (params: CreateTerminalPayload): Promise<Terminal> => {
-    return await withErrorHandling('createTerminal', () =>
-      terminalRepository.create(params),
-    );
+    return await terminalRepository.create(params);
   },
 );
 
@@ -36,9 +31,7 @@ export const createTerminal = api(
 export const getTerminal = api(
   { method: 'GET', path: '/terminals/:id', expose: true },
   async ({ id }: { id: number }): Promise<Terminal> => {
-    return await withErrorHandling('getTerminal', () =>
-      terminalRepository.findOne(id),
-    );
+    return await terminalRepository.findOne(id);
   },
 );
 
@@ -51,9 +44,7 @@ export const getTerminal = api(
 export const listTerminals = api(
   { method: 'GET', path: '/terminals', expose: true },
   async (params: PaginationParams): Promise<PaginatedTerminals> => {
-    return await withErrorHandling('listTerminals', () =>
-      terminalRepository.findAllPaginated(params),
-    );
+    return await terminalRepository.findAllPaginated(params);
   },
 );
 
@@ -70,9 +61,7 @@ export const updateTerminal = api(
     id,
     ...data
   }: UpdateTerminalPayload & { id: number }): Promise<Terminal> => {
-    return await withErrorHandling('updateTerminal', () =>
-      terminalRepository.update(id, data),
-    );
+    return await terminalRepository.update(id, data);
   },
 );
 
@@ -86,8 +75,6 @@ export const updateTerminal = api(
 export const deleteTerminal = api(
   { method: 'DELETE', path: '/terminals/:id', expose: true },
   async ({ id }: { id: number }): Promise<Terminal> => {
-    return await withErrorHandling('deleteTerminal', () =>
-      terminalRepository.delete(id),
-    );
+    return await terminalRepository.delete(id);
   },
 );

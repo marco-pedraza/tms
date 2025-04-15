@@ -7,73 +7,79 @@ import {
 } from '@repo/base-repo';
 import { InvalidStateTransitionError } from '@repo/state-machine';
 
+// we need to use any here because the type is not defined in the APIError class
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ErrDetails = Record<string, any>;
+
 /**
  * Utility for standardized API error creation
  */
 export const errors = {
-  notFound: (message = 'Resource not found', details?: unknown) =>
-    APIError.notFound(message).withDetails(details),
+  notFound: (message = 'Resource not found', details?: ErrDetails) =>
+    APIError.notFound(message).withDetails(details ?? {}),
 
-  invalidArgument: (message = 'Invalid argument provided', details?: unknown) =>
-    APIError.invalidArgument(message).withDetails(details),
+  invalidArgument: (
+    message = 'Invalid argument provided',
+    details?: ErrDetails,
+  ) => APIError.invalidArgument(message).withDetails(details ?? {}),
 
   alreadyExists: (
     message = 'Resource with this name or code already exists',
-    details?: unknown,
-  ) => APIError.alreadyExists(message).withDetails(details),
+    details?: ErrDetails,
+  ) => APIError.alreadyExists(message).withDetails(details ?? {}),
 
-  unauthenticated: (message = 'Authentication failed', details?: unknown) =>
-    APIError.unauthenticated(message).withDetails(details),
+  unauthenticated: (message = 'Authentication failed', details?: ErrDetails) =>
+    APIError.unauthenticated(message).withDetails(details ?? {}),
 
-  permissionDenied: (message = 'Access denied', details?: unknown) =>
-    APIError.permissionDenied(message).withDetails(details),
+  permissionDenied: (message = 'Access denied', details?: ErrDetails) =>
+    APIError.permissionDenied(message).withDetails(details ?? {}),
 
-  canceled: (message = 'Operation was canceled', details?: unknown) =>
-    APIError.canceled(message).withDetails(details),
+  canceled: (message = 'Operation was canceled', details?: ErrDetails) =>
+    APIError.canceled(message).withDetails(details ?? {}),
 
-  unknown: (message = 'An unknown error occurred', details?: unknown) =>
-    APIError.unknown(message).withDetails(details),
+  unknown: (message = 'An unknown error occurred', details?: ErrDetails) =>
+    APIError.unknown(message).withDetails(details ?? {}),
 
   deadlineExceeded: (
     message = 'Operation deadline exceeded',
-    details?: unknown,
-  ) => APIError.deadlineExceeded(message).withDetails(details),
+    details?: ErrDetails,
+  ) => APIError.deadlineExceeded(message).withDetails(details ?? {}),
 
   resourceExhausted: (
     message = 'Resource has been exhausted',
-    details?: unknown,
-  ) => APIError.resourceExhausted(message).withDetails(details),
+    details?: ErrDetails,
+  ) => APIError.resourceExhausted(message).withDetails(details ?? {}),
 
   failedPrecondition: (
     message = 'Operation failed due to failed precondition',
-    details?: unknown,
-  ) => APIError.failedPrecondition(message).withDetails(details),
+    details?: ErrDetails,
+  ) => APIError.failedPrecondition(message).withDetails(details ?? {}),
 
-  aborted: (message = 'Operation was aborted', details?: unknown) =>
-    APIError.aborted(message).withDetails(details),
+  aborted: (message = 'Operation was aborted', details?: ErrDetails) =>
+    APIError.aborted(message).withDetails(details ?? {}),
 
   outOfRange: (
     message = 'Operation was attempted past valid range',
-    details?: unknown,
-  ) => APIError.outOfRange(message).withDetails(details),
+    details?: ErrDetails,
+  ) => APIError.outOfRange(message).withDetails(details ?? {}),
 
   unimplemented: (
     message = 'Operation is not implemented',
-    details?: unknown,
-  ) => APIError.unimplemented(message).withDetails(details),
+    details?: ErrDetails,
+  ) => APIError.unimplemented(message).withDetails(details ?? {}),
 
-  internal: (message = 'Internal server error', details?: unknown) =>
-    APIError.internal(message).withDetails(details),
+  internal: (message = 'Internal server error', details?: ErrDetails) =>
+    APIError.internal(message).withDetails(details ?? {}),
 
   unavailable: (
     message = 'Service is currently unavailable',
-    details?: unknown,
-  ) => APIError.unavailable(message).withDetails(details),
+    details?: ErrDetails,
+  ) => APIError.unavailable(message).withDetails(details ?? {}),
 
   dataLoss: (
     message = 'Unrecoverable data loss or corruption',
     details?: unknown,
-  ) => APIError.dataLoss(message).withDetails(details),
+  ) => APIError.dataLoss(message).withDetails(details ?? {}),
 };
 
 /**

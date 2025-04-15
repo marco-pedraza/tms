@@ -7,10 +7,7 @@ import type {
   Countries,
   PaginatedCountries,
 } from './countries.types';
-import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
-
-const withErrorHandling = createControllerErrorHandler('CountriesController');
 
 /**
  * Creates a new country.
@@ -21,9 +18,7 @@ const withErrorHandling = createControllerErrorHandler('CountriesController');
 export const createCountry = api(
   { expose: true, method: 'POST', path: '/countries' },
   async (params: CreateCountryPayload): Promise<Country> => {
-    return await withErrorHandling('createCountry', () =>
-      countryRepository.create(params),
-    );
+    return await countryRepository.create(params);
   },
 );
 
@@ -37,9 +32,7 @@ export const createCountry = api(
 export const getCountry = api(
   { expose: true, method: 'GET', path: '/countries/:id' },
   async ({ id }: { id: number }): Promise<Country> => {
-    return await withErrorHandling('getCountry', () =>
-      countryRepository.findOne(id),
-    );
+    return await countryRepository.findOne(id);
   },
 );
 
@@ -51,9 +44,7 @@ export const getCountry = api(
 export const listCountries = api(
   { expose: true, method: 'GET', path: '/countries' },
   async (): Promise<Countries> => {
-    return await withErrorHandling('listCountries', () =>
-      countryRepository.findAll(),
-    );
+    return await countryRepository.findAll();
   },
 );
 
@@ -66,9 +57,7 @@ export const listCountries = api(
 export const listCountriesPaginated = api(
   { expose: true, method: 'GET', path: '/countries/paginated' },
   async (params: PaginationParams): Promise<PaginatedCountries> => {
-    return await withErrorHandling('listCountriesPaginated', () =>
-      countryRepository.findAllPaginated(params),
-    );
+    return await countryRepository.findAllPaginated(params);
   },
 );
 
@@ -86,9 +75,7 @@ export const updateCountry = api(
     id,
     ...data
   }: UpdateCountryPayload & { id: number }): Promise<Country> => {
-    return await withErrorHandling('updateCountry', () =>
-      countryRepository.update(id, data),
-    );
+    return await countryRepository.update(id, data);
   },
 );
 
@@ -102,8 +89,6 @@ export const updateCountry = api(
 export const deleteCountry = api(
   { expose: true, method: 'DELETE', path: '/countries/:id' },
   async ({ id }: { id: number }): Promise<Country> => {
-    return await withErrorHandling('deleteCountry', () =>
-      countryRepository.delete(id),
-    );
+    return await countryRepository.delete(id);
   },
 );

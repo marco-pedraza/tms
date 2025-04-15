@@ -6,10 +6,7 @@ import type {
   Gate,
   PaginatedGates,
 } from './gates.types';
-import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
-
-const withErrorHandling = createControllerErrorHandler('GatesController');
 
 /**
  * Creates a new gate.
@@ -20,9 +17,7 @@ const withErrorHandling = createControllerErrorHandler('GatesController');
 export const createGate = api(
   { method: 'POST', path: '/gates', expose: true },
   async (params: CreateGatePayload): Promise<Gate> => {
-    return await withErrorHandling('createGate', () =>
-      gateRepository.create(params),
-    );
+    return await gateRepository.create(params);
   },
 );
 
@@ -36,7 +31,7 @@ export const createGate = api(
 export const getGate = api(
   { method: 'GET', path: '/gates/:id', expose: true },
   async ({ id }: { id: number }): Promise<Gate> => {
-    return await withErrorHandling('getGate', () => gateRepository.findOne(id));
+    return await gateRepository.findOne(id);
   },
 );
 
@@ -49,9 +44,7 @@ export const getGate = api(
 export const listGates = api(
   { method: 'GET', path: '/gates', expose: true },
   async (params: PaginationParams): Promise<PaginatedGates> => {
-    return await withErrorHandling('listGates', () =>
-      gateRepository.findAllPaginated(params),
-    );
+    return await gateRepository.findAllPaginated(params);
   },
 );
 
@@ -67,9 +60,7 @@ export const listGatesByTerminal = api(
     terminalId,
     ...paginationParams
   }: { terminalId: number } & PaginationParams): Promise<PaginatedGates> => {
-    return await withErrorHandling('listGatesByTerminal', () =>
-      gateRepository.findByTerminal(terminalId, paginationParams),
-    );
+    return await gateRepository.findByTerminal(terminalId, paginationParams);
   },
 );
 
@@ -86,9 +77,7 @@ export const updateGate = api(
     id,
     ...data
   }: UpdateGatePayload & { id: number }): Promise<Gate> => {
-    return await withErrorHandling('updateGate', () =>
-      gateRepository.update(id, data),
-    );
+    return await gateRepository.update(id, data);
   },
 );
 
@@ -102,8 +91,6 @@ export const updateGate = api(
 export const deleteGate = api(
   { method: 'DELETE', path: '/gates/:id', expose: true },
   async ({ id }: { id: number }): Promise<Gate> => {
-    return await withErrorHandling('deleteGate', () =>
-      gateRepository.delete(id),
-    );
+    return await gateRepository.delete(id);
   },
 );

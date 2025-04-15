@@ -6,12 +6,7 @@ import type {
   UserWithPermissions,
   UserWithRoles,
 } from './user-permissions.types';
-import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { ValidationError } from '@repo/base-repo';
-
-const withErrorHandling = createControllerErrorHandler(
-  'UserPermissionsController',
-);
 
 /**
  * Retrieves a user with their assigned roles.
@@ -28,9 +23,7 @@ export const getUserWithRoles = api(
       throw new ValidationError('Invalid user ID provided');
     }
 
-    return await withErrorHandling('getUserWithRoles', () =>
-      userPermissionsRepository.getUserWithRoles(userId),
-    );
+    return await userPermissionsRepository.getUserWithRoles(userId);
   },
 );
 
@@ -49,9 +42,7 @@ export const getUserWithPermissions = api(
     auth: true,
   },
   async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
-    return await withErrorHandling('getUserWithPermissions', () =>
-      userPermissionsRepository.getUserWithPermissions(userId),
-    );
+    return await userPermissionsRepository.getUserWithPermissions(userId);
   },
 );
 
@@ -69,9 +60,7 @@ export const assignRolesToUser = api(
     userId,
     ...data
   }: AssignRolesToUserPayload & { userId: number }): Promise<UserWithRoles> => {
-    return await withErrorHandling('assignRolesToUser', () =>
-      userPermissionsRepository.assignRoles(userId, data),
-    );
+    return await userPermissionsRepository.assignRoles(userId, data);
   },
 );
 
@@ -96,9 +85,7 @@ export const assignPermissionsToUser = api(
   }: AssignPermissionsToUserPayload & {
     userId: number;
   }): Promise<UserWithPermissions> => {
-    return await withErrorHandling('assignPermissionsToUser', () =>
-      userPermissionsRepository.assignPermissions(userId, data),
-    );
+    return await userPermissionsRepository.assignPermissions(userId, data);
   },
 );
 
@@ -124,21 +111,19 @@ export const checkUserPermission = api(
     userId: number;
     permissionCode: string;
   }): Promise<{ hasPermission: boolean }> => {
-    return await withErrorHandling('checkUserPermission', async () => {
-      try {
-        await userPermissionsRepository.hasPermission(userId, permissionCode);
-        return { hasPermission: true };
-      } catch (error) {
-        // If it's an UnauthorizedError or NotFoundError, return false without throwing
-        if (
-          error instanceof Error &&
-          (error.name === 'UnauthorizedError' || error.name === 'NotFoundError')
-        ) {
-          return { hasPermission: false };
-        }
-        throw error;
+    try {
+      await userPermissionsRepository.hasPermission(userId, permissionCode);
+      return { hasPermission: true };
+    } catch (error) {
+      // If it's an UnauthorizedError or NotFoundError, return false without throwing
+      if (
+        error instanceof Error &&
+        (error.name === 'UnauthorizedError' || error.name === 'NotFoundError')
+      ) {
+        return { hasPermission: false };
       }
-    });
+      throw error;
+    }
   },
 );
 
@@ -164,21 +149,19 @@ export const checkUserRole = api(
     userId: number;
     roleId: number;
   }): Promise<{ hasRole: boolean }> => {
-    return await withErrorHandling('checkUserRole', async () => {
-      try {
-        await userPermissionsRepository.hasRole(userId, roleId);
-        return { hasRole: true };
-      } catch (error) {
-        // If it's an UnauthorizedError or NotFoundError, return false without throwing
-        if (
-          error instanceof Error &&
-          (error.name === 'UnauthorizedError' || error.name === 'NotFoundError')
-        ) {
-          return { hasRole: false };
-        }
-        throw error;
+    try {
+      await userPermissionsRepository.hasRole(userId, roleId);
+      return { hasRole: true };
+    } catch (error) {
+      // If it's an UnauthorizedError or NotFoundError, return false without throwing
+      if (
+        error instanceof Error &&
+        (error.name === 'UnauthorizedError' || error.name === 'NotFoundError')
+      ) {
+        return { hasRole: false };
       }
-    });
+      throw error;
+    }
   },
 );
 
@@ -197,9 +180,7 @@ export const getUserPermissions = api(
     auth: true,
   },
   async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
-    return await withErrorHandling('getUserPermissions', () =>
-      userPermissionsRepository.getUserWithPermissions(userId),
-    );
+    return await userPermissionsRepository.getUserWithPermissions(userId);
   },
 );
 
@@ -218,8 +199,6 @@ export const getUserRoles = api(
     auth: true,
   },
   async ({ userId }: { userId: number }): Promise<UserWithRoles> => {
-    return await withErrorHandling('getUserRoles', () =>
-      userPermissionsRepository.getUserWithRoles(userId),
-    );
+    return await userPermissionsRepository.getUserWithRoles(userId);
   },
 );

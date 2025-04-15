@@ -5,10 +5,7 @@ import type {
   RefreshTokenPayload,
   LogoutPayload,
 } from './auth.types';
-import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { authUseCases } from './auth.use-cases';
-
-const withErrorHandling = createControllerErrorHandler('AuthController');
 
 /**
  * Authenticates a user and generates JWT tokens
@@ -19,9 +16,7 @@ const withErrorHandling = createControllerErrorHandler('AuthController');
 export const login = api(
   { method: 'POST', path: '/auth/login', expose: true },
   async (params: LoginPayload): Promise<LoginResponse> => {
-    return await withErrorHandling('login', () =>
-      authUseCases.authenticateUser(params),
-    );
+    return await authUseCases.authenticateUser(params);
   },
 );
 
@@ -34,9 +29,7 @@ export const login = api(
 export const refreshToken = api(
   { method: 'POST', path: '/auth/refresh-token', expose: true },
   async (params: RefreshTokenPayload): Promise<Omit<LoginResponse, 'user'>> => {
-    return await withErrorHandling('refreshToken', () =>
-      authUseCases.refreshUserToken(params),
-    );
+    return await authUseCases.refreshUserToken(params);
   },
 );
 
@@ -49,9 +42,7 @@ export const refreshToken = api(
 export const logout = api(
   { method: 'POST', path: '/auth/logout', expose: true },
   async (params: LogoutPayload): Promise<{ message: string }> => {
-    return await withErrorHandling('logout', () =>
-      authUseCases.logoutUser(params),
-    );
+    return await authUseCases.logoutUser(params);
   },
 );
 
@@ -69,8 +60,6 @@ export const revokeAllTokens = api(
     auth: true,
   },
   async ({ userId }: { userId: number }): Promise<{ count: number }> => {
-    return await withErrorHandling('revokeAllTokens', () =>
-      authUseCases.revokeAllUserTokens(userId),
-    );
+    return await authUseCases.revokeAllUserTokens(userId);
   },
 );

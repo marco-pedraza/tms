@@ -11,10 +11,7 @@ import type {
   PaginatedRolesWithPermissions,
   AssignPermissionsToRolePayload,
 } from './roles.types';
-import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
-
-const withErrorHandling = createControllerErrorHandler('RolesController');
 
 /**
  * Creates a new role.
@@ -25,9 +22,7 @@ const withErrorHandling = createControllerErrorHandler('RolesController');
 export const createRole = api(
   { method: 'POST', path: '/roles', expose: true, auth: true },
   async (params: CreateRolePayload): Promise<RoleWithPermissions> => {
-    return await withErrorHandling('createRole', () =>
-      roleRepository.create(params),
-    );
+    return await roleRepository.create(params);
   },
 );
 
@@ -41,7 +36,7 @@ export const createRole = api(
 export const getRole = api(
   { method: 'GET', path: '/roles/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Role> => {
-    return await withErrorHandling('getRole', () => roleRepository.findOne(id));
+    return await roleRepository.findOne(id);
   },
 );
 
@@ -60,9 +55,7 @@ export const getRoleWithPermissions = api(
     auth: true,
   },
   async ({ id }: { id: number }): Promise<RoleWithPermissions> => {
-    return await withErrorHandling('getRoleWithPermissions', () =>
-      roleRepository.findOneWithPermissions(id),
-    );
+    return await roleRepository.findOneWithPermissions(id);
   },
 );
 
@@ -74,10 +67,7 @@ export const getRoleWithPermissions = api(
 export const listRoles = api(
   { method: 'GET', path: '/roles', expose: true, auth: true },
   async (): Promise<Roles> => {
-    return await withErrorHandling(
-      'listRoles',
-      () => roleRepository.findAll(false) as Promise<Roles>,
-    );
+    return (await roleRepository.findAll(false)) as Roles;
   },
 );
 
@@ -89,10 +79,7 @@ export const listRoles = api(
 export const listRolesWithPermissions = api(
   { method: 'GET', path: '/roles/with-permissions', expose: true, auth: true },
   async (): Promise<RolesWithPermissions> => {
-    return await withErrorHandling(
-      'listRolesWithPermissions',
-      () => roleRepository.findAll(true) as Promise<RolesWithPermissions>,
-    );
+    return (await roleRepository.findAll(true)) as RolesWithPermissions;
   },
 );
 
@@ -106,10 +93,7 @@ export const listRolesWithPermissions = api(
 export const listRolesByTenant = api(
   { method: 'GET', path: '/tenants/:tenantId/roles', expose: true, auth: true },
   async ({ tenantId }: { tenantId: number }): Promise<Roles> => {
-    return await withErrorHandling(
-      'listRolesByTenant',
-      () => roleRepository.findAllByTenant(tenantId, false) as Promise<Roles>,
-    );
+    return (await roleRepository.findAllByTenant(tenantId, false)) as Roles;
   },
 );
 
@@ -128,14 +112,10 @@ export const listRolesByTenantWithPermissions = api(
     auth: true,
   },
   async ({ tenantId }: { tenantId: number }): Promise<RolesWithPermissions> => {
-    return await withErrorHandling(
-      'listRolesByTenantWithPermissions',
-      () =>
-        roleRepository.findAllByTenant(
-          tenantId,
-          true,
-        ) as Promise<RolesWithPermissions>,
-    );
+    return (await roleRepository.findAllByTenant(
+      tenantId,
+      true,
+    )) as RolesWithPermissions;
   },
 );
 
@@ -148,14 +128,10 @@ export const listRolesByTenantWithPermissions = api(
 export const listRolesWithPagination = api(
   { method: 'GET', path: '/roles/paginated', expose: true, auth: true },
   async (params: PaginationParams): Promise<PaginatedRoles> => {
-    return await withErrorHandling(
-      'listRolesWithPagination',
-      () =>
-        roleRepository.findAllPaginated(
-          params,
-          false,
-        ) as Promise<PaginatedRoles>,
-    );
+    return (await roleRepository.findAllPaginated(
+      params,
+      false,
+    )) as PaginatedRoles;
   },
 );
 
@@ -173,14 +149,10 @@ export const listRolesWithPermissionsAndPagination = api(
     auth: true,
   },
   async (params: PaginationParams): Promise<PaginatedRolesWithPermissions> => {
-    return await withErrorHandling(
-      'listRolesWithPermissionsAndPagination',
-      () =>
-        roleRepository.findAllPaginated(
-          params,
-          true,
-        ) as Promise<PaginatedRolesWithPermissions>,
-    );
+    return (await roleRepository.findAllPaginated(
+      params,
+      true,
+    )) as PaginatedRolesWithPermissions;
   },
 );
 
@@ -197,9 +169,7 @@ export const updateRole = api(
     id,
     ...data
   }: UpdateRolePayload & { id: number }): Promise<RoleWithPermissions> => {
-    return await withErrorHandling('updateRole', () =>
-      roleRepository.update(id, data),
-    );
+    return await roleRepository.update(id, data);
   },
 );
 
@@ -219,9 +189,7 @@ export const assignPermissionsToRole = api(
   }: AssignPermissionsToRolePayload & {
     id: number;
   }): Promise<RoleWithPermissions> => {
-    return await withErrorHandling('assignPermissionsToRole', () =>
-      roleRepository.assignPermissions(id, data),
-    );
+    return await roleRepository.assignPermissions(id, data);
   },
 );
 
@@ -235,9 +203,7 @@ export const assignPermissionsToRole = api(
 export const deleteRole = api(
   { method: 'DELETE', path: '/roles/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Role> => {
-    return await withErrorHandling('deleteRole', () =>
-      roleRepository.delete(id),
-    );
+    return await roleRepository.delete(id);
   },
 );
 
@@ -259,15 +225,11 @@ export const listRolesByTenantWithPagination = api(
     tenantId,
     ...params
   }: PaginationParams & { tenantId: number }): Promise<PaginatedRoles> => {
-    return await withErrorHandling(
-      'listRolesByTenantWithPagination',
-      () =>
-        roleRepository.findAllByTenantPaginated(
-          tenantId,
-          params,
-          false,
-        ) as Promise<PaginatedRoles>,
-    );
+    return (await roleRepository.findAllByTenantPaginated(
+      tenantId,
+      params,
+      false,
+    )) as PaginatedRoles;
   },
 );
 
@@ -291,15 +253,11 @@ export const listRolesByTenantWithPermissionsAndPagination = api(
   }: PaginationParams & {
     tenantId: number;
   }): Promise<PaginatedRolesWithPermissions> => {
-    return await withErrorHandling(
-      'listRolesByTenantWithPermissionsAndPagination',
-      () =>
-        roleRepository.findAllByTenantPaginated(
-          tenantId,
-          params,
-          true,
-        ) as Promise<PaginatedRolesWithPermissions>,
-    );
+    return (await roleRepository.findAllByTenantPaginated(
+      tenantId,
+      params,
+      true,
+    )) as PaginatedRolesWithPermissions;
   },
 );
 
@@ -318,10 +276,7 @@ export const listTenantRoles = api(
     auth: true,
   },
   async ({ tenantId }: { tenantId: number }): Promise<Roles> => {
-    return await withErrorHandling(
-      'listTenantRoles',
-      () => roleRepository.findAllByTenant(tenantId, false) as Promise<Roles>,
-    );
+    return (await roleRepository.findAllByTenant(tenantId, false)) as Roles;
   },
 );
 
@@ -343,14 +298,10 @@ export const listTenantRolesWithPagination = api(
     tenantId,
     ...paginationParams
   }: PaginationParams & { tenantId: number }): Promise<PaginatedRoles> => {
-    return await withErrorHandling(
-      'listTenantRolesWithPagination',
-      () =>
-        roleRepository.findAllByTenantPaginated(
-          tenantId,
-          paginationParams,
-          false,
-        ) as Promise<PaginatedRoles>,
-    );
+    return (await roleRepository.findAllByTenantPaginated(
+      tenantId,
+      paginationParams,
+      false,
+    )) as PaginatedRoles;
   },
 );

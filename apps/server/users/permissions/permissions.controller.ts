@@ -7,10 +7,7 @@ import type {
   Permissions,
   PaginatedPermissions,
 } from './permissions.types';
-import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
-
-const withErrorHandling = createControllerErrorHandler('PermissionsController');
 
 /**
  * Creates a new permission.
@@ -21,9 +18,7 @@ const withErrorHandling = createControllerErrorHandler('PermissionsController');
 export const createPermission = api(
   { method: 'POST', path: '/permissions', expose: true, auth: true },
   async (params: CreatePermissionPayload): Promise<Permission> => {
-    return await withErrorHandling('createPermission', () =>
-      permissionRepository.create(params),
-    );
+    return await permissionRepository.create(params);
   },
 );
 
@@ -37,9 +32,7 @@ export const createPermission = api(
 export const getPermission = api(
   { method: 'GET', path: '/permissions/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Permission> => {
-    return await withErrorHandling('getPermission', () =>
-      permissionRepository.findOne(id),
-    );
+    return await permissionRepository.findOne(id);
   },
 );
 
@@ -51,9 +44,7 @@ export const getPermission = api(
 export const listPermissions = api(
   { method: 'GET', path: '/permissions', expose: true, auth: true },
   async (): Promise<Permissions> => {
-    return await withErrorHandling('listPermissions', () =>
-      permissionRepository.findAll(),
-    );
+    return await permissionRepository.findAll();
   },
 );
 
@@ -66,9 +57,7 @@ export const listPermissions = api(
 export const listPermissionsWithPagination = api(
   { method: 'GET', path: '/permissions/paginated', expose: true, auth: true },
   async (params: PaginationParams): Promise<PaginatedPermissions> => {
-    return await withErrorHandling('listPermissionsWithPagination', () =>
-      permissionRepository.findAllPaginated(params),
-    );
+    return await permissionRepository.findAllPaginated(params);
   },
 );
 
@@ -85,9 +74,7 @@ export const updatePermission = api(
     id,
     ...data
   }: UpdatePermissionPayload & { id: number }): Promise<Permission> => {
-    return await withErrorHandling('updatePermission', () =>
-      permissionRepository.update(id, data),
-    );
+    return await permissionRepository.update(id, data);
   },
 );
 
@@ -101,8 +88,6 @@ export const updatePermission = api(
 export const deletePermission = api(
   { method: 'DELETE', path: '/permissions/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Permission> => {
-    return await withErrorHandling('deletePermission', () =>
-      permissionRepository.delete(id),
-    );
+    return await permissionRepository.delete(id);
   },
 );

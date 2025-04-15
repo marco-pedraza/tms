@@ -106,14 +106,8 @@ export const deleteDriver = api(
  */
 export const updateDriverStatus = api(
   { expose: true, method: 'PUT', path: '/drivers/:id/status' },
-  async ({
-    id,
-    status,
-  }: {
-    id: number;
-    status: DriverStatus;
-  }): Promise<Driver> => {
-    return await driverRepository.updateStatus(id, status);
+  async ({ id, status }: { id: number; status: string }): Promise<Driver> => {
+    return await driverRepository.updateStatus(id, status as DriverStatus);
   },
 );
 

@@ -6,9 +6,9 @@ import { Params } from 'next/dist/server/request/params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import imsClient from '@/lib/imsClient';
 import type { states } from '@repo/ims-client';
-import { useTranslation } from 'react-i18next';
 import StateForm, { StateFormValues } from '@/app/states/state-form';
 import { useStateMutations } from '@/app/states/hooks/use-state-mutations';
+import { useTranslations } from 'next-intl';
 
 interface EditStatePageParams extends Params {
   id: string;
@@ -19,11 +19,12 @@ const isNumber = (value: string) => {
 };
 
 export default function EditStatePage() {
-  const { t } = useTranslation(['states', 'common']);
   const params = useParams<EditStatePageParams>();
   const stateId = parseInt(params.id);
   const queryClient = useQueryClient();
   const { updateState } = useStateMutations();
+  const tStates = useTranslations('states');
+  const tCommon = useTranslations('common');
 
   const { data, status, error } = useQuery({
     queryKey: ['state', stateId],
@@ -38,15 +39,15 @@ export default function EditStatePage() {
   });
 
   if (!isNumber(params.id)) {
-    return <div>{t('states:errors.invalidId')}</div>;
+    return <div>{tCommon('errors.invalidId')}</div>;
   }
 
   if (status === 'pending') {
-    return <div>{t('common:states.loading')}</div>;
+    return <div>{tCommon('states.loading')}</div>;
   }
 
   if (error) {
-    return <div>{t('common:errors.unexpected')}</div>;
+    return <div>{tCommon('errors.unexpected')}</div>;
   }
 
   const handleSubmit = (values: StateFormValues) => {
@@ -56,14 +57,14 @@ export default function EditStatePage() {
   return (
     <div>
       <PageHeader
-        title={t('states:edit.title')}
+        title={tStates('edit.title')}
         description={`${data?.name} (${data?.code})`}
         backHref="/states"
       />
       <StateForm
         defaultValues={data}
         onSubmit={handleSubmit}
-        submitButtonText={t('states:actions.update')}
+        submitButtonText={tCommon('actions.update')}
       />
     </div>
   );

@@ -9,6 +9,8 @@ import type { countries } from '@repo/ims-client';
 import CountryForm, { CountryFormValues } from '@/app/countries/country-form';
 import { useCountryMutations } from '@/app/countries/hooks/use-country-mutations';
 
+import { useTranslations } from 'next-intl';
+
 interface EditCountryPageParams extends Params {
   id: string;
 }
@@ -22,6 +24,9 @@ export default function EditCountryPage() {
   const countryId = parseInt(params.id);
   const queryClient = useQueryClient();
   const { updateCountry } = useCountryMutations();
+  const tCountries = useTranslations('countries');
+  const tCommon = useTranslations('common');
+
   const { data, status, error } = useQuery({
     queryKey: ['country', countryId],
     enabled: isNumber(params.id),
@@ -36,11 +41,11 @@ export default function EditCountryPage() {
   });
 
   if (!isNumber(params.id)) {
-    return <div>Invalid country ID</div>;
+    return <div>{tCommon('errors.invalidId')}</div>;
   }
 
   if (status === 'pending') {
-    return <div>Loading...</div>;
+    return <div>{tCommon('states.loading')}</div>;
   }
 
   if (error) {
@@ -54,14 +59,14 @@ export default function EditCountryPage() {
   return (
     <div>
       <PageHeader
-        title="Detalles del país"
+        title={tCountries('details.description')}
         description={`${data?.name} (${data?.code})`}
         backHref="/countries"
       />
       <CountryForm
         defaultValues={data}
         onSubmit={handleSubmit}
-        submitButtonText="Actualizar"
+        submitButtonText={tCommon('actions.update')}
       />
     </div>
   );

@@ -6,9 +6,9 @@ import { Params } from 'next/dist/server/request/params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import imsClient from '@/lib/imsClient';
 import type { cities } from '@repo/ims-client';
-import { useTranslation } from 'react-i18next';
 import CityForm, { CityFormValues } from '../../city-form';
 import { useCityMutations } from '../../hooks/use-city-mutations';
+import { useTranslations } from 'next-intl';
 
 interface EditCityPageParams extends Params {
   id: string;
@@ -19,11 +19,12 @@ const isNumber = (value: string) => {
 };
 
 export default function EditCityPage() {
-  const { t } = useTranslation(['cities', 'common']);
   const params = useParams<EditCityPageParams>();
   const cityId = parseInt(params.id);
   const queryClient = useQueryClient();
   const { updateCity } = useCityMutations();
+  const tCities = useTranslations('cities');
+  const tCommon = useTranslations('common');
 
   const { data, status, error } = useQuery({
     queryKey: ['city', cityId],
@@ -38,15 +39,15 @@ export default function EditCityPage() {
   });
 
   if (!isNumber(params.id)) {
-    return <div>{t('cities:errors.invalidId')}</div>;
+    return <div>{tCommon('errors.invalidId')}</div>;
   }
 
   if (status === 'pending') {
-    return <div>{t('common:states.loading')}</div>;
+    return <div>{tCommon('states.loading')}</div>;
   }
 
   if (error) {
-    return <div>{t('common:errors.unexpected')}</div>;
+    return <div>{tCommon('errors.unexpected')}</div>;
   }
 
   const handleSubmit = (values: CityFormValues) => {
@@ -56,14 +57,14 @@ export default function EditCityPage() {
   return (
     <div>
       <PageHeader
-        title={t('cities:edit.title')}
+        title={tCities('edit.title')}
         description={data?.name}
         backHref="/cities"
       />
       <CityForm
         defaultValues={data}
         onSubmit={handleSubmit}
-        submitButtonText={t('cities:actions.update')}
+        submitButtonText={tCommon('actions.update')}
       />
     </div>
   );

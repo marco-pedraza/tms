@@ -1,10 +1,16 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import imsClient from '@/lib/imsClient';
 import type { countries } from '@repo/ims-client';
 import type { CountryFormValues } from '../country-form';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
+
+interface MutationMessages {
+  loading: string;
+  success: string;
+  error: string;
+}
 
 /**
  * Custom hook for country-related CRUD operations with toast notifications.
@@ -19,7 +25,7 @@ import { useToastMutation } from '@/hooks/use-toast-mutation';
  * @returns {Object} result.deleteCountry - Mutation for deleting a country
  */
 export function useCountryMutations() {
-  const { t } = useTranslation('countries');
+  const t = useTranslations('countries');
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -28,6 +34,25 @@ export function useCountryMutations() {
    */
   const invalidateCountries = () => {
     queryClient.invalidateQueries({ queryKey: ['countries'] });
+  };
+
+  // Prepare messages for the mutations
+  const createMessages: MutationMessages = {
+    loading: t('messages.create.loading'),
+    success: t('messages.create.success'),
+    error: t('messages.create.error'),
+  };
+
+  const updateMessages: MutationMessages = {
+    loading: t('messages.update.loading'),
+    success: t('messages.update.success'),
+    error: t('messages.update.error'),
+  };
+
+  const deleteMessages: MutationMessages = {
+    loading: t('messages.delete.loading'),
+    success: t('messages.delete.success'),
+    error: t('messages.delete.error'),
   };
 
   // Create Country
@@ -45,11 +70,7 @@ export function useCountryMutations() {
    */
   const createCountry = useToastMutation({
     mutation: createCountryMutation,
-    messages: {
-      loading: t('messages.create.loading'),
-      success: t('messages.create.success'),
-      error: t('messages.create.error'),
-    },
+    messages: createMessages,
     onSuccess: (data: countries.Country) => {
       invalidateCountries();
       router.push(`/countries/${data.id}`);
@@ -75,11 +96,7 @@ export function useCountryMutations() {
    */
   const updateCountry = useToastMutation({
     mutation: updateCountryMutation,
-    messages: {
-      loading: t('messages.update.loading'),
-      success: t('messages.update.success'),
-      error: t('messages.update.error'),
-    },
+    messages: updateMessages,
     onSuccess: (data: countries.Country) => {
       invalidateCountries();
       router.push(`/countries/${data.id}`);
@@ -105,11 +122,7 @@ export function useCountryMutations() {
    */
   const deleteCountry = useToastMutation({
     mutation: deleteCountryMutation,
-    messages: {
-      loading: t('messages.delete.loading'),
-      success: t('messages.delete.success'),
-      error: t('messages.delete.error'),
-    },
+    messages: deleteMessages,
     onSuccess: () => {
       invalidateCountries();
       router.push('/countries');

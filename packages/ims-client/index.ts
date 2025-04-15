@@ -8,4226 +8,4620 @@
 /**
  * BaseURL is the base URL for calling the Encore application's API.
  */
-export type BaseURL = string
+export type BaseURL = string;
 
-export const Local: BaseURL = "http://localhost:4000"
+export const Local: BaseURL = 'http://localhost:4000';
 
 /**
  * Environment returns a BaseURL for calling the cloud environment with the given name.
  */
 export function Environment(name: string): BaseURL {
-    return `https://${name}-server-nest-8sci.encr.app`
+  return `https://${name}-server-nest-8sci.encr.app`;
 }
 
 /**
  * PreviewEnv returns a BaseURL for calling the preview environment with the given PR number.
  */
 export function PreviewEnv(pr: number | string): BaseURL {
-    return Environment(`pr${pr}`)
+  return Environment(`pr${pr}`);
 }
 
 /**
  * Client is an API client for the server-nest-8sci Encore application.
  */
 export default class Client {
-    public readonly inventory: inventory.ServiceClient
-    public readonly users: users.ServiceClient
+  public readonly inventory: inventory.ServiceClient;
+  public readonly users: users.ServiceClient;
 
-
-    /**
-     * Creates a Client for calling the public and authenticated APIs of your Encore application.
-     *
-     * @param target  The target which the client should be configured to use. See Local and Environment for options.
-     * @param options Options for the client
-     */
-    constructor(target: BaseURL, options?: ClientOptions) {
-        const base = new BaseClient(target, options ?? {})
-        this.inventory = new inventory.ServiceClient(base)
-        this.users = new users.ServiceClient(base)
-    }
+  /**
+   * Creates a Client for calling the public and authenticated APIs of your Encore application.
+   *
+   * @param target  The target which the client should be configured to use. See Local and Environment for options.
+   * @param options Options for the client
+   */
+  constructor(target: BaseURL, options?: ClientOptions) {
+    const base = new BaseClient(target, options ?? {});
+    this.inventory = new inventory.ServiceClient(base);
+    this.users = new users.ServiceClient(base);
+  }
 }
 
 /**
  * ClientOptions allows you to override any default behaviour within the generated Encore client.
  */
 export interface ClientOptions {
-    /**
-     * By default the client will use the inbuilt fetch function for making the API requests.
-     * however you can override it with your own implementation here if you want to run custom
-     * code on each API request made or response received.
-     */
-    fetcher?: Fetcher
+  /**
+   * By default the client will use the inbuilt fetch function for making the API requests.
+   * however you can override it with your own implementation here if you want to run custom
+   * code on each API request made or response received.
+   */
+  fetcher?: Fetcher;
 
-    /** Default RequestInit to be used for the client */
-    requestInit?: Omit<RequestInit, "headers"> & { headers?: Record<string, string> }
+  /** Default RequestInit to be used for the client */
+  requestInit?: Omit<RequestInit, 'headers'> & { headers?: Record<string, string> };
 
-    /**
-     * Allows you to set the authentication data to be used for each
-     * request either by passing in a static object or by passing in
-     * a function which returns a new object for each request.
-     */
-    auth?: users.AuthParams | AuthDataGenerator
+  /**
+   * Allows you to set the authentication data to be used for each
+   * request either by passing in a static object or by passing in
+   * a function which returns a new object for each request.
+   */
+  auth?: users.AuthParams | AuthDataGenerator;
 }
 
 export namespace inventory {
-
-    export class ServiceClient {
-        private baseClient: BaseClient
-
-        constructor(baseClient: BaseClient) {
-            this.baseClient = baseClient
-        }
-
-        /**
-         * Assigns a driver to a bus line
-         * @param params - Object containing the driver ID and bus line ID
-         * @param params.id - The ID of the driver
-         * @param params.busLineId - The ID of the bus line
-         * @returns {Promise<Driver>} The updated driver
-         * @throws {APIError} If the assignment fails
-         */
-        public async assignDriverToBusLine(id: number, params: {
-    busLineId: number
-}): Promise<drivers.Driver> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/drivers/${encodeURIComponent(id)}/bus-line`, JSON.stringify(params))
-            return await resp.json() as drivers.Driver
-        }
-
-        /**
-         * Assigns a driver to a transporter
-         * @param params - Object containing the driver ID and transporter ID
-         * @param params.id - The ID of the driver
-         * @param params.transporterId - The ID of the transporter
-         * @returns {Promise<Driver>} The updated driver
-         * @throws {APIError} If the assignment fails
-         */
-        public async assignDriverToTransporter(id: number, params: {
-    transporterId: number
-}): Promise<drivers.Driver> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/drivers/${encodeURIComponent(id)}/transporter`, JSON.stringify(params))
-            return await resp.json() as drivers.Driver
-        }
-
-        /**
-         * Creates a new city.
-         * @param params - The city data to create
-         * @returns {Promise<City>} The created city
-         * @throws {APIError} If the city creation fails
-         */
-        public async createCity(params: cities.CreateCityPayload): Promise<cities.City> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/cities`, JSON.stringify(params))
-            return await resp.json() as cities.City
-        }
-
-        /**
-         * Creates a new country.
-         * @param params - The country data to create
-         * @returns {Promise<Country>} The created country
-         * @throws {APIError} If the country creation fails
-         */
-        public async createCountry(params: countries.CreateCountryPayload): Promise<countries.Country> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/countries`, JSON.stringify(params))
-            return await resp.json() as countries.Country
-        }
-
-        /**
-         * Creates a new driver.
-         * @param params - The driver data to create
-         * @returns {Promise<Driver>} The created driver
-         * @throws {APIError} If the driver creation fails
-         */
-        public async createDriver(params: drivers.CreateDriverPayload): Promise<drivers.Driver> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/drivers`, JSON.stringify(params))
-            return await resp.json() as drivers.Driver
-        }
-
-        /**
-         * Creates a new gate.
-         * @param params - The gate data to create
-         * @returns {Promise<Gate>} The created gate
-         * @throws {APIError} If the gate creation fails
-         */
-        public async createGate(params: gates.CreateGatePayload): Promise<gates.Gate> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/gates`, JSON.stringify(params))
-            return await resp.json() as gates.Gate
-        }
-
-        /**
-         * Creates a new state.
-         * @param params - The state data to create
-         * @returns {Promise<State>} The created state
-         * @throws {APIError} If the state creation fails
-         */
-        public async createState(params: states.CreateStatePayload): Promise<states.State> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/states`, JSON.stringify(params))
-            return await resp.json() as states.State
-        }
-
-        /**
-         * Deletes a city by its ID.
-         * @param params - Object containing the city ID
-         * @param params.id - The ID of the city to delete
-         * @returns {Promise<City>} The deleted city
-         * @throws {APIError} If the city is not found or deletion fails
-         */
-        public async deleteCity(id: number): Promise<cities.City> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/cities/${encodeURIComponent(id)}`)
-            return await resp.json() as cities.City
-        }
-
-        /**
-         * Deletes a country by its ID.
-         * @param params - Object containing the country ID
-         * @param params.id - The ID of the country to delete
-         * @returns {Promise<Country>} The deleted country
-         * @throws {APIError} If the country is not found or deletion fails
-         */
-        public async deleteCountry(id: number): Promise<countries.Country> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/countries/${encodeURIComponent(id)}`)
-            return await resp.json() as countries.Country
-        }
-
-        /**
-         * Deletes a driver by its ID.
-         * @param params - Object containing the driver ID
-         * @param params.id - The ID of the driver to delete
-         * @returns {Promise<Driver>} The deleted driver
-         * @throws {APIError} If the driver is not found or deletion fails
-         */
-        public async deleteDriver(id: number): Promise<drivers.Driver> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/drivers/${encodeURIComponent(id)}`)
-            return await resp.json() as drivers.Driver
-        }
-
-        /**
-         * Deletes a gate by its ID.
-         * @param params - Object containing the gate ID
-         * @param params.id - The ID of the gate to delete
-         * @returns {Promise<Gate>} The deleted gate
-         * @throws {APIError} If the gate is not found or deletion fails
-         */
-        public async deleteGate(id: number): Promise<gates.Gate> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/gates/${encodeURIComponent(id)}`)
-            return await resp.json() as gates.Gate
-        }
-
-        /**
-         * Deletes a state by its ID.
-         * @param params - Object containing the state ID
-         * @param params.id - The ID of the state to delete
-         * @returns {Promise<State>} The deleted state
-         * @throws {APIError} If the state is not found or deletion fails
-         */
-        public async deleteState(id: number): Promise<states.State> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/states/${encodeURIComponent(id)}`)
-            return await resp.json() as states.State
-        }
-
-        /**
-         * Deletes a terminal by its ID.
-         * @param params - Object containing the terminal ID
-         * @param params.id - The ID of the terminal to delete
-         * @returns {Promise<Terminal>} The deleted terminal
-         * @throws {APIError} If the terminal is not found or deletion fails
-         */
-        public async deleteTerminal(id: number): Promise<terminals.Terminal> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/terminals/${encodeURIComponent(id)}`)
-            return await resp.json() as terminals.Terminal
-        }
-
-        /**
-         * Deletes a transporter by its ID.
-         * @param params - Object containing the transporter ID
-         * @param params.id - The ID of the transporter to delete
-         * @returns {Promise<Transporter>} The deleted transporter
-         * @throws {APIError} If the transporter is not found or deletion fails
-         */
-        public async deleteTransporter(id: number): Promise<transporters.Transporter> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/transporters/${encodeURIComponent(id)}`)
-            return await resp.json() as transporters.Transporter
-        }
-
-        /**
-         * Retrieves a city by its ID.
-         * @param params - Object containing the city ID
-         * @param params.id - The ID of the city to retrieve
-         * @returns {Promise<City>} The found city
-         * @throws {APIError} If the city is not found or retrieval fails
-         */
-        public async getCity(id: number): Promise<cities.City> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/cities/${encodeURIComponent(id)}`)
-            return await resp.json() as cities.City
-        }
-
-        /**
-         * Retrieves a country by its ID.
-         * @param params - Object containing the country ID
-         * @param params.id - The ID of the country to retrieve
-         * @returns {Promise<Country>} The found country
-         * @throws {APIError} If the country is not found or retrieval fails
-         */
-        public async getCountry(id: number): Promise<countries.Country> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/countries/${encodeURIComponent(id)}`)
-            return await resp.json() as countries.Country
-        }
-
-        /**
-         * Retrieves a driver by its ID.
-         * @param params - Object containing the driver ID
-         * @param params.id - The ID of the driver to retrieve
-         * @returns {Promise<Driver>} The found driver
-         * @throws {APIError} If the driver is not found or retrieval fails
-         */
-        public async getDriver(id: number): Promise<drivers.Driver> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/drivers/${encodeURIComponent(id)}`)
-            return await resp.json() as drivers.Driver
-        }
-
-        /**
-         * Gets all possible next statuses for a driver
-         * @param params - Object containing the driver ID
-         * @param params.id - The ID of the driver
-         * @returns {Promise<PossibleDriverStatuses>} Object containing array of possible next statuses
-         * @throws {APIError} If the driver is not found
-         */
-        public async getDriverPossibleStatuses(id: number): Promise<drivers.PossibleDriverStatuses> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/drivers/${encodeURIComponent(id)}/possible-statuses`)
-            return await resp.json() as drivers.PossibleDriverStatuses
-        }
-
-        /**
-         * Retrieves a gate by its ID.
-         * @param params - Object containing the gate ID
-         * @param params.id - The ID of the gate to retrieve
-         * @returns {Promise<Gate>} The found gate
-         * @throws {APIError} If the gate is not found or retrieval fails
-         */
-        public async getGate(id: number): Promise<gates.Gate> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/gates/${encodeURIComponent(id)}`)
-            return await resp.json() as gates.Gate
-        }
-
-        /**
-         * Retrieves a state by its ID.
-         * @param params - Object containing the state ID
-         * @param params.id - The ID of the state to retrieve
-         * @returns {Promise<State>} The found state
-         * @throws {APIError} If the state is not found or retrieval fails
-         */
-        public async getState(id: number): Promise<states.State> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/states/${encodeURIComponent(id)}`)
-            return await resp.json() as states.State
-        }
-
-        /**
-         * Retrieves a terminal by its ID.
-         * @param params - Object containing the terminal ID
-         * @param params.id - The ID of the terminal to retrieve
-         * @returns {Promise<Terminal>} The found terminal
-         * @throws {APIError} If the terminal is not found or retrieval fails
-         */
-        public async getTerminal(id: number): Promise<terminals.Terminal> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/terminals/${encodeURIComponent(id)}`)
-            return await resp.json() as terminals.Terminal
-        }
-
-        /**
-         * Retrieves a timezone by its ID.
-         * @param params - Object containing the timezone ID
-         * @param params.id - The ID of the timezone to retrieve
-         * @returns {Timezone} The found timezone
-         * @throws {Error} If the timezone is not found
-         */
-        public async getTimezone(id: string): Promise<timezones.Timezone> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/timezones/${encodeURIComponent(id)}`)
-            return await resp.json() as timezones.Timezone
-        }
-
-        /**
-         * Retrieves a transporter by its ID.
-         * @param params - Object containing the transporter ID
-         * @param params.id - The ID of the transporter to retrieve
-         * @returns {Promise<Transporter>} The found transporter
-         * @throws {APIError} If the transporter is not found or retrieval fails
-         */
-        public async getTransporter(id: number): Promise<transporters.Transporter> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/transporters/${encodeURIComponent(id)}`)
-            return await resp.json() as transporters.Transporter
-        }
-
-        /**
-         * Retrieves all cities.
-         * @returns {Promise<City[]>} List of all cities
-         * @throws {APIError} If retrieval fails
-         */
-        public async listCities(): Promise<cities.Cities> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/cities`)
-            return await resp.json() as cities.Cities
-        }
-
-        /**
-         * Retrieves cities with pagination.
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedCities>} Paginated list of cities
-         * @throws {APIError} If retrieval fails
-         */
-        public async listCitiesPaginated(params: shared.PaginationParams): Promise<cities.PaginatedCities> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/cities/paginated`, undefined, {query})
-            return await resp.json() as cities.PaginatedCities
-        }
-
-        /**
-         * Retrieves all countries without pagination (useful for dropdowns).
-         * @returns {Promise<Countries>} An object containing an array of countries
-         * @throws {APIError} If retrieval fails
-         */
-        public async listCountries(): Promise<countries.Countries> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/countries`)
-            return await resp.json() as countries.Countries
-        }
-
-        /**
-         * Retrieves countries with pagination (useful for tables).
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedCountries>} Paginated list of countries
-         * @throws {APIError} If retrieval fails
-         */
-        public async listCountriesPaginated(params: shared.PaginationParams): Promise<countries.PaginatedCountries> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/countries/paginated`, undefined, {query})
-            return await resp.json() as countries.PaginatedCountries
-        }
-
-        /**
-         * List drivers by bus line
-         * @param params - Object containing the bus line ID to filter by
-         * @param params.busLineId - The bus line ID to filter by
-         * @returns {Promise<Drivers>} Drivers associated with the specified bus line
-         * @throws {APIError} If retrieval fails
-         */
-        public async listDriversByBusLine(busLineId: number): Promise<drivers.Drivers> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/drivers/by-bus-line/${encodeURIComponent(busLineId)}`)
-            return await resp.json() as drivers.Drivers
-        }
-
-        /**
-         * List drivers by status
-         * @param params - Object containing the status to filter by
-         * @param params.status - The status to filter by
-         * @returns {Promise<Drivers>} Drivers with the specified status
-         * @throws {APIError} If retrieval fails
-         */
-        public async listDriversByStatus(status: string): Promise<drivers.Drivers> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/drivers/by-status/${encodeURIComponent(status)}`)
-            return await resp.json() as drivers.Drivers
-        }
-
-        /**
-         * List drivers by transporter
-         * @param params - Object containing the transporter ID to filter by
-         * @param params.transporterId - The transporter ID to filter by
-         * @returns {Promise<Drivers>} Drivers associated with the specified transporter
-         * @throws {APIError} If retrieval fails
-         */
-        public async listDriversByTransporter(transporterId: number): Promise<drivers.Drivers> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/drivers/by-transporter/${encodeURIComponent(transporterId)}`)
-            return await resp.json() as drivers.Drivers
-        }
-
-        /**
-         * Retrieves drivers with pagination (useful for tables).
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedDrivers>} Paginated list of drivers
-         * @throws {APIError} If retrieval fails
-         */
-        public async listDriversPaginated(params: shared.PaginationParams): Promise<drivers.PaginatedDrivers> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/drivers/paginated`, undefined, {query})
-            return await resp.json() as drivers.PaginatedDrivers
-        }
-
-        /**
-         * Retrieves gates with pagination.
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedGates>} Paginated list of gates
-         * @throws {APIError} If retrieval fails
-         */
-        public async listGates(params: shared.PaginationParams): Promise<gates.PaginatedGates> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/gates`, undefined, {query})
-            return await resp.json() as gates.PaginatedGates
-        }
-
-        /**
-         * Retrieves gates for a terminal with pagination.
-         * @param params - Object containing the terminal ID and pagination parameters
-         * @returns {Promise<PaginatedGates>} Paginated list of gates for the terminal
-         * @throws {APIError} If retrieval fails
-         */
-        public async listGatesByTerminal(terminalId: number, params: {
-    /**
-     * Page number (1-based)
-     */
-    page?: number
-
-    /**
-     * Number of items per page
-     */
-    pageSize?: number
-
-    /**
-     * Column to sort by
-     */
-    sortBy?: string
-
-    /**
-     * Sort direction
-     */
-    sortDirection?: "asc" | "desc"
-}): Promise<gates.PaginatedGates> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/terminals/${encodeURIComponent(terminalId)}/gates`, undefined, {query})
-            return await resp.json() as gates.PaginatedGates
-        }
-
-        /**
-         * Retrieves all states without pagination (useful for dropdowns).
-         * @returns {Promise<States>} An object containing an array of states
-         * @throws {APIError} If the retrieval fails
-         */
-        public async listStates(): Promise<states.States> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/states`)
-            return await resp.json() as states.States
-        }
-
-        /**
-         * Retrieves states with pagination (useful for tables).
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedStates>} Paginated list of states
-         * @throws {APIError} If retrieval fails
-         */
-        public async listStatesPaginated(params: shared.PaginationParams): Promise<states.PaginatedStates> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/states/paginated`, undefined, {query})
-            return await resp.json() as states.PaginatedStates
-        }
-
-        /**
-         * Retrieves terminals with pagination.
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedTerminals>} Paginated list of terminals
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTerminals(params: shared.PaginationParams): Promise<terminals.PaginatedTerminals> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/terminals`, undefined, {query})
-            return await resp.json() as terminals.PaginatedTerminals
-        }
-
-        /**
-         * Retrieves all timezones.
-         * @returns {Timezones} An object containing an array of timezones
-         */
-        public async listTimezones(): Promise<timezones.Timezones> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/timezones`)
-            return await resp.json() as timezones.Timezones
-        }
-
-        /**
-         * Retrieves transporters with pagination.
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedTransporters>} Paginated list of transporters
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTransporters(params: shared.PaginationParams): Promise<transporters.PaginatedTransporters> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/transporters`, undefined, {query})
-            return await resp.json() as transporters.PaginatedTransporters
-        }
-
-        /**
-         * Removes a driver from a bus line
-         * @param params - Object containing the driver ID
-         * @param params.id - The ID of the driver
-         * @returns {Promise<Driver>} The updated driver
-         * @throws {APIError} If the removal fails
-         */
-        public async removeDriverFromBusLine(id: number): Promise<drivers.Driver> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/drivers/${encodeURIComponent(id)}/bus-line`)
-            return await resp.json() as drivers.Driver
-        }
-
-        /**
-         * Removes a driver from a transporter
-         * @param params - Object containing the driver ID
-         * @param params.id - The ID of the driver
-         * @returns {Promise<Driver>} The updated driver
-         * @throws {APIError} If the removal fails
-         */
-        public async removeDriverFromTransporter(id: number): Promise<drivers.Driver> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/drivers/${encodeURIComponent(id)}/transporter`)
-            return await resp.json() as drivers.Driver
-        }
-
-        /**
-         * Updates an existing city.
-         * @param params - Object containing the city ID and update data
-         * @param params.id - The ID of the city to update
-         * @returns {Promise<City>} The updated city
-         * @throws {APIError} If the city is not found or update fails
-         */
-        public async updateCity(id: number, params: {
-    /**
-     * The name of the city
-     * Must contain only letters (with or without accents) and spaces
-     */
-    name?: string
-
-    /**
-     * The ID of the state this city belongs to
-     * Must be a positive number
-     */
-    stateId?: number
-
-    /**
-     * Latitude of the city
-     * Must be a number between -90 and 90
-     */
-    latitude?: number
-
-    /**
-     * Longitude of the city
-     * Must be a number between -180 and 180
-     */
-    longitude?: number
-
-    /**
-     * Timezone of the city (e.g., "America/Mexico_City")
-     * Must have at least 1 non-whitespace character
-     */
-    timezone?: string
-
-    /**
-     * Whether the city is active
-     */
-    active?: boolean
-}): Promise<cities.City> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/cities/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as cities.City
-        }
-
-        /**
-         * Updates an existing country.
-         * @param params - Object containing the country ID and update data
-         * @param params.id - The ID of the country to update
-         * @param params.data - The country data to update
-         * @returns {Promise<Country>} The updated country
-         * @throws {APIError} If the country is not found or update fails
-         */
-        public async updateCountry(id: number, params: {
-    /**
-     * Name of the country
-     * Must have at least 1 non-whitespace character
-     */
-    name?: string
-
-    /**
-     * ISO country code (e.g., "US", "CA", "MX")
-     * Must have at least 1 non-whitespace character
-     */
-    code?: string
-
-    /**
-     * Whether the country is active
-     */
-    active?: boolean
-}): Promise<countries.Country> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/countries/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as countries.Country
-        }
-
-        /**
-         * Updates an existing driver.
-         * @param params - Object containing the driver ID and update data
-         * @param params.id - The ID of the driver to update
-         * @param params.data - The driver data to update
-         * @returns {Promise<Driver>} The updated driver
-         * @throws {APIError} If the driver is not found or update fails
-         */
-        public async updateDriver(id: number, params: {
-    /**
-     * Employee ID (Clave)
-     * Must have at least 1 non-whitespace character
-     */
-    driverKey?: string
-
-    /**
-     * Full name of the driver
-     * Must have at least 1 non-whitespace character
-     */
-    fullName?: string
-
-    /**
-     * Mexican tax ID (RFC)
-     * Must have at least 1 non-whitespace character
-     */
-    rfc?: string
-
-    /**
-     * CURP Mexican national ID
-     * Must have at least 1 non-whitespace character
-     */
-    curp?: string
-
-    /**
-     * Social security number (IMSS)
-     */
-    imss?: string
-
-    /**
-     * Civil status (Estado Civil)
-     */
-    civilStatus?: string
-
-    /**
-     * Number of dependents (Escolaridad)
-     */
-    dependents?: number
-
-    /**
-     * Street address (Calle)
-     */
-    addressStreet?: string
-
-    /**
-     * Neighborhood (Colonia)
-     */
-    addressNeighborhood?: string
-
-    /**
-     * City (Ciudad)
-     */
-    addressCity?: string
-
-    /**
-     * State (Estado)
-     */
-    addressState?: string
-
-    /**
-     * Postal code (Código Postal)
-     */
-    postalCode?: string
-
-    /**
-     * Phone number (Teléfono)
-     * Must have at least 1 non-whitespace character
-     */
-    phoneNumber?: string
-
-    /**
-     * Email address (E-Mail)
-     * Must be a valid email format
-     */
-    email?: string
-
-    /**
-     * Type of operator (Tipo Operador)
-     * Must have at least 1 non-whitespace character
-     */
-    driverType?: string
-
-    /**
-     * Department (Departamento)
-     */
-    department?: string
-
-    /**
-     * Position (Clave Puesto)
-     */
-    position?: string
-
-    /**
-     * Office code (Clave Oficina)
-     */
-    officeCode?: string
-
-    /**
-     * Office location
-     */
-    officeLocation?: string
-
-    /**
-     * Date of hiring (Fec. Ingreso)
-     */
-    hireDate?: string
-
-    /**
-     * Current status (Estado Actual)
-     */
-    status?: drivers.DriverStatus
-
-    /**
-     * Status date (Fecha Estado)
-     */
-    statusDate?: string
-
-    /**
-     * Federal license (Licencia Federal)
-     */
-    federalLicense?: string
-
-    /**
-     * Federal license expiry (Fecha Lic. Fed)
-     */
-    federalLicenseExpiry?: string
-
-    /**
-     * State license (Licencia Estatal)
-     */
-    stateLicense?: string
-
-    /**
-     * State license expiry (Fecha Lic. Est)
-     */
-    stateLicenseExpiry?: string
-
-    /**
-     * Credit card info (Tarjeta Crédito)
-     */
-    creditCard?: string
-
-    /**
-     * Credit card expiry (Fecha T. Crédito)
-     */
-    creditCardExpiry?: string
-
-    /**
-     * Company (Empresa Alterna)
-     */
-    company?: string
-
-    /**
-     * Whether the driver is active
-     */
-    active?: boolean
-
-    /**
-     * The transporter this driver is associated with
-     */
-    transporterId?: number
-
-    /**
-     * The bus line this driver is associated with
-     */
-    busLineId?: number
-}): Promise<drivers.Driver> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/drivers/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as drivers.Driver
-        }
-
-        /**
-         * Updates a driver's status using state machine validation
-         * @param params - Object containing the driver ID and new status
-         * @param params.id - The ID of the driver to update
-         * @param params.status - The new status to set
-         * @returns {Promise<Driver>} The updated driver
-         * @throws {APIError} If the status transition is invalid or update fails
-         */
-        public async updateDriverStatus(id: number, params: {
-    status: string
-}): Promise<drivers.Driver> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/drivers/${encodeURIComponent(id)}/status`, JSON.stringify(params))
-            return await resp.json() as drivers.Driver
-        }
-
-        /**
-         * Updates an existing gate.
-         * @param params - Object containing the gate ID and update data
-         * @param params.id - The ID of the gate to update
-         * @returns {Promise<Gate>} The updated gate
-         * @throws {APIError} If the gate is not found or update fails
-         */
-        public async updateGate(id: number, params: {
-    /**
-     * The ID of the terminal this gate belongs to
-     * Must be a positive number
-     */
-    terminalId?: number
-
-    /**
-     * Whether the gate is active
-     */
-    active?: boolean
-}): Promise<gates.Gate> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/gates/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as gates.Gate
-        }
-
-        /**
-         * Updates an existing state.
-         * @param params - Object containing the state ID and update data
-         * @param params.id - The ID of the state to update
-         * @param params.data - The state data to update
-         * @returns {Promise<State>} The updated state
-         * @throws {APIError} If the state is not found or update fails
-         */
-        public async updateState(id: number, params: {
-    /**
-     * The name of the state
-     * Must have at least 1 non-whitespace character
-     */
-    name?: string
-
-    /**
-     * The state code (e.g., "TX", "CA", "NY")
-     * Must have at least 1 non-whitespace character
-     */
-    code?: string
-
-    /**
-     * The ID of the country this state belongs to
-     * Must be a positive number
-     */
-    countryId?: number
-
-    /**
-     * Whether the state is active
-     */
-    active?: boolean
-}): Promise<states.State> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/states/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as states.State
-        }
-
-        /**
-         * Updates an existing terminal.
-         * @param params - Object containing the terminal ID and update data
-         * @param params.id - The ID of the terminal to update
-         * @returns {Promise<Terminal>} The updated terminal
-         * @throws {APIError} If the terminal is not found or update fails
-         */
-        public async updateTerminal(id: number, params: {
-    /**
-     * The name of the terminal
-     * Must have at least 1 non-whitespace character
-     */
-    name?: string
-
-    /**
-     * Physical address of the terminal
-     * Must have at least 1 non-whitespace character
-     */
-    address?: string
-
-    /**
-     * The ID of the city where the terminal is located
-     * Must be a positive number
-     */
-    cityId?: number
-
-    /**
-     * Latitude coordinate of the terminal
-     */
-    latitude?: number
-
-    /**
-     * Longitude coordinate of the terminal
-     */
-    longitude?: number
-
-    /**
-     * Contact phone number for the terminal
-     */
-    contactphone?: string
-
-    /**
-     * Operating hours of the terminal
-     */
-    operatingHours?: terminals.OperatingHours
-
-    /**
-     * List of facilities available at the terminal
-     */
-    facilities?: terminals.Facility[]
-
-    /**
-     * Terminal code (unique identifier)
-     * Must have at least 1 non-whitespace character
-     */
-    code?: string
-
-    /**
-     * URL-friendly identifier for the terminal
-     * Must be lowercase, can contain only letters, numbers and hyphens
-     * No consecutive hyphens, special characters or spaces allowed
-     * Format examples: 'central-norte', 'tapo', 'observatorio'
-     */
-    slug?: string
-
-    /**
-     * Whether the terminal is active
-     */
-    active?: boolean
-}): Promise<terminals.Terminal> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/terminals/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as terminals.Terminal
-        }
-
-        /**
-         * Updates an existing transporter.
-         * @param params - Object containing the transporter ID and update data
-         * @param params.id - The ID of the transporter to update
-         * @returns {Promise<Transporter>} The updated transporter
-         * @throws {APIError} If the transporter is not found or update fails
-         */
-        public async updateTransporter(id: number, params: {
-    /**
-     * The name of the transportation company
-     * Must have at least 1 non-whitespace character
-     */
-    name?: string
-
-    /**
-     * Unique business code for the transporter (1-10 characters)
-     * Must contain only uppercase letters, numbers, and hyphens
-     */
-    code?: string
-
-    /**
-     * Description of the transporter
-     */
-    description?: string
-
-    /**
-     * Website URL of the transporter
-     */
-    website?: string
-
-    /**
-     * Contact email of the transporter
-     */
-    email?: string
-
-    /**
-     * Contact phone number of the transporter
-     */
-    phone?: string
-
-    /**
-     * ID of the city where the transporter is headquartered
-     * Must be a positive number
-     */
-    headquarterCityId?: number
-
-    /**
-     * URL to the transporter's logo
-     */
-    logoUrl?: string
-
-    /**
-     * Additional contact information
-     */
-    contactInfo?: string
-
-    /**
-     * Regulatory license number
-     */
-    licenseNumber?: string
-
-    /**
-     * Whether the transporter is active
-     */
-    active?: boolean
-}): Promise<transporters.Transporter> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/transporters/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as transporters.Transporter
-        }
-    }
-}
-
-export namespace users {
-    export interface AuthParams {
-        authorization: string
+  export class ServiceClient {
+    private baseClient: BaseClient;
+
+    constructor(baseClient: BaseClient) {
+      this.baseClient = baseClient;
     }
 
-    export interface CreateUserPayload {
-        /**
-         * ID of the tenant this user belongs to
-         */
-        tenantId: number
-
-        /**
-         * ID of the department this user belongs to
-         */
-        departmentId: number
-
-        /**
-         * Username for login
-         * Must have at least 3 non-whitespace characters
-         */
-        username: string
-
-        /**
-         * Email address of the user
-         * Must be a valid email format
-         */
-        email: string
-
-        /**
-         * Password for the user
-         * Will be hashed before storage
-         * Must have at least 8 characters
-         */
-        password: string
-
-        /**
-         * First name of the user
-         * Must have at least 1 non-whitespace character
-         */
-        firstName: string
-
-        /**
-         * Last name of the user
-         * Must have at least 1 non-whitespace character
-         */
-        lastName: string
-
-        /**
-         * Phone number of the user
-         */
-        phone?: string
-
-        /**
-         * Job title/position of the user
-         */
-        position?: string
-
-        /**
-         * Internal employee ID
-         */
-        employeeId?: string
-
-        /**
-         * Whether the user is currently active
-         * @default true
-         */
-        isActive?: boolean
-
-        /**
-         * Whether the user is a system-wide admin
-         * @default false
-         */
-        isSystemAdmin?: boolean
+    /**
+     * Assigns a driver to a bus line
+     * @param params - Object containing the driver ID and bus line ID
+     * @param params.id - The ID of the driver
+     * @param params.busLineId - The ID of the bus line
+     * @returns {Promise<Driver>} The updated driver
+     * @throws {APIError} If the assignment fails
+     */
+    public async assignDriverToBusLine(
+      id: number,
+      params: {
+        busLineId: number;
+      }
+    ): Promise<drivers.Driver> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'POST',
+        `/drivers/${encodeURIComponent(id)}/bus-line`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as drivers.Driver;
     }
 
-    export interface PaginatedUsers {
-        data: SafeUser[]
-        pagination: shared.PaginationMeta
+    /**
+     * Assigns a driver to a transporter
+     * @param params - Object containing the driver ID and transporter ID
+     * @param params.id - The ID of the driver
+     * @param params.transporterId - The ID of the transporter
+     * @returns {Promise<Driver>} The updated driver
+     * @throws {APIError} If the assignment fails
+     */
+    public async assignDriverToTransporter(
+      id: number,
+      params: {
+        transporterId: number;
+      }
+    ): Promise<drivers.Driver> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'POST',
+        `/drivers/${encodeURIComponent(id)}/transporter`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as drivers.Driver;
     }
 
-    export interface SafeUser {
-        id: number
-        tenantId: number
-        departmentId: number
-        username: string
-        email: string
-        firstName: string
-        lastName: string
-        phone: string | null
-        position: string | null
-        employeeId: string | null
-        mfaSettings: { [key: string]: any } | null
-        lastLogin: string | null
-        isActive: boolean
-        isSystemAdmin: boolean
-        createdAt: string | null
-        updatedAt: string | null
+    /**
+     * Creates a new city.
+     * @param params - The city data to create
+     * @returns {Promise<City>} The created city
+     * @throws {APIError} If the city creation fails
+     */
+    public async createCity(params: cities.CreateCityPayload): Promise<cities.City> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('POST', `/cities`, JSON.stringify(params));
+      return (await resp.json()) as cities.City;
     }
 
-    export interface Users {
-        /**
-         * List of users (without sensitive data)
-         */
-        users: SafeUser[]
+    /**
+     * Creates a new country.
+     * @param params - The country data to create
+     * @returns {Promise<Country>} The created country
+     * @throws {APIError} If the country creation fails
+     */
+    public async createCountry(params: countries.CreateCountryPayload): Promise<countries.Country> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('POST', `/countries`, JSON.stringify(params));
+      return (await resp.json()) as countries.Country;
     }
 
-    export class ServiceClient {
-        private baseClient: BaseClient
-
-        constructor(baseClient: BaseClient) {
-            this.baseClient = baseClient
-        }
-
-        /**
-         * Assigns permissions to a role.
-         * @param params - Object containing the role ID and permission IDs
-         * @param params.id - The ID of the role
-         * @param params.permissionIds - The IDs of the permissions to assign
-         * @returns {Promise<RoleWithPermissions>} The role with updated permissions
-         * @throws {APIError} If the role is not found or assignment fails
-         */
-        public async assignPermissionsToRole(id: number, params: {
     /**
-     * IDs of permissions to assign to the role
+     * Creates a new driver.
+     * @param params - The driver data to create
+     * @returns {Promise<Driver>} The created driver
+     * @throws {APIError} If the driver creation fails
      */
-    permissionIds: number[]
-}): Promise<roles.RoleWithPermissions> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/roles/${encodeURIComponent(id)}/permissions`, JSON.stringify(params))
-            return await resp.json() as roles.RoleWithPermissions
-        }
-
-        /**
-         * Assigns permissions directly to a user.
-         * @param params - Object containing the user ID and permission IDs
-         * @param params.userId - The ID of the user
-         * @param params.permissionIds - The IDs of the permissions to assign
-         * @returns {Promise<UserWithPermissions>} The user with updated permissions
-         * @throws {APIError} If the user is not found or assignment fails
-         */
-        public async assignPermissionsToUser(userId: number, params: {
-    /**
-     * IDs of permissions to assign to the user
-     */
-    permissionIds: number[]
-}): Promise<user_permissions.UserWithPermissions> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/users/${encodeURIComponent(userId)}/permissions`, JSON.stringify(params))
-            return await resp.json() as user_permissions.UserWithPermissions
-        }
-
-        /**
-         * Assigns roles to a user.
-         * @param params - Object containing the user ID and role IDs
-         * @param params.userId - The ID of the user
-         * @param params.roleIds - The IDs of the roles to assign
-         * @returns {Promise<UserWithRoles>} The user with updated roles
-         * @throws {APIError} If the user is not found or assignment fails
-         */
-        public async assignRolesToUser(userId: number, params: {
-    /**
-     * IDs of roles to assign to the user
-     */
-    roleIds: number[]
-}): Promise<user_permissions.UserWithRoles> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/users/${encodeURIComponent(userId)}/roles`, JSON.stringify(params))
-            return await resp.json() as user_permissions.UserWithRoles
-        }
-
-        /**
-         * Changes a user's password
-         * @param params - Object containing the user ID and password data
-         * @param params.id - The ID of the user to update
-         * @returns {Promise<SafeUser>} The updated user (without password hash)
-         * @throws {APIError} If the user is not found, current password is invalid, or update fails
-         */
-        public async changePassword(id: number, params: {
-    /**
-     * Current password for verification
-     */
-    currentPassword: string
-
-    /**
-     * New password to set
-     * Must have at least 8 characters
-     */
-    newPassword: string
-}): Promise<SafeUser> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/users/${encodeURIComponent(id)}/password`, JSON.stringify(params))
-            return await resp.json() as SafeUser
-        }
-
-        /**
-         * Checks if a user has a specific permission.
-         * @param params - Object containing the user ID and permission code
-         * @param params.userId - The ID of the user
-         * @param params.permissionCode - The code of the permission to check
-         * @returns {Promise<{hasPermission: boolean}>} Whether the user has the permission
-         * @throws {APIError} If permission check fails or the user is unauthorized
-         */
-        public async checkUserPermission(userId: number, permissionCode: string): Promise<{
-    hasPermission: boolean
-}> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/users/${encodeURIComponent(userId)}/permissions/${encodeURIComponent(permissionCode)}/check`)
-            return await resp.json() as {
-    hasPermission: boolean
-}
-        }
-
-        /**
-         * Checks if a user has a specific role.
-         * @param params - Object containing the user ID and role ID
-         * @param params.userId - The ID of the user
-         * @param params.roleId - The ID of the role to check
-         * @returns {Promise<{hasRole: boolean}>} Whether the user has the role
-         * @throws {APIError} If role check fails or the user is unauthorized
-         */
-        public async checkUserRole(userId: number, roleId: number): Promise<{
-    hasRole: boolean
-}> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/users/${encodeURIComponent(userId)}/roles/${encodeURIComponent(roleId)}/check`)
-            return await resp.json() as {
-    hasRole: boolean
-}
-        }
-
-        /**
-         * Creates a new department.
-         * @param params - The department data to create
-         * @returns {Promise<Department>} The created department
-         * @throws {APIError} If the department creation fails
-         */
-        public async createDepartment(params: departments.CreateDepartmentPayload): Promise<departments.Department> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/departments`, JSON.stringify(params))
-            return await resp.json() as departments.Department
-        }
-
-        /**
-         * Creates a new permission.
-         * @param params - The permission data to create
-         * @returns {Promise<Permission>} The created permission
-         * @throws {APIError} If the permission creation fails
-         */
-        public async createPermission(params: permissions.CreatePermissionPayload): Promise<permissions.Permission> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/permissions`, JSON.stringify(params))
-            return await resp.json() as permissions.Permission
-        }
-
-        /**
-         * Creates a new role.
-         * @param params - The role data to create
-         * @returns {Promise<RoleWithPermissions>} The created role with permissions
-         * @throws {APIError} If the role creation fails
-         */
-        public async createRole(params: roles.CreateRolePayload): Promise<roles.RoleWithPermissions> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/roles`, JSON.stringify(params))
-            return await resp.json() as roles.RoleWithPermissions
-        }
-
-        /**
-         * Creates a new tenant.
-         * @param params - The tenant data to create
-         * @returns {Promise<Tenant>} The created tenant
-         * @throws {APIError} If the tenant creation fails
-         */
-        public async createTenant(params: tenants.CreateTenantPayload): Promise<tenants.Tenant> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/tenants`, JSON.stringify(params))
-            return await resp.json() as tenants.Tenant
-        }
-
-        /**
-         * Creates a new user
-         * @param params - The user data to create
-         * @returns {Promise<SafeUser>} The created user (without password hash)
-         * @throws {APIError} If the user creation fails
-         */
-        public async createUser(params: CreateUserPayload): Promise<SafeUser> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/users`, JSON.stringify(params))
-            return await resp.json() as SafeUser
-        }
-
-        /**
-         * Deletes a department by ID.
-         * @param params - Object containing the department ID
-         * @param params.id - The ID of the department to delete
-         * @returns {Promise<Department>} The deleted department
-         * @throws {APIError} If the department is not found or deletion fails
-         */
-        public async deleteDepartment(id: number): Promise<departments.Department> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/departments/${encodeURIComponent(id)}`)
-            return await resp.json() as departments.Department
-        }
-
-        /**
-         * Deletes a permission by ID.
-         * @param params - Object containing the permission ID
-         * @param params.id - The ID of the permission to delete
-         * @returns {Promise<Permission>} The deleted permission
-         * @throws {APIError} If the permission is not found or deletion fails
-         */
-        public async deletePermission(id: number): Promise<permissions.Permission> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/permissions/${encodeURIComponent(id)}`)
-            return await resp.json() as permissions.Permission
-        }
-
-        /**
-         * Deletes a role by ID.
-         * @param params - Object containing the role ID
-         * @param params.id - The ID of the role to delete
-         * @returns {Promise<Role>} The deleted role
-         * @throws {APIError} If the role is not found or deletion fails
-         */
-        public async deleteRole(id: number): Promise<roles.Role> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/roles/${encodeURIComponent(id)}`)
-            return await resp.json() as roles.Role
-        }
-
-        /**
-         * Deletes a tenant by ID.
-         * @param params - Object containing the tenant ID
-         * @param params.id - The ID of the tenant to delete
-         * @returns {Promise<Tenant>} The deleted tenant
-         * @throws {APIError} If the tenant is not found or deletion fails
-         */
-        public async deleteTenant(id: number): Promise<tenants.Tenant> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/tenants/${encodeURIComponent(id)}`)
-            return await resp.json() as tenants.Tenant
-        }
-
-        /**
-         * Deletes a user by ID
-         * @param params - Object containing the user ID
-         * @param params.id - The ID of the user to delete
-         * @returns {Promise<SafeUser>} The deleted user (without password hash)
-         * @throws {APIError} If the user is not found or deletion fails
-         */
-        public async deleteUser(id: number): Promise<SafeUser> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/users/${encodeURIComponent(id)}`)
-            return await resp.json() as SafeUser
-        }
-
-        /**
-         * Retrieves a department by ID.
-         * @param params - Object containing the department ID
-         * @param params.id - The ID of the department to retrieve
-         * @returns {Promise<Department>} The found department
-         * @throws {APIError} If the department is not found or retrieval fails
-         */
-        public async getDepartment(id: number): Promise<departments.Department> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/departments/${encodeURIComponent(id)}`)
-            return await resp.json() as departments.Department
-        }
-
-        /**
-         * Retrieves a permission by ID.
-         * @param params - Object containing the permission ID
-         * @param params.id - The ID of the permission to retrieve
-         * @returns {Promise<Permission>} The found permission
-         * @throws {APIError} If the permission is not found or retrieval fails
-         */
-        public async getPermission(id: number): Promise<permissions.Permission> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/permissions/${encodeURIComponent(id)}`)
-            return await resp.json() as permissions.Permission
-        }
-
-        /**
-         * Retrieves a role by ID.
-         * @param params - Object containing the role ID
-         * @param params.id - The ID of the role to retrieve
-         * @returns {Promise<Role>} The found role
-         * @throws {APIError} If the role is not found or retrieval fails
-         */
-        public async getRole(id: number): Promise<roles.Role> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/roles/${encodeURIComponent(id)}`)
-            return await resp.json() as roles.Role
-        }
-
-        /**
-         * Retrieves a role by ID with its permissions.
-         * @param params - Object containing the role ID
-         * @param params.id - The ID of the role to retrieve
-         * @returns {Promise<RoleWithPermissions>} The found role with permissions
-         * @throws {APIError} If the role is not found or retrieval fails
-         */
-        public async getRoleWithPermissions(id: number): Promise<roles.RoleWithPermissions> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/roles/${encodeURIComponent(id)}/with-permissions`)
-            return await resp.json() as roles.RoleWithPermissions
-        }
-
-        /**
-         * Retrieves a tenant by ID.
-         * @param params - Object containing the tenant ID
-         * @param params.id - The ID of the tenant to retrieve
-         * @returns {Promise<Tenant>} The found tenant
-         * @throws {APIError} If the tenant is not found or retrieval fails
-         */
-        public async getTenant(id: number): Promise<tenants.Tenant> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(id)}`)
-            return await resp.json() as tenants.Tenant
-        }
-
-        /**
-         * Retrieves a user by ID
-         * @param params - Object containing the user ID
-         * @param params.id - The ID of the user to retrieve
-         * @returns {Promise<SafeUser>} The found user (without password hash)
-         * @throws {APIError} If the user is not found
-         */
-        public async getUser(id: number): Promise<SafeUser> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/users/${encodeURIComponent(id)}`)
-            return await resp.json() as SafeUser
-        }
-
-        /**
-         * Retrieves a user with their effective permissions (combined from direct assignments and roles).
-         * @param params - Object containing the user ID
-         * @param params.userId - The ID of the user to retrieve
-         * @returns {Promise<UserWithPermissions>} The user with their effective permissions
-         * @throws {APIError} If the user is not found or retrieval fails
-         */
-        public async getUserPermissions(userId: number): Promise<user_permissions.UserWithPermissions> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/users/${encodeURIComponent(userId)}/effective-permissions`)
-            return await resp.json() as user_permissions.UserWithPermissions
-        }
-
-        /**
-         * Retrieves a user with their roles.
-         * @param params - Object containing the user ID
-         * @param params.userId - The ID of the user to retrieve
-         * @returns {Promise<UserWithRoles>} The user with their roles
-         * @throws {APIError} If the user is not found or retrieval fails
-         */
-        public async getUserRoles(userId: number): Promise<user_permissions.UserWithRoles> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/users/${encodeURIComponent(userId)}/assigned-roles`)
-            return await resp.json() as user_permissions.UserWithRoles
-        }
-
-        /**
-         * Retrieves a user with their assigned permissions.
-         * @param params - Object containing the user ID
-         * @param params.userId - The ID of the user to retrieve
-         * @returns {Promise<UserWithPermissions>} The user with their permissions
-         * @throws {APIError} If the user is not found or retrieval fails
-         */
-        public async getUserWithPermissions(userId: number): Promise<user_permissions.UserWithPermissions> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/users/${encodeURIComponent(userId)}/permissions`)
-            return await resp.json() as user_permissions.UserWithPermissions
-        }
-
-        /**
-         * Retrieves a user with their assigned roles.
-         * @param params - Object containing the user ID
-         * @param params.userId - The ID of the user to retrieve
-         * @returns {Promise<UserWithRoles>} The user with their roles
-         * @throws {APIError} If the user is not found or retrieval fails
-         */
-        public async getUserWithRoles(userId: number): Promise<user_permissions.UserWithRoles> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/users/${encodeURIComponent(userId)}/roles`)
-            return await resp.json() as user_permissions.UserWithRoles
-        }
-
-        /**
-         * Retrieves all users for a specific department
-         * @param params - Object containing the department ID
-         * @param params.departmentId - The ID of the department to get users for
-         * @returns {Promise<Users>} List of users for the department (without password hashes)
-         * @throws {APIError} If retrieval fails
-         */
-        public async listDepartmentUsers(departmentId: number): Promise<Users> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/departments/${encodeURIComponent(departmentId)}/users`)
-            return await resp.json() as Users
-        }
-
-        /**
-         * Retrieves paginated users for a specific department
-         * @param params - Object containing the department ID and pagination parameters
-         * @param params.departmentId - The ID of the department to get users for
-         * @returns {Promise<PaginatedUsers>} Paginated list of users for the department (without password hashes)
-         * @throws {APIError} If retrieval fails
-         */
-        public async listDepartmentUsersWithPagination(departmentId: number, params: {
-    /**
-     * Page number (1-based)
-     */
-    page?: number
-
-    /**
-     * Number of items per page
-     */
-    pageSize?: number
-
-    /**
-     * Column to sort by
-     */
-    sortBy?: string
-
-    /**
-     * Sort direction
-     */
-    sortDirection?: "asc" | "desc"
-}): Promise<PaginatedUsers> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/departments/${encodeURIComponent(departmentId)}/users/paginated`, undefined, {query})
-            return await resp.json() as PaginatedUsers
-        }
-
-        /**
-         * Retrieves all departments.
-         * @returns {Promise<Departments>} List of all departments
-         * @throws {APIError} If retrieval fails
-         */
-        public async listDepartments(): Promise<departments.Departments> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/departments`)
-            return await resp.json() as departments.Departments
-        }
-
-        /**
-         * Retrieves departments with pagination.
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedDepartments>} Paginated list of departments
-         * @throws {APIError} If retrieval fails
-         */
-        public async listDepartmentsWithPagination(params: shared.PaginationParams): Promise<departments.PaginatedDepartments> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/departments/paginated`, undefined, {query})
-            return await resp.json() as departments.PaginatedDepartments
-        }
-
-        /**
-         * Retrieves all permissions.
-         * @returns {Promise<Permissions>} List of all permissions
-         * @throws {APIError} If the retrieval fails
-         */
-        public async listPermissions(): Promise<permissions.Permissions> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/permissions`)
-            return await resp.json() as permissions.Permissions
-        }
-
-        /**
-         * Retrieves permissions with pagination.
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedPermissions>} Paginated list of permissions
-         * @throws {APIError} If retrieval fails
-         */
-        public async listPermissionsWithPagination(params: shared.PaginationParams): Promise<permissions.PaginatedPermissions> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/permissions/paginated`, undefined, {query})
-            return await resp.json() as permissions.PaginatedPermissions
-        }
-
-        /**
-         * Retrieves all roles.
-         * @returns {Promise<Roles>} List of all roles
-         * @throws {APIError} If the retrieval fails
-         */
-        public async listRoles(): Promise<roles.Roles> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/roles`)
-            return await resp.json() as roles.Roles
-        }
-
-        /**
-         * Retrieves all roles for a tenant.
-         * @param params - Object containing the tenant ID
-         * @param params.tenantId - The ID of the tenant
-         * @returns {Promise<Roles>} List of all roles for the tenant
-         * @throws {APIError} If the retrieval fails
-         */
-        public async listRolesByTenant(tenantId: number): Promise<roles.Roles> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(tenantId)}/roles`)
-            return await resp.json() as roles.Roles
-        }
-
-        /**
-         * Retrieves roles for a tenant with pagination.
-         * @param params - Object containing the tenant ID and pagination parameters
-         * @param params.tenantId - The ID of the tenant
-         * @returns {Promise<PaginatedRoles>} Paginated list of roles for the tenant
-         * @throws {APIError} If retrieval fails
-         */
-        public async listRolesByTenantWithPagination(tenantId: number, params: {
-    /**
-     * Page number (1-based)
-     */
-    page?: number
-
-    /**
-     * Number of items per page
-     */
-    pageSize?: number
-
-    /**
-     * Column to sort by
-     */
-    sortBy?: string
-
-    /**
-     * Sort direction
-     */
-    sortDirection?: "asc" | "desc"
-}): Promise<roles.PaginatedRoles> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(tenantId)}/roles/paginated`, undefined, {query})
-            return await resp.json() as roles.PaginatedRoles
-        }
-
-        /**
-         * Retrieves all roles for a tenant with their permissions.
-         * @param params - Object containing the tenant ID
-         * @param params.tenantId - The ID of the tenant
-         * @returns {Promise<RolesWithPermissions>} List of all roles for the tenant with permissions
-         * @throws {APIError} If the retrieval fails
-         */
-        public async listRolesByTenantWithPermissions(tenantId: number): Promise<roles.RolesWithPermissions> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(tenantId)}/roles/with-permissions`)
-            return await resp.json() as roles.RolesWithPermissions
-        }
-
-        /**
-         * Retrieves roles for a tenant with permissions and pagination.
-         * @param params - Object containing the tenant ID and pagination parameters
-         * @param params.tenantId - The ID of the tenant
-         * @returns {Promise<PaginatedRolesWithPermissions>} Paginated list of roles for the tenant with permissions
-         * @throws {APIError} If retrieval fails
-         */
-        public async listRolesByTenantWithPermissionsAndPagination(tenantId: number, params: {
-    /**
-     * Page number (1-based)
-     */
-    page?: number
-
-    /**
-     * Number of items per page
-     */
-    pageSize?: number
-
-    /**
-     * Column to sort by
-     */
-    sortBy?: string
-
-    /**
-     * Sort direction
-     */
-    sortDirection?: "asc" | "desc"
-}): Promise<roles.PaginatedRolesWithPermissions> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(tenantId)}/roles/with-permissions/paginated`, undefined, {query})
-            return await resp.json() as roles.PaginatedRolesWithPermissions
-        }
-
-        /**
-         * Retrieves roles with pagination.
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedRoles>} Paginated list of roles
-         * @throws {APIError} If retrieval fails
-         */
-        public async listRolesWithPagination(params: shared.PaginationParams): Promise<roles.PaginatedRoles> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/roles/paginated`, undefined, {query})
-            return await resp.json() as roles.PaginatedRoles
-        }
-
-        /**
-         * Retrieves all roles with their permissions.
-         * @returns {Promise<RolesWithPermissions>} List of all roles with permissions
-         * @throws {APIError} If the retrieval fails
-         */
-        public async listRolesWithPermissions(): Promise<roles.RolesWithPermissions> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/roles/with-permissions`)
-            return await resp.json() as roles.RolesWithPermissions
-        }
-
-        /**
-         * Retrieves roles with permissions and pagination.
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedRolesWithPermissions>} Paginated list of roles with permissions
-         * @throws {APIError} If retrieval fails
-         */
-        public async listRolesWithPermissionsAndPagination(params: shared.PaginationParams): Promise<roles.PaginatedRolesWithPermissions> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/roles/with-permissions/paginated`, undefined, {query})
-            return await resp.json() as roles.PaginatedRolesWithPermissions
-        }
-
-        /**
-         * Retrieves all departments for a specific tenant.
-         * @param params - Object containing the tenant ID
-         * @param params.tenantId - The ID of the tenant to get departments for
-         * @returns {Promise<Departments>} List of departments for the tenant
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTenantDepartments(tenantId: number): Promise<departments.Departments> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(tenantId)}/departments`)
-            return await resp.json() as departments.Departments
-        }
-
-        /**
-         * Retrieves paginated departments for a specific tenant.
-         * @param params - Object containing the tenant ID and pagination parameters
-         * @param params.tenantId - The ID of the tenant to get departments for
-         * @returns {Promise<PaginatedDepartments>} Paginated list of departments for the tenant
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTenantDepartmentsWithPagination(tenantId: number, params: {
-    /**
-     * Page number (1-based)
-     */
-    page?: number
-
-    /**
-     * Number of items per page
-     */
-    pageSize?: number
-
-    /**
-     * Column to sort by
-     */
-    sortBy?: string
-
-    /**
-     * Sort direction
-     */
-    sortDirection?: "asc" | "desc"
-}): Promise<departments.PaginatedDepartments> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(tenantId)}/departments/paginated`, undefined, {query})
-            return await resp.json() as departments.PaginatedDepartments
-        }
-
-        /**
-         * Alias for listRolesByTenant to match test case naming.
-         * @param params - Object containing the tenant ID
-         * @param params.tenantId - The ID of the tenant
-         * @returns {Promise<Roles>} List of all roles for the tenant
-         * @throws {APIError} If the retrieval fails
-         */
-        public async listTenantRoles(tenantId: number): Promise<roles.Roles> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(tenantId)}/roles-alias`)
-            return await resp.json() as roles.Roles
-        }
-
-        /**
-         * Alias for listRolesByTenantWithPagination to match test case naming.
-         * @param params - Object containing pagination parameters and tenant ID
-         * @param params.tenantId - The ID of the tenant
-         * @returns {Promise<PaginatedRoles>} Paginated list of tenant roles
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTenantRolesWithPagination(tenantId: number, params: {
-    /**
-     * Page number (1-based)
-     */
-    page?: number
-
-    /**
-     * Number of items per page
-     */
-    pageSize?: number
-
-    /**
-     * Column to sort by
-     */
-    sortBy?: string
-
-    /**
-     * Sort direction
-     */
-    sortDirection?: "asc" | "desc"
-}): Promise<roles.PaginatedRoles> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(tenantId)}/roles-paginated`, undefined, {query})
-            return await resp.json() as roles.PaginatedRoles
-        }
-
-        /**
-         * Retrieves all users for a specific tenant
-         * @param params - Object containing the tenant ID
-         * @param params.tenantId - The ID of the tenant to get users for
-         * @returns {Promise<Users>} List of users for the tenant (without password hashes)
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTenantUsers(tenantId: number): Promise<Users> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(tenantId)}/users`)
-            return await resp.json() as Users
-        }
-
-        /**
-         * Retrieves paginated users for a specific tenant
-         * @param params - Object containing the tenant ID and pagination parameters
-         * @param params.tenantId - The ID of the tenant to get users for
-         * @returns {Promise<PaginatedUsers>} Paginated list of users for the tenant (without password hashes)
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTenantUsersWithPagination(tenantId: number, params: {
-    /**
-     * Page number (1-based)
-     */
-    page?: number
-
-    /**
-     * Number of items per page
-     */
-    pageSize?: number
-
-    /**
-     * Column to sort by
-     */
-    sortBy?: string
-
-    /**
-     * Sort direction
-     */
-    sortDirection?: "asc" | "desc"
-}): Promise<PaginatedUsers> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(tenantId)}/users/paginated`, undefined, {query})
-            return await resp.json() as PaginatedUsers
-        }
-
-        /**
-         * Retrieves tenants with pagination.
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedTenants>} Paginated list of tenants
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTenants(params: shared.PaginationParams): Promise<tenants.PaginatedTenants> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants`, undefined, {query})
-            return await resp.json() as tenants.PaginatedTenants
-        }
-
-        /**
-         * Retrieves all users
-         * @returns {Promise<Users>} List of all users (without password hashes)
-         * @throws {APIError} If retrieval fails
-         */
-        public async listUsers(): Promise<Users> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/users`)
-            return await resp.json() as Users
-        }
-
-        /**
-         * Retrieves users with pagination
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedUsers>} Paginated list of users (without password hashes)
-         * @throws {APIError} If retrieval fails
-         */
-        public async listUsersWithPagination(params: shared.PaginationParams): Promise<PaginatedUsers> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:          params.page === undefined ? undefined : String(params.page),
-                pageSize:      params.pageSize === undefined ? undefined : String(params.pageSize),
-                sortBy:        params.sortBy,
-                sortDirection: params.sortDirection === undefined ? undefined : String(params.sortDirection),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/users/paginated`, undefined, {query})
-            return await resp.json() as PaginatedUsers
-        }
-
-        /**
-         * Authenticates a user and generates JWT tokens
-         * @param params Login credentials
-         * @returns User data and authentication tokens
-         * @throws {APIError} If authentication fails
-         */
-        public async login(params: auth.LoginPayload): Promise<auth.LoginResponse> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/auth/login`, JSON.stringify(params))
-            return await resp.json() as auth.LoginResponse
-        }
-
-        /**
-         * Logs out a user by revoking their refresh token
-         * @param params Refresh token to revoke
-         * @returns Success message
-         * @throws {APIError} If logout fails
-         */
-        public async logout(params: auth.LogoutPayload): Promise<{
-    message: string
-}> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/auth/logout`, JSON.stringify(params))
-            return await resp.json() as {
-    message: string
-}
-        }
-
-        /**
-         * Refreshes an access token using a valid refresh token
-         * @param params Refresh token
-         * @returns New access and refresh tokens
-         * @throws {APIError} If refresh token is invalid
-         */
-        public async refreshToken(params: auth.RefreshTokenPayload): Promise<{
-    accessToken: string
-    refreshToken: string
-}> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/auth/refresh-token`, JSON.stringify(params))
-            return await resp.json() as {
-    accessToken: string
-    refreshToken: string
-}
-        }
-
-        /**
-         * Revokes all refresh tokens for a user
-         * @param params User ID
-         * @returns Number of tokens revoked
-         * @throws {APIError} If operation fails
-         */
-        public async revokeAllTokens(userId: number): Promise<{
-    count: number
-}> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/auth/revoke-all/${encodeURIComponent(userId)}`)
-            return await resp.json() as {
-    count: number
-}
-        }
-
-        /**
-         * Updates an existing department.
-         * @param params - Object containing the department ID and update data
-         * @param params.id - The ID of the department to update
-         * @returns {Promise<Department>} The updated department
-         * @throws {APIError} If the department is not found or update fails
-         */
-        public async updateDepartment(id: number, params: {
-    /**
-     * Updated name of the department
-     * @minLength 2
-     */
-    name?: string
-
-    /**
-     * Updated code for the department (alphanumeric with no spaces)
-     * @minLength 2
-     * @pattern ^[a-zA-Z0-9-]+$
-     */
-    code?: string
-
-    /**
-     * Updated description of the department
-     */
-    description?: string
-
-    /**
-     * Updated active status of the department
-     */
-    isActive?: boolean
-}): Promise<departments.Department> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/departments/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as departments.Department
-        }
-
-        /**
-         * Updates an existing permission.
-         * @param params - Object containing the permission ID and update data
-         * @param params.id - The ID of the permission to update
-         * @returns {Promise<Permission>} The updated permission
-         * @throws {APIError} If the permission is not found or update fails
-         */
-        public async updatePermission(id: number, params: {
-    /**
-     * Human-readable name of the permission
-     * Must have at least 3 non-whitespace characters
-     */
-    name?: string
-
-    /**
-     * Description of what the permission allows
-     */
-    description?: string
-}): Promise<permissions.Permission> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/permissions/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as permissions.Permission
-        }
-
-        /**
-         * Updates an existing role.
-         * @param params - Object containing the role ID and update data
-         * @param params.id - The ID of the role to update
-         * @returns {Promise<RoleWithPermissions>} The updated role with permissions
-         * @throws {APIError} If the role is not found or update fails
-         */
-        public async updateRole(id: number, params: {
-    /**
-     * Human-readable name of the role
-     * Must have at least 3 non-whitespace characters
-     */
-    name?: string
-
-    /**
-     * Description of what the role represents
-     */
-    description?: string
-}): Promise<roles.RoleWithPermissions> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/roles/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as roles.RoleWithPermissions
-        }
-
-        /**
-         * Updates an existing tenant.
-         * @param params - Object containing the tenant ID and update data
-         * @param params.id - The ID of the tenant to update
-         * @returns {Promise<Tenant>} The updated tenant
-         * @throws {APIError} If the tenant is not found or update fails
-         */
-        public async updateTenant(id: number, params: {
-    /**
-     * Updated name of the tenant
-     * @minLength 2
-     */
-    name?: string
-
-    /**
-     * Updated code for the tenant (alphanumeric with no spaces)
-     * @minLength 2
-     * @pattern ^[a-zA-Z0-9-]+$
-     */
-    code?: string
-
-    /**
-     * Updated description of the tenant
-     */
-    description?: string
-
-    /**
-     * Updated active status of the tenant
-     */
-    isActive?: boolean
-}): Promise<tenants.Tenant> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/tenants/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as tenants.Tenant
-        }
-
-        /**
-         * Updates an existing user
-         * @param params - Object containing the user ID and update data
-         * @param params.id - The ID of the user to update
-         * @returns {Promise<SafeUser>} The updated user (without password hash)
-         * @throws {APIError} If the user is not found or update fails
-         */
-        public async updateUser(id: number, params: {
-    /**
-     * ID of the department this user belongs to
-     */
-    departmentId?: number
-
-    /**
-     * Email address of the user
-     * Must be a valid email format
-     */
-    email?: string
-
-    /**
-     * First name of the user
-     * Must have at least 1 non-whitespace character
-     */
-    firstName?: string
-
-    /**
-     * Last name of the user
-     * Must have at least 1 non-whitespace character
-     */
-    lastName?: string
-
-    /**
-     * Phone number of the user
-     */
-    phone?: string
-
-    /**
-     * Job title/position of the user
-     */
-    position?: string
-
-    /**
-     * Internal employee ID
-     */
-    employeeId?: string
-
-    /**
-     * Whether the user is currently active
-     */
-    isActive?: boolean
-
-    /**
-     * Whether the user is a system-wide admin
-     */
-    isSystemAdmin?: boolean
-}): Promise<SafeUser> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/users/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as SafeUser
-        }
-    }
-}
-
-export namespace auth {
-    export interface LoginPayload {
-        /**
-         * Username for login
-         */
-        username: string
-
-        /**
-         * Password for authentication
-         */
-        password: string
+    public async createDriver(params: drivers.CreateDriverPayload): Promise<drivers.Driver> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('POST', `/drivers`, JSON.stringify(params));
+      return (await resp.json()) as drivers.Driver;
     }
 
-    export interface LoginResponse {
-        /**
-         * User data without sensitive information
-         */
-        user: users.SafeUser
-
-        /**
-         * JWT access token
-         */
-        accessToken: string
-
-        /**
-         * JWT refresh token
-         */
-        refreshToken: string
+    /**
+     * Creates a new gate.
+     * @param params - The gate data to create
+     * @returns {Promise<Gate>} The created gate
+     * @throws {APIError} If the gate creation fails
+     */
+    public async createGate(params: gates.CreateGatePayload): Promise<gates.Gate> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('POST', `/gates`, JSON.stringify(params));
+      return (await resp.json()) as gates.Gate;
     }
 
-    export interface LogoutPayload {
-        /**
-         * Refresh token to invalidate
-         */
-        refreshToken: string
+    /**
+     * Creates a new state.
+     * @param params - The state data to create
+     * @returns {Promise<State>} The created state
+     * @throws {APIError} If the state creation fails
+     */
+    public async createState(params: states.CreateStatePayload): Promise<states.State> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('POST', `/states`, JSON.stringify(params));
+      return (await resp.json()) as states.State;
     }
 
-    export interface RefreshTokenPayload {
-        /**
-         * Refresh token
-         */
-        refreshToken: string
-    }
-}
-
-export namespace cities {
-    export interface Cities {
-        /**
-         * List of cities
-         */
-        cities: City[]
-    }
-
-    export interface City {
-        /**
-         * Unique identifier for the city
-         */
-        id: number
-
-        /**
-         * Name of the city
-         */
-        name: string
-
-        /**
-         * ID of the state this city belongs to
-         */
-        stateId: number
-
-        /**
-         * Latitude of the city
-         */
-        latitude: number
-
-        /**
-         * Longitude of the city
-         */
-        longitude: number
-
-        /**
-         * Timezone of the city (e.g., "America/Mexico_City")
-         */
-        timezone: string
-
-        /**
-         * Whether the city is currently active in the system
-         */
-        active: boolean
-
-        /**
-         * Timestamp when the city record was created
-         */
-        createdAt: string | null
-
-        /**
-         * Timestamp when the city record was last updated
-         */
-        updatedAt: string | null
-
-        /**
-         * URL-friendly identifier for the city
-         */
-        slug: string
+    /**
+     * Deletes a city by its ID.
+     * @param params - Object containing the city ID
+     * @param params.id - The ID of the city to delete
+     * @returns {Promise<City>} The deleted city
+     * @throws {APIError} If the city is not found or deletion fails
+     */
+    public async deleteCity(id: number): Promise<cities.City> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'DELETE',
+        `/cities/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as cities.City;
     }
 
-    export interface CreateCityPayload {
+    /**
+     * Deletes a country by its ID.
+     * @param params - Object containing the country ID
+     * @param params.id - The ID of the country to delete
+     * @returns {Promise<Country>} The deleted country
+     * @throws {APIError} If the country is not found or deletion fails
+     */
+    public async deleteCountry(id: number): Promise<countries.Country> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'DELETE',
+        `/countries/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as countries.Country;
+    }
+
+    /**
+     * Deletes a driver by its ID.
+     * @param params - Object containing the driver ID
+     * @param params.id - The ID of the driver to delete
+     * @returns {Promise<Driver>} The deleted driver
+     * @throws {APIError} If the driver is not found or deletion fails
+     */
+    public async deleteDriver(id: number): Promise<drivers.Driver> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'DELETE',
+        `/drivers/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as drivers.Driver;
+    }
+
+    /**
+     * Deletes a gate by its ID.
+     * @param params - Object containing the gate ID
+     * @param params.id - The ID of the gate to delete
+     * @returns {Promise<Gate>} The deleted gate
+     * @throws {APIError} If the gate is not found or deletion fails
+     */
+    public async deleteGate(id: number): Promise<gates.Gate> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('DELETE', `/gates/${encodeURIComponent(id)}`);
+      return (await resp.json()) as gates.Gate;
+    }
+
+    /**
+     * Deletes a state by its ID.
+     * @param params - Object containing the state ID
+     * @param params.id - The ID of the state to delete
+     * @returns {Promise<State>} The deleted state
+     * @throws {APIError} If the state is not found or deletion fails
+     */
+    public async deleteState(id: number): Promise<states.State> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'DELETE',
+        `/states/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as states.State;
+    }
+
+    /**
+     * Deletes a terminal by its ID.
+     * @param params - Object containing the terminal ID
+     * @param params.id - The ID of the terminal to delete
+     * @returns {Promise<Terminal>} The deleted terminal
+     * @throws {APIError} If the terminal is not found or deletion fails
+     */
+    public async deleteTerminal(id: number): Promise<terminals.Terminal> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'DELETE',
+        `/terminals/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as terminals.Terminal;
+    }
+
+    /**
+     * Deletes a transporter by its ID.
+     * @param params - Object containing the transporter ID
+     * @param params.id - The ID of the transporter to delete
+     * @returns {Promise<Transporter>} The deleted transporter
+     * @throws {APIError} If the transporter is not found or deletion fails
+     */
+    public async deleteTransporter(id: number): Promise<transporters.Transporter> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'DELETE',
+        `/transporters/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as transporters.Transporter;
+    }
+
+    /**
+     * Retrieves a city by its ID.
+     * @param params - Object containing the city ID
+     * @param params.id - The ID of the city to retrieve
+     * @returns {Promise<City>} The found city
+     * @throws {APIError} If the city is not found or retrieval fails
+     */
+    public async getCity(id: number): Promise<cities.City> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/cities/${encodeURIComponent(id)}`);
+      return (await resp.json()) as cities.City;
+    }
+
+    /**
+     * Retrieves a country by its ID.
+     * @param params - Object containing the country ID
+     * @param params.id - The ID of the country to retrieve
+     * @returns {Promise<Country>} The found country
+     * @throws {APIError} If the country is not found or retrieval fails
+     */
+    public async getCountry(id: number): Promise<countries.Country> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/countries/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as countries.Country;
+    }
+
+    /**
+     * Retrieves a driver by its ID.
+     * @param params - Object containing the driver ID
+     * @param params.id - The ID of the driver to retrieve
+     * @returns {Promise<Driver>} The found driver
+     * @throws {APIError} If the driver is not found or retrieval fails
+     */
+    public async getDriver(id: number): Promise<drivers.Driver> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/drivers/${encodeURIComponent(id)}`);
+      return (await resp.json()) as drivers.Driver;
+    }
+
+    /**
+     * Gets all possible next statuses for a driver
+     * @param params - Object containing the driver ID
+     * @param params.id - The ID of the driver
+     * @returns {Promise<PossibleDriverStatuses>} Object containing array of possible next statuses
+     * @throws {APIError} If the driver is not found
+     */
+    public async getDriverPossibleStatuses(id: number): Promise<drivers.PossibleDriverStatuses> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/drivers/${encodeURIComponent(id)}/possible-statuses`
+      );
+      return (await resp.json()) as drivers.PossibleDriverStatuses;
+    }
+
+    /**
+     * Retrieves a gate by its ID.
+     * @param params - Object containing the gate ID
+     * @param params.id - The ID of the gate to retrieve
+     * @returns {Promise<Gate>} The found gate
+     * @throws {APIError} If the gate is not found or retrieval fails
+     */
+    public async getGate(id: number): Promise<gates.Gate> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/gates/${encodeURIComponent(id)}`);
+      return (await resp.json()) as gates.Gate;
+    }
+
+    /**
+     * Retrieves a state by its ID.
+     * @param params - Object containing the state ID
+     * @param params.id - The ID of the state to retrieve
+     * @returns {Promise<State>} The found state
+     * @throws {APIError} If the state is not found or retrieval fails
+     */
+    public async getState(id: number): Promise<states.State> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/states/${encodeURIComponent(id)}`);
+      return (await resp.json()) as states.State;
+    }
+
+    /**
+     * Retrieves a terminal by its ID.
+     * @param params - Object containing the terminal ID
+     * @param params.id - The ID of the terminal to retrieve
+     * @returns {Promise<Terminal>} The found terminal
+     * @throws {APIError} If the terminal is not found or retrieval fails
+     */
+    public async getTerminal(id: number): Promise<terminals.Terminal> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/terminals/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as terminals.Terminal;
+    }
+
+    /**
+     * Retrieves a timezone by its ID.
+     * @param params - Object containing the timezone ID
+     * @param params.id - The ID of the timezone to retrieve
+     * @returns {Timezone} The found timezone
+     * @throws {Error} If the timezone is not found
+     */
+    public async getTimezone(id: string): Promise<timezones.Timezone> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/timezones/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as timezones.Timezone;
+    }
+
+    /**
+     * Retrieves a transporter by its ID.
+     * @param params - Object containing the transporter ID
+     * @param params.id - The ID of the transporter to retrieve
+     * @returns {Promise<Transporter>} The found transporter
+     * @throws {APIError} If the transporter is not found or retrieval fails
+     */
+    public async getTransporter(id: number): Promise<transporters.Transporter> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/transporters/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as transporters.Transporter;
+    }
+
+    /**
+     * Retrieves all cities.
+     * @returns {Promise<City[]>} List of all cities
+     * @throws {APIError} If retrieval fails
+     */
+    public async listCities(): Promise<cities.Cities> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/cities`);
+      return (await resp.json()) as cities.Cities;
+    }
+
+    /**
+     * Retrieves cities with pagination.
+     * @param params - Pagination parameters
+     * @returns {Promise<PaginatedCities>} Paginated list of cities
+     * @throws {APIError} If retrieval fails
+     */
+    public async listCitiesPaginated(
+      params: shared.PaginationParams
+    ): Promise<cities.PaginatedCities> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/cities/paginated`, undefined, {
+        query,
+      });
+      return (await resp.json()) as cities.PaginatedCities;
+    }
+
+    /**
+     * Retrieves all countries without pagination (useful for dropdowns).
+     * @returns {Promise<Countries>} An object containing an array of countries
+     * @throws {APIError} If retrieval fails
+     */
+    public async listCountries(): Promise<countries.Countries> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/countries`);
+      return (await resp.json()) as countries.Countries;
+    }
+
+    /**
+     * Retrieves countries with pagination (useful for tables).
+     * @param params - Pagination parameters
+     * @returns {Promise<PaginatedCountries>} Paginated list of countries
+     * @throws {APIError} If retrieval fails
+     */
+    public async listCountriesPaginated(
+      params: shared.PaginationParams
+    ): Promise<countries.PaginatedCountries> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/countries/paginated`, undefined, {
+        query,
+      });
+      return (await resp.json()) as countries.PaginatedCountries;
+    }
+
+    /**
+     * List drivers by bus line
+     * @param params - Object containing the bus line ID to filter by
+     * @param params.busLineId - The bus line ID to filter by
+     * @returns {Promise<Drivers>} Drivers associated with the specified bus line
+     * @throws {APIError} If retrieval fails
+     */
+    public async listDriversByBusLine(busLineId: number): Promise<drivers.Drivers> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/drivers/by-bus-line/${encodeURIComponent(busLineId)}`
+      );
+      return (await resp.json()) as drivers.Drivers;
+    }
+
+    /**
+     * List drivers by status
+     * @param params - Object containing the status to filter by
+     * @param params.status - The status to filter by
+     * @returns {Promise<Drivers>} Drivers with the specified status
+     * @throws {APIError} If retrieval fails
+     */
+    public async listDriversByStatus(status: string): Promise<drivers.Drivers> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/drivers/by-status/${encodeURIComponent(status)}`
+      );
+      return (await resp.json()) as drivers.Drivers;
+    }
+
+    /**
+     * List drivers by transporter
+     * @param params - Object containing the transporter ID to filter by
+     * @param params.transporterId - The transporter ID to filter by
+     * @returns {Promise<Drivers>} Drivers associated with the specified transporter
+     * @throws {APIError} If retrieval fails
+     */
+    public async listDriversByTransporter(transporterId: number): Promise<drivers.Drivers> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/drivers/by-transporter/${encodeURIComponent(transporterId)}`
+      );
+      return (await resp.json()) as drivers.Drivers;
+    }
+
+    /**
+     * Retrieves drivers with pagination (useful for tables).
+     * @param params - Pagination parameters
+     * @returns {Promise<PaginatedDrivers>} Paginated list of drivers
+     * @throws {APIError} If retrieval fails
+     */
+    public async listDriversPaginated(
+      params: shared.PaginationParams
+    ): Promise<drivers.PaginatedDrivers> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/drivers/paginated`, undefined, {
+        query,
+      });
+      return (await resp.json()) as drivers.PaginatedDrivers;
+    }
+
+    /**
+     * Retrieves gates with pagination.
+     * @param params - Pagination parameters
+     * @returns {Promise<PaginatedGates>} Paginated list of gates
+     * @throws {APIError} If retrieval fails
+     */
+    public async listGates(params: shared.PaginationParams): Promise<gates.PaginatedGates> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/gates`, undefined, { query });
+      return (await resp.json()) as gates.PaginatedGates;
+    }
+
+    /**
+     * Retrieves gates for a terminal with pagination.
+     * @param params - Object containing the terminal ID and pagination parameters
+     * @returns {Promise<PaginatedGates>} Paginated list of gates for the terminal
+     * @throws {APIError} If retrieval fails
+     */
+    public async listGatesByTerminal(
+      terminalId: number,
+      params: {
+        /**
+         * Page number (1-based)
+         */
+        page?: number;
+
+        /**
+         * Number of items per page
+         */
+        pageSize?: number;
+
+        /**
+         * Column to sort by
+         */
+        sortBy?: string;
+
+        /**
+         * Sort direction
+         */
+        sortDirection?: 'asc' | 'desc';
+      }
+    ): Promise<gates.PaginatedGates> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/terminals/${encodeURIComponent(terminalId)}/gates`,
+        undefined,
+        { query }
+      );
+      return (await resp.json()) as gates.PaginatedGates;
+    }
+
+    /**
+     * Retrieves all states without pagination (useful for dropdowns).
+     * @returns {Promise<States>} An object containing an array of states
+     * @throws {APIError} If the retrieval fails
+     */
+    public async listStates(): Promise<states.States> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/states`);
+      return (await resp.json()) as states.States;
+    }
+
+    /**
+     * Retrieves states with pagination (useful for tables).
+     * @param params - Pagination parameters
+     * @returns {Promise<PaginatedStates>} Paginated list of states
+     * @throws {APIError} If retrieval fails
+     */
+    public async listStatesPaginated(
+      params: shared.PaginationParams
+    ): Promise<states.PaginatedStates> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/states/paginated`, undefined, {
+        query,
+      });
+      return (await resp.json()) as states.PaginatedStates;
+    }
+
+    /**
+     * Retrieves terminals with pagination.
+     * @param params - Pagination parameters
+     * @returns {Promise<PaginatedTerminals>} Paginated list of terminals
+     * @throws {APIError} If retrieval fails
+     */
+    public async listTerminals(
+      params: shared.PaginationParams
+    ): Promise<terminals.PaginatedTerminals> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/terminals`, undefined, { query });
+      return (await resp.json()) as terminals.PaginatedTerminals;
+    }
+
+    /**
+     * Retrieves all timezones.
+     * @returns {Timezones} An object containing an array of timezones
+     */
+    public async listTimezones(): Promise<timezones.Timezones> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/timezones`);
+      return (await resp.json()) as timezones.Timezones;
+    }
+
+    /**
+     * Retrieves transporters with pagination.
+     * @param params - Pagination parameters
+     * @returns {Promise<PaginatedTransporters>} Paginated list of transporters
+     * @throws {APIError} If retrieval fails
+     */
+    public async listTransporters(
+      params: shared.PaginationParams
+    ): Promise<transporters.PaginatedTransporters> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/transporters`, undefined, { query });
+      return (await resp.json()) as transporters.PaginatedTransporters;
+    }
+
+    /**
+     * Removes a driver from a bus line
+     * @param params - Object containing the driver ID
+     * @param params.id - The ID of the driver
+     * @returns {Promise<Driver>} The updated driver
+     * @throws {APIError} If the removal fails
+     */
+    public async removeDriverFromBusLine(id: number): Promise<drivers.Driver> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'DELETE',
+        `/drivers/${encodeURIComponent(id)}/bus-line`
+      );
+      return (await resp.json()) as drivers.Driver;
+    }
+
+    /**
+     * Removes a driver from a transporter
+     * @param params - Object containing the driver ID
+     * @param params.id - The ID of the driver
+     * @returns {Promise<Driver>} The updated driver
+     * @throws {APIError} If the removal fails
+     */
+    public async removeDriverFromTransporter(id: number): Promise<drivers.Driver> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'DELETE',
+        `/drivers/${encodeURIComponent(id)}/transporter`
+      );
+      return (await resp.json()) as drivers.Driver;
+    }
+
+    /**
+     * Updates an existing city.
+     * @param params - Object containing the city ID and update data
+     * @param params.id - The ID of the city to update
+     * @returns {Promise<City>} The updated city
+     * @throws {APIError} If the city is not found or update fails
+     */
+    public async updateCity(
+      id: number,
+      params: {
         /**
          * The name of the city
          * Must contain only letters (with or without accents) and spaces
          */
-        name: string
+        name?: string;
 
         /**
          * The ID of the state this city belongs to
          * Must be a positive number
          */
-        stateId: number
+        stateId?: number;
 
         /**
          * Latitude of the city
          * Must be a number between -90 and 90
          */
-        latitude: number
+        latitude?: number;
 
         /**
          * Longitude of the city
          * Must be a number between -180 and 180
          */
-        longitude: number
+        longitude?: number;
 
         /**
          * Timezone of the city (e.g., "America/Mexico_City")
          * Must have at least 1 non-whitespace character
          */
-        timezone: string
+        timezone?: string;
 
         /**
          * Whether the city is active
-         * @default true
          */
-        active?: boolean
+        active?: boolean;
+      }
+    ): Promise<cities.City> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/cities/${encodeURIComponent(id)}`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as cities.City;
     }
 
-    export interface PaginatedCities {
-        data: City[]
-        pagination: shared.PaginationMeta
-    }
-}
-
-export namespace countries {
-    export interface Countries {
-        /**
-         * List of countries
-         */
-        countries: Country[]
-    }
-
-    export interface Country {
-        /**
-         * Unique identifier for the country
-         */
-        id: number
-
-        /**
-         * Name of the country
-         */
-        name: string
-
-        /**
-         * Whether the country is currently active in the system
-         */
-        active: boolean
-
-        /**
-         * ISO country code (e.g., "US", "CA", "MX")
-         */
-        code: string
-
-        /**
-         * Timestamp when the country record was created
-         */
-        createdAt: string | null
-
-        /**
-         * Timestamp when the country record was last updated
-         */
-        updatedAt: string | null
-    }
-
-    export interface CreateCountryPayload {
+    /**
+     * Updates an existing country.
+     * @param params - Object containing the country ID and update data
+     * @param params.id - The ID of the country to update
+     * @param params.data - The country data to update
+     * @returns {Promise<Country>} The updated country
+     * @throws {APIError} If the country is not found or update fails
+     */
+    public async updateCountry(
+      id: number,
+      params: {
         /**
          * Name of the country
          * Must have at least 1 non-whitespace character
          */
-        name: string
+        name?: string;
 
         /**
          * ISO country code (e.g., "US", "CA", "MX")
          * Must have at least 1 non-whitespace character
          */
-        code: string
+        code?: string;
 
         /**
          * Whether the country is active
-         * @default true
          */
-        active?: boolean
+        active?: boolean;
+      }
+    ): Promise<countries.Country> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/countries/${encodeURIComponent(id)}`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as countries.Country;
     }
 
-    export interface PaginatedCountries {
-        data: Country[]
-        pagination: shared.PaginationMeta
-    }
-}
-
-export namespace departments {
-    export interface CreateDepartmentPayload {
-        /**
-         * ID of the tenant this department belongs to
-         */
-        tenantId: number
-
-        /**
-         * Name of the department
-         * @minLength 2
-         */
-        name: string
-
-        /**
-         * Unique code for the department (alphanumeric with no spaces)
-         * @minLength 2
-         * @pattern ^[a-zA-Z0-9-]+$
-         */
-        code: string
-
-        /**
-         * Optional description of the department
-         */
-        description?: string
-    }
-
-    export interface Department {
-        /**
-         * Unique identifier for the department
-         */
-        id: number
-
-        /**
-         * ID of the tenant this department belongs to
-         */
-        tenantId: number
-
-        /**
-         * Name of the department
-         */
-        name: string
-
-        /**
-         * Unique code identifier for the department
-         */
-        code: string
-
-        /**
-         * Optional description of the department
-         */
-        description?: string | null
-
-        /**
-         * Whether the department is currently active
-         */
-        isActive: boolean
-
-        /**
-         * Timestamp when the department record was created
-         */
-        createdAt: string
-
-        /**
-         * Timestamp when the department record was last updated
-         */
-        updatedAt: string
-    }
-
-    export interface Departments {
-        /**
-         * List of departments
-         */
-        departments: Department[]
-    }
-
-    export interface PaginatedDepartments {
-        data: Department[]
-        pagination: shared.PaginationMeta
-    }
-}
-
-export namespace drivers {
-    export interface CreateDriverPayload {
+    /**
+     * Updates an existing driver.
+     * @param params - Object containing the driver ID and update data
+     * @param params.id - The ID of the driver to update
+     * @param params.data - The driver data to update
+     * @returns {Promise<Driver>} The updated driver
+     * @throws {APIError} If the driver is not found or update fails
+     */
+    public async updateDriver(
+      id: number,
+      params: {
         /**
          * Employee ID (Clave)
          * Must have at least 1 non-whitespace character
          */
-        driverKey: string
+        driverKey?: string;
 
         /**
          * Full name of the driver
          * Must have at least 1 non-whitespace character
          */
-        fullName: string
+        fullName?: string;
 
         /**
          * Mexican tax ID (RFC)
          * Must have at least 1 non-whitespace character
          */
-        rfc: string
+        rfc?: string;
 
         /**
          * CURP Mexican national ID
          * Must have at least 1 non-whitespace character
          */
-        curp: string
+        curp?: string;
 
         /**
          * Social security number (IMSS)
          */
-        imss?: string
+        imss?: string;
 
         /**
          * Civil status (Estado Civil)
          */
-        civilStatus?: string
+        civilStatus?: string;
 
         /**
          * Number of dependents (Escolaridad)
          */
-        dependents?: number
+        dependents?: number;
 
         /**
          * Street address (Calle)
          */
-        addressStreet?: string
+        addressStreet?: string;
 
         /**
          * Neighborhood (Colonia)
          */
-        addressNeighborhood?: string
+        addressNeighborhood?: string;
 
         /**
          * City (Ciudad)
          */
-        addressCity?: string
+        addressCity?: string;
 
         /**
          * State (Estado)
          */
-        addressState?: string
+        addressState?: string;
 
         /**
          * Postal code (Código Postal)
          */
-        postalCode?: string
+        postalCode?: string;
 
         /**
          * Phone number (Teléfono)
          * Must have at least 1 non-whitespace character
          */
-        phoneNumber: string
+        phoneNumber?: string;
 
         /**
          * Email address (E-Mail)
          * Must be a valid email format
          */
-        email: string
+        email?: string;
 
         /**
          * Type of operator (Tipo Operador)
          * Must have at least 1 non-whitespace character
          */
-        driverType: string
+        driverType?: string;
 
         /**
          * Department (Departamento)
          */
-        department?: string
+        department?: string;
 
         /**
          * Position (Clave Puesto)
          */
-        position?: string
+        position?: string;
 
         /**
          * Office code (Clave Oficina)
          */
-        officeCode?: string
+        officeCode?: string;
 
         /**
          * Office location
          */
-        officeLocation?: string
+        officeLocation?: string;
 
         /**
          * Date of hiring (Fec. Ingreso)
          */
-        hireDate?: string
+        hireDate?: string;
 
         /**
          * Current status (Estado Actual)
          */
-        status: DriverStatus
+        status?: drivers.DriverStatus;
 
         /**
          * Status date (Fecha Estado)
          */
-        statusDate: string
+        statusDate?: string;
 
         /**
          * Federal license (Licencia Federal)
          */
-        federalLicense?: string
+        federalLicense?: string;
 
         /**
          * Federal license expiry (Fecha Lic. Fed)
          */
-        federalLicenseExpiry?: string
+        federalLicenseExpiry?: string;
 
         /**
          * State license (Licencia Estatal)
          */
-        stateLicense?: string
+        stateLicense?: string;
 
         /**
          * State license expiry (Fecha Lic. Est)
          */
-        stateLicenseExpiry?: string
+        stateLicenseExpiry?: string;
 
         /**
          * Credit card info (Tarjeta Crédito)
          */
-        creditCard?: string
+        creditCard?: string;
 
         /**
          * Credit card expiry (Fecha T. Crédito)
          */
-        creditCardExpiry?: string
+        creditCardExpiry?: string;
 
         /**
          * Company (Empresa Alterna)
          */
-        company?: string
+        company?: string;
 
         /**
          * Whether the driver is active
-         * @default true
          */
-        active?: boolean
+        active?: boolean;
 
         /**
          * The transporter this driver is associated with
          */
-        transporterId?: number
+        transporterId?: number;
 
         /**
          * The bus line this driver is associated with
          */
-        busLineId?: number
+        busLineId?: number;
+      }
+    ): Promise<drivers.Driver> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/drivers/${encodeURIComponent(id)}`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as drivers.Driver;
     }
 
-    export interface Driver {
-        /**
-         * Unique identifier for the driver
-         */
-        id: number
-
-        /**
-         * Employee ID (Clave)
-         */
-        driverKey: string
-
-        /**
-         * Full name of the driver
-         */
-        fullName: string
-
-        /**
-         * Mexican tax ID (RFC)
-         */
-        rfc: string
-
-        /**
-         * CURP Mexican national ID
-         */
-        curp: string
-
-        /**
-         * Social security number (IMSS)
-         */
-        imss: string | null
-
-        /**
-         * Civil status (Estado Civil)
-         */
-        civilStatus: string | null
-
-        /**
-         * Number of dependents (Escolaridad)
-         */
-        dependents: number | null
-
-        /**
-         * Street address (Calle)
-         */
-        addressStreet: string | null
-
-        /**
-         * Neighborhood (Colonia)
-         */
-        addressNeighborhood: string | null
-
-        /**
-         * City (Ciudad)
-         */
-        addressCity: string | null
-
-        /**
-         * State (Estado)
-         */
-        addressState: string | null
-
-        /**
-         * Postal code (Código Postal)
-         */
-        postalCode: string | null
-
-        /**
-         * Phone number (Teléfono)
-         */
-        phoneNumber: string
-
-        /**
-         * Email address (E-Mail)
-         */
-        email: string
-
-        /**
-         * Type of operator (Tipo Operador)
-         */
-        driverType: string
-
-        /**
-         * Position (Clave Puesto)
-         */
-        position: string | null
-
-        /**
-         * Office code (Clave Oficina)
-         */
-        officeCode: string | null
-
-        /**
-         * Office location
-         */
-        officeLocation: string | null
-
-        /**
-         * Date of hiring (Fec. Ingreso)
-         */
-        hireDate: string | null
-
-        /**
-         * Current status (Estado Actual)
-         */
-        status: DriverStatus
-
-        /**
-         * Status date (Fecha Estado)
-         */
-        statusDate: string
-
-        /**
-         * Federal license (Licencia Federal)
-         */
-        federalLicense: string | null
-
-        /**
-         * Federal license expiry (Fecha Lic. Fed)
-         */
-        federalLicenseExpiry: string | null
-
-        /**
-         * State license (Licencia Estatal)
-         */
-        stateLicense: string | null
-
-        /**
-         * State license expiry (Fecha Lic. Est)
-         */
-        stateLicenseExpiry: string | null
-
-        /**
-         * Credit card info (Tarjeta Crédito)
-         */
-        creditCard: string | null
-
-        /**
-         * Credit card expiry (Fecha T. Crédito)
-         */
-        creditCardExpiry: string | null
-
-        /**
-         * Company (Empresa Alterna)
-         */
-        company: string | null
-
-        /**
-         * The transporter this driver is associated with
-         */
-        transporterId: number | null
-
-        /**
-         * The bus line this driver is associated with
-         */
-        busLineId: number | null
-
-        /**
-         * Whether the driver is currently active in the system
-         */
-        active: boolean
-
-        /**
-         * Timestamp when the driver record was created
-         */
-        createdAt: string | null
-
-        /**
-         * Timestamp when the driver record was last updated
-         */
-        updatedAt: string | null
+    /**
+     * Updates a driver's status using state machine validation
+     * @param params - Object containing the driver ID and new status
+     * @param params.id - The ID of the driver to update
+     * @param params.status - The new status to set
+     * @returns {Promise<Driver>} The updated driver
+     * @throws {APIError} If the status transition is invalid or update fails
+     */
+    public async updateDriverStatus(
+      id: number,
+      params: {
+        status: string;
+      }
+    ): Promise<drivers.Driver> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/drivers/${encodeURIComponent(id)}/status`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as drivers.Driver;
     }
 
-    export type DriverStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED" | "ON_LEAVE" | "TERMINATED" | "IN_TRAINING" | "PROBATION"
-
-    export interface Drivers {
-        /**
-         * List of drivers
-         */
-        drivers: Driver[]
-    }
-
-    export interface PaginatedDrivers {
-        data: Driver[]
-        pagination: shared.PaginationMeta
-    }
-
-    export interface PossibleDriverStatuses {
-        /**
-         * List of possible next statuses
-         */
-        statuses: string[]
-    }
-}
-
-export namespace gates {
-    export interface CreateGatePayload {
+    /**
+     * Updates an existing gate.
+     * @param params - Object containing the gate ID and update data
+     * @param params.id - The ID of the gate to update
+     * @returns {Promise<Gate>} The updated gate
+     * @throws {APIError} If the gate is not found or update fails
+     */
+    public async updateGate(
+      id: number,
+      params: {
         /**
          * The ID of the terminal this gate belongs to
          * Must be a positive number
          */
-        terminalId: number
+        terminalId?: number;
 
         /**
          * Whether the gate is active
-         * @default true
          */
-        active?: boolean
+        active?: boolean;
+      }
+    ): Promise<gates.Gate> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/gates/${encodeURIComponent(id)}`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as gates.Gate;
     }
 
-    export interface Gate {
-        /**
-         * Unique identifier for the gate
-         */
-        id: number
-
-        /**
-         * ID of the terminal this gate belongs to
-         */
-        terminalId: number
-
-        /**
-         * Whether the gate is currently active in the system
-         */
-        active: boolean
-
-        /**
-         * Timestamp when the gate record was created
-         */
-        createdAt: string | null
-
-        /**
-         * Timestamp when the gate record was last updated
-         */
-        updatedAt: string | null
-    }
-
-    export interface PaginatedGates {
-        data: Gate[]
-        pagination: shared.PaginationMeta
-    }
-}
-
-export namespace permissions {
-    export interface CreatePermissionPayload {
-        /**
-         * Unique code identifier for the permission (e.g., 'CREATE_USER')
-         * Must be uppercase with underscores and at least 3 characters
-         */
-        code: string
-
-        /**
-         * Human-readable name of the permission
-         * Must have at least 3 non-whitespace characters
-         */
-        name: string
-
-        /**
-         * Description of what the permission allows
-         */
-        description?: string
-    }
-
-    export interface PaginatedPermissions {
-        data: Permission[]
-        pagination: shared.PaginationMeta
-    }
-
-    export interface Permission {
-        /**
-         * Unique identifier for the permission
-         */
-        id: number
-
-        /**
-         * Unique code identifier for the permission (e.g., 'CREATE_USER')
-         */
-        code: string
-
-        /**
-         * Human-readable name of the permission
-         */
-        name: string
-
-        /**
-         * Description of what the permission allows
-         */
-        description: string | null
-
-        /**
-         * Timestamp when the permission was created
-         */
-        createdAt: string | null
-
-        /**
-         * Timestamp when the permission was last updated
-         */
-        updatedAt: string | null
-    }
-
-    export interface Permissions {
-        /**
-         * List of permissions
-         */
-        permissions: Permission[]
-    }
-}
-
-export namespace roles {
-    export interface CreateRolePayload {
-        /**
-         * Human-readable name of the role
-         * Must have at least 3 non-whitespace characters
-         */
-        name: string
-
-        /**
-         * Description of what the role represents
-         */
-        description?: string
-
-        /**
-         * ID of the tenant this role belongs to
-         */
-        tenantId: number
-
-        /**
-         * IDs of permissions to associate with this role
-         */
-        permissionIds?: number[]
-    }
-
-    export interface PaginatedRoles {
-        data: Role[]
-        pagination: shared.PaginationMeta
-    }
-
-    export interface PaginatedRolesWithPermissions {
-        data: RoleWithPermissions[]
-        pagination: shared.PaginationMeta
-    }
-
-    export interface Role {
-        /**
-         * Unique identifier for the role
-         */
-        id: number
-
-        /**
-         * Human-readable name of the role
-         */
-        name: string
-
-        /**
-         * Description of what the role represents
-         */
-        description: string | null
-
-        /**
-         * ID of the tenant this role belongs to
-         */
-        tenantId: number
-
-        /**
-         * Timestamp when the role was created
-         */
-        createdAt: string | null
-
-        /**
-         * Timestamp when the role was last updated
-         */
-        updatedAt: string | null
-    }
-
-    export interface RoleWithPermissions {
-        /**
-         * Permissions associated with this role
-         */
-        permissions: permissions.Permission[]
-
-        /**
-         * Unique identifier for the role
-         */
-        id: number
-
-        /**
-         * Human-readable name of the role
-         */
-        name: string
-
-        /**
-         * Description of what the role represents
-         */
-        description: string | null
-
-        /**
-         * ID of the tenant this role belongs to
-         */
-        tenantId: number
-
-        /**
-         * Timestamp when the role was created
-         */
-        createdAt: string | null
-
-        /**
-         * Timestamp when the role was last updated
-         */
-        updatedAt: string | null
-    }
-
-    export interface Roles {
-        /**
-         * List of roles
-         */
-        roles: Role[]
-    }
-
-    export interface RolesWithPermissions {
-        /**
-         * List of roles with their permissions
-         */
-        roles: RoleWithPermissions[]
-    }
-}
-
-export namespace shared {
-    export interface PaginationMeta {
-        /**
-         * Current page number (1-based)
-         */
-        currentPage: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize: number
-
-        /**
-         * Total number of items across all pages
-         */
-        totalCount: number
-
-        /**
-         * Total number of pages
-         */
-        totalPages: number
-
-        /**
-         * Whether there is a next page available
-         */
-        hasNextPage: boolean
-
-        /**
-         * Whether there is a previous page available
-         */
-        hasPreviousPage: boolean
-    }
-
-    export interface PaginationParams {
-        /**
-         * Page number (1-based)
-         */
-        page?: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize?: number
-
-        /**
-         * Column to sort by
-         */
-        sortBy?: string
-
-        /**
-         * Sort direction
-         */
-        sortDirection?: "asc" | "desc"
-    }
-
-    export interface PaginationParams {
-        /**
-         * Page number (1-based)
-         */
-        page?: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize?: number
-
-        /**
-         * Column to sort by
-         */
-        sortBy?: string
-
-        /**
-         * Sort direction
-         */
-        sortDirection?: "asc" | "desc"
-    }
-
-    export interface PaginationParams {
-        /**
-         * Page number (1-based)
-         */
-        page?: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize?: number
-
-        /**
-         * Column to sort by
-         */
-        sortBy?: string
-
-        /**
-         * Sort direction
-         */
-        sortDirection?: "asc" | "desc"
-    }
-
-    export interface PaginationParams {
-        /**
-         * Page number (1-based)
-         */
-        page?: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize?: number
-
-        /**
-         * Column to sort by
-         */
-        sortBy?: string
-
-        /**
-         * Sort direction
-         */
-        sortDirection?: "asc" | "desc"
-    }
-
-    export interface PaginationParams {
-        /**
-         * Page number (1-based)
-         */
-        page?: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize?: number
-
-        /**
-         * Column to sort by
-         */
-        sortBy?: string
-
-        /**
-         * Sort direction
-         */
-        sortDirection?: "asc" | "desc"
-    }
-
-    export interface PaginationParams {
-        /**
-         * Page number (1-based)
-         */
-        page?: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize?: number
-
-        /**
-         * Column to sort by
-         */
-        sortBy?: string
-
-        /**
-         * Sort direction
-         */
-        sortDirection?: "asc" | "desc"
-    }
-
-    export interface PaginationParams {
-        /**
-         * Page number (1-based)
-         */
-        page?: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize?: number
-
-        /**
-         * Column to sort by
-         */
-        sortBy?: string
-
-        /**
-         * Sort direction
-         */
-        sortDirection?: "asc" | "desc"
-    }
-
-    export interface PaginationParams {
-        /**
-         * Page number (1-based)
-         */
-        page?: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize?: number
-
-        /**
-         * Column to sort by
-         */
-        sortBy?: string
-
-        /**
-         * Sort direction
-         */
-        sortDirection?: "asc" | "desc"
-    }
-
-    export interface PaginationParams {
-        /**
-         * Page number (1-based)
-         */
-        page?: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize?: number
-
-        /**
-         * Column to sort by
-         */
-        sortBy?: string
-
-        /**
-         * Sort direction
-         */
-        sortDirection?: "asc" | "desc"
-    }
-
-    export interface PaginationParams {
-        /**
-         * Page number (1-based)
-         */
-        page?: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize?: number
-
-        /**
-         * Column to sort by
-         */
-        sortBy?: string
-
-        /**
-         * Sort direction
-         */
-        sortDirection?: "asc" | "desc"
-    }
-
-    export interface PaginationParams {
-        /**
-         * Page number (1-based)
-         */
-        page?: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize?: number
-
-        /**
-         * Column to sort by
-         */
-        sortBy?: string
-
-        /**
-         * Sort direction
-         */
-        sortDirection?: "asc" | "desc"
-    }
-
-    export interface PaginationParams {
-        /**
-         * Page number (1-based)
-         */
-        page?: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize?: number
-
-        /**
-         * Column to sort by
-         */
-        sortBy?: string
-
-        /**
-         * Sort direction
-         */
-        sortDirection?: "asc" | "desc"
-    }
-
-    export interface PaginationParams {
-        /**
-         * Page number (1-based)
-         */
-        page?: number
-
-        /**
-         * Number of items per page
-         */
-        pageSize?: number
-
-        /**
-         * Column to sort by
-         */
-        sortBy?: string
-
-        /**
-         * Sort direction
-         */
-        sortDirection?: "asc" | "desc"
-    }
-}
-
-export namespace states {
-    export interface CreateStatePayload {
+    /**
+     * Updates an existing state.
+     * @param params - Object containing the state ID and update data
+     * @param params.id - The ID of the state to update
+     * @param params.data - The state data to update
+     * @returns {Promise<State>} The updated state
+     * @throws {APIError} If the state is not found or update fails
+     */
+    public async updateState(
+      id: number,
+      params: {
         /**
          * The name of the state
          * Must have at least 1 non-whitespace character
          */
-        name: string
+        name?: string;
 
         /**
          * The state code (e.g., "TX", "CA", "NY")
          * Must have at least 1 non-whitespace character
          */
-        code: string
+        code?: string;
 
         /**
          * The ID of the country this state belongs to
          * Must be a positive number
          */
-        countryId: number
+        countryId?: number;
 
         /**
          * Whether the state is active
-         * @default true
          */
-        active?: boolean
+        active?: boolean;
+      }
+    ): Promise<states.State> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/states/${encodeURIComponent(id)}`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as states.State;
     }
 
-    export interface PaginatedStates {
-        data: State[]
-        pagination: shared.PaginationMeta
-    }
-
-    export interface State {
+    /**
+     * Updates an existing terminal.
+     * @param params - Object containing the terminal ID and update data
+     * @param params.id - The ID of the terminal to update
+     * @returns {Promise<Terminal>} The updated terminal
+     * @throws {APIError} If the terminal is not found or update fails
+     */
+    public async updateTerminal(
+      id: number,
+      params: {
         /**
-         * Unique identifier for the state
+         * The name of the terminal
+         * Must have at least 1 non-whitespace character
          */
-        id: number
-
-        /**
-         * Name of the state
-         */
-        name: string
-
-        /**
-         * State code (e.g., "TX", "CA", "NY")
-         */
-        code: string
-
-        /**
-         * ID of the country this state belongs to
-         */
-        countryId: number
-
-        /**
-         * Whether the state is currently active in the system
-         */
-        active: boolean
-
-        /**
-         * Timestamp when the state record was created
-         */
-        createdAt: string | null
-
-        /**
-         * Timestamp when the state record was last updated
-         */
-        updatedAt: string | null
-    }
-
-    export interface States {
-        /**
-         * List of states
-         */
-        states: State[]
-    }
-}
-
-export namespace tenants {
-    export interface CreateTenantPayload {
-        /**
-         * Name of the tenant
-         * @minLength 2
-         */
-        name: string
-
-        /**
-         * Unique code for the tenant (alphanumeric with no spaces)
-         * @minLength 2
-         * @pattern ^[a-zA-Z0-9-]+$
-         */
-        code: string
-
-        /**
-         * Optional description of the tenant
-         */
-        description?: string
-    }
-
-    export interface PaginatedTenants {
-        data: Tenant[]
-        pagination: shared.PaginationMeta
-    }
-
-    export interface Tenant {
-        id: number
-        name: string
-        code: string
-        description?: string | null
-        isActive: boolean
-        createdAt: string
-        updatedAt: string
-    }
-}
-
-export namespace terminals {
-    export interface Facility {
-        /**
-         * Name of the facility
-         */
-        name: string
-
-        /**
-         * Description of the facility
-         */
-        description?: string
-
-        /**
-         * Icon or image representing the facility
-         */
-        icon?: string
-    }
-
-    export interface OperatingHours {
-        /**
-         * Monday opening hours
-         */
-        monday?: {
-            open: string
-            close: string
-        }
-
-        /**
-         * Tuesday opening hours
-         */
-        tuesday?: {
-            open: string
-            close: string
-        }
-
-        /**
-         * Wednesday opening hours
-         */
-        wednesday?: {
-            open: string
-            close: string
-        }
-
-        /**
-         * Thursday opening hours
-         */
-        thursday?: {
-            open: string
-            close: string
-        }
-
-        /**
-         * Friday opening hours
-         */
-        friday?: {
-            open: string
-            close: string
-        }
-
-        /**
-         * Saturday opening hours
-         */
-        saturday?: {
-            open: string
-            close: string
-        }
-
-        /**
-         * Sunday opening hours
-         */
-        sunday?: {
-            open: string
-            close: string
-        }
-
-        /**
-         * Note about operating hours
-         */
-        notes?: string
-    }
-
-    export interface PaginatedTerminals {
-        data: Terminal[]
-        pagination: shared.PaginationMeta
-    }
-
-    export interface Terminal {
-        /**
-         * Unique identifier for the terminal
-         */
-        id: number
-
-        /**
-         * Name of the terminal
-         */
-        name: string
+        name?: string;
 
         /**
          * Physical address of the terminal
+         * Must have at least 1 non-whitespace character
          */
-        address: string
+        address?: string;
 
         /**
-         * ID of the city where the terminal is located
+         * The ID of the city where the terminal is located
+         * Must be a positive number
          */
-        cityId: number
+        cityId?: number;
 
         /**
-         * Latitude coordinate
+         * Latitude coordinate of the terminal
          */
-        latitude: number
+        latitude?: number;
 
         /**
-         * Longitude coordinate
+         * Longitude coordinate of the terminal
          */
-        longitude: number
+        longitude?: number;
 
         /**
          * Contact phone number for the terminal
          */
-        contactphone?: string | null
+        contactphone?: string;
 
         /**
          * Operating hours of the terminal
          */
-        operatingHours?: OperatingHours | any
+        operatingHours?: terminals.OperatingHours;
 
         /**
          * List of facilities available at the terminal
          */
-        facilities?: Facility[] | any
+        facilities?: terminals.Facility[];
 
         /**
          * Terminal code (unique identifier)
+         * Must have at least 1 non-whitespace character
          */
-        code: string
+        code?: string;
 
         /**
          * URL-friendly identifier for the terminal
+         * Must be lowercase, can contain only letters, numbers and hyphens
+         * No consecutive hyphens, special characters or spaces allowed
+         * Format examples: 'central-norte', 'tapo', 'observatorio'
          */
-        slug: string
+        slug?: string;
 
         /**
-         * Whether the terminal is currently active in the system
+         * Whether the terminal is active
          */
-        active: boolean
-
-        /**
-         * Timestamp when the terminal record was created
-         */
-        createdAt: string | null
-
-        /**
-         * Timestamp when the terminal record was last updated
-         */
-        updatedAt: string | null
-    }
-}
-
-export namespace timezones {
-    export interface Timezone {
-        /**
-         * Unique identifier for the timezone
-         */
-        id: string
+        active?: boolean;
+      }
+    ): Promise<terminals.Terminal> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/terminals/${encodeURIComponent(id)}`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as terminals.Terminal;
     }
 
-    export interface Timezones {
+    /**
+     * Updates an existing transporter.
+     * @param params - Object containing the transporter ID and update data
+     * @param params.id - The ID of the transporter to update
+     * @returns {Promise<Transporter>} The updated transporter
+     * @throws {APIError} If the transporter is not found or update fails
+     */
+    public async updateTransporter(
+      id: number,
+      params: {
         /**
-         * List of timezones
+         * The name of the transportation company
+         * Must have at least 1 non-whitespace character
          */
-        timezones: Timezone[]
-    }
-}
-
-export namespace transporters {
-    export interface PaginatedTransporters {
-        data: Transporter[]
-        pagination: shared.PaginationMeta
-    }
-
-    export interface Transporter {
-        /**
-         * Unique identifier for the transporter
-         */
-        id: number
+        name?: string;
 
         /**
-         * Name of the transportation company
+         * Unique business code for the transporter (1-10 characters)
+         * Must contain only uppercase letters, numbers, and hyphens
          */
-        name: string
-
-        /**
-         * Unique business code for the transporter
-         */
-        code: string
+        code?: string;
 
         /**
          * Description of the transporter
          */
-        description: string | null
+        description?: string;
 
         /**
          * Website URL of the transporter
          */
-        website: string | null
+        website?: string;
 
         /**
          * Contact email of the transporter
          */
-        email: string | null
+        email?: string;
 
         /**
          * Contact phone number of the transporter
          */
-        phone: string | null
+        phone?: string;
 
         /**
          * ID of the city where the transporter is headquartered
+         * Must be a positive number
          */
-        headquarterCityId: number | null
+        headquarterCityId?: number;
 
         /**
          * URL to the transporter's logo
          */
-        logoUrl: string | null
+        logoUrl?: string;
 
         /**
          * Additional contact information
          */
-        contactInfo: string | null
+        contactInfo?: string;
 
         /**
          * Regulatory license number
          */
-        licenseNumber: string | null
+        licenseNumber?: string;
 
         /**
-         * Whether the transporter is currently active in the system
+         * Whether the transporter is active
          */
-        active: boolean
-
-        /**
-         * Timestamp when the transporter record was created
-         */
-        createdAt: string | null
-
-        /**
-         * Timestamp when the transporter record was last updated
-         */
-        updatedAt: string | null
+        active?: boolean;
+      }
+    ): Promise<transporters.Transporter> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/transporters/${encodeURIComponent(id)}`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as transporters.Transporter;
     }
+  }
+}
+
+export namespace users {
+  export interface AuthParams {
+    authorization: string;
+  }
+
+  export interface CreateUserPayload {
+    /**
+     * ID of the tenant this user belongs to
+     */
+    tenantId: number;
+
+    /**
+     * ID of the department this user belongs to
+     */
+    departmentId: number;
+
+    /**
+     * Username for login
+     * Must have at least 3 non-whitespace characters
+     */
+    username: string;
+
+    /**
+     * Email address of the user
+     * Must be a valid email format
+     */
+    email: string;
+
+    /**
+     * Password for the user
+     * Will be hashed before storage
+     * Must have at least 8 characters
+     */
+    password: string;
+
+    /**
+     * First name of the user
+     * Must have at least 1 non-whitespace character
+     */
+    firstName: string;
+
+    /**
+     * Last name of the user
+     * Must have at least 1 non-whitespace character
+     */
+    lastName: string;
+
+    /**
+     * Phone number of the user
+     */
+    phone?: string;
+
+    /**
+     * Job title/position of the user
+     */
+    position?: string;
+
+    /**
+     * Internal employee ID
+     */
+    employeeId?: string;
+
+    /**
+     * Whether the user is currently active
+     * @default true
+     */
+    isActive?: boolean;
+
+    /**
+     * Whether the user is a system-wide admin
+     * @default false
+     */
+    isSystemAdmin?: boolean;
+  }
+
+  export interface PaginatedUsers {
+    data: SafeUser[];
+    pagination: shared.PaginationMeta;
+  }
+
+  export interface SafeUser {
+    id: number;
+    tenantId: number;
+    departmentId: number;
+    username: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string | null;
+    position: string | null;
+    employeeId: string | null;
+    mfaSettings: { [key: string]: any } | null;
+    lastLogin: string | null;
+    isActive: boolean;
+    isSystemAdmin: boolean;
+    createdAt: string | null;
+    updatedAt: string | null;
+  }
+
+  export interface Users {
+    /**
+     * List of users (without sensitive data)
+     */
+    users: SafeUser[];
+  }
+
+  export class ServiceClient {
+    private baseClient: BaseClient;
+
+    constructor(baseClient: BaseClient) {
+      this.baseClient = baseClient;
+    }
+
+    /**
+     * Assigns permissions to a role.
+     * @param params - Object containing the role ID and permission IDs
+     * @param params.id - The ID of the role
+     * @param params.permissionIds - The IDs of the permissions to assign
+     * @returns {Promise<RoleWithPermissions>} The role with updated permissions
+     * @throws {APIError} If the role is not found or assignment fails
+     */
+    public async assignPermissionsToRole(
+      id: number,
+      params: {
+        /**
+         * IDs of permissions to assign to the role
+         */
+        permissionIds: number[];
+      }
+    ): Promise<roles.RoleWithPermissions> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'POST',
+        `/roles/${encodeURIComponent(id)}/permissions`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as roles.RoleWithPermissions;
+    }
+
+    /**
+     * Assigns permissions directly to a user.
+     * @param params - Object containing the user ID and permission IDs
+     * @param params.userId - The ID of the user
+     * @param params.permissionIds - The IDs of the permissions to assign
+     * @returns {Promise<UserWithPermissions>} The user with updated permissions
+     * @throws {APIError} If the user is not found or assignment fails
+     */
+    public async assignPermissionsToUser(
+      userId: number,
+      params: {
+        /**
+         * IDs of permissions to assign to the user
+         */
+        permissionIds: number[];
+      }
+    ): Promise<user_permissions.UserWithPermissions> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'POST',
+        `/users/${encodeURIComponent(userId)}/permissions`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as user_permissions.UserWithPermissions;
+    }
+
+    /**
+     * Assigns roles to a user.
+     * @param params - Object containing the user ID and role IDs
+     * @param params.userId - The ID of the user
+     * @param params.roleIds - The IDs of the roles to assign
+     * @returns {Promise<UserWithRoles>} The user with updated roles
+     * @throws {APIError} If the user is not found or assignment fails
+     */
+    public async assignRolesToUser(
+      userId: number,
+      params: {
+        /**
+         * IDs of roles to assign to the user
+         */
+        roleIds: number[];
+      }
+    ): Promise<user_permissions.UserWithRoles> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'POST',
+        `/users/${encodeURIComponent(userId)}/roles`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as user_permissions.UserWithRoles;
+    }
+
+    /**
+     * Changes a user's password
+     * @param params - Object containing the user ID and password data
+     * @param params.id - The ID of the user to update
+     * @returns {Promise<SafeUser>} The updated user (without password hash)
+     * @throws {APIError} If the user is not found, current password is invalid, or update fails
+     */
+    public async changePassword(
+      id: number,
+      params: {
+        /**
+         * Current password for verification
+         */
+        currentPassword: string;
+
+        /**
+         * New password to set
+         * Must have at least 8 characters
+         */
+        newPassword: string;
+      }
+    ): Promise<SafeUser> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/users/${encodeURIComponent(id)}/password`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as SafeUser;
+    }
+
+    /**
+     * Checks if a user has a specific permission.
+     * @param params - Object containing the user ID and permission code
+     * @param params.userId - The ID of the user
+     * @param params.permissionCode - The code of the permission to check
+     * @returns {Promise<{hasPermission: boolean}>} Whether the user has the permission
+     * @throws {APIError} If permission check fails or the user is unauthorized
+     */
+    public async checkUserPermission(
+      userId: number,
+      permissionCode: string
+    ): Promise<{
+      hasPermission: boolean;
+    }> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/users/${encodeURIComponent(userId)}/permissions/${encodeURIComponent(permissionCode)}/check`
+      );
+      return (await resp.json()) as {
+        hasPermission: boolean;
+      };
+    }
+
+    /**
+     * Checks if a user has a specific role.
+     * @param params - Object containing the user ID and role ID
+     * @param params.userId - The ID of the user
+     * @param params.roleId - The ID of the role to check
+     * @returns {Promise<{hasRole: boolean}>} Whether the user has the role
+     * @throws {APIError} If role check fails or the user is unauthorized
+     */
+    public async checkUserRole(
+      userId: number,
+      roleId: number
+    ): Promise<{
+      hasRole: boolean;
+    }> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/users/${encodeURIComponent(userId)}/roles/${encodeURIComponent(roleId)}/check`
+      );
+      return (await resp.json()) as {
+        hasRole: boolean;
+      };
+    }
+
+    /**
+     * Creates a new department.
+     * @param params - The department data to create
+     * @returns {Promise<Department>} The created department
+     * @throws {APIError} If the department creation fails
+     */
+    public async createDepartment(
+      params: departments.CreateDepartmentPayload
+    ): Promise<departments.Department> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'POST',
+        `/departments`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as departments.Department;
+    }
+
+    /**
+     * Creates a new permission.
+     * @param params - The permission data to create
+     * @returns {Promise<Permission>} The created permission
+     * @throws {APIError} If the permission creation fails
+     */
+    public async createPermission(
+      params: permissions.CreatePermissionPayload
+    ): Promise<permissions.Permission> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'POST',
+        `/permissions`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as permissions.Permission;
+    }
+
+    /**
+     * Creates a new role.
+     * @param params - The role data to create
+     * @returns {Promise<RoleWithPermissions>} The created role with permissions
+     * @throws {APIError} If the role creation fails
+     */
+    public async createRole(params: roles.CreateRolePayload): Promise<roles.RoleWithPermissions> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('POST', `/roles`, JSON.stringify(params));
+      return (await resp.json()) as roles.RoleWithPermissions;
+    }
+
+    /**
+     * Creates a new tenant.
+     * @param params - The tenant data to create
+     * @returns {Promise<Tenant>} The created tenant
+     * @throws {APIError} If the tenant creation fails
+     */
+    public async createTenant(params: tenants.CreateTenantPayload): Promise<tenants.Tenant> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('POST', `/tenants`, JSON.stringify(params));
+      return (await resp.json()) as tenants.Tenant;
+    }
+
+    /**
+     * Creates a new user
+     * @param params - The user data to create
+     * @returns {Promise<SafeUser>} The created user (without password hash)
+     * @throws {APIError} If the user creation fails
+     */
+    public async createUser(params: CreateUserPayload): Promise<SafeUser> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('POST', `/users`, JSON.stringify(params));
+      return (await resp.json()) as SafeUser;
+    }
+
+    /**
+     * Deletes a department by ID.
+     * @param params - Object containing the department ID
+     * @param params.id - The ID of the department to delete
+     * @returns {Promise<Department>} The deleted department
+     * @throws {APIError} If the department is not found or deletion fails
+     */
+    public async deleteDepartment(id: number): Promise<departments.Department> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'DELETE',
+        `/departments/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as departments.Department;
+    }
+
+    /**
+     * Deletes a permission by ID.
+     * @param params - Object containing the permission ID
+     * @param params.id - The ID of the permission to delete
+     * @returns {Promise<Permission>} The deleted permission
+     * @throws {APIError} If the permission is not found or deletion fails
+     */
+    public async deletePermission(id: number): Promise<permissions.Permission> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'DELETE',
+        `/permissions/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as permissions.Permission;
+    }
+
+    /**
+     * Deletes a role by ID.
+     * @param params - Object containing the role ID
+     * @param params.id - The ID of the role to delete
+     * @returns {Promise<Role>} The deleted role
+     * @throws {APIError} If the role is not found or deletion fails
+     */
+    public async deleteRole(id: number): Promise<roles.Role> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('DELETE', `/roles/${encodeURIComponent(id)}`);
+      return (await resp.json()) as roles.Role;
+    }
+
+    /**
+     * Deletes a tenant by ID.
+     * @param params - Object containing the tenant ID
+     * @param params.id - The ID of the tenant to delete
+     * @returns {Promise<Tenant>} The deleted tenant
+     * @throws {APIError} If the tenant is not found or deletion fails
+     */
+    public async deleteTenant(id: number): Promise<tenants.Tenant> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'DELETE',
+        `/tenants/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as tenants.Tenant;
+    }
+
+    /**
+     * Deletes a user by ID
+     * @param params - Object containing the user ID
+     * @param params.id - The ID of the user to delete
+     * @returns {Promise<SafeUser>} The deleted user (without password hash)
+     * @throws {APIError} If the user is not found or deletion fails
+     */
+    public async deleteUser(id: number): Promise<SafeUser> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('DELETE', `/users/${encodeURIComponent(id)}`);
+      return (await resp.json()) as SafeUser;
+    }
+
+    /**
+     * Retrieves a department by ID.
+     * @param params - Object containing the department ID
+     * @param params.id - The ID of the department to retrieve
+     * @returns {Promise<Department>} The found department
+     * @throws {APIError} If the department is not found or retrieval fails
+     */
+    public async getDepartment(id: number): Promise<departments.Department> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/departments/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as departments.Department;
+    }
+
+    /**
+     * Retrieves a permission by ID.
+     * @param params - Object containing the permission ID
+     * @param params.id - The ID of the permission to retrieve
+     * @returns {Promise<Permission>} The found permission
+     * @throws {APIError} If the permission is not found or retrieval fails
+     */
+    public async getPermission(id: number): Promise<permissions.Permission> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/permissions/${encodeURIComponent(id)}`
+      );
+      return (await resp.json()) as permissions.Permission;
+    }
+
+    /**
+     * Retrieves a role by ID.
+     * @param params - Object containing the role ID
+     * @param params.id - The ID of the role to retrieve
+     * @returns {Promise<Role>} The found role
+     * @throws {APIError} If the role is not found or retrieval fails
+     */
+    public async getRole(id: number): Promise<roles.Role> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/roles/${encodeURIComponent(id)}`);
+      return (await resp.json()) as roles.Role;
+    }
+
+    /**
+     * Retrieves a role by ID with its permissions.
+     * @param params - Object containing the role ID
+     * @param params.id - The ID of the role to retrieve
+     * @returns {Promise<RoleWithPermissions>} The found role with permissions
+     * @throws {APIError} If the role is not found or retrieval fails
+     */
+    public async getRoleWithPermissions(id: number): Promise<roles.RoleWithPermissions> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/roles/${encodeURIComponent(id)}/with-permissions`
+      );
+      return (await resp.json()) as roles.RoleWithPermissions;
+    }
+
+    /**
+     * Retrieves a tenant by ID.
+     * @param params - Object containing the tenant ID
+     * @param params.id - The ID of the tenant to retrieve
+     * @returns {Promise<Tenant>} The found tenant
+     * @throws {APIError} If the tenant is not found or retrieval fails
+     */
+    public async getTenant(id: number): Promise<tenants.Tenant> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/tenants/${encodeURIComponent(id)}`);
+      return (await resp.json()) as tenants.Tenant;
+    }
+
+    /**
+     * Retrieves a user by ID
+     * @param params - Object containing the user ID
+     * @param params.id - The ID of the user to retrieve
+     * @returns {Promise<SafeUser>} The found user (without password hash)
+     * @throws {APIError} If the user is not found
+     */
+    public async getUser(id: number): Promise<SafeUser> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/users/${encodeURIComponent(id)}`);
+      return (await resp.json()) as SafeUser;
+    }
+
+    /**
+     * Retrieves a user with their effective permissions (combined from direct assignments and roles).
+     * @param params - Object containing the user ID
+     * @param params.userId - The ID of the user to retrieve
+     * @returns {Promise<UserWithPermissions>} The user with their effective permissions
+     * @throws {APIError} If the user is not found or retrieval fails
+     */
+    public async getUserPermissions(userId: number): Promise<user_permissions.UserWithPermissions> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/users/${encodeURIComponent(userId)}/effective-permissions`
+      );
+      return (await resp.json()) as user_permissions.UserWithPermissions;
+    }
+
+    /**
+     * Retrieves a user with their roles.
+     * @param params - Object containing the user ID
+     * @param params.userId - The ID of the user to retrieve
+     * @returns {Promise<UserWithRoles>} The user with their roles
+     * @throws {APIError} If the user is not found or retrieval fails
+     */
+    public async getUserRoles(userId: number): Promise<user_permissions.UserWithRoles> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/users/${encodeURIComponent(userId)}/assigned-roles`
+      );
+      return (await resp.json()) as user_permissions.UserWithRoles;
+    }
+
+    /**
+     * Retrieves a user with their assigned permissions.
+     * @param params - Object containing the user ID
+     * @param params.userId - The ID of the user to retrieve
+     * @returns {Promise<UserWithPermissions>} The user with their permissions
+     * @throws {APIError} If the user is not found or retrieval fails
+     */
+    public async getUserWithPermissions(
+      userId: number
+    ): Promise<user_permissions.UserWithPermissions> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/users/${encodeURIComponent(userId)}/permissions`
+      );
+      return (await resp.json()) as user_permissions.UserWithPermissions;
+    }
+
+    /**
+     * Retrieves a user with their assigned roles.
+     * @param params - Object containing the user ID
+     * @param params.userId - The ID of the user to retrieve
+     * @returns {Promise<UserWithRoles>} The user with their roles
+     * @throws {APIError} If the user is not found or retrieval fails
+     */
+    public async getUserWithRoles(userId: number): Promise<user_permissions.UserWithRoles> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/users/${encodeURIComponent(userId)}/roles`
+      );
+      return (await resp.json()) as user_permissions.UserWithRoles;
+    }
+
+    /**
+     * Retrieves all users for a specific department
+     * @param params - Object containing the department ID
+     * @param params.departmentId - The ID of the department to get users for
+     * @returns {Promise<Users>} List of users for the department (without password hashes)
+     * @throws {APIError} If retrieval fails
+     */
+    public async listDepartmentUsers(departmentId: number): Promise<Users> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/departments/${encodeURIComponent(departmentId)}/users`
+      );
+      return (await resp.json()) as Users;
+    }
+
+    /**
+     * Retrieves paginated users for a specific department
+     * @param params - Object containing the department ID and pagination parameters
+     * @param params.departmentId - The ID of the department to get users for
+     * @returns {Promise<PaginatedUsers>} Paginated list of users for the department (without password hashes)
+     * @throws {APIError} If retrieval fails
+     */
+    public async listDepartmentUsersWithPagination(
+      departmentId: number,
+      params: {
+        /**
+         * Page number (1-based)
+         */
+        page?: number;
+
+        /**
+         * Number of items per page
+         */
+        pageSize?: number;
+
+        /**
+         * Column to sort by
+         */
+        sortBy?: string;
+
+        /**
+         * Sort direction
+         */
+        sortDirection?: 'asc' | 'desc';
+      }
+    ): Promise<PaginatedUsers> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/departments/${encodeURIComponent(departmentId)}/users/paginated`,
+        undefined,
+        { query }
+      );
+      return (await resp.json()) as PaginatedUsers;
+    }
+
+    /**
+     * Retrieves all departments.
+     * @returns {Promise<Departments>} List of all departments
+     * @throws {APIError} If retrieval fails
+     */
+    public async listDepartments(): Promise<departments.Departments> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/departments`);
+      return (await resp.json()) as departments.Departments;
+    }
+
+    /**
+     * Retrieves departments with pagination.
+     * @param params - Pagination parameters
+     * @returns {Promise<PaginatedDepartments>} Paginated list of departments
+     * @throws {APIError} If retrieval fails
+     */
+    public async listDepartmentsWithPagination(
+      params: shared.PaginationParams
+    ): Promise<departments.PaginatedDepartments> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/departments/paginated`, undefined, {
+        query,
+      });
+      return (await resp.json()) as departments.PaginatedDepartments;
+    }
+
+    /**
+     * Retrieves all permissions.
+     * @returns {Promise<Permissions>} List of all permissions
+     * @throws {APIError} If the retrieval fails
+     */
+    public async listPermissions(): Promise<permissions.Permissions> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/permissions`);
+      return (await resp.json()) as permissions.Permissions;
+    }
+
+    /**
+     * Retrieves permissions with pagination.
+     * @param params - Pagination parameters
+     * @returns {Promise<PaginatedPermissions>} Paginated list of permissions
+     * @throws {APIError} If retrieval fails
+     */
+    public async listPermissionsWithPagination(
+      params: shared.PaginationParams
+    ): Promise<permissions.PaginatedPermissions> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/permissions/paginated`, undefined, {
+        query,
+      });
+      return (await resp.json()) as permissions.PaginatedPermissions;
+    }
+
+    /**
+     * Retrieves all roles.
+     * @returns {Promise<Roles>} List of all roles
+     * @throws {APIError} If the retrieval fails
+     */
+    public async listRoles(): Promise<roles.Roles> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/roles`);
+      return (await resp.json()) as roles.Roles;
+    }
+
+    /**
+     * Retrieves all roles for a tenant.
+     * @param params - Object containing the tenant ID
+     * @param params.tenantId - The ID of the tenant
+     * @returns {Promise<Roles>} List of all roles for the tenant
+     * @throws {APIError} If the retrieval fails
+     */
+    public async listRolesByTenant(tenantId: number): Promise<roles.Roles> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/tenants/${encodeURIComponent(tenantId)}/roles`
+      );
+      return (await resp.json()) as roles.Roles;
+    }
+
+    /**
+     * Retrieves roles for a tenant with pagination.
+     * @param params - Object containing the tenant ID and pagination parameters
+     * @param params.tenantId - The ID of the tenant
+     * @returns {Promise<PaginatedRoles>} Paginated list of roles for the tenant
+     * @throws {APIError} If retrieval fails
+     */
+    public async listRolesByTenantWithPagination(
+      tenantId: number,
+      params: {
+        /**
+         * Page number (1-based)
+         */
+        page?: number;
+
+        /**
+         * Number of items per page
+         */
+        pageSize?: number;
+
+        /**
+         * Column to sort by
+         */
+        sortBy?: string;
+
+        /**
+         * Sort direction
+         */
+        sortDirection?: 'asc' | 'desc';
+      }
+    ): Promise<roles.PaginatedRoles> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/tenants/${encodeURIComponent(tenantId)}/roles/paginated`,
+        undefined,
+        { query }
+      );
+      return (await resp.json()) as roles.PaginatedRoles;
+    }
+
+    /**
+     * Retrieves all roles for a tenant with their permissions.
+     * @param params - Object containing the tenant ID
+     * @param params.tenantId - The ID of the tenant
+     * @returns {Promise<RolesWithPermissions>} List of all roles for the tenant with permissions
+     * @throws {APIError} If the retrieval fails
+     */
+    public async listRolesByTenantWithPermissions(
+      tenantId: number
+    ): Promise<roles.RolesWithPermissions> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/tenants/${encodeURIComponent(tenantId)}/roles/with-permissions`
+      );
+      return (await resp.json()) as roles.RolesWithPermissions;
+    }
+
+    /**
+     * Retrieves roles for a tenant with permissions and pagination.
+     * @param params - Object containing the tenant ID and pagination parameters
+     * @param params.tenantId - The ID of the tenant
+     * @returns {Promise<PaginatedRolesWithPermissions>} Paginated list of roles for the tenant with permissions
+     * @throws {APIError} If retrieval fails
+     */
+    public async listRolesByTenantWithPermissionsAndPagination(
+      tenantId: number,
+      params: {
+        /**
+         * Page number (1-based)
+         */
+        page?: number;
+
+        /**
+         * Number of items per page
+         */
+        pageSize?: number;
+
+        /**
+         * Column to sort by
+         */
+        sortBy?: string;
+
+        /**
+         * Sort direction
+         */
+        sortDirection?: 'asc' | 'desc';
+      }
+    ): Promise<roles.PaginatedRolesWithPermissions> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/tenants/${encodeURIComponent(tenantId)}/roles/with-permissions/paginated`,
+        undefined,
+        { query }
+      );
+      return (await resp.json()) as roles.PaginatedRolesWithPermissions;
+    }
+
+    /**
+     * Retrieves roles with pagination.
+     * @param params - Pagination parameters
+     * @returns {Promise<PaginatedRoles>} Paginated list of roles
+     * @throws {APIError} If retrieval fails
+     */
+    public async listRolesWithPagination(
+      params: shared.PaginationParams
+    ): Promise<roles.PaginatedRoles> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/roles/paginated`, undefined, {
+        query,
+      });
+      return (await resp.json()) as roles.PaginatedRoles;
+    }
+
+    /**
+     * Retrieves all roles with their permissions.
+     * @returns {Promise<RolesWithPermissions>} List of all roles with permissions
+     * @throws {APIError} If the retrieval fails
+     */
+    public async listRolesWithPermissions(): Promise<roles.RolesWithPermissions> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/roles/with-permissions`);
+      return (await resp.json()) as roles.RolesWithPermissions;
+    }
+
+    /**
+     * Retrieves roles with permissions and pagination.
+     * @param params - Pagination parameters
+     * @returns {Promise<PaginatedRolesWithPermissions>} Paginated list of roles with permissions
+     * @throws {APIError} If retrieval fails
+     */
+    public async listRolesWithPermissionsAndPagination(
+      params: shared.PaginationParams
+    ): Promise<roles.PaginatedRolesWithPermissions> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/roles/with-permissions/paginated`,
+        undefined,
+        { query }
+      );
+      return (await resp.json()) as roles.PaginatedRolesWithPermissions;
+    }
+
+    /**
+     * Retrieves all departments for a specific tenant.
+     * @param params - Object containing the tenant ID
+     * @param params.tenantId - The ID of the tenant to get departments for
+     * @returns {Promise<Departments>} List of departments for the tenant
+     * @throws {APIError} If retrieval fails
+     */
+    public async listTenantDepartments(tenantId: number): Promise<departments.Departments> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/tenants/${encodeURIComponent(tenantId)}/departments`
+      );
+      return (await resp.json()) as departments.Departments;
+    }
+
+    /**
+     * Retrieves paginated departments for a specific tenant.
+     * @param params - Object containing the tenant ID and pagination parameters
+     * @param params.tenantId - The ID of the tenant to get departments for
+     * @returns {Promise<PaginatedDepartments>} Paginated list of departments for the tenant
+     * @throws {APIError} If retrieval fails
+     */
+    public async listTenantDepartmentsWithPagination(
+      tenantId: number,
+      params: {
+        /**
+         * Page number (1-based)
+         */
+        page?: number;
+
+        /**
+         * Number of items per page
+         */
+        pageSize?: number;
+
+        /**
+         * Column to sort by
+         */
+        sortBy?: string;
+
+        /**
+         * Sort direction
+         */
+        sortDirection?: 'asc' | 'desc';
+      }
+    ): Promise<departments.PaginatedDepartments> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/tenants/${encodeURIComponent(tenantId)}/departments/paginated`,
+        undefined,
+        { query }
+      );
+      return (await resp.json()) as departments.PaginatedDepartments;
+    }
+
+    /**
+     * Alias for listRolesByTenant to match test case naming.
+     * @param params - Object containing the tenant ID
+     * @param params.tenantId - The ID of the tenant
+     * @returns {Promise<Roles>} List of all roles for the tenant
+     * @throws {APIError} If the retrieval fails
+     */
+    public async listTenantRoles(tenantId: number): Promise<roles.Roles> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/tenants/${encodeURIComponent(tenantId)}/roles-alias`
+      );
+      return (await resp.json()) as roles.Roles;
+    }
+
+    /**
+     * Alias for listRolesByTenantWithPagination to match test case naming.
+     * @param params - Object containing pagination parameters and tenant ID
+     * @param params.tenantId - The ID of the tenant
+     * @returns {Promise<PaginatedRoles>} Paginated list of tenant roles
+     * @throws {APIError} If retrieval fails
+     */
+    public async listTenantRolesWithPagination(
+      tenantId: number,
+      params: {
+        /**
+         * Page number (1-based)
+         */
+        page?: number;
+
+        /**
+         * Number of items per page
+         */
+        pageSize?: number;
+
+        /**
+         * Column to sort by
+         */
+        sortBy?: string;
+
+        /**
+         * Sort direction
+         */
+        sortDirection?: 'asc' | 'desc';
+      }
+    ): Promise<roles.PaginatedRoles> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/tenants/${encodeURIComponent(tenantId)}/roles-paginated`,
+        undefined,
+        { query }
+      );
+      return (await resp.json()) as roles.PaginatedRoles;
+    }
+
+    /**
+     * Retrieves all users for a specific tenant
+     * @param params - Object containing the tenant ID
+     * @param params.tenantId - The ID of the tenant to get users for
+     * @returns {Promise<Users>} List of users for the tenant (without password hashes)
+     * @throws {APIError} If retrieval fails
+     */
+    public async listTenantUsers(tenantId: number): Promise<Users> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/tenants/${encodeURIComponent(tenantId)}/users`
+      );
+      return (await resp.json()) as Users;
+    }
+
+    /**
+     * Retrieves paginated users for a specific tenant
+     * @param params - Object containing the tenant ID and pagination parameters
+     * @param params.tenantId - The ID of the tenant to get users for
+     * @returns {Promise<PaginatedUsers>} Paginated list of users for the tenant (without password hashes)
+     * @throws {APIError} If retrieval fails
+     */
+    public async listTenantUsersWithPagination(
+      tenantId: number,
+      params: {
+        /**
+         * Page number (1-based)
+         */
+        page?: number;
+
+        /**
+         * Number of items per page
+         */
+        pageSize?: number;
+
+        /**
+         * Column to sort by
+         */
+        sortBy?: string;
+
+        /**
+         * Sort direction
+         */
+        sortDirection?: 'asc' | 'desc';
+      }
+    ): Promise<PaginatedUsers> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'GET',
+        `/tenants/${encodeURIComponent(tenantId)}/users/paginated`,
+        undefined,
+        { query }
+      );
+      return (await resp.json()) as PaginatedUsers;
+    }
+
+    /**
+     * Retrieves tenants with pagination.
+     * @param params - Pagination parameters
+     * @returns {Promise<PaginatedTenants>} Paginated list of tenants
+     * @throws {APIError} If retrieval fails
+     */
+    public async listTenants(params: shared.PaginationParams): Promise<tenants.PaginatedTenants> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/tenants`, undefined, { query });
+      return (await resp.json()) as tenants.PaginatedTenants;
+    }
+
+    /**
+     * Retrieves all users
+     * @returns {Promise<Users>} List of all users (without password hashes)
+     * @throws {APIError} If retrieval fails
+     */
+    public async listUsers(): Promise<Users> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/users`);
+      return (await resp.json()) as Users;
+    }
+
+    /**
+     * Retrieves users with pagination
+     * @param params - Pagination parameters
+     * @returns {Promise<PaginatedUsers>} Paginated list of users (without password hashes)
+     * @throws {APIError} If retrieval fails
+     */
+    public async listUsersWithPagination(params: shared.PaginationParams): Promise<PaginatedUsers> {
+      // Convert our params into the objects we need for the request
+      const query = makeRecord<string, string | string[]>({
+        page: params.page === undefined ? undefined : String(params.page),
+        pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+        sortBy: params.sortBy,
+        sortDirection:
+          params.sortDirection === undefined ? undefined : String(params.sortDirection),
+      });
+
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI('GET', `/users/paginated`, undefined, {
+        query,
+      });
+      return (await resp.json()) as PaginatedUsers;
+    }
+
+    /**
+     * Authenticates a user and generates JWT tokens
+     * @param params Login credentials
+     * @returns User data and authentication tokens
+     * @throws {APIError} If authentication fails
+     */
+    public async login(params: auth.LoginPayload): Promise<auth.LoginResponse> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'POST',
+        `/auth/login`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as auth.LoginResponse;
+    }
+
+    /**
+     * Logs out a user by revoking their refresh token
+     * @param params Refresh token to revoke
+     * @returns Success message
+     * @throws {APIError} If logout fails
+     */
+    public async logout(params: auth.LogoutPayload): Promise<{
+      message: string;
+    }> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'POST',
+        `/auth/logout`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as {
+        message: string;
+      };
+    }
+
+    /**
+     * Refreshes an access token using a valid refresh token
+     * @param params Refresh token
+     * @returns New access and refresh tokens
+     * @throws {APIError} If refresh token is invalid
+     */
+    public async refreshToken(params: auth.RefreshTokenPayload): Promise<{
+      accessToken: string;
+      refreshToken: string;
+    }> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'POST',
+        `/auth/refresh-token`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as {
+        accessToken: string;
+        refreshToken: string;
+      };
+    }
+
+    /**
+     * Revokes all refresh tokens for a user
+     * @param params User ID
+     * @returns Number of tokens revoked
+     * @throws {APIError} If operation fails
+     */
+    public async revokeAllTokens(userId: number): Promise<{
+      count: number;
+    }> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'POST',
+        `/auth/revoke-all/${encodeURIComponent(userId)}`
+      );
+      return (await resp.json()) as {
+        count: number;
+      };
+    }
+
+    /**
+     * Updates an existing department.
+     * @param params - Object containing the department ID and update data
+     * @param params.id - The ID of the department to update
+     * @returns {Promise<Department>} The updated department
+     * @throws {APIError} If the department is not found or update fails
+     */
+    public async updateDepartment(
+      id: number,
+      params: {
+        /**
+         * Updated name of the department
+         * @minLength 2
+         */
+        name?: string;
+
+        /**
+         * Updated code for the department (alphanumeric with no spaces)
+         * @minLength 2
+         * @pattern ^[a-zA-Z0-9-]+$
+         */
+        code?: string;
+
+        /**
+         * Updated description of the department
+         */
+        description?: string;
+
+        /**
+         * Updated active status of the department
+         */
+        isActive?: boolean;
+      }
+    ): Promise<departments.Department> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/departments/${encodeURIComponent(id)}`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as departments.Department;
+    }
+
+    /**
+     * Updates an existing permission.
+     * @param params - Object containing the permission ID and update data
+     * @param params.id - The ID of the permission to update
+     * @returns {Promise<Permission>} The updated permission
+     * @throws {APIError} If the permission is not found or update fails
+     */
+    public async updatePermission(
+      id: number,
+      params: {
+        /**
+         * Human-readable name of the permission
+         * Must have at least 3 non-whitespace characters
+         */
+        name?: string;
+
+        /**
+         * Description of what the permission allows
+         */
+        description?: string;
+      }
+    ): Promise<permissions.Permission> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/permissions/${encodeURIComponent(id)}`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as permissions.Permission;
+    }
+
+    /**
+     * Updates an existing role.
+     * @param params - Object containing the role ID and update data
+     * @param params.id - The ID of the role to update
+     * @returns {Promise<RoleWithPermissions>} The updated role with permissions
+     * @throws {APIError} If the role is not found or update fails
+     */
+    public async updateRole(
+      id: number,
+      params: {
+        /**
+         * Human-readable name of the role
+         * Must have at least 3 non-whitespace characters
+         */
+        name?: string;
+
+        /**
+         * Description of what the role represents
+         */
+        description?: string;
+      }
+    ): Promise<roles.RoleWithPermissions> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/roles/${encodeURIComponent(id)}`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as roles.RoleWithPermissions;
+    }
+
+    /**
+     * Updates an existing tenant.
+     * @param params - Object containing the tenant ID and update data
+     * @param params.id - The ID of the tenant to update
+     * @returns {Promise<Tenant>} The updated tenant
+     * @throws {APIError} If the tenant is not found or update fails
+     */
+    public async updateTenant(
+      id: number,
+      params: {
+        /**
+         * Updated name of the tenant
+         * @minLength 2
+         */
+        name?: string;
+
+        /**
+         * Updated code for the tenant (alphanumeric with no spaces)
+         * @minLength 2
+         * @pattern ^[a-zA-Z0-9-]+$
+         */
+        code?: string;
+
+        /**
+         * Updated description of the tenant
+         */
+        description?: string;
+
+        /**
+         * Updated active status of the tenant
+         */
+        isActive?: boolean;
+      }
+    ): Promise<tenants.Tenant> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/tenants/${encodeURIComponent(id)}`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as tenants.Tenant;
+    }
+
+    /**
+     * Updates an existing user
+     * @param params - Object containing the user ID and update data
+     * @param params.id - The ID of the user to update
+     * @returns {Promise<SafeUser>} The updated user (without password hash)
+     * @throws {APIError} If the user is not found or update fails
+     */
+    public async updateUser(
+      id: number,
+      params: {
+        /**
+         * ID of the department this user belongs to
+         */
+        departmentId?: number;
+
+        /**
+         * Email address of the user
+         * Must be a valid email format
+         */
+        email?: string;
+
+        /**
+         * First name of the user
+         * Must have at least 1 non-whitespace character
+         */
+        firstName?: string;
+
+        /**
+         * Last name of the user
+         * Must have at least 1 non-whitespace character
+         */
+        lastName?: string;
+
+        /**
+         * Phone number of the user
+         */
+        phone?: string;
+
+        /**
+         * Job title/position of the user
+         */
+        position?: string;
+
+        /**
+         * Internal employee ID
+         */
+        employeeId?: string;
+
+        /**
+         * Whether the user is currently active
+         */
+        isActive?: boolean;
+
+        /**
+         * Whether the user is a system-wide admin
+         */
+        isSystemAdmin?: boolean;
+      }
+    ): Promise<SafeUser> {
+      // Now make the actual call to the API
+      const resp = await this.baseClient.callTypedAPI(
+        'PUT',
+        `/users/${encodeURIComponent(id)}`,
+        JSON.stringify(params)
+      );
+      return (await resp.json()) as SafeUser;
+    }
+  }
+}
+
+export namespace auth {
+  export interface LoginPayload {
+    /**
+     * Username for login
+     */
+    username: string;
+
+    /**
+     * Password for authentication
+     */
+    password: string;
+  }
+
+  export interface LoginResponse {
+    /**
+     * User data without sensitive information
+     */
+    user: users.SafeUser;
+
+    /**
+     * JWT access token
+     */
+    accessToken: string;
+
+    /**
+     * JWT refresh token
+     */
+    refreshToken: string;
+  }
+
+  export interface LogoutPayload {
+    /**
+     * Refresh token to invalidate
+     */
+    refreshToken: string;
+  }
+
+  export interface RefreshTokenPayload {
+    /**
+     * Refresh token
+     */
+    refreshToken: string;
+  }
+}
+
+export namespace cities {
+  export interface Cities {
+    /**
+     * List of cities
+     */
+    cities: City[];
+  }
+
+  export interface City {
+    /**
+     * Unique identifier for the city
+     */
+    id: number;
+
+    /**
+     * Name of the city
+     */
+    name: string;
+
+    /**
+     * ID of the state this city belongs to
+     */
+    stateId: number;
+
+    /**
+     * Latitude of the city
+     */
+    latitude: number;
+
+    /**
+     * Longitude of the city
+     */
+    longitude: number;
+
+    /**
+     * Timezone of the city (e.g., "America/Mexico_City")
+     */
+    timezone: string;
+
+    /**
+     * Whether the city is currently active in the system
+     */
+    active: boolean;
+
+    /**
+     * Timestamp when the city record was created
+     */
+    createdAt: string | null;
+
+    /**
+     * Timestamp when the city record was last updated
+     */
+    updatedAt: string | null;
+
+    /**
+     * URL-friendly identifier for the city
+     */
+    slug: string;
+  }
+
+  export interface CreateCityPayload {
+    /**
+     * The name of the city
+     * Must contain only letters (with or without accents) and spaces
+     */
+    name: string;
+
+    /**
+     * The ID of the state this city belongs to
+     * Must be a positive number
+     */
+    stateId: number;
+
+    /**
+     * Latitude of the city
+     * Must be a number between -90 and 90
+     */
+    latitude: number;
+
+    /**
+     * Longitude of the city
+     * Must be a number between -180 and 180
+     */
+    longitude: number;
+
+    /**
+     * Timezone of the city (e.g., "America/Mexico_City")
+     * Must have at least 1 non-whitespace character
+     */
+    timezone: string;
+
+    /**
+     * Whether the city is active
+     * @default true
+     */
+    active?: boolean;
+  }
+
+  export interface PaginatedCities {
+    data: City[];
+    pagination: shared.PaginationMeta;
+  }
+}
+
+export namespace countries {
+  export interface Countries {
+    /**
+     * List of countries
+     */
+    countries: Country[];
+  }
+
+  export interface Country {
+    /**
+     * Unique identifier for the country
+     */
+    id: number;
+
+    /**
+     * Name of the country
+     */
+    name: string;
+
+    /**
+     * Whether the country is currently active in the system
+     */
+    active: boolean;
+
+    /**
+     * ISO country code (e.g., "US", "CA", "MX")
+     */
+    code: string;
+
+    /**
+     * Timestamp when the country record was created
+     */
+    createdAt: string | null;
+
+    /**
+     * Timestamp when the country record was last updated
+     */
+    updatedAt: string | null;
+  }
+
+  export interface CreateCountryPayload {
+    /**
+     * Name of the country
+     * Must have at least 1 non-whitespace character
+     */
+    name: string;
+
+    /**
+     * ISO country code (e.g., "US", "CA", "MX")
+     * Must have at least 1 non-whitespace character
+     */
+    code: string;
+
+    /**
+     * Whether the country is active
+     * @default true
+     */
+    active?: boolean;
+  }
+
+  export interface PaginatedCountries {
+    data: Country[];
+    pagination: shared.PaginationMeta;
+  }
+}
+
+export namespace departments {
+  export interface CreateDepartmentPayload {
+    /**
+     * ID of the tenant this department belongs to
+     */
+    tenantId: number;
+
+    /**
+     * Name of the department
+     * @minLength 2
+     */
+    name: string;
+
+    /**
+     * Unique code for the department (alphanumeric with no spaces)
+     * @minLength 2
+     * @pattern ^[a-zA-Z0-9-]+$
+     */
+    code: string;
+
+    /**
+     * Optional description of the department
+     */
+    description?: string;
+  }
+
+  export interface Department {
+    /**
+     * Unique identifier for the department
+     */
+    id: number;
+
+    /**
+     * ID of the tenant this department belongs to
+     */
+    tenantId: number;
+
+    /**
+     * Name of the department
+     */
+    name: string;
+
+    /**
+     * Unique code identifier for the department
+     */
+    code: string;
+
+    /**
+     * Optional description of the department
+     */
+    description?: string | null;
+
+    /**
+     * Whether the department is currently active
+     */
+    isActive: boolean;
+
+    /**
+     * Timestamp when the department record was created
+     */
+    createdAt: string;
+
+    /**
+     * Timestamp when the department record was last updated
+     */
+    updatedAt: string;
+  }
+
+  export interface Departments {
+    /**
+     * List of departments
+     */
+    departments: Department[];
+  }
+
+  export interface PaginatedDepartments {
+    data: Department[];
+    pagination: shared.PaginationMeta;
+  }
+}
+
+export namespace drivers {
+  export interface CreateDriverPayload {
+    /**
+     * Employee ID (Clave)
+     * Must have at least 1 non-whitespace character
+     */
+    driverKey: string;
+
+    /**
+     * Full name of the driver
+     * Must have at least 1 non-whitespace character
+     */
+    fullName: string;
+
+    /**
+     * Mexican tax ID (RFC)
+     * Must have at least 1 non-whitespace character
+     */
+    rfc: string;
+
+    /**
+     * CURP Mexican national ID
+     * Must have at least 1 non-whitespace character
+     */
+    curp: string;
+
+    /**
+     * Social security number (IMSS)
+     */
+    imss?: string;
+
+    /**
+     * Civil status (Estado Civil)
+     */
+    civilStatus?: string;
+
+    /**
+     * Number of dependents (Escolaridad)
+     */
+    dependents?: number;
+
+    /**
+     * Street address (Calle)
+     */
+    addressStreet?: string;
+
+    /**
+     * Neighborhood (Colonia)
+     */
+    addressNeighborhood?: string;
+
+    /**
+     * City (Ciudad)
+     */
+    addressCity?: string;
+
+    /**
+     * State (Estado)
+     */
+    addressState?: string;
+
+    /**
+     * Postal code (Código Postal)
+     */
+    postalCode?: string;
+
+    /**
+     * Phone number (Teléfono)
+     * Must have at least 1 non-whitespace character
+     */
+    phoneNumber: string;
+
+    /**
+     * Email address (E-Mail)
+     * Must be a valid email format
+     */
+    email: string;
+
+    /**
+     * Type of operator (Tipo Operador)
+     * Must have at least 1 non-whitespace character
+     */
+    driverType: string;
+
+    /**
+     * Department (Departamento)
+     */
+    department?: string;
+
+    /**
+     * Position (Clave Puesto)
+     */
+    position?: string;
+
+    /**
+     * Office code (Clave Oficina)
+     */
+    officeCode?: string;
+
+    /**
+     * Office location
+     */
+    officeLocation?: string;
+
+    /**
+     * Date of hiring (Fec. Ingreso)
+     */
+    hireDate?: string;
+
+    /**
+     * Current status (Estado Actual)
+     */
+    status: DriverStatus;
+
+    /**
+     * Status date (Fecha Estado)
+     */
+    statusDate: string;
+
+    /**
+     * Federal license (Licencia Federal)
+     */
+    federalLicense?: string;
+
+    /**
+     * Federal license expiry (Fecha Lic. Fed)
+     */
+    federalLicenseExpiry?: string;
+
+    /**
+     * State license (Licencia Estatal)
+     */
+    stateLicense?: string;
+
+    /**
+     * State license expiry (Fecha Lic. Est)
+     */
+    stateLicenseExpiry?: string;
+
+    /**
+     * Credit card info (Tarjeta Crédito)
+     */
+    creditCard?: string;
+
+    /**
+     * Credit card expiry (Fecha T. Crédito)
+     */
+    creditCardExpiry?: string;
+
+    /**
+     * Company (Empresa Alterna)
+     */
+    company?: string;
+
+    /**
+     * Whether the driver is active
+     * @default true
+     */
+    active?: boolean;
+
+    /**
+     * The transporter this driver is associated with
+     */
+    transporterId?: number;
+
+    /**
+     * The bus line this driver is associated with
+     */
+    busLineId?: number;
+  }
+
+  export interface Driver {
+    /**
+     * Unique identifier for the driver
+     */
+    id: number;
+
+    /**
+     * Employee ID (Clave)
+     */
+    driverKey: string;
+
+    /**
+     * Full name of the driver
+     */
+    fullName: string;
+
+    /**
+     * Mexican tax ID (RFC)
+     */
+    rfc: string;
+
+    /**
+     * CURP Mexican national ID
+     */
+    curp: string;
+
+    /**
+     * Social security number (IMSS)
+     */
+    imss: string | null;
+
+    /**
+     * Civil status (Estado Civil)
+     */
+    civilStatus: string | null;
+
+    /**
+     * Number of dependents (Escolaridad)
+     */
+    dependents: number | null;
+
+    /**
+     * Street address (Calle)
+     */
+    addressStreet: string | null;
+
+    /**
+     * Neighborhood (Colonia)
+     */
+    addressNeighborhood: string | null;
+
+    /**
+     * City (Ciudad)
+     */
+    addressCity: string | null;
+
+    /**
+     * State (Estado)
+     */
+    addressState: string | null;
+
+    /**
+     * Postal code (Código Postal)
+     */
+    postalCode: string | null;
+
+    /**
+     * Phone number (Teléfono)
+     */
+    phoneNumber: string;
+
+    /**
+     * Email address (E-Mail)
+     */
+    email: string;
+
+    /**
+     * Type of operator (Tipo Operador)
+     */
+    driverType: string;
+
+    /**
+     * Position (Clave Puesto)
+     */
+    position: string | null;
+
+    /**
+     * Office code (Clave Oficina)
+     */
+    officeCode: string | null;
+
+    /**
+     * Office location
+     */
+    officeLocation: string | null;
+
+    /**
+     * Date of hiring (Fec. Ingreso)
+     */
+    hireDate: string | null;
+
+    /**
+     * Current status (Estado Actual)
+     */
+    status: DriverStatus;
+
+    /**
+     * Status date (Fecha Estado)
+     */
+    statusDate: string;
+
+    /**
+     * Federal license (Licencia Federal)
+     */
+    federalLicense: string | null;
+
+    /**
+     * Federal license expiry (Fecha Lic. Fed)
+     */
+    federalLicenseExpiry: string | null;
+
+    /**
+     * State license (Licencia Estatal)
+     */
+    stateLicense: string | null;
+
+    /**
+     * State license expiry (Fecha Lic. Est)
+     */
+    stateLicenseExpiry: string | null;
+
+    /**
+     * Credit card info (Tarjeta Crédito)
+     */
+    creditCard: string | null;
+
+    /**
+     * Credit card expiry (Fecha T. Crédito)
+     */
+    creditCardExpiry: string | null;
+
+    /**
+     * Company (Empresa Alterna)
+     */
+    company: string | null;
+
+    /**
+     * The transporter this driver is associated with
+     */
+    transporterId: number | null;
+
+    /**
+     * The bus line this driver is associated with
+     */
+    busLineId: number | null;
+
+    /**
+     * Whether the driver is currently active in the system
+     */
+    active: boolean;
+
+    /**
+     * Timestamp when the driver record was created
+     */
+    createdAt: string | null;
+
+    /**
+     * Timestamp when the driver record was last updated
+     */
+    updatedAt: string | null;
+  }
+
+  export type DriverStatus =
+    | 'ACTIVE'
+    | 'INACTIVE'
+    | 'SUSPENDED'
+    | 'ON_LEAVE'
+    | 'TERMINATED'
+    | 'IN_TRAINING'
+    | 'PROBATION';
+
+  export interface Drivers {
+    /**
+     * List of drivers
+     */
+    drivers: Driver[];
+  }
+
+  export interface PaginatedDrivers {
+    data: Driver[];
+    pagination: shared.PaginationMeta;
+  }
+
+  export interface PossibleDriverStatuses {
+    /**
+     * List of possible next statuses
+     */
+    statuses: string[];
+  }
+}
+
+export namespace gates {
+  export interface CreateGatePayload {
+    /**
+     * The ID of the terminal this gate belongs to
+     * Must be a positive number
+     */
+    terminalId: number;
+
+    /**
+     * Whether the gate is active
+     * @default true
+     */
+    active?: boolean;
+  }
+
+  export interface Gate {
+    /**
+     * Unique identifier for the gate
+     */
+    id: number;
+
+    /**
+     * ID of the terminal this gate belongs to
+     */
+    terminalId: number;
+
+    /**
+     * Whether the gate is currently active in the system
+     */
+    active: boolean;
+
+    /**
+     * Timestamp when the gate record was created
+     */
+    createdAt: string | null;
+
+    /**
+     * Timestamp when the gate record was last updated
+     */
+    updatedAt: string | null;
+  }
+
+  export interface PaginatedGates {
+    data: Gate[];
+    pagination: shared.PaginationMeta;
+  }
+}
+
+export namespace permissions {
+  export interface CreatePermissionPayload {
+    /**
+     * Unique code identifier for the permission (e.g., 'CREATE_USER')
+     * Must be uppercase with underscores and at least 3 characters
+     */
+    code: string;
+
+    /**
+     * Human-readable name of the permission
+     * Must have at least 3 non-whitespace characters
+     */
+    name: string;
+
+    /**
+     * Description of what the permission allows
+     */
+    description?: string;
+  }
+
+  export interface PaginatedPermissions {
+    data: Permission[];
+    pagination: shared.PaginationMeta;
+  }
+
+  export interface Permission {
+    /**
+     * Unique identifier for the permission
+     */
+    id: number;
+
+    /**
+     * Unique code identifier for the permission (e.g., 'CREATE_USER')
+     */
+    code: string;
+
+    /**
+     * Human-readable name of the permission
+     */
+    name: string;
+
+    /**
+     * Description of what the permission allows
+     */
+    description: string | null;
+
+    /**
+     * Timestamp when the permission was created
+     */
+    createdAt: string | null;
+
+    /**
+     * Timestamp when the permission was last updated
+     */
+    updatedAt: string | null;
+  }
+
+  export interface Permissions {
+    /**
+     * List of permissions
+     */
+    permissions: Permission[];
+  }
+}
+
+export namespace roles {
+  export interface CreateRolePayload {
+    /**
+     * Human-readable name of the role
+     * Must have at least 3 non-whitespace characters
+     */
+    name: string;
+
+    /**
+     * Description of what the role represents
+     */
+    description?: string;
+
+    /**
+     * ID of the tenant this role belongs to
+     */
+    tenantId: number;
+
+    /**
+     * IDs of permissions to associate with this role
+     */
+    permissionIds?: number[];
+  }
+
+  export interface PaginatedRoles {
+    data: Role[];
+    pagination: shared.PaginationMeta;
+  }
+
+  export interface PaginatedRolesWithPermissions {
+    data: RoleWithPermissions[];
+    pagination: shared.PaginationMeta;
+  }
+
+  export interface Role {
+    /**
+     * Unique identifier for the role
+     */
+    id: number;
+
+    /**
+     * Human-readable name of the role
+     */
+    name: string;
+
+    /**
+     * Description of what the role represents
+     */
+    description: string | null;
+
+    /**
+     * ID of the tenant this role belongs to
+     */
+    tenantId: number;
+
+    /**
+     * Timestamp when the role was created
+     */
+    createdAt: string | null;
+
+    /**
+     * Timestamp when the role was last updated
+     */
+    updatedAt: string | null;
+  }
+
+  export interface RoleWithPermissions {
+    /**
+     * Permissions associated with this role
+     */
+    permissions: permissions.Permission[];
+
+    /**
+     * Unique identifier for the role
+     */
+    id: number;
+
+    /**
+     * Human-readable name of the role
+     */
+    name: string;
+
+    /**
+     * Description of what the role represents
+     */
+    description: string | null;
+
+    /**
+     * ID of the tenant this role belongs to
+     */
+    tenantId: number;
+
+    /**
+     * Timestamp when the role was created
+     */
+    createdAt: string | null;
+
+    /**
+     * Timestamp when the role was last updated
+     */
+    updatedAt: string | null;
+  }
+
+  export interface Roles {
+    /**
+     * List of roles
+     */
+    roles: Role[];
+  }
+
+  export interface RolesWithPermissions {
+    /**
+     * List of roles with their permissions
+     */
+    roles: RoleWithPermissions[];
+  }
+}
+
+export namespace shared {
+  export interface PaginationMeta {
+    /**
+     * Current page number (1-based)
+     */
+    currentPage: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize: number;
+
+    /**
+     * Total number of items across all pages
+     */
+    totalCount: number;
+
+    /**
+     * Total number of pages
+     */
+    totalPages: number;
+
+    /**
+     * Whether there is a next page available
+     */
+    hasNextPage: boolean;
+
+    /**
+     * Whether there is a previous page available
+     */
+    hasPreviousPage: boolean;
+  }
+
+  export interface PaginationParams {
+    /**
+     * Page number (1-based)
+     */
+    page?: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize?: number;
+
+    /**
+     * Column to sort by
+     */
+    sortBy?: string;
+
+    /**
+     * Sort direction
+     */
+    sortDirection?: 'asc' | 'desc';
+  }
+
+  export interface PaginationParams {
+    /**
+     * Page number (1-based)
+     */
+    page?: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize?: number;
+
+    /**
+     * Column to sort by
+     */
+    sortBy?: string;
+
+    /**
+     * Sort direction
+     */
+    sortDirection?: 'asc' | 'desc';
+  }
+
+  export interface PaginationParams {
+    /**
+     * Page number (1-based)
+     */
+    page?: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize?: number;
+
+    /**
+     * Column to sort by
+     */
+    sortBy?: string;
+
+    /**
+     * Sort direction
+     */
+    sortDirection?: 'asc' | 'desc';
+  }
+
+  export interface PaginationParams {
+    /**
+     * Page number (1-based)
+     */
+    page?: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize?: number;
+
+    /**
+     * Column to sort by
+     */
+    sortBy?: string;
+
+    /**
+     * Sort direction
+     */
+    sortDirection?: 'asc' | 'desc';
+  }
+
+  export interface PaginationParams {
+    /**
+     * Page number (1-based)
+     */
+    page?: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize?: number;
+
+    /**
+     * Column to sort by
+     */
+    sortBy?: string;
+
+    /**
+     * Sort direction
+     */
+    sortDirection?: 'asc' | 'desc';
+  }
+
+  export interface PaginationParams {
+    /**
+     * Page number (1-based)
+     */
+    page?: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize?: number;
+
+    /**
+     * Column to sort by
+     */
+    sortBy?: string;
+
+    /**
+     * Sort direction
+     */
+    sortDirection?: 'asc' | 'desc';
+  }
+
+  export interface PaginationParams {
+    /**
+     * Page number (1-based)
+     */
+    page?: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize?: number;
+
+    /**
+     * Column to sort by
+     */
+    sortBy?: string;
+
+    /**
+     * Sort direction
+     */
+    sortDirection?: 'asc' | 'desc';
+  }
+
+  export interface PaginationParams {
+    /**
+     * Page number (1-based)
+     */
+    page?: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize?: number;
+
+    /**
+     * Column to sort by
+     */
+    sortBy?: string;
+
+    /**
+     * Sort direction
+     */
+    sortDirection?: 'asc' | 'desc';
+  }
+
+  export interface PaginationParams {
+    /**
+     * Page number (1-based)
+     */
+    page?: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize?: number;
+
+    /**
+     * Column to sort by
+     */
+    sortBy?: string;
+
+    /**
+     * Sort direction
+     */
+    sortDirection?: 'asc' | 'desc';
+  }
+
+  export interface PaginationParams {
+    /**
+     * Page number (1-based)
+     */
+    page?: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize?: number;
+
+    /**
+     * Column to sort by
+     */
+    sortBy?: string;
+
+    /**
+     * Sort direction
+     */
+    sortDirection?: 'asc' | 'desc';
+  }
+
+  export interface PaginationParams {
+    /**
+     * Page number (1-based)
+     */
+    page?: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize?: number;
+
+    /**
+     * Column to sort by
+     */
+    sortBy?: string;
+
+    /**
+     * Sort direction
+     */
+    sortDirection?: 'asc' | 'desc';
+  }
+
+  export interface PaginationParams {
+    /**
+     * Page number (1-based)
+     */
+    page?: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize?: number;
+
+    /**
+     * Column to sort by
+     */
+    sortBy?: string;
+
+    /**
+     * Sort direction
+     */
+    sortDirection?: 'asc' | 'desc';
+  }
+
+  export interface PaginationParams {
+    /**
+     * Page number (1-based)
+     */
+    page?: number;
+
+    /**
+     * Number of items per page
+     */
+    pageSize?: number;
+
+    /**
+     * Column to sort by
+     */
+    sortBy?: string;
+
+    /**
+     * Sort direction
+     */
+    sortDirection?: 'asc' | 'desc';
+  }
+}
+
+export namespace states {
+  export interface CreateStatePayload {
+    /**
+     * The name of the state
+     * Must have at least 1 non-whitespace character
+     */
+    name: string;
+
+    /**
+     * The state code (e.g., "TX", "CA", "NY")
+     * Must have at least 1 non-whitespace character
+     */
+    code: string;
+
+    /**
+     * The ID of the country this state belongs to
+     * Must be a positive number
+     */
+    countryId: number;
+
+    /**
+     * Whether the state is active
+     * @default true
+     */
+    active?: boolean;
+  }
+
+  export interface PaginatedStates {
+    data: State[];
+    pagination: shared.PaginationMeta;
+  }
+
+  export interface State {
+    /**
+     * Unique identifier for the state
+     */
+    id: number;
+
+    /**
+     * Name of the state
+     */
+    name: string;
+
+    /**
+     * State code (e.g., "TX", "CA", "NY")
+     */
+    code: string;
+
+    /**
+     * ID of the country this state belongs to
+     */
+    countryId: number;
+
+    /**
+     * Whether the state is currently active in the system
+     */
+    active: boolean;
+
+    /**
+     * Timestamp when the state record was created
+     */
+    createdAt: string | null;
+
+    /**
+     * Timestamp when the state record was last updated
+     */
+    updatedAt: string | null;
+  }
+
+  export interface States {
+    /**
+     * List of states
+     */
+    states: State[];
+  }
+}
+
+export namespace tenants {
+  export interface CreateTenantPayload {
+    /**
+     * Name of the tenant
+     * @minLength 2
+     */
+    name: string;
+
+    /**
+     * Unique code for the tenant (alphanumeric with no spaces)
+     * @minLength 2
+     * @pattern ^[a-zA-Z0-9-]+$
+     */
+    code: string;
+
+    /**
+     * Optional description of the tenant
+     */
+    description?: string;
+  }
+
+  export interface PaginatedTenants {
+    data: Tenant[];
+    pagination: shared.PaginationMeta;
+  }
+
+  export interface Tenant {
+    id: number;
+    name: string;
+    code: string;
+    description?: string | null;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+  }
+}
+
+export namespace terminals {
+  export interface Facility {
+    /**
+     * Name of the facility
+     */
+    name: string;
+
+    /**
+     * Description of the facility
+     */
+    description?: string;
+
+    /**
+     * Icon or image representing the facility
+     */
+    icon?: string;
+  }
+
+  export interface OperatingHours {
+    /**
+     * Monday opening hours
+     */
+    monday?: {
+      open: string;
+      close: string;
+    };
+
+    /**
+     * Tuesday opening hours
+     */
+    tuesday?: {
+      open: string;
+      close: string;
+    };
+
+    /**
+     * Wednesday opening hours
+     */
+    wednesday?: {
+      open: string;
+      close: string;
+    };
+
+    /**
+     * Thursday opening hours
+     */
+    thursday?: {
+      open: string;
+      close: string;
+    };
+
+    /**
+     * Friday opening hours
+     */
+    friday?: {
+      open: string;
+      close: string;
+    };
+
+    /**
+     * Saturday opening hours
+     */
+    saturday?: {
+      open: string;
+      close: string;
+    };
+
+    /**
+     * Sunday opening hours
+     */
+    sunday?: {
+      open: string;
+      close: string;
+    };
+
+    /**
+     * Note about operating hours
+     */
+    notes?: string;
+  }
+
+  export interface PaginatedTerminals {
+    data: Terminal[];
+    pagination: shared.PaginationMeta;
+  }
+
+  export interface Terminal {
+    /**
+     * Unique identifier for the terminal
+     */
+    id: number;
+
+    /**
+     * Name of the terminal
+     */
+    name: string;
+
+    /**
+     * Physical address of the terminal
+     */
+    address: string;
+
+    /**
+     * ID of the city where the terminal is located
+     */
+    cityId: number;
+
+    /**
+     * Latitude coordinate
+     */
+    latitude: number;
+
+    /**
+     * Longitude coordinate
+     */
+    longitude: number;
+
+    /**
+     * Contact phone number for the terminal
+     */
+    contactphone?: string | null;
+
+    /**
+     * Operating hours of the terminal
+     */
+    operatingHours?: OperatingHours | any;
+
+    /**
+     * List of facilities available at the terminal
+     */
+    facilities?: Facility[] | any;
+
+    /**
+     * Terminal code (unique identifier)
+     */
+    code: string;
+
+    /**
+     * URL-friendly identifier for the terminal
+     */
+    slug: string;
+
+    /**
+     * Whether the terminal is currently active in the system
+     */
+    active: boolean;
+
+    /**
+     * Timestamp when the terminal record was created
+     */
+    createdAt: string | null;
+
+    /**
+     * Timestamp when the terminal record was last updated
+     */
+    updatedAt: string | null;
+  }
+}
+
+export namespace timezones {
+  export interface Timezone {
+    /**
+     * Unique identifier for the timezone
+     */
+    id: string;
+  }
+
+  export interface Timezones {
+    /**
+     * List of timezones
+     */
+    timezones: Timezone[];
+  }
+}
+
+export namespace transporters {
+  export interface PaginatedTransporters {
+    data: Transporter[];
+    pagination: shared.PaginationMeta;
+  }
+
+  export interface Transporter {
+    /**
+     * Unique identifier for the transporter
+     */
+    id: number;
+
+    /**
+     * Name of the transportation company
+     */
+    name: string;
+
+    /**
+     * Unique business code for the transporter
+     */
+    code: string;
+
+    /**
+     * Description of the transporter
+     */
+    description: string | null;
+
+    /**
+     * Website URL of the transporter
+     */
+    website: string | null;
+
+    /**
+     * Contact email of the transporter
+     */
+    email: string | null;
+
+    /**
+     * Contact phone number of the transporter
+     */
+    phone: string | null;
+
+    /**
+     * ID of the city where the transporter is headquartered
+     */
+    headquarterCityId: number | null;
+
+    /**
+     * URL to the transporter's logo
+     */
+    logoUrl: string | null;
+
+    /**
+     * Additional contact information
+     */
+    contactInfo: string | null;
+
+    /**
+     * Regulatory license number
+     */
+    licenseNumber: string | null;
+
+    /**
+     * Whether the transporter is currently active in the system
+     */
+    active: boolean;
+
+    /**
+     * Timestamp when the transporter record was created
+     */
+    createdAt: string | null;
+
+    /**
+     * Timestamp when the transporter record was last updated
+     */
+    updatedAt: string | null;
+  }
 }
 
 export namespace user_permissions {
-    export interface UserWithPermissions {
-        /**
-         * Directly assigned permissions
-         */
-        directPermissions: permissions.Permission[]
+  export interface UserWithPermissions {
+    /**
+     * Directly assigned permissions
+     */
+    directPermissions: permissions.Permission[];
 
-        /**
-         * Roles assigned to this user, including their permissions
-         */
-        roles: roles.RoleWithPermissions[]
+    /**
+     * Roles assigned to this user, including their permissions
+     */
+    roles: roles.RoleWithPermissions[];
 
-        /**
-         * Permissions that came from roles only
-         */
-        rolesPermissions: permissions.Permission[]
+    /**
+     * Permissions that came from roles only
+     */
+    rolesPermissions: permissions.Permission[];
 
-        /**
-         * All effective permissions (combined from direct assignments and roles)
-         */
-        effectivePermissions: permissions.Permission[]
+    /**
+     * All effective permissions (combined from direct assignments and roles)
+     */
+    effectivePermissions: permissions.Permission[];
 
-        id: number
-        tenantId: number
-        departmentId: number
-        username: string
-        email: string
-        firstName: string
-        lastName: string
-        phone: string | null
-        position: string | null
-        employeeId: string | null
-        mfaSettings: { [key: string]: any } | null
-        lastLogin: string | null
-        isActive: boolean
-        isSystemAdmin: boolean
-        createdAt: string | null
-        updatedAt: string | null
-    }
+    id: number;
+    tenantId: number;
+    departmentId: number;
+    username: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string | null;
+    position: string | null;
+    employeeId: string | null;
+    mfaSettings: { [key: string]: any } | null;
+    lastLogin: string | null;
+    isActive: boolean;
+    isSystemAdmin: boolean;
+    createdAt: string | null;
+    updatedAt: string | null;
+  }
 
-    export interface UserWithRoles {
-        /**
-         * Roles assigned to this user
-         */
-        roles: roles.Role[]
+  export interface UserWithRoles {
+    /**
+     * Roles assigned to this user
+     */
+    roles: roles.Role[];
 
-        id: number
-        tenantId: number
-        departmentId: number
-        username: string
-        email: string
-        firstName: string
-        lastName: string
-        phone: string | null
-        position: string | null
-        employeeId: string | null
-        mfaSettings: { [key: string]: any } | null
-        lastLogin: string | null
-        isActive: boolean
-        isSystemAdmin: boolean
-        createdAt: string | null
-        updatedAt: string | null
-    }
+    id: number;
+    tenantId: number;
+    departmentId: number;
+    username: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string | null;
+    position: string | null;
+    employeeId: string | null;
+    mfaSettings: { [key: string]: any } | null;
+    lastLogin: string | null;
+    isActive: boolean;
+    isSystemAdmin: boolean;
+    createdAt: string | null;
+    updatedAt: string | null;
+  }
 }
 
-
-
 function encodeQuery(parts: Record<string, string | string[]>): string {
-    const pairs: string[] = []
-    for (const key in parts) {
-        const val = (Array.isArray(parts[key]) ?  parts[key] : [parts[key]]) as string[]
-        for (const v of val) {
-            pairs.push(`${key}=${encodeURIComponent(v)}`)
-        }
+  const pairs: string[] = [];
+  for (const key in parts) {
+    const val = (Array.isArray(parts[key]) ? parts[key] : [parts[key]]) as string[];
+    for (const v of val) {
+      pairs.push(`${key}=${encodeURIComponent(v)}`);
     }
-    return pairs.join("&")
+  }
+  return pairs.join('&');
 }
 
 // makeRecord takes a record and strips any undefined values from it,
 // and returns the same record with a narrower type.
 // @ts-ignore - TS ignore because makeRecord is not always used
-function makeRecord<K extends string | number | symbol, V>(record: Record<K, V | undefined>): Record<K, V> {
-    for (const key in record) {
-        if (record[key] === undefined) {
-            delete record[key]
-        }
+function makeRecord<K extends string | number | symbol, V>(
+  record: Record<K, V | undefined>
+): Record<K, V> {
+  for (const key in record) {
+    if (record[key] === undefined) {
+      delete record[key];
     }
-    return record as Record<K, V>
+  }
+  return record as Record<K, V>;
 }
 
 function encodeWebSocketHeaders(headers: Record<string, string>) {
-    // url safe, no pad
-    const base64encoded = btoa(JSON.stringify(headers))
-      .replaceAll("=", "")
-      .replaceAll("+", "-")
-      .replaceAll("/", "_");
-    return "encore.dev.headers." + base64encoded;
+  // url safe, no pad
+  const base64encoded = btoa(JSON.stringify(headers))
+    .replaceAll('=', '')
+    .replaceAll('+', '-')
+    .replaceAll('/', '_');
+  return 'encore.dev.headers.' + base64encoded;
 }
 
 class WebSocketConnection {
-    public ws: WebSocket;
+  public ws: WebSocket;
 
-    private hasUpdateHandlers: (() => void)[] = [];
+  private hasUpdateHandlers: (() => void)[] = [];
 
-    constructor(url: string, headers?: Record<string, string>) {
-        let protocols = ["encore-ws"];
-        if (headers) {
-            protocols.push(encodeWebSocketHeaders(headers))
-        }
-
-        this.ws = new WebSocket(url, protocols)
-
-        this.on("error", () => {
-            this.resolveHasUpdateHandlers();
-        });
-
-        this.on("close", () => {
-            this.resolveHasUpdateHandlers();
-        });
+  constructor(url: string, headers?: Record<string, string>) {
+    let protocols = ['encore-ws'];
+    if (headers) {
+      protocols.push(encodeWebSocketHeaders(headers));
     }
 
-    resolveHasUpdateHandlers() {
-        const handlers = this.hasUpdateHandlers;
-        this.hasUpdateHandlers = [];
+    this.ws = new WebSocket(url, protocols);
 
-        for (const handler of handlers) {
-            handler()
-        }
-    }
+    this.on('error', () => {
+      this.resolveHasUpdateHandlers();
+    });
 
-    async hasUpdate() {
-        // await until a new message have been received, or the socket is closed
-        await new Promise((resolve) => {
-            this.hasUpdateHandlers.push(() => resolve(null))
-        });
-    }
+    this.on('close', () => {
+      this.resolveHasUpdateHandlers();
+    });
+  }
 
-    on(type: "error" | "close" | "message" | "open", handler: (event: any) => void) {
-        this.ws.addEventListener(type, handler);
-    }
+  resolveHasUpdateHandlers() {
+    const handlers = this.hasUpdateHandlers;
+    this.hasUpdateHandlers = [];
 
-    off(type: "error" | "close" | "message" | "open", handler: (event: any) => void) {
-        this.ws.removeEventListener(type, handler);
+    for (const handler of handlers) {
+      handler();
     }
+  }
 
-    close() {
-        this.ws.close();
-    }
+  async hasUpdate() {
+    // await until a new message have been received, or the socket is closed
+    await new Promise((resolve) => {
+      this.hasUpdateHandlers.push(() => resolve(null));
+    });
+  }
+
+  on(type: 'error' | 'close' | 'message' | 'open', handler: (event: any) => void) {
+    this.ws.addEventListener(type, handler);
+  }
+
+  off(type: 'error' | 'close' | 'message' | 'open', handler: (event: any) => void) {
+    this.ws.removeEventListener(type, handler);
+  }
+
+  close() {
+    this.ws.close();
+  }
 }
 
 export class StreamInOut<Request, Response> {
-    public socket: WebSocketConnection;
-    private buffer: Response[] = [];
+  public socket: WebSocketConnection;
+  private buffer: Response[] = [];
 
-    constructor(url: string, headers?: Record<string, string>) {
-        this.socket = new WebSocketConnection(url, headers);
-        this.socket.on("message", (event: any) => {
-            this.buffer.push(JSON.parse(event.data));
-            this.socket.resolveHasUpdateHandlers();
-        });
+  constructor(url: string, headers?: Record<string, string>) {
+    this.socket = new WebSocketConnection(url, headers);
+    this.socket.on('message', (event: any) => {
+      this.buffer.push(JSON.parse(event.data));
+      this.socket.resolveHasUpdateHandlers();
+    });
+  }
+
+  close() {
+    this.socket.close();
+  }
+
+  async send(msg: Request) {
+    if (this.socket.ws.readyState === WebSocket.CONNECTING) {
+      // await that the socket is opened
+      await new Promise((resolve) => {
+        this.socket.ws.addEventListener('open', resolve, { once: true });
+      });
     }
 
-    close() {
-        this.socket.close();
-    }
+    return this.socket.ws.send(JSON.stringify(msg));
+  }
 
-    async send(msg: Request) {
-        if (this.socket.ws.readyState === WebSocket.CONNECTING) {
-            // await that the socket is opened
-            await new Promise((resolve) => {
-                this.socket.ws.addEventListener("open", resolve, { once: true });
-            });
-        }
+  async next(): Promise<Response | undefined> {
+    for await (const next of this) return next;
+    return undefined;
+  }
 
-        return this.socket.ws.send(JSON.stringify(msg));
+  async *[Symbol.asyncIterator](): AsyncGenerator<Response, undefined, void> {
+    while (true) {
+      if (this.buffer.length > 0) {
+        yield this.buffer.shift() as Response;
+      } else {
+        if (this.socket.ws.readyState === WebSocket.CLOSED) return;
+        await this.socket.hasUpdate();
+      }
     }
-
-    async next(): Promise<Response | undefined> {
-        for await (const next of this) return next;
-        return undefined;
-    }
-
-    async *[Symbol.asyncIterator](): AsyncGenerator<Response, undefined, void> {
-        while (true) {
-            if (this.buffer.length > 0) {
-                yield this.buffer.shift() as Response;
-            } else {
-                if (this.socket.ws.readyState === WebSocket.CLOSED) return;
-                await this.socket.hasUpdate();
-            }
-        }
-    }
+  }
 }
 
 export class StreamIn<Response> {
-    public socket: WebSocketConnection;
-    private buffer: Response[] = [];
+  public socket: WebSocketConnection;
+  private buffer: Response[] = [];
 
-    constructor(url: string, headers?: Record<string, string>) {
-        this.socket = new WebSocketConnection(url, headers);
-        this.socket.on("message", (event: any) => {
-            this.buffer.push(JSON.parse(event.data));
-            this.socket.resolveHasUpdateHandlers();
-        });
-    }
+  constructor(url: string, headers?: Record<string, string>) {
+    this.socket = new WebSocketConnection(url, headers);
+    this.socket.on('message', (event: any) => {
+      this.buffer.push(JSON.parse(event.data));
+      this.socket.resolveHasUpdateHandlers();
+    });
+  }
 
-    close() {
-        this.socket.close();
-    }
+  close() {
+    this.socket.close();
+  }
 
-    async next(): Promise<Response | undefined> {
-        for await (const next of this) return next;
-        return undefined;
-    }
+  async next(): Promise<Response | undefined> {
+    for await (const next of this) return next;
+    return undefined;
+  }
 
-    async *[Symbol.asyncIterator](): AsyncGenerator<Response, undefined, void> {
-        while (true) {
-            if (this.buffer.length > 0) {
-                yield this.buffer.shift() as Response;
-            } else {
-                if (this.socket.ws.readyState === WebSocket.CLOSED) return;
-                await this.socket.hasUpdate();
-            }
-        }
+  async *[Symbol.asyncIterator](): AsyncGenerator<Response, undefined, void> {
+    while (true) {
+      if (this.buffer.length > 0) {
+        yield this.buffer.shift() as Response;
+      } else {
+        if (this.socket.ws.readyState === WebSocket.CLOSED) return;
+        await this.socket.hasUpdate();
+      }
     }
+  }
 }
 
 export class StreamOut<Request, Response> {
-    public socket: WebSocketConnection;
-    private responseValue: Promise<Response>;
+  public socket: WebSocketConnection;
+  private responseValue: Promise<Response>;
 
-    constructor(url: string, headers?: Record<string, string>) {
-        let responseResolver: (_: any) => void;
-        this.responseValue = new Promise((resolve) => responseResolver = resolve);
+  constructor(url: string, headers?: Record<string, string>) {
+    let responseResolver: (_: any) => void;
+    this.responseValue = new Promise((resolve) => (responseResolver = resolve));
 
-        this.socket = new WebSocketConnection(url, headers);
-        this.socket.on("message", (event: any) => {
-            responseResolver(JSON.parse(event.data))
-        });
+    this.socket = new WebSocketConnection(url, headers);
+    this.socket.on('message', (event: any) => {
+      responseResolver(JSON.parse(event.data));
+    });
+  }
+
+  async response(): Promise<Response> {
+    return this.responseValue;
+  }
+
+  close() {
+    this.socket.close();
+  }
+
+  async send(msg: Request) {
+    if (this.socket.ws.readyState === WebSocket.CONNECTING) {
+      // await that the socket is opened
+      await new Promise((resolve) => {
+        this.socket.ws.addEventListener('open', resolve, { once: true });
+      });
     }
 
-    async response(): Promise<Response> {
-        return this.responseValue;
-    }
-
-    close() {
-        this.socket.close();
-    }
-
-    async send(msg: Request) {
-        if (this.socket.ws.readyState === WebSocket.CONNECTING) {
-            // await that the socket is opened
-            await new Promise((resolve) => {
-                this.socket.ws.addEventListener("open", resolve, { once: true });
-            });
-        }
-
-        return this.socket.ws.send(JSON.stringify(msg));
-    }
+    return this.socket.ws.send(JSON.stringify(msg));
+  }
 }
 // CallParameters is the type of the parameters to a method call, but require headers to be a Record type
-type CallParameters = Omit<RequestInit, "method" | "body" | "headers"> & {
-    /** Headers to be sent with the request */
-    headers?: Record<string, string>
+type CallParameters = Omit<RequestInit, 'method' | 'body' | 'headers'> & {
+  /** Headers to be sent with the request */
+  headers?: Record<string, string>;
 
-    /** Query parameters to be sent with the request */
-    query?: Record<string, string | string[]>
-}
+  /** Query parameters to be sent with the request */
+  query?: Record<string, string | string[]>;
+};
 
 // AuthDataGenerator is a function that returns a new instance of the authentication data required by this API
 export type AuthDataGenerator = () =>
@@ -4241,469 +4635,492 @@ export type Fetcher = typeof fetch;
 const boundFetch = fetch.bind(this);
 
 class BaseClient {
-    readonly baseURL: string
-    readonly fetcher: Fetcher
-    readonly headers: Record<string, string>
-    readonly requestInit: Omit<RequestInit, "headers"> & { headers?: Record<string, string> }
-    readonly authGenerator?: AuthDataGenerator
+  readonly baseURL: string;
+  readonly fetcher: Fetcher;
+  readonly headers: Record<string, string>;
+  readonly requestInit: Omit<RequestInit, 'headers'> & { headers?: Record<string, string> };
+  readonly authGenerator?: AuthDataGenerator;
 
-    constructor(baseURL: string, options: ClientOptions) {
-        this.baseURL = baseURL
-        this.headers = {}
+  constructor(baseURL: string, options: ClientOptions) {
+    this.baseURL = baseURL;
+    this.headers = {};
 
-        // Add User-Agent header if the script is running in the server
-        // because browsers do not allow setting User-Agent headers to requests
-        if ( typeof globalThis === "object" && !("window" in globalThis) ) {
-            this.headers["User-Agent"] = "server-nest-8sci-Generated-TS-Client (Encore/v1.46.18)";
-        }
-
-        this.requestInit = options.requestInit ?? {};
-
-        // Setup what fetch function we'll be using in the base client
-        if (options.fetcher !== undefined) {
-            this.fetcher = options.fetcher
-        } else {
-            this.fetcher = boundFetch
-        }
-
-        // Setup an authentication data generator using the auth data token option
-        if (options.auth !== undefined) {
-            const auth = options.auth
-            if (typeof auth === "function") {
-                this.authGenerator = auth
-            } else {
-                this.authGenerator = () => auth
-            }
-        }
+    // Add User-Agent header if the script is running in the server
+    // because browsers do not allow setting User-Agent headers to requests
+    if (typeof globalThis === 'object' && !('window' in globalThis)) {
+      this.headers['User-Agent'] = 'server-nest-8sci-Generated-TS-Client (Encore/v1.46.18)';
     }
 
-    async getAuthData(): Promise<CallParameters | undefined> {
-        let authData: users.AuthParams | undefined;
+    this.requestInit = options.requestInit ?? {};
 
-        // If authorization data generator is present, call it and add the returned data to the request
-        if (this.authGenerator) {
-            const mayBePromise = this.authGenerator();
-            if (mayBePromise instanceof Promise) {
-                authData = await mayBePromise;
-            } else {
-                authData = mayBePromise;
-            }
-        }
-
-        if (authData) {
-            const data: CallParameters = {};
-
-            data.headers = makeRecord<string, string>({
-                authorization: authData.authorization,
-            });
-
-            return data;
-        }
-
-        return undefined;
+    // Setup what fetch function we'll be using in the base client
+    if (options.fetcher !== undefined) {
+      this.fetcher = options.fetcher;
+    } else {
+      this.fetcher = boundFetch;
     }
 
-    // createStreamInOut sets up a stream to a streaming API endpoint.
-    async createStreamInOut<Request, Response>(path: string, params?: CallParameters): Promise<StreamInOut<Request, Response>> {
-        let { query, headers } = params ?? {};
+    // Setup an authentication data generator using the auth data token option
+    if (options.auth !== undefined) {
+      const auth = options.auth;
+      if (typeof auth === 'function') {
+        this.authGenerator = auth;
+      } else {
+        this.authGenerator = () => auth;
+      }
+    }
+  }
 
-        // Fetch auth data if there is any
-        const authData = await this.getAuthData();
+  async getAuthData(): Promise<CallParameters | undefined> {
+    let authData: users.AuthParams | undefined;
 
-        // If we now have authentication data, add it to the request
-        if (authData) {
-            if (authData.query) {
-                query = {...query, ...authData.query};
-            }
-            if (authData.headers) {
-                headers = {...headers, ...authData.headers};
-            }
-        }
-
-        const queryString = query ? '?' + encodeQuery(query) : ''
-        return new StreamInOut(this.baseURL + path + queryString, headers);
+    // If authorization data generator is present, call it and add the returned data to the request
+    if (this.authGenerator) {
+      const mayBePromise = this.authGenerator();
+      if (mayBePromise instanceof Promise) {
+        authData = await mayBePromise;
+      } else {
+        authData = mayBePromise;
+      }
     }
 
-    // createStreamIn sets up a stream to a streaming API endpoint.
-    async createStreamIn<Response>(path: string, params?: CallParameters): Promise<StreamIn<Response>> {
-        let { query, headers } = params ?? {};
+    if (authData) {
+      const data: CallParameters = {};
 
-        // Fetch auth data if there is any
-        const authData = await this.getAuthData();
+      data.headers = makeRecord<string, string>({
+        authorization: authData.authorization,
+      });
 
-        // If we now have authentication data, add it to the request
-        if (authData) {
-            if (authData.query) {
-                query = {...query, ...authData.query};
-            }
-            if (authData.headers) {
-                headers = {...headers, ...authData.headers};
-            }
-        }
-
-        const queryString = query ? '?' + encodeQuery(query) : ''
-        return new StreamIn(this.baseURL + path + queryString, headers);
+      return data;
     }
 
-    // createStreamOut sets up a stream to a streaming API endpoint.
-    async createStreamOut<Request, Response>(path: string, params?: CallParameters): Promise<StreamOut<Request, Response>> {
-        let { query, headers } = params ?? {};
+    return undefined;
+  }
 
-        // Fetch auth data if there is any
-        const authData = await this.getAuthData();
+  // createStreamInOut sets up a stream to a streaming API endpoint.
+  async createStreamInOut<Request, Response>(
+    path: string,
+    params?: CallParameters
+  ): Promise<StreamInOut<Request, Response>> {
+    let { query, headers } = params ?? {};
 
-        // If we now have authentication data, add it to the request
-        if (authData) {
-            if (authData.query) {
-                query = {...query, ...authData.query};
-            }
-            if (authData.headers) {
-                headers = {...headers, ...authData.headers};
-            }
-        }
+    // Fetch auth data if there is any
+    const authData = await this.getAuthData();
 
-        const queryString = query ? '?' + encodeQuery(query) : ''
-        return new StreamOut(this.baseURL + path + queryString, headers);
+    // If we now have authentication data, add it to the request
+    if (authData) {
+      if (authData.query) {
+        query = { ...query, ...authData.query };
+      }
+      if (authData.headers) {
+        headers = { ...headers, ...authData.headers };
+      }
     }
 
-    // callTypedAPI makes an API call, defaulting content type to "application/json"
-    public async callTypedAPI(method: string, path: string, body?: BodyInit, params?: CallParameters): Promise<Response> {
-        return this.callAPI(method, path, body, {
-            ...params,
-            headers: { "Content-Type": "application/json", ...params?.headers }
-        });
+    const queryString = query ? '?' + encodeQuery(query) : '';
+    return new StreamInOut(this.baseURL + path + queryString, headers);
+  }
+
+  // createStreamIn sets up a stream to a streaming API endpoint.
+  async createStreamIn<Response>(
+    path: string,
+    params?: CallParameters
+  ): Promise<StreamIn<Response>> {
+    let { query, headers } = params ?? {};
+
+    // Fetch auth data if there is any
+    const authData = await this.getAuthData();
+
+    // If we now have authentication data, add it to the request
+    if (authData) {
+      if (authData.query) {
+        query = { ...query, ...authData.query };
+      }
+      if (authData.headers) {
+        headers = { ...headers, ...authData.headers };
+      }
     }
 
-    // callAPI is used by each generated API method to actually make the request
-    public async callAPI(method: string, path: string, body?: BodyInit, params?: CallParameters): Promise<Response> {
-        let { query, headers, ...rest } = params ?? {}
-        const init = {
-            ...this.requestInit,
-            ...rest,
-            method,
-            body: body ?? null,
-        }
+    const queryString = query ? '?' + encodeQuery(query) : '';
+    return new StreamIn(this.baseURL + path + queryString, headers);
+  }
 
-        // Merge our headers with any predefined headers
-        init.headers = {...this.headers, ...init.headers, ...headers}
+  // createStreamOut sets up a stream to a streaming API endpoint.
+  async createStreamOut<Request, Response>(
+    path: string,
+    params?: CallParameters
+  ): Promise<StreamOut<Request, Response>> {
+    let { query, headers } = params ?? {};
 
-        // Fetch auth data if there is any
-        const authData = await this.getAuthData();
+    // Fetch auth data if there is any
+    const authData = await this.getAuthData();
 
-        // If we now have authentication data, add it to the request
-        if (authData) {
-            if (authData.query) {
-                query = {...query, ...authData.query};
-            }
-            if (authData.headers) {
-                init.headers = {...init.headers, ...authData.headers};
-            }
-        }
-
-        // Make the actual request
-        const queryString = query ? '?' + encodeQuery(query) : ''
-        const response = await this.fetcher(this.baseURL+path+queryString, init)
-
-        // handle any error responses
-        if (!response.ok) {
-            // try and get the error message from the response body
-            let body: APIErrorResponse = { code: ErrCode.Unknown, message: `request failed: status ${response.status}` }
-
-            // if we can get the structured error we should, otherwise give a best effort
-            try {
-                const text = await response.text()
-
-                try {
-                    const jsonBody = JSON.parse(text)
-                    if (isAPIErrorResponse(jsonBody)) {
-                        body = jsonBody
-                    } else {
-                        body.message += ": " + JSON.stringify(jsonBody)
-                    }
-                } catch {
-                    body.message += ": " + text
-                }
-            } catch (e) {
-                // otherwise we just append the text to the error message
-                body.message += ": " + String(e)
-            }
-
-            throw new APIError(response.status, body)
-        }
-
-        return response
+    // If we now have authentication data, add it to the request
+    if (authData) {
+      if (authData.query) {
+        query = { ...query, ...authData.query };
+      }
+      if (authData.headers) {
+        headers = { ...headers, ...authData.headers };
+      }
     }
+
+    const queryString = query ? '?' + encodeQuery(query) : '';
+    return new StreamOut(this.baseURL + path + queryString, headers);
+  }
+
+  // callTypedAPI makes an API call, defaulting content type to "application/json"
+  public async callTypedAPI(
+    method: string,
+    path: string,
+    body?: BodyInit,
+    params?: CallParameters
+  ): Promise<Response> {
+    return this.callAPI(method, path, body, {
+      ...params,
+      headers: { 'Content-Type': 'application/json', ...params?.headers },
+    });
+  }
+
+  // callAPI is used by each generated API method to actually make the request
+  public async callAPI(
+    method: string,
+    path: string,
+    body?: BodyInit,
+    params?: CallParameters
+  ): Promise<Response> {
+    let { query, headers, ...rest } = params ?? {};
+    const init = {
+      ...this.requestInit,
+      ...rest,
+      method,
+      body: body ?? null,
+    };
+
+    // Merge our headers with any predefined headers
+    init.headers = { ...this.headers, ...init.headers, ...headers };
+
+    // Fetch auth data if there is any
+    const authData = await this.getAuthData();
+
+    // If we now have authentication data, add it to the request
+    if (authData) {
+      if (authData.query) {
+        query = { ...query, ...authData.query };
+      }
+      if (authData.headers) {
+        init.headers = { ...init.headers, ...authData.headers };
+      }
+    }
+
+    // Make the actual request
+    const queryString = query ? '?' + encodeQuery(query) : '';
+    const response = await this.fetcher(this.baseURL + path + queryString, init);
+
+    // handle any error responses
+    if (!response.ok) {
+      // try and get the error message from the response body
+      let body: APIErrorResponse = {
+        code: ErrCode.Unknown,
+        message: `request failed: status ${response.status}`,
+      };
+
+      // if we can get the structured error we should, otherwise give a best effort
+      try {
+        const text = await response.text();
+
+        try {
+          const jsonBody = JSON.parse(text);
+          if (isAPIErrorResponse(jsonBody)) {
+            body = jsonBody;
+          } else {
+            body.message += ': ' + JSON.stringify(jsonBody);
+          }
+        } catch {
+          body.message += ': ' + text;
+        }
+      } catch (e) {
+        // otherwise we just append the text to the error message
+        body.message += ': ' + String(e);
+      }
+
+      throw new APIError(response.status, body);
+    }
+
+    return response;
+  }
 }
 
 /**
  * APIErrorDetails represents the response from an Encore API in the case of an error
  */
 interface APIErrorResponse {
-    code: ErrCode
-    message: string
-    details?: any
+  code: ErrCode;
+  message: string;
+  details?: any;
 }
 
 function isAPIErrorResponse(err: any): err is APIErrorResponse {
-    return (
-        err !== undefined && err !== null &&
-        isErrCode(err.code) &&
-        typeof(err.message) === "string" &&
-        (err.details === undefined || err.details === null || typeof(err.details) === "object")
-    )
+  return (
+    err !== undefined &&
+    err !== null &&
+    isErrCode(err.code) &&
+    typeof err.message === 'string' &&
+    (err.details === undefined || err.details === null || typeof err.details === 'object')
+  );
 }
 
 function isErrCode(code: any): code is ErrCode {
-    return code !== undefined && Object.values(ErrCode).includes(code)
+  return code !== undefined && Object.values(ErrCode).includes(code);
 }
 
 /**
  * APIError represents a structured error as returned from an Encore application.
  */
 export class APIError extends Error {
-    /**
-     * The HTTP status code associated with the error.
-     */
-    public readonly status: number
+  /**
+   * The HTTP status code associated with the error.
+   */
+  public readonly status: number;
 
-    /**
-     * The Encore error code
-     */
-    public readonly code: ErrCode
+  /**
+   * The Encore error code
+   */
+  public readonly code: ErrCode;
 
-    /**
-     * The error details
-     */
-    public readonly details?: any
+  /**
+   * The error details
+   */
+  public readonly details?: any;
 
-    constructor(status: number, response: APIErrorResponse) {
-        // extending errors causes issues after you construct them, unless you apply the following fixes
-        super(response.message);
+  constructor(status: number, response: APIErrorResponse) {
+    // extending errors causes issues after you construct them, unless you apply the following fixes
+    super(response.message);
 
-        // set error name as constructor name, make it not enumerable to keep native Error behavior
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/new.target#new.target_in_constructors
-        Object.defineProperty(this, 'name', {
-            value:        'APIError',
-            enumerable:   false,
-            configurable: true,
-        })
+    // set error name as constructor name, make it not enumerable to keep native Error behavior
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/new.target#new.target_in_constructors
+    Object.defineProperty(this, 'name', {
+      value: 'APIError',
+      enumerable: false,
+      configurable: true,
+    });
 
-        // fix the prototype chain
-        if ((Object as any).setPrototypeOf == undefined) {
-            (this as any).__proto__ = APIError.prototype
-        } else {
-            Object.setPrototypeOf(this, APIError.prototype);
-        }
-
-        // capture a stack trace
-        if ((Error as any).captureStackTrace !== undefined) {
-            (Error as any).captureStackTrace(this, this.constructor);
-        }
-
-        this.status = status
-        this.code = response.code
-        this.details = response.details
+    // fix the prototype chain
+    if ((Object as any).setPrototypeOf == undefined) {
+      (this as any).__proto__ = APIError.prototype;
+    } else {
+      Object.setPrototypeOf(this, APIError.prototype);
     }
+
+    // capture a stack trace
+    if ((Error as any).captureStackTrace !== undefined) {
+      (Error as any).captureStackTrace(this, this.constructor);
+    }
+
+    this.status = status;
+    this.code = response.code;
+    this.details = response.details;
+  }
 }
 
 /**
  * Typeguard allowing use of an APIError's fields'
  */
 export function isAPIError(err: any): err is APIError {
-    return err instanceof APIError;
+  return err instanceof APIError;
 }
 
 export enum ErrCode {
-    /**
-     * OK indicates the operation was successful.
-     */
-    OK = "ok",
+  /**
+   * OK indicates the operation was successful.
+   */
+  OK = 'ok',
 
-    /**
-     * Canceled indicates the operation was canceled (typically by the caller).
-     *
-     * Encore will generate this error code when cancellation is requested.
-     */
-    Canceled = "canceled",
+  /**
+   * Canceled indicates the operation was canceled (typically by the caller).
+   *
+   * Encore will generate this error code when cancellation is requested.
+   */
+  Canceled = 'canceled',
 
-    /**
-     * Unknown error. An example of where this error may be returned is
-     * if a Status value received from another address space belongs to
-     * an error-space that is not known in this address space. Also
-     * errors raised by APIs that do not return enough error information
-     * may be converted to this error.
-     *
-     * Encore will generate this error code in the above two mentioned cases.
-     */
-    Unknown = "unknown",
+  /**
+   * Unknown error. An example of where this error may be returned is
+   * if a Status value received from another address space belongs to
+   * an error-space that is not known in this address space. Also
+   * errors raised by APIs that do not return enough error information
+   * may be converted to this error.
+   *
+   * Encore will generate this error code in the above two mentioned cases.
+   */
+  Unknown = 'unknown',
 
-    /**
-     * InvalidArgument indicates client specified an invalid argument.
-     * Note that this differs from FailedPrecondition. It indicates arguments
-     * that are problematic regardless of the state of the system
-     * (e.g., a malformed file name).
-     *
-     * This error code will not be generated by the gRPC framework.
-     */
-    InvalidArgument = "invalid_argument",
+  /**
+   * InvalidArgument indicates client specified an invalid argument.
+   * Note that this differs from FailedPrecondition. It indicates arguments
+   * that are problematic regardless of the state of the system
+   * (e.g., a malformed file name).
+   *
+   * This error code will not be generated by the gRPC framework.
+   */
+  InvalidArgument = 'invalid_argument',
 
-    /**
-     * DeadlineExceeded means operation expired before completion.
-     * For operations that change the state of the system, this error may be
-     * returned even if the operation has completed successfully. For
-     * example, a successful response from a server could have been delayed
-     * long enough for the deadline to expire.
-     *
-     * The gRPC framework will generate this error code when the deadline is
-     * exceeded.
-     */
-    DeadlineExceeded = "deadline_exceeded",
+  /**
+   * DeadlineExceeded means operation expired before completion.
+   * For operations that change the state of the system, this error may be
+   * returned even if the operation has completed successfully. For
+   * example, a successful response from a server could have been delayed
+   * long enough for the deadline to expire.
+   *
+   * The gRPC framework will generate this error code when the deadline is
+   * exceeded.
+   */
+  DeadlineExceeded = 'deadline_exceeded',
 
-    /**
-     * NotFound means some requested entity (e.g., file or directory) was
-     * not found.
-     *
-     * This error code will not be generated by the gRPC framework.
-     */
-    NotFound = "not_found",
+  /**
+   * NotFound means some requested entity (e.g., file or directory) was
+   * not found.
+   *
+   * This error code will not be generated by the gRPC framework.
+   */
+  NotFound = 'not_found',
 
-    /**
-     * AlreadyExists means an attempt to create an entity failed because one
-     * already exists.
-     *
-     * This error code will not be generated by the gRPC framework.
-     */
-    AlreadyExists = "already_exists",
+  /**
+   * AlreadyExists means an attempt to create an entity failed because one
+   * already exists.
+   *
+   * This error code will not be generated by the gRPC framework.
+   */
+  AlreadyExists = 'already_exists',
 
-    /**
-     * PermissionDenied indicates the caller does not have permission to
-     * execute the specified operation. It must not be used for rejections
-     * caused by exhausting some resource (use ResourceExhausted
-     * instead for those errors). It must not be
-     * used if the caller cannot be identified (use Unauthenticated
-     * instead for those errors).
-     *
-     * This error code will not be generated by the gRPC core framework,
-     * but expect authentication middleware to use it.
-     */
-    PermissionDenied = "permission_denied",
+  /**
+   * PermissionDenied indicates the caller does not have permission to
+   * execute the specified operation. It must not be used for rejections
+   * caused by exhausting some resource (use ResourceExhausted
+   * instead for those errors). It must not be
+   * used if the caller cannot be identified (use Unauthenticated
+   * instead for those errors).
+   *
+   * This error code will not be generated by the gRPC core framework,
+   * but expect authentication middleware to use it.
+   */
+  PermissionDenied = 'permission_denied',
 
-    /**
-     * ResourceExhausted indicates some resource has been exhausted, perhaps
-     * a per-user quota, or perhaps the entire file system is out of space.
-     *
-     * This error code will be generated by the gRPC framework in
-     * out-of-memory and server overload situations, or when a message is
-     * larger than the configured maximum size.
-     */
-    ResourceExhausted = "resource_exhausted",
+  /**
+   * ResourceExhausted indicates some resource has been exhausted, perhaps
+   * a per-user quota, or perhaps the entire file system is out of space.
+   *
+   * This error code will be generated by the gRPC framework in
+   * out-of-memory and server overload situations, or when a message is
+   * larger than the configured maximum size.
+   */
+  ResourceExhausted = 'resource_exhausted',
 
-    /**
-     * FailedPrecondition indicates operation was rejected because the
-     * system is not in a state required for the operation's execution.
-     * For example, directory to be deleted may be non-empty, an rmdir
-     * operation is applied to a non-directory, etc.
-     *
-     * A litmus test that may help a service implementor in deciding
-     * between FailedPrecondition, Aborted, and Unavailable:
-     *  (a) Use Unavailable if the client can retry just the failing call.
-     *  (b) Use Aborted if the client should retry at a higher-level
-     *      (e.g., restarting a read-modify-write sequence).
-     *  (c) Use FailedPrecondition if the client should not retry until
-     *      the system state has been explicitly fixed. E.g., if an "rmdir"
-     *      fails because the directory is non-empty, FailedPrecondition
-     *      should be returned since the client should not retry unless
-     *      they have first fixed up the directory by deleting files from it.
-     *  (d) Use FailedPrecondition if the client performs conditional
-     *      REST Get/Update/Delete on a resource and the resource on the
-     *      server does not match the condition. E.g., conflicting
-     *      read-modify-write on the same resource.
-     *
-     * This error code will not be generated by the gRPC framework.
-     */
-    FailedPrecondition = "failed_precondition",
+  /**
+   * FailedPrecondition indicates operation was rejected because the
+   * system is not in a state required for the operation's execution.
+   * For example, directory to be deleted may be non-empty, an rmdir
+   * operation is applied to a non-directory, etc.
+   *
+   * A litmus test that may help a service implementor in deciding
+   * between FailedPrecondition, Aborted, and Unavailable:
+   *  (a) Use Unavailable if the client can retry just the failing call.
+   *  (b) Use Aborted if the client should retry at a higher-level
+   *      (e.g., restarting a read-modify-write sequence).
+   *  (c) Use FailedPrecondition if the client should not retry until
+   *      the system state has been explicitly fixed. E.g., if an "rmdir"
+   *      fails because the directory is non-empty, FailedPrecondition
+   *      should be returned since the client should not retry unless
+   *      they have first fixed up the directory by deleting files from it.
+   *  (d) Use FailedPrecondition if the client performs conditional
+   *      REST Get/Update/Delete on a resource and the resource on the
+   *      server does not match the condition. E.g., conflicting
+   *      read-modify-write on the same resource.
+   *
+   * This error code will not be generated by the gRPC framework.
+   */
+  FailedPrecondition = 'failed_precondition',
 
-    /**
-     * Aborted indicates the operation was aborted, typically due to a
-     * concurrency issue like sequencer check failures, transaction aborts,
-     * etc.
-     *
-     * See litmus test above for deciding between FailedPrecondition,
-     * Aborted, and Unavailable.
-     */
-    Aborted = "aborted",
+  /**
+   * Aborted indicates the operation was aborted, typically due to a
+   * concurrency issue like sequencer check failures, transaction aborts,
+   * etc.
+   *
+   * See litmus test above for deciding between FailedPrecondition,
+   * Aborted, and Unavailable.
+   */
+  Aborted = 'aborted',
 
-    /**
-     * OutOfRange means operation was attempted past the valid range.
-     * E.g., seeking or reading past end of file.
-     *
-     * Unlike InvalidArgument, this error indicates a problem that may
-     * be fixed if the system state changes. For example, a 32-bit file
-     * system will generate InvalidArgument if asked to read at an
-     * offset that is not in the range [0,2^32-1], but it will generate
-     * OutOfRange if asked to read from an offset past the current
-     * file size.
-     *
-     * There is a fair bit of overlap between FailedPrecondition and
-     * OutOfRange. We recommend using OutOfRange (the more specific
-     * error) when it applies so that callers who are iterating through
-     * a space can easily look for an OutOfRange error to detect when
-     * they are done.
-     *
-     * This error code will not be generated by the gRPC framework.
-     */
-    OutOfRange = "out_of_range",
+  /**
+   * OutOfRange means operation was attempted past the valid range.
+   * E.g., seeking or reading past end of file.
+   *
+   * Unlike InvalidArgument, this error indicates a problem that may
+   * be fixed if the system state changes. For example, a 32-bit file
+   * system will generate InvalidArgument if asked to read at an
+   * offset that is not in the range [0,2^32-1], but it will generate
+   * OutOfRange if asked to read from an offset past the current
+   * file size.
+   *
+   * There is a fair bit of overlap between FailedPrecondition and
+   * OutOfRange. We recommend using OutOfRange (the more specific
+   * error) when it applies so that callers who are iterating through
+   * a space can easily look for an OutOfRange error to detect when
+   * they are done.
+   *
+   * This error code will not be generated by the gRPC framework.
+   */
+  OutOfRange = 'out_of_range',
 
-    /**
-     * Unimplemented indicates operation is not implemented or not
-     * supported/enabled in this service.
-     *
-     * This error code will be generated by the gRPC framework. Most
-     * commonly, you will see this error code when a method implementation
-     * is missing on the server. It can also be generated for unknown
-     * compression algorithms or a disagreement as to whether an RPC should
-     * be streaming.
-     */
-    Unimplemented = "unimplemented",
+  /**
+   * Unimplemented indicates operation is not implemented or not
+   * supported/enabled in this service.
+   *
+   * This error code will be generated by the gRPC framework. Most
+   * commonly, you will see this error code when a method implementation
+   * is missing on the server. It can also be generated for unknown
+   * compression algorithms or a disagreement as to whether an RPC should
+   * be streaming.
+   */
+  Unimplemented = 'unimplemented',
 
-    /**
-     * Internal errors. Means some invariants expected by underlying
-     * system has been broken. If you see one of these errors,
-     * something is very broken.
-     *
-     * This error code will be generated by the gRPC framework in several
-     * internal error conditions.
-     */
-    Internal = "internal",
+  /**
+   * Internal errors. Means some invariants expected by underlying
+   * system has been broken. If you see one of these errors,
+   * something is very broken.
+   *
+   * This error code will be generated by the gRPC framework in several
+   * internal error conditions.
+   */
+  Internal = 'internal',
 
-    /**
-     * Unavailable indicates the service is currently unavailable.
-     * This is a most likely a transient condition and may be corrected
-     * by retrying with a backoff. Note that it is not always safe to retry
-     * non-idempotent operations.
-     *
-     * See litmus test above for deciding between FailedPrecondition,
-     * Aborted, and Unavailable.
-     *
-     * This error code will be generated by the gRPC framework during
-     * abrupt shutdown of a server process or network connection.
-     */
-    Unavailable = "unavailable",
+  /**
+   * Unavailable indicates the service is currently unavailable.
+   * This is a most likely a transient condition and may be corrected
+   * by retrying with a backoff. Note that it is not always safe to retry
+   * non-idempotent operations.
+   *
+   * See litmus test above for deciding between FailedPrecondition,
+   * Aborted, and Unavailable.
+   *
+   * This error code will be generated by the gRPC framework during
+   * abrupt shutdown of a server process or network connection.
+   */
+  Unavailable = 'unavailable',
 
-    /**
-     * DataLoss indicates unrecoverable data loss or corruption.
-     *
-     * This error code will not be generated by the gRPC framework.
-     */
-    DataLoss = "data_loss",
+  /**
+   * DataLoss indicates unrecoverable data loss or corruption.
+   *
+   * This error code will not be generated by the gRPC framework.
+   */
+  DataLoss = 'data_loss',
 
-    /**
-     * Unauthenticated indicates the request does not have valid
-     * authentication credentials for the operation.
-     *
-     * The gRPC framework will generate this error code when the
-     * authentication metadata is invalid or a Credentials callback fails,
-     * but also expect authentication middleware to generate it.
-     */
-    Unauthenticated = "unauthenticated",
+  /**
+   * Unauthenticated indicates the request does not have valid
+   * authentication credentials for the operation.
+   *
+   * The gRPC framework will generate this error code when the
+   * authentication metadata is invalid or a Credentials callback fails,
+   * but also expect authentication middleware to generate it.
+   */
+  Unauthenticated = 'unauthenticated',
 }

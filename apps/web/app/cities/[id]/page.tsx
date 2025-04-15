@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import imsClient from '@/lib/imsClient';
 import { useCityMutations } from '../hooks/use-city-mutations';
@@ -27,7 +27,8 @@ import { createGoogleMapsLink } from '@/lib/utils';
 export default function CityDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { t } = useTranslation(['cities', 'common']);
+  const tCities = useTranslations('cities');
+  const tCommon = useTranslations('common');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { deleteCity } = useCityMutations();
 
@@ -41,7 +42,7 @@ export default function CityDetailsPage() {
     queryKey: ['cities', cityId],
     queryFn: async () => {
       if (!cityId || isNaN(cityId)) {
-        throw new Error(t('common:errors.invalidId'));
+        throw new Error(tCommon('errors.invalidId'));
       }
       return await imsClient.inventory.getCity(cityId);
     },
@@ -68,10 +69,10 @@ export default function CityDetailsPage() {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
         <h2 className="text-xl font-semibold">
-          {t('cities:errors.notFound.title')}
+          {tCities('errors.notFound.title')}
         </h2>
         <p className="text-muted-foreground">
-          {t('cities:errors.notFound.description')}
+          {tCities('errors.notFound.description')}
         </p>
         <Button
           variant="outline"
@@ -79,7 +80,7 @@ export default function CityDetailsPage() {
             router.push('/cities');
           }}
         >
-          {t('cities:actions.backToList')}
+          {tCities('actions.backToList')}
         </Button>
       </div>
     );
@@ -89,7 +90,7 @@ export default function CityDetailsPage() {
     <div>
       <PageHeader
         title={city.name}
-        description={t('cities:details.description')}
+        description={tCities('details.description')}
         backHref="/cities"
       />
 
@@ -97,29 +98,31 @@ export default function CityDetailsPage() {
         <ActionButtons
           editHref={`/cities/${city.id}/edit`}
           onDelete={handleDelete}
+          editLabel={tCommon('actions.edit')}
+          deleteLabel={tCommon('actions.delete')}
         />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>{t('common:sections.basicInfo')}</CardTitle>
+            <CardTitle>{tCommon('sections.basicInfo')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
-              <dt className="font-medium">{t('common:fields.name')}:</dt>
+              <dt className="font-medium">{tCommon('fields.name')}:</dt>
               <dd>{city.name}</dd>
 
-              <dt className="font-medium">{t('cities:fields.state')}:</dt>
+              <dt className="font-medium">{tCities('fields.state')}:</dt>
               <dd>{city.stateId}</dd>
 
-              <dt className="font-medium">{t('cities:fields.timezone')}:</dt>
+              <dt className="font-medium">{tCities('fields.timezone')}:</dt>
               <dd>{city.timezone}</dd>
 
-              <dt className="font-medium">{t('common:fields.slug')}:</dt>
+              <dt className="font-medium">{tCommon('fields.slug')}:</dt>
               <dd>{city.slug}</dd>
 
-              <dt className="font-medium">{t('cities:fields.coordinates')}:</dt>
+              <dt className="font-medium">{tCities('fields.coordinates')}:</dt>
               <dd>
                 <a
                   href={createGoogleMapsLink(city.latitude, city.longitude)}
@@ -132,15 +135,15 @@ export default function CityDetailsPage() {
                 </a>
               </dd>
 
-              <dt className="font-medium">{t('common:fields.status')}:</dt>
+              <dt className="font-medium">{tCommon('fields.status')}:</dt>
               <dd>
                 {city.active ? (
                   <Badge variant="outline" className="bg-green-100">
-                    {t('common:status.active')}
+                    {tCommon('status.active')}
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="bg-red-100">
-                    {t('common:status.inactive')}
+                    {tCommon('status.inactive')}
                   </Badge>
                 )}
               </dd>
@@ -150,21 +153,21 @@ export default function CityDetailsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{t('common:sections.systemInfo')}</CardTitle>
+            <CardTitle>{tCommon('sections.systemInfo')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
-              <dt className="font-medium">{t('common:fields.id')}:</dt>
+              <dt className="font-medium">{tCommon('fields.id')}:</dt>
               <dd>{city.id}</dd>
 
-              <dt className="font-medium">{t('common:fields.createdAt')}:</dt>
+              <dt className="font-medium">{tCommon('fields.createdAt')}:</dt>
               <dd>
                 {city.createdAt
                   ? new Date(city.createdAt).toLocaleString()
                   : '-'}
               </dd>
 
-              <dt className="font-medium">{t('common:fields.updatedAt')}:</dt>
+              <dt className="font-medium">{tCommon('fields.updatedAt')}:</dt>
               <dd>
                 {city.updatedAt
                   ? new Date(city.updatedAt).toLocaleString()
@@ -182,19 +185,19 @@ export default function CityDetailsPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t('common:crud.delete.confirm')}
+              {tCommon('crud.delete.confirm')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t('common:crud.delete.description')}
+              {tCommon('crud.delete.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common:actions.cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon('actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground"
             >
-              {t('common:actions.delete')}
+              {tCommon('actions.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

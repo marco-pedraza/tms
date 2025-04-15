@@ -1,20 +1,25 @@
 'use client';
 
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { PageHeader } from '@/components/ui-components';
 import StateForm from '@/app/states/state-form';
 import { useStateMutations } from '../hooks/use-state-mutations';
 
 export default function NewStatePage() {
-  const { t } = useTranslation('states');
+  const t = useTranslations('states');
+  const tCommon = useTranslations('common');
   const { createState } = useStateMutations();
 
   return (
     <div>
-      <PageHeader title={t('form.title')} backHref="/states" />
+      <PageHeader
+        title={t('actions.create')}
+        backHref="/states"
+        backLabel={t('actions.backToList')}
+      />
       <StateForm
         onSubmit={createState.mutateWithToast}
-        submitButtonText={t('actions.create')}
+        submitButtonText={tCommon('actions.create')}
       />
     </div>
   );

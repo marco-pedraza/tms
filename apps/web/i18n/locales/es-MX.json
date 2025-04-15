@@ -1,0 +1,223 @@
+{
+  "common": {
+    "errors": {
+      "default": "Ha ocurrido un error",
+      "notFound": "No encontrado",
+      "unexpected": "Error inesperado",
+      "invalidId": "ID inválido"
+    },
+    "actions": {
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "view": "Ver",
+      "more": "Más acciones",
+      "create": "Crear",
+      "update": "Actualizar",
+      "backToList": "Volver a la lista"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "fields": {
+      "id": "ID",
+      "createdAt": "Creado",
+      "updatedAt": "Última Actualización",
+      "actions": "Acciones",
+      "name": "Nombre",
+      "code": "Código",
+      "active": "Activo",
+      "status": "Estado",
+      "latitude": "Latitud",
+      "longitude": "Longitud",
+      "slug": "Slug"
+    },
+    "sections": {
+      "basicInfo": "Información Básica",
+      "systemInfo": "Información del Sistema"
+    },
+    "crud": {
+      "create": {
+        "loading": "Creando...",
+        "success": "Creado correctamente",
+        "error": "No se pudo crear"
+      },
+      "update": {
+        "loading": "Actualizando...",
+        "success": "Actualizado correctamente",
+        "error": "No se pudo actualizar"
+      },
+      "delete": {
+        "loading": "Eliminando...",
+        "success": "Eliminado correctamente",
+        "error": "No se pudo eliminar",
+        "confirm": "¿Estás seguro?",
+        "description": "Esta acción no se puede deshacer. Se eliminará permanentemente el registro y todos los datos asociados."
+      }
+    },
+    "states": {
+      "loading": "Cargando..."
+    }
+  },
+  "countries": {
+    "title": "Países",
+    "description": "Administra información de países para el Sistema de Inventario de Autobuses",
+    "actions": {
+      "create": "Crear País",
+      "update": "Actualizar País",
+      "backToList": "Volver a países"
+    },
+    "form": {
+      "title": "Información del país",
+      "placeholders": {
+        "name": "Ej: México",
+        "code": "Ej: MX"
+      },
+      "codeHelp": "Usa el código ISO 3166-1 alpha-2 (2 letras)"
+    },
+    "details": {
+      "description": "Detalles del país"
+    },
+    "edit": {
+      "title": "Editar País",
+      "description": "Actualiza la información del país"
+    },
+    "errors": {
+      "notFound": {
+        "title": "País no encontrado",
+        "description": "No pudimos encontrar el país que buscas. Es posible que haya sido eliminado o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando país...",
+        "success": "País creado correctamente",
+        "error": "No pudimos crear el país"
+      },
+      "update": {
+        "loading": "Actualizando país...",
+        "success": "País actualizado correctamente",
+        "error": "No pudimos actualizar el país"
+      },
+      "delete": {
+        "loading": "Eliminando país...",
+        "success": "País eliminado correctamente",
+        "error": "No pudimos eliminar el país"
+      }
+    }
+  },
+  "states": {
+    "title": "Estados",
+    "description": "Administra información de estados para el Sistema de Inventario de Autobuses",
+    "actions": {
+      "create": "Crear Estado",
+      "update": "Actualizar Estado",
+      "backToList": "Volver a estados"
+    },
+    "form": {
+      "title": "Información del estado",
+      "placeholders": {
+        "name": "Ej: Jalisco",
+        "code": "Ej: JAL",
+        "country": "Selecciona un país"
+      },
+      "codeHelp": "Usa un código de 2-3 letras para identificar el estado",
+      "country": "País"
+    },
+    "details": {
+      "description": "Detalles del estado"
+    },
+    "edit": {
+      "title": "Editar Estado",
+      "description": "Actualiza la información del estado"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Estado no encontrado",
+        "description": "No pudimos encontrar el estado que buscas. Es posible que haya sido eliminado o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando estado...",
+        "success": "Estado creado correctamente",
+        "error": "No pudimos crear el estado"
+      },
+      "update": {
+        "loading": "Actualizando estado...",
+        "success": "Estado actualizado correctamente",
+        "error": "No pudimos actualizar el estado"
+      },
+      "delete": {
+        "loading": "Eliminando estado...",
+        "success": "Estado eliminado correctamente",
+        "error": "No pudimos eliminar el estado"
+      }
+    }
+  },
+  "cities": {
+    "title": "Ciudades",
+    "description": "Administra información de ciudades para el Sistema de Inventario de Autobuses",
+    "actions": {
+      "create": "Crear Ciudad",
+      "update": "Actualizar Ciudad",
+      "backToList": "Volver a ciudades"
+    },
+    "fields": {
+      "state": "Estado",
+      "timezone": "Zona Horaria",
+      "coordinates": "Coordenadas",
+      "latitude": "Latitud",
+      "longitude": "Longitud"
+    },
+    "form": {
+      "title": "Información de la ciudad",
+      "placeholders": {
+        "name": "Ej: Guadalajara",
+        "code": "Ej: GDL",
+        "state": "Selecciona un estado",
+        "timezone": "Ej: America/Mexico_City"
+      },
+      "codeHelp": "Usa un código de 2-5 letras para identificar la ciudad",
+      "timezoneHelp": "Usa el formato IANA (Ej: America/Mexico_City)",
+      "state": "Estado",
+      "timezone": "Zona Horaria"
+    },
+    "details": {
+      "description": "Detalles de la ciudad"
+    },
+    "new": {
+      "title": "Crear Ciudad",
+      "description": "Agrega una nueva ciudad al sistema"
+    },
+    "edit": {
+      "title": "Editar Ciudad",
+      "description": "Actualiza la información de la ciudad"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Ciudad no encontrada",
+        "description": "No pudimos encontrar la ciudad que buscas. Es posible que haya sido eliminada o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando ciudad...",
+        "success": "Ciudad creada correctamente",
+        "error": "No pudimos crear la ciudad"
+      },
+      "update": {
+        "loading": "Actualizando ciudad...",
+        "success": "Ciudad actualizada correctamente",
+        "error": "No pudimos actualizar la ciudad"
+      },
+      "delete": {
+        "loading": "Eliminando ciudad...",
+        "success": "Ciudad eliminada correctamente",
+        "error": "No pudimos eliminar la ciudad"
+      }
+    }
+  }
+}

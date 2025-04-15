@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
@@ -29,64 +29,84 @@ import { useStateMutations } from '@/app/states/hooks/use-state-mutations';
 
 type State = states.State;
 
+interface CommonTranslations {
+  fields: {
+    name: string;
+    code: string;
+    status: string;
+    createdAt: string;
+    actions: string;
+  };
+  status: {
+    active: string;
+    inactive: string;
+  };
+  actions: {
+    view: string;
+    edit: string;
+    delete: string;
+    more: string;
+  };
+}
+
 const statesColumnsFactory = (
   getViewHref: (id: string) => string,
   onDelete: (id: string) => void,
   onEdit: (id: string) => void,
-  t: (key: string) => string,
+  translations: CommonTranslations,
 ): ColumnDef<State>[] => {
   return [
     {
       accessorKey: 'name',
-      header: t('common:fields.name'),
+      header: translations.fields.name,
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue('name')}</div>
       ),
     },
     {
       accessorKey: 'code',
-      header: t('common:fields.code'),
+      header: translations.fields.code,
     },
     {
       accessorKey: 'active',
-      header: t('common:fields.status'),
+      header: translations.fields.status,
       cell: ({ row }) => {
         const active = row.getValue('active');
         return active ? (
           <Badge variant="outline" className="bg-green-100">
-            {t('common:status.active')}
+            {translations.status.active}
           </Badge>
         ) : (
           <Badge variant="outline" className="bg-red-100">
-            {t('common:status.inactive')}
+            {translations.status.inactive}
           </Badge>
         );
       },
     },
     {
       accessorKey: 'createdAt',
-      header: t('common:fields.createdAt'),
+      header: translations.fields.createdAt,
       cell: ({ row }) => {
         return new Date(row.getValue('createdAt') ?? '').toLocaleDateString();
       },
     },
     {
       id: 'actions',
-      header: t('common:fields.actions'),
+      header: translations.fields.actions,
       cell: ({ row }) => {
         const record = row.original;
         return (
           <div className="flex items-center justify-end gap-2">
             <Link href={getViewHref(record.id.toString())}>
               <Button variant="ghost" size="sm">
-                {t('common:actions.view')}
+                {translations.actions.view}
               </Button>
             </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">{t('common:actions.more')}</span>
+                  <span className="sr-only">{translations.actions.more}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -97,7 +117,7 @@ const statesColumnsFactory = (
                     onEdit(record.id.toString());
                   }}
                 >
-                  {t('common:actions.edit')}
+                  {translations.actions.edit}
                 </Button>
                 <Button
                   variant="ghost"
@@ -106,7 +126,7 @@ const statesColumnsFactory = (
                     onDelete(record.id.toString());
                   }}
                 >
-                  {t('common:actions.delete')}
+                  {translations.actions.delete}
                 </Button>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -118,7 +138,8 @@ const statesColumnsFactory = (
 };
 
 export default function StatesTable() {
-  const { t } = useTranslation(['states', 'common']);
+  const t = useTranslations('common');
+
   const router = useRouter();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const { deleteState } = useStateMutations();
@@ -155,11 +176,32 @@ export default function StatesTable() {
     router.push('/states/new');
   };
 
+  // Prepare translations object for the columns factory only
+  const translations: CommonTranslations = {
+    fields: {
+      name: t('fields.name'),
+      code: t('fields.code'),
+      status: t('fields.status'),
+      createdAt: t('fields.createdAt'),
+      actions: t('fields.actions'),
+    },
+    status: {
+      active: t('status.active'),
+      inactive: t('status.inactive'),
+    },
+    actions: {
+      view: t('actions.view'),
+      edit: t('actions.edit'),
+      delete: t('actions.delete'),
+      more: t('actions.more'),
+    },
+  };
+
   const columns = statesColumnsFactory(
     getViewHref,
     handleDelete,
     handleEdit,
-    t,
+    translations,
   );
 
   return (
@@ -180,20 +222,18 @@ export default function StatesTable() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t('common:crud.delete.confirm')}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{t('crud.delete.confirm')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t('common:crud.delete.description')}
+              {t('crud.delete.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common:actions.cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>{t('actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground"
             >
-              {t('common:actions.delete')}
+              {t('actions.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

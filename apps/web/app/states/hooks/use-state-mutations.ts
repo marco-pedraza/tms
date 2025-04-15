@@ -1,10 +1,16 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import imsClient from '@/lib/imsClient';
 import type { states } from '@repo/ims-client';
 import type { StateFormValues } from '../state-form';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
+
+interface MutationMessages {
+  loading: string;
+  success: string;
+  error: string;
+}
 
 /**
  * Custom hook for state-related CRUD operations with toast notifications.
@@ -19,7 +25,7 @@ import { useToastMutation } from '@/hooks/use-toast-mutation';
  * @returns {Object} result.deleteState - Mutation for deleting a state
  */
 export function useStateMutations() {
-  const { t } = useTranslation('states');
+  const t = useTranslations('states');
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -28,6 +34,25 @@ export function useStateMutations() {
    */
   const invalidateStates = () => {
     queryClient.invalidateQueries({ queryKey: ['states'] });
+  };
+
+  // Prepare messages for the mutations
+  const createMessages: MutationMessages = {
+    loading: t('messages.create.loading'),
+    success: t('messages.create.success'),
+    error: t('messages.create.error'),
+  };
+
+  const updateMessages: MutationMessages = {
+    loading: t('messages.update.loading'),
+    success: t('messages.update.success'),
+    error: t('messages.update.error'),
+  };
+
+  const deleteMessages: MutationMessages = {
+    loading: t('messages.delete.loading'),
+    success: t('messages.delete.success'),
+    error: t('messages.delete.error'),
   };
 
   // Create State
@@ -45,11 +70,7 @@ export function useStateMutations() {
    */
   const createState = useToastMutation({
     mutation: createStateMutation,
-    messages: {
-      loading: t('messages.create.loading'),
-      success: t('messages.create.success'),
-      error: t('messages.create.error'),
-    },
+    messages: createMessages,
     onSuccess: (data: states.State) => {
       invalidateStates();
       router.push(`/states/${data.id}`);
@@ -75,11 +96,7 @@ export function useStateMutations() {
    */
   const updateState = useToastMutation({
     mutation: updateStateMutation,
-    messages: {
-      loading: t('messages.update.loading'),
-      success: t('messages.update.success'),
-      error: t('messages.update.error'),
-    },
+    messages: updateMessages,
     onSuccess: (data: states.State) => {
       invalidateStates();
       router.push(`/states/${data.id}`);
@@ -105,11 +122,7 @@ export function useStateMutations() {
    */
   const deleteState = useToastMutation({
     mutation: deleteStateMutation,
-    messages: {
-      loading: t('messages.delete.loading'),
-      success: t('messages.delete.success'),
-      error: t('messages.delete.error'),
-    },
+    messages: deleteMessages,
     onSuccess: () => {
       invalidateStates();
       router.push('/states');

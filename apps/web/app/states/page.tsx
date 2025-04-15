@@ -1,11 +1,11 @@
 'use client';
 
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { PageHeader } from '@/components/ui-components';
 import StatesTable from './states-table';
 
 export default function StatesPage() {
-  const { t } = useTranslation(['states', 'common']);
+  const t = useTranslations('states');
 
   return (
     <div>

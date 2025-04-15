@@ -4,7 +4,8 @@ import './globals.css';
 import { SideNav } from '@/components/side-nav';
 import QueryClientProvider from '@/components/query-client-provider';
 import { Toaster } from '@/components/ui/sonner';
-import { I18nProvider } from '@/providers/i18n-provider';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale } from 'next-intl/server';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -21,16 +22,18 @@ export const metadata: Metadata = {
     'Administra datos geográficos para el Sistema de Inventario de Autobuses',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+
   return (
-    <html lang="es-MX">
+    <html lang={locale}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <QueryClientProvider>
-          <I18nProvider>
+          <NextIntlClientProvider>
             <div className="flex min-h-screen">
               <aside className="w-64 border-r bg-background">
                 <SideNav />
@@ -38,7 +41,7 @@ export default function RootLayout({
               <main className="flex-1 p-6">{children}</main>
             </div>
             <Toaster richColors />
-          </I18nProvider>
+          </NextIntlClientProvider>
         </QueryClientProvider>
       </body>
     </html>

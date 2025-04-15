@@ -1,7 +1,7 @@
 'use client';
 
 import { z } from 'zod';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,7 +42,8 @@ function StateForm({
   onSubmit,
   submitButtonText,
 }: StateFormProps) {
-  const { t } = useTranslation(['states', 'common']);
+  const tStates = useTranslations('states');
+  const tCommon = useTranslations('common');
 
   // Fetch countries for the dropdown
   const { data: countriesData } = useQuery({
@@ -75,19 +76,19 @@ function StateForm({
     >
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>{t('states:form.title')}</CardTitle>
+          <CardTitle>{tStates('form.title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <form.Field name="name">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="name">{t('common:fields.name')}</Label>
+                <Label htmlFor="name">{tCommon('fields.name')}</Label>
                 <Input
                   id={field.name}
                   name={field.name}
                   value={field.state.value ?? ''}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={t('states:form.placeholders.name')}
+                  placeholder={tStates('form.placeholders.name')}
                 />
               </div>
             )}
@@ -96,17 +97,17 @@ function StateForm({
           <form.Field name="code">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="code">{t('common:fields.code')}</Label>
+                <Label htmlFor="code">{tCommon('fields.code')}</Label>
                 <Input
                   id={field.name}
                   name={field.name}
                   value={field.state.value ?? ''}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={t('states:form.placeholders.code')}
+                  placeholder={tStates('form.placeholders.code')}
                   maxLength={3}
                 />
                 <p className="text-sm text-muted-foreground">
-                  {t('states:form.codeHelp')}
+                  {tStates('form.codeHelp')}
                 </p>
               </div>
             )}
@@ -115,7 +116,7 @@ function StateForm({
           <form.Field name="countryId">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="countryId">{t('states:form.country')}</Label>
+                <Label htmlFor="countryId">{tStates('form.country')}</Label>
                 <Select
                   value={field.state.value?.toString() ?? ''}
                   onValueChange={(value) =>
@@ -124,7 +125,7 @@ function StateForm({
                 >
                   <SelectTrigger>
                     <SelectValue
-                      placeholder={t('states:form.placeholders.country')}
+                      placeholder={tStates('form.placeholders.country')}
                     />
                   </SelectTrigger>
                   <SelectContent>
@@ -150,7 +151,7 @@ function StateForm({
                   checked={field.state.value ?? false}
                   onCheckedChange={(checked) => field.handleChange(checked)}
                 />
-                <Label htmlFor={field.name}>{t('common:fields.active')}</Label>
+                <Label htmlFor={field.name}>{tCommon('fields.active')}</Label>
               </div>
             )}
           </form.Field>
@@ -162,7 +163,7 @@ function StateForm({
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="submit" disabled={!canSubmit || isSubmitting}>
                   {isSubmitting && <Loader2 className="animate-spin" />}
-                  {submitButtonText ?? t('common:actions.create')}
+                  {submitButtonText ?? tCommon('actions.create')}
                 </Button>
               </div>
             )}

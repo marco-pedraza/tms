@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { PageHeader, ActionButtons } from '@/components/ui-components';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,7 +26,9 @@ import { useStateMutations } from '@/app/states/hooks/use-state-mutations';
 type State = states.State;
 
 export default function StateDetailsPage() {
-  const { t } = useTranslation(['states', 'common']);
+  const tStates = useTranslations('states');
+  const tCommon = useTranslations('common');
+
   const params = useParams();
   const queryClient = useQueryClient();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -67,29 +69,29 @@ export default function StateDetailsPage() {
   };
 
   if (isLoadingState || isLoadingCountry) {
-    return <div>{t('common:states.loading')}</div>;
+    return <div>{tCommon('states.loading')}</div>;
   }
 
   if (stateError && isAPIError(stateError) && stateError.code === 'not_found') {
     return (
       <NotFound
-        title={t('states:errors.notFound.title')}
-        description={t('states:errors.notFound.description')}
+        title={tStates('errors.notFound.title')}
+        description={tStates('errors.notFound.description')}
         backHref="/states"
-        backLabel={t('states:actions.backToList')}
+        backLabel={tStates('actions.backToList')}
       />
     );
   }
 
   if (!state) {
-    return <div>{t('common:errors.unexpected')}</div>;
+    return <div>{tCommon('errors.unexpected')}</div>;
   }
 
   return (
     <div>
       <PageHeader
         title={state.name}
-        description={t('states:details.description')}
+        description={tStates('details.description')}
         backHref="/states"
       />
 
@@ -97,23 +99,25 @@ export default function StateDetailsPage() {
         <ActionButtons
           editHref={`/states/${state.id}/edit`}
           onDelete={handleDelete}
+          editLabel={tCommon('actions.edit')}
+          deleteLabel={tCommon('actions.delete')}
         />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>{t('common:sections.basicInfo')}</CardTitle>
+            <CardTitle>{tCommon('sections.basicInfo')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
-              <dt className="font-medium">{t('common:fields.name')}:</dt>
+              <dt className="font-medium">{tCommon('fields.name')}:</dt>
               <dd>{state.name}</dd>
 
-              <dt className="font-medium">{t('common:fields.code')}:</dt>
+              <dt className="font-medium">{tCommon('fields.code')}:</dt>
               <dd>{state.code}</dd>
 
-              <dt className="font-medium">{t('states:form.country')}:</dt>
+              <dt className="font-medium">{tStates('form.country')}:</dt>
               <dd>
                 {country ? (
                   <span>
@@ -124,15 +128,15 @@ export default function StateDetailsPage() {
                 )}
               </dd>
 
-              <dt className="font-medium">{t('common:fields.status')}:</dt>
+              <dt className="font-medium">{tCommon('fields.status')}:</dt>
               <dd>
                 {state.active ? (
                   <Badge variant="outline" className="bg-green-100">
-                    {t('common:status.active')}
+                    {tCommon('status.active')}
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="bg-red-100">
-                    {t('common:status.inactive')}
+                    {tCommon('status.inactive')}
                   </Badge>
                 )}
               </dd>
@@ -142,17 +146,17 @@ export default function StateDetailsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{t('common:sections.systemInfo')}</CardTitle>
+            <CardTitle>{tCommon('sections.systemInfo')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
-              <dt className="font-medium">{t('common:fields.id')}:</dt>
+              <dt className="font-medium">{tCommon('fields.id')}:</dt>
               <dd>{state.id}</dd>
 
-              <dt className="font-medium">{t('common:fields.createdAt')}:</dt>
+              <dt className="font-medium">{tCommon('fields.createdAt')}:</dt>
               <dd>{new Date(state.createdAt ?? '').toLocaleString()}</dd>
 
-              <dt className="font-medium">{t('common:fields.updatedAt')}:</dt>
+              <dt className="font-medium">{tCommon('fields.updatedAt')}:</dt>
               <dd>{new Date(state.updatedAt ?? '').toLocaleString()}</dd>
             </dl>
           </CardContent>
@@ -166,19 +170,19 @@ export default function StateDetailsPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t('common:crud.delete.confirm')}
+              {tCommon('crud.delete.confirm')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t('common:crud.delete.description')}
+              {tCommon('crud.delete.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common:actions.cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon('actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground"
             >
-              {t('common:actions.delete')}
+              {tCommon('actions.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

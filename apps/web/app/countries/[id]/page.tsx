@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { PageHeader, ActionButtons } from '@/components/ui-components';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,7 +23,9 @@ import NotFound from '@/components/ui-components/not-found';
 import { useCountryMutations } from '@/app/countries/hooks/use-country-mutations';
 
 export default function CountryDetailsPage() {
-  const { t } = useTranslation(['countries', 'common']);
+  const tCountries = useTranslations('countries');
+  const tCommon = useTranslations('common');
+
   const params = useParams();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const countryId = parseInt(params.id as string, 10);
@@ -48,29 +50,29 @@ export default function CountryDetailsPage() {
   };
 
   if (isLoading) {
-    return <div>{t('common:states.loading')}</div>;
+    return <div>{tCommon('states.loading')}</div>;
   }
 
   if (error && isAPIError(error) && error.code === 'not_found') {
     return (
       <NotFound
-        title={t('countries:errors.notFound.title')}
-        description={t('countries:errors.notFound.description')}
+        title={tCountries('errors.notFound.title')}
+        description={tCountries('errors.notFound.description')}
         backHref="/countries"
-        backLabel={t('countries:actions.backToList')}
+        backLabel={tCountries('actions.backToList')}
       />
     );
   }
 
   if (!country) {
-    return <div>{t('common:errors.unexpected')}</div>;
+    return <div>{tCommon('errors.unexpected')}</div>;
   }
 
   return (
     <div>
       <PageHeader
         title={country.name}
-        description={t('countries:details.description')}
+        description={tCountries('details.description')}
         backHref="/countries"
       />
 
@@ -78,31 +80,33 @@ export default function CountryDetailsPage() {
         <ActionButtons
           editHref={`/countries/${country.id}/edit`}
           onDelete={handleDelete}
+          editLabel={tCommon('actions.edit')}
+          deleteLabel={tCommon('actions.delete')}
         />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>{t('common:sections.basicInfo')}</CardTitle>
+            <CardTitle>{tCommon('sections.basicInfo')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
-              <dt className="font-medium">{t('common:fields.name')}:</dt>
+              <dt className="font-medium">{tCommon('fields.name')}:</dt>
               <dd>{country.name}</dd>
 
-              <dt className="font-medium">{t('common:fields.code')}:</dt>
+              <dt className="font-medium">{tCommon('fields.code')}:</dt>
               <dd>{country.code}</dd>
 
-              <dt className="font-medium">{t('common:fields.status')}:</dt>
+              <dt className="font-medium">{tCommon('fields.status')}:</dt>
               <dd>
                 {country.active ? (
                   <Badge variant="outline" className="bg-green-100">
-                    {t('common:status.active')}
+                    {tCommon('status.active')}
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="bg-red-100">
-                    {t('common:status.inactive')}
+                    {tCommon('status.inactive')}
                   </Badge>
                 )}
               </dd>
@@ -112,17 +116,17 @@ export default function CountryDetailsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{t('common:sections.systemInfo')}</CardTitle>
+            <CardTitle>{tCommon('sections.systemInfo')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
-              <dt className="font-medium">{t('common:fields.id')}:</dt>
+              <dt className="font-medium">{tCommon('fields.id')}:</dt>
               <dd>{country.id}</dd>
 
-              <dt className="font-medium">{t('common:fields.createdAt')}:</dt>
+              <dt className="font-medium">{tCommon('fields.createdAt')}:</dt>
               <dd>{new Date(country.createdAt ?? '').toLocaleString()}</dd>
 
-              <dt className="font-medium">{t('common:fields.updatedAt')}:</dt>
+              <dt className="font-medium">{tCommon('fields.updatedAt')}:</dt>
               <dd>{new Date(country.updatedAt ?? '').toLocaleString()}</dd>
             </dl>
           </CardContent>
@@ -136,19 +140,19 @@ export default function CountryDetailsPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t('common:crud.delete.confirm')}
+              {tCommon('crud.delete.confirm')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t('common:crud.delete.description')}
+              {tCommon('crud.delete.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common:actions.cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon('actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground"
             >
-              {t('common:actions.delete')}
+              {tCommon('actions.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

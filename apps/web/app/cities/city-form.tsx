@@ -1,9 +1,8 @@
 'use client';
 
 import { z } from 'zod';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,7 +74,8 @@ function CityForm({
   onSubmit,
   submitButtonText,
 }: CityFormProps) {
-  const { t } = useTranslation(['cities', 'common']);
+  const tCities = useTranslations('cities');
+  const tCommon = useTranslations('common');
 
   // Transform default values to use strings for numeric inputs
   const transformedDefaults = defaultValues
@@ -98,8 +98,6 @@ function CityForm({
     queryFn: async () => await imsClient.inventory.listTimezones(),
   });
 
-  const isCreate = !defaultValues;
-
   const form = useForm({
     defaultValues: transformedDefaults ?? {
       name: '',
@@ -116,13 +114,6 @@ function CityForm({
         await onSubmit(parsed);
       } catch (error) {
         console.error('Validation error:', error);
-        toast.error(
-          t(
-            isCreate
-              ? 'cities:messages.create.error'
-              : 'cities:messages.update.error',
-          ),
-        );
       }
     },
   });
@@ -137,19 +128,19 @@ function CityForm({
     >
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>{t('cities:form.title')}</CardTitle>
+          <CardTitle>{tCities('form.title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <form.Field name="name">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="name">{t('common:fields.name')}</Label>
+                <Label htmlFor="name">{tCommon('fields.name')}</Label>
                 <Input
                   id={field.name}
                   name={field.name}
                   value={field.state.value ?? ''}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={t('cities:form.placeholders.name')}
+                  placeholder={tCities('form.placeholders.name')}
                   required
                 />
               </div>
@@ -159,7 +150,7 @@ function CityForm({
           <form.Field name="stateId">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="stateId">{t('cities:form.state')}</Label>
+                <Label htmlFor="stateId">{tCities('form.state')}</Label>
                 <Select
                   value={field.state.value?.toString() ?? ''}
                   onValueChange={(value) =>
@@ -169,7 +160,7 @@ function CityForm({
                 >
                   <SelectTrigger>
                     <SelectValue
-                      placeholder={t('cities:form.placeholders.state')}
+                      placeholder={tCities('form.placeholders.state')}
                     />
                   </SelectTrigger>
                   <SelectContent>
@@ -187,7 +178,7 @@ function CityForm({
           <form.Field name="timezone">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="timezone">{t('cities:form.timezone')}</Label>
+                <Label htmlFor="timezone">{tCities('form.timezone')}</Label>
                 <Select
                   value={field.state.value ?? ''}
                   onValueChange={(value) => field.handleChange(value)}
@@ -195,17 +186,20 @@ function CityForm({
                 >
                   <SelectTrigger id="timezone">
                     <SelectValue
-                      placeholder={t('cities:form.placeholders.timezone')}
+                      placeholder={tCities('form.placeholders.timezone')}
                     />
                   </SelectTrigger>
                   <SelectContent>
                     {timezonesData?.timezones?.map((timezone: Timezone) => (
                       <SelectItem key={timezone.id} value={timezone.id}>
-                        {timezone.id}
+                        {timezone.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-sm text-muted-foreground">
+                  {tCities('form.timezoneHelp')}
+                </p>
               </div>
             )}
           </form.Field>
@@ -214,9 +208,7 @@ function CityForm({
             <form.Field name="latitude">
               {(field) => (
                 <div className="space-y-2">
-                  <Label htmlFor="latitude">
-                    {t('common:fields.latitude')}
-                  </Label>
+                  <Label htmlFor="latitude">{tCommon('fields.latitude')}</Label>
                   <Input
                     id={field.name}
                     name={field.name}
@@ -235,7 +227,7 @@ function CityForm({
               {(field) => (
                 <div className="space-y-2">
                   <Label htmlFor="longitude">
-                    {t('common:fields.longitude')}
+                    {tCommon('fields.longitude')}
                   </Label>
                   <Input
                     id={field.name}
@@ -260,7 +252,7 @@ function CityForm({
                   checked={field.state.value ?? false}
                   onCheckedChange={(checked) => field.handleChange(checked)}
                 />
-                <Label htmlFor={field.name}>{t('common:fields.active')}</Label>
+                <Label htmlFor={field.name}>{tCommon('fields.active')}</Label>
               </div>
             )}
           </form.Field>
@@ -271,10 +263,8 @@ function CityForm({
             {([canSubmit, isSubmitting]) => (
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="submit" disabled={!canSubmit || isSubmitting}>
-                  {isSubmitting && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  {submitButtonText ?? t('common:actions.create')}
+                  {isSubmitting && <Loader2 className="animate-spin" />}
+                  {submitButtonText ?? tCommon('actions.create')}
                 </Button>
               </div>
             )}

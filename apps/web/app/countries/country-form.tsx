@@ -1,7 +1,7 @@
 'use client';
 
 import { z } from 'zod';
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,9 @@ function CountryForm({
   onSubmit,
   submitButtonText,
 }: CountryFormProps) {
-  const { t } = useTranslation(['countries', 'common']);
+  const tCountries = useTranslations('countries');
+  const tCommon = useTranslations('common');
+
   const form = useForm({
     defaultValues: defaultValues ?? {
       name: '',
@@ -54,19 +56,19 @@ function CountryForm({
     >
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>{t('countries:form.title')}</CardTitle>
+          <CardTitle>{tCountries('form.title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <form.Field name="name">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="name">{t('common:fields.name')}</Label>
+                <Label htmlFor="name">{tCommon('fields.name')}</Label>
                 <Input
                   id={field.name}
                   name={field.name}
                   value={field.state.value ?? ''}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={t('countries:form.placeholders.name')}
+                  placeholder={tCountries('form.placeholders.name')}
                 />
               </div>
             )}
@@ -75,17 +77,17 @@ function CountryForm({
           <form.Field name="code">
             {(field) => (
               <div className="space-y-2">
-                <Label htmlFor="code">{t('common:fields.code')}</Label>
+                <Label htmlFor="code">{tCommon('fields.code')}</Label>
                 <Input
                   id={field.name}
                   name={field.name}
                   value={field.state.value ?? ''}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={t('countries:form.placeholders.code')}
+                  placeholder={tCountries('form.placeholders.code')}
                   maxLength={2}
                 />
                 <p className="text-sm text-muted-foreground">
-                  {t('countries:form.codeHelp')}
+                  {tCountries('form.codeHelp')}
                 </p>
               </div>
             )}
@@ -99,7 +101,7 @@ function CountryForm({
                   checked={field.state.value ?? false}
                   onCheckedChange={(checked) => field.handleChange(checked)}
                 />
-                <Label htmlFor={field.name}>{t('common:fields.active')}</Label>
+                <Label htmlFor={field.name}>{tCommon('fields.active')}</Label>
               </div>
             )}
           </form.Field>
@@ -111,7 +113,7 @@ function CountryForm({
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="submit" disabled={!canSubmit || isSubmitting}>
                   {isSubmitting && <Loader2 className="animate-spin" />}
-                  {submitButtonText || t('common:actions.create')}
+                  {submitButtonText ?? tCommon('actions.create')}
                 </Button>
               </div>
             )}

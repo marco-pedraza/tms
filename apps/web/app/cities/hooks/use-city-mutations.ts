@@ -1,10 +1,16 @@
-import { useTranslation } from 'react-i18next';
+import { useTranslations } from 'next-intl';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import imsClient from '@/lib/imsClient';
 import type { cities } from '@repo/ims-client';
 import type { CityFormValues } from '../city-form';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
+
+interface MutationMessages {
+  loading: string;
+  success: string;
+  error: string;
+}
 
 /**
  * Custom hook for city-related CRUD operations with toast notifications.
@@ -19,7 +25,7 @@ import { useToastMutation } from '@/hooks/use-toast-mutation';
  * @returns {Object} result.deleteCity - Mutation for deleting a city
  */
 export function useCityMutations() {
-  const { t } = useTranslation('cities');
+  const t = useTranslations('cities');
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -28,6 +34,25 @@ export function useCityMutations() {
    */
   const invalidateCities = () => {
     queryClient.invalidateQueries({ queryKey: ['cities'] });
+  };
+
+  // Prepare messages for the mutations
+  const createMessages: MutationMessages = {
+    loading: t('messages.create.loading'),
+    success: t('messages.create.success'),
+    error: t('messages.create.error'),
+  };
+
+  const updateMessages: MutationMessages = {
+    loading: t('messages.update.loading'),
+    success: t('messages.update.success'),
+    error: t('messages.update.error'),
+  };
+
+  const deleteMessages: MutationMessages = {
+    loading: t('messages.delete.loading'),
+    success: t('messages.delete.success'),
+    error: t('messages.delete.error'),
   };
 
   // Create City
@@ -45,11 +70,7 @@ export function useCityMutations() {
    */
   const createCity = useToastMutation({
     mutation: createCityMutation,
-    messages: {
-      loading: t('messages.create.loading'),
-      success: t('messages.create.success'),
-      error: t('messages.create.error'),
-    },
+    messages: createMessages,
     onSuccess: (data: cities.City) => {
       invalidateCities();
       router.push(`/cities/${data.id}`);
@@ -75,11 +96,7 @@ export function useCityMutations() {
    */
   const updateCity = useToastMutation({
     mutation: updateCityMutation,
-    messages: {
-      loading: t('messages.update.loading'),
-      success: t('messages.update.success'),
-      error: t('messages.update.error'),
-    },
+    messages: updateMessages,
     onSuccess: (data: cities.City) => {
       invalidateCities();
       router.push(`/cities/${data.id}`);
@@ -105,11 +122,7 @@ export function useCityMutations() {
    */
   const deleteCity = useToastMutation({
     mutation: deleteCityMutation,
-    messages: {
-      loading: t('messages.delete.loading'),
-      success: t('messages.delete.success'),
-      error: t('messages.delete.error'),
-    },
+    messages: deleteMessages,
     onSuccess: () => {
       invalidateCities();
       router.push('/cities');

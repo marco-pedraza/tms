@@ -1,30 +1,18 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import { createTranslator } from 'next-intl';
+import messagesData from './locales/es-MX.json';
 
-// Importamos las traducciones
-import common from './locales/es-MX/common';
-import countries from './locales/es-MX/countries';
-import states from './locales/es-MX/states';
-import cities from './locales/es-MX/cities';
+// Set locale type
+type Locale = 'es-MX';
+// Explicitly type the messages object to match what's expected by next-intl
+const messages = messagesData as Record<string, Record<string, unknown>>;
 
-const resources = {
-  'es-MX': {
-    common,
-    countries,
-    states,
-    cities,
-  },
-};
+// Helper function to get translator for client components
+export function getTranslator(namespace = 'common') {
+  const locale: Locale = 'es-MX';
 
-i18n.use(initReactI18next).init({
-  resources,
-  lng: 'es-MX',
-  fallbackLng: 'es-MX',
-  ns: ['common', 'countries', 'states', 'cities'],
-  defaultNS: 'common',
-  interpolation: {
-    escapeValue: false,
-  },
-});
+  return createTranslator({ locale, messages, namespace });
+}
 
-export default i18n;
+// Re-export useful next-intl hooks and functions
+export { useTranslations } from 'next-intl';
+export { getTranslations } from 'next-intl/server';

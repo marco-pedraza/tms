@@ -10,6 +10,7 @@ interface PageHeaderProps {
   createHref?: string;
   createLabel?: string;
   backHref?: string;
+  backLabel?: string;
 }
 
 export function PageHeader({
@@ -18,6 +19,7 @@ export function PageHeader({
   createHref,
   createLabel = 'Create New',
   backHref,
+  backLabel,
 }: PageHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-6">
@@ -26,6 +28,7 @@ export function PageHeader({
           <Link href={backHref}>
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <ArrowLeft className="h-4 w-4" />
+              {backLabel && <span className="sr-only">{backLabel}</span>}
             </Button>
           </Link>
         )}
@@ -55,6 +58,9 @@ interface ActionButtonsProps {
   editHref?: string;
   onDelete?: () => void;
   small?: boolean;
+  viewLabel?: string;
+  editLabel?: string;
+  deleteLabel?: string;
 }
 
 export function ActionButtons({
@@ -62,6 +68,9 @@ export function ActionButtons({
   editHref,
   onDelete,
   small = false,
+  viewLabel = 'Ver',
+  editLabel = 'Editar',
+  deleteLabel = 'Eliminar',
 }: ActionButtonsProps) {
   const size = small ? 'sm' : 'default';
 
@@ -70,7 +79,7 @@ export function ActionButtons({
       {viewHref && (
         <Link href={viewHref}>
           <Button variant="outline" size={size}>
-            Ver
+            {viewLabel}
           </Button>
         </Link>
       )}
@@ -78,14 +87,14 @@ export function ActionButtons({
         <Link href={editHref}>
           <Button variant="outline" size={size}>
             <Pencil className="mr-1 h-3.5 w-3.5" />
-            Editar
+            {editLabel}
           </Button>
         </Link>
       )}
       {onDelete && (
         <Button variant="destructive" size={size} onClick={onDelete}>
           <Trash2 className="mr-1 h-3.5 w-3.5" />
-          Eliminar
+          {deleteLabel}
         </Button>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { MinLen, MatchesRegexp, Min } from 'encore.dev/validate';
+import { MinLen, MatchesRegexp, Min, Max } from 'encore.dev/validate';
 import { PaginatedResult } from '../../shared/types';
 
 /**
@@ -54,15 +54,15 @@ export interface CreateCityPayload {
 
   /**
    * Latitude of the city
-   * Must be a number
+   * Must be a number between -90 and 90
    */
-  latitude: number & Min<1>;
+  latitude: number & Min<-90> & Max<90>;
 
   /**
    * Longitude of the city
-   * Must be a number
+   * Must be a number between -180 and 180
    */
-  longitude: number & Min<1>;
+  longitude: number & Min<-180> & Max<180>;
 
   /**
    * Timezone of the city (e.g., "America/Mexico_City")
@@ -105,15 +105,15 @@ export interface UpdateCityPayload {
 
   /**
    * Latitude of the city
-   * Must be a number
+   * Must be a number between -90 and 90
    */
-  latitude?: number & Min<1>;
+  latitude?: number & Min<-90> & Max<90>;
 
   /**
    * Longitude of the city
-   * Must be a number
+   * Must be a number between -180 and 180
    */
-  longitude?: number & Min<1>;
+  longitude?: number & Min<-180> & Max<180>;
 
   /**
    * Timezone of the city (e.g., "America/Mexico_City")

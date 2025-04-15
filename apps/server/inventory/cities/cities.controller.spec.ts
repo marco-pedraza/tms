@@ -2,7 +2,7 @@ import { expect, describe, test, beforeAll, afterAll } from 'vitest';
 import {
   createCity,
   getCity,
-  listCities,
+  listCitiesPaginated,
   updateCity,
   deleteCity,
 } from './cities.controller';
@@ -114,7 +114,7 @@ describe('Cities Controller', () => {
     });
 
     test('should retrieve paginated cities', async () => {
-      const result = await listCities({ page: 1, pageSize: 10 });
+      const result = await listCitiesPaginated({ page: 1, pageSize: 10 });
 
       // Check the structure of the response
       expect(result).toBeDefined();
@@ -138,7 +138,7 @@ describe('Cities Controller', () => {
 
     test('pagination should respect pageSize parameter', async () => {
       // Request with a small page size
-      const result = await listCities({ page: 1, pageSize: 1 });
+      const result = await listCitiesPaginated({ page: 1, pageSize: 1 });
 
       expect(result.data.length).toBeLessThanOrEqual(1);
       expect(result.pagination.pageSize).toBe(1);
@@ -276,7 +276,7 @@ describe('Cities Controller', () => {
 
   describe('pagination', () => {
     test('should return paginated cities with default parameters', async () => {
-      const response = await listCities({});
+      const response = await listCitiesPaginated({});
 
       expect(response.data).toBeDefined();
       expect(Array.isArray(response.data)).toBe(true);
@@ -290,7 +290,7 @@ describe('Cities Controller', () => {
     });
 
     test('should honor page and pageSize parameters', async () => {
-      const response = await listCities({
+      const response = await listCitiesPaginated({
         page: 1,
         pageSize: 5,
       });
@@ -322,7 +322,7 @@ describe('Cities Controller', () => {
 
       try {
         // Get cities with large enough page size to include test cities
-        const response = await listCities({
+        const response = await listCitiesPaginated({
           pageSize: 50,
         });
 

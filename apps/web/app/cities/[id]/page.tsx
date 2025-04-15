@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { PageHeader, ActionButtons } from '@/components/ui-components';
-import { cities, type City } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ExternalLink } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,42 +17,79 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useTranslation } from 'react-i18next';
+import { useQuery } from '@tanstack/react-query';
+import imsClient from '@/lib/imsClient';
+import { useCityMutations } from '../hooks/use-city-mutations';
+import { Loader2 } from 'lucide-react';
+import { createGoogleMapsLink } from '@/lib/utils';
 
 export default function CityDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const [city, setCity] = useState<City | null>(null);
+  const { t } = useTranslation(['cities', 'common']);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { deleteCity } = useCityMutations();
 
-  useEffect(() => {
-    const id = params.id as string;
-    const foundCity = cities.find((c) => c.id === id);
+  const cityId = parseInt(params.id as string, 10);
 
-    if (foundCity) {
-      setCity(foundCity);
-    } else {
-      router.push('/cities');
-    }
-  }, [params.id, router]);
+  const {
+    data: city,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['cities', cityId],
+    queryFn: async () => {
+      if (!cityId || isNaN(cityId)) {
+        throw new Error(t('common:errors.invalidId'));
+      }
+      return await imsClient.inventory.getCity(cityId);
+    },
+  });
 
   const handleDelete = () => {
     setIsDeleteDialogOpen(true);
   };
 
   const confirmDelete = () => {
-    // In a real app, this would make an API call
-    router.push('/cities');
+    if (!cityId) return;
+    deleteCity.mutateWithToast(cityId);
   };
 
-  if (!city) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error ?? !city) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
+        <h2 className="text-xl font-semibold">
+          {t('cities:errors.notFound.title')}
+        </h2>
+        <p className="text-muted-foreground">
+          {t('cities:errors.notFound.description')}
+        </p>
+        <Button
+          variant="outline"
+          onClick={() => {
+            router.push('/cities');
+          }}
+        >
+          {t('cities:actions.backToList')}
+        </Button>
+      </div>
+    );
   }
 
   return (
     <div>
       <PageHeader
         title={city.name}
-        description="City details"
+        description={t('cities:details.description')}
         backHref="/cities"
       />
 
@@ -65,31 +103,44 @@ export default function CityDetailsPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
+            <CardTitle>{t('common:sections.basicInfo')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
-              <dt className="font-medium">Name:</dt>
+              <dt className="font-medium">{t('common:fields.name')}:</dt>
               <dd>{city.name}</dd>
 
-              <dt className="font-medium">State/Province:</dt>
-              <dd>{city.state_name}</dd>
+              <dt className="font-medium">{t('cities:fields.state')}:</dt>
+              <dd>{city.stateId}</dd>
 
-              <dt className="font-medium">Country:</dt>
-              <dd>{city.country_name}</dd>
-
-              <dt className="font-medium">Timezone:</dt>
+              <dt className="font-medium">{t('cities:fields.timezone')}:</dt>
               <dd>{city.timezone}</dd>
 
-              <dt className="font-medium">Status:</dt>
+              <dt className="font-medium">{t('common:fields.slug')}:</dt>
+              <dd>{city.slug}</dd>
+
+              <dt className="font-medium">{t('cities:fields.coordinates')}:</dt>
+              <dd>
+                <a
+                  href={createGoogleMapsLink(city.latitude, city.longitude)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center hover:text-primary"
+                >
+                  {city.latitude}, {city.longitude}
+                  <ExternalLink className="ml-1 h-4 w-4" />
+                </a>
+              </dd>
+
+              <dt className="font-medium">{t('common:fields.status')}:</dt>
               <dd>
                 {city.active ? (
                   <Badge variant="outline" className="bg-green-100">
-                    Active
+                    {t('common:status.active')}
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="bg-red-100">
-                    Inactive
+                    {t('common:status.inactive')}
                   </Badge>
                 )}
               </dd>
@@ -99,23 +150,26 @@ export default function CityDetailsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Location Information</CardTitle>
+            <CardTitle>{t('common:sections.systemInfo')}</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
-              <dt className="font-medium">Coordinates:</dt>
+              <dt className="font-medium">{t('common:fields.id')}:</dt>
+              <dd>{city.id}</dd>
+
+              <dt className="font-medium">{t('common:fields.createdAt')}:</dt>
               <dd>
-                {city.coordinates.latitude}, {city.coordinates.longitude}
+                {city.createdAt
+                  ? new Date(city.createdAt).toLocaleString()
+                  : '-'}
               </dd>
 
-              <dt className="font-medium">Slug:</dt>
-              <dd>{city.slug}</dd>
-
-              <dt className="font-medium">Created:</dt>
-              <dd>{new Date(city.created_at).toLocaleString()}</dd>
-
-              <dt className="font-medium">Last Updated:</dt>
-              <dd>{new Date(city.updated_at).toLocaleString()}</dd>
+              <dt className="font-medium">{t('common:fields.updatedAt')}:</dt>
+              <dd>
+                {city.updatedAt
+                  ? new Date(city.updatedAt).toLocaleString()
+                  : '-'}
+              </dd>
             </dl>
           </CardContent>
         </Card>
@@ -127,19 +181,20 @@ export default function CityDetailsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('common:crud.delete.confirm')}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              city and all associated data.
+              {t('common:crud.delete.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common:actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground"
             >
-              Delete
+              {t('common:actions.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

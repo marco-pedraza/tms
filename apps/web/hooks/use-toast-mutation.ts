@@ -1,59 +1,67 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { UseMutationResult } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
 
-interface UseToastMutationOptions<TData, TVariables> {
-  mutationFn: (variables: TVariables) => Promise<TData>;
+/**
+ * A hook that enhances a React Query mutation with toast notifications.
+ *
+ * This hook wraps a standard React Query mutation to provide visual feedback through
+ * toast notifications during the mutation lifecycle (loading, success, error).
+ * It also handles executing business logic after successful mutations.
+ *
+ * @template TData - The type of data returned by the mutation
+ * @template TVariables - The type of variables accepted by the mutation
+ *
+ * @param options - Configuration options for the enhanced mutation
+ * @param options.mutation - The base React Query mutation result to enhance
+ * @param options.messages - Toast notification messages for different mutation states
+ * @param options.messages.loading - Message to display while the mutation is loading
+ * @param options.messages.success - Message to display when the mutation succeeds
+ * @param options.messages.error - Message to display when the mutation fails
+ * @param options.onSuccess - Callback function to execute after a successful mutation
+ *
+ * @returns An enhanced mutation object with all original properties plus a `mutateWithToast` method
+ */
+export function useToastMutation<TData, TVariables>({
+  mutation,
+  messages,
+  onSuccess,
+}: {
+  mutation: UseMutationResult<TData, Error, TVariables>;
   messages: {
-    loading?: string;
+    loading: string;
     success: string;
     error: string;
   };
-  onSuccess?: (data: TData) => void;
-  invalidateQueries?: string[];
-  redirectTo?: string | ((data: TData) => string);
-}
-
-export function useToastMutation<TData, TVariables>({
-  mutationFn,
-  messages,
-  onSuccess,
-  invalidateQueries = [],
-  redirectTo,
-}: UseToastMutationOptions<TData, TVariables>) {
-  const queryClient = useQueryClient();
-  const router = useRouter();
-
-  const mutation = useMutation({
-    mutationFn,
-    onSuccess: (data) => {
-      // Invalidar queries si es necesario
-      if (invalidateQueries.length > 0) {
-        invalidateQueries.forEach((queryKey) => {
-          queryClient.invalidateQueries({ queryKey: [queryKey] });
-        });
-      }
-
-      // Redirigir si es necesario
-      if (redirectTo) {
-        const path =
-          typeof redirectTo === 'function' ? redirectTo(data) : redirectTo;
-        router.push(path);
-      }
-
-      // Ejecutar callback adicional si existe
-      if (onSuccess) {
-        onSuccess(data);
-      }
-    },
-  });
-
+  onSuccess: (data: TData) => void;
+}) {
+  /**
+   * Executes the mutation with toast notifications for each state.
+   *
+   * @param variables - The variables to pass to the mutation function
+   * @returns A promise that resolves with the mutation result
+   * @throws Will throw and display an error toast if the mutation fails
+   */
   const mutateWithToast = async (variables: TVariables) => {
-    return toast.promise(mutation.mutateAsync(variables), {
-      loading: messages.loading ?? 'Procesando...',
-      success: messages.success,
-      error: messages.error,
-    });
+    try {
+      const promiseResult = await toast.promise(
+        mutation.mutateAsync(variables),
+        {
+          loading: messages.loading,
+          success: messages.success,
+          error: messages.error,
+        },
+      );
+
+      // Unwrap the result to get the actual data
+      const response = await promiseResult.unwrap();
+
+      // Handle business logic
+      onSuccess(response);
+      return response;
+    } catch (error) {
+      console.error('Mutation error:', error);
+      throw error;
+    }
   };
 
   return {

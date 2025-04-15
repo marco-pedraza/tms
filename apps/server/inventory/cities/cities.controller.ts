@@ -5,6 +5,7 @@ import type {
   UpdateCityPayload,
   City,
   PaginatedCities,
+  Cities,
 } from './cities.types';
 import { createControllerErrorHandler } from '../../shared/controller-utils';
 import { PaginationParams } from '../../shared/types';
@@ -18,7 +19,7 @@ const withErrorHandling = createControllerErrorHandler('CitiesController');
  * @throws {APIError} If the city creation fails
  */
 export const createCity = api(
-  { method: 'POST', path: '/cities' },
+  { method: 'POST', path: '/cities', expose: true },
   async (params: CreateCityPayload): Promise<City> => {
     return await withErrorHandling('createCity', () =>
       cityRepository.create(params),
@@ -41,15 +42,28 @@ export const getCity = api(
 );
 
 /**
+ * Retrieves all cities.
+ * @returns {Promise<City[]>} List of all cities
+ * @throws {APIError} If retrieval fails
+ */
+export const listCities = api(
+  { method: 'GET', path: '/cities', expose: true },
+  async (): Promise<Cities> => {
+    const cities = await cityRepository.findAll();
+    return { cities };
+  },
+);
+
+/**
  * Retrieves cities with pagination.
  * @param params - Pagination parameters
  * @returns {Promise<PaginatedCities>} Paginated list of cities
  * @throws {APIError} If retrieval fails
  */
-export const listCities = api(
-  { method: 'GET', path: '/cities', expose: true },
+export const listCitiesPaginated = api(
+  { method: 'GET', path: '/cities/paginated', expose: true },
   async (params: PaginationParams): Promise<PaginatedCities> => {
-    return await withErrorHandling('listCities', () =>
+    return await withErrorHandling('listCitiesPaginated', () =>
       cityRepository.findAllPaginated(params),
     );
   },

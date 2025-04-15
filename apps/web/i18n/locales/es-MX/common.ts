@@ -29,6 +29,9 @@ export default {
     code: 'Código',
     active: 'Activo',
     status: 'Estado',
+    latitude: 'Latitud',
+    longitude: 'Longitud',
+    slug: 'Slug',
   },
   sections: {
     basicInfo: 'Información Básica',

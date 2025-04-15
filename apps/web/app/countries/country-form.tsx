@@ -9,10 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useForm } from '@tanstack/react-form';
+import { nameSchema, codeSchema } from '@/lib/schemas/common';
+import { hasFieldErrors } from '@/lib/utils';
 
 const editCountrySchema = z.object({
-  name: z.string().min(1),
-  code: z.string().min(2).max(2),
+  name: nameSchema,
+  code: codeSchema(2, 2),
   active: z.boolean(),
 });
 
@@ -69,6 +71,7 @@ function CountryForm({
                   value={field.state.value ?? ''}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder={tCountries('form.placeholders.name')}
+                  aria-invalid={hasFieldErrors(field)}
                 />
               </div>
             )}
@@ -84,6 +87,7 @@ function CountryForm({
                   value={field.state.value ?? ''}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder={tCountries('form.placeholders.code')}
+                  aria-invalid={hasFieldErrors(field)}
                   maxLength={2}
                 />
                 <p className="text-sm text-muted-foreground">

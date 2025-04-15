@@ -19,40 +19,24 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import imsClient from '@/lib/imsClient';
 import type { states, timezones } from '@repo/ims-client';
+import {
+  nameSchema,
+  latitudeSchema,
+  longitudeSchema,
+} from '@/lib/schemas/common';
+import { hasFieldErrors } from '@/lib/utils';
 
 type State = states.State;
 type Timezone = timezones.Timezone;
 
-// TODO: Number input and typescript looks like general issue, we should refactor this soon
-// Single schema with transformations
+// Single schema with common validations
 const editCitySchema = z.object({
-  name: z
-    .string()
-    .min(1)
-    .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/),
+  name: nameSchema,
   stateId: z.number().min(1),
   timezone: z.string().min(1),
   active: z.boolean(),
-  latitude: z
-    .string()
-    .min(1, 'Latitude is required')
-    .transform((val) => {
-      const num = parseFloat(val);
-      if (isNaN(num)) throw new Error('Invalid number');
-      if (num < -90 || num > 90)
-        throw new Error('Latitude must be between -90 and 90');
-      return num;
-    }),
-  longitude: z
-    .string()
-    .min(1, 'Longitude is required')
-    .transform((val) => {
-      const num = parseFloat(val);
-      if (isNaN(num)) throw new Error('Invalid number');
-      if (num < -180 || num > 180)
-        throw new Error('Longitude must be between -180 and 180');
-      return num;
-    }),
+  latitude: latitudeSchema,
+  longitude: longitudeSchema,
 });
 
 export type CityFormValues = z.output<typeof editCitySchema>;
@@ -107,6 +91,9 @@ function CityForm({
       latitude: '',
       longitude: '',
     },
+    validators: {
+      onChange: editCitySchema,
+    },
     onSubmit: async (values) => {
       // editCitySchema validates and transforms the values
       try {
@@ -141,6 +128,7 @@ function CityForm({
                   value={field.state.value ?? ''}
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder={tCities('form.placeholders.name')}
+                  aria-invalid={hasFieldErrors(field)}
                   required
                 />
               </div>
@@ -192,7 +180,7 @@ function CityForm({
                   <SelectContent>
                     {timezonesData?.timezones?.map((timezone: Timezone) => (
                       <SelectItem key={timezone.id} value={timezone.id}>
-                        {timezone.name}
+                        {timezone.id}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -217,6 +205,7 @@ function CityForm({
                     value={field.state.value ?? ''}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="e.g. 19.4326"
+                    aria-invalid={hasFieldErrors(field)}
                     required
                   />
                 </div>
@@ -237,6 +226,7 @@ function CityForm({
                     value={field.state.value ?? ''}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="e.g. -99.1332"
+                    aria-invalid={hasFieldErrors(field)}
                     required
                   />
                 </div>

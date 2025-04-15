@@ -11,6 +11,10 @@ import { InvalidStateTransitionError } from '@repo/state-machine';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ErrDetails = Record<string, any>;
 
+// we need to use any here because the type is not defined in the APIError class
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ErrDetails = Record<string, any>;
+
 /**
  * Utility for standardized API error creation
  */

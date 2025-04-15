@@ -19,12 +19,14 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import imsClient from '@/lib/imsClient';
 import type { countries } from '@repo/ims-client';
+import { nameSchema, codeSchema } from '@/lib/schemas/common';
+import { hasFieldErrors } from '@/lib/utils';
 
 type Country = countries.Country;
 
 const editStateSchema = z.object({
-  name: z.string().min(1),
-  code: z.string().min(2).max(3),
+  name: nameSchema,
+  code: codeSchema(2, 3),
   countryId: z.number().min(1),
   active: z.boolean(),
 });
@@ -105,6 +107,7 @@ function StateForm({
                   onChange={(e) => field.handleChange(e.target.value)}
                   placeholder={tStates('form.placeholders.code')}
                   maxLength={3}
+                  aria-invalid={hasFieldErrors(field)}
                 />
                 <p className="text-sm text-muted-foreground">
                   {tStates('form.codeHelp')}

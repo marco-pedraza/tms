@@ -676,7 +676,7 @@ export namespace inventory {
         public async updateCity(id: number, params: {
     /**
      * The name of the city
-     * Must have at least 1 non-whitespace character
+     * Must contain only letters (with or without accents) and spaces
      */
     name?: string
 
@@ -703,14 +703,6 @@ export namespace inventory {
      * Must have at least 1 non-whitespace character
      */
     timezone?: string
-
-    /**
-     * URL-friendly identifier for the city
-     * Must be lowercase, can contain only letters, numbers and hyphens
-     * No consecutive hyphens, special characters or spaces allowed
-     * Format examples: 'ciudad-de-mexico', 'monterrey', 'san-luis-potosi'
-     */
-    slug?: string
 
     /**
      * Whether the city is active
@@ -2496,7 +2488,7 @@ export namespace cities {
     export interface CreateCityPayload {
         /**
          * The name of the city
-         * Must have at least 1 non-whitespace character
+         * Must contain only letters (with or without accents) and spaces
          */
         name: string
 
@@ -2523,14 +2515,6 @@ export namespace cities {
          * Must have at least 1 non-whitespace character
          */
         timezone: string
-
-        /**
-         * URL-friendly identifier for the city
-         * Must be lowercase, can contain only letters, numbers and hyphens
-         * No consecutive hyphens, special characters or spaces allowed
-         * Format examples: 'ciudad-de-mexico', 'monterrey', 'san-luis-potosi'
-         */
-        slug: string
 
         /**
          * Whether the city is active

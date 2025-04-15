@@ -42,9 +42,9 @@ export interface City {
 export interface CreateCityPayload {
   /**
    * The name of the city
-   * Must have at least 1 non-whitespace character
+   * Must contain only letters (with or without accents) and spaces
    */
-  name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  name: string & MinLen<1> & MatchesRegexp<'^[A-Za-zÀ-ÖØ-öø-ÿ\\s]+$'>;
 
   /**
    * The ID of the state this city belongs to
@@ -73,14 +73,6 @@ export interface CreateCityPayload {
     MatchesRegexp<'^America/([A-Za-z_]+)(/[A-Za-z_]+)?$'>;
 
   /**
-   * URL-friendly identifier for the city
-   * Must be lowercase, can contain only letters, numbers and hyphens
-   * No consecutive hyphens, special characters or spaces allowed
-   * Format examples: 'ciudad-de-mexico', 'monterrey', 'san-luis-potosi'
-   */
-  slug: string & MinLen<1> & MatchesRegexp<'^[a-z0-9]+(?:-[a-z0-9]+)*$'>;
-
-  /**
    * Whether the city is active
    * @default true
    */
@@ -93,9 +85,9 @@ export interface CreateCityPayload {
 export interface UpdateCityPayload {
   /**
    * The name of the city
-   * Must have at least 1 non-whitespace character
+   * Must contain only letters (with or without accents) and spaces
    */
-  name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  name?: string & MinLen<1> & MatchesRegexp<'^[A-Za-zÀ-ÖØ-öø-ÿ\\s]+$'>;
 
   /**
    * The ID of the state this city belongs to
@@ -122,14 +114,6 @@ export interface UpdateCityPayload {
   timezone?: string &
     MinLen<1> &
     MatchesRegexp<'^America/([A-Za-z_]+)(/[A-Za-z_]+)?$'>;
-
-  /**
-   * URL-friendly identifier for the city
-   * Must be lowercase, can contain only letters, numbers and hyphens
-   * No consecutive hyphens, special characters or spaces allowed
-   * Format examples: 'ciudad-de-mexico', 'monterrey', 'san-luis-potosi'
-   */
-  slug?: string & MinLen<1> & MatchesRegexp<'^[a-z0-9]+(?:-[a-z0-9]+)*$'>;
 
   /**
    * Whether the city is active

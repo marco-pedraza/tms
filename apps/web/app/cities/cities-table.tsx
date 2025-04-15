@@ -44,9 +44,9 @@ const citiesColumnsFactory = (
       ),
     },
     {
-      accessorKey: 'stateName',
-      header: t('cities:fields.state'),
-      cell: ({ row }) => <div>{row.getValue('stateName')}</div>,
+      accessorKey: 'slug',
+      header: t('common:fields.slug'),
+      cell: ({ row }) => <div>{row.getValue('slug')}</div>,
     },
     {
       accessorKey: 'timezone',

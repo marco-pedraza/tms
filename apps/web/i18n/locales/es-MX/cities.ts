@@ -30,6 +30,10 @@ export default {
   details: {
     description: 'Detalles de la ciudad',
   },
+  new: {
+    title: 'Crear Ciudad',
+    description: 'Agrega una nueva ciudad al sistema',
+  },
   edit: {
     title: 'Editar Ciudad',
     description: 'Actualiza la información de la ciudad',

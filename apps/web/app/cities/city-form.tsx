@@ -54,10 +54,6 @@ const editCitySchema = z.object({
         throw new Error('Longitude must be between -180 and 180');
       return num;
     }),
-  slug: z
-    .string()
-    .min(1)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be in kebab-case format'),
 });
 
 export type CityFormValues = z.output<typeof editCitySchema>;
@@ -112,7 +108,6 @@ function CityForm({
       active: false,
       latitude: '',
       longitude: '',
-      slug: '',
     },
     onSubmit: async (values) => {
       // editCitySchema validates and transforms the values
@@ -256,28 +251,6 @@ function CityForm({
               )}
             </form.Field>
           </div>
-
-          <form.Field name="slug">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="slug">{t('common:fields.slug')}</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value ?? ''}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder="e.g. mexico-city"
-                  required
-                />
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    'cities:form.slugHelp',
-                    'URL-friendly version of the city name',
-                  )}
-                </p>
-              </div>
-            )}
-          </form.Field>
 
           <form.Field name="active">
             {(field) => (

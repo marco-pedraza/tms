@@ -78,6 +78,13 @@
       "when": 1744670623467,
       "tag": "20250414224343_create_bus_models_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1744836615486,
+      "tag": "20250416205015_create_bus_table",
+      "breakpoints": true
     }
   ]
 }

@@ -241,3 +241,46 @@ export const removeDriverFromBusLine = api(
     return await driverUseCases.removeFromBusLine(id);
   },
 );
+
+/**
+ * List drivers by bus
+ * @param params - Object containing the bus ID to filter by
+ * @param params.busId - The bus ID to filter by
+ * @returns {Promise<Drivers>} Drivers associated with the specified bus
+ * @throws {APIError} If retrieval fails
+ */
+export const listDriversByBus = api(
+  { expose: true, method: 'GET', path: '/drivers/by-bus/:busId' },
+  async ({ busId }: { busId: number }): Promise<Drivers> => {
+    return await driverRepository.findAllByBus(busId);
+  },
+);
+
+/**
+ * Assigns a driver to a bus
+ * @param params - Object containing the driver ID and bus ID
+ * @param params.id - The ID of the driver
+ * @param params.busId - The ID of the bus
+ * @returns {Promise<Driver>} The updated driver
+ * @throws {APIError} If the assignment fails
+ */
+export const assignDriverToBus = api(
+  { expose: true, method: 'POST', path: '/drivers/:id/bus' },
+  async ({ id, busId }: { id: number; busId: number }): Promise<Driver> => {
+    return await driverUseCases.assignToBus(id, busId);
+  },
+);
+
+/**
+ * Removes a driver from a bus
+ * @param params - Object containing the driver ID
+ * @param params.id - The ID of the driver
+ * @returns {Promise<Driver>} The updated driver
+ * @throws {APIError} If the removal fails
+ */
+export const removeDriverFromBus = api(
+  { expose: true, method: 'DELETE', path: '/drivers/:id/bus' },
+  async ({ id }: { id: number }): Promise<Driver> => {
+    return await driverUseCases.removeFromBus(id);
+  },
+);

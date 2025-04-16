@@ -9,6 +9,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { transporters } from '../transporters/transporters.schema';
 import { busLines } from '../bus-lines/bus-lines.schema';
+import { buses } from '../buses/buses.schema';
 
 export const drivers = pgTable('drivers', {
   id: serial('id').primaryKey(),
@@ -42,6 +43,7 @@ export const drivers = pgTable('drivers', {
   company: text('company'),
   transporterId: integer('transporter_id').references(() => transporters.id),
   busLineId: integer('bus_line_id').references(() => busLines.id),
+  busId: integer('bus_id').references(() => buses.id),
   active: boolean('active').notNull().default(true),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),

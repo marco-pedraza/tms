@@ -112,6 +112,9 @@ export interface Driver {
   /** The bus line this driver is associated with */
   busLineId: number | null;
 
+  /** The bus this driver is assigned to */
+  busId: number | null;
+
   /** Whether the driver is currently active in the system */
   active: boolean;
 
@@ -293,6 +296,11 @@ export interface CreateDriverPayload {
    * The bus line this driver is associated with
    */
   busLineId?: number;
+
+  /**
+   * The bus this driver is assigned to
+   */
+  busId?: number;
 }
 
 /**
@@ -465,6 +473,11 @@ export interface UpdateDriverPayload {
    * The bus line this driver is associated with
    */
   busLineId?: number;
+
+  /**
+   * The bus this driver is assigned to
+   */
+  busId?: number;
 }
 
 /**

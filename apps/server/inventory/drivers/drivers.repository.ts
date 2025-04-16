@@ -196,6 +196,21 @@ export const createDriverRepository = () => {
   };
 
   /**
+   * Finds drivers by bus
+   * @param {number} busId - The bus ID to filter by
+   * @returns {Promise<Drivers>} Object containing array of drivers assigned to the specified bus
+   */
+  const findAllByBus = async (busId: number): Promise<Drivers> => {
+    const driversList = await baseRepository.findAllBy(drivers.busId, busId, {
+      orderBy: [{ field: drivers.fullName, direction: 'asc' }],
+    });
+
+    return {
+      drivers: driversList,
+    };
+  };
+
+  /**
    * Gets all possible next statuses for a driver
    * @param {number} id - The ID of the driver
    * @returns {Promise<DriverStatus[]>} Array of possible next statuses
@@ -234,6 +249,16 @@ export const createDriverRepository = () => {
   };
 
   /**
+   * Assigns a driver to a bus
+   * @param {number} id - The ID of the driver
+   * @param {number} busId - The ID of the bus
+   * @returns {Promise<Driver>} The updated driver
+   */
+  const assignToBus = async (id: number, busId: number): Promise<Driver> => {
+    return await baseRepository.update(id, { busId });
+  };
+
+  /**
    * Removes a driver from a transporter
    * @param {number} id - The ID of the driver
    * @returns {Promise<Driver>} The updated driver
@@ -251,6 +276,15 @@ export const createDriverRepository = () => {
     return await baseRepository.update(id, { busLineId: null });
   };
 
+  /**
+   * Removes a driver from a bus
+   * @param {number} id - The ID of the driver
+   * @returns {Promise<Driver>} The updated driver
+   */
+  const removeFromBus = async (id: number): Promise<Driver> => {
+    return await baseRepository.update(id, { busId: null });
+  };
+
   return {
     ...baseRepository,
     create,
@@ -259,12 +293,15 @@ export const createDriverRepository = () => {
     findAllByStatus,
     findAllByTransporter,
     findAllByBusLine,
+    findAllByBus,
     updateStatus,
     getPossibleNextStatuses,
     assignToTransporter,
     assignToBusLine,
+    assignToBus,
     removeFromTransporter,
     removeFromBusLine,
+    removeFromBus,
   };
 };
 

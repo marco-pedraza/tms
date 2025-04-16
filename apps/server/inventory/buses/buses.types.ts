@@ -1,0 +1,477 @@
+import { MinLen, MatchesRegexp } from 'encore.dev/validate';
+import { PaginatedResult } from '../../shared/types';
+
+/**
+ * Enum for bus operational status
+ */
+export enum BusStatus {
+  ACTIVE = 'active',
+  MAINTENANCE = 'maintenance',
+  REPAIR = 'repair',
+  OUT_OF_SERVICE = 'out_of_service',
+  RESERVED = 'reserved',
+  IN_TRANSIT = 'in_transit',
+  RETIRED = 'retired',
+}
+
+/**
+ * Base interface representing a bus entity
+ */
+export interface Bus {
+  /** Unique identifier for the bus */
+  id: number;
+
+  /** Registration number / license plate */
+  registrationNumber: string;
+
+  /** ID of the bus model */
+  modelId: number;
+
+  /** Bus type code */
+  typeCode?: number;
+
+  /** Brand code */
+  brandCode?: string;
+
+  /** Model code */
+  modelCode?: string;
+
+  /** Maximum passenger capacity */
+  maxCapacity?: number;
+
+  /** Date of purchase */
+  purchaseDate?: Date;
+
+  /** Economic number */
+  economicNumber?: string;
+
+  /** Type of license plate */
+  licensePlateType?: string;
+
+  /** Circulation card */
+  circulationCard?: string;
+
+  /** Year of manufacture */
+  year?: number;
+
+  /** SCT permit */
+  sctPermit?: string;
+
+  /** Vehicle ID */
+  vehicleId?: string;
+
+  /** Gross vehicle weight */
+  grossVehicleWeight?: number;
+
+  /** Engine number */
+  engineNumber?: string;
+
+  /** Serial number */
+  serialNumber?: string;
+
+  /** Chassis number */
+  chassisNumber?: string;
+
+  /** SAP key */
+  sapKey?: string;
+
+  /** Base/station code */
+  baseCode?: string;
+
+  /** ERP client number */
+  erpClientNumber?: string;
+
+  /** Cost center */
+  costCenter?: string;
+
+  /** Fuel efficiency (km/liter) */
+  fuelEfficiency?: number;
+
+  /** Alternate company */
+  alternateCompany?: string;
+
+  /** Service type */
+  serviceType?: string;
+
+  /** Commercial tourism module flag */
+  commercialTourism?: boolean;
+
+  /** Available for use flag */
+  available?: boolean;
+
+  /** Tourism usage flag */
+  tourism?: boolean;
+
+  /** Current operational status */
+  status: BusStatus;
+
+  /** Last maintenance date */
+  lastMaintenanceDate?: Date;
+
+  /** Next scheduled maintenance date */
+  nextMaintenanceDate?: Date;
+
+  /** GPS identifier */
+  gpsId?: string;
+
+  /** Whether the bus is active */
+  active: boolean;
+
+  /** Timestamp when the bus was created */
+  createdAt: Date;
+
+  /** Timestamp when the bus was last updated */
+  updatedAt: Date;
+}
+
+/**
+ * Input for creating a new bus
+ */
+export interface CreateBusPayload {
+  /**
+   * Registration number / license plate
+   * Must have at least 1 character
+   */
+  registrationNumber: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * ID of the bus model
+   * Must be a positive number
+   */
+  modelId: number;
+
+  /**
+   * Bus type code
+   */
+  typeCode?: number;
+
+  /**
+   * Brand code
+   */
+  brandCode?: string;
+
+  /**
+   * Model code
+   */
+  modelCode?: string;
+
+  /**
+   * Maximum passenger capacity
+   */
+  maxCapacity?: number;
+
+  /**
+   * Date of purchase
+   */
+  purchaseDate?: Date;
+
+  /**
+   * Economic number
+   */
+  economicNumber?: string;
+
+  /**
+   * Type of license plate
+   */
+  licensePlateType?: string;
+
+  /**
+   * Circulation card
+   */
+  circulationCard?: string;
+
+  /**
+   * Year of manufacture
+   */
+  year?: number;
+
+  /**
+   * SCT permit
+   */
+  sctPermit?: string;
+
+  /**
+   * Vehicle ID
+   */
+  vehicleId?: string;
+
+  /**
+   * Gross vehicle weight
+   */
+  grossVehicleWeight?: number;
+
+  /**
+   * Engine number
+   */
+  engineNumber?: string;
+
+  /**
+   * Serial number
+   */
+  serialNumber?: string;
+
+  /**
+   * Chassis number
+   */
+  chassisNumber?: string;
+
+  /**
+   * SAP key
+   */
+  sapKey?: string;
+
+  /**
+   * Base/station code
+   */
+  baseCode?: string;
+
+  /**
+   * ERP client number
+   */
+  erpClientNumber?: string;
+
+  /**
+   * Cost center
+   */
+  costCenter?: string;
+
+  /**
+   * Fuel efficiency (km/liter)
+   */
+  fuelEfficiency?: number;
+
+  /**
+   * Alternate company
+   */
+  alternateCompany?: string;
+
+  /**
+   * Service type
+   */
+  serviceType?: string;
+
+  /**
+   * Commercial tourism module flag
+   * @default false
+   */
+  commercialTourism?: boolean;
+
+  /**
+   * Available for use flag
+   * @default true
+   */
+  available?: boolean;
+
+  /**
+   * Tourism usage flag
+   * @default false
+   */
+  tourism?: boolean;
+
+  /**
+   * Current operational status
+   * @default BusStatus.ACTIVE
+   */
+  status?: BusStatus;
+
+  /**
+   * Last maintenance date
+   */
+  lastMaintenanceDate?: Date;
+
+  /**
+   * Next scheduled maintenance date
+   */
+  nextMaintenanceDate?: Date;
+
+  /**
+   * GPS identifier
+   */
+  gpsId?: string;
+
+  /**
+   * Whether the bus is active
+   * @default true
+   */
+  active?: boolean;
+}
+
+/**
+ * Input for updating a bus
+ */
+export interface UpdateBusPayload {
+  /**
+   * Registration number / license plate
+   * Must have at least 1 character
+   */
+  registrationNumber?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * ID of the bus model
+   * Must be a positive number
+   */
+  modelId?: number;
+
+  /**
+   * Bus type code
+   */
+  typeCode?: number;
+
+  /**
+   * Brand code
+   */
+  brandCode?: string;
+
+  /**
+   * Model code
+   */
+  modelCode?: string;
+
+  /**
+   * Maximum passenger capacity
+   */
+  maxCapacity?: number;
+
+  /**
+   * Date of purchase
+   */
+  purchaseDate?: Date;
+
+  /**
+   * Economic number
+   */
+  economicNumber?: string;
+
+  /**
+   * Type of license plate
+   */
+  licensePlateType?: string;
+
+  /**
+   * Circulation card
+   */
+  circulationCard?: string;
+
+  /**
+   * Year of manufacture
+   */
+  year?: number;
+
+  /**
+   * SCT permit
+   */
+  sctPermit?: string;
+
+  /**
+   * Vehicle ID
+   */
+  vehicleId?: string;
+
+  /**
+   * Gross vehicle weight
+   */
+  grossVehicleWeight?: number;
+
+  /**
+   * Engine number
+   */
+  engineNumber?: string;
+
+  /**
+   * Serial number
+   */
+  serialNumber?: string;
+
+  /**
+   * Chassis number
+   */
+  chassisNumber?: string;
+
+  /**
+   * SAP key
+   */
+  sapKey?: string;
+
+  /**
+   * Base/station code
+   */
+  baseCode?: string;
+
+  /**
+   * ERP client number
+   */
+  erpClientNumber?: string;
+
+  /**
+   * Cost center
+   */
+  costCenter?: string;
+
+  /**
+   * Fuel efficiency (km/liter)
+   */
+  fuelEfficiency?: number;
+
+  /**
+   * Alternate company
+   */
+  alternateCompany?: string;
+
+  /**
+   * Service type
+   */
+  serviceType?: string;
+
+  /**
+   * Commercial tourism module flag
+   */
+  commercialTourism?: boolean;
+
+  /**
+   * Available for use flag
+   */
+  available?: boolean;
+
+  /**
+   * Tourism usage flag
+   */
+  tourism?: boolean;
+
+  /**
+   * Current operational status
+   */
+  status?: BusStatus;
+
+  /**
+   * Last maintenance date
+   */
+  lastMaintenanceDate?: Date;
+
+  /**
+   * Next scheduled maintenance date
+   */
+  nextMaintenanceDate?: Date;
+
+  /**
+   * GPS identifier
+   */
+  gpsId?: string;
+
+  /**
+   * Whether the bus is active
+   */
+  active?: boolean;
+}
+
+/**
+ * Response containing a list of buses
+ */
+export interface Buses {
+  /** List of buses */
+  buses: Bus[];
+}
+
+/**
+ * Paginated list of buses
+ */
+export type PaginatedBuses = PaginatedResult<Bus>;

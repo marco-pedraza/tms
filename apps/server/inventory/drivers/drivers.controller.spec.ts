@@ -15,11 +15,15 @@ import {
   assignDriverToBusLine,
   removeDriverFromTransporter,
   removeDriverFromBusLine,
+  listDriversByBus,
+  assignDriverToBus,
+  removeDriverFromBus,
 } from './drivers.controller';
 import { Drivers, Driver, DriverStatus } from './drivers.types';
 import { transporterRepository } from '../transporters/transporters.repository';
 import { busLineRepository } from '../bus-lines/bus-lines.repository';
 import { serviceTypeRepository } from '../service-types/service-types.repository';
+import { busRepository } from '../buses/buses.repository';
 
 describe('Drivers Controller', () => {
   // Test data and setup
@@ -60,6 +64,7 @@ describe('Drivers Controller', () => {
   let createdTransporterId: number;
   let createdBusLineId: number;
   let createdServiceTypeId: number;
+  let createdBusId: number;
 
   // Setup test transporter and bus line
   beforeAll(async () => {
@@ -93,6 +98,15 @@ describe('Drivers Controller', () => {
         active: true,
       });
       createdBusLineId = testBusLine.id;
+
+      // Create test bus
+      const testBus = await busRepository.create({
+        registrationNumber: 'TST123',
+        modelId: 1, // Assuming a model with ID 1 exists, adjust as needed
+        status: 'ACTIVE',
+        active: true,
+      });
+      createdBusId = testBus.id;
     } catch (error) {
       console.log('Error setting up test data:', error);
     }
@@ -105,6 +119,15 @@ describe('Drivers Controller', () => {
         await deleteDriver({ id: createdDriverId });
       } catch (error) {
         console.log('Error cleaning up test driver:', error);
+      }
+    }
+
+    // Clean up test bus
+    if (createdBusId) {
+      try {
+        await busRepository.delete(createdBusId);
+      } catch (error) {
+        console.log('Error cleaning up test bus:', error);
       }
     }
 
@@ -683,6 +706,71 @@ describe('Drivers Controller', () => {
       expect(response.id).toBe(createdDriverId);
       expect(response.transporterId).toBeNull();
       expect(response.busLineId).toBeNull();
+    });
+  });
+
+  describe('bus relations', () => {
+    test('should assign a driver to a bus', async () => {
+      // First, assign driver to transporter (required setup)
+      await assignDriverToTransporter({
+        id: createdDriverId,
+        transporterId: createdTransporterId,
+      });
+
+      // Then, assign driver to bus
+      const response = await assignDriverToBus({
+        id: createdDriverId,
+        busId: createdBusId,
+      });
+
+      expect(response).toBeDefined();
+      expect(response.id).toBe(createdDriverId);
+      expect(response.busId).toBe(createdBusId);
+
+      // Check that driver still has transporter relationship
+      const updatedDriver = await getDriver({ id: createdDriverId });
+      expect(updatedDriver.transporterId).toBe(createdTransporterId);
+      expect(updatedDriver.busId).toBe(createdBusId);
+    });
+
+    test('should list drivers by bus', async () => {
+      // Make sure driver is assigned to bus
+      const driver = await getDriver({ id: createdDriverId });
+      if (!driver.busId) {
+        await assignDriverToBus({
+          id: createdDriverId,
+          busId: createdBusId,
+        });
+      }
+
+      const response = await listDriversByBus({
+        busId: createdBusId,
+      });
+
+      expect(response).toBeDefined();
+      expect(response.drivers).toBeDefined();
+      expect(Array.isArray(response.drivers)).toBe(true);
+      expect(response.drivers.length).toBeGreaterThan(0);
+
+      // At least one driver should match our test driver
+      const foundDriver = response.drivers.find(
+        (driver) => driver.id === createdDriverId,
+      );
+      expect(foundDriver).toBeDefined();
+      expect(foundDriver?.fullName).toBe('Jane Doe');
+    });
+
+    test('should remove a driver from a bus', async () => {
+      const response = await removeDriverFromBus({
+        id: createdDriverId,
+      });
+
+      expect(response).toBeDefined();
+      expect(response.id).toBe(createdDriverId);
+      expect(response.busId).toBeNull();
+
+      // Transporter should still be assigned
+      expect(response.transporterId).toBe(createdTransporterId);
     });
   });
 });

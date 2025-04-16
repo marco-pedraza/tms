@@ -143,11 +143,70 @@ export const createDriverUseCases = () => {
     }
   };
 
+  /**
+   * Assigns a driver to a bus with validation
+   * @param {number} id - The ID of the driver
+   * @param {number} busId - The ID of the bus
+   * @returns {Promise<Driver>} The updated driver
+   * @throws {ValidationError} If the assignment fails
+   */
+  const assignToBus = async (id: number, busId: number): Promise<Driver> => {
+    try {
+      // Validate driver exists
+      const driver = await driverRepository.findOne(id);
+
+      // Check if driver is already assigned to a bus
+      if (driver.busId) {
+        throw new ValidationError(`Driver is already assigned to a bus`);
+      }
+
+      // Use repository update to assign driver to bus
+      return await driverRepository.assignToBus(id, busId);
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+      throw new ValidationError(
+        `Failed to assign driver to bus: ${error.message}`,
+      );
+    }
+  };
+
+  /**
+   * Removes a driver from a bus
+   * @param {number} id - The ID of the driver
+   * @returns {Promise<Driver>} The updated driver
+   * @throws {ValidationError} If the removal fails
+   */
+  const removeFromBus = async (id: number): Promise<Driver> => {
+    try {
+      // Validate driver exists
+      const driver = await driverRepository.findOne(id);
+
+      // Check if driver is assigned to a bus
+      if (!driver.busId) {
+        throw new ValidationError(`Driver is not assigned to any bus`);
+      }
+
+      // Use repository update to remove driver from bus
+      return await driverRepository.removeFromBus(id);
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+      throw new ValidationError(
+        `Failed to remove driver from bus: ${error.message}`,
+      );
+    }
+  };
+
   return {
     assignToTransporter,
     assignToBusLine,
+    assignToBus,
     removeFromTransporter,
     removeFromBusLine,
+    removeFromBus,
   };
 };
 

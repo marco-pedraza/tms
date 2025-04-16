@@ -5,13 +5,13 @@ import { PaginatedResult } from '../../shared/types';
  * Enum for bus operational status
  */
 export enum BusStatus {
-  ACTIVE = 'active',
-  MAINTENANCE = 'maintenance',
-  REPAIR = 'repair',
-  OUT_OF_SERVICE = 'out_of_service',
-  RESERVED = 'reserved',
-  IN_TRANSIT = 'in_transit',
-  RETIRED = 'retired',
+  ACTIVE = 'ACTIVE',
+  MAINTENANCE = 'MAINTENANCE',
+  REPAIR = 'REPAIR',
+  OUT_OF_SERVICE = 'OUT_OF_SERVICE',
+  RESERVED = 'RESERVED',
+  IN_TRANSIT = 'IN_TRANSIT',
+  RETIRED = 'RETIRED',
 }
 
 /**

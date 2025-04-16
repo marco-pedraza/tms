@@ -27,7 +27,7 @@ CREATE TABLE "buses" (
 	"commercial_tourism" boolean DEFAULT false,
 	"available" boolean DEFAULT true,
 	"tourism" boolean DEFAULT false,
-	"status" text DEFAULT 'active' NOT NULL,
+	"status" text DEFAULT 'ACTIVE' NOT NULL,
 	"last_maintenance_date" date,
 	"next_maintenance_date" date,
 	"gps_id" text,

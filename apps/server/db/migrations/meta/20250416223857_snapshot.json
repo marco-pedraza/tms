@@ -1,5 +1,5 @@
 {
-  "id": "66f145f1-77bd-4bdd-a3b5-7af116479985",
+  "id": "88428957-fac6-434b-9f4d-73a9b5801a7d",
   "prevId": "969c3881-ee6b-4c71-ad82-9a089eff1e35",
   "version": "7",
   "dialect": "postgresql",
@@ -515,7 +515,7 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'active'"
+          "default": "'ACTIVE'"
         },
         "last_maintenance_date": {
           "name": "last_maintenance_date",

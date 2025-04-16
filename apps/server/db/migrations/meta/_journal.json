@@ -71,6 +71,13 @@
       "when": 1744653817301,
       "tag": "20250414180337_creates_drivers_refresh_tokens_table",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1744670623467,
+      "tag": "20250414224343_create_bus_models_tables",
+      "breakpoints": true
     }
   ]
 }

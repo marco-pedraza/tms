@@ -17,3 +17,5 @@ export {
 } from '../users/user-permissions/user-permissions.schema';
 export { refreshTokens } from '../users/auth/auth.schema';
 export { drivers } from '../inventory/drivers/drivers.schema';
+export { busModels } from '../inventory/bus-models/bus-models.schema';
+export { busSeats } from '../inventory/bus-seats/bus-seats.schema';

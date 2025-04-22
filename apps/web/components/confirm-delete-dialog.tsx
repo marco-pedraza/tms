@@ -33,10 +33,7 @@ export default function ConfirmDeleteDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{tCommon('actions.cancel')}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            className="bg-destructive text-destructive-foreground"
-          >
+          <AlertDialogAction onClick={onConfirm} className="bg-destructive">
             {tCommon('actions.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>

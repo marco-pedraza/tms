@@ -7,22 +7,13 @@ import PageHeader from '@/components/page-header';
 import ActionButtons from '@/components/action-buttons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import imsClient from '@/lib/imsClient';
 import { isAPIError } from '@repo/ims-client';
 import type { states } from '@repo/ims-client';
 import NotFound from '@/components/not-found';
 import { useStateMutations } from '@/app/states/hooks/use-state-mutations';
+import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 
 type State = states.State;
 
@@ -164,30 +155,11 @@ export default function StateDetailsPage() {
         </Card>
       </div>
 
-      <AlertDialog
-        open={isDeleteDialogOpen}
+      <ConfirmDeleteDialog
+        isOpen={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {tCommon('crud.delete.confirm')}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {tCommon('crud.delete.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{tCommon('actions.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground"
-            >
-              {tCommon('actions.delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

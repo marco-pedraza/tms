@@ -3,16 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import client from '@/lib/imsClient';
 import { useQuery } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -223,32 +214,13 @@ export default function CitiesTable() {
         onRetry={refetch}
         onAdd={onAdd}
       />
-      <AlertDialog
-        open={!!deleteId}
+      <ConfirmDeleteDialog
+        isOpen={!!deleteId}
         onOpenChange={() => {
           setDeleteId(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {tCommon('crud.delete.confirm')}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {tCommon('crud.delete.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{tCommon('actions.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground"
-            >
-              {tCommon('actions.delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={confirmDelete}
+      />
     </>
   );
 }

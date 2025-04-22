@@ -3,16 +3,6 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import client from '@/lib/imsClient';
 import { useQuery } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -26,6 +16,7 @@ import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCountryMutations } from '@/app/countries/hooks/use-country-mutations';
+import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 
 type Country = countries.Country;
 
@@ -210,25 +201,11 @@ export default function CountriesTable() {
         onRetry={refetch}
         onAdd={onAdd}
       />
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('crud.delete.confirm')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('crud.delete.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('actions.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground"
-            >
-              {t('actions.delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDeleteDialog
+        isOpen={!!deleteId}
+        onOpenChange={() => setDeleteId(null)}
+        onConfirm={confirmDelete}
+      />
     </>
   );
 }

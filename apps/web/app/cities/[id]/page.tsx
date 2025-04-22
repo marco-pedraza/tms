@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { PageHeader, ActionButtons } from '@/components/ui-components';
+import PageHeader from '@/components/page-header';
+import ActionButtons from '@/components/action-buttons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
-import { PageHeader, ActionButtons } from '@/components/ui-components';
+import PageHeader from '@/components/page-header';
+import ActionButtons from '@/components/action-buttons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -19,7 +20,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import imsClient from '@/lib/imsClient';
 import { isAPIError } from '@repo/ims-client';
-import NotFound from '@/components/ui-components/not-found';
+import NotFound from '@/components/not-found';
 import { useCountryMutations } from '@/app/countries/hooks/use-country-mutations';
 
 export default function CountryDetailsPage() {

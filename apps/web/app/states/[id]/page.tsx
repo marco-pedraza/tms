@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
-import { PageHeader, ActionButtons } from '@/components/ui-components';
+import PageHeader from '@/components/page-header';
+import ActionButtons from '@/components/action-buttons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -20,7 +21,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import imsClient from '@/lib/imsClient';
 import { isAPIError } from '@repo/ims-client';
 import type { states } from '@repo/ims-client';
-import NotFound from '@/components/ui-components/not-found';
+import NotFound from '@/components/not-found';
 import { useStateMutations } from '@/app/states/hooks/use-state-mutations';
 
 type State = states.State;

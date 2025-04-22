@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { PageHeader } from '@/components/ui-components';
+import PageHeader from '@/components/page-header';
 import { Params } from 'next/dist/server/request/params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import imsClient from '@/lib/imsClient';

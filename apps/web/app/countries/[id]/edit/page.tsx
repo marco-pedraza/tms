@@ -1,13 +1,13 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
 import CountryForm, {
   CountryFormValues,
-} from '@/app/countries/components/country-form';
-import { useCountryMutations } from '@/app/countries/hooks/use-country-mutations';
-import { useTranslations } from 'next-intl';
-import useQueryCountry from '@/app/countries/hooks/use-query-country';
-import useCountryDetailsParams from '@/app/countries/hooks/use-country-details-params';
+} from '@/countries/components/country-form';
+import { useCountryMutations } from '@/countries/hooks/use-country-mutations';
+import useQueryCountry from '@/countries/hooks/use-query-country';
+import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
 
 export default function EditCountryPage() {
   const tCountries = useTranslations('countries');

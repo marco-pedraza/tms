@@ -15,7 +15,7 @@ import { DropdownMenu } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCountryMutations } from '@/app/countries/hooks/use-country-mutations';
+import { useCountryMutations } from '@/countries/hooks/use-country-mutations';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 
 type Country = countries.Country;

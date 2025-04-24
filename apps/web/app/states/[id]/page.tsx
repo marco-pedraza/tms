@@ -12,7 +12,7 @@ import imsClient from '@/lib/ims-client';
 import { isAPIError } from '@repo/ims-client';
 import type { states } from '@repo/ims-client';
 import NotFound from '@/components/not-found';
-import { useStateMutations } from '@/app/states/hooks/use-state-mutations';
+import { useStateMutations } from '@/states/hooks/use-state-mutations';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 
 type State = states.State;

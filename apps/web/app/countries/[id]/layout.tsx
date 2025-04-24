@@ -1,8 +1,8 @@
 'use client';
 
-import useQueryCountry from '@/app/countries/hooks/use-query-country';
-import CountryNotFound from '@/app/countries/components/country-not-found';
-import useCountryDetailsParams from '@/app/countries/hooks/use-country-details-params';
+import useQueryCountry from '@/countries/hooks/use-query-country';
+import CountryNotFound from '@/countries/components/country-not-found';
+import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
 
 export default function CountryLayout({
   children,

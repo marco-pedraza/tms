@@ -6,8 +6,8 @@ import { Params } from 'next/dist/server/request/params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import imsClient from '@/lib/ims-client';
 import type { states } from '@repo/ims-client';
-import StateForm, { StateFormValues } from '@/app/states/state-form';
-import { useStateMutations } from '@/app/states/hooks/use-state-mutations';
+import StateForm, { StateFormValues } from '@/states/state-form';
+import { useStateMutations } from '@/states/hooks/use-state-mutations';
 import { useTranslations } from 'next-intl';
 
 interface EditStatePageParams extends Params {

@@ -6,10 +6,10 @@ import PageHeader from '@/components/page-header';
 import ActionButtons from '@/components/action-buttons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useCountryMutations } from '@/app/countries/hooks/use-country-mutations';
+import { useCountryMutations } from '@/countries/hooks/use-country-mutations';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
-import useQueryCountry from '@/app/countries/hooks/use-query-country';
-import useCountryDetailsParams from '@/app/countries/hooks/use-country-details-params';
+import useQueryCountry from '@/countries/hooks/use-query-country';
+import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
 
 export default function CountryDetailsPage() {
   const tCountries = useTranslations('countries');

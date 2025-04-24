@@ -16,7 +16,7 @@ import { DropdownMenu } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCityMutations } from '@/app/cities/hooks/use-city-mutations';
+import { useCityMutations } from '@/cities/hooks/use-city-mutations';
 
 type City = cities.City;
 

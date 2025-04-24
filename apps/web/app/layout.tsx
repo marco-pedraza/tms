@@ -38,7 +38,7 @@ export default async function RootLayout({
               <aside className="w-64 border-r bg-background">
                 <SideNav />
               </aside>
-              <main className="flex-1 p-6">{children}</main>
+              <main className="flex-1 px-24 py-6">{children}</main>
             </div>
             <Toaster richColors />
           </NextIntlClientProvider>

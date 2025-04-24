@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { states } from '@repo/ims-client';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
 import imsClient from '@/lib/ims-client';
-import type { StateFormValues } from '../state-form';
+import type { StateFormValues } from '@/states/state-form';
 
 interface MutationMessages {
   loading: string;

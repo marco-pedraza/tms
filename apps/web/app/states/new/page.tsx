@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { PageHeader } from '@/components/ui-components';
+import PageHeader from '@/components/page-header';
 import StateForm from '@/app/states/state-form';
 import { useStateMutations } from '../hooks/use-state-mutations';
 

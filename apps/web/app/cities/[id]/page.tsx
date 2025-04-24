@@ -2,27 +2,19 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { PageHeader, ActionButtons } from '@/components/ui-components';
+import PageHeader from '@/components/page-header';
+import ActionButtons from '@/components/action-buttons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import imsClient from '@/lib/imsClient';
 import { useCityMutations } from '../hooks/use-city-mutations';
 import { Loader2 } from 'lucide-react';
 import { createGoogleMapsLink } from '@/lib/utils';
+import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 
 export default function CityDetailsPage() {
   const params = useParams();
@@ -178,30 +170,11 @@ export default function CityDetailsPage() {
         </Card>
       </div>
 
-      <AlertDialog
-        open={isDeleteDialogOpen}
+      <ConfirmDeleteDialog
+        isOpen={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {tCommon('crud.delete.confirm')}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {tCommon('crud.delete.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{tCommon('actions.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground"
-            >
-              {tCommon('actions.delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

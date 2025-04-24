@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { PageHeader } from '@/components/ui-components';
+import PageHeader from '@/components/page-header';
 import CityForm from '../city-form';
 import { useCityMutations } from '../hooks/use-city-mutations';
 

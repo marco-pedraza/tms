@@ -8,7 +8,7 @@ import ActionButtons from '@/components/action-buttons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import imsClient from '@/lib/imsClient';
+import imsClient from '@/lib/ims-client';
 import { isAPIError } from '@repo/ims-client';
 import type { states } from '@repo/ims-client';
 import NotFound from '@/components/not-found';

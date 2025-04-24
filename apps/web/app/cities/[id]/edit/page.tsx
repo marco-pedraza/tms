@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import { Params } from 'next/dist/server/request/params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import imsClient from '@/lib/imsClient';
+import imsClient from '@/lib/ims-client';
 import type { cities } from '@repo/ims-client';
 import CityForm, { CityFormValues } from '../../city-form';
 import { useCityMutations } from '../../hooks/use-city-mutations';

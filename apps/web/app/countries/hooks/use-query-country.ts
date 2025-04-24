@@ -1,4 +1,4 @@
-import imsClient from '@/lib/imsClient';
+import imsClient from '@/lib/ims-client';
 import type { countries } from '@repo/ims-client';
 import {
   useQuery,

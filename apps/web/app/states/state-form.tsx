@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useQuery } from '@tanstack/react-query';
-import imsClient from '@/lib/imsClient';
+import imsClient from '@/lib/ims-client';
 import type { countries } from '@repo/ims-client';
 import { nameSchema, codeSchema } from '@/lib/schemas/common';
 import { hasFieldErrors } from '@/lib/utils';

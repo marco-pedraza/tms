@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
-import imsClient from '@/lib/imsClient';
+import imsClient from '@/lib/ims-client';
 import { useCityMutations } from '../hooks/use-city-mutations';
 import { Loader2 } from 'lucide-react';
 import { createGoogleMapsLink } from '@/lib/utils';

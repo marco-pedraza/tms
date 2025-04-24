@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import { Params } from 'next/dist/server/request/params';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import imsClient from '@/lib/imsClient';
+import imsClient from '@/lib/ims-client';
 import type { states } from '@repo/ims-client';
 import StateForm, { StateFormValues } from '@/app/states/state-form';
 import { useStateMutations } from '@/app/states/hooks/use-state-mutations';

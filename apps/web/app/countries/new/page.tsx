@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
-import CountryForm from '@/app/countries/country-form';
+import CountryForm from '@/app/countries/components/country-form';
 import { useCountryMutations } from '../hooks/use-country-mutations';
 
 export default function NewCountryPage() {

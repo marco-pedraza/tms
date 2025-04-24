@@ -2,35 +2,25 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useParams } from 'next/navigation';
 import PageHeader from '@/components/page-header';
 import ActionButtons from '@/components/action-buttons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useQuery } from '@tanstack/react-query';
-import imsClient from '@/lib/imsClient';
-import { isAPIError } from '@repo/ims-client';
-import NotFound from '@/components/not-found';
 import { useCountryMutations } from '@/app/countries/hooks/use-country-mutations';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import useQueryCountry from '@/app/countries/hooks/use-query-country';
+import useCountryDetailsParams from '@/app/countries/hooks/use-country-details-params';
 
 export default function CountryDetailsPage() {
   const tCountries = useTranslations('countries');
   const tCommon = useTranslations('common');
-
-  const params = useParams();
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const countryId = parseInt(params.id as string, 10);
-  const { deleteCountry } = useCountryMutations();
-
-  const {
-    data: country,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['countries', countryId],
-    queryFn: async () => await imsClient.inventory.getCountry(countryId),
+  const { countryId, isValidId } = useCountryDetailsParams();
+  const { data: country, isLoading } = useQueryCountry({
+    countryId,
+    enabled: isValidId,
   });
+  const { deleteCountry } = useCountryMutations();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleDelete = () => {
     setIsDeleteDialogOpen(true);
@@ -45,19 +35,8 @@ export default function CountryDetailsPage() {
     return <div>{tCommon('states.loading')}</div>;
   }
 
-  if (error && isAPIError(error) && error.code === 'not_found') {
-    return (
-      <NotFound
-        title={tCountries('errors.notFound.title')}
-        description={tCountries('errors.notFound.description')}
-        backHref="/countries"
-        backLabel={tCountries('actions.backToList')}
-      />
-    );
-  }
-
   if (!country) {
-    return <div>{tCommon('errors.unexpected')}</div>;
+    return null;
   }
 
   return (

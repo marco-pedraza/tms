@@ -8,7 +8,7 @@ interface CountryPageParams extends Params {
 
 export default function useCountryDetailsParams() {
   const params = useParams<CountryPageParams>();
-  const countryId = parseInt(params.id, 10);
+  const countryId = Number.parseInt(params.id, 10);
   const isValidId = isNumber(params.id);
 
   return {

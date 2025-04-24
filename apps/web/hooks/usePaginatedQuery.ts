@@ -1,5 +1,5 @@
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useState } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 interface UsePaginatedQueryProps<T> {
   queryKey: (string | number)[];

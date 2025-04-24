@@ -1,15 +1,15 @@
 'use client';
 
-import { z } from 'zod';
-import { useTranslations } from 'next-intl';
+import { useForm } from '@tanstack/react-form';
 import { Loader2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslations } from 'next-intl';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { useForm } from '@tanstack/react-form';
-import { nameSchema, codeSchema } from '@/lib/schemas/common';
+import { codeSchema, nameSchema } from '@/lib/schemas/common';
 import { hasFieldErrors } from '@/lib/utils';
 
 const editCountrySchema = z.object({

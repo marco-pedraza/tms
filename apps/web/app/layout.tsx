@@ -1,11 +1,11 @@
-import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import './globals.css';
-import { SideNav } from '@/components/side-nav';
-import QueryClientProvider from '@/components/query-client-provider';
-import { Toaster } from '@/components/ui/sonner';
+import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
+import QueryClientProvider from '@/components/query-client-provider';
+import { SideNav } from '@/components/side-nav';
+import { Toaster } from '@/components/ui/sonner';
+import './globals.css';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',

@@ -2,14 +2,14 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import PageHeader from '@/components/page-header';
 import ActionButtons from '@/components/action-buttons';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useCountryMutations } from '@/countries/hooks/use-country-mutations';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
-import useQueryCountry from '@/countries/hooks/use-query-country';
+import PageHeader from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
+import { useCountryMutations } from '@/countries/hooks/use-country-mutations';
+import useQueryCountry from '@/countries/hooks/use-query-country';
 
 export default function CountryDetailsPage() {
   const tCountries = useTranslations('countries');

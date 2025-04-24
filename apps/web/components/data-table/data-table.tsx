@@ -1,14 +1,14 @@
 'use client';
 
 import {
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  useReactTable,
   type ColumnDef,
   type Header,
   type HeaderGroup,
   type PaginationState,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
 } from '@tanstack/react-table';
 import {
   Table,
@@ -18,10 +18,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import DataTablePagination from './data-table-pagination';
+import DataTableEmpty from './data-table-empty';
 import DataTableError from './data-table-error';
 import DataTableLoading from './data-table-loading';
-import DataTableEmpty from './data-table-empty';
+import DataTablePagination from './data-table-pagination';
 
 interface DataTablePagination extends PaginationState {
   pageCount: number;

@@ -1,5 +1,5 @@
-import { useParams } from 'next/navigation';
 import { Params } from 'next/dist/server/request/params';
+import { useParams } from 'next/navigation';
 import isNumber from '@/utils/is-number';
 
 interface CountryPageParams extends Params {

@@ -1,16 +1,16 @@
-import { getTranslations } from 'next-intl/server';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import {
-  Globe,
-  Map,
+  Briefcase,
   Building,
   Building2,
   Bus,
-  Briefcase,
+  Globe,
+  Map,
   Route,
 } from 'lucide-react';
+import { getTranslations } from 'next-intl/server';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default async function HomePage() {
   const t = await getTranslations('countries');

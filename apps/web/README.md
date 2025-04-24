@@ -20,6 +20,29 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Inter, a custom Google Font.
 
+## Code Style
+
+This project uses [Prettier](https://prettier.io/) for code formatting with automatic import sorting. Imports are automatically organized in the following order without empty lines between groups:
+
+1. React imports
+2. Next.js imports
+3. Third-party modules
+4. Repo-specific modules (`@repo/*`)
+5. Local project modules (`@/*`)
+6. Relative imports
+
+To format your code and sort imports:
+
+```bash
+npm run format
+```
+
+Or format a specific file:
+
+```bash
+npx prettier --write path/to/file.tsx
+```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

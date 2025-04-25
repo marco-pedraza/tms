@@ -1,4 +1,4 @@
-import { MinLen, MatchesRegexp, Min } from 'encore.dev/validate';
+import { MinLen, MatchesRegexp, Min, Max } from 'encore.dev/validate';
 import { PaginatedResult } from '../../shared/types';
 
 /**
@@ -16,32 +16,40 @@ export interface Facility {
 }
 
 /**
+ * Represents a time slot for operating hours
+ */
+export interface TimeSlot {
+  /** Opening time in format HH:MM (24-hour format) */
+  open: string;
+
+  /** Closing time in format HH:MM (24-hour format) */
+  close: string;
+}
+
+/**
  * Represents operating hours for a terminal
  */
 export interface OperatingHours {
   /** Monday opening hours */
-  monday?: { open: string; close: string };
+  monday?: TimeSlot[];
 
   /** Tuesday opening hours */
-  tuesday?: { open: string; close: string };
+  tuesday?: TimeSlot[];
 
   /** Wednesday opening hours */
-  wednesday?: { open: string; close: string };
+  wednesday?: TimeSlot[];
 
   /** Thursday opening hours */
-  thursday?: { open: string; close: string };
+  thursday?: TimeSlot[];
 
   /** Friday opening hours */
-  friday?: { open: string; close: string };
+  friday?: TimeSlot[];
 
   /** Saturday opening hours */
-  saturday?: { open: string; close: string };
+  saturday?: TimeSlot[];
 
   /** Sunday opening hours */
-  sunday?: { open: string; close: string };
-
-  /** Note about operating hours */
-  notes?: string;
+  sunday?: TimeSlot[];
 }
 
 /**
@@ -115,15 +123,15 @@ export interface CreateTerminalPayload {
 
   /**
    * Latitude coordinate of the terminal
-   * Must be a valid latitude value
+   * Must be a number between -90 and 90
    */
-  latitude: number & Min<1>;
+  latitude: number & Min<-90> & Max<90>;
 
   /**
    * Longitude coordinate of the terminal
-   * Must be a valid longitude value
+   * Must be a number between -180 and 180
    */
-  longitude: number & Min<1>;
+  longitude: number & Min<-180> & Max<180>;
 
   /**
    * Contact phone number for the terminal
@@ -145,14 +153,6 @@ export interface CreateTerminalPayload {
    * Must have at least 1 non-whitespace character
    */
   code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-
-  /**
-   * URL-friendly identifier for the terminal
-   * Must be lowercase, can contain only letters, numbers and hyphens
-   * No consecutive hyphens, special characters or spaces allowed
-   * Format examples: 'central-norte', 'tapo', 'observatorio'
-   */
-  slug: string & MinLen<1> & MatchesRegexp<'^[a-z0-9]+(?:-[a-z0-9]+)*$'>;
 
   /**
    * Whether the terminal is active
@@ -185,13 +185,15 @@ export interface UpdateTerminalPayload {
 
   /**
    * Latitude coordinate of the terminal
+   * Must be a number between -90 and 90
    */
-  latitude?: number & Min<1>;
+  latitude?: number & Min<-90> & Max<90>;
 
   /**
    * Longitude coordinate of the terminal
+   * Must be a number between -180 and 180
    */
-  longitude?: number & Min<1>;
+  longitude?: number & Min<-180> & Max<180>;
 
   /**
    * Contact phone number for the terminal
@@ -213,14 +215,6 @@ export interface UpdateTerminalPayload {
    * Must have at least 1 non-whitespace character
    */
   code?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-
-  /**
-   * URL-friendly identifier for the terminal
-   * Must be lowercase, can contain only letters, numbers and hyphens
-   * No consecutive hyphens, special characters or spaces allowed
-   * Format examples: 'central-norte', 'tapo', 'observatorio'
-   */
-  slug?: string & MinLen<1> & MatchesRegexp<'^[a-z0-9]+(?:-[a-z0-9]+)*$'>;
 
   /**
    * Whether the terminal is active

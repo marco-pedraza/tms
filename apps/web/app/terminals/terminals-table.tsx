@@ -3,28 +3,38 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
-import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import client from '@/lib/imsClient';
 import { useQuery } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table';
 import { Button } from '@/components/ui/button';
-import type { cities } from '@repo/ims-client';
+import type { terminals } from '@repo/ims-client';
 import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DropdownMenuContent } from '@/components/ui/dropdown-menu';
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCityMutations } from '@/app/cities/hooks/use-city-mutations';
+import { useTerminalMutations } from './hooks/use-terminal-mutations';
 
-type City = cities.City;
+type Terminal = terminals.Terminal;
 
 interface TranslationObject {
   fields: {
     name: string;
+    code: string;
+    city: string;
     slug: string;
-    timezone: string;
     status: string;
     createdAt: string;
     actions: string;
@@ -41,12 +51,12 @@ interface TranslationObject {
   };
 }
 
-const citiesColumnsFactory = (
+const terminalsColumnsFactory = (
   getViewHref: (id: string) => string,
   onDelete: (id: string) => void,
   onEdit: (id: string) => void,
   translations: TranslationObject,
-): ColumnDef<City>[] => {
+): ColumnDef<Terminal>[] => {
   return [
     {
       accessorKey: 'name',
@@ -56,14 +66,14 @@ const citiesColumnsFactory = (
       ),
     },
     {
+      accessorKey: 'code',
+      header: translations.fields.code,
+      cell: ({ row }) => <div>{row.getValue('code')}</div>,
+    },
+    {
       accessorKey: 'slug',
       header: translations.fields.slug,
       cell: ({ row }) => <div>{row.getValue('slug')}</div>,
-    },
-    {
-      accessorKey: 'timezone',
-      header: translations.fields.timezone,
-      cell: ({ row }) => <div>{row.getValue('timezone')}</div>,
     },
     {
       accessorKey: 'active',
@@ -136,23 +146,23 @@ const citiesColumnsFactory = (
   ];
 };
 
-export default function CitiesTable() {
-  const tCities = useTranslations('cities');
+export default function TerminalsTable() {
+  const tTerminals = useTranslations('terminals');
   const tCommon = useTranslations('common');
 
   const router = useRouter();
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const { deleteCity } = useCityMutations();
+  const { deleteTerminal } = useTerminalMutations();
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['cities'],
-    queryFn: async () => await client.inventory.listCitiesPaginated({}),
+    queryKey: ['terminals'],
+    queryFn: async () => await client.inventory.listTerminals({}),
   });
 
   const handleDelete = (id: string) => {
     const numericId = parseInt(id);
     if (isNaN(numericId)) {
-      console.error('Invalid city ID:', id);
+      console.error('Invalid terminal ID:', id);
       return;
     }
     setDeleteId(numericId);
@@ -160,28 +170,29 @@ export default function CitiesTable() {
 
   const confirmDelete = () => {
     if (!deleteId) return;
-    deleteCity.mutateWithToast(deleteId);
+    deleteTerminal.mutateWithToast(deleteId);
     setDeleteId(null);
   };
 
   const getViewHref = (id: string) => {
-    return `/cities/${id}`;
+    return `/terminals/${id}`;
   };
 
   const handleEdit = (id: string) => {
-    router.push(`/cities/${id}/edit`);
+    router.push(`/terminals/${id}/edit`);
   };
 
   const onAdd = () => {
-    router.push('/cities/new');
+    router.push('/terminals/new');
   };
 
   // Prepare translations object for the columns factory
   const translations: TranslationObject = {
     fields: {
       name: tCommon('fields.name'),
-      slug: tCommon('fields.slug'),
-      timezone: tCities('fields.timezone'),
+      code: tCommon('fields.code'),
+      city: tTerminals('fields.city'),
+      slug: tTerminals('fields.slug'),
       status: tCommon('fields.status'),
       createdAt: tCommon('fields.createdAt'),
       actions: tCommon('fields.actions'),
@@ -198,7 +209,7 @@ export default function CitiesTable() {
     },
   };
 
-  const columns = citiesColumnsFactory(
+  const columns = terminalsColumnsFactory(
     getViewHref,
     handleDelete,
     handleEdit,
@@ -215,13 +226,32 @@ export default function CitiesTable() {
         onRetry={refetch}
         onAdd={onAdd}
       />
-      <ConfirmDeleteDialog
-        isOpen={!!deleteId}
+      <AlertDialog
+        open={!!deleteId}
         onOpenChange={() => {
           setDeleteId(null);
         }}
-        onConfirm={confirmDelete}
-      />
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {tCommon('crud.delete.confirm')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {tCommon('crud.delete.description')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tCommon('actions.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground"
+            >
+              {tCommon('actions.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

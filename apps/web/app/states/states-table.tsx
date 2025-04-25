@@ -78,7 +78,8 @@ const statesColumnsFactory = (
       accessorKey: 'createdAt',
       header: translations.fields.createdAt,
       cell: ({ row }) => {
-        return new Date(row.getValue('createdAt') ?? '').toLocaleDateString();
+        const value = row.getValue('createdAt');
+        return value ? new Date(value as string).toLocaleDateString() : '-';
       },
     },
     {

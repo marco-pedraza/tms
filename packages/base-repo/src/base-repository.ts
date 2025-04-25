@@ -36,7 +36,8 @@ export const createBaseRepository = <
   UpdateT extends Partial<CreateT>,
   TTable extends TableWithId,
 >(
-  db: NodePgDatabase<Record<string, never>>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: NodePgDatabase<any>,
   table: TTable,
   entityName: string,
 ): BaseRepository<T, CreateT, UpdateT, TTable> => {

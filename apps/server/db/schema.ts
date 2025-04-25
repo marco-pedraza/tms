@@ -20,3 +20,15 @@ export { drivers } from '../inventory/drivers/drivers.schema';
 export { busModels } from '../inventory/bus-models/bus-models.schema';
 export { busSeats } from '../inventory/bus-seats/bus-seats.schema';
 export { buses } from '../inventory/buses/buses.schema';
+export {
+  pathways,
+  pathwaysRelations,
+} from '../inventory/pathways/pathways.schema';
+export {
+  pathwayServices,
+  pathwayServicesRelations,
+} from '../inventory/pathway-services/pathway-services.schema';
+export {
+  pathwayServiceAssignments,
+  pathwayServiceAssignmentsRelations,
+} from '../inventory/pathway-service-assignments/pathway-service-assignments.schema';

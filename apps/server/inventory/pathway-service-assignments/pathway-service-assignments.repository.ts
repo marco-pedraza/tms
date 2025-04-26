@@ -6,7 +6,6 @@ import type {
 } from './pathway-service-assignments.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { db } from '@/db';
-import { PgTransaction } from 'drizzle-orm/pg-core';
 
 /**
  * Defining internal types to avoid exposing the sequence number to the outside world
@@ -16,10 +15,6 @@ type CreatePathwayServiceAssignmentPayloadWithSequence =
 
 type UpdatePathwayServiceAssignmentPayloadWithSequence =
   UpdatePathwayServiceAssignmentPayload & { sequence: number };
-
-// More generic typing for database or transaction
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DatabaseOrTransaction = typeof db | PgTransaction<any, any, any>;
 
 /**
  * Creates a repository for managing pathway service assignments
@@ -32,19 +27,20 @@ type DatabaseOrTransaction = typeof db | PgTransaction<any, any, any>;
  *
  * @returns {Object} An object containing pathway service assignment operations
  */
-export const createPathwayServiceAssignmentRepository = (
-  dbOrTx?: DatabaseOrTransaction,
-) => {
-  const dbInstance = dbOrTx || db;
-
+export const createPathwayServiceAssignmentRepository = () => {
   const baseRepository = createBaseRepository<
     PathwayServiceAssignment,
     CreatePathwayServiceAssignmentPayloadWithSequence,
     UpdatePathwayServiceAssignmentPayloadWithSequence,
     typeof pathwayServiceAssignments
-  >(dbInstance, pathwayServiceAssignments, 'PathwayServiceAssignment');
+  >(db, pathwayServiceAssignments, 'PathwayServiceAssignment');
 
-  const { create, update, delete: deleteAssignment } = baseRepository;
+  const {
+    create,
+    update,
+    delete: deleteAssignment,
+    transaction,
+  } = baseRepository;
 
   return {
     /**
@@ -62,14 +58,13 @@ export const createPathwayServiceAssignmentRepository = (
      * Deletes a pathway service assignment
      */
     delete: deleteAssignment,
+
+    /**
+     * Executes operations within a transaction
+     */
+    transaction,
   };
 };
 
 export const pathwayServiceAssignmentRepository =
   createPathwayServiceAssignmentRepository();
-
-// TODO: We need to move this to the base repo
-export const transactionalPathwayServiceAssignmentRepository = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tx: PgTransaction<any, any, any>,
-) => createPathwayServiceAssignmentRepository(tx);

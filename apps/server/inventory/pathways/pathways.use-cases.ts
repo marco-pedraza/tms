@@ -1,13 +1,9 @@
-import {
-  pathwayServiceAssignmentRepository,
-  transactionalPathwayServiceAssignmentRepository,
-} from '../pathway-service-assignments/pathway-service-assignments.repository';
+import { pathwayServiceAssignmentRepository } from '../pathway-service-assignments/pathway-service-assignments.repository';
 import {
   CreatePathwayServiceAssignmentPayload,
   DeletePathwayServiceAssignmentPayload,
 } from '../pathway-service-assignments/pathway-service-assignments.types';
 import { pathwayRepository } from './pathways.repository';
-import { db } from '@/db';
 
 export const createPathwayUseCases = () => {
   const assignServicesToPathway = async (
@@ -48,10 +44,7 @@ export const createPathwayUseCases = () => {
       .sort((a, b) => a.sequence - b.sequence);
 
     // Use transaction to ensure all operations (delete + sequence updates) are atomic
-    await db.transaction(async (tx) => {
-      // Get transaction-specific repository
-      const txRepo = transactionalPathwayServiceAssignmentRepository(tx);
-
+    await pathwayServiceAssignmentRepository.transaction(async (txRepo) => {
       await txRepo.delete(assignmentId);
 
       // Update sequences for remaining assignments

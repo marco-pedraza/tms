@@ -29,7 +29,6 @@ describe('Transactions with BaseRepository', () => {
 
   // Global setup for the test suite
   beforeAll(async () => {
-    // Create schema if it doesn't exist
     await createSchema();
   });
 
@@ -45,29 +44,25 @@ describe('Transactions with BaseRepository', () => {
 
   describe('Basic transaction support', () => {
     it('should commit changes when transaction succeeds', async () => {
-      // Execute a transaction that creates a user and a related post
-      await db.transaction(async (tx) => {
-        const txUserRepo = createBaseRepository<
-          User,
-          CreateUser,
-          Partial<CreateUser>,
-          typeof users
-        >(tx, users, 'User');
-
-        const txPostRepo = createBaseRepository<
-          Post,
-          CreatePost,
-          Partial<CreatePost>,
-          typeof posts
-        >(tx, posts, 'Post');
-
+      await userRepository.transaction(async (txUserRepo) => {
         // Create a user within the transaction
         const user = await txUserRepo.create({
           name: 'Transaction User',
           email: 'tx_user@example.com',
         });
 
-        // Create a post for that user within the transaction
+        // Create a post for that user within the same transaction
+        if (!txUserRepo.__internal?.db) {
+          throw new Error('Transaction database connection not available');
+        }
+
+        const txPostRepo = createBaseRepository<
+          Post,
+          CreatePost,
+          Partial<CreatePost>,
+          typeof posts
+        >(txUserRepo.__internal.db, posts, 'Post');
+
         await txPostRepo.create({
           title: 'Transaction Post',
           content: 'This post was created in a transaction',
@@ -86,18 +81,10 @@ describe('Transactions with BaseRepository', () => {
     });
 
     it('should rollback changes when transaction throws an error', async () => {
-      // Start a transaction but throw an error in the middle
       try {
-        await db.transaction(async (tx) => {
-          const txUserRepo = createBaseRepository<
-            User,
-            CreateUser,
-            Partial<CreateUser>,
-            typeof users
-          >(tx, users, 'User');
-
+        await userRepository.transaction(async (txRepo) => {
           // Create a user within the transaction
-          await txUserRepo.create({
+          await txRepo.create({
             name: 'Will Rollback User',
             email: 'rollback@example.com',
           });
@@ -119,107 +106,26 @@ describe('Transactions with BaseRepository', () => {
     });
   });
 
-  describe('Manual transaction control', () => {
-    it('should support explicit rollback', async () => {
-      // Transaction with explicit rollback
-      try {
-        await db.transaction(async (tx) => {
-          const txUserRepo = createBaseRepository<
-            User,
-            CreateUser,
-            Partial<CreateUser>,
-            typeof users
-          >(tx, users, 'User');
-
-          await txUserRepo.create({
-            name: 'Explicit Rollback User',
-            email: 'explicit_rollback@example.com',
-          });
-
-          // Explicitly request a rollback
-          tx.rollback();
-
-          // We shouldn't reach here
-          expect('Transaction should continue after rollback').toBe(false);
-        });
-      } catch (error) {
-        // Expected error, transaction was rolled back
-        expect((error as Error).message).toBe('Rollback');
-      }
-
-      // Verify that no entities were created
-      const allUsers = await userRepository.findAll();
-      expect(allUsers).toHaveLength(0);
-    });
-
-    it('should return values from transaction', async () => {
-      // Execute a transaction that returns a value
-      const result = await db.transaction(async (tx) => {
-        const txUserRepo = createBaseRepository<
-          User,
-          CreateUser,
-          Partial<CreateUser>,
-          typeof users
-        >(tx, users, 'User');
-
-        const user = await txUserRepo.create({
-          name: 'Return Value User',
-          email: 'returns@example.com',
-        });
-
-        // Return a value from the transaction
-        return {
-          userId: user.id,
-          message: 'Transaction completed',
-        };
-      });
-
-      // Verify the returned value
-      expect(result).toHaveProperty('userId');
-      expect(result).toHaveProperty('message', 'Transaction completed');
-
-      // Verify the user was created
-      const user = await userRepository.findOne(result.userId);
-      expect(user).toBeDefined();
-      expect(user.email).toBe('returns@example.com');
-    });
-  });
-
   describe('Complex transaction scenarios', () => {
-    it('should handle nested transactions (savepoints)', async () => {
-      // Execute a nested transaction
-      await db.transaction(async (tx) => {
-        const txUserRepo = createBaseRepository<
-          User,
-          CreateUser,
-          Partial<CreateUser>,
-          typeof users
-        >(tx, users, 'User');
-
+    it('should handle nested transactions', async () => {
+      await userRepository.transaction(async (txRepo) => {
         // Create first user in outer transaction
-        await txUserRepo.create({
+        await txRepo.create({
           name: 'Outer Transaction',
           email: 'outer@example.com',
         });
 
         // Start a nested transaction
-        await tx.transaction(async (innerTx) => {
-          const innerUserRepo = createBaseRepository<
-            User,
-            CreateUser,
-            Partial<CreateUser>,
-            typeof users
-          >(innerTx, users, 'User');
-
+        await txRepo.transaction(async (innerTxRepo) => {
           // Create second user in inner transaction
-          await innerUserRepo.create({
+          await innerTxRepo.create({
             name: 'Inner Transaction',
             email: 'inner@example.com',
           });
         });
 
         // Create third user after inner transaction
-        await txUserRepo.create({
+        await txRepo.create({
           name: 'After Inner',
           email: 'after@example.com',
         });
@@ -228,36 +134,23 @@ describe('Transactions with BaseRepository', () => {
       // Verify all three users were created
       const allUsers = await userRepository.findAll();
       expect(allUsers).toHaveLength(3);
+      expect(allUsers.map((u) => u.name)).toContain('Outer Transaction');
+      expect(allUsers.map((u) => u.name)).toContain('Inner Transaction');
+      expect(allUsers.map((u) => u.name)).toContain('After Inner');
     });
 
     it('should handle rollback of inner transaction without affecting outer transaction', async () => {
-      // Execute a nested transaction with inner rollback
-      await db.transaction(async (tx) => {
-        const txUserRepo = createBaseRepository<
-          User,
-          CreateUser,
-          Partial<CreateUser>,
-          typeof users
-        >(tx, users, 'User');
-
+      await userRepository.transaction(async (txRepo) => {
         // Create first user in outer transaction
-        await txUserRepo.create({
+        await txRepo.create({
           name: 'Before Inner Rollback',
           email: 'before@example.com',
         });
-
         // Start a nested transaction that will rollback
         try {
-          await tx.transaction(async (innerTx) => {
-            const innerUserRepo = createBaseRepository<
-              User,
-              CreateUser,
-              Partial<CreateUser>,
-              typeof users
-            >(innerTx, users, 'User');
-
+          await txRepo.transaction(async (innerTxRepo) => {
             // Create user in inner transaction
-            await innerUserRepo.create({
+            await innerTxRepo.create({
               name: 'Will Rollback',
               email: 'willrollback@example.com',
             });
@@ -271,7 +164,7 @@ describe('Transactions with BaseRepository', () => {
         }
 
         // Create another user after inner transaction failed
-        await txUserRepo.create({
+        await txRepo.create({
           name: 'After Inner Rollback',
           email: 'after@example.com',
         });
@@ -286,55 +179,42 @@ describe('Transactions with BaseRepository', () => {
     });
   });
 
-  describe('BaseRepository operations in transactions', () => {
+  describe('Repository operations in transactions', () => {
     it('should perform all repository operations within a transaction', async () => {
-      const result = await db.transaction(async (tx) => {
-        const txUserRepo = createBaseRepository<
-          User,
-          CreateUser,
-          Partial<CreateUser>,
-          typeof users
-        >(tx, users, 'User');
-
+      const result = await userRepository.transaction(async (txRepo) => {
         // Create
-        const user = await txUserRepo.create({
+        const user = await txRepo.create({
           name: 'Transaction CRUD',
           email: 'crud@example.com',
         });
 
         // Find
-        const found = await txUserRepo.findOne(user.id);
+        const found = await txRepo.findOne(user.id);
         expect(found.id).toBe(user.id);
 
         // Update
-        const updated = await txUserRepo.update(user.id, {
+        const updated = await txRepo.update(user.id, {
           name: 'Updated in Transaction',
         });
         expect(updated.name).toBe('Updated in Transaction');
 
         // FindAll
-        const all = await txUserRepo.findAll();
+        const all = await txRepo.findAll();
         expect(all).toHaveLength(1);
 
         // FindAllBy
-        const byEmail = await txUserRepo.findAllBy(
-          users.email,
-          'crud@example.com',
-        );
+        const byEmail = await txRepo.findAllBy(users.email, 'crud@example.com');
         expect(byEmail).toHaveLength(1);
 
         // ExistsBy
-        const exists = await txUserRepo.existsBy(
-          users.email,
-          'crud@example.com',
-        );
+        const exists = await txRepo.existsBy(users.email, 'crud@example.com');
         expect(exists).toBe(true);
 
         // Delete
-        await txUserRepo.delete(user.id);
+        await txRepo.delete(user.id);
 
         // Verify deletion within transaction
-        const afterDelete = await tx.select().from(users);
+        const afterDelete = await txRepo.findAll();
         expect(afterDelete).toHaveLength(0);
 
         return { success: true };

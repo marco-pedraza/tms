@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { PageHeader, ActionButtons } from '@/components/ui-components';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
 import { ExternalLink, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import type { terminals } from '@repo/ims-client';
+import ActionButtons from '@/components/action-buttons';
+import PageHeader from '@/components/page-header';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,12 +18,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useTranslations } from 'next-intl';
-import { useQuery } from '@tanstack/react-query';
-import imsClient from '@/lib/imsClient';
-import { useTerminalMutations } from '../hooks/use-terminal-mutations';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import imsClient from '@/lib/ims-client';
 import { createGoogleMapsLink } from '@/lib/utils';
-import type { terminals } from '@repo/ims-client';
+import { useTerminalMutations } from '@/terminals/hooks/use-terminal-mutations';
 
 type OperatingHours = terminals.OperatingHours;
 

@@ -1,10 +1,10 @@
-import { useTranslations } from 'next-intl';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import imsClient from '@/lib/imsClient';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import type { terminals } from '@repo/ims-client';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
-import type { TerminalFormValues } from '../terminal-form';
+import imsClient from '@/lib/ims-client';
+import type { TerminalFormValues } from '@/terminals/terminal-form';
 
 interface MutationMessages {
   loading: string;

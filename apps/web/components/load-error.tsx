@@ -39,7 +39,7 @@ export default function LoadError({
         </Button>
         <Link href={backHref}>
           <Button variant="outline" size="sm">
-            {backLabel || tCommon('actions.back')}
+            {backLabel || tCommon('actions.backToList')}
           </Button>
         </Link>
       </div>

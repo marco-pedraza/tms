@@ -1,7 +1,7 @@
 'use client';
 
+import LoadError from '@/components/load-error';
 import CountryNotFound from '@/countries/components/country-not-found';
-import useQueryCountry from '@/countries/hooks/use-query-country';
 import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
 import useQueryCountry from '@/countries/hooks/use-query-country';
 
@@ -23,7 +23,7 @@ export default function CountryLayout({
   }
 
   if (status === 'error') {
-    return <div>Error</div>;
+    return <LoadError backHref="/countries" backLabel="Volver a Países" />;
   }
 
   return children;

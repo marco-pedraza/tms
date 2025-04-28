@@ -7,6 +7,7 @@ import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import CountrySkeleton from '@/countries/components/country-skeleton';
 import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
 import { useCountryMutations } from '@/countries/hooks/use-country-mutations';
 import useQueryCountry from '@/countries/hooks/use-query-country';
@@ -32,7 +33,7 @@ export default function CountryDetailsPage() {
   };
 
   if (isLoading) {
-    return <div>{tCommon('states.loading')}</div>;
+    return <CountrySkeleton />;
   }
 
   if (!country) {

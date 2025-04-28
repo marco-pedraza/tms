@@ -280,17 +280,28 @@ export const withScopes = <
       }
     },
 
-    create: baseRepository.create,
-    update: baseRepository.update,
-    delete: baseRepository.delete,
-    deleteAll: baseRepository.deleteAll,
-    existsBy: baseRepository.existsBy,
+    create: (...args) => baseRepository.create(...args),
+    update: (...args) => baseRepository.update(...args),
+    delete: (...args) => baseRepository.delete(...args),
+    deleteAll: (...args) => baseRepository.deleteAll(...args),
+    existsBy: (...args) => baseRepository.existsBy(...args),
     ...(baseRepository.validateUniqueness && {
-      validateUniqueness: baseRepository.validateUniqueness,
+      validateUniqueness: (...args) => {
+        if (!baseRepository.validateUniqueness) {
+          throw new Error('validateUniqueness is not implemented');
+        }
+        return baseRepository.validateUniqueness(...args);
+      },
     }),
     ...(baseRepository.validateRelationExists && {
-      validateRelationExists: baseRepository.validateRelationExists,
+      validateRelationExists: (...args) => {
+        if (!baseRepository.validateRelationExists) {
+          throw new Error('validateRelationExists is not implemented');
+        }
+        return baseRepository.validateRelationExists(...args);
+      },
     }),
+    transaction: (...args) => baseRepository.transaction(...args),
     __internal: baseRepository.__internal,
   };
 

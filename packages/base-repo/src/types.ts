@@ -1,18 +1,32 @@
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
+import { PgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import { SQL } from 'drizzle-orm';
 
 /**
  * Type for the database query builder
  * This encapsulates NodePgDatabase to avoid Symbol.iterator TypeScript errors
  */
-export type DrizzleDB = NodePgDatabase<Record<string, never>>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type DrizzleDB = NodePgDatabase<any>;
 
 /**
  * Type for query results from Drizzle operations
  * Used to provide a specific type for query operations
  */
 export type DrizzleQueryResult<T> = T;
+
+/**
+ * Type for Drizzle transactions
+ * This is a wrapper around the PgTransaction type to avoid Symbol.iterator TypeScript errors
+ */
+export type DrizzleTransaction = PgTransaction<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
+  Record<string, never>,
+  Record<string, never>
+>;
+
+export type TransactionalDB = DrizzleDB | DrizzleTransaction;
 
 /**
  * Generic type for paginated results
@@ -167,13 +181,18 @@ export interface BaseRepository<
     relationId: number,
     relationName?: string,
   ): Promise<void>;
+  transaction<R>(
+    callback: (
+      txRepo: BaseRepository<T, CreateT, UpdateT, TTable>,
+    ) => Promise<R>,
+  ): Promise<R>;
   // Internal state we need to access
   __internal?: {
     /**
      * Database connection instance
-     * Using a specific DrizzleDB type instead of any to maintain type safety
+     * Using TransactionalDB type to support both regular DB and transaction contexts
      */
-    db: DrizzleDB;
+    db: TransactionalDB;
     /**
      * Table definition for the entity
      */

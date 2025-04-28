@@ -113,7 +113,7 @@ export default function CityDetailsPage() {
               <dt className="font-medium">{tCommon('fields.slug')}:</dt>
               <dd>{city.slug}</dd>
 
-              <dt className="font-medium">{tCities('fields.coordinates')}:</dt>
+              <dt className="font-medium">{tCommon('fields.coordinates')}:</dt>
               <dd>
                 <a
                   href={createGoogleMapsLink(city.latitude, city.longitude)}

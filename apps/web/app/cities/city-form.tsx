@@ -141,7 +141,7 @@ function CityForm({
                 <Label htmlFor="stateId">{tCities('form.state')}</Label>
                 <Select
                   value={field.state.value?.toString() ?? ''}
-                  onValueChange={(value) =>
+                  onValueChange={(value: string) =>
                     field.handleChange(parseInt(value, 10))
                   }
                   disabled={isLoadingStates}
@@ -169,7 +169,7 @@ function CityForm({
                 <Label htmlFor="timezone">{tCities('form.timezone')}</Label>
                 <Select
                   value={field.state.value ?? ''}
-                  onValueChange={(value) => field.handleChange(value)}
+                  onValueChange={(value: string) => field.handleChange(value)}
                   disabled={isLoadingTimezones}
                 >
                   <SelectTrigger id="timezone">
@@ -240,7 +240,9 @@ function CityForm({
                 <Switch
                   id={field.name}
                   checked={field.state.value ?? false}
-                  onCheckedChange={(checked) => field.handleChange(checked)}
+                  onCheckedChange={(checked: boolean) =>
+                    field.handleChange(checked)
+                  }
                 />
                 <Label htmlFor={field.name}>{tCommon('fields.active')}</Label>
               </div>
@@ -250,7 +252,7 @@ function CityForm({
           <form.Subscribe
             selector={(state) => [state.canSubmit, state.isSubmitting]}
           >
-            {([canSubmit, isSubmitting]) => (
+            {([canSubmit, isSubmitting]: [boolean, boolean]) => (
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="submit" disabled={!canSubmit || isSubmitting}>
                   {isSubmitting && <Loader2 className="animate-spin" />}

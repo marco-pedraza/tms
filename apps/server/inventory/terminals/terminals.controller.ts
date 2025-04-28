@@ -15,7 +15,7 @@ import { PaginationParams } from '../../shared/types';
  * @throws {APIError} If the terminal creation fails
  */
 export const createTerminal = api(
-  { method: 'POST', path: '/terminals' },
+  { method: 'POST', path: '/terminals', expose: true },
   async (params: CreateTerminalPayload): Promise<Terminal> => {
     return await terminalRepository.create(params);
   },

@@ -1,16 +1,17 @@
 'use client';
 
-import { z } from 'zod';
-import { useTranslations } from 'next-intl';
+import { useForm } from '@tanstack/react-form';
+import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslations } from 'next-intl';
+import { z } from 'zod';
+import type { cities, terminals } from '@repo/ims-client';
+import { OperatingHoursSelector } from '@/components/operating-hours-selector';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useForm } from '@tanstack/react-form';
 import {
   Select,
   SelectContent,
@@ -18,20 +19,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useQuery } from '@tanstack/react-query';
-import imsClient from '@/lib/imsClient';
-import type { cities, terminals } from '@repo/ims-client';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import imsClient from '@/lib/ims-client';
 import {
-  nameSchema,
+  codeSchema,
+  facilitiesSchema,
   latitudeSchema,
   longitudeSchema,
+  nameSchema,
   operatingHoursSchema,
-  facilitiesSchema,
-  codeSchema,
   phoneSchema,
 } from '@/lib/schemas/common';
 import { hasFieldErrors } from '@/lib/utils';
-import { OperatingHoursSelector } from '@/components/operating-hours-selector';
 
 // Days of the week
 const daysOfWeek = [

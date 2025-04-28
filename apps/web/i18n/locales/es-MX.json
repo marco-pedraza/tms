@@ -4,7 +4,9 @@
       "default": "Ha ocurrido un error",
       "notFound": "No encontrado",
       "unexpected": "Error inesperado",
-      "invalidId": "ID inválido"
+      "invalidId": "ID inválido",
+      "somethingWentWrong": "Algo salió mal.",
+      "noResourceFound": "No pudimos encontrar el recurso que buscas."
     },
     "actions": {
       "save": "Guardar",
@@ -15,7 +17,8 @@
       "more": "Más acciones",
       "create": "Crear",
       "update": "Actualizar",
-      "backToList": "Volver a la lista"
+      "backToList": "Volver a la lista",
+      "retry": "Reintentar"
     },
     "status": {
       "active": "Activo",

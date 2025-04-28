@@ -5,6 +5,7 @@ import PageHeader from '@/components/page-header';
 import CountryForm, {
   CountryFormValues,
 } from '@/countries/components/country-form';
+import CountryFormSkeleton from '@/countries/components/country-form-skeleton';
 import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
 import { useCountryMutations } from '@/countries/hooks/use-country-mutations';
 import useQueryCountry from '@/countries/hooks/use-query-country';
@@ -20,7 +21,7 @@ export default function EditCountryPage() {
   const { updateCountry } = useCountryMutations();
 
   if (status === 'pending') {
-    return <div>{tCommon('states.loading')}</div>;
+    return <CountryFormSkeleton />;
   }
 
   const handleSubmit = (values: CountryFormValues) => {

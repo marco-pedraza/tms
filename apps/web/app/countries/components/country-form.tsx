@@ -103,7 +103,9 @@ function CountryForm({
                 <Switch
                   id={field.name}
                   checked={field.state.value ?? false}
-                  onCheckedChange={(checked) => field.handleChange(checked)}
+                  onCheckedChange={(checked: boolean) =>
+                    field.handleChange(checked)
+                  }
                 />
                 <Label htmlFor={field.name}>{tCommon('fields.active')}</Label>
               </div>
@@ -113,7 +115,7 @@ function CountryForm({
           <form.Subscribe
             selector={(state) => [state.canSubmit, state.isSubmitting]}
           >
-            {([canSubmit, isSubmitting]) => (
+            {([canSubmit, isSubmitting]: [boolean, boolean]) => (
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="submit" disabled={!canSubmit || isSubmitting}>
                   {isSubmitting && <Loader2 className="animate-spin" />}

@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
-import CountriesTable from './countries-table';
+import CountriesTable from '@/countries/components/countries-table';
 
 export default function CountriesPage() {
   const t = useTranslations('countries');

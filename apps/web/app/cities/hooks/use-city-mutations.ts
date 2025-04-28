@@ -1,7 +1,7 @@
 import { useTranslations } from 'next-intl';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import imsClient from '@/lib/imsClient';
+import imsClient from '@/lib/ims-client';
 import type { cities } from '@repo/ims-client';
 import type { CityFormValues } from '../city-form';
 import { useToastMutation } from '@/hooks/use-toast-mutation';

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Badge } from '@/components/ui/badge';
-import client from '@/lib/imsClient';
+import client from '@/lib/ims-client';
 import { useQuery } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/data-table';
@@ -15,7 +15,7 @@ import { DropdownMenu } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useStateMutations } from '@/app/states/hooks/use-state-mutations';
+import { useStateMutations } from '@/states/hooks/use-state-mutations';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 
 type State = states.State;

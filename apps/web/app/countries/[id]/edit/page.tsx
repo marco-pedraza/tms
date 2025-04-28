@@ -1,55 +1,26 @@
 'use client';
 
-import { useParams } from 'next/navigation';
-import PageHeader from '@/components/page-header';
-import { Params } from 'next/dist/server/request/params';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import imsClient from '@/lib/imsClient';
-import type { countries } from '@repo/ims-client';
-import CountryForm, { CountryFormValues } from '@/app/countries/country-form';
-import { useCountryMutations } from '@/app/countries/hooks/use-country-mutations';
-
 import { useTranslations } from 'next-intl';
-
-interface EditCountryPageParams extends Params {
-  id: string;
-}
-
-const isNumber = (value: string) => {
-  return !isNaN(Number(value));
-};
+import PageHeader from '@/components/page-header';
+import CountryForm, {
+  CountryFormValues,
+} from '@/countries/components/country-form';
+import { useCountryMutations } from '@/countries/hooks/use-country-mutations';
+import useQueryCountry from '@/countries/hooks/use-query-country';
+import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
 
 export default function EditCountryPage() {
-  const params = useParams<EditCountryPageParams>();
-  const countryId = parseInt(params.id);
-  const queryClient = useQueryClient();
-  const { updateCountry } = useCountryMutations();
   const tCountries = useTranslations('countries');
   const tCommon = useTranslations('common');
-
-  const { data, status, error } = useQuery({
-    queryKey: ['country', countryId],
-    enabled: isNumber(params.id),
-    queryFn: () => imsClient.inventory.getCountry(countryId),
-    initialData: () =>
-      queryClient
-        ?.getQueryData<countries.PaginatedCountries>(['countries'])
-        ?.data.find((country) => country.id === countryId),
-    initialDataUpdatedAt: () =>
-      queryClient?.getQueryState<countries.Country[]>(['countries'])
-        ?.dataUpdatedAt,
+  const { countryId, isValidId } = useCountryDetailsParams();
+  const { data, status } = useQueryCountry({
+    countryId,
+    enabled: isValidId,
   });
-
-  if (!isNumber(params.id)) {
-    return <div>{tCommon('errors.invalidId')}</div>;
-  }
+  const { updateCountry } = useCountryMutations();
 
   if (status === 'pending') {
     return <div>{tCommon('states.loading')}</div>;
-  }
-
-  if (error) {
-    return <div>Error: {error.message}</div>;
   }
 
   const handleSubmit = (values: CountryFormValues) => {

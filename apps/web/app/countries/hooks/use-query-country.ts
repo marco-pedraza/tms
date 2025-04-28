@@ -6,6 +6,11 @@ import {
 import type { countries } from '@repo/ims-client';
 import imsClient from '@/lib/ims-client';
 
+interface QueryCountryError extends Error {
+  code?: string;
+  status?: number;
+}
+
 interface UseQueryCountryProps {
   countryId: number;
   enabled?: boolean;
@@ -20,7 +25,7 @@ interface UseQueryCountryProps {
 export default function useQueryCountry({
   countryId,
   enabled = true,
-}: UseQueryCountryProps): UseQueryResult<countries.Country, Error> {
+}: UseQueryCountryProps): UseQueryResult<countries.Country, QueryCountryError> {
   const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ['country', countryId],

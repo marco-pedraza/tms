@@ -14,7 +14,6 @@ export default function CountryLayout({
     countryId,
     enabled: isValidId,
   });
-  // @ts-expect-error - error is not defined in the type
   const isCountryNotFound = !isValidId || error?.code === 'not_found';
 
   if (isCountryNotFound) {

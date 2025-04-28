@@ -12,6 +12,8 @@ import {
   createCountry,
   deleteCountry,
 } from '../countries/countries.controller';
+import { createSlug } from '../../shared/utils';
+import { Facility, OperatingHours } from './terminals.types';
 
 describe('Terminals Controller', () => {
   // Test data and setup
@@ -27,21 +29,19 @@ describe('Terminals Controller', () => {
     longitude: -99.1332,
     contactphone: '555-1234',
     operatingHours: {
-      monday: { open: '08:00', close: '20:00' },
-      tuesday: { open: '08:00', close: '20:00' },
-      wednesday: { open: '08:00', close: '20:00' },
-      thursday: { open: '08:00', close: '20:00' },
-      friday: { open: '08:00', close: '20:00' },
-      saturday: { open: '09:00', close: '18:00' },
-      sunday: { open: '10:00', close: '16:00' },
-      notes: 'Closed on major holidays',
+      monday: [{ open: '08:00', close: '20:00' }],
+      tuesday: [{ open: '08:00', close: '20:00' }],
+      wednesday: [{ open: '08:00', close: '20:00' }],
+      thursday: [{ open: '08:00', close: '20:00' }],
+      friday: [{ open: '08:00', close: '20:00' }],
+      saturday: [{ open: '09:00', close: '18:00' }],
+      sunday: [{ open: '10:00', close: '16:00' }],
     },
     facilities: [
       { name: 'Waiting Area', description: 'Comfortable seating area' },
       { name: 'Restrooms', description: 'Clean public restrooms' },
     ],
     code: 'TEST-TERM-01',
-    slug: 'test-terminal', // Slug format: lowercase, hyphen-separated
     active: true,
   };
 
@@ -76,63 +76,48 @@ describe('Terminals Controller', () => {
       latitude: 19.4326,
       longitude: -99.1332,
       timezone: 'America/Mexico_City',
-      slug: 'test-city-terminals',
       active: true,
     });
     cityId = city.id;
     testTerminal.cityId = cityId; // Update the test terminal with the real city ID
   });
 
-  // Clean up after all tests
+  // Cleanup after all tests
   afterAll(async () => {
     // Clean up any additional terminals created during tests
     for (const id of additionalTerminalIds) {
       try {
         await deleteTerminal({ id });
       } catch (error) {
-        console.log(`Error cleaning up additional terminal ${id}:`, error);
+        // Ignore errors in cleanup, terminal might have been deleted in test
+        console.error(`Error deleting additional terminal ${id}:`, error);
       }
     }
 
-    // Clean up the main created terminal if any
+    // Clean up the main test terminal if it was created
     if (createdTerminalId) {
       try {
         await deleteTerminal({ id: createdTerminalId });
       } catch (error) {
-        console.log('Error cleaning up test terminal:', error);
+        console.error(
+          `Error deleting main test terminal ${createdTerminalId}:`,
+          error,
+        );
       }
     }
 
-    // Clean up the created city
-    if (cityId) {
-      try {
-        await deleteCity({ id: cityId });
-      } catch (error) {
-        console.log('Error cleaning up test city:', error);
-      }
-    }
-
-    // Clean up the created state
-    if (stateId) {
-      try {
-        await deleteState({ id: stateId });
-      } catch (error) {
-        console.log('Error cleaning up test state:', error);
-      }
-    }
-
-    // Clean up the created country
-    if (countryId) {
-      try {
-        await deleteCountry({ id: countryId });
-      } catch (error) {
-        console.log('Error cleaning up test country:', error);
-      }
+    // Clean up city, state, country
+    try {
+      await deleteCity({ id: cityId });
+      await deleteState({ id: stateId });
+      await deleteCountry({ id: countryId });
+    } catch (error) {
+      console.error('Error in cleanup:', error);
     }
   });
 
   describe('success scenarios', () => {
-    test('should create a new terminal with properly formatted slug', async () => {
+    test('should create a new terminal with auto-generated slug with t prefix', async () => {
       // Create a new terminal
       const response = await createTerminal(testTerminal);
 
@@ -151,42 +136,99 @@ describe('Terminals Controller', () => {
       expect(response.operatingHours).toEqual(testTerminal.operatingHours);
       expect(response.facilities).toEqual(testTerminal.facilities);
       expect(response.code).toBe(testTerminal.code);
-      expect(response.slug).toBe(testTerminal.slug);
       expect(response.active).toBe(testTerminal.active);
       expect(response.createdAt).toBeDefined();
 
-      // Validate slug format: lowercase, hyphen-separated, no special chars
-      expect(response.slug).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+      // Validate slug was generated correctly from the name with t prefix
+      const expectedSlug = createSlug(testTerminal.name, 't');
+      expect(response.slug).toBe(expectedSlug);
+
+      // Validate slug format: t-prefixed, lowercase, hyphen-separated, no special chars
+      expect(response.slug).toMatch(/^t-[a-z0-9]+(?:-[a-z0-9]+)*$/);
     });
 
-    test('should create a terminal with multi-word slug', async () => {
-      // Create a terminal with multi-word slug
-      const terminalWithComplexSlug = await createTerminal({
-        name: 'Terminal Central del Norte',
-        address: '456 Central Avenue',
+    test('should create a terminal with facilities', async () => {
+      // Create a terminal with facilities
+      const terminalWithFacilities = await createTerminal({
+        name: 'Terminal with Facilities',
+        address: '456 Facility Street',
         cityId: cityId,
         latitude: 19.4326,
         longitude: -99.1332,
-        contactphone: '555-5678',
-        code: 'TERM-CENTRAL',
-        slug: 'terminal-central-norte', // Multi-word slug with hyphens
+        code: 'TERM-FAC',
         active: true,
+        facilities: [
+          {
+            name: 'WiFi',
+            description: 'Free WiFi for passengers',
+            icon: 'wifi',
+          },
+          {
+            name: 'Food Court',
+            description: 'Various food options',
+            icon: 'food',
+          },
+        ],
       });
 
-      // Add to list of terminals to clean up
-      additionalTerminalIds.push(terminalWithComplexSlug.id);
+      // Keep track for cleanup
+      additionalTerminalIds.push(terminalWithFacilities.id);
 
-      // Assertions for slug format
-      expect(terminalWithComplexSlug.slug).toBe('terminal-central-norte');
-      expect(terminalWithComplexSlug.slug).toMatch(
-        /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-      );
+      // Assertions for facilities
+      expect(terminalWithFacilities.facilities).toBeDefined();
+      const facilities = terminalWithFacilities.facilities as Facility[];
+      expect(facilities).toHaveLength(2);
+      expect(facilities[0].name).toBe('WiFi');
+      expect(facilities[1].name).toBe('Food Court');
+
+      // Verify slug has t prefix
+      expect(terminalWithFacilities.slug).toMatch(/^t-/);
+    });
+
+    test('should create a terminal with multiple operating hours in a day', async () => {
+      // Create a terminal with multiple operating hours per day
+      const terminalWithMultipleHours = await createTerminal({
+        name: 'Terminal with Multiple Hours',
+        address: '789 Hours Street',
+        cityId: cityId,
+        latitude: 19.4326,
+        longitude: -99.1332,
+        code: 'TERM-HOURS',
+        active: true,
+        operatingHours: {
+          monday: [
+            { open: '08:00', close: '12:00' },
+            { open: '13:00', close: '20:00' },
+          ],
+          tuesday: [{ open: '08:00', close: '20:00' }],
+          wednesday: [{ open: '08:00', close: '20:00' }],
+          thursday: [{ open: '08:00', close: '20:00' }],
+          friday: [{ open: '08:00', close: '20:00' }],
+          saturday: [{ open: '09:00', close: '18:00' }],
+          sunday: [{ open: '10:00', close: '16:00' }],
+        },
+      });
+
+      // Keep track for cleanup
+      additionalTerminalIds.push(terminalWithMultipleHours.id);
+
+      // Assertions for multiple operating hours
+      expect(terminalWithMultipleHours.operatingHours).toBeDefined();
+      const hours = terminalWithMultipleHours.operatingHours as OperatingHours;
+      expect(hours.monday).toBeDefined();
+      expect(hours.monday).toHaveLength(2);
+      expect(hours.monday?.[0].open).toBe('08:00');
+      expect(hours.monday?.[0].close).toBe('12:00');
+      expect(hours.monday?.[1].open).toBe('13:00');
+      expect(hours.monday?.[1].close).toBe('20:00');
+      // Verify slug has t prefix
+      expect(terminalWithMultipleHours.slug).toMatch(/^t-/);
 
       // Clean up
-      await deleteTerminal({ id: terminalWithComplexSlug.id });
+      await deleteTerminal({ id: terminalWithMultipleHours.id });
       // Remove from cleanup list since we just deleted it
       additionalTerminalIds = additionalTerminalIds.filter(
-        (id) => id !== terminalWithComplexSlug.id,
+        (id) => id !== terminalWithMultipleHours.id,
       );
     });
 
@@ -201,6 +243,9 @@ describe('Terminals Controller', () => {
       expect(response.cityId).toBe(testTerminal.cityId);
       expect(response.latitude).toBe(testTerminal.latitude);
       expect(response.longitude).toBe(testTerminal.longitude);
+
+      // Verify slug has t prefix
+      expect(response.slug).toMatch(/^t-/);
     });
 
     test('should list terminals with pagination', async () => {
@@ -213,7 +258,6 @@ describe('Terminals Controller', () => {
           latitude: 19.4226,
           longitude: -99.1432,
           code: 'TERM-EAST',
-          slug: 'terminal-east',
           active: true,
         },
         {
@@ -223,7 +267,6 @@ describe('Terminals Controller', () => {
           latitude: 19.4426,
           longitude: -99.1232,
           code: 'TERM-WEST',
-          slug: 'terminal-west',
           active: true,
         },
       ];
@@ -232,6 +275,9 @@ describe('Terminals Controller', () => {
       for (const terminal of extraTerminals) {
         const created = await createTerminal(terminal);
         additionalTerminalIds.push(created.id);
+
+        // Verify each created terminal has t-prefixed slug
+        expect(created.slug).toMatch(/^t-/);
       }
 
       // Test pagination with default parameters (page 1, pageSize 10)
@@ -249,9 +295,14 @@ describe('Terminals Controller', () => {
       expect(typeof response.pagination.currentPage).toBe('number');
       expect(typeof response.pagination.pageSize).toBe('number');
       expect(typeof response.pagination.totalCount).toBe('number');
+
+      // Verify all terminals in response have t-prefixed slugs
+      response.data.forEach((terminal) => {
+        expect(terminal.slug).toMatch(/^t-/);
+      });
     });
 
-    test('should update a terminal', async () => {
+    test('should update a terminal and regenerate slug when name changes', async () => {
       // Update data
       const updateData = {
         id: createdTerminalId,
@@ -270,7 +321,11 @@ describe('Terminals Controller', () => {
       expect(response.longitude).toBe(updateData.longitude);
       // Original data that wasn't updated should remain
       expect(response.address).toBe(testTerminal.address);
-      expect(response.slug).toBe(testTerminal.slug);
+
+      // Slug should be regenerated from the new name with t prefix
+      const expectedSlug = createSlug(updateData.name, 't');
+      expect(response.slug).toBe(expectedSlug);
+      expect(response.slug).toMatch(/^t-/);
     });
 
     test('should delete a terminal', async () => {
@@ -282,9 +337,11 @@ describe('Terminals Controller', () => {
         latitude: 19.4326,
         longitude: -99.1332,
         code: 'TERM-DELETE',
-        slug: 'terminal-to-delete',
         active: true,
       });
+
+      // Verify created terminal has t-prefixed slug
+      expect(terminalToDelete.slug).toMatch(/^t-/);
 
       // Delete the terminal
       const response = await deleteTerminal({ id: terminalToDelete.id });
@@ -308,53 +365,38 @@ describe('Terminals Controller', () => {
 
   describe('error scenarios', () => {
     test('should fail to create terminal with missing required fields', async () => {
-      // Missing required field: name
       try {
-        // @ts-expect-error - Testing validation by intentionally omitting required 'name' field
-        await createTerminal({
-          address: '123 Missing Name Street',
-          cityId: cityId,
-          latitude: 19.4326,
-          longitude: -99.1332,
-          code: 'MISSING-NAME',
-          slug: 'missing-name',
+        // Missing required fields
+        const incompleteData = {
+          name: 'Incomplete Terminal',
+          // Missing address
+          cityId,
+          // Missing coordinates
+          code: 'INCOMPLETE',
           active: true,
-        });
-        expect(true).toBe(false); // Should not reach here
-      } catch (error) {
-        expect(error).toBeDefined();
-      }
-
-      // Missing required field: latitude
-      try {
-        // @ts-expect-error - Testing validation by intentionally omitting required 'latitude' field
-        await createTerminal({
-          name: 'Missing Coordinates Terminal',
-          address: '123 Missing Coords Street',
-          cityId: cityId,
-          longitude: -99.1332, // Missing latitude
-          code: 'MISSING-COORDS',
-          slug: 'missing-coordinates',
-          active: true,
-        });
+        };
+        // @ts-expect-error - Intentionally sending incomplete data
+        await createTerminal(incompleteData);
         expect(true).toBe(false); // Should not reach here
       } catch (error) {
         expect(error).toBeDefined();
       }
     });
 
-    test('should fail to create terminal with duplicate slug', async () => {
+    test('should fail to create terminal with invalid operating hours', async () => {
       try {
-        // Attempt to create a terminal with same slug as existing terminal
+        // Invalid time format
         await createTerminal({
-          name: 'Duplicate Slug Terminal',
-          address: '123 Duplicate Slug Street',
+          name: 'Terminal With Invalid Hours',
+          address: '123 Invalid Hours Street',
           cityId: cityId,
           latitude: 19.4326,
           longitude: -99.1332,
-          code: 'UNIQUE-CODE', // Different code
-          slug: testTerminal.slug, // Same slug as existing terminal
+          code: 'TERM-INVALID',
           active: true,
+          operatingHours: {
+            monday: [{ open: 'invalid', close: '20:00' }],
+          },
         });
         expect(true).toBe(false); // Should not reach here
       } catch (error) {
@@ -372,7 +414,6 @@ describe('Terminals Controller', () => {
           latitude: 19.4326,
           longitude: -99.1332,
           code: testTerminal.code, // Same code as existing terminal
-          slug: 'unique-slug-for-test', // Different slug
           active: true,
         });
         expect(true).toBe(false); // Should not reach here

@@ -32,7 +32,9 @@
       "status": "Estado",
       "latitude": "Latitud",
       "longitude": "Longitud",
-      "slug": "Slug"
+      "slug": "Slug",
+      "coordinates": "Coordenadas",
+      "location": "Ubicación"
     },
     "sections": {
       "basicInfo": "Información Básica",
@@ -59,6 +61,15 @@
     },
     "states": {
       "loading": "Cargando..."
+    },
+    "days": {
+      "monday": "Lunes",
+      "tuesday": "Martes",
+      "wednesday": "Miércoles",
+      "thursday": "Jueves",
+      "friday": "Viernes",
+      "saturday": "Sábado",
+      "sunday": "Domingo"
     }
   },
   "countries": {
@@ -168,7 +179,6 @@
     "fields": {
       "state": "Estado",
       "timezone": "Zona Horaria",
-      "coordinates": "Coordenadas",
       "latitude": "Latitud",
       "longitude": "Longitud"
     },
@@ -217,6 +227,93 @@
         "loading": "Eliminando ciudad...",
         "success": "Ciudad eliminada correctamente",
         "error": "No pudimos eliminar la ciudad"
+      }
+    }
+  },
+  "terminals": {
+    "title": "Terminales",
+    "description": "Administra información de terminales de autobuses para el Sistema de Inventario",
+    "actions": {
+      "create": "Crear Terminal",
+      "update": "Actualizar Terminal",
+      "backToList": "Volver a terminales"
+    },
+    "fields": {
+      "address": "Dirección",
+      "contactphone": "Teléfono de Contacto",
+      "city": "Ciudad",
+      "operatingHours": "Horarios de Operación",
+      "facilities": "Instalaciones",
+      "slug": "Slug"
+    },
+    "form": {
+      "basicInfo": "Información Básica",
+      "placeholders": {
+        "name": "Ej: Terminal Central de Autobuses",
+        "code": "Ej: TERM-GDL",
+        "address": "Ej: Av. Central #123, Col. Centro",
+        "contactphone": "Ej: (33) 1234-5678",
+        "city": "Selecciona una ciudad"
+      },
+      "helpText": {
+        "code": "Usa un código alfanumérico único para identificar la terminal"
+      }
+    },
+    "details": {
+      "description": "Detalles de la terminal"
+    },
+    "new": {
+      "title": "Crear Terminal",
+      "description": "Agrega una nueva terminal al sistema"
+    },
+    "edit": {
+      "title": "Editar Terminal",
+      "description": "Actualiza la información de la terminal"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Terminal no encontrada",
+        "description": "No pudimos encontrar la terminal que buscas. Es posible que haya sido eliminada o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando terminal...",
+        "success": "Terminal creada correctamente",
+        "error": "No pudimos crear la terminal"
+      },
+      "update": {
+        "loading": "Actualizando terminal...",
+        "success": "Terminal actualizada correctamente",
+        "error": "No pudimos actualizar la terminal"
+      },
+      "delete": {
+        "loading": "Eliminando terminal...",
+        "success": "Terminal eliminada correctamente",
+        "error": "No pudimos eliminar la terminal"
+      }
+    },
+    "facilities": {
+      "waitingRoom": "Sala de Espera",
+      "restrooms": "Baños",
+      "restaurants": "Restaurantes",
+      "ticketOffices": "Taquillas",
+      "luggageStorage": "Almacenamiento de Equipaje",
+      "wifi": "WiFi",
+      "atm": "Cajeros Automáticos",
+      "parking": "Estacionamiento",
+      "accessibleFacilities": "Acceso para Discapacitados",
+      "infoModule": "Módulo de Información"
+    },
+    "operatingHours": {
+      "openingTime": "Hora de apertura",
+      "closingTime": "Hora de cierre",
+      "open24hours": "Abierto 24 horas",
+      "closed": "Cerrado",
+      "timeSelectors": {
+        "hour": "Hora",
+        "minute": "Min",
+        "period": "AM/PM"
       }
     }
   }

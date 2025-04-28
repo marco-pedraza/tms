@@ -11,9 +11,10 @@ import type {
   TableWithId,
   UniqueFieldConfig,
   BaseRepository,
+  TransactionalDB,
+  DrizzleDB,
 } from './types';
 import { PgColumn } from 'drizzle-orm/pg-core';
-import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import {
   handlePostgresError,
   isApplicationError,
@@ -36,14 +37,14 @@ export const createBaseRepository = <
   UpdateT extends Partial<CreateT>,
   TTable extends TableWithId,
 >(
-  db: NodePgDatabase<Record<string, never>>,
+  db: TransactionalDB,
   table: TTable,
   entityName: string,
 ): BaseRepository<T, CreateT, UpdateT, TTable> => {
   type TableInsert = TTable extends { $inferInsert: infer U } ? U : never;
 
   /**
-   * Finds an entity by its ID
+   λ* Finds an entity by its ID
    * @param {number} id - The ID of the entity to find
    * @throws {NotFoundError} If the entity is not found
    * @returns {Promise<T>} The found entity
@@ -393,6 +394,21 @@ export const createBaseRepository = <
     }
   };
 
+  const transaction = <R>(
+    callback: (
+      txRepo: BaseRepository<T, CreateT, UpdateT, TTable>,
+    ) => Promise<R>,
+  ): Promise<R> => {
+    return (db as DrizzleDB).transaction((tx: TransactionalDB) => {
+      const txRepository = createBaseRepository<T, CreateT, UpdateT, TTable>(
+        tx,
+        table,
+        entityName,
+      );
+      return callback(txRepository);
+    }) as Promise<R>;
+  };
+
   const repository: BaseRepository<T, CreateT, UpdateT, TTable> = {
     findOne,
     findAll,
@@ -407,6 +423,7 @@ export const createBaseRepository = <
     existsBy,
     validateUniqueness,
     validateRelationExists,
+    transaction,
     __internal: {
       db,
       table,

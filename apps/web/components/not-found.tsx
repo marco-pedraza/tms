@@ -1,6 +1,6 @@
+import Link from 'next/link';
 import { FileX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
 
 interface NotFoundProps {
   title?: string;

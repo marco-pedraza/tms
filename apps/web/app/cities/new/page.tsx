@@ -1,9 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import CityForm from '@/cities/city-form';
+import { useCityMutations } from '@/cities/hooks/use-city-mutations';
 import PageHeader from '@/components/page-header';
-import CityForm from '../city-form';
-import { useCityMutations } from '../hooks/use-city-mutations';
 
 export default function NewCityPage() {
   const { createCity } = useCityMutations();

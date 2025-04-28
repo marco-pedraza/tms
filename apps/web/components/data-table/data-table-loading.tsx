@@ -1,19 +1,19 @@
 import {
   ColumnDef,
-  flexRender,
   Header,
   HeaderGroup,
   Table as TableType,
+  flexRender,
 } from '@tanstack/react-table';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
-  TableHead,
-  TableRow,
-  TableHeader,
+  Table,
   TableBody,
   TableCell,
-  Table,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface DataTableLoadingProps<TData> {
   table: TableType<TData>;

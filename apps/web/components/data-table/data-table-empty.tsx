@@ -1,19 +1,19 @@
 import {
-  Table,
-  TableRow,
-  TableHeader,
-  TableHead,
-  TableBody,
-  TableCell,
-} from '@/components/ui/table';
-import {
-  HeaderGroup,
   Header,
-  flexRender,
+  HeaderGroup,
   Table as TableType,
+  flexRender,
 } from '@tanstack/react-table';
 import { DatabaseIcon, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface DataTableEmptyProps<TData> {
   table: TableType<TData>;

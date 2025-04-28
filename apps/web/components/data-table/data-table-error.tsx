@@ -1,19 +1,19 @@
 import {
-  flexRender,
   Header,
   HeaderGroup,
   Table as TableType,
+  flexRender,
 } from '@tanstack/react-table';
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Table,
-  TableHeader,
   TableBody,
-  TableRow,
   TableCell,
   TableHead,
+  TableHeader,
+  TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 
 interface DataTableErrorProps<TData> {
   table: TableType<TData>;

@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Clock } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import type { terminals } from '@repo/ims-client';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -12,8 +14,6 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/utils/cn';
-import type { terminals } from '@repo/ims-client';
-import { useTranslations } from 'next-intl';
 
 type TimeSlot = terminals.TimeSlot;
 

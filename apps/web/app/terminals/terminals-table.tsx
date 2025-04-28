@@ -1,8 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { type ColumnDef } from '@tanstack/react-table';
+import { MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Badge } from '@/components/ui/badge';
+import type { terminals } from '@repo/ims-client';
+import { DataTable } from '@/components/data-table';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,19 +19,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import client from '@/lib/imsClient';
-import { useQuery } from '@tanstack/react-query';
-import { type ColumnDef } from '@tanstack/react-table';
-import { DataTable } from '@/components/data-table';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import type { terminals } from '@repo/ims-client';
-import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { DropdownMenuContent } from '@/components/ui/dropdown-menu';
-import { DropdownMenu } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useTerminalMutations } from './hooks/use-terminal-mutations';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import client from '@/lib/ims-client';
+import { useTerminalMutations } from '@/terminals/hooks/use-terminal-mutations';
 
 type Terminal = terminals.Terminal;
 

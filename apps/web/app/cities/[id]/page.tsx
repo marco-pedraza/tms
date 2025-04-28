@@ -2,19 +2,18 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import PageHeader from '@/components/page-header';
+import { useQuery } from '@tanstack/react-query';
+import { ExternalLink, Loader2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useCityMutations } from '@/cities/hooks/use-city-mutations';
 import ActionButtons from '@/components/action-buttons';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import imsClient from '@/lib/ims-client';
-import { useCityMutations } from '../hooks/use-city-mutations';
-import { Loader2 } from 'lucide-react';
 import { createGoogleMapsLink } from '@/lib/utils';
-import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 
 export default function CityDetailsPage() {
   const params = useParams();

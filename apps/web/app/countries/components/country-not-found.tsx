@@ -1,5 +1,5 @@
-import NotFound from '@/components/not-found';
 import { useTranslations } from 'next-intl';
+import NotFound from '@/components/not-found';
 
 export default function CountryNotFound() {
   const tCountries = useTranslations('countries');

@@ -1,10 +1,10 @@
-import imsClient from '@/lib/ims-client';
-import type { countries } from '@repo/ims-client';
 import {
+  UseQueryResult,
   useQuery,
   useQueryClient,
-  UseQueryResult,
 } from '@tanstack/react-query';
+import type { countries } from '@repo/ims-client';
+import imsClient from '@/lib/ims-client';
 
 interface QueryCountryError extends Error {
   code?: string;

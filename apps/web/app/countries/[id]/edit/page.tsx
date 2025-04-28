@@ -5,9 +5,9 @@ import PageHeader from '@/components/page-header';
 import CountryForm, {
   CountryFormValues,
 } from '@/countries/components/country-form';
+import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
 import { useCountryMutations } from '@/countries/hooks/use-country-mutations';
 import useQueryCountry from '@/countries/hooks/use-query-country';
-import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
 
 export default function EditCountryPage() {
   const tCountries = useTranslations('countries');

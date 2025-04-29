@@ -3,19 +3,19 @@ import {
   createBusSeat,
   createBusSeatsBatch,
   getBusSeat,
-  listBusSeatsByModel,
+  listBusSeatsBySeatDiagram,
   updateBusSeat,
   deleteBusSeat,
 } from './bus-seats.controller';
 import {
-  createBusModel,
-  deleteBusModel,
-} from '../bus-models/bus-models.controller';
+  createSeatDiagram,
+  deleteSeatDiagram,
+} from '../seat-diagrams/seat-diagrams.controller';
 import { SeatType, SeatPosition } from './bus-seats.types';
 
 describe('Bus Seats Controller', () => {
   // Test data and setup
-  let busModelId: number; // We need a valid bus model ID for bus seat tests
+  let seatDiagramId: number; // We need a valid seat diagram ID for bus seat tests
 
   const testSeatPosition: SeatPosition = {
     x: 1,
@@ -23,7 +23,7 @@ describe('Bus Seats Controller', () => {
   };
 
   const testBusSeat = {
-    modelId: 0, // This will be populated in beforeAll
+    seatDiagramId: 0, // This will be populated in beforeAll
     seatNumber: 'A1',
     floorNumber: 1,
     seatType: SeatType.REGULAR,
@@ -38,14 +38,14 @@ describe('Bus Seats Controller', () => {
   const batchCreatedIds: number[] = [];
   let createdBusSeatId: number;
 
-  // Create a test bus model before running the bus seat tests
+  // Create a test seat diagram before running the bus seat tests
   beforeAll(async () => {
-    // Create a temporary bus model to use for the bus seat tests
-    const busModel = await createBusModel({
-      manufacturer: 'TestManufacturer',
-      model: 'TestModel',
-      year: 2023,
-      seatingCapacity: 40,
+    // Create a test seat diagram
+    const seatDiagram = await createSeatDiagram({
+      name: 'Test Seat Diagram',
+      diagramNumber: 2,
+      maxCapacity: 40,
+      totalSeats: 40,
       numFloors: 1,
       seatsPerFloor: [
         {
@@ -56,12 +56,11 @@ describe('Bus Seats Controller', () => {
         },
       ],
       bathroomRows: [],
-      amenities: [],
       active: true,
     });
 
-    busModelId = busModel.id;
-    testBusSeat.modelId = busModelId; // Update the test bus seat with the real model ID
+    seatDiagramId = seatDiagram.id;
+    testBusSeat.seatDiagramId = seatDiagramId; // Update the test bus seat with the real seat diagram ID
   });
 
   // Clean up after all tests
@@ -84,12 +83,12 @@ describe('Bus Seats Controller', () => {
       }
     }
 
-    // Clean up the created bus model
-    if (busModelId) {
+    // Clean up the created seat diagram
+    if (seatDiagramId) {
       try {
-        await deleteBusModel({ id: busModelId });
+        await deleteSeatDiagram({ id: seatDiagramId });
       } catch (error) {
-        console.log('Error cleaning up test bus model:', error);
+        console.log('Error cleaning up test seat diagram:', error);
       }
     }
   });
@@ -105,7 +104,7 @@ describe('Bus Seats Controller', () => {
       // Assertions
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
-      expect(response.modelId).toBe(testBusSeat.modelId);
+      expect(response.seatDiagramId).toBe(testBusSeat.seatDiagramId);
       expect(response.seatNumber).toBe(testBusSeat.seatNumber);
       expect(response.floorNumber).toBe(testBusSeat.floorNumber);
       expect(response.seatType).toBe(testBusSeat.seatType);
@@ -122,7 +121,7 @@ describe('Bus Seats Controller', () => {
       const batchData = {
         seats: [
           {
-            modelId: busModelId,
+            seatDiagramId: seatDiagramId,
             seatNumber: 'B1',
             floorNumber: 1,
             seatType: SeatType.PREMIUM,
@@ -133,7 +132,7 @@ describe('Bus Seats Controller', () => {
             active: true,
           },
           {
-            modelId: busModelId,
+            seatDiagramId: seatDiagramId,
             seatNumber: 'B2',
             floorNumber: 1,
             seatType: SeatType.PREMIUM,
@@ -175,12 +174,14 @@ describe('Bus Seats Controller', () => {
 
       expect(response).toBeDefined();
       expect(response.id).toBe(createdBusSeatId);
-      expect(response.modelId).toBe(testBusSeat.modelId);
+      expect(response.seatDiagramId).toBe(testBusSeat.seatDiagramId);
       expect(response.seatNumber).toBe(testBusSeat.seatNumber);
     });
 
-    test('should list bus seats by model ID', async () => {
-      const response = await listBusSeatsByModel({ modelId: busModelId });
+    test('should list bus seats by seat diagram ID', async () => {
+      const response = await listBusSeatsBySeatDiagram({
+        seatDiagramId: seatDiagramId,
+      });
 
       expect(response).toBeDefined();
       expect(response.busSeats).toBeDefined();
@@ -189,7 +190,7 @@ describe('Bus Seats Controller', () => {
 
       // All seats should belong to our model
       for (const seat of response.busSeats) {
-        expect(seat.modelId).toBe(busModelId);
+        expect(seat.seatDiagramId).toBe(seatDiagramId);
       }
     });
 
@@ -217,7 +218,7 @@ describe('Bus Seats Controller', () => {
     test('should delete a bus seat', async () => {
       // Create a seat specifically for deletion test
       const seatToDelete = await createBusSeat({
-        modelId: busModelId,
+        seatDiagramId: seatDiagramId,
         seatNumber: 'DELETE-ME',
         floorNumber: 1,
         position: { x: 99, y: 99 },
@@ -242,11 +243,11 @@ describe('Bus Seats Controller', () => {
       await expect(getBusSeat({ id: 9999 })).rejects.toThrow();
     });
 
-    test('should handle invalid bus model ID', async () => {
+    test('should handle invalid seat diagram ID', async () => {
       await expect(
         createBusSeat({
           ...testBusSeat,
-          modelId: 9999, // Non-existent bus model ID
+          seatDiagramId: 9999, // Non-existent seat diagram ID
           seatNumber: 'ERROR-SEAT',
           position: { x: 0, y: 0 },
         }),

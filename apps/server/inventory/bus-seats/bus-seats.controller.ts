@@ -49,16 +49,20 @@ export const getBusSeat = api(
 );
 
 /**
- * Retrieves bus seats by model ID.
- * @param params - Object containing the model ID
- * @param params.modelId - The ID of the model to retrieve seats for
+ * Retrieves bus seats by seat diagram ID.
+ * @param params - Object containing the seat diagram ID
+ * @param params.seatDiagramId - The ID of the seat diagram to retrieve seats for
  * @returns {Promise<BusSeats>} Object containing array of bus seats
  * @throws {APIError} If retrieval fails
  */
-export const listBusSeatsByModel = api(
-  { expose: true, method: 'GET', path: '/bus-seats/by-model/:modelId' },
-  async ({ modelId }: { modelId: number }): Promise<BusSeats> => {
-    return await busSeatRepository.findAllByModel(modelId);
+export const listBusSeatsBySeatDiagram = api(
+  {
+    expose: true,
+    method: 'GET',
+    path: '/bus-seats/by-seat-diagram/:seatDiagramId',
+  },
+  async ({ seatDiagramId }: { seatDiagramId: number }): Promise<BusSeats> => {
+    return await busSeatRepository.findAllBySeatDiagram(seatDiagramId);
   },
 );
 

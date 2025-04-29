@@ -2,49 +2,14 @@ import { MinLen, MatchesRegexp } from 'encore.dev/validate';
 import { PaginatedResult } from '../../shared/types';
 
 /**
- * Space type in bus layout
- */
-export enum SpaceType {
-  SEAT = 'seat',
-  HALLWAY = 'hallway',
-  BATHROOM = 'bathroom',
-  EMPTY = 'empty',
-}
-
-/**
- * Seat configuration for a specific floor
- */
-export interface FloorSeats {
-  /** Floor number */
-  floorNumber: number;
-
-  /** Number of rows in this floor */
-  numRows: number;
-
-  /** Number of seats on the left side per row for this floor */
-  seatsLeft: number;
-
-  /** Number of seats on the right side per row for this floor */
-  seatsRight: number;
-}
-
-/**
- * Bathroom row configuration
- */
-export interface BathroomLocation {
-  /** Floor number */
-  floorNumber: number;
-
-  /** Row number */
-  rowNumber: number;
-}
-
-/**
  * Base interface representing a bus model entity
  */
 export interface BusModel {
   /** Unique identifier for the bus model */
   id: number;
+
+  /** Default seat diagram ID */
+  defaultSeatDiagramId: number;
 
   /** Manufacturer of the bus */
   manufacturer: string;
@@ -60,12 +25,6 @@ export interface BusModel {
 
   /** Number of floors/decks in the bus */
   numFloors: number;
-
-  /** Seat configuration for each floor */
-  seatsPerFloor: FloorSeats[];
-
-  /** Rows that contain bathrooms */
-  bathroomRows: BathroomLocation[];
 
   /** Available amenities */
   amenities: string[];
@@ -90,6 +49,12 @@ export interface BusModel {
  * Input for creating a new bus model
  */
 export interface CreateBusModelPayload {
+  /**
+   * Default seat diagram ID
+   * Must be a positive number
+   */
+  defaultSeatDiagramId: number;
+
   /**
    * Manufacturer of the bus
    * Must have at least 1 character
@@ -121,18 +86,6 @@ export interface CreateBusModelPayload {
   numFloors?: number;
 
   /**
-   * Seat configuration for each floor
-   * If not provided, defaults to single floor with 2 seats on each side
-   */
-  seatsPerFloor?: FloorSeats[];
-
-  /**
-   * Rows that contain bathrooms
-   * @default []
-   */
-  bathroomRows?: BathroomLocation[];
-
-  /**
    * Available amenities
    * @default []
    */
@@ -159,6 +112,11 @@ export interface CreateBusModelPayload {
  * Input for updating a bus model
  */
 export interface UpdateBusModelPayload {
+  /**
+   * Default seat diagram ID
+   */
+  defaultSeatDiagramId?: number;
+
   /**
    * Manufacturer of the bus
    * Must have at least 1 character
@@ -187,16 +145,6 @@ export interface UpdateBusModelPayload {
    * Number of floors/decks in the bus
    */
   numFloors?: number;
-
-  /**
-   * Seat configuration for each floor
-   */
-  seatsPerFloor?: FloorSeats[];
-
-  /**
-   * Rows that contain bathrooms
-   */
-  bathroomRows?: BathroomLocation[];
 
   /**
    * Available amenities
@@ -228,35 +176,6 @@ export interface BusModels {
 }
 
 /**
- * Seat configuration type for bus layout
- */
-export interface SeatConfiguration {
-  floors: Floor[];
-  amenities: string[];
-  totalSeats: number;
-}
-
-/**
- * Floor in a bus seat configuration
- */
-export interface Floor {
-  floorNumber: number;
-  rows: Space[][];
-}
-
-/**
- * Space in a bus seat configuration
- */
-export interface Space {
-  type: SpaceType;
-  seatNumber?: string;
-  seatType?: string;
-  amenities?: string[];
-  meta?: Record<string, unknown>;
-  reclinementAngle?: number;
-}
-
-/**
- * Paginated list of bus models
+ * Paginated bus models result
  */
 export type PaginatedBusModels = PaginatedResult<BusModel>;

@@ -25,23 +25,23 @@ import {
 import type { Resource } from "@repo/types";
 import client from "@/lib/api-client";
 
+// Define a structured error type that extends Error
+// with additional fields that match backend error responses
+interface QueryResourceError extends Error {
+  code?: string;
+  status?: number;
+}
+
 interface UseQueryResourceProps {
   resourceId: number;
   enabled?: boolean;
 }
 
-type QueryResourceError = Error;
-
 /**
- * Custom hook for querying a resource by ID with cache integration.
+ * Custom hook for querying a resource by ID with cache integration
  *
- * This hook first attempts to retrieve the resource from the collection cache,
- * then fetches the complete resource data from the API.
- *
- * @param props - The properties for configuring the query
- * @param props.resourceId - The ID of the resource to fetch
- * @param props.enabled - Whether the query should execute (defaults to true)
- * @returns The query result containing resource data, loading state, and error state
+ * Uses the collection cache as initial data for immediate rendering
+ * while fetching the complete data in the background
  */
 export default function useQueryResource({
   resourceId,
@@ -52,26 +52,44 @@ export default function useQueryResource({
   return useQuery({
     queryKey: ["resources", resourceId],
     queryFn: () => client.resources.getResource(resourceId),
-    // Only run if enabled flag is true and resourceId is valid
-    enabled: enabled && Boolean(resourceId) && !isNaN(Number(resourceId)),
-    // Try to get initial data from the collection cache
+    enabled,
     initialData: () => {
-      // Look for this resource in the collection query cache
       const collectionData = queryClient.getQueryData<{ data: Resource[] }>([
         "resources",
       ]);
 
-      // If we found the collection and this resource exists in it, return that data
       return collectionData?.data?.find(
         (resource) => resource.id === resourceId
       );
     },
-    // Tell React Query when the initialData was last updated
     initialDataUpdatedAt: () => {
-      // Return the timestamp of when the collection query was last updated
       return queryClient.getQueryState(["resources"])?.dataUpdatedAt;
     },
   });
+}
+```
+
+## Error Handling
+
+When defining error types, extend the base `Error` interface with additional fields that represent the structure of error responses from the backend. This allows for more specific error handling in components:
+
+```typescript
+// Example error response from backend:
+// { error: { code: "NOT_FOUND", status: 404, message: "Resource not found" } }
+
+interface QueryResourceError extends Error {
+  code?: string;
+  status?: number;
+}
+
+// Usage in a component:
+const { error } = useQueryResource({ resourceId: 123 });
+
+if (error) {
+  if (error.code === "NOT_FOUND" || error.status === 404) {
+    return <ResourceNotFound />;
+  }
+  return <GenericError message={error.message} />;
 }
 ```
 
@@ -83,6 +101,7 @@ This pattern provides several advantages:
 2. **Reduced Network Traffic**: Prevents unnecessary duplicate requests
 3. **Consistent Data**: Eventually shows the complete, up-to-date data from the API
 4. **Better UX**: Reduces loading spinners and wait times
+5. **Structured Error Handling**: Provides specific error types for better error responses
 
 ## When to Use
 
@@ -101,11 +120,19 @@ const { data, isLoading, error } = useQueryResource({
   resourceId: parseInt(params.id),
 });
 
+// Check for specific error types
+if (error) {
+  if (error.status === 404) {
+    return <ResourceNotFound />;
+  }
+  return <ErrorMessage message={error.message} />;
+}
+
 if (isLoading && !data) {
   return <ResourceSkeleton />;
 }
 
-if (error || !data) {
+if (!data) {
   return <ResourceNotFound />;
 }
 

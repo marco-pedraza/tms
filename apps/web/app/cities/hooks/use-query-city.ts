@@ -11,13 +11,16 @@ interface UseQueryCityProps {
   enabled?: boolean;
 }
 
-type QueryCityError = Error;
+interface QueryCityError extends Error {
+  code?: string;
+  status?: number;
+}
 
 /**
- * Custom hook for querying a city by ID with cache integration.
+ * Custom hook for querying a city by ID with cache integration
  *
- * This hook first attempts to retrieve the city from the collection cache,
- * then fetches the complete city data from the API.
+ * Uses the collection cache as initial data for immediate rendering
+ * while fetching the complete data in the background
  */
 export default function useQueryCity({
   cityId,
@@ -27,8 +30,8 @@ export default function useQueryCity({
 
   return useQuery({
     queryKey: ['cities', cityId],
-    enabled,
     queryFn: () => imsClient.inventory.getCity(cityId),
+    enabled,
     initialData: () =>
       queryClient
         .getQueryData<cities.PaginatedCities>(['cities'])

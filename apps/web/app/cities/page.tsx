@@ -1,8 +1,8 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import CitiesTable from '@/cities/components/cities-table';
 import PageHeader from '@/components/page-header';
-import CitiesTable from './cities-table';
 
 /**
  * Main page component for managing cities

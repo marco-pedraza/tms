@@ -1,23 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { ExternalLink, Loader2 } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import CityNotFound from '@/cities/components/city-not-found';
+import CitySkeleton from '@/cities/components/city-skeleton';
 import { useCityMutations } from '@/cities/hooks/use-city-mutations';
+import useQueryCity from '@/cities/hooks/use-query-city';
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import imsClient from '@/lib/ims-client';
 import { createGoogleMapsLink } from '@/lib/utils';
 
 export default function CityDetailsPage() {
   const params = useParams();
-  const router = useRouter();
   const tCities = useTranslations('cities');
   const tCommon = useTranslations('common');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -29,14 +28,8 @@ export default function CityDetailsPage() {
     data: city,
     isLoading,
     error,
-  } = useQuery({
-    queryKey: ['cities', cityId],
-    queryFn: async () => {
-      if (!cityId || isNaN(cityId)) {
-        throw new Error(tCommon('errors.invalidId'));
-      }
-      return await imsClient.inventory.getCity(cityId);
-    },
+  } = useQueryCity({
+    cityId,
   });
 
   const handleDelete = () => {
@@ -49,32 +42,11 @@ export default function CityDetailsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <CitySkeleton />;
   }
 
   if (error ?? !city) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
-        <h2 className="text-xl font-semibold">
-          {tCities('errors.notFound.title')}
-        </h2>
-        <p className="text-muted-foreground">
-          {tCities('errors.notFound.description')}
-        </p>
-        <Button
-          variant="outline"
-          onClick={() => {
-            router.push('/cities');
-          }}
-        >
-          {tCities('actions.backToList')}
-        </Button>
-      </div>
-    );
+    return <CityNotFound />;
   }
 
   return (

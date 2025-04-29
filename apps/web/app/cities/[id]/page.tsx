@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
 import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import CityNotFound from '@/cities/components/city-not-found';
 import CitySkeleton from '@/cities/components/city-skeleton';
+import useCityDetailsParams from '@/cities/hooks/use-city-details-params';
 import { useCityMutations } from '@/cities/hooks/use-city-mutations';
 import useQueryCity from '@/cities/hooks/use-query-city';
 import ActionButtons from '@/components/action-buttons';
@@ -16,13 +16,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createGoogleMapsLink } from '@/lib/utils';
 
 export default function CityDetailsPage() {
-  const params = useParams();
   const tCities = useTranslations('cities');
   const tCommon = useTranslations('common');
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { deleteCity } = useCityMutations();
-
-  const cityId = parseInt(params.id as string, 10);
+  const { cityId, isValidId } = useCityDetailsParams();
 
   const {
     data: city,
@@ -30,6 +28,7 @@ export default function CityDetailsPage() {
     error,
   } = useQueryCity({
     cityId,
+    enabled: isValidId,
   });
 
   const handleDelete = () => {
@@ -41,7 +40,12 @@ export default function CityDetailsPage() {
     deleteCity.mutateWithToast(cityId);
   };
 
-  if (isLoading) {
+  if (!isValidId) {
+    return <CityNotFound />;
+  }
+
+  // Show the skeleton only if we're loading and don't have any cached data
+  if (isLoading && !city) {
     return <CitySkeleton />;
   }
 

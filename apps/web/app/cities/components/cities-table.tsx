@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { cities } from '@repo/ims-client';
 import { useCityMutations } from '@/cities/hooks/use-city-mutations';
+import useQueryCities from '@/cities/hooks/use-query-cities';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable } from '@/components/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,6 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DropdownMenuContent } from '@/components/ui/dropdown-menu';
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
-import client from '@/lib/ims-client';
 
 type City = cities.City;
 
@@ -144,10 +143,7 @@ export default function CitiesTable() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const { deleteCity } = useCityMutations();
 
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['cities'],
-    queryFn: async () => await client.inventory.listCitiesPaginated({}),
-  });
+  const { data, isLoading, error, refetch } = useQueryCities();
 
   const handleDelete = (id: string) => {
     const numericId = parseInt(id);

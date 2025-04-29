@@ -18,11 +18,6 @@ type QueryCityError = Error;
  *
  * This hook first attempts to retrieve the city from the collection cache,
  * then fetches the complete city data from the API.
- *
- * @param props - The properties for configuring the query
- * @param props.cityId - The ID of the city to fetch
- * @param props.enabled - Whether the query should execute (defaults to true)
- * @returns The query result containing city data, loading state, and error state
  */
 export default function useQueryCity({
   cityId,
@@ -32,19 +27,12 @@ export default function useQueryCity({
 
   return useQuery({
     queryKey: ['cities', cityId],
-    queryFn: async () => {
-      if (!cityId || isNaN(cityId)) {
-        throw new Error('Invalid city ID');
-      }
-      return await imsClient.inventory.getCity(cityId);
-    },
-    enabled: enabled && Boolean(cityId) && !isNaN(cityId),
-    // Try to get initial data from the collection cache
+    enabled,
+    queryFn: () => imsClient.inventory.getCity(cityId),
     initialData: () =>
       queryClient
         .getQueryData<cities.PaginatedCities>(['cities'])
         ?.data.find((city) => city.id === cityId),
-    // Tell React Query when the initialData was last updated
     initialDataUpdatedAt: () =>
       queryClient.getQueryState<cities.City[]>(['cities'])?.dataUpdatedAt,
   });

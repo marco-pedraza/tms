@@ -11,6 +11,7 @@ app/module-name/
 ├── components/        # Reusable UI components specific to the module
 ├── hooks/             # Custom React hooks for module data and logic
 ├── [id]/              # Dynamic route for entity details
+│   ├── layout.tsx     # Shared layout for entity detail routes
 │   └── edit/          # Entity editing page
 ├── new/               # Page for creating new entities
 └── page.tsx           # Main entity listing page
@@ -95,6 +96,59 @@ export default function useQueryEntity({
 }
 ```
 
+## Layout Organization
+
+Layouts are used to encapsulate common behavior across nested routes and follow these patterns:
+
+1. **Layout Responsibility**:
+
+   - Handle invalid parameters using parameter hooks
+   - Show error states (not found, generic errors)
+   - Provide consistent appearance and navigation for child pages
+
+2. **Implementation**:
+   - Create layout components for dynamic routes like `[id]/layout.tsx`
+   - Use relevant parameter hooks for validation
+   - Centralize error handling to avoid duplication in child pages
+   - Allow child pages to handle their own loading states
+
+Example layout structure:
+
+```typescript
+'use client';
+
+import { useTranslations } from 'next-intl';
+import LoadError from '@/components/load-error';
+import EntityNotFound from '@/module-name/components/entity-not-found';
+import useEntityDetailsParams from '@/module-name/hooks/use-entity-details-params';
+import useQueryEntity from '@/module-name/hooks/use-query-entity';
+
+export default function EntityLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { entityId, isValidId } = useEntityDetailsParams();
+  const { status, error } = useQueryEntity({
+    entityId,
+    enabled: isValidId,
+  });
+
+  // Handle invalid parameters
+  if (!isValidId) {
+    return <EntityNotFound />;
+  }
+
+  // Handle error states
+  if (status === 'error') {
+    return <LoadError />;
+  }
+
+  // Render children, letting them handle their own loading states
+  return children;
+}
+```
+
 ## Pages Organization
 
 Pages should follow Next.js App Router conventions:
@@ -114,14 +168,12 @@ Pages should follow Next.js App Router conventions:
 
    - Displays details for a specific entity
    - Uses entity-specific components
+   - Relies on layout for common error handling
 
 4. **Edit Page**: `module-name/[id]/edit/page.tsx`
-
    - Form for editing an existing entity
    - Reuses the entity form component with different props
-
-5. **Layout**: `module-name/[id]/layout.tsx`
-   - Provides shared layout for detail pages
+   - Relies on layout for common error handling
 
 Example page structure:
 
@@ -192,6 +244,7 @@ export default function ModuleNamePage() {
 
 2. **Error States**:
    - Create dedicated components for not-found states
+   - Use layouts for centralized error handling
    - Implement error handling in data fetching hooks
 
 ## Step-by-Step Guide to Creating a New Module
@@ -211,23 +264,30 @@ export default function ModuleNamePage() {
    - Create a table component: `app/module-name/components/entity-table.tsx`
    - Create a form component: `app/module-name/components/entity-form.tsx`
    - Create loading states: `app/module-name/components/entity-skeleton.tsx`
+   - Create error state: `app/module-name/components/entity-not-found.tsx`
 
 4. **Create data hooks**:
 
    - Create query hook: `app/module-name/hooks/use-query-entity.ts`
    - Create mutations hook: `app/module-name/hooks/use-entity-mutations.ts`
+   - Create parameters hook: `app/module-name/hooks/use-entity-details-params.ts`
 
-5. **Create CRUD pages**:
+5. **Create layout**:
+
+   - Create layout component: `app/module-name/[id]/layout.tsx`
+   - Handle error states and invalid parameters
+
+6. **Create CRUD pages**:
 
    - Create new entity page: `app/module-name/new/page.tsx`
    - Create detail page: `app/module-name/[id]/page.tsx`
    - Create edit page: `app/module-name/[id]/edit/page.tsx`
 
-6. **Add translations**:
+7. **Add translations**:
 
    - Add module translations to the i18n files
 
-7. **Test the module**:
+8. **Test the module**:
    - Verify all CRUD operations work correctly
    - Check loading and error states
 

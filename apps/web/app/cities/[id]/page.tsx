@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import CityNotFound from '@/cities/components/city-not-found';
 import CitySkeleton from '@/cities/components/city-skeleton';
 import useCityDetailsParams from '@/cities/hooks/use-city-details-params';
 import { useCityMutations } from '@/cities/hooks/use-city-mutations';
@@ -22,11 +21,7 @@ export default function CityDetailsPage() {
   const { deleteCity } = useCityMutations();
   const { cityId, isValidId } = useCityDetailsParams();
 
-  const {
-    data: city,
-    isLoading,
-    error,
-  } = useQueryCity({
+  const { data: city, isLoading } = useQueryCity({
     cityId,
     enabled: isValidId,
   });
@@ -40,17 +35,13 @@ export default function CityDetailsPage() {
     deleteCity.mutateWithToast(cityId);
   };
 
-  if (!isValidId) {
-    return <CityNotFound />;
-  }
-
   // Show the skeleton only if we're loading and don't have any cached data
   if (isLoading && !city) {
     return <CitySkeleton />;
   }
 
-  if (error ?? !city) {
-    return <CityNotFound />;
+  if (!city) {
+    return null;
   }
 
   return (

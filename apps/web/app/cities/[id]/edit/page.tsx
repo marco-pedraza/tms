@@ -3,7 +3,6 @@
 import { useTranslations } from 'next-intl';
 import CityForm, { CityFormValues } from '@/cities/components/city-form';
 import CityFormSkeleton from '@/cities/components/city-form-skeleton';
-import CityNotFound from '@/cities/components/city-not-found';
 import useCityDetailsParams from '@/cities/hooks/use-city-details-params';
 import { useCityMutations } from '@/cities/hooks/use-city-mutations';
 import useQueryCity from '@/cities/hooks/use-query-city';
@@ -15,22 +14,18 @@ export default function EditCityPage() {
   const tCities = useTranslations('cities');
   const tCommon = useTranslations('common');
 
-  const { data, status, error } = useQueryCity({
+  const { data, status } = useQueryCity({
     cityId,
     enabled: isValidId,
   });
-
-  if (!isValidId) {
-    return <CityNotFound />;
-  }
 
   // Show the form skeleton only if we're loading and don't have cached data
   if (status === 'pending' && !data) {
     return <CityFormSkeleton />;
   }
 
-  if (error || !data) {
-    return <CityNotFound />;
+  if (!data) {
+    return null;
   }
 
   const handleSubmit = (values: CityFormValues) => {

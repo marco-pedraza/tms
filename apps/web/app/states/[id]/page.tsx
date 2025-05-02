@@ -1,46 +1,28 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { isAPIError } from '@repo/ims-client';
-import type { states } from '@repo/ims-client';
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
-import NotFound from '@/components/not-found';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import imsClient from '@/lib/ims-client';
+import StateSkeleton from '@/states/components/state-skeleton';
+import { useQueryState } from '@/states/hooks/use-query-states';
+import useStateDetailsParams from '@/states/hooks/use-state-details-params';
 import { useStateMutations } from '@/states/hooks/use-state-mutations';
-
-type State = states.State;
 
 export default function StateDetailsPage() {
   const tStates = useTranslations('states');
   const tCommon = useTranslations('common');
 
-  const params = useParams();
-  const queryClient = useQueryClient();
+  const { stateId } = useStateDetailsParams();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const stateId = parseInt(params.id as string, 10);
   const { deleteState } = useStateMutations();
 
-  const {
-    data: state,
-    isLoading: isLoadingState,
-    error: stateError,
-  } = useQuery({
-    queryKey: ['state', stateId],
-    queryFn: async () => await imsClient.inventory.getState(stateId),
-    initialData: () =>
-      queryClient
-        .getQueryData<states.PaginatedStates>(['states'])
-        ?.data.find((state) => state.id === stateId),
-    initialDataUpdatedAt: () =>
-      queryClient.getQueryState<State[]>(['states'])?.dataUpdatedAt,
-  });
+  const { data: state, status } = useQueryState({ stateId });
 
   const { data: country, isLoading: isLoadingCountry } = useQuery({
     queryKey: ['country', state?.countryId],
@@ -56,23 +38,13 @@ export default function StateDetailsPage() {
   };
 
   const confirmDelete = () => {
-    deleteState.mutateWithToast(stateId);
+    const numericId = parseInt(stateId, 10);
+    deleteState.mutateWithToast(numericId);
     setIsDeleteDialogOpen(false);
   };
 
-  if (isLoadingState || isLoadingCountry) {
-    return <div>{tCommon('states.loading')}</div>;
-  }
-
-  if (stateError && isAPIError(stateError) && stateError.code === 'not_found') {
-    return (
-      <NotFound
-        title={tStates('errors.notFound.title')}
-        description={tStates('errors.notFound.description')}
-        backHref="/states"
-        backLabel={tStates('actions.backToList')}
-      />
-    );
+  if (status === 'pending' || isLoadingCountry) {
+    return <StateSkeleton />;
   }
 
   if (!state) {

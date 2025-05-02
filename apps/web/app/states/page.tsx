@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
-import StatesTable from './states-table';
+import StatesTable from '@/states/components/states-table';
 
 export default function StatesPage() {
   const t = useTranslations('states');

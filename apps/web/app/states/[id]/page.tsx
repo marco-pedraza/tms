@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import imsClient from '@/lib/ims-client';
 import StateSkeleton from '@/states/components/state-skeleton';
-import { useQueryState } from '@/states/hooks/use-query-states';
+import { useQueryState } from '@/states/hooks/use-query-state';
 import useStateDetailsParams from '@/states/hooks/use-state-details-params';
 import { useStateMutations } from '@/states/hooks/use-state-mutations';
 

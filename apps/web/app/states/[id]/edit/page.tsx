@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
 import StateForm, { StateFormValues } from '@/states/components/state-form';
 import StateFormSkeleton from '@/states/components/state-form-skeleton';
-import { useQueryState } from '@/states/hooks/use-query-states';
+import { useQueryState } from '@/states/hooks/use-query-state';
 import useStateDetailsParams from '@/states/hooks/use-state-details-params';
 import { useStateMutations } from '@/states/hooks/use-state-mutations';
 

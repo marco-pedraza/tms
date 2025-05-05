@@ -7,26 +7,30 @@ import CountryForm, {
 } from '@/countries/components/country-form';
 import CountryFormSkeleton from '@/countries/components/country-form-skeleton';
 import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
-import { useCountryMutations } from '@/countries/hooks/use-country-mutations';
+import useCountryMutations from '@/countries/hooks/use-country-mutations';
 import useQueryCountry from '@/countries/hooks/use-query-country';
 
 export default function EditCountryPage() {
   const tCountries = useTranslations('countries');
   const tCommon = useTranslations('common');
   const { countryId, isValidId } = useCountryDetailsParams();
-  const { data, status } = useQueryCountry({
+  const { data, isLoading } = useQueryCountry({
     countryId,
     enabled: isValidId,
   });
   const { updateCountry } = useCountryMutations();
 
-  if (status === 'pending') {
-    return <CountryFormSkeleton />;
-  }
-
   const handleSubmit = (values: CountryFormValues) => {
     return updateCountry.mutateWithToast({ id: countryId, values });
   };
+
+  if (isLoading) {
+    return <CountryFormSkeleton />;
+  }
+
+  if (!data) {
+    return null;
+  }
 
   return (
     <div>

@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { ExternalLink, Loader2 } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { terminals } from '@repo/ims-client';
+import useQueryCity from '@/app/cities/hooks/use-query-city';
 import ActionButtons from '@/components/action-buttons';
 import PageHeader from '@/components/page-header';
 import {
@@ -19,10 +18,11 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import imsClient from '@/lib/ims-client';
 import { createGoogleMapsLink } from '@/lib/utils';
+import TerminalSkeleton from '@/terminals/components/terminal-skeleton';
+import useQueryTerminal from '@/terminals/hooks/use-query-terminal';
+import useTerminalDetailsParams from '@/terminals/hooks/use-terminal-details-params';
 import useTerminalMutations from '@/terminals/hooks/use-terminal-mutations';
 
 type OperatingHours = terminals.OperatingHours;
@@ -39,38 +39,19 @@ const DAYS_OF_WEEK = [
 ] as const;
 
 export default function TerminalDetailsPage() {
-  const params = useParams();
-  const router = useRouter();
   const tTerminals = useTranslations('terminals');
   const tCommon = useTranslations('common');
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { terminalId, isValidId } = useTerminalDetailsParams();
+  const { data: terminal, isLoading } = useQueryTerminal({
+    terminalId,
+    enabled: isValidId,
+  });
   const { deleteTerminal } = useTerminalMutations();
-
-  const terminalId = parseInt(params.id as string, 10);
-
-  const {
-    data: terminal,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ['terminals', terminalId],
-    queryFn: async () => {
-      if (!terminalId || isNaN(terminalId)) {
-        throw new Error(tCommon('errors.invalidId'));
-      }
-      return await imsClient.inventory.getTerminal(terminalId);
-    },
+  const { data: city } = useQueryCity({
+    cityId: terminal?.cityId ?? -1,
+    enabled: !!terminal?.cityId,
   });
-
-  const { data: city } = useQuery({
-    queryKey: ['cities', terminal?.cityId],
-    queryFn: async () => {
-      if (!terminal?.cityId) {
-        throw new Error(tCommon('errors.invalidId'));
-      }
-      return await imsClient.inventory.getCity(terminal.cityId);
-    },
-  });
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleDelete = () => {
     setIsDeleteDialogOpen(true);
@@ -101,32 +82,11 @@ export default function TerminalDetailsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <TerminalSkeleton />;
   }
 
-  if (error ?? !terminal) {
-    return (
-      <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
-        <h2 className="text-xl font-semibold">
-          {tTerminals('errors.notFound.title')}
-        </h2>
-        <p className="text-muted-foreground">
-          {tTerminals('errors.notFound.description')}
-        </p>
-        <Button
-          variant="outline"
-          onClick={() => {
-            router.push('/terminals');
-          }}
-        >
-          {tTerminals('actions.backToList')}
-        </Button>
-      </div>
-    );
+  if (!terminal) {
+    return null;
   }
 
   // Prepare facilities for display

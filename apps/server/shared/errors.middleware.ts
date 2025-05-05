@@ -16,14 +16,13 @@ function logError(
     return;
   }
 
-  log.error('\n\nRequest failed:', {
+  log.error('middleware caught error', {
     error_name: error instanceof Error ? error.name : 'Unknown',
     error_message: error instanceof Error ? error.message : 'Unknown error',
     endpoint,
     service: service || 'unknown',
     host,
   });
-  log.info('\n\n');
 }
 
 /**

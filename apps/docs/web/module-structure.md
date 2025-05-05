@@ -78,6 +78,10 @@ Custom hooks should be in the `hooks/` directory and follow these patterns:
    - They should use TypeScript for type safety
    - React Query should be used for data fetching and caching
    - Hooks should encapsulate reusable logic to avoid duplication across components
+   - Each hook should be in its own file, following the single responsibility principle
+   - Query hooks for individual entities should implement the cache-first pattern
+
+For detailed guidelines on hooks implementation, refer to the [Hooks Patterns and Best Practices](./hooks-patterns.md) documentation.
 
 Example hook structure:
 

@@ -1,55 +1,32 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { isAPIError } from '@repo/ims-client';
-import type { states } from '@repo/ims-client';
+import useQueryCountry from '@/app/countries/hooks/use-query-country';
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
-import NotFound from '@/components/not-found';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import imsClient from '@/lib/ims-client';
-import { useStateMutations } from '@/states/hooks/use-state-mutations';
-
-type State = states.State;
+import StateSkeleton from '@/states/components/state-skeleton';
+import useQueryState from '@/states/hooks/use-query-state';
+import useStateDetailsParams from '@/states/hooks/use-state-details-params';
+import useStateMutations from '@/states/hooks/use-state-mutations';
 
 export default function StateDetailsPage() {
   const tStates = useTranslations('states');
   const tCommon = useTranslations('common');
-
-  const params = useParams();
-  const queryClient = useQueryClient();
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const stateId = parseInt(params.id as string, 10);
-  const { deleteState } = useStateMutations();
-
-  const {
-    data: state,
-    isLoading: isLoadingState,
-    error: stateError,
-  } = useQuery({
-    queryKey: ['state', stateId],
-    queryFn: async () => await imsClient.inventory.getState(stateId),
-    initialData: () =>
-      queryClient
-        .getQueryData<states.PaginatedStates>(['states'])
-        ?.data.find((state) => state.id === stateId),
-    initialDataUpdatedAt: () =>
-      queryClient.getQueryState<State[]>(['states'])?.dataUpdatedAt,
+  const { stateId, isValidId } = useStateDetailsParams();
+  const { data: state, isLoading } = useQueryState({
+    stateId,
+    enabled: isValidId,
   });
-
-  const { data: country, isLoading: isLoadingCountry } = useQuery({
-    queryKey: ['country', state?.countryId],
-    queryFn: async () => {
-      if (!state?.countryId) return null;
-      return await imsClient.inventory.getCountry(state.countryId);
-    },
+  const { data: country } = useQueryCountry({
+    countryId: state?.countryId ?? -1,
     enabled: !!state?.countryId,
   });
+  const { deleteState } = useStateMutations();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleDelete = () => {
     setIsDeleteDialogOpen(true);
@@ -60,23 +37,12 @@ export default function StateDetailsPage() {
     setIsDeleteDialogOpen(false);
   };
 
-  if (isLoadingState || isLoadingCountry) {
-    return <div>{tCommon('states.loading')}</div>;
-  }
-
-  if (stateError && isAPIError(stateError) && stateError.code === 'not_found') {
-    return (
-      <NotFound
-        title={tStates('errors.notFound.title')}
-        description={tStates('errors.notFound.description')}
-        backHref="/states"
-        backLabel={tStates('actions.backToList')}
-      />
-    );
+  if (isLoading) {
+    return <StateSkeleton />;
   }
 
   if (!state) {
-    return <div>{tCommon('errors.unexpected')}</div>;
+    return null;
   }
 
   return (

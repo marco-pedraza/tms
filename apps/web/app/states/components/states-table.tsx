@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
-import { type ColumnDef } from '@tanstack/react-table';
+import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { states } from '@repo/ims-client';
@@ -15,8 +14,8 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DropdownMenuContent } from '@/components/ui/dropdown-menu';
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
-import client from '@/lib/ims-client';
-import { useStateMutations } from '@/states/hooks/use-state-mutations';
+import { useQueryStates } from '@/states/hooks/use-query-states';
+import useStateMutations from '@/states/hooks/use-state-mutations';
 
 type State = states.State;
 
@@ -131,15 +130,10 @@ const statesColumnsFactory = (
 
 export default function StatesTable() {
   const t = useTranslations('common');
-
   const router = useRouter();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const { deleteState } = useStateMutations();
-
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['states'],
-    queryFn: async () => await client.inventory.listStatesPaginated({}),
-  });
+  const { data, isLoading, error, refetch } = useQueryStates();
 
   const handleDelete = (id: string) => {
     const numericId = parseInt(id);

@@ -1,11 +1,11 @@
 'use client';
 
 import { useForm } from '@tanstack/react-form';
-import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import type { countries } from '@repo/ims-client';
+import useQueryCountries from '@/app/countries/hooks/use-query-countries';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import imsClient from '@/lib/ims-client';
 import { codeSchema, nameSchema } from '@/lib/schemas/common';
 import { hasFieldErrors } from '@/lib/utils';
 
@@ -39,19 +38,14 @@ interface StateFormProps {
   submitButtonText?: string;
 }
 
-function StateForm({
+export default function StateForm({
   defaultValues,
   onSubmit,
   submitButtonText,
 }: StateFormProps) {
   const tStates = useTranslations('states');
   const tCommon = useTranslations('common');
-
-  // Fetch countries for the dropdown
-  const { data: countriesData } = useQuery({
-    queryKey: ['countries'],
-    queryFn: async () => await imsClient.inventory.listCountries(),
-  });
+  const { data: countriesData } = useQueryCountries();
 
   const form = useForm({
     defaultValues: defaultValues ?? {
@@ -122,7 +116,7 @@ function StateForm({
                 <Label htmlFor="countryId">{tStates('form.country')}</Label>
                 <Select
                   value={field.state.value?.toString() ?? ''}
-                  onValueChange={(value) =>
+                  onValueChange={(value: string) =>
                     field.handleChange(parseInt(value, 10))
                   }
                 >
@@ -132,7 +126,7 @@ function StateForm({
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {countriesData?.countries?.map((country: Country) => (
+                    {countriesData?.data?.map((country: Country) => (
                       <SelectItem
                         key={country.id}
                         value={country.id.toString()}
@@ -152,7 +146,9 @@ function StateForm({
                 <Switch
                   id={field.name}
                   checked={field.state.value ?? false}
-                  onCheckedChange={(checked) => field.handleChange(checked)}
+                  onCheckedChange={(checked: boolean) =>
+                    field.handleChange(checked)
+                  }
                 />
                 <Label htmlFor={field.name}>{tCommon('fields.active')}</Label>
               </div>
@@ -162,7 +158,7 @@ function StateForm({
           <form.Subscribe
             selector={(state) => [state.canSubmit, state.isSubmitting]}
           >
-            {([canSubmit, isSubmitting]) => (
+            {([canSubmit, isSubmitting]: [boolean, boolean]) => (
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="submit" disabled={!canSubmit || isSubmitting}>
                   {isSubmitting && <Loader2 className="animate-spin" />}
@@ -176,5 +172,3 @@ function StateForm({
     </form>
   );
 }
-
-export default StateForm;

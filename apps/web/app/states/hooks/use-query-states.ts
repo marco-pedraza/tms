@@ -9,6 +9,6 @@ import client from '@/lib/ims-client';
 export function useQueryStates() {
   return useQuery({
     queryKey: ['states'],
-    queryFn: async () => await client.inventory.listStatesPaginated({}),
+    queryFn: () => client.inventory.listStatesPaginated({}),
   });
 }

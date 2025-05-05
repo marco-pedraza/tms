@@ -17,9 +17,9 @@ interface UseQueryTerminalProps {
 }
 
 /**
- * Custom hook for querying a country by ID.
+ * Custom hook for querying a terminal by ID.
  *
- * This hook provides a reusable query for fetching a country by its ID.
+ * This hook provides a reusable query for fetching a terminal by its ID.
  * It handles query setup, caching, and error handling.
  */
 export default function useQueryTerminal({

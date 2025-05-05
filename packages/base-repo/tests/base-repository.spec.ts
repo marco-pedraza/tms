@@ -189,6 +189,101 @@ describe('BaseRepository', () => {
       expect(page3.pagination.hasNextPage).toBe(false);
       expect(page3.pagination.hasPreviousPage).toBe(true);
     });
+
+    it('should return paginated results with ascending order', async () => {
+      // Create users with different names to test ordering
+      await createTestUser({ name: 'Charlie', email: 'charlie@example.com' });
+      await createTestUser({ name: 'Alice', email: 'alice@example.com' });
+      await createTestUser({ name: 'Bob', email: 'bob@example.com' });
+      await createTestUser({ name: 'David', email: 'david@example.com' });
+      await createTestUser({ name: 'Eve', email: 'eve@example.com' });
+
+      const result = await userRepository.findAllPaginated({
+        page: 1,
+        pageSize: 3,
+        orderBy: [{ field: users.name, direction: 'asc' }],
+      });
+
+      expect(result.data).toHaveLength(3);
+      expect(result.data[0].name).toBe('Alice');
+      expect(result.data[1].name).toBe('Bob');
+      expect(result.data[2].name).toBe('Charlie');
+      expect(result.pagination.totalCount).toBe(5);
+      expect(result.pagination.hasNextPage).toBe(true);
+
+      // Verify second page
+      const page2 = await userRepository.findAllPaginated({
+        page: 2,
+        pageSize: 3,
+        orderBy: [{ field: users.name, direction: 'asc' }],
+      });
+
+      expect(page2.data).toHaveLength(2);
+      expect(page2.data[0].name).toBe('David');
+      expect(page2.data[1].name).toBe('Eve');
+      expect(page2.pagination.hasNextPage).toBe(false);
+    });
+
+    it('should return paginated results with descending order', async () => {
+      // Create users with different names to test ordering
+      await createTestUser({ name: 'Charlie', email: 'charlie@example.com' });
+      await createTestUser({ name: 'Alice', email: 'alice@example.com' });
+      await createTestUser({ name: 'Bob', email: 'bob@example.com' });
+      await createTestUser({ name: 'David', email: 'david@example.com' });
+      await createTestUser({ name: 'Eve', email: 'eve@example.com' });
+
+      const result = await userRepository.findAllPaginated({
+        page: 1,
+        pageSize: 3,
+        orderBy: [{ field: users.name, direction: 'desc' }],
+      });
+
+      expect(result.data).toHaveLength(3);
+      expect(result.data[0].name).toBe('Eve');
+      expect(result.data[1].name).toBe('David');
+      expect(result.data[2].name).toBe('Charlie');
+      expect(result.pagination.totalCount).toBe(5);
+      expect(result.pagination.hasNextPage).toBe(true);
+
+      // Verify second page
+      const page2 = await userRepository.findAllPaginated({
+        page: 2,
+        pageSize: 3,
+        orderBy: [{ field: users.name, direction: 'desc' }],
+      });
+
+      expect(page2.data).toHaveLength(2);
+      expect(page2.data[0].name).toBe('Bob');
+      expect(page2.data[1].name).toBe('Alice');
+      expect(page2.pagination.hasNextPage).toBe(false);
+    });
+
+    it('should handle multiple ordering criteria', async () => {
+      // Create users with same names but different emails to test multiple ordering
+      await createTestUser({ name: 'Alice', email: 'alice2@example.com' });
+      await createTestUser({ name: 'Alice', email: 'alice1@example.com' });
+      await createTestUser({ name: 'Bob', email: 'bob2@example.com' });
+      await createTestUser({ name: 'Bob', email: 'bob1@example.com' });
+
+      const result = await userRepository.findAllPaginated({
+        page: 1,
+        pageSize: 4,
+        orderBy: [
+          { field: users.name, direction: 'asc' },
+          { field: users.email, direction: 'asc' },
+        ],
+      });
+
+      expect(result.data).toHaveLength(4);
+      expect(result.data[0].name).toBe('Alice');
+      expect(result.data[0].email).toBe('alice1@example.com');
+      expect(result.data[1].name).toBe('Alice');
+      expect(result.data[1].email).toBe('alice2@example.com');
+      expect(result.data[2].name).toBe('Bob');
+      expect(result.data[2].email).toBe('bob1@example.com');
+      expect(result.data[3].name).toBe('Bob');
+      expect(result.data[3].email).toBe('bob2@example.com');
+    });
   });
 
   describe('existsBy', () => {

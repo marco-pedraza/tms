@@ -9,7 +9,7 @@ import type {
 import { BusStatus } from './buses.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-import { db } from '@/db';
+import { db } from '../db-service';
 import { eq, and } from 'drizzle-orm';
 import { createBaseStateMachine, StateTransition } from '@repo/state-machine';
 

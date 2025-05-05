@@ -17,9 +17,19 @@ export {
 } from '../users/user-permissions/user-permissions.schema';
 export { refreshTokens } from '../users/auth/auth.schema';
 export { drivers } from '../inventory/drivers/drivers.schema';
-export { busModels } from '../inventory/bus-models/bus-models.schema';
-export { busSeats } from '../inventory/bus-seats/bus-seats.schema';
-export { buses } from '../inventory/buses/buses.schema';
+export {
+  seatDiagrams,
+  seatDiagramsRelations,
+} from '../inventory/seat-diagrams/seat-diagrams.schema';
+export {
+  busModels,
+  busModelsRelations,
+} from '../inventory/bus-models/bus-models.schema';
+export {
+  busSeats,
+  busSeatsRelations,
+} from '../inventory/bus-seats/bus-seats.schema';
+export { buses, busesRelations } from '../inventory/buses/buses.schema';
 export {
   pathways,
   pathwaysRelations,

@@ -1,6 +1,5 @@
 import { asc, desc } from 'drizzle-orm';
-import { PgColumn } from 'drizzle-orm/pg-core';
-import { PaginationMeta } from './types';
+import { OrderBy, PaginationMeta } from './types';
 
 /**
  * Creates pagination metadata based on query results
@@ -41,7 +40,7 @@ export const createPaginationMeta = (
  */
 export const applyOrdering = <Q extends object>(
   query: Q,
-  orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>,
+  orderBy?: OrderBy,
 ): Q => {
   if (!orderBy?.length || !('orderBy' in query)) {
     return query;

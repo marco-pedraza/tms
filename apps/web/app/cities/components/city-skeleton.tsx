@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function CitySkeleton() {
   const tCommon = useTranslations('common');
+  const tCities = useTranslations('cities');
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
@@ -52,12 +53,12 @@ export default function CitySkeleton() {
             </div>
 
             <div className="flex justify-between items-start">
-              <div className="font-medium">State:</div>
+              <div className="font-medium">{tCities('fields.state')}:</div>
               <Skeleton className="h-6 w-32" />
             </div>
 
             <div className="flex justify-between items-start">
-              <div className="font-medium">Timezone:</div>
+              <div className="font-medium">{tCities('fields.timezone')}:</div>
               <Skeleton className="h-6 w-24" />
             </div>
 
@@ -70,7 +71,9 @@ export default function CitySkeleton() {
 
         {/* Location Information Card */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-6">Location</h2>
+          <h2 className="text-lg font-semibold mb-6">
+            {tCommon('sections.basicInfo')}
+          </h2>
 
           <div className="space-y-6">
             <div className="flex justify-between items-start">

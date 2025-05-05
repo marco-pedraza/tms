@@ -75,12 +75,19 @@
     {
       "idx": 10,
       "version": "7",
+      "when": 1744670622467,
+      "tag": "20250414224342_create_seat_diagrams_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
       "when": 1744670623467,
       "tag": "20250414224343_create_bus_models_tables",
       "breakpoints": true
     },
     {
-      "idx": 11,
+      "idx": 12,
       "version": "7",
       "when": 1744843137136,
       "tag": "20250416223857_create_bus_table",

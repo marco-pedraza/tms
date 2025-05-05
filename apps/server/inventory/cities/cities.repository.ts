@@ -7,7 +7,7 @@ import type {
 } from './cities.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-import { db } from '@/db';
+import { db } from '../db-service';
 import { createSlug } from '../../shared/utils';
 
 type CreateCityPayloadWithSlug = CreateCityPayload & { slug: string };

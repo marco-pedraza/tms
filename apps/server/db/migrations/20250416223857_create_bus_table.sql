@@ -2,6 +2,7 @@ CREATE TABLE "buses" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"registration_number" text NOT NULL,
 	"model_id" integer NOT NULL,
+	"seat_diagram_id" integer NOT NULL,
 	"type_code" integer,
 	"brand_code" text,
 	"model_code" text,
@@ -39,4 +40,5 @@ CREATE TABLE "buses" (
 --> statement-breakpoint
 ALTER TABLE "drivers" ADD COLUMN "bus_id" integer;--> statement-breakpoint
 ALTER TABLE "buses" ADD CONSTRAINT "buses_model_id_bus_models_id_fk" FOREIGN KEY ("model_id") REFERENCES "public"."bus_models"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "buses" ADD CONSTRAINT "buses_seat_diagram_id_seat_diagrams_id_fk" FOREIGN KEY ("seat_diagram_id") REFERENCES "public"."seat_diagrams"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "drivers" ADD CONSTRAINT "drivers_bus_id_buses_id_fk" FOREIGN KEY ("bus_id") REFERENCES "public"."buses"("id") ON DELETE no action ON UPDATE no action;

@@ -1,10 +1,10 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import PageHeader from '@/components/page-header';
 import TerminalForm, {
   type TerminalFormValues,
-} from '@/app/terminals/components/terminal-form';
-import PageHeader from '@/components/page-header';
+} from '@/terminals/components/terminal-form';
 import TerminalSkeleton from '@/terminals/components/terminal-skeleton';
 import useQueryTerminal from '@/terminals/hooks/use-query-terminal';
 import useTerminalDetailsParams from '@/terminals/hooks/use-terminal-details-params';

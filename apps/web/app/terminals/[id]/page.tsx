@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { terminals } from '@repo/ims-client';
-import useQueryCity from '@/app/cities/hooks/use-query-city';
+import useQueryCity from '@/cities/hooks/use-query-city';
 import ActionButtons from '@/components/action-buttons';
 import PageHeader from '@/components/page-header';
 import {

@@ -1,8 +1,8 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import TerminalsTable from '@/app/terminals/components/terminals-table';
 import PageHeader from '@/components/page-header';
+import TerminalsTable from '@/terminals/components/terminals-table';
 
 /**
  * Main page component for managing terminals

@@ -249,22 +249,18 @@ function CityForm({
             )}
           </form.Field>
 
-          <div className="pt-4">
-            <Button
-              type="submit"
-              disabled={form.state.isSubmitting}
-              className="w-full"
-            >
-              {form.state.isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />{' '}
-                  {tCommon('states.processing')}
-                </>
-              ) : (
-                submitButtonText || tCommon('actions.create')
-              )}
-            </Button>
-          </div>
+          <form.Subscribe
+            selector={(state) => [state.canSubmit, state.isSubmitting]}
+          >
+            {([canSubmit, isSubmitting]: [boolean, boolean]) => (
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button type="submit" disabled={!canSubmit || isSubmitting}>
+                  {isSubmitting && <Loader2 className="animate-spin" />}
+                  {submitButtonText ?? tCommon('actions.create')}
+                </Button>
+              </div>
+            )}
+          </form.Subscribe>
         </CardContent>
       </Card>
     </form>

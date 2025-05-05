@@ -5,7 +5,7 @@ import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import CitySkeleton from '@/cities/components/city-skeleton';
 import useCityDetailsParams from '@/cities/hooks/use-city-details-params';
-import { useCityMutations } from '@/cities/hooks/use-city-mutations';
+import useCityMutations from '@/cities/hooks/use-city-mutations';
 import useQueryCity from '@/cities/hooks/use-query-city';
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
@@ -17,14 +17,13 @@ import { createGoogleMapsLink } from '@/lib/utils';
 export default function CityDetailsPage() {
   const tCities = useTranslations('cities');
   const tCommon = useTranslations('common');
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { deleteCity } = useCityMutations();
   const { cityId, isValidId } = useCityDetailsParams();
-
   const { data: city, isLoading } = useQueryCity({
     cityId,
     enabled: isValidId,
   });
+  const { deleteCity } = useCityMutations();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleDelete = () => {
     setIsDeleteDialogOpen(true);
@@ -33,10 +32,10 @@ export default function CityDetailsPage() {
   const confirmDelete = () => {
     if (!cityId) return;
     deleteCity.mutateWithToast(cityId);
+    setIsDeleteDialogOpen(false);
   };
 
-  // Show the skeleton only if we're loading and don't have any cached data
-  if (isLoading && !city) {
+  if (isLoading) {
     return <CitySkeleton />;
   }
 

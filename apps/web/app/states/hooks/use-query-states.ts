@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query';
-import type { states } from '@repo/ims-client';
 import client from '@/lib/ims-client';
 
 /**

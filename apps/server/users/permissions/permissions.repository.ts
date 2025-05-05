@@ -9,7 +9,7 @@ import type {
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
 import { errors } from '../../shared/errors';
-import { db } from '@/db';
+import { db } from '../db-service';
 
 /**
  * Creates a repository for managing permission entities

@@ -6,7 +6,7 @@ import type {
   BusSeats,
 } from './bus-seats.types';
 import { createBaseRepository } from '@repo/base-repo';
-import { db } from '@/db';
+import { db } from '../db-service';
 
 /**
  * Creates a repository for managing bus seat entities

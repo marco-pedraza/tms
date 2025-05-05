@@ -1,4 +1,4 @@
-import { db } from '../../db';
+import { db } from '../db-service';
 import { seatDiagrams } from './seat-diagrams.schema';
 import {
   SeatDiagram,

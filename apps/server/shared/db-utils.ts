@@ -1,7 +1,9 @@
 import { PgSelect } from 'drizzle-orm/pg-core';
 import { PaginatedResult, PaginationMeta, PaginationParams } from './types';
-import { db } from '../db';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
+import { PgTable, TableConfig } from 'drizzle-orm/pg-core';
+import type { DbReturnType } from '../db/database';
+import type { AnyColumn } from 'drizzle-orm';
 
 const DEFAULT_PAGE_SIZE = 10;
 const DEFAULT_PAGE = 1;
@@ -10,9 +12,9 @@ const MAX_PAGE_SIZE = 100;
 /**
  * Applies pagination to a query and handles metadata calculation
  *
- * @param query Main query in dynamic mode
- * @param countQuery Query to get total count
- * @param params Pagination parameters
+ * @param query - Main query in dynamic mode
+ * @param countQuery - Query to get total count
+ * @param params - Pagination parameters
  * @returns Paginated results with metadata
  *
  * @template T Query type
@@ -23,18 +25,18 @@ export async function withPagination<T extends PgSelect, TRecord>(
   countQuery: Promise<{ count: number }[]> | Promise<{ count: bigint }[]>,
   params: PaginationParams = {},
 ): Promise<PaginatedResult<TRecord>> {
-  // Extraer y validar parámetros de paginación
+  // Extract and validate pagination parameters
   const page = Math.max(1, params.page ?? DEFAULT_PAGE);
   const pageSize = Math.max(
     1,
     Math.min(MAX_PAGE_SIZE, params.pageSize ?? DEFAULT_PAGE_SIZE),
   );
 
-  // Aplicar paginación a la consulta
+  // Apply pagination to the query
   const offset = (page - 1) * pageSize;
   const paginatedQuery = query.limit(pageSize).offset(offset);
 
-  // Ejecutar ambas consultas en paralelo para mejor rendimiento
+  // Execute both queries in parallel for better performance
   const [results, countResult] = await Promise.all([
     paginatedQuery,
     countQuery,
@@ -65,6 +67,7 @@ export async function withPagination<T extends PgSelect, TRecord>(
 
 /**
  * Updates a many-to-many relationship between entities
+ * @param db - Database connection instance initialized for the specific service
  * @param relationTable - The join table for the relationship
  * @param sourceField - The field in the join table that references the source entity
  * @param sourceId - The ID of the source entity
@@ -72,10 +75,11 @@ export async function withPagination<T extends PgSelect, TRecord>(
  * @param targetIds - The IDs of the target entities to assign
  */
 export async function updateManyToManyRelation(
-  relationTable: unknown,
-  sourceField: unknown,
+  db: DbReturnType,
+  relationTable: PgTable<TableConfig>,
+  sourceField: AnyColumn,
   sourceId: number,
-  targetField: unknown,
+  targetField: AnyColumn,
   targetIds: number[],
 ): Promise<void> {
   // Delete existing relations
@@ -109,19 +113,23 @@ function toCamelCase(str: string): string {
 
 /**
  * Gets related entities from a join table
+ * @param db - Database connection instance initialized for the specific service
  * @param targetTable - The table of the target entities
  * @param relationTable - The join table for the relationship
  * @param sourceField - The field in the join table that references the source entity
  * @param sourceId - The ID of the source entity
  * @param targetField - The field in the join table that references the target entity
- * @returns The related entities
+ * @returns Array of related entities
+ *
+ * @template T - The type of entities to return
  */
 export async function getRelatedEntities<T>(
-  targetTable: unknown,
-  relationTable: unknown,
-  sourceField: unknown,
+  db: DbReturnType,
+  targetTable: PgTable<TableConfig>,
+  relationTable: PgTable<TableConfig>,
+  sourceField: AnyColumn,
   sourceId: number,
-  targetField: unknown,
+  targetField: AnyColumn,
 ): Promise<T[]> {
   const relations = await db
     .select()
@@ -135,8 +143,9 @@ export async function getRelatedEntities<T>(
   // Convert targetField name to camelCase for consistent access
   const targetFieldName = toCamelCase(targetField.name);
   const targetIds = relations.map((relation) => relation[targetFieldName]);
-  return await db
+
+  return (await db
     .select()
     .from(targetTable)
-    .where(inArray(targetTable.id, targetIds));
+    .where(inArray(sql`${targetTable}.id`, targetIds))) as T[];
 }

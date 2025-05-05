@@ -6,7 +6,7 @@ import type {
   Countries,
 } from './countries.types';
 import { createBaseRepository } from '@repo/base-repo';
-import { db } from '@/db';
+import { db } from '../db-service';
 
 /**
  * Creates a repository for managing country entities

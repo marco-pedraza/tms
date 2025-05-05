@@ -1,4 +1,6 @@
-import { db } from './database';
+import { DB, initDrizzle } from './database';
+import type { DbReturnType } from './database';
 import * as schema from './schema';
 
-export { db, schema };
+export { DB, initDrizzle, schema };
+export type { DbReturnType };

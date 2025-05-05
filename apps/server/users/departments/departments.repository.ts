@@ -8,7 +8,7 @@ import type {
 } from './departments.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-import { db } from '@/db';
+import { db } from '../db-service';
 
 export const createDepartmentRepository = () => {
   const baseRepository = createBaseRepository<

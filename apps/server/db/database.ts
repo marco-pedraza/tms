@@ -1,7 +1,9 @@
 import { SQLDatabase } from 'encore.dev/storage/sqldb';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import log from 'encore.dev/log';
+import { appMeta } from 'encore.dev';
 import * as schema from './schema';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 // Define a database named 'inventory-db', using the database migrations
 // in the "./migrations" folder. Encore automatically provisions,
@@ -22,7 +24,27 @@ export function initDrizzle(sqlDb: SQLDatabase) {
   if (!sqlDb) {
     throw new Error('Database connection not available');
   }
-  const db = drizzle(sqlDb.connectionString, { schema });
+
+  const environment = appMeta().environment.type; // 'local', 'development', 'production'
+  const enableQueryLogs =
+    process.env.ENABLE_DB_LOGS === 'true' && environment !== 'production';
+
+  const db = drizzle(sqlDb.connectionString, {
+    schema,
+    logger: enableQueryLogs
+      ? {
+          logQuery: (query, params) => {
+            const executableSQL = query
+              .replace(/"([^"]+)"/g, '$1') // Remove double quotes from identifiers
+              .trim();
+            log.info(
+              `query="${executableSQL}"`,
+              params.length ? { params } : undefined,
+            );
+          },
+        }
+      : undefined,
+  });
   return db;
 }
 

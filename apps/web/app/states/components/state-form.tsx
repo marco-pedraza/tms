@@ -5,7 +5,6 @@ import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import type { countries } from '@repo/ims-client';
-import useQueryCountries from '@/app/countries/hooks/use-query-countries';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import useQueryCountries from '@/countries/hooks/use-query-countries';
 import { codeSchema, nameSchema } from '@/lib/schemas/common';
 import { hasFieldErrors } from '@/lib/utils';
 

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -26,8 +25,8 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import client from '@/lib/ims-client';
-import { useTerminalMutations } from '@/terminals/hooks/use-terminal-mutations';
+import useQueryTerminals from '@/terminals/hooks/use-query-terminals';
+import useTerminalMutations from '@/terminals/hooks/use-terminal-mutations';
 
 type Terminal = terminals.Terminal;
 
@@ -156,10 +155,7 @@ export default function TerminalsTable() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const { deleteTerminal } = useTerminalMutations();
 
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['terminals'],
-    queryFn: async () => await client.inventory.listTerminals({}),
-  });
+  const { data, isLoading, error, refetch } = useQueryTerminals();
 
   const handleDelete = (id: string) => {
     const numericId = parseInt(id);

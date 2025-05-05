@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { terminals } from '@repo/ims-client';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
 import imsClient from '@/lib/ims-client';
-import type { TerminalFormValues } from '@/terminals/terminal-form';
+import type { TerminalFormValues } from '@/terminals/components/terminal-form';
 
 interface MutationMessages {
   loading: string;
@@ -24,7 +24,7 @@ interface MutationMessages {
  * @returns {Object} result.updateTerminal - Mutation for updating an existing terminal
  * @returns {Object} result.deleteTerminal - Mutation for deleting a terminal
  */
-export function useTerminalMutations() {
+export default function useTerminalMutations() {
   const t = useTranslations('terminals');
   const router = useRouter();
   const queryClient = useQueryClient();

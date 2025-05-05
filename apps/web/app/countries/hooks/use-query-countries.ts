@@ -16,6 +16,6 @@ export default function useQueryCountries(): UseQueryResult<
 > {
   return useQuery({
     queryKey: ['countries'],
-    queryFn: async () => await imsClient.inventory.listCountriesPaginated({}),
+    queryFn: () => imsClient.inventory.listCountriesPaginated({}),
   });
 }

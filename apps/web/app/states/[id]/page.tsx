@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import useQueryCountry from '@/app/countries/hooks/use-query-country';
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import useQueryCountry from '@/countries/hooks/use-query-country';
 import StateSkeleton from '@/states/components/state-skeleton';
 import useQueryState from '@/states/hooks/use-query-state';
 import useStateDetailsParams from '@/states/hooks/use-state-details-params';

@@ -24,7 +24,7 @@ interface MutationMessages {
  * @returns {Object} result.updateCountry - Mutation for updating an existing country
  * @returns {Object} result.deleteCountry - Mutation for deleting a country
  */
-export function useCountryMutations() {
+export default function useCountryMutations() {
   const t = useTranslations('countries');
   const router = useRouter();
   const queryClient = useQueryClient();

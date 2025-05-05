@@ -1,58 +1,34 @@
 'use client';
 
-import { Params } from 'next/dist/server/request/params';
-import { useParams } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import type { cities } from '@repo/ims-client';
-import CityForm, { CityFormValues } from '@/cities/city-form';
-import { useCityMutations } from '@/cities/hooks/use-city-mutations';
+import CityForm, { CityFormValues } from '@/cities/components/city-form';
+import CityFormSkeleton from '@/cities/components/city-form-skeleton';
+import useCityDetailsParams from '@/cities/hooks/use-city-details-params';
+import useCityMutations from '@/cities/hooks/use-city-mutations';
+import useQueryCity from '@/cities/hooks/use-query-city';
 import PageHeader from '@/components/page-header';
-import imsClient from '@/lib/ims-client';
-
-interface EditCityPageParams extends Params {
-  id: string;
-}
-
-const isNumber = (value: string) => {
-  return !isNaN(Number(value));
-};
 
 export default function EditCityPage() {
-  const params = useParams<EditCityPageParams>();
-  const cityId = parseInt(params.id);
-  const queryClient = useQueryClient();
-  const { updateCity } = useCityMutations();
   const tCities = useTranslations('cities');
   const tCommon = useTranslations('common');
-
-  const { data, status, error } = useQuery({
-    queryKey: ['city', cityId],
-    enabled: isNumber(params.id),
-    queryFn: () => imsClient.inventory.getCity(cityId),
-    initialData: () =>
-      queryClient
-        .getQueryData<cities.PaginatedCities>(['cities'])
-        ?.data.find((city) => city.id === cityId),
-    initialDataUpdatedAt: () =>
-      queryClient.getQueryState<cities.City[]>(['cities'])?.dataUpdatedAt,
+  const { cityId, isValidId } = useCityDetailsParams();
+  const { data, isLoading } = useQueryCity({
+    cityId,
+    enabled: isValidId,
   });
-
-  if (!isNumber(params.id)) {
-    return <div>{tCommon('errors.invalidId')}</div>;
-  }
-
-  if (status === 'pending') {
-    return <div>{tCommon('states.loading')}</div>;
-  }
-
-  if (error) {
-    return <div>{tCommon('errors.unexpected')}</div>;
-  }
+  const { updateCity } = useCityMutations();
 
   const handleSubmit = (values: CityFormValues) => {
     return updateCity.mutateWithToast({ id: cityId, values });
   };
+
+  if (isLoading) {
+    return <CityFormSkeleton />;
+  }
+
+  if (!data) {
+    return null;
+  }
 
   return (
     <div>

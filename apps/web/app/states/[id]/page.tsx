@@ -1,54 +1,48 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
+import useQueryCountry from '@/app/countries/hooks/use-query-country';
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import imsClient from '@/lib/ims-client';
 import StateSkeleton from '@/states/components/state-skeleton';
-import { useQueryState } from '@/states/hooks/use-query-state';
+import useQueryState from '@/states/hooks/use-query-state';
 import useStateDetailsParams from '@/states/hooks/use-state-details-params';
-import { useStateMutations } from '@/states/hooks/use-state-mutations';
+import useStateMutations from '@/states/hooks/use-state-mutations';
 
 export default function StateDetailsPage() {
   const tStates = useTranslations('states');
   const tCommon = useTranslations('common');
-
-  const { stateId } = useStateDetailsParams();
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { deleteState } = useStateMutations();
-
-  const { data: state, status } = useQueryState({ stateId });
-
-  const { data: country, isLoading: isLoadingCountry } = useQuery({
-    queryKey: ['country', state?.countryId],
-    queryFn: async () => {
-      if (!state?.countryId) return null;
-      return await imsClient.inventory.getCountry(state.countryId);
-    },
+  const { stateId, isValidId } = useStateDetailsParams();
+  const { data: state, isLoading } = useQueryState({
+    stateId,
+    enabled: isValidId,
+  });
+  const { data: country } = useQueryCountry({
+    countryId: state?.countryId ?? -1,
     enabled: !!state?.countryId,
   });
+  const { deleteState } = useStateMutations();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleDelete = () => {
     setIsDeleteDialogOpen(true);
   };
 
   const confirmDelete = () => {
-    const numericId = parseInt(stateId, 10);
-    deleteState.mutateWithToast(numericId);
+    deleteState.mutateWithToast(stateId);
     setIsDeleteDialogOpen(false);
   };
 
-  if (status === 'pending' || isLoadingCountry) {
+  if (isLoading) {
     return <StateSkeleton />;
   }
 
   if (!state) {
-    return <div>{tCommon('errors.unexpected')}</div>;
+    return null;
   }
 
   return (

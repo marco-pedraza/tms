@@ -6,13 +6,14 @@
 import { NotFoundError, DuplicateError } from './errors';
 import { eq, and, count, not, or } from 'drizzle-orm';
 import type {
-  PaginationParams,
   PaginationMeta,
   TableWithId,
   UniqueFieldConfig,
   BaseRepository,
   TransactionalDB,
   DrizzleDB,
+  QueryOptions,
+  PaginationParams,
 } from './types';
 import { PgColumn } from 'drizzle-orm/pg-core';
 import {
@@ -44,7 +45,7 @@ export const createBaseRepository = <
   type TableInsert = TTable extends { $inferInsert: infer U } ? U : never;
 
   /**
-   λ* Finds an entity by its ID
+   * Finds an entity by its ID
    * @param {number} id - The ID of the entity to find
    * @throws {NotFoundError} If the entity is not found
    * @returns {Promise<T>} The found entity
@@ -73,9 +74,7 @@ export const createBaseRepository = <
    * @param {Array<{field: PgColumn; direction: 'asc' | 'desc'}>} [options.orderBy] - Fields to order by
    * @returns {Promise<T[]>} Array of all entities
    */
-  const findAll = async (options?: {
-    orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
-  }): Promise<T[]> => {
+  const findAll = async (options?: QueryOptions): Promise<T[]> => {
     try {
       let query = db.select().from(table);
       query = applyOrdering(query, options?.orderBy);
@@ -97,9 +96,7 @@ export const createBaseRepository = <
   const findAllBy = async (
     field: PgColumn,
     value: unknown,
-    options?: {
-      orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
-    },
+    options?: QueryOptions,
   ): Promise<T[]> => {
     try {
       let query = db.select().from(table);
@@ -115,24 +112,25 @@ export const createBaseRepository = <
 
   /**
    * Retrieves entities with pagination
-   * @param {PaginationParams} params - Pagination parameters (page and pageSize)
+   * @param {PaginationParams} query - Pagination and ordering parameters
    * @returns {Promise<Object>} Paginated results with data and pagination metadata
    */
   const findAllPaginated = async (
-    params: PaginationParams = {},
+    query?: PaginationParams,
   ): Promise<{
     data: T[];
     pagination: PaginationMeta;
   }> => {
     try {
-      const { page = 1, pageSize = 10 } = params;
+      const { page = 1, pageSize = 10, orderBy } = query ?? {};
       const offset = (page - 1) * pageSize;
 
       const countQuery = db.select({ count: count() }).from(table);
       const [countResult] = await countQuery;
       const totalCount = countResult?.count ?? 0;
 
-      const dataQuery = db.select().from(table);
+      let dataQuery = db.select().from(table);
+      dataQuery = applyOrdering(dataQuery, orderBy);
       const data = await dataQuery.limit(pageSize).offset(offset);
 
       return {
@@ -251,19 +249,19 @@ export const createBaseRepository = <
    * Finds entities by a specific field value with pagination
    * @param {PgColumn} field - The field to search by
    * @param {unknown} value - The value to search for
-   * @param {PaginationParams} params - Pagination parameters (page and pageSize)
+   * @param {PaginationParams} query - Pagination and ordering parameters
    * @returns {Promise<Object>} Paginated results with data and pagination metadata
    */
   const findByPaginated = async (
     field: PgColumn,
     value: unknown,
-    params: PaginationParams = {},
+    query?: PaginationParams,
   ): Promise<{
     data: T[];
     pagination: PaginationMeta;
   }> => {
     try {
-      const { page = 1, pageSize = 10 } = params;
+      const { page = 1, pageSize = 10, orderBy } = query ?? {};
       const offset = (page - 1) * pageSize;
 
       const countQuery = db
@@ -273,14 +271,10 @@ export const createBaseRepository = <
       const [countResult] = await countQuery;
       const totalCount = countResult?.count ?? 0;
 
-      const dataQuery = db
-        .select()
-        .from(table)
-        .where(eq(field, value))
-        .limit(pageSize)
-        .offset(offset);
+      let dataQuery = db.select().from(table).where(eq(field, value));
+      dataQuery = applyOrdering(dataQuery, orderBy);
 
-      const data = await dataQuery;
+      const data = await dataQuery.limit(pageSize).offset(offset);
 
       return {
         data: data as T[],
@@ -428,7 +422,7 @@ export const createBaseRepository = <
       db,
       table,
     },
-  };
+  } as const;
 
   return repository;
 };

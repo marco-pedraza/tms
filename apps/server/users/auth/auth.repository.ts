@@ -8,7 +8,7 @@ import {
 } from './auth.types';
 import { errors } from '../../shared/errors';
 import { createBaseRepository } from '@repo/base-repo';
-import { db } from '@/db';
+import { db } from '../db-service';
 
 // Error message constants
 const ERROR_MESSAGES = {

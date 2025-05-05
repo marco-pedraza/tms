@@ -1,4 +1,4 @@
-import { db } from '@/db';
+import { db } from '../db-service';
 import { NotFoundError } from '@repo/base-repo';
 import { roles, rolePermissions } from './roles.schema';
 import { permissions } from '../permissions/permissions.schema';
@@ -72,6 +72,7 @@ export const createRoleRepository = () => {
   ): Promise<RoleWithPermissions> => {
     const role = await baseRepository.findOne(id);
     const permissionList = await getRelatedEntities<Permission>(
+      db,
       permissions,
       rolePermissions,
       rolePermissions.roleId,
@@ -208,6 +209,7 @@ export const createRoleRepository = () => {
     );
 
     await updateManyToManyRelation(
+      db,
       rolePermissions,
       rolePermissions.roleId,
       id,

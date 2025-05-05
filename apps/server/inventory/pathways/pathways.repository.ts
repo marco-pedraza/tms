@@ -6,7 +6,7 @@ import type {
   PathwayWithServiceAssignments,
 } from './pathways.types';
 import { createBaseRepository } from '@repo/base-repo';
-import { db } from '@/db';
+import { db } from '../db-service';
 import { eq } from 'drizzle-orm';
 import { NotFoundError } from '../../shared/errors';
 

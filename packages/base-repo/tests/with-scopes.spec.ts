@@ -137,6 +137,128 @@ describe('withScopes', () => {
       expect(result.pagination.totalPages).toBe(2);
       expect(result.pagination.hasNextPage).toBe(true);
     });
+
+    it('should paginate and order results with ascending order', async () => {
+      // Create active users with different names
+      await createTestUser({ name: 'Charlie', active: true });
+      await createTestUser({ name: 'Alice', active: true });
+      await createTestUser({ name: 'Bob', active: true });
+      // Create inactive users that shouldn't appear in results
+      await createTestUser({ name: 'David', active: false });
+      await createTestUser({ name: 'Eve', active: false });
+
+      const result = await scopedRepo.scope('active').findAllPaginated({
+        page: 1,
+        pageSize: 2,
+        orderBy: [{ field: users.name, direction: 'asc' }],
+      });
+
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0].name).toBe('Alice');
+      expect(result.data[1].name).toBe('Bob');
+      expect(result.pagination.totalCount).toBe(3);
+      expect(result.pagination.hasNextPage).toBe(true);
+
+      // Verify second page
+      const page2 = await scopedRepo.scope('active').findAllPaginated({
+        page: 2,
+        pageSize: 2,
+        orderBy: [{ field: users.name, direction: 'asc' }],
+      });
+
+      expect(page2.data).toHaveLength(1);
+      expect(page2.data[0].name).toBe('Charlie');
+      expect(page2.pagination.hasNextPage).toBe(false);
+    });
+
+    it('should paginate and order results with descending order', async () => {
+      // Create active users with different names
+      await createTestUser({ name: 'Charlie', active: true });
+      await createTestUser({ name: 'Alice', active: true });
+      await createTestUser({ name: 'Bob', active: true });
+      // Create inactive users that shouldn't appear in results
+      await createTestUser({ name: 'David', active: false });
+      await createTestUser({ name: 'Eve', active: false });
+
+      const result = await scopedRepo.scope('active').findAllPaginated({
+        page: 1,
+        pageSize: 2,
+        orderBy: [{ field: users.name, direction: 'desc' }],
+      });
+
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0].name).toBe('Charlie');
+      expect(result.data[1].name).toBe('Bob');
+      expect(result.pagination.totalCount).toBe(3);
+      expect(result.pagination.hasNextPage).toBe(true);
+
+      // Verify second page
+      const page2 = await scopedRepo.scope('active').findAllPaginated({
+        page: 2,
+        pageSize: 2,
+        orderBy: [{ field: users.name, direction: 'desc' }],
+      });
+
+      expect(page2.data).toHaveLength(1);
+      expect(page2.data[0].name).toBe('Alice');
+      expect(page2.pagination.hasNextPage).toBe(false);
+    });
+
+    it('should handle multiple ordering criteria with scopes', async () => {
+      // Create active users with same names but different emails
+      await createTestUser({
+        name: 'Alice',
+        email: 'alice2@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Alice',
+        email: 'alice1@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Bob',
+        email: 'bob2@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Bob',
+        email: 'bob1@example.com',
+        active: true,
+      });
+      // Create inactive users that shouldn't appear in results
+      await createTestUser({
+        name: 'Alice',
+        email: 'alice3@example.com',
+        active: false,
+      });
+      await createTestUser({
+        name: 'Bob',
+        email: 'bob3@example.com',
+        active: false,
+      });
+
+      const result = await scopedRepo.scope('active').findAllPaginated({
+        page: 1,
+        pageSize: 4,
+        orderBy: [
+          { field: users.name, direction: 'asc' },
+          { field: users.email, direction: 'asc' },
+        ],
+      });
+
+      expect(result.data).toHaveLength(4);
+      expect(result.data[0].name).toBe('Alice');
+      expect(result.data[0].email).toBe('alice1@example.com');
+      expect(result.data[1].name).toBe('Alice');
+      expect(result.data[1].email).toBe('alice2@example.com');
+      expect(result.data[2].name).toBe('Bob');
+      expect(result.data[2].email).toBe('bob1@example.com');
+      expect(result.data[3].name).toBe('Bob');
+      expect(result.data[3].email).toBe('bob2@example.com');
+      expect(result.pagination.totalCount).toBe(4);
+      expect(result.pagination.hasNextPage).toBe(false);
+    });
   });
 
   describe('error handling', () => {

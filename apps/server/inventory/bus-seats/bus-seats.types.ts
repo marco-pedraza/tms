@@ -27,8 +27,8 @@ export interface BusSeat {
   /** Unique identifier for the bus seat */
   id: number;
 
-  /** ID of the bus model this seat belongs to */
-  modelId: number;
+  /** ID of the seat diagram this seat belongs to */
+  seatDiagramId: number;
 
   /** Seat number (e.g., "1A", "2B") */
   seatNumber: string;
@@ -66,10 +66,10 @@ export interface BusSeat {
  */
 export interface CreateBusSeatPayload {
   /**
-   * ID of the bus model this seat belongs to
+   * ID of the seat diagram this seat belongs to
    * Must be a positive number
    */
-  modelId: number;
+  seatDiagramId: number;
 
   /**
    * Seat number (e.g., "1A", "2B")
@@ -133,10 +133,10 @@ export interface CreateBusSeatBatchPayload {
  */
 export interface UpdateBusSeatPayload {
   /**
-   * ID of the bus model this seat belongs to
+   * ID of the seat diagram this seat belongs to
    * Must be a positive number
    */
-  modelId?: number;
+  seatDiagramId?: number;
 
   /**
    * Seat number (e.g., "1A", "2B")

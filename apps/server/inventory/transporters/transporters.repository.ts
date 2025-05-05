@@ -7,7 +7,7 @@ import type {
 } from './transporters.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-import { db } from '@/db';
+import { db } from '../db-service';
 
 export const createTransporterRepository = () => {
   const baseRepository = createBaseRepository<

@@ -1,22 +1,30 @@
+import { Params } from 'next/dist/server/request/params';
 import { useParams } from 'next/navigation';
+import isNumber from '@/utils/is-number';
 
+interface StatePageParams extends Params {
+  id: string;
+}
+
+interface UseStateDetailsParamsResult {
+  stateId: number;
+  isValidId: boolean;
+}
 /**
- * Parses and validates state ID from the URL parameters
+ * Custom hook for extracting and validating state details from URL parameters.
  *
- * @returns Object containing the stateId and validation state
- * @returns {string} result.stateId - The parsed state ID
- * @returns {boolean} result.isValidId - Whether the ID is valid
+ * This hook retrieves the 'id' parameter from the URL and validates it as a valid number.
+ * It provides the validated state ID and a boolean indicating whether the ID is valid.
+ *
  */
-export default function useStateDetailsParams() {
-  const params = useParams();
-  const id = params?.id as string;
-
-  // Validate that the ID is a number
-  const numericId = id ? parseInt(id, 10) : NaN;
-  const isValidId = !isNaN(numericId) && numericId > 0;
+export default function useStateDetailsParams(): UseStateDetailsParamsResult {
+  const params = useParams<StatePageParams>();
+  const idParam = params?.id || '';
+  const stateId = Number.parseInt(idParam, 10);
+  const isValidId = isNumber(idParam);
 
   return {
-    stateId: id,
+    stateId,
     isValidId,
   };
 }

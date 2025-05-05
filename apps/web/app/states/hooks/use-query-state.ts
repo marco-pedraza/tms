@@ -1,8 +1,20 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  UseQueryResult,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import type { states } from '@repo/ims-client';
 import client from '@/lib/ims-client';
 
-type State = states.State;
+interface QueryStateError extends Error {
+  code?: string;
+  status?: number;
+}
+
+interface UseQueryStateProps {
+  stateId: number;
+  enabled?: boolean;
+}
 
 /**
  * Custom hook for querying a single state by ID
@@ -12,26 +24,20 @@ type State = states.State;
  * @param props.enabled - Whether the query should be enabled
  * @returns Query result containing state data
  */
-export function useQueryState({
+export default function useQueryState({
   stateId,
   enabled = true,
-}: {
-  stateId: string | number;
-  enabled?: boolean;
-}) {
+}: UseQueryStateProps): UseQueryResult<states.State, QueryStateError> {
   const queryClient = useQueryClient();
-  const numericId =
-    typeof stateId === 'string' ? parseInt(stateId, 10) : stateId;
-
   return useQuery({
-    queryKey: ['states', numericId],
+    queryKey: ['states', stateId],
     queryFn: async () => {
-      return await client.inventory.getState(numericId);
+      return await client.inventory.getState(stateId);
     },
     initialData: () =>
       queryClient
         .getQueryData<states.PaginatedStates>(['states'])
-        ?.data.find((state) => state.id === numericId),
+        ?.data.find((state) => state.id === stateId),
     initialDataUpdatedAt: () =>
       queryClient.getQueryState<states.PaginatedStates>(['states'])
         ?.dataUpdatedAt,

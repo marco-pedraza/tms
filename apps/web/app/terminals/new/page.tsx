@@ -1,9 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import TerminalForm from '@/app/terminals/components/terminal-form';
 import PageHeader from '@/components/page-header';
-import { useTerminalMutations } from '@/terminals/hooks/use-terminal-mutations';
-import TerminalForm from '@/terminals/terminal-form';
+import useTerminalMutations from '@/terminals/hooks/use-terminal-mutations';
 
 export default function NewTerminalPage() {
   const { createTerminal } = useTerminalMutations();

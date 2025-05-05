@@ -3,12 +3,12 @@
 import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import PageHeader from '@/components/page-header';
-import imsClient from '@/lib/ims-client';
-import { useTerminalMutations } from '@/terminals/hooks/use-terminal-mutations';
 import TerminalForm, {
   type TerminalFormValues,
-} from '@/terminals/terminal-form';
+} from '@/app/terminals/components/terminal-form';
+import PageHeader from '@/components/page-header';
+import imsClient from '@/lib/ims-client';
+import useTerminalMutations from '@/terminals/hooks/use-terminal-mutations';
 
 export default function EditTerminalPage() {
   const t = useTranslations('terminals');

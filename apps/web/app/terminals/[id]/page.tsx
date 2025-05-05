@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import imsClient from '@/lib/ims-client';
 import { createGoogleMapsLink } from '@/lib/utils';
-import { useTerminalMutations } from '@/terminals/hooks/use-terminal-mutations';
+import useTerminalMutations from '@/terminals/hooks/use-terminal-mutations';
 
 type OperatingHours = terminals.OperatingHours;
 

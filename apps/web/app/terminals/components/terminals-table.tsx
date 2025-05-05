@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import client from '@/lib/ims-client';
-import { useTerminalMutations } from '@/terminals/hooks/use-terminal-mutations';
+import useTerminalMutations from '@/terminals/hooks/use-terminal-mutations';
 
 type Terminal = terminals.Terminal;
 

@@ -8,7 +8,9 @@ import {
   date,
   numeric,
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import { busModels } from '../bus-models/bus-models.schema';
+import { seatDiagrams } from '../seat-diagrams/seat-diagrams.schema';
 import { BusStatus } from './buses.types';
 
 /**
@@ -20,6 +22,9 @@ export const buses = pgTable('buses', {
   modelId: integer('model_id')
     .notNull()
     .references(() => busModels.id),
+  seatDiagramId: integer('seat_diagram_id')
+    .notNull()
+    .references(() => seatDiagrams.id),
   typeCode: integer('type_code'), // Bus type code (Tipo)
   brandCode: text('brand_code'), // Brand code (Marca)
   modelCode: text('model_code'), // Model code (Modelo)
@@ -53,3 +58,17 @@ export const buses = pgTable('buses', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
+
+/**
+ * Relations for buses
+ */
+export const busesRelations = relations(buses, ({ one }) => ({
+  model: one(busModels, {
+    fields: [buses.modelId],
+    references: [busModels.id],
+  }),
+  seatDiagram: one(seatDiagrams, {
+    fields: [buses.seatDiagramId],
+    references: [seatDiagrams.id],
+  }),
+}));

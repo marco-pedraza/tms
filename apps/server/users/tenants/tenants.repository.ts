@@ -7,7 +7,7 @@ import type {
 } from './tenants.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-import { db } from '@/db';
+import { db } from '../db-service';
 
 export const createTenantRepository = () => {
   const baseRepository = createBaseRepository<

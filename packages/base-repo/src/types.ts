@@ -26,7 +26,54 @@ export type DrizzleTransaction = PgTransaction<
   Record<string, never>
 >;
 
+/**
+ * Type for a database or transaction, allows to swap between a regular database and a transaction to create a transactional repository
+ */
 export type TransactionalDB = DrizzleDB | DrizzleTransaction;
+
+/**
+ * Extract column names from a table, only includes actual columns
+ */
+export type ColumnFieldNames<TTable> = TTable extends { $inferSelect: infer U }
+  ? keyof U
+  : Extract<keyof TTable, string>;
+
+/**
+ * Type for ordering options
+ */
+export type OrderBy<TTable> = {
+  field: ColumnFieldNames<TTable>;
+  direction: 'asc' | 'desc';
+}[];
+
+/**
+ * Simple filters type for filtering query results by matching fields
+ */
+export type Filters<T> = {
+  [K in keyof T]?: T[K];
+};
+
+/**
+ * Options for querying entities
+ * @template TFilters - The type of filters that can be applied
+ */
+export interface QueryOptions<T, TTable> {
+  orderBy?: OrderBy<TTable>;
+  filters?: Filters<T>;
+}
+
+/**
+ * Type for searchable fields
+ */
+export type SearchableFields = PgColumn[];
+
+/**
+ * Repository configuration options
+ */
+export interface RepositoryConfig {
+  /** Fields that can be searched with search and searchPaginated methods */
+  searchableFields?: SearchableFields;
+}
 
 /**
  * Generic type for paginated results
@@ -55,17 +102,13 @@ export interface PaginationMeta {
 }
 
 /**
- * Parameters for pagination requests
+ * Query options combining pagination and ordering
  */
-export interface PaginationParams {
-  /** Page number (1-based) */
+export interface PaginationParams<T, TTable> {
   page?: number;
-  /** Number of items per page */
   pageSize?: number;
-  /** Column to sort by */
-  sortBy?: string;
-  /** Sort direction */
-  sortDirection?: 'asc' | 'desc';
+  orderBy?: OrderBy<TTable>;
+  filters?: Filters<T>;
 }
 
 export type TableWithId = PgTable & {
@@ -107,17 +150,23 @@ export type UniqueFieldConfig<TTable extends TableWithId> = {
  */
 export type ScopeFunction<TTable extends TableWithId> = (
   table: TTable,
-  db: DrizzleDB,
+  db: TransactionalDB,
 ) => SQL<unknown>;
+
+/**
+ * Represents a scope factory function that returns a scope function
+ * @template TTable - The database table type
+ */
+export type ScopeFactoryFunction<TTable extends TableWithId> = (
+  ...args: unknown[]
+) => ScopeFunction<TTable>;
 
 /**
  * Collection of named scope functions
  * @template TTable - The database table type
  */
 export type ScopesConfig<TTable extends TableWithId> = {
-  [key: string]:
-    | ScopeFunction<TTable>
-    | ((...params: unknown[]) => ScopeFunction<TTable>);
+  [key: string]: ScopeFunction<TTable> | ScopeFactoryFunction<TTable>;
 };
 
 /**
@@ -139,17 +188,13 @@ export interface BaseRepository<
   TTable extends TableWithId,
 > {
   findOne(id: number): Promise<T>;
-  findAll(options?: {
-    orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
-  }): Promise<T[]>;
+  findAll(options?: QueryOptions<T, TTable>): Promise<T[]>;
   findAllBy(
     field: PgColumn,
     value: unknown,
-    options?: {
-      orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
-    },
+    options?: QueryOptions<T, TTable>,
   ): Promise<T[]>;
-  findAllPaginated(params?: PaginationParams): Promise<{
+  findAllPaginated(query?: PaginationParams<T, TTable>): Promise<{
     data: T[];
     pagination: PaginationMeta;
   }>;
@@ -157,26 +202,26 @@ export interface BaseRepository<
   update(id: number, data: UpdateT): Promise<T>;
   delete(id: number): Promise<T>;
   deleteAll(): Promise<number>;
-  findBy(field: PgColumn, value: unknown): Promise<T | null>;
-  findByPaginated(
+  findBy<K extends keyof T>(field: PgColumn, value: T[K]): Promise<T | null>;
+  findByPaginated<K extends keyof T>(
     field: PgColumn,
-    value: unknown,
-    params?: PaginationParams,
+    value: T[K],
+    query?: PaginationParams<T, TTable>,
   ): Promise<{
     data: T[];
     pagination: PaginationMeta;
   }>;
-  existsBy(
+  existsBy<K extends keyof T>(
     field: PgColumn,
-    value: unknown,
+    value: T[K],
     excludeId?: number,
   ): Promise<boolean>;
-  validateUniqueness?(
+  validateUniqueness(
     fields: UniqueFieldConfig<TTable>[],
     excludeId?: number,
     errorMessage?: string,
   ): Promise<void>;
-  validateRelationExists?(
+  validateRelationExists(
     relatedTable: TableWithId,
     relationId: number,
     relationName?: string,
@@ -186,17 +231,18 @@ export interface BaseRepository<
       txRepo: BaseRepository<T, CreateT, UpdateT, TTable>,
     ) => Promise<R>,
   ): Promise<R>;
-  // Internal state we need to access
+  search(term: string): Promise<T[]>;
+  searchPaginated(
+    term: string,
+    query?: PaginationParams<T, TTable>,
+  ): Promise<{
+    data: T[];
+    pagination: PaginationMeta;
+  }>;
   __internal?: {
-    /**
-     * Database connection instance
-     * Using TransactionalDB type to support both regular DB and transaction contexts
-     */
     db: TransactionalDB;
-    /**
-     * Table definition for the entity
-     */
     table: TTable;
+    config?: RepositoryConfig;
   };
 }
 
@@ -212,10 +258,26 @@ export interface ScopedRepository<
   CreateT,
   UpdateT,
   TTable extends TableWithId,
-> extends BaseRepository<T, CreateT, UpdateT, TTable> {
+> extends Omit<
+    BaseRepository<T, CreateT, UpdateT, TTable>,
+    'transaction' | 'search' | 'searchPaginated'
+  > {
   scope(
     scopeParams: ScopeParams,
   ): ScopedRepository<T, CreateT, UpdateT, TTable>;
+  transaction<R>(
+    callback: (
+      txRepo: ScopedRepository<T, CreateT, UpdateT, TTable>,
+    ) => Promise<R>,
+  ): Promise<R>;
+  search(term: string): Promise<T[]>;
+  searchPaginated(
+    term: string,
+    params?: PaginationParams<T, TTable>,
+  ): Promise<{
+    data: T[];
+    pagination: PaginationMeta;
+  }>;
 }
 
 /**

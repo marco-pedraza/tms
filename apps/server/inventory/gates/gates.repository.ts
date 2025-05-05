@@ -8,7 +8,7 @@ import type {
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
 import { eq, count } from 'drizzle-orm';
-import { db } from '@/db';
+import { db } from '../db-service';
 import { withPagination } from '../../shared/db-utils';
 
 /**

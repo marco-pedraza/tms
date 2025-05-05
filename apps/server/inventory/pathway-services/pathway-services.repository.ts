@@ -5,7 +5,7 @@ import type {
   UpdatePathwayServicePayload,
 } from './pathway-services.types';
 import { createBaseRepository } from '@repo/base-repo';
-import { db } from '@/db';
+import { db } from '../db-service';
 
 export const createPathwayServiceRepository = () => {
   const baseRepository = createBaseRepository<

@@ -4,11 +4,9 @@ import type {
   CreateBusSeatPayload,
   UpdateBusSeatPayload,
   BusSeats,
-  PaginatedBusSeats,
 } from './bus-seats.types';
 import { createBaseRepository } from '@repo/base-repo';
-import { PaginationParams } from '../../shared/types';
-import { db } from '@/db';
+import { db } from '../db-service';
 
 /**
  * Creates a repository for managing bus seat entities
@@ -23,58 +21,20 @@ export const createBusSeatRepository = () => {
   >(db, busSeats, 'Bus Seat');
 
   /**
-   * Creates a new bus seat
-   * @param data - The bus seat data to create
-   * @returns {Promise<BusSeat>} The created bus seat
+   * Finds seats by seat diagram ID
+   * @param seatDiagramId - The seat diagram ID to filter by
+   * @returns {Promise<BusSeats>} Object containing array of seats for the specified seat diagram
    */
-  const create = async (data: CreateBusSeatPayload): Promise<BusSeat> => {
-    return await baseRepository.create(data);
-  };
-
-  /**
-   * Updates a bus seat
-   * @param id - The ID of the bus seat to update
-   * @param data - The bus seat data to update
-   * @returns {Promise<BusSeat>} The updated bus seat
-   */
-  const update = async (
-    id: number,
-    data: UpdateBusSeatPayload,
-  ): Promise<BusSeat> => {
-    return await baseRepository.update(id, data);
-  };
-
-  /**
-   * Retrieves all bus seats with pagination
-   * @param params - Pagination parameters
-   * @returns {Promise<PaginatedBusSeats>} Paginated list of bus seats
-   */
-  const findAllPaginated = async (
-    params: PaginationParams = {},
-  ): Promise<PaginatedBusSeats> => {
-    return await baseRepository.findAllPaginated(params);
-  };
-
-  /**
-   * Retrieves all bus seats
-   * @returns {Promise<BusSeats>} Object containing array of bus seats
-   */
-  const findAll = async (): Promise<BusSeats> => {
-    const busSeatsList = await baseRepository.findAll();
-    return {
-      busSeats: busSeatsList,
-    };
-  };
-
-  /**
-   * Finds seats by model ID
-   * @param modelId - The model ID to filter by
-   * @returns {Promise<BusSeats>} Object containing array of seats for the specified model
-   */
-  const findAllByModel = async (modelId: number): Promise<BusSeats> => {
-    const results = await baseRepository.findAllBy(busSeats.modelId, modelId, {
-      orderBy: [{ field: busSeats.seatNumber, direction: 'asc' }],
-    });
+  const findAllBySeatDiagram = async (
+    seatDiagramId: number,
+  ): Promise<BusSeats> => {
+    const results = await baseRepository.findAllBy(
+      busSeats.seatDiagramId,
+      seatDiagramId,
+      {
+        orderBy: [{ field: 'seatNumber', direction: 'asc' }],
+      },
+    );
 
     return {
       busSeats: results,
@@ -110,11 +70,7 @@ export const createBusSeatRepository = () => {
 
   return {
     ...baseRepository,
-    create,
-    update,
-    findAll,
-    findAllPaginated,
-    findAllByModel,
+    findAllBySeatDiagram,
     createBatch,
   };
 };

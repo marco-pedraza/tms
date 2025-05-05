@@ -6,20 +6,27 @@
 import { NotFoundError, DuplicateError } from './errors';
 import { eq, and, count, not, or } from 'drizzle-orm';
 import type {
-  PaginationParams,
   PaginationMeta,
   TableWithId,
   UniqueFieldConfig,
   BaseRepository,
   TransactionalDB,
   DrizzleDB,
+  QueryOptions,
+  PaginationParams,
+  RepositoryConfig,
 } from './types';
 import { PgColumn } from 'drizzle-orm/pg-core';
 import {
   handlePostgresError,
   isApplicationError,
 } from './postgres-error-handler';
-import { createPaginationMeta, applyOrdering } from './query-utils';
+import {
+  createPaginationMeta,
+  applyOrdering,
+  applySimpleFilters,
+  applySearchConditions,
+} from './query-utils';
 
 /**
  * Creates a base repository with CRUD operations for a database entity
@@ -27,24 +34,27 @@ import { createPaginationMeta, applyOrdering } from './query-utils';
  * @template CreateT - The type for creating a new entity
  * @template UpdateT - The type for updating an existing entity
  * @template TTable - The type of the database table
+ * @param {TransactionalDB} db - The database connection
  * @param {TTable} table - The database table for the entity
  * @param {string} entityName - The name of the entity for error messages
+ * @param {RepositoryConfig} [config] - Configuration options for the repository
  * @returns {Object} An object containing CRUD and utility functions for the entity
  */
 export const createBaseRepository = <
   T,
   CreateT,
-  UpdateT extends Partial<CreateT>,
+  UpdateT,
   TTable extends TableWithId,
 >(
   db: TransactionalDB,
   table: TTable,
   entityName: string,
+  config?: RepositoryConfig,
 ): BaseRepository<T, CreateT, UpdateT, TTable> => {
   type TableInsert = TTable extends { $inferInsert: infer U } ? U : never;
 
   /**
-   λ* Finds an entity by its ID
+   * Finds an entity by its ID
    * @param {number} id - The ID of the entity to find
    * @throws {NotFoundError} If the entity is not found
    * @returns {Promise<T>} The found entity
@@ -52,7 +62,8 @@ export const createBaseRepository = <
   const findOne = async (id: number): Promise<T> => {
     try {
       const query = db.select().from(table);
-      const [entity] = await query.where(eq(table.id, id)).limit(1);
+      const finalQuery = query.where(eq(table.id, id)).limit(1);
+      const [entity] = await finalQuery;
 
       if (!entity) {
         throw new NotFoundError(`${entityName} with id ${id} not found`);
@@ -68,17 +79,18 @@ export const createBaseRepository = <
   };
 
   /**
-   * Retrieves all entities from the table
-   * @param {Object} options - Additional options for the query
+   * Retrieves all entities from the table with optional filters and ordering
+   * @param {QueryOptions<T>} options - Additional options for the query
+   * @param {Record<string, unknown>} [options.filters] - Simple equality filters to apply
    * @param {Array<{field: PgColumn; direction: 'asc' | 'desc'}>} [options.orderBy] - Fields to order by
    * @returns {Promise<T[]>} Array of all entities
    */
-  const findAll = async (options?: {
-    orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
-  }): Promise<T[]> => {
+  const findAll = async (options?: QueryOptions<T, TTable>): Promise<T[]> => {
     try {
       let query = db.select().from(table);
-      query = applyOrdering(query, options?.orderBy);
+      query = applySimpleFilters(query, table, options?.filters);
+      query = applyOrdering(query, options?.orderBy, table);
+
       const entities = await query;
       return entities as T[];
     } catch (error) {
@@ -87,25 +99,26 @@ export const createBaseRepository = <
   };
 
   /**
-   * Retrieves all entities filtered by a specific field value
+   * Retrieves all entities filtered by a specific field value and optional filters
    * @param {PgColumn} field - The field to filter by
    * @param {unknown} value - The value to filter for
-   * @param {Object} options - Additional options for the query
+   * @param {QueryOptions<T>} options - Additional options for the query
+   * @param {Record<string, unknown>} [options.filters] - Simple equality filters to apply
    * @param {Array<{field: PgColumn; direction: 'asc' | 'desc'}>} [options.orderBy] - Fields to order by
    * @returns {Promise<T[]>} Array of filtered entities
    */
   const findAllBy = async (
     field: PgColumn,
     value: unknown,
-    options?: {
-      orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
-    },
+    options?: QueryOptions<T, TTable>,
   ): Promise<T[]> => {
     try {
       let query = db.select().from(table);
       // @ts-expect-error - Drizzle query builder method typing
       query = query.where(eq(field, value));
-      query = applyOrdering(query, options?.orderBy);
+      query = applySimpleFilters(query, table, options?.filters);
+      query = applyOrdering(query, options?.orderBy, table);
+
       const entities = await query;
       return entities as T[];
     } catch (error) {
@@ -114,26 +127,30 @@ export const createBaseRepository = <
   };
 
   /**
-   * Retrieves entities with pagination
-   * @param {PaginationParams} params - Pagination parameters (page and pageSize)
+   * Retrieves entities with pagination, optional filters, and ordering
+   * @param {PaginationParams & { filters?: Record<string, unknown> }} query - Pagination, filters, and ordering parameters
    * @returns {Promise<Object>} Paginated results with data and pagination metadata
    */
   const findAllPaginated = async (
-    params: PaginationParams = {},
+    query?: PaginationParams<T, TTable>,
   ): Promise<{
     data: T[];
     pagination: PaginationMeta;
   }> => {
     try {
-      const { page = 1, pageSize = 10 } = params;
+      const { page = 1, pageSize = 10, orderBy, filters } = query ?? {};
       const offset = (page - 1) * pageSize;
 
       const countQuery = db.select({ count: count() }).from(table);
-      const [countResult] = await countQuery;
+      const finalCountQuery = applySimpleFilters(countQuery, table, filters);
+      const [countResult] = await finalCountQuery;
       const totalCount = countResult?.count ?? 0;
 
-      const dataQuery = db.select().from(table);
-      const data = await dataQuery.limit(pageSize).offset(offset);
+      let dataQuery = db.select().from(table);
+      dataQuery = applySimpleFilters(dataQuery, table, filters);
+      dataQuery = applyOrdering(dataQuery, orderBy, table);
+      const finalDataQuery = dataQuery.limit(pageSize).offset(offset);
+      const data = await finalDataQuery;
 
       return {
         data: data as T[],
@@ -248,39 +265,64 @@ export const createBaseRepository = <
   };
 
   /**
-   * Finds entities by a specific field value with pagination
+   * Finds entities by a specific field value with pagination and optional filters and ordering
    * @param {PgColumn} field - The field to search by
    * @param {unknown} value - The value to search for
-   * @param {PaginationParams} params - Pagination parameters (page and pageSize)
+   * @param {PaginationParams & { filters?: Record<string, unknown> }} query - Pagination, filters, and ordering parameters
    * @returns {Promise<Object>} Paginated results with data and pagination metadata
    */
   const findByPaginated = async (
     field: PgColumn,
     value: unknown,
-    params: PaginationParams = {},
+    query?: PaginationParams<T, TTable>,
   ): Promise<{
     data: T[];
     pagination: PaginationMeta;
   }> => {
     try {
-      const { page = 1, pageSize = 10 } = params;
+      const { page = 1, pageSize = 10, orderBy, filters } = query ?? {};
       const offset = (page - 1) * pageSize;
 
+      // Prepare base conditions including the main field condition
+      const baseConditions = [eq(field, value)];
+
+      // Add filter conditions if there are any
+      if (filters && Object.keys(filters).length > 0) {
+        const filterConditions = Object.entries(filters).map(
+          ([filterField, filterValue]) => {
+            const column = (table as unknown as Record<string, PgColumn>)[
+              filterField
+            ];
+            if (!column) {
+              throw new Error(
+                `Invalid filter field: ${filterField}. Field does not exist in the table.`,
+              );
+            }
+            return eq(column, filterValue);
+          },
+        );
+
+        baseConditions.push(...filterConditions);
+      }
+
+      // For count query, apply all conditions at once
       const countQuery = db
         .select({ count: count() })
         .from(table)
-        .where(eq(field, value));
+        .where(and(...baseConditions));
+
       const [countResult] = await countQuery;
       const totalCount = countResult?.count ?? 0;
 
-      const dataQuery = db
+      // For data query, apply all conditions at once
+      let dataQuery = db
         .select()
         .from(table)
-        .where(eq(field, value))
-        .limit(pageSize)
-        .offset(offset);
+        .where(and(...baseConditions));
 
-      const data = await dataQuery;
+      dataQuery = applyOrdering(dataQuery, orderBy, table);
+      const finalDataQuery = dataQuery.limit(pageSize).offset(offset);
+      const data = await finalDataQuery;
 
       return {
         data: data as T[],
@@ -394,6 +436,26 @@ export const createBaseRepository = <
     }
   };
 
+  /**
+   * Executes operations within a database transaction
+   * @template R - The return type of the transaction callback
+   * @param {Function} callback - Function to execute within the transaction
+   * @param {BaseRepository<T, CreateT, UpdateT, TTable>} callback.txRepo - Transaction-scoped repository passed to the callback
+   * @returns {Promise<R>} Result of the transaction
+   * @description
+   * Creates a new transaction and passes a transaction-scoped repository to the callback.
+   * All operations performed using the transaction repository will be atomic - they will
+   * either all succeed or all fail together.
+   *
+   * @example
+   * ```ts
+   * await repo.transaction(async (txRepo) => {
+   *   const user = await txRepo.create({ name: 'Alice' });
+   *   await txRepo.create({ name: 'Bob' });
+   *   return user;
+   * });
+   * ```
+   */
   const transaction = <R>(
     callback: (
       txRepo: BaseRepository<T, CreateT, UpdateT, TTable>,
@@ -404,9 +466,89 @@ export const createBaseRepository = <
         tx,
         table,
         entityName,
+        config,
       );
       return callback(txRepository);
     }) as Promise<R>;
+  };
+
+  /**
+   * Searches for entities by matching a search term against configured searchable fields
+   * @param {string} term - The search term to match against searchable fields
+   * @throws {Error} If no searchable fields are configured for the repository
+   * @returns {Promise<T[]>} Array of entities matching the search term
+   */
+  const search = async (term: string): Promise<T[]> => {
+    if (!config?.searchableFields) {
+      throw new Error(`Searchable fields not defined for ${entityName}`);
+    }
+
+    try {
+      let query = db.select().from(table);
+      query = applySearchConditions(query, term, config, table);
+      const entities = await query;
+      return entities as T[];
+    } catch (error) {
+      throw handlePostgresError(error, entityName, 'search');
+    }
+  };
+
+  /**
+   * Searches for entities by matching a search term against configured searchable fields with pagination
+   * @param {string} term - The search term to match against searchable fields
+   * @param {PaginationParams} query - Pagination, filters, and ordering parameters
+   * @throws {Error} If no searchable fields are configured for the repository
+   * @returns {Promise<PaginatedResult<T>>} Paginated search results with data and pagination metadata
+   */
+  const searchPaginated = async (
+    term: string,
+    query?: PaginationParams<T, TTable>,
+  ): Promise<{
+    data: T[];
+    pagination: PaginationMeta;
+  }> => {
+    if (!config?.searchableFields) {
+      throw new Error(`Searchable fields not defined for ${entityName}`);
+    }
+
+    const { page = 1, pageSize = 10, orderBy, filters } = query ?? {};
+    const offset = (page - 1) * pageSize;
+
+    try {
+      // Count total results matching the search term and filters
+      let countQuery = db.select({ count: count() }).from(table);
+      countQuery = applySearchConditions(
+        countQuery,
+        term,
+        config,
+        table,
+        filters,
+      );
+      const [countResult] = await countQuery;
+      const totalCount = countResult?.count ?? 0;
+
+      // Build the data query with search conditions and filters
+      let dataQuery = db.select().from(table);
+      dataQuery = applySearchConditions(
+        dataQuery,
+        term,
+        config,
+        table,
+        filters,
+      );
+
+      // Apply ordering and pagination
+      dataQuery = applyOrdering(dataQuery, orderBy, table);
+      const finalDataQuery = dataQuery.limit(pageSize).offset(offset);
+      const data = await finalDataQuery;
+
+      return {
+        data: data as T[],
+        pagination: createPaginationMeta(totalCount, page, pageSize),
+      };
+    } catch (error) {
+      throw handlePostgresError(error, entityName, 'searchPaginated');
+    }
   };
 
   const repository: BaseRepository<T, CreateT, UpdateT, TTable> = {
@@ -424,11 +566,14 @@ export const createBaseRepository = <
     validateUniqueness,
     validateRelationExists,
     transaction,
+    search,
+    searchPaginated,
     __internal: {
       db,
       table,
+      config,
     },
-  };
+  } as const;
 
   return repository;
 };

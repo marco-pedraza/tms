@@ -14,6 +14,7 @@ import { cleanDatabase, createSchema } from './helpers/reset-db';
 import { createBaseRepository } from '../src/base-repository';
 import { NotFoundError, DuplicateError, ForeignKeyError } from '../src/errors';
 import { eq } from 'drizzle-orm';
+import { BaseRepository } from '../src/types';
 
 describe('BaseRepository', () => {
   // Create a repository instance for testing
@@ -137,7 +138,7 @@ describe('BaseRepository', () => {
       await createTestUser({ name: 'Bob', email: 'bob@example.com' });
 
       const orderedUsers = await userRepository.findAll({
-        orderBy: [{ field: users.name, direction: 'asc' }],
+        orderBy: [{ field: 'name', direction: 'asc' }],
       });
 
       expect(orderedUsers).toHaveLength(3);
@@ -188,6 +189,210 @@ describe('BaseRepository', () => {
       expect(page3.data).toHaveLength(2); // Only 2 items on the last page
       expect(page3.pagination.hasNextPage).toBe(false);
       expect(page3.pagination.hasPreviousPage).toBe(true);
+    });
+
+    it('should return paginated results with ascending order', async () => {
+      // Create users with different names to test ordering
+      await createTestUser({ name: 'Charlie', email: 'charlie@example.com' });
+      await createTestUser({ name: 'Alice', email: 'alice@example.com' });
+      await createTestUser({ name: 'Bob', email: 'bob@example.com' });
+      await createTestUser({ name: 'David', email: 'david@example.com' });
+      await createTestUser({ name: 'Eve', email: 'eve@example.com' });
+
+      const result = await userRepository.findAllPaginated({
+        page: 1,
+        pageSize: 3,
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
+
+      expect(result.data).toHaveLength(3);
+      expect(result.data[0].name).toBe('Alice');
+      expect(result.data[1].name).toBe('Bob');
+      expect(result.data[2].name).toBe('Charlie');
+      expect(result.pagination.totalCount).toBe(5);
+      expect(result.pagination.hasNextPage).toBe(true);
+
+      // Verify second page
+      const page2 = await userRepository.findAllPaginated({
+        page: 2,
+        pageSize: 3,
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
+
+      expect(page2.data).toHaveLength(2);
+      expect(page2.data[0].name).toBe('David');
+      expect(page2.data[1].name).toBe('Eve');
+      expect(page2.pagination.hasNextPage).toBe(false);
+    });
+
+    it('should return paginated results with descending order', async () => {
+      // Create users with different names to test ordering
+      await createTestUser({ name: 'Charlie', email: 'charlie@example.com' });
+      await createTestUser({ name: 'Alice', email: 'alice@example.com' });
+      await createTestUser({ name: 'Bob', email: 'bob@example.com' });
+      await createTestUser({ name: 'David', email: 'david@example.com' });
+      await createTestUser({ name: 'Eve', email: 'eve@example.com' });
+
+      const result = await userRepository.findAllPaginated({
+        page: 1,
+        pageSize: 3,
+        orderBy: [{ field: 'name', direction: 'desc' }],
+      });
+
+      expect(result.data).toHaveLength(3);
+      expect(result.data[0].name).toBe('Eve');
+      expect(result.data[1].name).toBe('David');
+      expect(result.data[2].name).toBe('Charlie');
+      expect(result.pagination.totalCount).toBe(5);
+      expect(result.pagination.hasNextPage).toBe(true);
+
+      // Verify second page
+      const page2 = await userRepository.findAllPaginated({
+        page: 2,
+        pageSize: 3,
+        orderBy: [{ field: 'name', direction: 'desc' }],
+      });
+
+      expect(page2.data).toHaveLength(2);
+      expect(page2.data[0].name).toBe('Bob');
+      expect(page2.data[1].name).toBe('Alice');
+      expect(page2.pagination.hasNextPage).toBe(false);
+    });
+
+    it('should handle multiple ordering criteria', async () => {
+      // Create users with same names but different emails to test multiple ordering
+      await createTestUser({ name: 'Alice', email: 'alice2@example.com' });
+      await createTestUser({ name: 'Alice', email: 'alice1@example.com' });
+      await createTestUser({ name: 'Bob', email: 'bob2@example.com' });
+      await createTestUser({ name: 'Bob', email: 'bob1@example.com' });
+
+      const result = await userRepository.findAllPaginated({
+        page: 1,
+        pageSize: 4,
+        orderBy: [
+          { field: 'name', direction: 'asc' },
+          { field: 'email', direction: 'asc' },
+        ],
+      });
+
+      expect(result.data).toHaveLength(4);
+      expect(result.data[0].name).toBe('Alice');
+      expect(result.data[0].email).toBe('alice1@example.com');
+      expect(result.data[1].name).toBe('Alice');
+      expect(result.data[1].email).toBe('alice2@example.com');
+      expect(result.data[2].name).toBe('Bob');
+      expect(result.data[2].email).toBe('bob1@example.com');
+      expect(result.data[3].name).toBe('Bob');
+      expect(result.data[3].email).toBe('bob2@example.com');
+    });
+  });
+
+  describe('Filters', () => {
+    beforeEach(async () => {
+      // Create test users with different attributes
+      await createTestUser({
+        name: 'Alice',
+        email: 'alice@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Bob',
+        email: 'bob@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Charlie',
+        email: 'charlie@example.com',
+        active: false,
+      });
+    });
+
+    describe('findAll with filters', () => {
+      it('should filter users by a single field', async () => {
+        const activeUsers = await userRepository.findAll({
+          filters: { active: true },
+        });
+
+        expect(activeUsers).toHaveLength(2);
+        expect(activeUsers.every((user) => user.active)).toBe(true);
+      });
+
+      it('should filter users by multiple fields', async () => {
+        const specificUser = await userRepository.findAll({
+          filters: {
+            name: 'Alice',
+            active: true,
+          },
+        });
+
+        expect(specificUser).toHaveLength(1);
+        expect(specificUser[0].name).toBe('Alice');
+        expect(specificUser[0].active).toBe(true);
+      });
+
+      it('should return empty array when no users match filters', async () => {
+        const nonExistentUsers = await userRepository.findAll({
+          filters: {
+            name: 'NonExistent',
+            active: true,
+          },
+        });
+
+        expect(nonExistentUsers).toHaveLength(0);
+      });
+
+      it('should combine filters with ordering', async () => {
+        const activeUsersOrdered = await userRepository.findAll({
+          filters: { active: true },
+          orderBy: [{ field: 'name', direction: 'desc' }],
+        });
+
+        expect(activeUsersOrdered).toHaveLength(2);
+        expect(activeUsersOrdered[0].name).toBe('Bob');
+        expect(activeUsersOrdered[1].name).toBe('Alice');
+      });
+    });
+
+    describe('findAllPaginated with filters', () => {
+      it('should apply filters to paginated results', async () => {
+        const result = await userRepository.findAllPaginated({
+          page: 1,
+          pageSize: 2,
+          filters: { active: true },
+        });
+
+        expect(result.data).toHaveLength(2);
+        expect(result.pagination.totalCount).toBe(2);
+        expect(result.pagination.totalPages).toBe(1);
+        expect(result.data.every((user) => user.active)).toBe(true);
+      });
+
+      it('should combine filters with ordering in paginated results', async () => {
+        const result = await userRepository.findAllPaginated({
+          page: 1,
+          pageSize: 2,
+          filters: { active: true },
+          orderBy: [{ field: 'name', direction: 'desc' }],
+        });
+
+        expect(result.data).toHaveLength(2);
+        expect(result.data[0].name).toBe('Bob');
+        expect(result.data[1].name).toBe('Alice');
+      });
+
+      it('should handle empty results with filters', async () => {
+        const result = await userRepository.findAllPaginated({
+          page: 1,
+          pageSize: 10,
+          filters: { name: 'NonExistent' },
+        });
+
+        expect(result.data).toHaveLength(0);
+        expect(result.pagination.totalCount).toBe(0);
+        expect(result.pagination.totalPages).toBe(0);
+        expect(result.pagination.hasNextPage).toBe(false);
+        expect(result.pagination.hasPreviousPage).toBe(false);
+      });
     });
   });
 
@@ -349,6 +554,302 @@ describe('BaseRepository', () => {
         .from(posts)
         .where(eq(posts.userId, user.id));
       expect(postsAfter.length).toBe(0);
+    });
+  });
+
+  describe('search', () => {
+    // Create a repository with searchable fields
+    const searchableUserRepository = createBaseRepository<
+      User,
+      CreateUser,
+      UpdateUser,
+      typeof users
+    >(db, users, 'User', {
+      searchableFields: [users.name, users.email],
+    }) as BaseRepository<User, CreateUser, UpdateUser, typeof users>;
+
+    beforeEach(async () => {
+      // Create test users with different attributes for search testing
+      // Original users
+      await createTestUser({
+        name: 'John Doe',
+        email: 'john@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Jane Smith',
+        email: 'jane@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'John Smith',
+        email: 'johnsmith@example.com',
+        active: false,
+      });
+      await createTestUser({
+        name: 'Alice Johnson',
+        email: 'alice@example.com',
+        active: true,
+      });
+
+      // Additional users with varied naming patterns
+      await createTestUser({
+        name: 'Xavier Rodriguez',
+        email: 'xavi@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Maria Garcia',
+        email: 'mg123@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Zack Brown',
+        email: 'zackb@example.org',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Yuki Tanaka',
+        email: 'ytanaka@example.net',
+        active: false,
+      });
+      await createTestUser({
+        name: 'Olivia Wilson',
+        email: 'olivia.w@example.com',
+        active: true,
+      });
+    });
+
+    it('should search users by term', async () => {
+      const results = await searchableUserRepository.search('John');
+
+      // We expect at least these 2 users to be returned
+      expect(results.map((user) => user.name)).toContain('John Doe');
+      expect(results.map((user) => user.name)).toContain('John Smith');
+
+      // Check that the total count is correct
+      expect(results).toHaveLength(3);
+    });
+
+    it('should find users by email term', async () => {
+      const results = await searchableUserRepository.search('jane');
+
+      expect(results).toHaveLength(1);
+      expect(results[0].email).toBe('jane@example.com');
+    });
+
+    it('should find users across configured searchable fields', async () => {
+      const results = await searchableUserRepository.search('smith');
+
+      expect(results).toHaveLength(2);
+      expect(results.some((user) => user.name === 'Jane Smith')).toBe(true);
+      expect(
+        results.some((user) => user.email === 'johnsmith@example.com'),
+      ).toBe(true);
+    });
+
+    it('should return empty array when no matches found', async () => {
+      const results = await searchableUserRepository.search('nonexistent');
+
+      expect(results).toHaveLength(0);
+    });
+
+    it('should perform case-insensitive search', async () => {
+      const lowerResults = await searchableUserRepository.search('john');
+      const upperResults = await searchableUserRepository.search('JOHN');
+      const mixedResults = await searchableUserRepository.search('JoHn');
+
+      // All searches should return the same number of results
+      expect(lowerResults).toHaveLength(3);
+      expect(upperResults).toHaveLength(3);
+      expect(mixedResults).toHaveLength(3);
+
+      // Verify the same results are returned regardless of case
+      expect(lowerResults.map((u) => u.id).sort()).toEqual(
+        upperResults.map((u) => u.id).sort(),
+      );
+      expect(lowerResults.map((u) => u.id).sort()).toEqual(
+        mixedResults.map((u) => u.id).sort(),
+      );
+    });
+
+    it('should throw error when searching without searchable fields configured', async () => {
+      // Create a repository without searchable fields
+      const nonSearchableRepo = createBaseRepository<
+        User,
+        CreateUser,
+        UpdateUser,
+        typeof users
+      >(db, users, 'User');
+
+      await expect(nonSearchableRepo.search('test')).rejects.toThrow(
+        'Searchable fields not defined for User',
+      );
+    });
+
+    it('should match partial terms', async () => {
+      const results = await searchableUserRepository.search('oh');
+
+      // The search should match partial terms
+      expect(results.map((user) => user.name)).toContain('John Doe');
+      expect(results.map((user) => user.name)).toContain('John Smith');
+      expect(results.map((user) => user.name)).toContain('Alice Johnson');
+
+      // Check that the total count is correct
+      expect(results).toHaveLength(3);
+    });
+
+    it('should find users with unique naming patterns', async () => {
+      const xaviResults = await searchableUserRepository.search('xavi');
+      expect(xaviResults).toHaveLength(1);
+      expect(xaviResults[0].name).toBe('Xavier Rodriguez');
+
+      const garciaResults = await searchableUserRepository.search('Garcia');
+      expect(garciaResults).toHaveLength(1);
+      expect(garciaResults[0].name).toBe('Maria Garcia');
+    });
+
+    it('should match by domain in email', async () => {
+      const results = await searchableUserRepository.search('example.org');
+
+      expect(results).toHaveLength(1);
+      expect(results[0].name).toBe('Zack Brown');
+      expect(results[0].email).toBe('zackb@example.org');
+    });
+
+    it('should handle searches with multiple potential matches', async () => {
+      // 'a' appears in many names and emails
+      const results = await searchableUserRepository.search('a');
+
+      // This should return multiple users
+      expect(results.length).toBeGreaterThan(5);
+
+      // Verify some expected results
+      const names = results.map((user) => user.name);
+      expect(names).toContain('Maria Garcia');
+      expect(names).toContain('Jane Smith');
+      expect(names).toContain('Yuki Tanaka');
+    });
+
+    it('should handle special characters and symbols in search', async () => {
+      // Search using a period
+      const dotResults = await searchableUserRepository.search('olivia.');
+      expect(dotResults).toHaveLength(1);
+      expect(dotResults[0].name).toBe('Olivia Wilson');
+
+      // Search using numbers
+      const numberResults = await searchableUserRepository.search('123');
+      expect(numberResults).toHaveLength(1);
+      expect(numberResults[0].email).toBe('mg123@example.com');
+    });
+
+    describe('searchPaginated', () => {
+      it('should return paginated search results', async () => {
+        const results = await searchableUserRepository.searchPaginated('john', {
+          page: 1,
+          pageSize: 2,
+        });
+
+        expect(results.data).toHaveLength(2);
+        expect(results.pagination.currentPage).toBe(1);
+        expect(results.pagination.pageSize).toBe(2);
+        expect(results.pagination.totalCount).toBe(3); // Total matches for 'john'
+        expect(results.pagination.totalPages).toBe(2);
+        expect(results.pagination.hasNextPage).toBe(true);
+        expect(results.pagination.hasPreviousPage).toBe(false);
+
+        // Verify second page
+        const page2 = await searchableUserRepository.searchPaginated('john', {
+          page: 2,
+          pageSize: 2,
+        });
+
+        expect(page2.data).toHaveLength(1); // Last remaining match
+        expect(page2.pagination.currentPage).toBe(2);
+        expect(page2.pagination.hasNextPage).toBe(false);
+        expect(page2.pagination.hasPreviousPage).toBe(true);
+      });
+
+      it('should combine search with ordering', async () => {
+        const results = await searchableUserRepository.searchPaginated('john', {
+          page: 1,
+          pageSize: 10,
+          orderBy: [{ field: 'name', direction: 'desc' }],
+        });
+
+        expect(results.data).toHaveLength(3);
+        expect(results.data[0].name).toBe('John Smith');
+        expect(results.data[1].name).toBe('John Doe');
+        expect(results.data[2].name).toBe('Alice Johnson');
+      });
+
+      it('should combine search with filters', async () => {
+        const results = await searchableUserRepository.searchPaginated('john', {
+          page: 1,
+          pageSize: 10,
+          filters: { active: true },
+        });
+
+        expect(results.data).toHaveLength(2);
+        expect(results.data.every((user) => user.active)).toBe(true);
+        expect(results.data.map((user) => user.name)).toContain('John Doe');
+        expect(results.data.map((user) => user.name)).toContain(
+          'Alice Johnson',
+        );
+      });
+
+      it('should handle empty search results with pagination', async () => {
+        const results = await searchableUserRepository.searchPaginated(
+          'nonexistent',
+          {
+            page: 1,
+            pageSize: 10,
+          },
+        );
+
+        expect(results.data).toHaveLength(0);
+        expect(results.pagination.totalCount).toBe(0);
+        expect(results.pagination.totalPages).toBe(0);
+        expect(results.pagination.hasNextPage).toBe(false);
+        expect(results.pagination.hasPreviousPage).toBe(false);
+      });
+
+      it('should handle case-insensitive search with pagination', async () => {
+        const lowerResults = await searchableUserRepository.searchPaginated(
+          'john',
+          {
+            page: 1,
+            pageSize: 10,
+          },
+        );
+        const upperResults = await searchableUserRepository.searchPaginated(
+          'JOHN',
+          {
+            page: 1,
+            pageSize: 10,
+          },
+        );
+        const mixedResults = await searchableUserRepository.searchPaginated(
+          'JoHn',
+          {
+            page: 1,
+            pageSize: 10,
+          },
+        );
+
+        // All searches should return the same number of results
+        expect(lowerResults.data).toHaveLength(3);
+        expect(upperResults.data).toHaveLength(3);
+        expect(mixedResults.data).toHaveLength(3);
+
+        // Verify the same results are returned regardless of case
+        expect(lowerResults.data.map((u) => u.id).sort()).toEqual(
+          upperResults.data.map((u) => u.id).sort(),
+        );
+        expect(lowerResults.data.map((u) => u.id).sort()).toEqual(
+          mixedResults.data.map((u) => u.id).sort(),
+        );
+      });
     });
   });
 

@@ -6,8 +6,9 @@ import type {
   Country,
   Countries,
   PaginatedCountries,
+  PaginationParamsCountries,
+  CountriesQueryOptions,
 } from './countries.types';
-import { PaginationParams } from '../../shared/types';
 
 /**
  * Creates a new country.
@@ -42,9 +43,12 @@ export const getCountry = api(
  * @throws {APIError} If retrieval fails
  */
 export const listCountries = api(
-  { expose: true, method: 'GET', path: '/countries' },
-  async (): Promise<Countries> => {
-    return await countryRepository.findAll();
+  { expose: true, method: 'POST', path: '/get-countries' },
+  async (params: CountriesQueryOptions): Promise<Countries> => {
+    const countries = await countryRepository.findAll(params);
+    return {
+      countries,
+    };
   },
 );
 
@@ -55,8 +59,8 @@ export const listCountries = api(
  * @throws {APIError} If retrieval fails
  */
 export const listCountriesPaginated = api(
-  { expose: true, method: 'GET', path: '/countries/paginated' },
-  async (params: PaginationParams): Promise<PaginatedCountries> => {
+  { expose: true, method: 'POST', path: '/get-countries/paginated' },
+  async (params: PaginationParamsCountries): Promise<PaginatedCountries> => {
     return await countryRepository.findAllPaginated(params);
   },
 );
@@ -90,5 +94,45 @@ export const deleteCountry = api(
   { expose: true, method: 'DELETE', path: '/countries/:id' },
   async ({ id }: { id: number }): Promise<Country> => {
     return await countryRepository.delete(id);
+  },
+);
+
+/**
+ * Searches for countries by matching a search term against name and code.
+ * @param params - Search parameters
+ * @param params.term - The search term to match against country name and code
+ * @returns {Promise<Countries>} List of matching countries
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchCountries = api(
+  { expose: true, method: 'GET', path: '/countries/search' },
+  async ({ term }: { term: string }): Promise<Countries> => {
+    const countries = await countryRepository.search(term);
+    return {
+      countries,
+    };
+  },
+);
+
+/**
+ * Searches for countries with pagination by matching a search term against name and code.
+ * @param params - Search and pagination parameters
+ * @param params.term - The search term to match against country name and code
+ * @param params.page - Page number for pagination (optional, default: 1)
+ * @param params.pageSize - Number of items per page (optional, default: 10)
+ * @param params.orderBy - Sorting criteria (optional)
+ * @param params.filters - Additional filters to apply (optional)
+ * @returns {Promise<PaginatedCountries>} Paginated list of matching countries
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchCountriesPaginated = api(
+  { expose: true, method: 'POST', path: '/countries/search/paginated' },
+  async ({
+    term,
+    ...params
+  }: PaginationParamsCountries & {
+    term: string;
+  }): Promise<PaginatedCountries> => {
+    return await countryRepository.searchPaginated(term, params);
   },
 );

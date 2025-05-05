@@ -1,4 +1,13 @@
 /**
+ * NOTE: These types are duplicated from @repo/base-repo due to Encore limitations.
+ * Encore has issues recognizing types imported from external packages,
+ * so we need to maintain a local copy of these types.
+ * If types are updated in @repo/base-repo, make sure to update them here as well.
+ *
+ * Original reference: packages/base-repo/src/types.ts
+ */
+
+/**
  * Generic type for paginated results
  */
 export interface PaginatedResult<T> {
@@ -25,15 +34,9 @@ export interface PaginationMeta {
 }
 
 /**
- * Parameters for pagination requests
+ * Query options combining pagination and ordering
  */
 export interface PaginationParams {
-  /** Page number (1-based) */
   page?: number;
-  /** Number of items per page */
   pageSize?: number;
-  /** Column to sort by */
-  sortBy?: string;
-  /** Sort direction */
-  sortDirection?: 'asc' | 'desc';
 }

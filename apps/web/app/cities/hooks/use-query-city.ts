@@ -37,6 +37,7 @@ export default function useQueryCity({
         .getQueryData<cities.PaginatedCities>(['cities'])
         ?.data.find((city) => city.id === cityId),
     initialDataUpdatedAt: () =>
-      queryClient.getQueryState<cities.City[]>(['cities'])?.dataUpdatedAt,
+      queryClient.getQueryState<cities.PaginatedCities>(['cities'])
+        ?.dataUpdatedAt,
   });
 }

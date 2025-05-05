@@ -8,7 +8,7 @@ import {
 } from './states.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-import { db } from '@/db';
+import { db } from '../db-service';
 
 /**
  * Creates a repository for managing state entities

@@ -7,7 +7,7 @@ import {
   DriverStatus,
 } from './drivers.types';
 import { createBaseRepository } from '@repo/base-repo';
-import { db } from '@/db';
+import { db } from '../db-service';
 import { createBaseStateMachine, StateTransition } from '@repo/state-machine';
 
 /**
@@ -135,7 +135,7 @@ export const createDriverRepository = () => {
    */
   const findAll = async (): Promise<Drivers> => {
     const driversList = await baseRepository.findAll({
-      orderBy: [{ field: drivers.fullName, direction: 'asc' }],
+      orderBy: [{ field: 'fullName', direction: 'asc' }],
     });
     return {
       drivers: driversList,
@@ -167,7 +167,7 @@ export const createDriverRepository = () => {
       drivers.transporterId,
       transporterId,
       {
-        orderBy: [{ field: drivers.fullName, direction: 'asc' }],
+        orderBy: [{ field: 'fullName', direction: 'asc' }],
       },
     );
 
@@ -186,7 +186,7 @@ export const createDriverRepository = () => {
       drivers.busLineId,
       busLineId,
       {
-        orderBy: [{ field: drivers.fullName, direction: 'asc' }],
+        orderBy: [{ field: 'fullName', direction: 'asc' }],
       },
     );
 
@@ -202,7 +202,7 @@ export const createDriverRepository = () => {
    */
   const findAllByBus = async (busId: number): Promise<Drivers> => {
     const driversList = await baseRepository.findAllBy(drivers.busId, busId, {
-      orderBy: [{ field: drivers.fullName, direction: 'asc' }],
+      orderBy: [{ field: 'fullName', direction: 'asc' }],
     });
 
     return {

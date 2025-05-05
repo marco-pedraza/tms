@@ -3,6 +3,7 @@
   "globalDependencies": [".env"],
   "ui": "tui",
   "globalEnv": [
+    "ENABLE_DB_LOGS",
     "TEST_DB_HOST",
     "TEST_DB_PORT",
     "TEST_DB_NAME",

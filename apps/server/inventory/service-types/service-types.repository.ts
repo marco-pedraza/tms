@@ -7,7 +7,7 @@ import type {
 } from './service-types.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-import { db } from '@/db';
+import { db } from '../db-service';
 
 export const createServiceTypeRepository = () => {
   const baseRepository = createBaseRepository<
@@ -39,13 +39,13 @@ export const createServiceTypeRepository = () => {
 
   const findAll = async (): Promise<ServiceType[]> => {
     return await baseRepository.findAll({
-      orderBy: [{ field: serviceTypes.name, direction: 'asc' }],
+      orderBy: [{ field: 'name', direction: 'asc' }],
     });
   };
 
   const findAllActive = async (): Promise<ServiceType[]> => {
     return await baseRepository.findAllBy(serviceTypes.active, true, {
-      orderBy: [{ field: serviceTypes.name, direction: 'asc' }],
+      orderBy: [{ field: 'name', direction: 'asc' }],
     });
   };
 

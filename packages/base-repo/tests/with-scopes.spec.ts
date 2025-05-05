@@ -137,6 +137,128 @@ describe('withScopes', () => {
       expect(result.pagination.totalPages).toBe(2);
       expect(result.pagination.hasNextPage).toBe(true);
     });
+
+    it('should paginate and order results with ascending order', async () => {
+      // Create active users with different names
+      await createTestUser({ name: 'Charlie', active: true });
+      await createTestUser({ name: 'Alice', active: true });
+      await createTestUser({ name: 'Bob', active: true });
+      // Create inactive users that shouldn't appear in results
+      await createTestUser({ name: 'David', active: false });
+      await createTestUser({ name: 'Eve', active: false });
+
+      const result = await scopedRepo.scope('active').findAllPaginated({
+        page: 1,
+        pageSize: 2,
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
+
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0].name).toBe('Alice');
+      expect(result.data[1].name).toBe('Bob');
+      expect(result.pagination.totalCount).toBe(3);
+      expect(result.pagination.hasNextPage).toBe(true);
+
+      // Verify second page
+      const page2 = await scopedRepo.scope('active').findAllPaginated({
+        page: 2,
+        pageSize: 2,
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
+
+      expect(page2.data).toHaveLength(1);
+      expect(page2.data[0].name).toBe('Charlie');
+      expect(page2.pagination.hasNextPage).toBe(false);
+    });
+
+    it('should paginate and order results with descending order', async () => {
+      // Create active users with different names
+      await createTestUser({ name: 'Charlie', active: true });
+      await createTestUser({ name: 'Alice', active: true });
+      await createTestUser({ name: 'Bob', active: true });
+      // Create inactive users that shouldn't appear in results
+      await createTestUser({ name: 'David', active: false });
+      await createTestUser({ name: 'Eve', active: false });
+
+      const result = await scopedRepo.scope('active').findAllPaginated({
+        page: 1,
+        pageSize: 2,
+        orderBy: [{ field: 'name', direction: 'desc' }],
+      });
+
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0].name).toBe('Charlie');
+      expect(result.data[1].name).toBe('Bob');
+      expect(result.pagination.totalCount).toBe(3);
+      expect(result.pagination.hasNextPage).toBe(true);
+
+      // Verify second page
+      const page2 = await scopedRepo.scope('active').findAllPaginated({
+        page: 2,
+        pageSize: 2,
+        orderBy: [{ field: 'name', direction: 'desc' }],
+      });
+
+      expect(page2.data).toHaveLength(1);
+      expect(page2.data[0].name).toBe('Alice');
+      expect(page2.pagination.hasNextPage).toBe(false);
+    });
+
+    it('should handle multiple ordering criteria with scopes', async () => {
+      // Create active users with same names but different emails
+      await createTestUser({
+        name: 'Alice',
+        email: 'alice2@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Alice',
+        email: 'alice1@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Bob',
+        email: 'bob2@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Bob',
+        email: 'bob1@example.com',
+        active: true,
+      });
+      // Create inactive users that shouldn't appear in results
+      await createTestUser({
+        name: 'Alice',
+        email: 'alice3@example.com',
+        active: false,
+      });
+      await createTestUser({
+        name: 'Bob',
+        email: 'bob3@example.com',
+        active: false,
+      });
+
+      const result = await scopedRepo.scope('active').findAllPaginated({
+        page: 1,
+        pageSize: 4,
+        orderBy: [
+          { field: 'name', direction: 'asc' },
+          { field: 'email', direction: 'asc' },
+        ],
+      });
+
+      expect(result.data).toHaveLength(4);
+      expect(result.data[0].name).toBe('Alice');
+      expect(result.data[0].email).toBe('alice1@example.com');
+      expect(result.data[1].name).toBe('Alice');
+      expect(result.data[1].email).toBe('alice2@example.com');
+      expect(result.data[2].name).toBe('Bob');
+      expect(result.data[2].email).toBe('bob1@example.com');
+      expect(result.data[3].name).toBe('Bob');
+      expect(result.data[3].email).toBe('bob2@example.com');
+      expect(result.pagination.totalCount).toBe(4);
+      expect(result.pagination.hasNextPage).toBe(false);
+    });
   });
 
   describe('error handling', () => {
@@ -276,6 +398,69 @@ describe('withScopes', () => {
       expect(result1).toHaveLength(1);
       expect(result2).toHaveLength(1);
       expect(result1[0].id).toBe(result2[0].id);
+    });
+  });
+
+  describe('Scoped Repository with Filters', () => {
+    const userScopes = {
+      active: (table: typeof users) => eq(table.active, true),
+    };
+
+    const scopedUserRepository = withScopes(baseRepo, userScopes);
+
+    beforeEach(async () => {
+      // Create test users with different attributes
+      await createTestUser({
+        name: 'Alice',
+        email: 'alice@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Bob',
+        email: 'bob@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Charlie',
+        email: 'charlie@example.com',
+        active: false,
+      });
+    });
+
+    it('should combine scopes with filters in findAll', async () => {
+      const result = await scopedUserRepository.scope('active').findAll({
+        filters: { name: 'Alice' },
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe('Alice');
+      expect(result[0].active).toBe(true);
+    });
+
+    it('should combine scopes with filters in findAllPaginated', async () => {
+      const result = await scopedUserRepository
+        .scope('active')
+        .findAllPaginated({
+          filters: { name: 'Bob' },
+          page: 1,
+          pageSize: 10,
+        });
+
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].name).toBe('Bob');
+      expect(result.data[0].active).toBe(true);
+      expect(result.pagination.totalCount).toBe(1);
+    });
+
+    it('should apply scope and filters correctly', async () => {
+      const result = await scopedUserRepository.scope('active').findAll({
+        filters: { email: 'alice@example.com' },
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe('Alice');
+      expect(result[0].email).toBe('alice@example.com');
+      expect(result[0].active).toBe(true);
     });
   });
 });

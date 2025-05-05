@@ -10,7 +10,7 @@ import type {
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
 import { hashPassword, omitPasswordHash } from '../../shared/auth-utils';
-import { db } from '@/db';
+import { db } from '../db-service';
 import { secret } from 'encore.dev/config';
 
 // Get salt rounds from Encore secret

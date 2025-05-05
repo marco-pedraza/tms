@@ -1,4 +1,4 @@
-import { expect, describe, test, afterAll } from 'vitest';
+import { expect, describe, test, afterAll, beforeAll } from 'vitest';
 import {
   createCountry,
   getCountry,
@@ -6,8 +6,10 @@ import {
   deleteCountry,
   listCountries,
   listCountriesPaginated,
+  searchCountries,
+  searchCountriesPaginated,
 } from './countries.controller';
-import type { Countries } from './countries.types';
+import type { Countries, Country } from './countries.types';
 
 describe('Countries Controller', () => {
   // Test data and setup
@@ -162,13 +164,177 @@ describe('Countries Controller', () => {
     });
 
     test('should return non-paginated list for dropdowns', async () => {
-      const response = (await listCountries()) as Countries;
+      const response = await listCountries({});
 
       expect(response.countries).toBeDefined();
       expect(Array.isArray(response.countries)).toBe(true);
       expect(response.countries.length).toBeGreaterThan(0);
       // No pagination info should be present
-      expect((response as unknown).pagination).toBeUndefined();
+      expect(response).not.toHaveProperty('pagination');
+    });
+  });
+
+  describe('search functionality', () => {
+    test('should search countries', async () => {
+      // Create a unique country for search testing
+      const searchableCountry = await createCountry({
+        name: 'Searchable Test Country',
+        code: 'STC',
+        active: true,
+      });
+
+      try {
+        // Search for the country by term
+        const response = await searchCountries({ term: 'Searchable' });
+
+        expect(response.countries).toBeDefined();
+        expect(Array.isArray(response.countries)).toBe(true);
+        expect(
+          response.countries.some((c) => c.id === searchableCountry.id),
+        ).toBe(true);
+      } finally {
+        // Clean up
+        await deleteCountry({ id: searchableCountry.id });
+      }
+    });
+
+    test('should search countries with pagination', async () => {
+      const response = await searchCountriesPaginated({
+        term: 'Test',
+        page: 1,
+        pageSize: 5,
+      });
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
+    });
+  });
+
+  describe('ordering and filtering', () => {
+    // Test countries for ordering and filtering tests
+    const testCountries: Country[] = [];
+
+    beforeAll(async () => {
+      // Create test countries with different properties
+      const countries = [
+        { name: 'Alpha Country', code: 'AC', active: true },
+        { name: 'Beta Country', code: 'BC', active: false },
+        { name: 'Gamma Country', code: 'GC', active: true },
+      ];
+
+      for (const country of countries) {
+        const created = await createCountry(country);
+        testCountries.push(created);
+      }
+    });
+
+    afterAll(async () => {
+      // Clean up test countries
+      for (const country of testCountries) {
+        try {
+          await deleteCountry({ id: country.id });
+        } catch (error) {
+          console.log(`Error cleaning up test country ${country.id}:`, error);
+        }
+      }
+    });
+
+    test('should order countries by name descending', async () => {
+      const response = await listCountries({
+        orderBy: [{ field: 'name', direction: 'desc' }],
+      });
+
+      const names = response.countries.map((c) => c.name);
+      // Check if names are in descending order
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] >= names[i + 1]).toBe(true);
+      }
+    });
+
+    test('should filter countries by active status', async () => {
+      const response = await listCountries({
+        filters: { active: true },
+      });
+
+      // All returned countries should be active
+      expect(response.countries.every((c) => c.active === true)).toBe(true);
+      // Should include our active test countries
+      const activeTestCountryIds = testCountries
+        .filter((c) => c.active)
+        .map((c) => c.id);
+
+      for (const id of activeTestCountryIds) {
+        expect(response.countries.some((c) => c.id === id)).toBe(true);
+      }
+    });
+
+    test('should combine ordering and filtering in paginated results', async () => {
+      const response = await listCountriesPaginated({
+        filters: { active: true },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+        page: 1,
+        pageSize: 10,
+      });
+
+      // Check filtering
+      expect(response.data.every((c) => c.active === true)).toBe(true);
+
+      // Check ordering (ascending)
+      const names = response.data.map((c) => c.name);
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] <= names[i + 1]).toBe(true);
+      }
+
+      // Check pagination properties
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(10);
+    });
+
+    test('should allow multi-field ordering', async () => {
+      // Create countries with same active status but different names
+      const sameActiveStatusCountries = [
+        { name: 'Same Status A', code: 'SSA', active: true },
+        { name: 'Same Status B', code: 'SSB', active: true },
+      ];
+
+      const createdCountries: Country[] = [];
+
+      try {
+        for (const country of sameActiveStatusCountries) {
+          const created = await createCountry(country);
+          createdCountries.push(created);
+        }
+
+        // Order by active status first, then by name
+        const response = await listCountries({
+          orderBy: [
+            { field: 'active', direction: 'desc' },
+            { field: 'name', direction: 'asc' },
+          ],
+        });
+
+        // Get all active countries and verify they're ordered by name
+        const activeCountries = response.countries.filter(
+          (c) => c.active === true,
+        );
+        const activeNames = activeCountries.map((c) => c.name);
+
+        for (let i = 0; i < activeNames.length - 1; i++) {
+          if (activeCountries[i].active === activeCountries[i + 1].active) {
+            // If active status is the same, names should be in ascending order
+            expect(activeNames[i] <= activeNames[i + 1]).toBe(true);
+          }
+        }
+      } finally {
+        // Clean up
+        for (const country of createdCountries) {
+          await deleteCountry({ id: country.id });
+        }
+      }
     });
   });
 });

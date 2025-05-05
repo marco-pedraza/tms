@@ -8,11 +8,6 @@
  */
 
 /**
- * Type for ordering options
- */
-export type OrderBy = { field: unknown; direction: 'asc' | 'desc' }[];
-
-/**
  * Generic type for paginated results
  */
 export interface PaginatedResult<T> {
@@ -44,5 +39,4 @@ export interface PaginationMeta {
 export interface PaginationParams {
   page?: number;
   pageSize?: number;
-  orderBy?: OrderBy;
 }

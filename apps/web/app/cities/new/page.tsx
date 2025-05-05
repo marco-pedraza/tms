@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import CityForm from '@/cities/components/city-form';
-import { useCityMutations } from '@/cities/hooks/use-city-mutations';
+import useCityMutations from '@/cities/hooks/use-city-mutations';
 import PageHeader from '@/components/page-header';
 
 export default function NewCityPage() {

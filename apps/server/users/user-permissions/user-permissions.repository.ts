@@ -18,6 +18,8 @@ import {
   getRelatedEntities,
 } from '../../shared/db-utils';
 import { omitPasswordHash } from '../../shared/auth-utils';
+import { db } from '../db-service';
+import { User } from '../users/users.types';
 
 // Error message constants
 const ERROR_MESSAGES = {
@@ -55,6 +57,7 @@ export const createUserPermissionsRepository = () => {
     );
 
     await updateManyToManyRelation(
+      db,
       userRoles,
       userRoles.userId,
       userId,
@@ -87,6 +90,7 @@ export const createUserPermissionsRepository = () => {
     );
 
     await updateManyToManyRelation(
+      db,
       userPermissions,
       userPermissions.userId,
       userId,
@@ -107,9 +111,10 @@ export const createUserPermissionsRepository = () => {
     const user = await userRepository.findOne(userId);
 
     // Create a safe user object without sensitive data
-    const safeUser = omitPasswordHash(user);
+    const safeUser = omitPasswordHash(user as User);
 
     const rolesList = await getRelatedEntities<Role>(
+      db,
       roles,
       userRoles,
       userRoles.userId,
@@ -135,10 +140,11 @@ export const createUserPermissionsRepository = () => {
     const user = await userRepository.findOne(userId);
 
     // Create a safe user object without sensitive data
-    const safeUser = omitPasswordHash(user);
+    const safeUser = omitPasswordHash(user as User);
 
     // Get direct permissions
     const directPermissionsList = await getRelatedEntities<Permission>(
+      db,
       permissions,
       userPermissions,
       userPermissions.userId,
@@ -148,6 +154,7 @@ export const createUserPermissionsRepository = () => {
 
     // Get roles with permissions
     const userRolesList = await getRelatedEntities<Role>(
+      db,
       roles,
       userRoles,
       userRoles.userId,

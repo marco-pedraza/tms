@@ -24,6 +24,9 @@ import { transporterRepository } from '../transporters/transporters.repository';
 import { busLineRepository } from '../bus-lines/bus-lines.repository';
 import { serviceTypeRepository } from '../service-types/service-types.repository';
 import { busRepository } from '../buses/buses.repository';
+import { BusStatus } from '../buses/buses.types';
+import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
+import { busModelRepository } from '../bus-models/bus-models.repository';
 
 describe('Drivers Controller', () => {
   // Test data and setup
@@ -65,6 +68,8 @@ describe('Drivers Controller', () => {
   let createdBusLineId: number;
   let createdServiceTypeId: number;
   let createdBusId: number;
+  let createdSeatDiagramId: number;
+  let createdBusModelId: number;
 
   // Setup test transporter and bus line
   beforeAll(async () => {
@@ -99,11 +104,47 @@ describe('Drivers Controller', () => {
       });
       createdBusLineId = testBusLine.id;
 
-      // Create test bus
+      // Create test seat diagram first
+      const testSeatDiagram = await seatDiagramRepository.create({
+        name: 'Test Seat Diagram',
+        diagramNumber: 1001,
+        maxCapacity: 40,
+        numFloors: 1,
+        allowsAdjacentSeat: true,
+        seatsPerFloor: [
+          {
+            floorNumber: 1,
+            numRows: 10,
+            seatsLeft: 2,
+            seatsRight: 2,
+          },
+        ],
+        bathroomRows: [],
+        totalSeats: 40,
+        isFactoryDefault: true,
+        active: true,
+      });
+      createdSeatDiagramId = testSeatDiagram.id;
+
+      // Create a test bus model
+      const testBusModel = await busModelRepository.create({
+        defaultSeatDiagramId: createdSeatDiagramId,
+        manufacturer: 'Test Manufacturer',
+        model: 'Test Model',
+        year: 2023,
+        seatingCapacity: 40,
+        numFloors: 1,
+        amenities: [],
+        active: true,
+      });
+      createdBusModelId = testBusModel.id;
+
+      // Create test bus with the created model and seat diagram IDs
       const testBus = await busRepository.create({
         registrationNumber: 'TST123',
-        modelId: 1, // Assuming a model with ID 1 exists, adjust as needed
-        status: 'ACTIVE',
+        modelId: createdBusModelId, // Use the newly created bus model ID
+        seatDiagramId: createdSeatDiagramId, // Use the newly created seat diagram ID
+        status: BusStatus.ACTIVE,
         active: true,
       });
       createdBusId = testBus.id;
@@ -128,6 +169,24 @@ describe('Drivers Controller', () => {
         await busRepository.delete(createdBusId);
       } catch (error) {
         console.log('Error cleaning up test bus:', error);
+      }
+    }
+
+    // Clean up test bus model
+    if (createdBusModelId) {
+      try {
+        await busModelRepository.delete(createdBusModelId);
+      } catch (error) {
+        console.log('Error cleaning up test bus model:', error);
+      }
+    }
+
+    // Clean up test seat diagram
+    if (createdSeatDiagramId) {
+      try {
+        await seatDiagramRepository.delete(createdSeatDiagramId);
+      } catch (error) {
+        console.log('Error cleaning up test seat diagram:', error);
       }
     }
 

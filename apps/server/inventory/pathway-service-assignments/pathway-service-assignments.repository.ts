@@ -5,7 +5,7 @@ import type {
   UpdatePathwayServiceAssignmentPayload,
 } from './pathway-service-assignments.types';
 import { createBaseRepository } from '@repo/base-repo';
-import { db } from '@/db';
+import { db } from '../db-service';
 
 /**
  * Defining internal types to avoid exposing the sequence number to the outside world

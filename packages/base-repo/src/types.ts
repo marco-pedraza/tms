@@ -26,7 +26,22 @@ export type DrizzleTransaction = PgTransaction<
   Record<string, never>
 >;
 
+/**
+ * Type for a database or transaction, allows to swap between a regular database and a transaction to create a transactional repository
+ */
 export type TransactionalDB = DrizzleDB | DrizzleTransaction;
+
+/**
+ * Type for ordering options
+ */
+export type OrderBy = { field: PgColumn; direction: 'asc' | 'desc' }[];
+
+/**
+ * Options for querying entities
+ */
+export interface QueryOptions {
+  orderBy?: OrderBy;
+}
 
 /**
  * Generic type for paginated results
@@ -55,17 +70,12 @@ export interface PaginationMeta {
 }
 
 /**
- * Parameters for pagination requests
+ * Query options combining pagination and ordering
  */
 export interface PaginationParams {
-  /** Page number (1-based) */
   page?: number;
-  /** Number of items per page */
   pageSize?: number;
-  /** Column to sort by */
-  sortBy?: string;
-  /** Sort direction */
-  sortDirection?: 'asc' | 'desc';
+  orderBy?: OrderBy;
 }
 
 export type TableWithId = PgTable & {
@@ -149,7 +159,7 @@ export interface BaseRepository<
       orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
     },
   ): Promise<T[]>;
-  findAllPaginated(params?: PaginationParams): Promise<{
+  findAllPaginated(query?: PaginationParams): Promise<{
     data: T[];
     pagination: PaginationMeta;
   }>;
@@ -161,7 +171,7 @@ export interface BaseRepository<
   findByPaginated(
     field: PgColumn,
     value: unknown,
-    params?: PaginationParams,
+    query?: PaginationParams,
   ): Promise<{
     data: T[];
     pagination: PaginationMeta;
@@ -171,12 +181,12 @@ export interface BaseRepository<
     value: unknown,
     excludeId?: number,
   ): Promise<boolean>;
-  validateUniqueness?(
+  validateUniqueness(
     fields: UniqueFieldConfig<TTable>[],
     excludeId?: number,
     errorMessage?: string,
   ): Promise<void>;
-  validateRelationExists?(
+  validateRelationExists(
     relatedTable: TableWithId,
     relationId: number,
     relationName?: string,

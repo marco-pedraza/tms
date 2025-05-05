@@ -182,7 +182,7 @@ export const withScopes = <
       pagination: PaginationMeta;
     }> {
       try {
-        const { page = 1, pageSize = 10 } = params;
+        const { page = 1, pageSize = 10, orderBy } = params;
         const offset = (page - 1) * pageSize;
 
         let countQuery = db.select({ count: count() }).from(table);
@@ -192,6 +192,7 @@ export const withScopes = <
 
         let dataQuery = db.select().from(table);
         dataQuery = combineConditions(dataQuery, []);
+        dataQuery = applyOrdering(dataQuery, orderBy);
         // @ts-expect-error - Drizzle query builder method typing
         dataQuery = dataQuery.limit(pageSize).offset(offset);
 
@@ -245,14 +246,13 @@ export const withScopes = <
     async findByPaginated<K extends keyof T>(
       field: PgColumn,
       value: T[K],
-      params: PaginationParams,
+      params: PaginationParams = {},
     ): Promise<{
       data: T[];
       pagination: PaginationMeta;
     }> {
       try {
-        const page = Math.max(1, params.page || 1);
-        const pageSize = params.pageSize || 10;
+        const { page = 1, pageSize = 10, orderBy } = params;
         const offset = (page - 1) * pageSize;
 
         let baseCountQuery = db.select({ count: count() }).from(table);
@@ -260,6 +260,7 @@ export const withScopes = <
 
         baseCountQuery = combineConditions(baseCountQuery, [eq(field, value)]);
         baseDataQuery = combineConditions(baseDataQuery, [eq(field, value)]);
+        baseDataQuery = applyOrdering(baseDataQuery, orderBy);
         // @ts-expect-error - Drizzle query builder method typing
         baseDataQuery = baseDataQuery.limit(pageSize).offset(offset);
 

@@ -1,13 +1,13 @@
 import {
-  BusModel,
+  SeatDiagram,
   SeatConfiguration,
   Floor,
   Space,
   SpaceType,
   FloorSeats,
   BathroomLocation,
-} from './bus-models.types';
-import { busModelRepository } from './bus-models.repository';
+} from './seat-diagrams.types';
+import { seatDiagramRepository } from './seat-diagrams.repository';
 import { busSeatRepository } from '../bus-seats/bus-seats.repository';
 import { CreateBusSeatPayload, SeatType } from '../bus-seats/bus-seats.types';
 
@@ -25,10 +25,10 @@ const DEFAULT_SEAT_FLOOR_PREFIX = 'Floor ';
 const DEFAULT_IS_ACTIVE = true;
 
 /**
- * Creates the bus model use cases
+ * Creates the seat diagram use cases
  * @returns Object with use case functions
  */
-export const createBusModelUseCases = () => {
+export const createSeatDiagramUseCases = () => {
   /**
    * Checks if a row is a bathroom row
    * @param bathroomRows - Array of bathroom locations
@@ -305,7 +305,7 @@ export const createBusModelUseCases = () => {
    * @returns [Floor object with rows, updated seat context]
    */
   const createFloor = (
-    model: BusModel,
+    model: SeatDiagram,
     floorNum: number,
     processRow: (
       rowNum: number,
@@ -372,7 +372,7 @@ export const createBusModelUseCases = () => {
    * @returns Seat configuration
    */
   const createConfiguration = (
-    model: BusModel,
+    model: SeatDiagram,
     floorProcessorFn: (
       floorNum: number,
       context: SeatContext,
@@ -391,34 +391,34 @@ export const createBusModelUseCases = () => {
 
     return {
       floors,
-      amenities: model.amenities,
       totalSeats: context.totalSeats,
     };
   };
 
   /**
-   * Builds a seat configuration for a bus model
-   * If there are seats already created for this model, it will use them
-   * Otherwise, it will generate a theoretical layout based on model parameters
-   * @param id - The ID of the bus model
+   * Builds a seat configuration for a seat diagram
+   * If there are seats already created for this diagram, it will use them
+   * Otherwise, it will generate a theoretical layout based on diagram parameters
+   * @param id - The ID of the seat diagram
    * @returns {Promise<SeatConfiguration>} The seat configuration
    */
   const buildSeatConfiguration = async (
     id: number,
   ): Promise<SeatConfiguration> => {
-    // First, find the bus model
-    const model = await busModelRepository.findOne(id);
+    // First, find the seat diagram
+    const diagram = await seatDiagramRepository.findOne(id);
 
-    // Check if there are already seats created for this model
-    const existingSeatsResult = await busSeatRepository.findAllByModel(id);
+    // Check if there are already seats created for this diagram
+    const existingSeatsResult =
+      await busSeatRepository.findAllBySeatDiagram(id);
     const existingSeats = existingSeatsResult.busSeats;
 
     if (existingSeats.length > 0) {
       // If there are existing seats, get configuration from them
-      return getConfigurationFromExistingSeats(model, existingSeats);
+      return getConfigurationFromExistingSeats(diagram, existingSeats);
     } else {
       // Otherwise, generate a theoretical layout
-      const result = buildTheoreticalConfiguration(model);
+      const result = buildTheoreticalConfiguration(diagram);
       return result;
     }
   };
@@ -430,7 +430,7 @@ export const createBusModelUseCases = () => {
    * @returns {SeatConfiguration} The seat configuration
    */
   const getConfigurationFromExistingSeats = (
-    model: BusModel,
+    model: SeatDiagram,
     seats: unknown[],
   ): SeatConfiguration => {
     // Group seats by floor number
@@ -497,7 +497,7 @@ export const createBusModelUseCases = () => {
    * @returns {SeatConfiguration} The theoretical seat configuration
    */
   const buildTheoreticalConfiguration = (
-    model: BusModel,
+    model: SeatDiagram,
   ): SeatConfiguration => {
     // Create a function to process each floor for theoretical configuration
     const processFloor = (
@@ -592,7 +592,7 @@ export const createBusModelUseCases = () => {
 
   /**
    * Creates seat payload for storing in the database
-   * @param modelId - Bus model ID
+   * @param seatDiagramId - Seat diagram ID
    * @param seatNumber - Seat number
    * @param floorNumber - Floor number
    * @param rowIndex - Row index
@@ -601,7 +601,7 @@ export const createBusModelUseCases = () => {
    * @returns CreateBusSeatPayload object
    */
   const createSeatPayload = (
-    modelId: number,
+    seatDiagramId: number,
     seatNumber: string,
     floorNumber: number,
     rowIndex: number,
@@ -610,7 +610,7 @@ export const createBusModelUseCases = () => {
     rowLength: number,
   ): CreateBusSeatPayload => {
     return {
-      modelId,
+      seatDiagramId,
       seatNumber,
       floorNumber,
       seatFloor: `${DEFAULT_SEAT_FLOOR_PREFIX}${floorNumber}`,
@@ -659,21 +659,22 @@ export const createBusModelUseCases = () => {
 
   /**
    * Creates actual bus seats from a theoretical configuration
-   * @param modelId - The ID of the bus model
+   * @param seatDiagramId - The ID of the seat diagram
    * @returns {Promise<number>} The number of seats created
    */
   const createSeatsFromTheoreticalConfiguration = async (
-    modelId: number,
+    seatDiagramId: number,
   ): Promise<number> => {
-    // First, check if we already have seats for this model
-    const existingSeatsResult = await busSeatRepository.findAllByModel(modelId);
+    // First, check if we already have seats for this diagram
+    const existingSeatsResult =
+      await busSeatRepository.findAllBySeatDiagram(seatDiagramId);
     if (existingSeatsResult.busSeats.length > 0) {
       return existingSeatsResult.busSeats.length; // Seats already exist
     }
 
     // Generate theoretical configuration
-    const model = await busModelRepository.findOne(modelId);
-    const configuration = buildTheoreticalConfiguration(model);
+    const diagram = await seatDiagramRepository.findOne(seatDiagramId);
+    const configuration = buildTheoreticalConfiguration(diagram);
 
     // Collect all seat spaces from the configuration
     const seatSpaces = collectSeatSpaces(configuration);
@@ -684,7 +685,7 @@ export const createBusModelUseCases = () => {
         const rowNumber = rowIndex + 1;
 
         return createSeatPayload(
-          modelId,
+          seatDiagramId,
           space.seatNumber,
           floorNumber,
           rowIndex,
@@ -711,5 +712,5 @@ export const createBusModelUseCases = () => {
   };
 };
 
-// Export the bus model use cases instance
-export const busModelUseCases = createBusModelUseCases();
+// Export the seat diagram use cases instance
+export const seatDiagramUseCases = createSeatDiagramUseCases();

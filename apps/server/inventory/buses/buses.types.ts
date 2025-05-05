@@ -27,6 +27,9 @@ export interface Bus {
   /** ID of the bus model */
   modelId: number;
 
+  /** ID of the seat diagram */
+  seatDiagramId: number;
+
   /** Bus type code */
   typeCode?: number;
 
@@ -139,6 +142,12 @@ export interface CreateBusPayload {
    * Must be a positive number
    */
   modelId: number;
+
+  /**
+   * ID of the seat diagram
+   * Must be a positive number
+   */
+  seatDiagramId: number;
 
   /**
    * Bus type code
@@ -311,6 +320,12 @@ export interface UpdateBusPayload {
    * Must be a positive number
    */
   modelId?: number;
+
+  /**
+   * ID of the seat diagram
+   * Must be a positive number
+   */
+  seatDiagramId?: number;
 
   /**
    * Bus type code

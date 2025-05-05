@@ -7,7 +7,7 @@ import {
   DriverStatus,
 } from './drivers.types';
 import { createBaseRepository } from '@repo/base-repo';
-import { db } from '@/db';
+import { db } from '../db-service';
 import { createBaseStateMachine, StateTransition } from '@repo/state-machine';
 
 /**

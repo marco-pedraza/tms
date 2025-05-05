@@ -7,7 +7,7 @@ import type {
 } from './terminals.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
-import { db } from '@/db';
+import { db } from '../db-service';
 import { validateOperatingHours } from './terminals.utils';
 import { createSlug } from '../../shared/utils';
 

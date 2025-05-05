@@ -15,7 +15,7 @@ import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DropdownMenuContent } from '@/components/ui/dropdown-menu';
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
 import { useQueryStates } from '@/states/hooks/use-query-states';
-import { useStateMutations } from '@/states/hooks/use-state-mutations';
+import useStateMutations from '@/states/hooks/use-state-mutations';
 
 type State = states.State;
 
@@ -130,11 +130,9 @@ const statesColumnsFactory = (
 
 export default function StatesTable() {
   const t = useTranslations('common');
-
   const router = useRouter();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const { deleteState } = useStateMutations();
-
   const { data, isLoading, error, refetch } = useQueryStates();
 
   const handleDelete = (id: string) => {

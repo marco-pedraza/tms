@@ -38,7 +38,7 @@ interface StateFormProps {
   submitButtonText?: string;
 }
 
-function StateForm({
+export default function StateForm({
   defaultValues,
   onSubmit,
   submitButtonText,
@@ -172,5 +172,3 @@ function StateForm({
     </form>
   );
 }
-
-export default StateForm;

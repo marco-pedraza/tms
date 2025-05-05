@@ -150,7 +150,7 @@ describe('withScopes', () => {
       const result = await scopedRepo.scope('active').findAllPaginated({
         page: 1,
         pageSize: 2,
-        orderBy: [{ field: users.name, direction: 'asc' }],
+        orderBy: [{ field: 'name', direction: 'asc' }],
       });
 
       expect(result.data).toHaveLength(2);
@@ -163,7 +163,7 @@ describe('withScopes', () => {
       const page2 = await scopedRepo.scope('active').findAllPaginated({
         page: 2,
         pageSize: 2,
-        orderBy: [{ field: users.name, direction: 'asc' }],
+        orderBy: [{ field: 'name', direction: 'asc' }],
       });
 
       expect(page2.data).toHaveLength(1);
@@ -183,7 +183,7 @@ describe('withScopes', () => {
       const result = await scopedRepo.scope('active').findAllPaginated({
         page: 1,
         pageSize: 2,
-        orderBy: [{ field: users.name, direction: 'desc' }],
+        orderBy: [{ field: 'name', direction: 'desc' }],
       });
 
       expect(result.data).toHaveLength(2);
@@ -196,7 +196,7 @@ describe('withScopes', () => {
       const page2 = await scopedRepo.scope('active').findAllPaginated({
         page: 2,
         pageSize: 2,
-        orderBy: [{ field: users.name, direction: 'desc' }],
+        orderBy: [{ field: 'name', direction: 'desc' }],
       });
 
       expect(page2.data).toHaveLength(1);
@@ -242,8 +242,8 @@ describe('withScopes', () => {
         page: 1,
         pageSize: 4,
         orderBy: [
-          { field: users.name, direction: 'asc' },
-          { field: users.email, direction: 'asc' },
+          { field: 'name', direction: 'asc' },
+          { field: 'email', direction: 'asc' },
         ],
       });
 
@@ -398,6 +398,69 @@ describe('withScopes', () => {
       expect(result1).toHaveLength(1);
       expect(result2).toHaveLength(1);
       expect(result1[0].id).toBe(result2[0].id);
+    });
+  });
+
+  describe('Scoped Repository with Filters', () => {
+    const userScopes = {
+      active: (table: typeof users) => eq(table.active, true),
+    };
+
+    const scopedUserRepository = withScopes(baseRepo, userScopes);
+
+    beforeEach(async () => {
+      // Create test users with different attributes
+      await createTestUser({
+        name: 'Alice',
+        email: 'alice@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Bob',
+        email: 'bob@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Charlie',
+        email: 'charlie@example.com',
+        active: false,
+      });
+    });
+
+    it('should combine scopes with filters in findAll', async () => {
+      const result = await scopedUserRepository.scope('active').findAll({
+        filters: { name: 'Alice' },
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe('Alice');
+      expect(result[0].active).toBe(true);
+    });
+
+    it('should combine scopes with filters in findAllPaginated', async () => {
+      const result = await scopedUserRepository
+        .scope('active')
+        .findAllPaginated({
+          filters: { name: 'Bob' },
+          page: 1,
+          pageSize: 10,
+        });
+
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].name).toBe('Bob');
+      expect(result.data[0].active).toBe(true);
+      expect(result.pagination.totalCount).toBe(1);
+    });
+
+    it('should apply scope and filters correctly', async () => {
+      const result = await scopedUserRepository.scope('active').findAll({
+        filters: { email: 'alice@example.com' },
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe('Alice');
+      expect(result[0].email).toBe('alice@example.com');
+      expect(result[0].active).toBe(true);
     });
   });
 });

@@ -54,10 +54,17 @@ import {
   ScopeState,
   PaginationMeta,
   PaginationParams,
+  QueryOptions,
+  Filters,
 } from './types';
 import { eq, and, count, type SQL } from 'drizzle-orm';
 import { PgColumn } from 'drizzle-orm/pg-core';
-import { createPaginationMeta, applyOrdering } from './query-utils';
+import {
+  createPaginationMeta,
+  applyOrdering,
+  applySimpleFilters,
+  applySearchConditions,
+} from './query-utils';
 
 /**
  * Error thrown when a scope is not found in the scopesConfig
@@ -74,12 +81,7 @@ export class ScopeNotFoundError extends Error {
 /**
  * Enhances a BaseRepository with scope functionality
  */
-export const withScopes = <
-  T,
-  CreateT,
-  UpdateT extends Partial<CreateT>,
-  TTable extends TableWithId,
->(
+export const withScopes = <T, CreateT, UpdateT, TTable extends TableWithId>(
   baseRepository: BaseRepository<T, CreateT, UpdateT, TTable>,
   scopesConfig: ScopesConfig<TTable>,
 ): ScopedRepository<T, CreateT, UpdateT, TTable> => {
@@ -93,7 +95,7 @@ export const withScopes = <
     throw new Error('BaseRepository does not have __internal property');
   }
 
-  const { db, table } = __internal;
+  const { db, table, config } = __internal;
 
   const processScopeParams = (scopeParams: ScopeParams): SQL<unknown> => {
     const [scopeName, ...params] = Array.isArray(scopeParams)
@@ -132,6 +134,108 @@ export const withScopes = <
     return query.where(and(...allConditions)) as Q;
   };
 
+  // Versión mejorada para evitar sobrescritura de condiciones cuando se aplican filtros
+  const combineConditionsWithFilters = <Q>(
+    query: Q,
+    baseConditions: SQL<unknown>[],
+    options?: { filters?: Filters<T> },
+  ): Q => {
+    // Colectamos todas las condiciones (scope + base)
+    const allConditions = [...baseConditions, ...state.conditions];
+
+    // Si hay filtros, los convertimos en condiciones SQL directamente en vez de usar applySimpleFilters
+    if (options?.filters && Object.keys(options.filters).length > 0) {
+      const filterConditions = Object.entries(options.filters).map(
+        ([field, value]) => {
+          const column = (table as unknown as Record<string, PgColumn>)[field];
+          if (!column) {
+            throw new Error(
+              `Invalid filter field: ${field}. Field does not exist in the table.`,
+            );
+          }
+          return eq(column, value);
+        },
+      );
+
+      // Agregar las condiciones de filtro a todas las condiciones
+      allConditions.push(...filterConditions);
+    }
+
+    // Aplicar todas las condiciones en una sola llamada a .where() para evitar sobrescrituras
+    // @ts-expect-error - Drizzle query type complexity requires this cast
+    return query.where(and(...allConditions)) as Q;
+  };
+
+  async function search(searchTerm: string): Promise<T[]> {
+    try {
+      if (!config?.searchableFields) {
+        throw new Error('Searchable fields not defined');
+      }
+
+      let query = db.select().from(table);
+      query = applySearchConditions(query, searchTerm, config, table);
+      query = combineConditions(query, []);
+
+      const entities = await query;
+      return entities as T[];
+    } finally {
+      clearConditions();
+    }
+  }
+
+  async function searchPaginated(
+    searchTerm: string,
+    params: PaginationParams<T, TTable> = {},
+  ): Promise<{
+    data: T[];
+    pagination: PaginationMeta;
+  }> {
+    try {
+      if (!config?.searchableFields) {
+        throw new Error('Searchable fields not defined');
+      }
+
+      const { page = 1, pageSize = 10, orderBy, filters } = params;
+      const offset = (page - 1) * pageSize;
+
+      // Count query
+      let countQuery = db.select({ count: count() }).from(table);
+      countQuery = applySearchConditions(
+        countQuery,
+        searchTerm,
+        config,
+        table,
+        filters,
+      );
+      countQuery = combineConditions(countQuery, []);
+      const [countResult] = await countQuery;
+      const totalCount = countResult?.count ?? 0;
+
+      // Data query
+      let dataQuery = db.select().from(table);
+      dataQuery = applySearchConditions(
+        dataQuery,
+        searchTerm,
+        config,
+        table,
+        filters,
+      );
+      dataQuery = combineConditions(dataQuery, []);
+      dataQuery = applyOrdering(dataQuery, orderBy, table);
+      // @ts-expect-error - Drizzle query builder method typing
+      dataQuery = dataQuery.limit(pageSize).offset(offset);
+
+      const data = await dataQuery;
+
+      return {
+        data: data as T[],
+        pagination: createPaginationMeta(totalCount, page, pageSize),
+      };
+    } finally {
+      clearConditions();
+    }
+  }
+
   const scopedRepository: ScopedRepository<T, CreateT, UpdateT, TTable> = {
     ...baseRepository,
 
@@ -162,13 +266,12 @@ export const withScopes = <
       }
     },
 
-    async findAll(options?: {
-      orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
-    }): Promise<T[]> {
+    async findAll(options?: QueryOptions<T, TTable>): Promise<T[]> {
       try {
         let query = db.select().from(table);
-        query = combineConditions(query, []);
-        query = applyOrdering(query, options?.orderBy);
+        // Usamos el nuevo método que combina condiciones sin sobrescribir
+        query = combineConditionsWithFilters(query, [], options);
+        query = applyOrdering(query, options?.orderBy, table);
 
         const entities = await query;
         return entities as T[];
@@ -177,22 +280,24 @@ export const withScopes = <
       }
     },
 
-    async findAllPaginated(params: PaginationParams = {}): Promise<{
+    async findAllPaginated(params: PaginationParams<T, TTable> = {}): Promise<{
       data: T[];
       pagination: PaginationMeta;
     }> {
       try {
-        const { page = 1, pageSize = 10, orderBy } = params;
+        const { page = 1, pageSize = 10, orderBy, filters } = params;
         const offset = (page - 1) * pageSize;
 
+        // Para la consulta de conteo
         let countQuery = db.select({ count: count() }).from(table);
-        countQuery = combineConditions(countQuery, []);
+        countQuery = combineConditionsWithFilters(countQuery, [], { filters });
         const [countResult] = await countQuery;
         const totalCount = countResult?.count ?? 0;
 
+        // Para la consulta de datos
         let dataQuery = db.select().from(table);
-        dataQuery = combineConditions(dataQuery, []);
-        dataQuery = applyOrdering(dataQuery, orderBy);
+        dataQuery = combineConditionsWithFilters(dataQuery, [], { filters });
+        dataQuery = applyOrdering(dataQuery, orderBy, table);
         // @ts-expect-error - Drizzle query builder method typing
         dataQuery = dataQuery.limit(pageSize).offset(offset);
 
@@ -210,14 +315,17 @@ export const withScopes = <
     async findAllBy(
       field: PgColumn,
       value: unknown,
-      options?: {
-        orderBy?: Array<{ field: PgColumn; direction: 'asc' | 'desc' }>;
-      },
+      options?: QueryOptions<T, TTable>,
     ): Promise<T[]> {
       try {
         let query = db.select().from(table);
-        query = combineConditions(query, [eq(field, value)]);
-        query = applyOrdering(query, options?.orderBy);
+        // Combinamos la condición de campo con las condiciones de scope y filtros
+        query = combineConditionsWithFilters(
+          query,
+          [eq(field, value)],
+          options,
+        );
+        query = applyOrdering(query, options?.orderBy, table);
 
         const entities = await query;
         return entities as T[];
@@ -246,30 +354,37 @@ export const withScopes = <
     async findByPaginated<K extends keyof T>(
       field: PgColumn,
       value: T[K],
-      params: PaginationParams = {},
+      params: PaginationParams<T, TTable> = {},
     ): Promise<{
       data: T[];
       pagination: PaginationMeta;
     }> {
       try {
-        const { page = 1, pageSize = 10, orderBy } = params;
+        const { page = 1, pageSize = 10, orderBy, filters } = params;
         const offset = (page - 1) * pageSize;
 
-        let baseCountQuery = db.select({ count: count() }).from(table);
-        let baseDataQuery = db.select().from(table);
+        // Consulta de conteo con condiciones combinadas
+        let countQuery = db.select({ count: count() }).from(table);
+        countQuery = combineConditionsWithFilters(
+          countQuery,
+          [eq(field, value)],
+          { filters },
+        );
+        const [countResult] = await countQuery;
+        const totalCount = Number(countResult?.count || 0);
 
-        baseCountQuery = combineConditions(baseCountQuery, [eq(field, value)]);
-        baseDataQuery = combineConditions(baseDataQuery, [eq(field, value)]);
-        baseDataQuery = applyOrdering(baseDataQuery, orderBy);
+        // Consulta de datos con condiciones combinadas
+        let dataQuery = db.select().from(table);
+        dataQuery = combineConditionsWithFilters(
+          dataQuery,
+          [eq(field, value)],
+          { filters },
+        );
+        dataQuery = applyOrdering(dataQuery, orderBy, table);
         // @ts-expect-error - Drizzle query builder method typing
-        baseDataQuery = baseDataQuery.limit(pageSize).offset(offset);
+        dataQuery = dataQuery.limit(pageSize).offset(offset);
 
-        const [countResult, data] = await Promise.all([
-          baseCountQuery,
-          baseDataQuery,
-        ]);
-
-        const totalCount = Number(countResult[0]?.count || 0);
+        const data = await dataQuery;
         const pagination = createPaginationMeta(totalCount, page, pageSize);
 
         return {
@@ -280,6 +395,9 @@ export const withScopes = <
         clearConditions();
       }
     },
+
+    search,
+    searchPaginated,
 
     create: (...args) => baseRepository.create(...args),
     update: (...args) => baseRepository.update(...args),
@@ -302,7 +420,19 @@ export const withScopes = <
         return baseRepository.validateRelationExists(...args);
       },
     }),
-    transaction: (...args) => baseRepository.transaction(...args),
+    transaction: <R>(
+      callback: (
+        txRepo: ScopedRepository<T, CreateT, UpdateT, TTable>,
+      ) => Promise<R>,
+    ): Promise<R> => {
+      if (!baseRepository.transaction) {
+        throw new Error('transaction is not implemented');
+      }
+      return baseRepository.transaction((txBaseRepo) => {
+        const txScopedRepo = withScopes(txBaseRepo, scopesConfig);
+        return callback(txScopedRepo);
+      });
+    },
     __internal: baseRepository.__internal,
   };
 

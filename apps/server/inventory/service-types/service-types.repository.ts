@@ -39,13 +39,13 @@ export const createServiceTypeRepository = () => {
 
   const findAll = async (): Promise<ServiceType[]> => {
     return await baseRepository.findAll({
-      orderBy: [{ field: serviceTypes.name, direction: 'asc' }],
+      orderBy: [{ field: 'name', direction: 'asc' }],
     });
   };
 
   const findAllActive = async (): Promise<ServiceType[]> => {
     return await baseRepository.findAllBy(serviceTypes.active, true, {
-      orderBy: [{ field: serviceTypes.name, direction: 'asc' }],
+      orderBy: [{ field: 'name', direction: 'asc' }],
     });
   };
 

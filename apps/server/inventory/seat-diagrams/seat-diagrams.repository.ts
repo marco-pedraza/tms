@@ -64,7 +64,7 @@ export const createSeatDiagramRepository = () => {
    */
   const findAll = async (): Promise<SeatDiagrams> => {
     const diagrams = await baseRepository.findAll({
-      orderBy: [{ field: seatDiagrams.diagramNumber, direction: 'asc' }],
+      orderBy: [{ field: 'diagramNumber', direction: 'asc' }],
     });
 
     return {

@@ -32,7 +32,7 @@ export const createBusSeatRepository = () => {
       busSeats.seatDiagramId,
       seatDiagramId,
       {
-        orderBy: [{ field: busSeats.seatNumber, direction: 'asc' }],
+        orderBy: [{ field: 'seatNumber', direction: 'asc' }],
       },
     );
 

@@ -15,7 +15,7 @@ export default function CountryFormSkeleton() {
       <div className="flex items-center mb-6">
         <Button variant="ghost" size="icon" className="mr-2">
           <ArrowLeft className="h-4 w-4" />
-          <span className="sr-only">{tCommon('actions.back')}</span>
+          <span className="sr-only">{tCommon('actions.backToList')}</span>
         </Button>
         <div>
           <Skeleton className="h-8 w-40 mb-1" />

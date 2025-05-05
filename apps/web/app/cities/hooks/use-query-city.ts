@@ -6,14 +6,14 @@ import {
 import type { cities } from '@repo/ims-client';
 import imsClient from '@/lib/ims-client';
 
-interface UseQueryCityProps {
-  cityId: number;
-  enabled?: boolean;
-}
-
 interface QueryCityError extends Error {
   code?: string;
   status?: number;
+}
+
+interface UseQueryCityProps {
+  cityId: number;
+  enabled?: boolean;
 }
 
 /**
@@ -30,8 +30,8 @@ export default function useQueryCity({
 
   return useQuery({
     queryKey: ['cities', cityId],
-    queryFn: () => imsClient.inventory.getCity(cityId),
     enabled,
+    queryFn: () => imsClient.inventory.getCity(cityId),
     initialData: () =>
       queryClient
         .getQueryData<cities.PaginatedCities>(['cities'])

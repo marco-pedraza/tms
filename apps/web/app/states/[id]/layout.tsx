@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import LoadError from '@/components/load-error';
 import StateNotFound from '@/states/components/state-not-found';
-import { useQueryState } from '@/states/hooks/use-query-state';
+import useQueryState from '@/states/hooks/use-query-state';
 import useStateDetailsParams from '@/states/hooks/use-state-details-params';
 
 export default function StateLayout({
@@ -11,22 +11,23 @@ export default function StateLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const tStates = useTranslations('states');
   const { stateId, isValidId } = useStateDetailsParams();
   const { status, error } = useQueryState({
     stateId,
     enabled: isValidId,
   });
+  const isStateNotFound = !isValidId || error?.code === 'not_found';
 
-  // Handle invalid parameters
-  if (!isValidId) {
+  if (isStateNotFound) {
     return <StateNotFound />;
   }
 
-  // Handle error states
   if (status === 'error') {
-    return <LoadError backHref="/states" />;
+    return (
+      <LoadError backHref="/states" backLabel={tStates('actions.backToList')} />
+    );
   }
 
-  // Render children, letting them handle their own loading states
   return children;
 }

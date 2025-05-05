@@ -24,7 +24,7 @@ interface MutationMessages {
  * @returns {Object} result.updateCity - Mutation for updating an existing city
  * @returns {Object} result.deleteCity - Mutation for deleting a city
  */
-export function useCityMutations() {
+export default function useCityMutations() {
   const t = useTranslations('cities');
   const router = useRouter();
   const queryClient = useQueryClient();

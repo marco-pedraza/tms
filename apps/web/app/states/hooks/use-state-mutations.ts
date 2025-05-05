@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { states } from '@repo/ims-client';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
 import imsClient from '@/lib/ims-client';
-import type { StateFormValues } from '@/states/state-form';
+import type { StateFormValues } from '@/states/components/state-form';
 
 interface MutationMessages {
   loading: string;
@@ -24,7 +24,7 @@ interface MutationMessages {
  * @returns {Object} result.updateState - Mutation for updating an existing state
  * @returns {Object} result.deleteState - Mutation for deleting a state
  */
-export function useStateMutations() {
+export default function useStateMutations() {
   const t = useTranslations('states');
   const router = useRouter();
   const queryClient = useQueryClient();

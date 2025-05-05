@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -12,11 +11,13 @@ import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable } from '@/components/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { DropdownMenuContent } from '@/components/ui/dropdown-menu';
-import { DropdownMenu } from '@/components/ui/dropdown-menu';
-import { useCountryMutations } from '@/countries/hooks/use-country-mutations';
-import client from '@/lib/ims-client';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import useCountryMutations from '@/countries/hooks/use-country-mutations';
+import useQueryCountries from '@/countries/hooks/use-query-countries';
 
 type Country = countries.Country;
 
@@ -132,10 +133,7 @@ export default function CountriesTable() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const { deleteCountry } = useCountryMutations();
 
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['countries'],
-    queryFn: async () => await client.inventory.listCountriesPaginated({}),
-  });
+  const { data, isLoading, error, refetch } = useQueryCountries();
 
   const handleDelete = (id: string) => {
     const numericId = parseInt(id);

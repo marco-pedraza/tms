@@ -11,13 +11,16 @@ import { relations } from 'drizzle-orm';
 import { busSeats } from '../bus-seats/bus-seats.schema';
 import { busModels } from '../bus-models/bus-models.schema';
 import { buses } from '../buses/buses.schema';
+import { seatLayoutModels } from '../seat-layout-models/seat-layout-models.schema';
 
 /**
  * Database table for seat diagrams
  */
 export const seatDiagrams = pgTable('seat_diagrams', {
   id: serial('id').primaryKey(),
-  diagramNumber: integer('diagram_number').notNull().unique(),
+  seatLayoutModelId: integer('seat_layout_model_id')
+    .notNull()
+    .references(() => seatLayoutModels.id),
   name: text('name').notNull(),
   maxCapacity: integer('max_capacity').notNull(),
   allowsAdjacentSeat: boolean('allows_adjacent_seat').notNull().default(false), // Allows one passenger to purchase two adjacent seats
@@ -35,8 +38,15 @@ export const seatDiagrams = pgTable('seat_diagrams', {
 /**
  * Relations for seat diagrams
  */
-export const seatDiagramsRelations = relations(seatDiagrams, ({ many }) => ({
-  busSeats: many(busSeats),
-  busModels: many(busModels),
-  buses: many(buses),
-}));
+export const seatDiagramsRelations = relations(
+  seatDiagrams,
+  ({ many, one }) => ({
+    busSeats: many(busSeats),
+    busModel: one(busModels),
+    bus: one(buses),
+    seatLayoutModel: one(seatLayoutModels, {
+      fields: [seatDiagrams.seatLayoutModelId],
+      references: [seatLayoutModels.id],
+    }),
+  }),
+);

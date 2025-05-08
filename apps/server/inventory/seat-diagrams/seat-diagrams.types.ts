@@ -91,8 +91,8 @@ export interface SeatDiagram {
   /** Unique identifier for the seat diagram */
   id: number;
 
-  /** Diagram number */
-  diagramNumber: number;
+  /** Seat Layout Model ID (reference to seat_layout_models) */
+  seatLayoutModelId: number;
 
   /** Name of the diagram */
   name: string;
@@ -136,10 +136,10 @@ export interface SeatDiagram {
  */
 export interface CreateSeatDiagramPayload {
   /**
-   * Diagram number
-   * Must be a positive number
+   * Seat Layout Model ID (reference to seat_layout_models)
+   * Required reference to a seat layout model template
    */
-  diagramNumber: number;
+  seatLayoutModelId: number;
 
   /**
    * Name of the diagram
@@ -203,12 +203,6 @@ export interface CreateSeatDiagramPayload {
  * Input for updating a seat diagram
  */
 export interface UpdateSeatDiagramPayload {
-  /**
-   * Diagram number
-   * Must be a positive number
-   */
-  diagramNumber?: number;
-
   /**
    * Name of the diagram
    * Must have at least 1 character

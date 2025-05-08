@@ -1,9 +1,8 @@
-import { expect, describe, test, afterAll } from 'vitest';
+import { expect, describe, test, afterAll, beforeAll } from 'vitest';
 import {
   getSeatDiagram,
   listSeatDiagrams,
   listSeatDiagramsPaginated,
-  createSeatDiagram,
   updateSeatDiagram,
   deleteSeatDiagram,
   getSeatDiagramConfiguration,
@@ -22,6 +21,9 @@ import {
   SeatConfiguration,
 } from './seat-diagrams.types';
 import { SeatType } from '../bus-seats/bus-seats.types';
+import { seatDiagramRepository } from './seat-diagrams.repository';
+import { createSeatLayoutModel } from '../seat-layout-models/seat-layout-models.controller';
+import { SeatLayoutModel } from '../seat-layout-models/seat-layout-models.types';
 
 describe('Seat Diagrams Controller', () => {
   // Test data and setup
@@ -37,15 +39,38 @@ describe('Seat Diagrams Controller', () => {
     rowNumber: 5,
   };
 
-  const testSeatDiagram = {
-    diagramNumber: 101,
-    name: 'Test Diagram',
+  // Before creating the seat diagram, create a seat layout model
+  const testLayoutModel = {
+    name: 'Test Layout Model',
+    description: 'A test model',
     maxCapacity: 50,
     numFloors: 1,
-    allowsAdjacentSeat: true,
     seatsPerFloor: [testFloorSeats],
     bathroomRows: [testBathroomLocation],
     totalSeats: 40,
+    isFactoryDefault: true,
+  };
+
+  let basicSeatDiagram: {
+    name: string;
+    maxCapacity: number;
+    numFloors: number;
+    allowsAdjacentSeat: boolean;
+    seatsPerFloor: FloorSeats[];
+    bathroomRows: BathroomLocation[];
+    totalSeats: number;
+    seatLayoutModelId: number;
+  };
+
+  let complexSeatDiagram: {
+    name: string;
+    maxCapacity: number;
+    numFloors: number;
+    allowsAdjacentSeat: boolean;
+    seatsPerFloor: FloorSeats[];
+    bathroomRows: BathroomLocation[];
+    totalSeats: number;
+    seatLayoutModelId: number;
   };
 
   const updatePayload = {
@@ -57,39 +82,56 @@ describe('Seat Diagrams Controller', () => {
   let createdSeatDiagramId: number;
   let additionalDiagramId: number | undefined;
   let useCaseDiagramId: number;
+
+  let layoutModelResponse: SeatLayoutModel;
   let theoreticalConfig: SeatConfiguration;
   let actualConfig: SeatConfiguration;
   let seatsCreated: number;
 
-  // Set up test data for a seat diagram
-  const testUseCaseDiagram = {
-    diagramNumber: 201,
-    name: 'Test Theoretical Diagram',
-    maxCapacity: 60,
-    numFloors: 2,
-    allowsAdjacentSeat: true,
-    seatsPerFloor: [
-      {
-        floorNumber: 1,
-        numRows: 5,
-        seatsLeft: 2,
-        seatsRight: 2,
-      },
-      {
-        floorNumber: 2,
-        numRows: 4,
-        seatsLeft: 2,
-        seatsRight: 2,
-      },
-    ],
-    bathroomRows: [
-      {
-        floorNumber: 1,
-        rowNumber: 3,
-      },
-    ],
-    totalSeats: 32,
-  };
+  beforeAll(async () => {
+    layoutModelResponse = await createSeatLayoutModel(testLayoutModel);
+
+    basicSeatDiagram = {
+      seatLayoutModelId: layoutModelResponse.id,
+      name: 'Test Diagram',
+      maxCapacity: 50,
+      numFloors: 1,
+      allowsAdjacentSeat: true,
+      seatsPerFloor: [testFloorSeats],
+      bathroomRows: [testBathroomLocation],
+      totalSeats: 40,
+    };
+
+    // Define complexSeatDiagram here after layoutModelResponse is available
+    complexSeatDiagram = {
+      seatLayoutModelId: layoutModelResponse.id,
+      name: 'Test Theoretical Diagram',
+      maxCapacity: 60,
+      numFloors: 2,
+      allowsAdjacentSeat: true,
+      seatsPerFloor: [
+        {
+          floorNumber: 1,
+          numRows: 5,
+          seatsLeft: 2,
+          seatsRight: 2,
+        },
+        {
+          floorNumber: 2,
+          numRows: 4,
+          seatsLeft: 2,
+          seatsRight: 2,
+        },
+      ],
+      bathroomRows: [
+        {
+          floorNumber: 1,
+          rowNumber: 3,
+        },
+      ],
+      totalSeats: 32,
+    };
+  });
 
   // Clean up after all tests
   afterAll(async () => {
@@ -114,8 +156,8 @@ describe('Seat Diagrams Controller', () => {
 
   describe('success scenarios', () => {
     test('should create a new seat diagram', async () => {
-      // Create a new seat diagram
-      const response = await createSeatDiagram(testSeatDiagram);
+      // Create a new seat diagram using the repository directly
+      const response = await seatDiagramRepository.create(basicSeatDiagram);
 
       // Store the ID for later cleanup
       createdSeatDiagramId = response.id;
@@ -123,16 +165,15 @@ describe('Seat Diagrams Controller', () => {
       // Assertions
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
-      expect(response.diagramNumber).toBe(testSeatDiagram.diagramNumber);
-      expect(response.name).toBe(testSeatDiagram.name);
-      expect(response.maxCapacity).toBe(testSeatDiagram.maxCapacity);
-      expect(response.numFloors).toBe(testSeatDiagram.numFloors);
+      expect(response.name).toBe(basicSeatDiagram.name);
+      expect(response.maxCapacity).toBe(basicSeatDiagram.maxCapacity);
+      expect(response.numFloors).toBe(basicSeatDiagram.numFloors);
       expect(response.allowsAdjacentSeat).toBe(
-        testSeatDiagram.allowsAdjacentSeat,
+        basicSeatDiagram.allowsAdjacentSeat,
       );
-      expect(response.seatsPerFloor).toEqual(testSeatDiagram.seatsPerFloor);
-      expect(response.bathroomRows).toEqual(testSeatDiagram.bathroomRows);
-      expect(response.totalSeats).toBe(testSeatDiagram.totalSeats);
+      expect(response.seatsPerFloor).toEqual(basicSeatDiagram.seatsPerFloor);
+      expect(response.bathroomRows).toEqual(basicSeatDiagram.bathroomRows);
+      expect(response.totalSeats).toBe(basicSeatDiagram.totalSeats);
       expect(response.active).toBeDefined();
       expect(response.createdAt).toBeDefined();
       expect(response.updatedAt).toBeDefined();
@@ -143,9 +184,8 @@ describe('Seat Diagrams Controller', () => {
 
       expect(response).toBeDefined();
       expect(response.id).toBe(createdSeatDiagramId);
-      expect(response.diagramNumber).toBe(testSeatDiagram.diagramNumber);
-      expect(response.name).toBe(testSeatDiagram.name);
-      expect(response.maxCapacity).toBe(testSeatDiagram.maxCapacity);
+      expect(response.name).toBe(basicSeatDiagram.name);
+      expect(response.maxCapacity).toBe(basicSeatDiagram.maxCapacity);
     });
 
     test('should list all seat diagrams', async () => {
@@ -161,7 +201,6 @@ describe('Seat Diagrams Controller', () => {
         (diagram) => diagram.id === createdSeatDiagramId,
       );
       expect(foundDiagram).toBeDefined();
-      expect(foundDiagram?.diagramNumber).toBe(testSeatDiagram.diagramNumber);
     });
 
     test('should update a seat diagram', async () => {
@@ -175,14 +214,15 @@ describe('Seat Diagrams Controller', () => {
       expect(response.name).toBe(updatePayload.name);
       expect(response.maxCapacity).toBe(updatePayload.maxCapacity);
       // Fields not in updatePayload should remain unchanged
-      expect(response.diagramNumber).toBe(testSeatDiagram.diagramNumber);
-      expect(response.numFloors).toBe(testSeatDiagram.numFloors);
+      expect(response.numFloors).toBe(basicSeatDiagram.numFloors);
+      expect(response.seatLayoutModelId).toBe(
+        basicSeatDiagram.seatLayoutModelId,
+      );
     });
 
     test('should delete a seat diagram', async () => {
-      // Create a diagram specifically for deletion test
-      const diagramToDelete = await createSeatDiagram({
-        diagramNumber: 102,
+      // Create a diagram specifically for deletion test using the repository
+      const diagramToDelete = await seatDiagramRepository.create({
         name: 'Diagram To Delete',
         maxCapacity: 40,
         numFloors: 1,
@@ -195,6 +235,7 @@ describe('Seat Diagrams Controller', () => {
           },
         ],
         totalSeats: 32,
+        seatLayoutModelId: layoutModelResponse.id,
       });
 
       additionalDiagramId = diagramToDelete.id;
@@ -251,8 +292,8 @@ describe('Seat Diagrams Controller', () => {
 
   describe('seat generation from theoretical model', () => {
     test('should build a theoretical configuration matching model specifications', async () => {
-      // Create a seat diagram for testing use cases
-      const diagram = await createSeatDiagram(testUseCaseDiagram);
+      // Create a seat diagram for testing use cases (using repository directly)
+      const diagram = await seatDiagramRepository.create(complexSeatDiagram);
       useCaseDiagramId = diagram.id;
 
       // Get the theoretical configuration directly
@@ -264,7 +305,7 @@ describe('Seat Diagrams Controller', () => {
       expect(theoreticalConfig.floors).toBeDefined();
       expect(Array.isArray(theoreticalConfig.floors)).toBe(true);
       expect(theoreticalConfig.floors.length).toBe(
-        testUseCaseDiagram.numFloors,
+        complexSeatDiagram.numFloors,
       );
 
       // Check floor 1 configuration - add bounds checking
@@ -287,8 +328,8 @@ describe('Seat Diagrams Controller', () => {
       const floorConfig0 = (() => {
         // Create a Map to safely access seatsPerFloor by index
         const configMap = new Map<number, unknown>();
-        if (testUseCaseDiagram.seatsPerFloor) {
-          testUseCaseDiagram.seatsPerFloor.forEach((config, idx) =>
+        if (complexSeatDiagram.seatsPerFloor) {
+          complexSeatDiagram.seatsPerFloor.forEach((config, idx) =>
             configMap.set(idx, config),
           );
         }
@@ -301,8 +342,8 @@ describe('Seat Diagrams Controller', () => {
       const bathroomRowIndex = (() => {
         // Create a Map to safely access bathroomRows by index
         const bathroomRowsMap = new Map<number, unknown>();
-        if (testUseCaseDiagram.bathroomRows) {
-          testUseCaseDiagram.bathroomRows.forEach((row, idx) =>
+        if (complexSeatDiagram.bathroomRows) {
+          complexSeatDiagram.bathroomRows.forEach((row, idx) =>
             bathroomRowsMap.set(idx, row),
           );
         }
@@ -355,8 +396,8 @@ describe('Seat Diagrams Controller', () => {
         const floorConfig0 = (() => {
           // Create a Map to safely access seatsPerFloor by index
           const configMap = new Map<number, unknown>();
-          if (testUseCaseDiagram.seatsPerFloor) {
-            testUseCaseDiagram.seatsPerFloor.forEach((config, idx) =>
+          if (complexSeatDiagram.seatsPerFloor) {
+            complexSeatDiagram.seatsPerFloor.forEach((config, idx) =>
               configMap.set(idx, config),
             );
           }
@@ -374,8 +415,8 @@ describe('Seat Diagrams Controller', () => {
       const floorConfigFirst = (() => {
         // Create a Map to safely access seatsPerFloor by index
         const configMap = new Map<number, unknown>();
-        if (testUseCaseDiagram.seatsPerFloor) {
-          testUseCaseDiagram.seatsPerFloor.forEach((config, idx) =>
+        if (complexSeatDiagram.seatsPerFloor) {
+          complexSeatDiagram.seatsPerFloor.forEach((config, idx) =>
             configMap.set(idx, config),
           );
         }
@@ -385,8 +426,8 @@ describe('Seat Diagrams Controller', () => {
       const floorConfig1 = (() => {
         // Create a Map to safely access seatsPerFloor by index
         const configMap = new Map<number, unknown>();
-        if (testUseCaseDiagram.seatsPerFloor) {
-          testUseCaseDiagram.seatsPerFloor.forEach((config, idx) =>
+        if (complexSeatDiagram.seatsPerFloor) {
+          complexSeatDiagram.seatsPerFloor.forEach((config, idx) =>
             configMap.set(idx, config),
           );
         }
@@ -436,7 +477,7 @@ describe('Seat Diagrams Controller', () => {
       expect(actualConfig).toBeDefined();
       expect(actualConfig.floors).toBeDefined();
       expect(Array.isArray(actualConfig.floors)).toBe(true);
-      expect(actualConfig.floors.length).toBe(testUseCaseDiagram.numFloors);
+      expect(actualConfig.floors.length).toBe(complexSeatDiagram.numFloors);
       expect(actualConfig.totalSeats).toBe(theoreticalConfig.totalSeats);
 
       // Compare key aspects of the configurations

@@ -10,6 +10,7 @@ import {
 } from './buses.types';
 import { PaginationParams } from '../../shared/types';
 import { parseApiError } from '../../shared/errors';
+import { createBusWithSeatDiagram } from './buses.use-cases';
 
 /**
  * Creates a new bus.
@@ -21,7 +22,7 @@ export const createBus = api(
   { method: 'POST', path: '/buses', expose: true },
   async (params: CreateBusPayload): Promise<Bus> => {
     try {
-      return await busRepository.create(params);
+      return await createBusWithSeatDiagram(params);
     } catch (error) {
       throw parseApiError(error);
     }

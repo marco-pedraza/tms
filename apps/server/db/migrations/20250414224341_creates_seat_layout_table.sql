@@ -1,10 +1,8 @@
-CREATE TABLE IF NOT EXISTS "seat_diagrams" (
+CREATE TABLE IF NOT EXISTS "seat_layout_models" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"seat_layout_model_id" integer NOT NULL,
 	"name" text NOT NULL,
+	"description" text,
 	"max_capacity" integer NOT NULL,
-	"allows_adjacent_seat" boolean DEFAULT false NOT NULL,
-	"observations" text,
 	"num_floors" integer DEFAULT 1 NOT NULL,
 	"seats_per_floor" jsonb NOT NULL,
 	"bathroom_rows" jsonb DEFAULT '[]'::jsonb NOT NULL,
@@ -14,5 +12,3 @@ CREATE TABLE IF NOT EXISTS "seat_diagrams" (
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
---> statement-breakpoint
-ALTER TABLE "seat_diagrams" ADD CONSTRAINT "seat_diagrams_seat_layout_model_id_seat_layout_models_id_fk" FOREIGN KEY ("seat_layout_model_id") REFERENCES "public"."seat_layout_models"("id") ON DELETE no action ON UPDATE no action;

@@ -75,33 +75,40 @@
     {
       "idx": 10,
       "version": "7",
+      "when": 1744670622367,
+      "tag": "20250414224341_creates_seat_layout_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
       "when": 1744670622467,
       "tag": "20250414224342_create_seat_diagrams_table",
       "breakpoints": true
     },
     {
-      "idx": 11,
+      "idx": 12,
       "version": "7",
       "when": 1744670623467,
       "tag": "20250414224343_create_bus_models_tables",
       "breakpoints": true
     },
     {
-      "idx": 12,
+      "idx": 13,
       "version": "7",
       "when": 1744843137136,
       "tag": "20250416223857_create_bus_table",
       "breakpoints": true
     },
     {
-      "idx": 12,
+      "idx": 14,
       "version": "7",
       "when": 1745456437954,
       "tag": "20250424010037_creates_pathways_tables",
       "breakpoints": true
     },
     {
-      "idx": 13,
+      "idx": 15,
       "version": "7",
       "when": 1746653888109,
       "tag": "20250507213808_create_route_tables",

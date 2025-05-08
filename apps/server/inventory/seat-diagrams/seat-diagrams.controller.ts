@@ -1,7 +1,6 @@
 import { api } from 'encore.dev/api';
 import {
   SeatDiagram,
-  CreateSeatDiagramPayload,
   UpdateSeatDiagramPayload,
   SeatDiagrams,
   PaginatedSeatDiagrams,
@@ -10,19 +9,6 @@ import {
 import { seatDiagramRepository } from './seat-diagrams.repository';
 import { PaginationParams } from '../../shared/types';
 import { seatDiagramUseCases } from './seat-diagrams.use-cases';
-
-/**
- * Creates a new seat diagram.
- * @param payload - Data for the new seat diagram
- * @returns {Promise<SeatDiagram>} The created seat diagram
- * @throws {APIError} If creation fails or validation fails
- */
-export const createSeatDiagram = api(
-  { method: 'POST', path: '/seat-diagrams', expose: true },
-  async (payload: CreateSeatDiagramPayload): Promise<SeatDiagram> => {
-    return await seatDiagramRepository.create(payload);
-  },
-);
 
 /**
  * Retrieves a seat diagram by its ID.
@@ -45,7 +31,8 @@ export const getSeatDiagram = api(
 export const listSeatDiagrams = api(
   { method: 'GET', path: '/seat-diagrams', expose: true },
   async (): Promise<SeatDiagrams> => {
-    return await seatDiagramRepository.findAll();
+    const diagrams = await seatDiagramRepository.findAll();
+    return { seatDiagrams: diagrams };
   },
 );
 

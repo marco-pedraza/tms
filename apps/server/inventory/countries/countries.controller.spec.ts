@@ -9,7 +9,7 @@ import {
   searchCountries,
   searchCountriesPaginated,
 } from './countries.controller';
-import type { Countries, Country } from './countries.types';
+import type { Country } from './countries.types';
 
 describe('Countries Controller', () => {
   // Test data and setup

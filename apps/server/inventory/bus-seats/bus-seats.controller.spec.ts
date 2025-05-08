@@ -7,11 +7,10 @@ import {
   updateBusSeat,
   deleteBusSeat,
 } from './bus-seats.controller';
-import {
-  createSeatDiagram,
-  deleteSeatDiagram,
-} from '../seat-diagrams/seat-diagrams.controller';
+import { deleteSeatDiagram } from '../seat-diagrams/seat-diagrams.controller';
 import { SeatType, SeatPosition } from './bus-seats.types';
+import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
+import { seatLayoutModelRepository } from '../seat-layout-models/seat-layout-models.repository';
 
 describe('Bus Seats Controller', () => {
   // Test data and setup
@@ -40,12 +39,11 @@ describe('Bus Seats Controller', () => {
 
   // Create a test seat diagram before running the bus seat tests
   beforeAll(async () => {
-    // Create a test seat diagram
-    const seatDiagram = await createSeatDiagram({
-      name: 'Test Seat Diagram',
-      diagramNumber: 2,
+    // Create a test seat layout model first
+    const layoutModel = await seatLayoutModelRepository.create({
+      name: 'Test Seat Layout Model',
+      description: 'Auto-generated layout for Test Seat Diagram',
       maxCapacity: 40,
-      totalSeats: 40,
       numFloors: 1,
       seatsPerFloor: [
         {
@@ -56,6 +54,29 @@ describe('Bus Seats Controller', () => {
         },
       ],
       bathroomRows: [],
+      totalSeats: 40,
+      isFactoryDefault: true,
+      active: true,
+    });
+
+    // Create the seat diagram with the layout model as template
+    const seatDiagram = await seatDiagramRepository.create({
+      seatLayoutModelId: layoutModel.id,
+      name: 'Test Seat Diagram',
+      maxCapacity: 40,
+      numFloors: 1,
+      allowsAdjacentSeat: false,
+      seatsPerFloor: [
+        {
+          floorNumber: 1,
+          numRows: 10,
+          seatsLeft: 2,
+          seatsRight: 2,
+        },
+      ],
+      bathroomRows: [],
+      totalSeats: 40,
+      isFactoryDefault: true,
       active: true,
     });
 

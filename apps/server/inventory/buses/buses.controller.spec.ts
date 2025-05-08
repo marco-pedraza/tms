@@ -18,19 +18,19 @@ import {
   deleteBusModel,
 } from '../bus-models/bus-models.controller';
 import {
-  createSeatDiagram,
-  deleteSeatDiagram,
-} from '../seat-diagrams/seat-diagrams.controller';
+  createSeatLayoutModel,
+  deleteSeatLayoutModel,
+} from '../seat-layout-models/seat-layout-models.controller';
+import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
 
 describe('Buses Controller', () => {
   // Test data and setup
   let busModelId: number; // We need a valid bus model ID for bus tests
-  let seatDiagramId: number; // We need a valid seat diagram ID for bus tests
+  let defaultSeatLayoutModelId: number; // We need a valid default seat layout model ID for bus tests
 
   const testBus = {
     registrationNumber: 'TEST001',
     modelId: 0, // This will be populated in beforeAll
-    seatDiagramId: 0, // This will be populated in beforeAll
     typeCode: 100,
     brandCode: 'TST',
     modelCode: 'MDL',
@@ -55,18 +55,18 @@ describe('Buses Controller', () => {
     active: true,
   };
 
-  // Variable to store created IDs for cleanup
+  // Variables to store created IDs for cleanup
   let createdBusId: number;
+  let createdSeatDiagramId: number;
 
   // Create test dependencies before running the bus tests
   beforeAll(async () => {
-    // Create a temporary seat diagram to use for the bus tests
-    const seatDiagram = await createSeatDiagram({
-      name: 'Test Seat Diagram',
-      diagramNumber: 1001,
+    // Create a temporary seat layout model to use for the bus tests
+    const seatLayoutModel = await createSeatLayoutModel({
+      name: 'Test Seat Layout Model',
+      description: 'Test Seat Layout Model Description',
       maxCapacity: 40,
       numFloors: 1,
-      allowsAdjacentSeat: true,
       seatsPerFloor: [
         {
           floorNumber: 1,
@@ -83,7 +83,7 @@ describe('Buses Controller', () => {
 
     // Create a temporary bus model to use for the bus tests
     const busModel = await createBusModel({
-      defaultSeatDiagramId: seatDiagram.id,
+      defaultSeatLayoutModelId: seatLayoutModel.id,
       manufacturer: 'TestManufacturer',
       model: 'TestModel-Bus',
       year: 2023,
@@ -94,11 +94,10 @@ describe('Buses Controller', () => {
     });
 
     busModelId = busModel.id;
-    seatDiagramId = seatDiagram.id;
+    defaultSeatLayoutModelId = seatLayoutModel.id;
 
     // Update the test bus with the real IDs
     testBus.modelId = busModelId;
-    testBus.seatDiagramId = seatDiagramId;
   });
 
   afterAll(async () => {
@@ -111,6 +110,15 @@ describe('Buses Controller', () => {
       }
     }
 
+    // Clean up the created seat diagram if any
+    if (createdSeatDiagramId) {
+      try {
+        await seatDiagramRepository.delete(createdSeatDiagramId);
+      } catch (error) {
+        console.log('Error cleaning up test seat diagram:', error);
+      }
+    }
+
     // Clean up the created bus model if any
     if (busModelId) {
       try {
@@ -120,30 +128,31 @@ describe('Buses Controller', () => {
       }
     }
 
-    // Clean up the created seat diagram if any
-    if (seatDiagramId) {
+    // Clean up the created seat layout model if any
+    if (defaultSeatLayoutModelId) {
       try {
-        await deleteSeatDiagram({ id: seatDiagramId });
+        await deleteSeatLayoutModel({ id: defaultSeatLayoutModelId });
       } catch (error) {
-        console.log('Error cleaning up test seat diagram:', error);
+        console.log('Error cleaning up test seat layout model:', error);
       }
     }
   });
 
   describe('success scenarios', () => {
-    test('should create a new bus', async () => {
+    test('should create a new bus with seat diagram', async () => {
       // Create a new bus
       const response = await createBus(testBus);
 
-      // Store the ID for later cleanup
+      // Store the IDs for later cleanup
       createdBusId = response.id;
+      createdSeatDiagramId = response.seatDiagramId;
 
       // Assertions
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
       expect(response.registrationNumber).toBe(testBus.registrationNumber);
       expect(response.modelId).toBe(testBus.modelId);
-      expect(response.seatDiagramId).toBe(testBus.seatDiagramId);
+      expect(response.seatDiagramId).toBeDefined();
       expect(response.typeCode).toBe(testBus.typeCode);
       expect(response.brandCode).toBe(testBus.brandCode);
       expect(response.modelCode).toBe(testBus.modelCode);
@@ -151,6 +160,17 @@ describe('Buses Controller', () => {
       expect(response.status).toBe(testBus.status);
       expect(response.active).toBe(testBus.active);
       expect(response.createdAt).toBeDefined();
+
+      // Verify the seat diagram was created correctly
+      const seatDiagram = await seatDiagramRepository.findOne(
+        response.seatDiagramId,
+      );
+      expect(seatDiagram).toBeDefined();
+      expect(seatDiagram.name).toContain(testBus.registrationNumber);
+      expect(seatDiagram.maxCapacity).toBe(40); // From the bus model's seating capacity
+      expect(seatDiagram.numFloors).toBe(1);
+      expect(seatDiagram.totalSeats).toBe(40);
+      expect(seatDiagram.active).toBe(true);
     });
 
     test('should retrieve a bus by ID', async () => {

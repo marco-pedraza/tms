@@ -1,6 +1,6 @@
 CREATE TABLE "bus_models" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"default_seat_diagram_id" integer NOT NULL,
+	"default_seat_layout_model_id" integer NOT NULL,
 	"manufacturer" text NOT NULL,
 	"model" text NOT NULL,
 	"year" integer NOT NULL,
@@ -31,4 +31,4 @@ CREATE TABLE "bus_seats" (
 --> statement-breakpoint
 ALTER TABLE "bus_seats" ADD CONSTRAINT "bus_seats_seat_diagram_id_seat_diagrams_id_fk" FOREIGN KEY ("seat_diagram_id") REFERENCES "public"."seat_diagrams"("id") ON DELETE no action ON UPDATE no action;
 --> statement-breakpoint
-ALTER TABLE "bus_models" ADD CONSTRAINT "bus_models_default_seat_diagram_id_seat_diagrams_id_fk" FOREIGN KEY ("default_seat_diagram_id") REFERENCES "public"."seat_diagrams"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "bus_models" ADD CONSTRAINT "bus_models_default_seat_layout_model_id_seat_layout_models_id_fk" FOREIGN KEY ("default_seat_layout_model_id") REFERENCES "public"."seat_layout_models"("id") ON DELETE no action ON UPDATE no action;

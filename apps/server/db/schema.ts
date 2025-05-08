@@ -25,6 +25,10 @@ export {
 export { refreshTokens } from '../users/auth/auth.schema';
 export { drivers } from '../inventory/drivers/drivers.schema';
 export {
+  seatLayoutModels,
+  seatLayoutModelsRelations,
+} from '../inventory/seat-layout-models/seat-layout-models.schema';
+export {
   seatDiagrams,
   seatDiagramsRelations,
 } from '../inventory/seat-diagrams/seat-diagrams.schema';

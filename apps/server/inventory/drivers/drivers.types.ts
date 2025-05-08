@@ -498,5 +498,5 @@ export type PaginatedDrivers = PaginatedResult<Driver>;
  */
 export interface PossibleDriverStatuses {
   /** List of possible next statuses */
-  statuses: string[];
+  statuses: DriverStatus[];
 }

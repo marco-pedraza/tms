@@ -27,6 +27,11 @@ import { busRepository } from '../buses/buses.repository';
 import { BusStatus } from '../buses/buses.types';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
 import { busModelRepository } from '../bus-models/bus-models.repository';
+import {
+  createSeatLayoutModel,
+  deleteSeatLayoutModel,
+} from '../seat-layout-models/seat-layout-models.controller';
+import { createBusWithSeatDiagram } from '../buses/buses.use-cases';
 
 describe('Drivers Controller', () => {
   // Test data and setup
@@ -50,7 +55,7 @@ describe('Drivers Controller', () => {
     officeCode: 'HQ001',
     officeLocation: 'Mexico City HQ',
     hireDate: new Date('2020-01-15'),
-    status: 'ACTIVE',
+    status: DriverStatus.ACTIVE,
     statusDate: new Date('2020-01-15'),
     federalLicense: 'FED12345',
     federalLicenseExpiry: new Date('2025-01-15'),
@@ -68,6 +73,7 @@ describe('Drivers Controller', () => {
   let createdBusLineId: number;
   let createdServiceTypeId: number;
   let createdBusId: number;
+  let createdSeatLayoutModelId: number;
   let createdSeatDiagramId: number;
   let createdBusModelId: number;
 
@@ -98,19 +104,18 @@ describe('Drivers Controller', () => {
         name: 'Test Bus Line',
         code: 'BL001',
         transporterId: createdTransporterId,
-        serviceTypeId: createdServiceTypeId, // Use the newly created service type ID
+        serviceTypeId: createdServiceTypeId,
         description: 'Test bus line for driver relations',
         active: true,
       });
       createdBusLineId = testBusLine.id;
 
       // Create test seat diagram first
-      const testSeatDiagram = await seatDiagramRepository.create({
-        name: 'Test Seat Diagram',
-        diagramNumber: 1001,
+      const testSeatLayoutModel = await createSeatLayoutModel({
+        name: 'Test Seat Layout Model',
+        description: 'Test Description',
         maxCapacity: 40,
         numFloors: 1,
-        allowsAdjacentSeat: true,
         seatsPerFloor: [
           {
             floorNumber: 1,
@@ -124,11 +129,11 @@ describe('Drivers Controller', () => {
         isFactoryDefault: true,
         active: true,
       });
-      createdSeatDiagramId = testSeatDiagram.id;
+      createdSeatLayoutModelId = testSeatLayoutModel.id;
 
       // Create a test bus model
       const testBusModel = await busModelRepository.create({
-        defaultSeatDiagramId: createdSeatDiagramId,
+        defaultSeatLayoutModelId: testSeatLayoutModel.id,
         manufacturer: 'Test Manufacturer',
         model: 'Test Model',
         year: 2023,
@@ -139,15 +144,35 @@ describe('Drivers Controller', () => {
       });
       createdBusModelId = testBusModel.id;
 
-      // Create test bus with the created model and seat diagram IDs
-      const testBus = await busRepository.create({
+      // Create test bus using the use case
+      const testBus = await createBusWithSeatDiagram({
         registrationNumber: 'TST123',
-        modelId: createdBusModelId, // Use the newly created bus model ID
-        seatDiagramId: createdSeatDiagramId, // Use the newly created seat diagram ID
+        modelId: createdBusModelId,
+        typeCode: 100,
+        brandCode: 'TST',
+        modelCode: 'MDL',
+        maxCapacity: 50,
+        economicNumber: 'ECO123',
+        licensePlateType: 'STANDARD',
+        circulationCard: 'CC12345',
+        year: 2023,
+        sctPermit: 'SCT12345',
+        vehicleId: 'VEH12345',
+        engineNumber: 'ENG12345',
+        serialNumber: 'SER12345',
+        chassisNumber: 'CHS12345',
+        baseCode: 'BASE001',
+        fuelEfficiency: 8.5,
+        serviceType: 'EXECUTIVE',
+        commercialTourism: false,
+        available: true,
+        tourism: false,
         status: BusStatus.ACTIVE,
+        gpsId: 'GPS12345',
         active: true,
       });
       createdBusId = testBus.id;
+      createdSeatDiagramId = testBus.seatDiagramId;
     } catch (error) {
       console.log('Error setting up test data:', error);
     }
@@ -187,6 +212,15 @@ describe('Drivers Controller', () => {
         await seatDiagramRepository.delete(createdSeatDiagramId);
       } catch (error) {
         console.log('Error cleaning up test seat diagram:', error);
+      }
+    }
+
+    // Clean up test seat layout model
+    if (createdSeatLayoutModelId) {
+      try {
+        await deleteSeatLayoutModel({ id: createdSeatLayoutModelId });
+      } catch (error) {
+        console.log('Error cleaning up test seat layout model:', error);
       }
     }
 
@@ -274,7 +308,7 @@ describe('Drivers Controller', () => {
 
     test('should update a driver', async () => {
       const updatedName = 'Jane Doe';
-      const updatedStatus = 'ON_LEAVE';
+      const updatedStatus = DriverStatus.ON_LEAVE;
       const updatedStatusDate = new Date();
 
       const response = await updateDriver({
@@ -308,7 +342,7 @@ describe('Drivers Controller', () => {
         email: 'delete.test@example.com',
         phoneNumber: '5559876543',
         driverType: 'STANDARD',
-        status: 'ACTIVE',
+        status: DriverStatus.ACTIVE,
         statusDate: new Date(),
       });
 
@@ -339,7 +373,7 @@ describe('Drivers Controller', () => {
           email: 'another.driver@example.com',
           phoneNumber: '5551112233',
           driverType: 'STANDARD',
-          status: 'ACTIVE',
+          status: DriverStatus.ACTIVE,
           statusDate: new Date(),
         }),
       ).rejects.toThrow();
@@ -383,7 +417,7 @@ describe('Drivers Controller', () => {
         email: 'aaa.driver@example.com',
         phoneNumber: '5551111111',
         driverType: 'STANDARD',
-        status: 'ACTIVE',
+        status: DriverStatus.ACTIVE,
         statusDate: new Date(),
       });
 
@@ -396,7 +430,7 @@ describe('Drivers Controller', () => {
         email: 'zzz.driver@example.com',
         phoneNumber: '5559999999',
         driverType: 'STANDARD',
-        status: 'ACTIVE',
+        status: DriverStatus.ACTIVE,
         statusDate: new Date(),
       });
 
@@ -448,7 +482,7 @@ describe('Drivers Controller', () => {
         email: 'active.driver@example.com',
         phoneNumber: '5551234568',
         driverType: 'STANDARD',
-        status: 'ACTIVE' as DriverStatus,
+        status: DriverStatus.ACTIVE,
         statusDate: new Date(),
       });
 
@@ -461,7 +495,7 @@ describe('Drivers Controller', () => {
         email: 'training.driver@example.com',
         phoneNumber: '5551234569',
         driverType: 'STANDARD',
-        status: 'IN_TRAINING' as DriverStatus,
+        status: DriverStatus.IN_TRAINING,
         statusDate: new Date(),
       });
 
@@ -495,10 +529,10 @@ describe('Drivers Controller', () => {
 
         const updatedDriver = await updateDriverStatus({
           id: activeDriver.id,
-          status: 'SUSPENDED' as DriverStatus,
+          status: DriverStatus.SUSPENDED,
         });
 
-        expect(updatedDriver.status).toBe('SUSPENDED');
+        expect(updatedDriver.status).toBe(DriverStatus.SUSPENDED);
         expect(updatedDriver.statusDate).toBeDefined();
 
         // The date should have changed but we can't predict exactly how
@@ -517,10 +551,10 @@ describe('Drivers Controller', () => {
       test('should transition from SUSPENDED back to ACTIVE', async () => {
         const updatedDriver = await updateDriverStatus({
           id: activeDriver.id,
-          status: 'ACTIVE' as DriverStatus,
+          status: DriverStatus.ACTIVE,
         });
 
-        expect(updatedDriver.status).toBe('ACTIVE');
+        expect(updatedDriver.status).toBe(DriverStatus.ACTIVE);
 
         // Update our reference for later tests
         activeDriver = updatedDriver;
@@ -529,10 +563,10 @@ describe('Drivers Controller', () => {
       test('should transition from IN_TRAINING to PROBATION', async () => {
         const updatedDriver = await updateDriverStatus({
           id: inTrainingDriver.id,
-          status: 'PROBATION' as DriverStatus,
+          status: DriverStatus.PROBATION,
         });
 
-        expect(updatedDriver.status).toBe('PROBATION');
+        expect(updatedDriver.status).toBe(DriverStatus.PROBATION);
 
         // Update our reference for later tests
         inTrainingDriver = updatedDriver;
@@ -544,7 +578,7 @@ describe('Drivers Controller', () => {
         await expect(
           updateDriverStatus({
             id: activeDriver.id,
-            status: 'IN_TRAINING' as DriverStatus,
+            status: DriverStatus.IN_TRAINING,
           }),
         ).rejects.toThrow();
       });
@@ -553,7 +587,7 @@ describe('Drivers Controller', () => {
         await expect(
           updateDriverStatus({
             id: inTrainingDriver.id,
-            status: 'IN_TRAINING' as DriverStatus,
+            status: DriverStatus.IN_TRAINING,
           }),
         ).rejects.toThrow();
       });
@@ -570,23 +604,23 @@ describe('Drivers Controller', () => {
           email: 'termination.driver@example.com',
           phoneNumber: '5551234570',
           driverType: 'STANDARD',
-          status: 'ACTIVE' as DriverStatus,
+          status: DriverStatus.ACTIVE,
           statusDate: new Date(),
         });
 
         // Terminate the driver
         const terminatedDriver = await updateDriverStatus({
           id: tempDriver.id,
-          status: 'TERMINATED' as DriverStatus,
+          status: DriverStatus.TERMINATED,
         });
 
-        expect(terminatedDriver.status).toBe('TERMINATED');
+        expect(terminatedDriver.status).toBe(DriverStatus.TERMINATED);
 
         // Try to reactivate a terminated driver - should fail
         await expect(
           updateDriverStatus({
             id: tempDriver.id,
-            status: 'ACTIVE' as DriverStatus,
+            status: DriverStatus.ACTIVE,
           }),
         ).rejects.toThrow();
 
@@ -603,13 +637,13 @@ describe('Drivers Controller', () => {
 
         expect(response).toBeDefined();
         expect(Array.isArray(response.statuses)).toBe(true);
-        expect(response.statuses).toContain('SUSPENDED');
-        expect(response.statuses).toContain('INACTIVE');
-        expect(response.statuses).toContain('ON_LEAVE');
-        expect(response.statuses).toContain('TERMINATED');
+        expect(response.statuses).toContain(DriverStatus.SUSPENDED);
+        expect(response.statuses).toContain(DriverStatus.INACTIVE);
+        expect(response.statuses).toContain(DriverStatus.ON_LEAVE);
+        expect(response.statuses).toContain(DriverStatus.TERMINATED);
         // Should not contain states that aren't valid transitions
-        expect(response.statuses).not.toContain('IN_TRAINING');
-        expect(response.statuses).not.toContain('PROBATION');
+        expect(response.statuses).not.toContain(DriverStatus.IN_TRAINING);
+        expect(response.statuses).not.toContain(DriverStatus.PROBATION);
       });
 
       test('should get possible next statuses for PROBATION driver', async () => {
@@ -619,18 +653,18 @@ describe('Drivers Controller', () => {
 
         expect(response).toBeDefined();
         expect(Array.isArray(response.statuses)).toBe(true);
-        expect(response.statuses).toContain('ACTIVE');
-        expect(response.statuses).toContain('TERMINATED');
+        expect(response.statuses).toContain(DriverStatus.ACTIVE);
+        expect(response.statuses).toContain(DriverStatus.TERMINATED);
         // Should not contain states that aren't valid transitions
-        expect(response.statuses).not.toContain('SUSPENDED');
-        expect(response.statuses).not.toContain('IN_TRAINING');
+        expect(response.statuses).not.toContain(DriverStatus.SUSPENDED);
+        expect(response.statuses).not.toContain(DriverStatus.IN_TRAINING);
       });
     });
 
     describe('Listing drivers by status', () => {
       test('should find drivers by ACTIVE status', async () => {
         const result = await listDriversByStatus({
-          status: 'ACTIVE' as DriverStatus,
+          status: DriverStatus.ACTIVE,
         });
 
         expect(result).toBeDefined();
@@ -643,12 +677,14 @@ describe('Drivers Controller', () => {
         expect(foundDriver).toBeDefined();
 
         // All drivers in result should have ACTIVE status
-        expect(result.drivers.every((d) => d.status === 'ACTIVE')).toBe(true);
+        expect(
+          result.drivers.every((d) => d.status === DriverStatus.ACTIVE),
+        ).toBe(true);
       });
 
       test('should find drivers by PROBATION status', async () => {
         const result = await listDriversByStatus({
-          status: 'PROBATION' as DriverStatus,
+          status: DriverStatus.PROBATION,
         });
 
         expect(result).toBeDefined();
@@ -661,9 +697,9 @@ describe('Drivers Controller', () => {
         expect(foundDriver).toBeDefined();
 
         // All drivers in result should have PROBATION status
-        expect(result.drivers.every((d) => d.status === 'PROBATION')).toBe(
-          true,
-        );
+        expect(
+          result.drivers.every((d) => d.status === DriverStatus.PROBATION),
+        ).toBe(true);
       });
     });
   });

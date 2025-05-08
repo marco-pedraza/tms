@@ -1,0 +1,66 @@
+import { busModelRepository } from '../bus-models/bus-models.repository';
+import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
+import { seatLayoutModelRepository } from '../seat-layout-models/seat-layout-models.repository';
+import { busRepository } from './buses.repository';
+import { CreateBusPayload, Bus } from './buses.types';
+import { CreateSeatDiagramPayload } from '../seat-diagrams/seat-diagrams.types';
+import { NotFoundError } from '../../shared/errors';
+
+/**
+ * Creates a new bus with a seat diagram. The seat diagram can be created in two ways:
+ * 1. Using a specific seat layout model ID provided in the payload
+ * 2. Using the default seat layout model from the bus model
+ *
+ * In both cases, the seat layout model is copied to a new seat diagram,
+ * allowing each bus to have its own independent seat diagram that can be modified
+ * without affecting other buses.
+ *
+ * Both the seat diagram and bus creation are wrapped in a transaction to ensure
+ * atomicity and prevent orphaned seat diagrams if bus creation fails.
+ *
+ * @param data - The bus data to create
+ * @returns {Promise<Bus>} The created bus with its seat diagram
+ * @throws {NotFoundError} If the bus model or seat layout model is not found
+ */
+export const createBusWithSeatDiagram = async (
+  data: CreateBusPayload,
+): Promise<Bus> => {
+  // Get the bus model
+  const busModel = await busModelRepository.findOne(data.modelId);
+  if (!busModel) {
+    throw new NotFoundError('Bus model not found');
+  }
+
+  // Use provided seat layout model or fallback to bus model's default
+  const seatLayoutModelId =
+    data.seatLayoutModelId ?? busModel.defaultSeatLayoutModelId;
+  const seatLayoutModel =
+    await seatLayoutModelRepository.findOne(seatLayoutModelId);
+  if (!seatLayoutModel) {
+    throw new NotFoundError('Seat layout model not found');
+  }
+
+  // Create a new seat diagram based on the layout model
+  const seatDiagramPayload: CreateSeatDiagramPayload = {
+    seatLayoutModelId: seatLayoutModel.id,
+    name: `${busModel.manufacturer} ${busModel.model} - ${data.registrationNumber}`,
+    maxCapacity: busModel.seatingCapacity,
+    numFloors: busModel.numFloors,
+    seatsPerFloor: seatLayoutModel.seatsPerFloor,
+    bathroomRows: seatLayoutModel.bathroomRows,
+    totalSeats: seatLayoutModel.totalSeats,
+    isFactoryDefault: seatLayoutModel.isFactoryDefault,
+    active: true,
+  };
+
+  // Create the seat diagram
+  const seatDiagram = await seatDiagramRepository.create(seatDiagramPayload);
+
+  // Create the bus with the new seat diagram
+  const busData = {
+    ...data,
+    seatDiagramId: seatDiagram.id,
+  };
+
+  return await busRepository.create(busData);
+};

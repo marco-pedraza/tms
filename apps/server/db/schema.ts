@@ -9,8 +9,15 @@ export { busLines } from '../inventory/bus-lines/bus-lines.schema';
 export { users } from '../users/users/users.schema';
 export { departments } from '../users/departments/departments.schema';
 export { tenants } from '../users/tenants/tenants.schema';
-export { permissions } from '../users/permissions/permissions.schema';
+export {
+  permissions,
+  permissionRelations,
+} from '../users/permissions/permissions.schema';
 export { roles, rolePermissions } from '../users/roles/roles.schema';
+export {
+  permissionGroups,
+  permissionGroupRelations,
+} from '../users/permission-groups/permission-groups.schema';
 export {
   userRoles,
   userPermissions,

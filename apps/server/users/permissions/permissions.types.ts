@@ -17,6 +17,8 @@ export interface Permission {
   /** Description of what the permission allows */
   description: string | null;
 
+  /** ID of the permission group this permission belongs to (nullable when un-assigned) */
+  permissionGroupId: number | null;
   /** Timestamp when the permission was created */
   createdAt: Date | null;
 
@@ -44,6 +46,9 @@ export interface CreatePermissionPayload {
    * Description of what the permission allows
    */
   description?: string;
+
+  /** ID of the permission group this permission belongs to */
+  permissionGroupId?: number | null;
 }
 
 /**
@@ -60,6 +65,9 @@ export interface UpdatePermissionPayload {
    * Description of what the permission allows
    */
   description?: string;
+
+  /** ID of the permission group this permission belongs to */
+  permissionGroupId?: number | null;
 }
 
 /**

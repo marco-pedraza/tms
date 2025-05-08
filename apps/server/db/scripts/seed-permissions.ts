@@ -3,10 +3,8 @@ import path from 'path';
 import { glob } from 'glob';
 import * as ts from 'typescript';
 import { permissionRepository } from '../../users/permissions/permissions.repository';
+import { userRepository } from '../../users/users/users.repository';
 import { userPermissionsRepository } from '../../users/user-permissions/user-permissions.repository';
-import { db } from '../database';
-import { users } from '../../users/users/users.schema';
-import { eq } from 'drizzle-orm';
 
 /**
  * Main function to seed permissions and assign them to system admins
@@ -105,10 +103,11 @@ async function seedPermissions() {
     console.log('\nAssigning permissions to system admin users...');
 
     // Get all system admin users
-    const systemAdmins = await db
-      .select()
-      .from(users)
-      .where(eq(users.isSystemAdmin, true));
+    const systemAdmins = await userRepository.findAllBy(
+      users.isSystemAdmin,
+      true,
+    );
+
     console.log(`Found ${systemAdmins.length} system admin users`);
 
     if (systemAdmins.length === 0) {

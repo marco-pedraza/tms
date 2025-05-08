@@ -42,9 +42,9 @@ export const getPermission = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listPermissions = api(
-  { method: 'GET', path: '/permissions', expose: true, auth: true },
+  { method: 'POST', path: '/get-permissions', expose: true, auth: true },
   async (): Promise<Permissions> => {
-    return await permissionRepository.findAll();
+    return await permissionRepository.findAll({});
   },
 );
 

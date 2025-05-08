@@ -20,6 +20,7 @@
     "seed:permissions": "encore exec -- npx tsx db/scripts/seed-permissions.ts"
   },
   "devDependencies": {
+    "@praha/drizzle-factory": "^1.0.2",
     "@repo/eslint-config": "*",
     "@types/node": "^20.5.7",
     "drizzle-kit": "^0.27.1",

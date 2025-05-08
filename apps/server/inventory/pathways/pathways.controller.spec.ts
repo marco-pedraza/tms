@@ -1,4 +1,4 @@
-import { expect, describe, test, afterAll } from 'vitest';
+import { expect, describe, test, afterAll, beforeAll } from 'vitest';
 import {
   createPathway,
   getPathway,
@@ -15,6 +15,7 @@ import {
   createPathwayService,
   deletePathwayService,
 } from '../pathway-services/pathway-services.controller';
+import { pathwayRepository } from './pathways.repository';
 
 describe('Pathways Controller', () => {
   // Test data and setup
@@ -85,6 +86,10 @@ describe('Pathways Controller', () => {
     });
     return trackPathway(pathway.id);
   };
+
+  beforeAll(async () => {
+    await pathwayRepository.deleteAll();
+  });
 
   // Clean up after all tests
   afterAll(async () => {

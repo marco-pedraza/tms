@@ -1,0 +1,334 @@
+import { routeRepository } from './routes.repository';
+import { terminalRepository } from '../terminals/terminals.repository';
+import {
+  CreateRoutePayload,
+  CreateRoutePayloadWithCityIds,
+  CreateSimpleRoutePayload,
+  Route,
+} from './routes.types';
+import { CreatePathwayPayload } from '../pathways/pathways.types';
+import { pathwayRepository } from '../pathways/pathways.repository';
+import { routeSegmentRepository } from '../route-segment/route-segment.repository';
+import { routeSegments } from '../route-segment/route-segment.schema';
+import { ValidationError } from '../../shared/errors';
+
+const ROUTE_ERRORS = {
+  SAME_TERMINAL: 'Origin and destination terminals cannot be the same',
+  REPEATED_SEGMENTS: 'Route segments cannot be repeated',
+  ROUTES_NOT_FOUND: (ids: number[]) =>
+    `Routes with ids [${ids.join(', ')}] not found or are compound routes`,
+  INVALID_CONNECTION: (idA: number, idB: number) =>
+    `Invalid route connection between route id ${idA} and route id ${idB}: origin and destination terminals mismatch`,
+  COMPOUND_ROUTE_MINIMUM: 'A compound route requires at least two routes',
+  FAILED_CREATE_SEGMENTS: 'Failed to create all route segments',
+  FAILED_REPLACE_SEGMENTS: 'Failed to replace route segments',
+};
+
+async function extractCityIds(
+  payload: CreateRoutePayload | CreateSimpleRoutePayload,
+) {
+  const { originTerminalId, destinationTerminalId } = payload;
+
+  const originTerminal = await terminalRepository.findOne(originTerminalId);
+  const destinationTerminal = await terminalRepository.findOne(
+    destinationTerminalId,
+  );
+
+  return {
+    originCityId: originTerminal.cityId,
+    destinationCityId: destinationTerminal.cityId,
+  };
+}
+
+/**
+ * Creates a simple route by first creating a pathway and then creating a route that uses it
+ *
+ * @param payload - The payload containing both pathway and route information
+ * @returns The created route
+ */
+async function createSimpleRoute(payload: CreateSimpleRoutePayload) {
+  const {
+    // Pathway properties
+    pathwayName,
+    name,
+    distance,
+    typicalTime,
+    meta,
+    tollRoad,
+    active,
+
+    // Route properties
+    originTerminalId,
+    destinationTerminalId,
+    baseTime,
+    description,
+    connectionCount = 0,
+    isCompound = false,
+  } = payload;
+
+  if (originTerminalId === destinationTerminalId) {
+    throw new ValidationError(ROUTE_ERRORS.SAME_TERMINAL);
+  }
+
+  // Create the pathway first
+  const pathwayPayload: CreatePathwayPayload = {
+    name: pathwayName || name, // Use pathwayName if provided, otherwise use route name
+    distance,
+    typicalTime,
+    meta,
+    tollRoad,
+    active,
+  };
+
+  const { originCityId, destinationCityId } = await extractCityIds(payload);
+
+  const pathway = await pathwayRepository.create(pathwayPayload);
+
+  // Create the route using the newly created pathway
+  const routePayload: CreateRoutePayloadWithCityIds = {
+    name,
+    description,
+    originTerminalId,
+    destinationTerminalId,
+    originCityId,
+    destinationCityId,
+    pathwayId: pathway.id,
+    distance,
+    baseTime,
+    isCompound,
+    connectionCount,
+    totalTravelTime: typicalTime,
+    totalDistance: distance,
+  };
+
+  const createdRoute = await routeRepository.create(routePayload);
+
+  return createdRoute;
+}
+
+function validateRouteIds(routeIds: number[], simpleRoutes: Route[]) {
+  const hasDuplicates = new Set(routeIds).size !== routeIds.length;
+
+  if (hasDuplicates) {
+    throw new ValidationError(ROUTE_ERRORS.REPEATED_SEGMENTS);
+  }
+
+  // Validate all routes exist
+  if (simpleRoutes.length !== routeIds.length) {
+    const missingRouteIds = routeIds.filter(
+      (id) => !simpleRoutes.some((route) => route.id === id),
+    );
+    throw new ValidationError(ROUTE_ERRORS.ROUTES_NOT_FOUND(missingRouteIds));
+  }
+
+  // Validate route connections
+  validateRouteConnections(simpleRoutes);
+}
+
+function calculateRouteTotals(routes: Route[]) {
+  const firstRoute = routes[0];
+  const lastRoute = routes[routes.length - 1];
+
+  const totalDistance = routes.reduce((sum, route) => sum + route.distance, 0);
+  const totalTravelTime = routes.reduce(
+    (sum, route) => sum + route.totalTravelTime,
+    0,
+  );
+  const baseTime = routes.reduce((sum, route) => sum + route.baseTime, 0);
+
+  return {
+    firstRoute,
+    lastRoute,
+    totalDistance,
+    totalTravelTime,
+    baseTime,
+  };
+}
+
+async function createCompoundRoute({
+  name,
+  description,
+  routeIds,
+}: {
+  name: string;
+  description: string;
+  routeIds: number[];
+}) {
+  // Get all required routes
+  const simpleRoutes = await routeRepository.findSimpleRoutesByIds(routeIds);
+
+  // Validate route IDs and connections
+  validateRouteIds(routeIds, simpleRoutes);
+
+  // Order routes according to routeIds
+  const simpleRoutesOrdered = routeIds
+    .map((id) => simpleRoutes.find((route) => route.id === id))
+    .filter((route): route is NonNullable<typeof route> => route !== undefined);
+
+  // Validate minimum number of segments
+  if (simpleRoutesOrdered.length < 2) {
+    throw new ValidationError(ROUTE_ERRORS.COMPOUND_ROUTE_MINIMUM);
+  }
+
+  // Create compound route payload from children
+  const compoundRoutePayload = createCompoundRouteFromChildren(
+    name,
+    description,
+    simpleRoutesOrdered,
+  );
+
+  // Create the parent route
+  const compoundRoute = await routeRepository.create(compoundRoutePayload);
+
+  // Create route segments in a separate transaction
+  await routeSegmentRepository.transaction(async (tx) => {
+    try {
+      for (const [index, route] of simpleRoutesOrdered.entries()) {
+        await tx.create({
+          parentRouteId: compoundRoute.id,
+          segmentRouteId: route.id,
+          sequence: index + 1,
+        });
+      }
+    } catch {
+      await routeRepository.delete(compoundRoute.id);
+      throw new Error(ROUTE_ERRORS.FAILED_CREATE_SEGMENTS);
+    }
+  });
+
+  return routeRepository.findOneWithFullDetails(compoundRoute.id);
+}
+
+function validateRouteConnections(routes: Route[]) {
+  routes.forEach((route, index) => {
+    const nextRoute = routes[index + 1];
+    if (!nextRoute) {
+      return;
+    }
+
+    if (route.destinationTerminalId !== nextRoute.originTerminalId) {
+      throw new ValidationError(
+        ROUTE_ERRORS.INVALID_CONNECTION(route.id, nextRoute.id),
+      );
+    }
+  });
+}
+
+function createCompoundRouteFromChildren(
+  name: string,
+  description: string,
+  routes: Route[],
+): CreateRoutePayloadWithCityIds {
+  if (routes.length < 2) {
+    throw new ValidationError(ROUTE_ERRORS.COMPOUND_ROUTE_MINIMUM);
+  }
+
+  const firstRoute = routes[0];
+  const lastRoute = routes[routes.length - 1];
+
+  // Calculate total distance and time by summing all routes
+  const totalDistance = routes.reduce((sum, route) => sum + route.distance, 0);
+  const totalTravelTime = routes.reduce(
+    (sum, route) => sum + route.totalTravelTime,
+    0,
+  );
+  const baseTime = routes.reduce((sum, route) => sum + route.baseTime, 0);
+
+  return {
+    name,
+    description,
+    originTerminalId: firstRoute.originTerminalId,
+    originCityId: firstRoute.originCityId,
+    destinationTerminalId: lastRoute.destinationTerminalId,
+    destinationCityId: lastRoute.destinationCityId,
+    baseTime,
+    isCompound: true,
+    connectionCount: routes.length - 1,
+    distance: totalDistance,
+    totalDistance,
+    totalTravelTime,
+  };
+}
+
+async function updateCompoundRouteSegments({
+  compoundRouteId,
+  routeIds,
+}: {
+  compoundRouteId: number;
+  routeIds: number[];
+}) {
+  // If compound route is not found, throw an error
+  await routeRepository.findCompoundRoute(compoundRouteId);
+
+  // Get all required routes
+  const simpleRoutes = await routeRepository.findSimpleRoutesByIds(routeIds);
+
+  // Validate route IDs and connections
+  validateRouteIds(routeIds, simpleRoutes);
+
+  // Order routes according to routeIds
+  const simpleRoutesOrdered = routeIds
+    .map((id) => simpleRoutes.find((route) => route.id === id))
+    .filter((route): route is NonNullable<typeof route> => route !== undefined);
+
+  // Validate minimum number of segments
+  if (simpleRoutesOrdered.length < 2) {
+    throw new ValidationError(ROUTE_ERRORS.COMPOUND_ROUTE_MINIMUM);
+  }
+
+  // Execute the update in a transaction
+  await routeSegmentRepository.transaction(async (tx) => {
+    try {
+      // Delete existing segments
+      const existingSegments = await routeSegmentRepository.findAllBy(
+        routeSegments.parentRouteId,
+        compoundRouteId,
+      );
+
+      for (const segment of existingSegments) {
+        await tx.delete(segment.id);
+      }
+
+      // Create new segments
+      for (const [index, route] of simpleRoutesOrdered.entries()) {
+        await tx.create({
+          parentRouteId: compoundRouteId,
+          segmentRouteId: route.id,
+          sequence: index + 1,
+        });
+      }
+
+      // Calculate and update route totals
+      const {
+        firstRoute,
+        lastRoute,
+        totalDistance,
+        totalTravelTime,
+        baseTime,
+      } = calculateRouteTotals(simpleRoutesOrdered);
+
+      await routeRepository.update(compoundRouteId, {
+        originTerminalId: firstRoute.originTerminalId,
+        destinationTerminalId: lastRoute.destinationTerminalId,
+        connectionCount: simpleRoutesOrdered.length - 1,
+        totalDistance,
+        totalTravelTime,
+        baseTime,
+      });
+    } catch {
+      throw new Error(ROUTE_ERRORS.FAILED_REPLACE_SEGMENTS);
+    }
+  });
+
+  return routeRepository.findOneWithFullDetails(compoundRouteId);
+}
+
+export const createRouteUseCases = () => {
+  return {
+    createSimpleRoute,
+    createCompoundRoute,
+    updateCompoundRouteSegments,
+  };
+};
+
+export const routeUseCases = createRouteUseCases();

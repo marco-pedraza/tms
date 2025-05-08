@@ -42,3 +42,8 @@ export {
   pathwayServiceAssignments,
   pathwayServiceAssignmentsRelations,
 } from '../inventory/pathway-service-assignments/pathway-service-assignments.schema';
+export { routes, routesRelations } from '../inventory/routes/routes.schema';
+export {
+  routeSegments,
+  routeSegmentsRelations,
+} from '../inventory/route-segment/route-segment.schema';

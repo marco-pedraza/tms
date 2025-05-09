@@ -11,9 +11,6 @@ import { db } from '../db-service';
 import { validateOperatingHours } from './terminals.utils';
 import { createSlug } from '../../shared/utils';
 
-type CreateTerminalPayloadWithSlug = CreateTerminalPayload & { slug: string };
-type UpdateTerminalPayloadWithSlug = UpdateTerminalPayload & { slug?: string };
-
 const SLUG_PREFIX = 't';
 /**
  * Creates a repository for managing terminal entities
@@ -22,10 +19,12 @@ const SLUG_PREFIX = 't';
 export const createTerminalRepository = () => {
   const baseRepository = createBaseRepository<
     Terminal,
-    CreateTerminalPayloadWithSlug,
-    UpdateTerminalPayloadWithSlug,
+    CreateTerminalPayload & { slug: string },
+    UpdateTerminalPayload & { slug?: string },
     typeof terminals
-  >(db, terminals, 'Terminal');
+  >(db, terminals, 'Terminal', {
+    searchableFields: [terminals.name, terminals.code, terminals.slug],
+  });
 
   /**
    * Creates a new terminal with auto-generated slug
@@ -36,15 +35,8 @@ export const createTerminalRepository = () => {
     if (data.operatingHours) {
       validateOperatingHours(data.operatingHours);
     }
-
-    // Generate slug from the terminal name with 't' prefix
     const slug = createSlug(data.name, SLUG_PREFIX);
-
-    // Add slug to the data and create the terminal
-    return await baseRepository.create({
-      ...data,
-      slug,
-    });
+    return await baseRepository.create({ ...data, slug });
   };
 
   /**
@@ -60,16 +52,10 @@ export const createTerminalRepository = () => {
     if (data.operatingHours) {
       validateOperatingHours(data.operatingHours);
     }
-
-    const updateData: UpdateTerminalPayloadWithSlug = {
-      ...data,
-    };
-
-    // If name is changing, update the slug accordingly with 't' prefix
+    const updateData: UpdateTerminalPayload & { slug?: string } = { ...data };
     if (data.name) {
       updateData.slug = createSlug(data.name, SLUG_PREFIX);
     }
-
     return await baseRepository.update(id, updateData);
   };
 

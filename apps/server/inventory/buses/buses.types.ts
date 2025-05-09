@@ -1,5 +1,5 @@
 import { MinLen, MatchesRegexp } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**
  * Enum for bus operational status
@@ -31,91 +31,91 @@ export interface Bus {
   seatDiagramId: number;
 
   /** Bus type code */
-  typeCode?: number;
+  typeCode?: number | null;
 
   /** Brand code */
-  brandCode?: string;
+  brandCode?: string | null;
 
   /** Model code */
-  modelCode?: string;
+  modelCode?: string | null;
 
   /** Maximum passenger capacity */
-  maxCapacity?: number;
+  maxCapacity?: number | null;
 
   /** Date of purchase */
-  purchaseDate?: Date;
+  purchaseDate?: string | null;
 
   /** Economic number */
-  economicNumber?: string;
+  economicNumber?: string | null;
 
   /** Type of license plate */
-  licensePlateType?: string;
+  licensePlateType?: string | null;
 
   /** Circulation card */
-  circulationCard?: string;
+  circulationCard?: string | null;
 
   /** Year of manufacture */
-  year?: number;
+  year?: number | null;
 
   /** SCT permit */
-  sctPermit?: string;
+  sctPermit?: string | null;
 
   /** Vehicle ID */
-  vehicleId?: string;
+  vehicleId?: string | null;
 
   /** Gross vehicle weight */
-  grossVehicleWeight?: number;
+  grossVehicleWeight?: number | null;
 
   /** Engine number */
-  engineNumber?: string;
+  engineNumber?: string | null;
 
   /** Serial number */
-  serialNumber?: string;
+  serialNumber?: string | null;
 
   /** Chassis number */
-  chassisNumber?: string;
+  chassisNumber?: string | null;
 
   /** SAP key */
-  sapKey?: string;
+  sapKey?: string | null;
 
   /** Base/station code */
-  baseCode?: string;
+  baseCode?: string | null;
 
   /** ERP client number */
-  erpClientNumber?: string;
+  erpClientNumber?: string | null;
 
   /** Cost center */
-  costCenter?: string;
+  costCenter?: string | null;
 
   /** Fuel efficiency (km/liter) */
-  fuelEfficiency?: number;
+  fuelEfficiency?: number | null;
 
   /** Alternate company */
-  alternateCompany?: string;
+  alternateCompany?: string | null;
 
   /** Service type */
-  serviceType?: string;
+  serviceType?: string | null;
 
   /** Commercial tourism module flag */
-  commercialTourism?: boolean;
+  commercialTourism?: boolean | null;
 
   /** Available for use flag */
-  available?: boolean;
+  available?: boolean | null;
 
   /** Tourism usage flag */
-  tourism?: boolean;
+  tourism?: boolean | null;
 
   /** Current operational status */
   status: BusStatus;
 
   /** Last maintenance date */
-  lastMaintenanceDate?: Date;
+  lastMaintenanceDate?: string | null;
 
   /** Next scheduled maintenance date */
-  nextMaintenanceDate?: Date;
+  nextMaintenanceDate?: string | null;
 
   /** GPS identifier */
-  gpsId?: string;
+  gpsId?: string | null;
 
   /** Whether the bus is active */
   active: boolean;
@@ -144,10 +144,10 @@ export interface CreateBusPayload {
   modelId: number;
 
   /**
-   * ID of the seat layout model (optional, will be created from bus model's default layout)
-   * Must be a positive number if provided
+   * ID of the seat diagram
+   * Must be a positive number
    */
-  seatLayoutModelId?: number;
+  seatDiagramId?: number;
 
   /**
    * Bus type code
@@ -172,7 +172,7 @@ export interface CreateBusPayload {
   /**
    * Date of purchase
    */
-  purchaseDate?: Date;
+  purchaseDate?: Date | null;
 
   /**
    * Economic number
@@ -320,6 +320,12 @@ export interface UpdateBusPayload {
    * Must be a positive number
    */
   modelId?: number;
+
+  /**
+   * ID of the seat diagram
+   * Must be a positive number
+   */
+  seatDiagramId?: number;
 
   /**
    * Bus type code
@@ -484,3 +490,18 @@ export interface Buses {
  * Paginated list of buses
  */
 export type PaginatedBuses = PaginatedResult<Bus>;
+
+/**
+ * Query options for buses listing
+ */
+export interface BusesQueryOptions {
+  orderBy?: { field: keyof Bus; direction: 'asc' | 'desc' }[];
+  filters?: Partial<Bus>;
+}
+
+/**
+ * Paginated parameters with query options for buses
+ */
+export interface PaginationParamsBuses
+  extends PaginationParams,
+    BusesQueryOptions {}

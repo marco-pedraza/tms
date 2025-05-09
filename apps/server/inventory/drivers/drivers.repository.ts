@@ -65,7 +65,16 @@ export const createDriverRepository = () => {
     CreateDriverPayload,
     UpdateDriverPayload,
     typeof drivers
-  >(db, drivers, 'Driver');
+  >(db, drivers, 'Driver', {
+    searchableFields: [
+      drivers.fullName,
+      drivers.driverKey,
+      drivers.rfc,
+      drivers.curp,
+      drivers.email,
+      drivers.phoneNumber,
+    ],
+  });
 
   // Create a state machine for driver statuses
   const stateMachine = createBaseStateMachine<DriverStatus>(
@@ -127,19 +136,6 @@ export const createDriverRepository = () => {
     }
 
     return await baseRepository.update(id, data);
-  };
-
-  /**
-   * Retrieves all drivers
-   * @returns {Promise<Drivers>} Object containing array of drivers
-   */
-  const findAll = async (): Promise<Drivers> => {
-    const driversList = await baseRepository.findAll({
-      orderBy: [{ field: 'fullName', direction: 'asc' }],
-    });
-    return {
-      drivers: driversList,
-    };
   };
 
   /**
@@ -289,7 +285,6 @@ export const createDriverRepository = () => {
     ...baseRepository,
     create,
     update,
-    findAll,
     findAllByStatus,
     findAllByTransporter,
     findAllByBusLine,

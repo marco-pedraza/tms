@@ -1,5 +1,5 @@
 import { MinLen, MatchesRegexp, Min, Max } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**
  * Represents a facility available at a terminal
@@ -230,7 +230,13 @@ export interface Terminals {
   terminals: Terminal[];
 }
 
-/**
- * Paginated response type for the list terminals endpoint
- */
+export interface TerminalsQueryOptions {
+  orderBy?: { field: keyof Terminal; direction: 'asc' | 'desc' }[];
+  filters?: Partial<Terminal>;
+}
+
 export type PaginatedTerminals = PaginatedResult<Terminal>;
+
+export interface PaginationParamsTerminals
+  extends PaginationParams,
+    TerminalsQueryOptions {}

@@ -16,6 +16,8 @@ import { BusStatus } from './buses.types';
 /**
  * Database table for buses
  */
+
+// TODO: change numeric to reals and Dates to timestamps
 export const buses = pgTable('buses', {
   id: serial('id').primaryKey(),
   registrationNumber: text('registration_number').notNull().unique(), // License plate (Placas)

@@ -11,8 +11,10 @@ import {
   getBusesByStatus,
   updateBusStatus,
   getAllowedBusStatusTransitions,
+  searchBuses,
+  searchBusesPaginated,
 } from './buses.controller';
-import { BusStatus } from './buses.types';
+import { BusStatus, Bus, CreateBusPayload } from './buses.types';
 import {
   createBusModel,
   deleteBusModel,
@@ -28,7 +30,7 @@ describe('Buses Controller', () => {
   let busModelId: number; // We need a valid bus model ID for bus tests
   let defaultSeatLayoutModelId: number; // We need a valid default seat layout model ID for bus tests
 
-  const testBus = {
+  const testBus: CreateBusPayload = {
     registrationNumber: 'TEST001',
     modelId: 0, // This will be populated in beforeAll
     typeCode: 100,
@@ -101,21 +103,21 @@ describe('Buses Controller', () => {
   });
 
   afterAll(async () => {
-    // Clean up the created bus if any
+    // Clean up the created bus and seat diagram if any
     if (createdBusId) {
       try {
         await deleteBus({ id: createdBusId });
-      } catch (error) {
-        console.log('Error cleaning up test bus:', error);
+      } catch {
+        // Silent error handling for cleanup
       }
     }
 
-    // Clean up the created seat diagram if any
+    // Clean up the created seat diagram directly if needed
     if (createdSeatDiagramId) {
       try {
         await seatDiagramRepository.delete(createdSeatDiagramId);
-      } catch (error) {
-        console.log('Error cleaning up test seat diagram:', error);
+      } catch {
+        // Silent error handling for cleanup
       }
     }
 
@@ -123,8 +125,8 @@ describe('Buses Controller', () => {
     if (busModelId) {
       try {
         await deleteBusModel({ id: busModelId });
-      } catch (error) {
-        console.log('Error cleaning up test bus model:', error);
+      } catch {
+        // Silent error handling for cleanup
       }
     }
 
@@ -132,8 +134,8 @@ describe('Buses Controller', () => {
     if (defaultSeatLayoutModelId) {
       try {
         await deleteSeatLayoutModel({ id: defaultSeatLayoutModelId });
-      } catch (error) {
-        console.log('Error cleaning up test seat layout model:', error);
+      } catch {
+        // Silent error handling for cleanup
       }
     }
   });
@@ -183,7 +185,7 @@ describe('Buses Controller', () => {
     });
 
     test('should list all buses', async () => {
-      const response = await listBuses();
+      const response = await listBuses({});
 
       expect(response).toBeDefined();
       expect(response.buses).toBeDefined();
@@ -231,7 +233,7 @@ describe('Buses Controller', () => {
     });
   });
 
-  describe('findAllPaginated', () => {
+  describe('pagination', () => {
     test('should return paginated buses with default parameters', async () => {
       const response = await listBusesPaginated({});
 
@@ -255,6 +257,16 @@ describe('Buses Controller', () => {
       expect(response.pagination.currentPage).toBe(1);
       expect(response.pagination.pageSize).toBe(5);
       expect(response.data.length).toBeLessThanOrEqual(5);
+    });
+
+    test('should return non-paginated list for dropdowns', async () => {
+      const response = await listBuses({});
+
+      expect(response.buses).toBeDefined();
+      expect(Array.isArray(response.buses)).toBe(true);
+      expect(response.buses.length).toBeGreaterThan(0);
+      // No pagination info should be present
+      expect(response).not.toHaveProperty('pagination');
     });
   });
 
@@ -283,6 +295,204 @@ describe('Buses Controller', () => {
       expect(response).toBeDefined();
       expect(response.buses).toBeDefined();
       expect(Array.isArray(response.buses)).toBe(true);
+    });
+  });
+
+  describe('search functionality', () => {
+    test('should search buses', async () => {
+      // Create a unique bus for search testing
+      const searchableBus = await createBus({
+        registrationNumber: 'SEARCH123',
+        modelId: testBus.modelId,
+        seatDiagramId: testBus.seatDiagramId,
+        economicNumber: 'SEARCHABLE',
+      });
+
+      try {
+        // Search for the bus by term
+        const response = await searchBuses({ term: 'SEARCH' });
+
+        expect(response.buses).toBeDefined();
+        expect(Array.isArray(response.buses)).toBe(true);
+        expect(response.buses.some((b) => b.id === searchableBus.id)).toBe(
+          true,
+        );
+      } finally {
+        // Clean up
+        await deleteBus({ id: searchableBus.id });
+      }
+    });
+
+    test('should search buses with pagination', async () => {
+      const response = await searchBusesPaginated({
+        term: 'TEST',
+        page: 1,
+        pageSize: 5,
+      });
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
+    });
+  });
+
+  describe('ordering and filtering', () => {
+    // Test buses for ordering and filtering tests
+    const testBuses: Bus[] = [];
+
+    beforeAll(async () => {
+      // Create test buses with different properties
+      const buses = [
+        {
+          registrationNumber: 'ORDR001',
+          modelId: testBus.modelId,
+          seatDiagramId: testBus.seatDiagramId,
+          economicNumber: 'ALPHA',
+          status: BusStatus.ACTIVE,
+          active: true,
+        },
+        {
+          registrationNumber: 'ORDR002',
+          modelId: testBus.modelId,
+          seatDiagramId: testBus.seatDiagramId,
+          economicNumber: 'BETA',
+          status: BusStatus.MAINTENANCE,
+          active: false,
+        },
+        {
+          registrationNumber: 'ORDR003',
+          modelId: testBus.modelId,
+          seatDiagramId: testBus.seatDiagramId,
+          economicNumber: 'GAMMA',
+          status: BusStatus.ACTIVE,
+          active: true,
+        },
+      ];
+
+      for (const bus of buses) {
+        const created = await createBus(bus);
+        testBuses.push(created);
+      }
+    });
+
+    afterAll(async () => {
+      // Clean up test buses
+      for (const bus of testBuses) {
+        try {
+          await deleteBus({ id: bus.id });
+        } catch (error) {
+          // Silent error handling for cleanup
+        }
+      }
+    });
+
+    test('should order buses by registration number descending', async () => {
+      const response = await listBuses({
+        orderBy: [{ field: 'registrationNumber', direction: 'desc' }],
+      });
+
+      const regNumbers = response.buses.map((b) => b.registrationNumber);
+      // Check if registration numbers are in descending order
+      for (let i = 0; i < regNumbers.length - 1; i++) {
+        expect(regNumbers[i] >= regNumbers[i + 1]).toBe(true);
+      }
+    });
+
+    test('should filter buses by active status', async () => {
+      const response = await listBuses({
+        filters: { active: true },
+      });
+
+      // All returned buses should be active
+      expect(response.buses.every((b) => b.active === true)).toBe(true);
+      // Should include our active test buses
+      const activeTestBusIds = testBuses
+        .filter((b) => b.active)
+        .map((b) => b.id);
+
+      for (const id of activeTestBusIds) {
+        expect(response.buses.some((b) => b.id === id)).toBe(true);
+      }
+    });
+
+    test('should combine ordering and filtering in paginated results', async () => {
+      const response = await listBusesPaginated({
+        filters: { active: true },
+        orderBy: [{ field: 'registrationNumber', direction: 'asc' }],
+        page: 1,
+        pageSize: 10,
+      });
+
+      // Check filtering
+      expect(response.data.every((b) => b.active === true)).toBe(true);
+
+      // Check ordering (ascending)
+      const regNumbers = response.data.map((b) => b.registrationNumber);
+      for (let i = 0; i < regNumbers.length - 1; i++) {
+        expect(regNumbers[i] <= regNumbers[i + 1]).toBe(true);
+      }
+
+      // Check pagination properties
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(10);
+    });
+
+    test('should allow multi-field ordering', async () => {
+      // Create buses with same active status but different registration numbers
+      const sameActiveStatusBuses = [
+        {
+          registrationNumber: 'MULTI1',
+          modelId: testBus.modelId,
+          seatDiagramId: testBus.seatDiagramId,
+          economicNumber: 'MULTI-A',
+          status: BusStatus.ACTIVE,
+          active: true,
+        },
+        {
+          registrationNumber: 'MULTI2',
+          modelId: testBus.modelId,
+          seatDiagramId: testBus.seatDiagramId,
+          economicNumber: 'MULTI-B',
+          status: BusStatus.ACTIVE,
+          active: true,
+        },
+      ];
+
+      const createdBuses: Bus[] = [];
+
+      try {
+        for (const bus of sameActiveStatusBuses) {
+          const created = await createBus(bus);
+          createdBuses.push(created);
+        }
+
+        // Order by active status first, then by registration number
+        const response = await listBuses({
+          orderBy: [
+            { field: 'active', direction: 'desc' },
+            { field: 'registrationNumber', direction: 'asc' },
+          ],
+        });
+
+        // Get all active buses and verify they're ordered by registration number
+        const activeBuses = response.buses.filter((b) => b.active === true);
+        const activeRegNumbers = activeBuses.map((b) => b.registrationNumber);
+
+        for (let i = 0; i < activeRegNumbers.length - 1; i++) {
+          if (activeBuses[i].active === activeBuses[i + 1].active) {
+            // If active status is the same, registration numbers should be in ascending order
+            expect(activeRegNumbers[i] <= activeRegNumbers[i + 1]).toBe(true);
+          }
+        }
+      } finally {
+        // Clean up
+        for (const bus of createdBuses) {
+          await deleteBus({ id: bus.id });
+        }
+      }
     });
   });
 });

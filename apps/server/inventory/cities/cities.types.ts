@@ -1,5 +1,5 @@
 import { MinLen, MatchesRegexp, Min, Max } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**
  * Base interface representing a city entity
@@ -41,13 +41,13 @@ export interface City {
  */
 export interface CreateCityPayload {
   /**
-   * The name of the city
+   * Name of the city
    * Must contain only letters (with or without accents) and spaces
    */
   name: string & MinLen<1> & MatchesRegexp<'^[A-Za-zÀ-ÖØ-öø-ÿ\\s]+$'>;
 
   /**
-   * The ID of the state this city belongs to
+   * ID of the state this city belongs to
    * Must be a positive number
    */
   stateId: number & Min<1>;
@@ -84,13 +84,13 @@ export interface CreateCityPayload {
  */
 export interface UpdateCityPayload {
   /**
-   * The name of the city
+   * Name of the city
    * Must contain only letters (with or without accents) and spaces
    */
   name?: string & MinLen<1> & MatchesRegexp<'^[A-Za-zÀ-ÖØ-öø-ÿ\\s]+$'>;
 
   /**
-   * The ID of the state this city belongs to
+   * ID of the state this city belongs to
    * Must be a positive number
    */
   stateId?: number & Min<1>;
@@ -129,7 +129,16 @@ export interface Cities {
   cities: City[];
 }
 
+export interface CitiesQueryOptions {
+  orderBy?: { field: keyof City; direction: 'asc' | 'desc' }[];
+  filters?: Partial<City>;
+}
+
 /**
  * Paginated response type for the list cities endpoint
  */
 export type PaginatedCities = PaginatedResult<City>;
+
+export interface PaginationParamsCities
+  extends PaginationParams,
+    CitiesQueryOptions {}

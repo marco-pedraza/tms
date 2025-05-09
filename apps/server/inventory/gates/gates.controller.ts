@@ -4,9 +4,11 @@ import type {
   CreateGatePayload,
   UpdateGatePayload,
   Gate,
+  Gates,
   PaginatedGates,
+  PaginationParamsGates,
+  GatesQueryOptions,
 } from './gates.types';
-import { PaginationParams } from '../../shared/types';
 
 /**
  * Creates a new gate.
@@ -15,7 +17,7 @@ import { PaginationParams } from '../../shared/types';
  * @throws {APIError} If the gate creation fails
  */
 export const createGate = api(
-  { method: 'POST', path: '/gates', expose: true },
+  { expose: true, method: 'POST', path: '/gates' },
   async (params: CreateGatePayload): Promise<Gate> => {
     return await gateRepository.create(params);
   },
@@ -29,38 +31,37 @@ export const createGate = api(
  * @throws {APIError} If the gate is not found or retrieval fails
  */
 export const getGate = api(
-  { method: 'GET', path: '/gates/:id', expose: true },
+  { expose: true, method: 'GET', path: '/gates/:id' },
   async ({ id }: { id: number }): Promise<Gate> => {
     return await gateRepository.findOne(id);
   },
 );
 
 /**
- * Retrieves gates with pagination.
- * @param params - Pagination parameters
- * @returns {Promise<PaginatedGates>} Paginated list of gates
+ * Retrieves all gates without pagination (useful for dropdowns).
+ * @returns {Promise<Gates>} An object containing an array of gates
  * @throws {APIError} If retrieval fails
  */
 export const listGates = api(
-  { method: 'GET', path: '/gates', expose: true },
-  async (params: PaginationParams): Promise<PaginatedGates> => {
-    return await gateRepository.findAllPaginated(params);
+  { expose: true, method: 'POST', path: '/get-gates' },
+  async (params: GatesQueryOptions): Promise<Gates> => {
+    const gates = await gateRepository.findAll(params);
+    return {
+      gates,
+    };
   },
 );
 
 /**
- * Retrieves gates for a terminal with pagination.
- * @param params - Object containing the terminal ID and pagination parameters
- * @returns {Promise<PaginatedGates>} Paginated list of gates for the terminal
+ * Retrieves gates with pagination (useful for tables).
+ * @param params - Pagination parameters
+ * @returns {Promise<PaginatedGates>} Paginated list of gates
  * @throws {APIError} If retrieval fails
  */
-export const listGatesByTerminal = api(
-  { method: 'GET', path: '/terminals/:terminalId/gates', expose: true },
-  async ({
-    terminalId,
-    ...paginationParams
-  }: { terminalId: number } & PaginationParams): Promise<PaginatedGates> => {
-    return await gateRepository.findByTerminal(terminalId, paginationParams);
+export const listGatesPaginated = api(
+  { expose: true, method: 'POST', path: '/get-gates/paginated' },
+  async (params: PaginationParamsGates): Promise<PaginatedGates> => {
+    return await gateRepository.findAllPaginated(params);
   },
 );
 
@@ -72,7 +73,7 @@ export const listGatesByTerminal = api(
  * @throws {APIError} If the gate is not found or update fails
  */
 export const updateGate = api(
-  { method: 'PUT', path: '/gates/:id', expose: true },
+  { expose: true, method: 'PUT', path: '/gates/:id' },
   async ({
     id,
     ...data
@@ -89,7 +90,7 @@ export const updateGate = api(
  * @throws {APIError} If the gate is not found or deletion fails
  */
 export const deleteGate = api(
-  { method: 'DELETE', path: '/gates/:id', expose: true },
+  { expose: true, method: 'DELETE', path: '/gates/:id' },
   async ({ id }: { id: number }): Promise<Gate> => {
     return await gateRepository.delete(id);
   },

@@ -6,98 +6,132 @@ import type {
   BusLines,
   CreateBusLinePayload,
   UpdateBusLinePayload,
+  BusLinesQueryOptions,
+  PaginationParamsBusLines,
 } from './bus-lines.types';
-import { PaginationParams } from '../../shared/types';
 
 /**
- * Creates a new bus line
- * @param payload - Bus line data to create
- * @returns The newly created bus line
+ * Creates a new bus line.
+ * @param params - The bus line data to create
+ * @returns {Promise<BusLine>} The created bus line
+ * @throws {APIError} If the bus line creation fails
  */
 export const createBusLine = api(
-  {
-    method: 'POST',
-    path: '/bus-lines',
-  },
-  async (payload: CreateBusLinePayload): Promise<BusLine> => {
-    return await busLineRepository.create(payload);
+  { expose: true, method: 'POST', path: '/bus-lines' },
+  async (params: CreateBusLinePayload): Promise<BusLine> => {
+    return await busLineRepository.create(params);
   },
 );
 
 /**
- * Gets a bus line by ID
+ * Retrieves a bus line by its ID.
  * @param params - Object containing the bus line ID
- * @returns The requested bus line
+ * @param params.id - The ID of the bus line to retrieve
+ * @returns {Promise<BusLine>} The found bus line
+ * @throws {APIError} If the bus line is not found or retrieval fails
  */
 export const getBusLine = api(
-  {
-    method: 'GET',
-    path: '/bus-lines/:id',
-  },
+  { expose: true, method: 'GET', path: '/bus-lines/:id' },
   async ({ id }: { id: number }): Promise<BusLine> => {
     return await busLineRepository.findOne(id);
   },
 );
 
 /**
- * List bus lines
- * @returns List of bus lines
+ * Retrieves all bus lines without pagination (useful for dropdowns).
+ * @returns {Promise<BusLines>} An object containing an array of bus lines
+ * @throws {APIError} If retrieval fails
  */
 export const listBusLines = api(
-  {
-    method: 'GET',
-    path: '/bus-lines',
-  },
-  async (): Promise<BusLines> => {
-    const busLines = await busLineRepository.findAll();
-    return { busLines };
+  { expose: true, method: 'POST', path: '/get-bus-lines' },
+  async (params: BusLinesQueryOptions): Promise<BusLines> => {
+    const busLines = await busLineRepository.findAll(params);
+    return {
+      busLines,
+    };
   },
 );
 
 /**
- * List bus lines with pagination
+ * Retrieves bus lines with pagination (useful for tables).
  * @param params - Pagination parameters
- * @returns Paginated list of bus lines
+ * @returns {Promise<PaginatedBusLines>} Paginated list of bus lines
+ * @throws {APIError} If retrieval fails
  */
 export const listBusLinesPaginated = api(
-  {
-    method: 'GET',
-    path: '/bus-lines/paginated',
-  },
-  async (params: PaginationParams): Promise<PaginatedBusLines> => {
+  { expose: true, method: 'POST', path: '/get-bus-lines/paginated' },
+  async (params: PaginationParamsBusLines): Promise<PaginatedBusLines> => {
     return await busLineRepository.findAllPaginated(params);
   },
 );
 
 /**
- * Updates an existing bus line
- * @param params - Object containing ID and update data
- * @returns The updated bus line
+ * Updates an existing bus line.
+ * @param params - Object containing the bus line ID and update data
+ * @param params.id - The ID of the bus line to update
+ * @returns {Promise<BusLine>} The updated bus line
+ * @throws {APIError} If the bus line is not found or update fails
  */
 export const updateBusLine = api(
-  {
-    method: 'PUT',
-    path: '/bus-lines/:id',
-  },
+  { expose: true, method: 'PUT', path: '/bus-lines/:id' },
   async ({
     id,
-    ...payload
-  }: { id: number } & UpdateBusLinePayload): Promise<BusLine> => {
-    return await busLineRepository.update(id, payload);
+    ...data
+  }: UpdateBusLinePayload & { id: number }): Promise<BusLine> => {
+    return await busLineRepository.update(id, data);
   },
 );
 
 /**
- * Deletes a bus line
- * @param params - Object containing the bus line ID to delete
- * @returns The deleted bus line
+ * Deletes a bus line by its ID.
+ * @param params - Object containing the bus line ID
+ * @param params.id - The ID of the bus line to delete
+ * @returns {Promise<BusLine>} The deleted bus line
+ * @throws {APIError} If the bus line is not found or deletion fails
  */
 export const deleteBusLine = api(
-  {
-    method: 'DELETE',
-    path: '/bus-lines/:id',
-  },
+  { expose: true, method: 'DELETE', path: '/bus-lines/:id' },
   async ({ id }: { id: number }): Promise<BusLine> => {
     return await busLineRepository.delete(id);
+  },
+);
+
+/**
+ * Searches for bus lines by matching a search term against name and code.
+ * @param params - Search parameters
+ * @param params.term - The search term to match against bus line name and code
+ * @returns {Promise<BusLines>} List of matching bus lines
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchBusLines = api(
+  { expose: true, method: 'GET', path: '/bus-lines/search' },
+  async ({ term }: { term: string }): Promise<BusLines> => {
+    const busLines = await busLineRepository.search(term);
+    return {
+      busLines,
+    };
+  },
+);
+
+/**
+ * Searches for bus lines with pagination by matching a search term against name and code.
+ * @param params - Search and pagination parameters
+ * @param params.term - The search term to match against bus line name and code
+ * @param params.page - Page number for pagination (optional, default: 1)
+ * @param params.pageSize - Number of items per page (optional, default: 10)
+ * @param params.orderBy - Sorting criteria (optional)
+ * @param params.filters - Additional filters to apply (optional)
+ * @returns {Promise<PaginatedBusLines>} Paginated list of matching bus lines
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchBusLinesPaginated = api(
+  { expose: true, method: 'POST', path: '/bus-lines/search/paginated' },
+  async ({
+    term,
+    ...params
+  }: PaginationParamsBusLines & {
+    term: string;
+  }): Promise<PaginatedBusLines> => {
+    return await busLineRepository.searchPaginated(term, params);
   },
 );

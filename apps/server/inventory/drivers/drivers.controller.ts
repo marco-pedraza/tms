@@ -9,8 +9,9 @@ import {
   PaginatedDrivers,
   DriverStatus,
   PossibleDriverStatuses,
+  DriversQueryOptions,
+  PaginationParamsDrivers,
 } from './drivers.types';
-import { PaginationParams } from '../../shared/types';
 
 /**
  * Creates a new driver.
@@ -45,9 +46,12 @@ export const getDriver = api(
  * @throws {APIError} If retrieval fails
  */
 export const listDrivers = api(
-  { method: 'GET', path: '/drivers' },
-  async (): Promise<Drivers> => {
-    return await driverRepository.findAll();
+  { expose: true, method: 'POST', path: '/get-drivers' },
+  async (params: DriversQueryOptions): Promise<Drivers> => {
+    const drivers = await driverRepository.findAll(params);
+    return {
+      drivers,
+    };
   },
 );
 
@@ -58,8 +62,8 @@ export const listDrivers = api(
  * @throws {APIError} If retrieval fails
  */
 export const listDriversPaginated = api(
-  { expose: true, method: 'GET', path: '/drivers/paginated' },
-  async (params: PaginationParams): Promise<PaginatedDrivers> => {
+  { expose: true, method: 'POST', path: '/get-drivers/paginated' },
+  async (params: PaginationParamsDrivers): Promise<PaginatedDrivers> => {
     return await driverRepository.findAllPaginated(params);
   },
 );
@@ -282,5 +286,45 @@ export const removeDriverFromBus = api(
   { expose: true, method: 'DELETE', path: '/drivers/:id/bus' },
   async ({ id }: { id: number }): Promise<Driver> => {
     return await driverUseCases.removeFromBus(id);
+  },
+);
+
+/**
+ * Searches for drivers by matching a search term against name, driver key, rfc, curp, etc.
+ * @param params - Search parameters
+ * @param params.term - The search term to match
+ * @returns {Promise<Drivers>} List of matching drivers
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchDrivers = api(
+  { expose: true, method: 'GET', path: '/drivers/search' },
+  async ({ term }: { term: string }): Promise<Drivers> => {
+    const drivers = await driverRepository.search(term);
+    return {
+      drivers,
+    };
+  },
+);
+
+/**
+ * Searches for drivers with pagination by matching a search term.
+ * @param params - Search and pagination parameters
+ * @param params.term - The search term to match
+ * @param params.page - Page number for pagination (optional, default: 1)
+ * @param params.pageSize - Number of items per page (optional, default: 10)
+ * @param params.orderBy - Sorting criteria (optional)
+ * @param params.filters - Additional filters to apply (optional)
+ * @returns {Promise<PaginatedDrivers>} Paginated list of matching drivers
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchDriversPaginated = api(
+  { expose: true, method: 'POST', path: '/drivers/search/paginated' },
+  async ({
+    term,
+    ...params
+  }: PaginationParamsDrivers & {
+    term: string;
+  }): Promise<PaginatedDrivers> => {
+    return await driverRepository.searchPaginated(term, params);
   },
 );

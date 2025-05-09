@@ -5,10 +5,11 @@ import type {
   UpdateBusPayload,
   Buses,
   PaginatedBuses,
+  BusesQueryOptions,
+  PaginationParamsBuses,
 } from './buses.types';
 import { BusStatus } from './buses.types';
 import { createBaseRepository } from '@repo/base-repo';
-import { PaginationParams } from '../../shared/types';
 import { db } from '../db-service';
 import { eq, and } from 'drizzle-orm';
 import { createBaseStateMachine, StateTransition } from '@repo/state-machine';
@@ -77,7 +78,14 @@ export const createBusRepository = () => {
     CreateBusPayload,
     UpdateBusPayload,
     typeof buses
-  >(db, buses, 'Bus');
+  >(db, buses, 'Bus', {
+    searchableFields: [
+      buses.registrationNumber,
+      buses.economicNumber,
+      buses.engineNumber,
+      buses.serialNumber,
+    ],
+  });
 
   /**
    * Creates a new bus
@@ -110,17 +118,18 @@ export const createBusRepository = () => {
    * @returns {Promise<PaginatedBuses>} Paginated list of buses
    */
   const findAllPaginated = async (
-    params: PaginationParams = {},
+    params: PaginationParamsBuses = {},
   ): Promise<PaginatedBuses> => {
     return await baseRepository.findAllPaginated(params);
   };
 
   /**
    * Retrieves all buses
+   * @param options - Query options for ordering and filtering
    * @returns {Promise<Buses>} Object containing array of buses
    */
-  const findAll = async (): Promise<Buses> => {
-    const busList = await baseRepository.findAll();
+  const findAll = async (options: BusesQueryOptions = {}): Promise<Buses> => {
+    const busList = await baseRepository.findAll(options);
     return {
       buses: busList,
     };
@@ -129,6 +138,7 @@ export const createBusRepository = () => {
   /**
    * Finds buses by model ID
    * @param modelId - The ID of the bus model
+   * @param options - Query options for ordering and filtering
    * @returns {Promise<Buses>} Object containing array of buses
    */
   const findByModelId = async (modelId: number): Promise<Buses> => {
@@ -140,6 +150,7 @@ export const createBusRepository = () => {
 
   /**
    * Finds available buses
+   * @param options - Query options for ordering and filtering
    * @returns {Promise<Buses>} Object containing array of available buses
    */
   const findAvailable = async (): Promise<Buses> => {
@@ -156,6 +167,7 @@ export const createBusRepository = () => {
   /**
    * Finds buses by status
    * @param status - The status to filter by
+   * @param options - Query options for ordering and filtering
    * @returns {Promise<Buses>} Object containing array of buses with the specified status
    */
   const findAllByStatus = async (status: BusStatus): Promise<Buses> => {

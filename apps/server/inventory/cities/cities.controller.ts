@@ -4,19 +4,17 @@ import type {
   CreateCityPayload,
   UpdateCityPayload,
   City,
-  PaginatedCities,
   Cities,
+  PaginatedCities,
+  PaginationParamsCities,
+  CitiesQueryOptions,
 } from './cities.types';
-import { PaginationParams } from '../../shared/types';
 
 /**
  * Creates a new city.
- * @param params - The city data to create
- * @returns {Promise<City>} The created city
- * @throws {APIError} If the city creation fails
  */
 export const createCity = api(
-  { method: 'POST', path: '/cities', expose: true },
+  { expose: true, method: 'POST', path: '/cities' },
   async (params: CreateCityPayload): Promise<City> => {
     return await cityRepository.create(params);
   },
@@ -24,53 +22,42 @@ export const createCity = api(
 
 /**
  * Retrieves a city by its ID.
- * @param params - Object containing the city ID
- * @param params.id - The ID of the city to retrieve
- * @returns {Promise<City>} The found city
- * @throws {APIError} If the city is not found or retrieval fails
  */
 export const getCity = api(
-  { method: 'GET', path: '/cities/:id', expose: true },
+  { expose: true, method: 'GET', path: '/cities/:id' },
   async ({ id }: { id: number }): Promise<City> => {
     return await cityRepository.findOne(id);
   },
 );
 
 /**
- * Retrieves all cities.
- * @returns {Promise<City[]>} List of all cities
- * @throws {APIError} If retrieval fails
+ * Retrieves all cities without pagination (useful for dropdowns).
  */
 export const listCities = api(
-  { method: 'GET', path: '/cities', expose: true },
-  async (): Promise<Cities> => {
-    const cities = await cityRepository.findAll();
-    return { cities };
+  { expose: true, method: 'POST', path: '/get-cities' },
+  async (params: CitiesQueryOptions): Promise<Cities> => {
+    const cities = await cityRepository.findAll(params);
+    return {
+      cities,
+    };
   },
 );
 
 /**
- * Retrieves cities with pagination.
- * @param params - Pagination parameters
- * @returns {Promise<PaginatedCities>} Paginated list of cities
- * @throws {APIError} If retrieval fails
+ * Retrieves cities with pagination (useful for tables).
  */
 export const listCitiesPaginated = api(
-  { method: 'GET', path: '/cities/paginated', expose: true },
-  async (params: PaginationParams): Promise<PaginatedCities> => {
+  { expose: true, method: 'POST', path: '/get-cities/paginated' },
+  async (params: PaginationParamsCities): Promise<PaginatedCities> => {
     return await cityRepository.findAllPaginated(params);
   },
 );
 
 /**
  * Updates an existing city.
- * @param params - Object containing the city ID and update data
- * @param params.id - The ID of the city to update
- * @returns {Promise<City>} The updated city
- * @throws {APIError} If the city is not found or update fails
  */
 export const updateCity = api(
-  { method: 'PUT', path: '/cities/:id', expose: true },
+  { expose: true, method: 'PUT', path: '/cities/:id' },
   async ({
     id,
     ...data
@@ -81,14 +68,36 @@ export const updateCity = api(
 
 /**
  * Deletes a city by its ID.
- * @param params - Object containing the city ID
- * @param params.id - The ID of the city to delete
- * @returns {Promise<City>} The deleted city
- * @throws {APIError} If the city is not found or deletion fails
  */
 export const deleteCity = api(
-  { method: 'DELETE', path: '/cities/:id', expose: true },
+  { expose: true, method: 'DELETE', path: '/cities/:id' },
   async ({ id }: { id: number }): Promise<City> => {
     return await cityRepository.delete(id);
+  },
+);
+
+/**
+ * Searches for cities by matching a search term against name and slug.
+ */
+export const searchCities = api(
+  { expose: true, method: 'GET', path: '/cities/search' },
+  async ({ term }: { term: string }): Promise<Cities> => {
+    const cities = await cityRepository.search(term);
+    return {
+      cities,
+    };
+  },
+);
+
+/**
+ * Searches for cities with pagination by matching a search term against name and slug.
+ */
+export const searchCitiesPaginated = api(
+  { expose: true, method: 'POST', path: '/cities/search/paginated' },
+  async ({
+    term,
+    ...params
+  }: PaginationParamsCities & { term: string }): Promise<PaginatedCities> => {
+    return await cityRepository.searchPaginated(term, params);
   },
 );

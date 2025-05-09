@@ -7,9 +7,9 @@ import {
   Buses,
   PaginatedBuses,
   BusStatus,
+  BusesQueryOptions,
+  PaginationParamsBuses,
 } from './buses.types';
-import { PaginationParams } from '../../shared/types';
-import { parseApiError } from '../../shared/errors';
 import { createBusWithSeatDiagram } from './buses.use-cases';
 
 /**
@@ -21,11 +21,7 @@ import { createBusWithSeatDiagram } from './buses.use-cases';
 export const createBus = api(
   { method: 'POST', path: '/buses', expose: true },
   async (params: CreateBusPayload): Promise<Bus> => {
-    try {
-      return await createBusWithSeatDiagram(params);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    return await createBusWithSeatDiagram(params);
   },
 );
 
@@ -39,44 +35,33 @@ export const createBus = api(
 export const getBus = api(
   { method: 'GET', path: '/buses/:id', expose: true },
   async ({ id }: { id: number }): Promise<Bus> => {
-    try {
-      return await busRepository.findOne(id);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    return await busRepository.findOne(id);
   },
 );
 
 /**
  * Retrieves all buses without pagination (useful for dropdowns).
+ * @param params - Query options for ordering and filtering
  * @returns {Promise<Buses>} An object containing an array of buses
  * @throws {APIError} If retrieval fails
  */
 export const listBuses = api(
-  { method: 'GET', path: '/buses', expose: true },
-  async (): Promise<Buses> => {
-    try {
-      return await busRepository.findAll();
-    } catch (error) {
-      throw parseApiError(error);
-    }
+  { method: 'POST', path: '/get-buses', expose: true },
+  async (params?: BusesQueryOptions): Promise<Buses> => {
+    return await busRepository.findAll(params || {});
   },
 );
 
 /**
  * Retrieves buses with pagination (useful for tables).
- * @param params - Pagination parameters
+ * @param params - Pagination parameters with query options
  * @returns {Promise<PaginatedBuses>} Paginated list of buses
  * @throws {APIError} If retrieval fails
  */
 export const listBusesPaginated = api(
-  { method: 'GET', path: '/buses/paginated', expose: true },
-  async (params: PaginationParams): Promise<PaginatedBuses> => {
-    try {
-      return await busRepository.findAllPaginated(params);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+  { method: 'POST', path: '/get-buses/paginated', expose: true },
+  async (params?: PaginationParamsBuses): Promise<PaginatedBuses> => {
+    return await busRepository.findAllPaginated(params || {});
   },
 );
 
@@ -91,11 +76,7 @@ export const listBusesPaginated = api(
 export const updateBus = api(
   { method: 'PUT', path: '/buses/:id', expose: true },
   async ({ id, ...data }: UpdateBusPayload & { id: number }): Promise<Bus> => {
-    try {
-      return await busRepository.update(id, data);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    return await busRepository.update(id, data);
   },
 );
 
@@ -109,11 +90,7 @@ export const updateBus = api(
 export const deleteBus = api(
   { method: 'DELETE', path: '/buses/:id', expose: true },
   async ({ id }: { id: number }): Promise<Bus> => {
-    try {
-      return await busRepository.delete(id);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    return await busRepository.delete(id);
   },
 );
 
@@ -127,11 +104,7 @@ export const deleteBus = api(
 export const getBusesByModel = api(
   { method: 'GET', path: '/buses/by-model/:modelId', expose: true },
   async ({ modelId }: { modelId: number }): Promise<Buses> => {
-    try {
-      return await busRepository.findByModelId(modelId);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    return await busRepository.findByModelId(modelId);
   },
 );
 
@@ -143,11 +116,7 @@ export const getBusesByModel = api(
 export const getAvailableBuses = api(
   { method: 'GET', path: '/buses/available', expose: true },
   async (): Promise<Buses> => {
-    try {
-      return await busRepository.findAvailable();
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    return await busRepository.findAvailable();
   },
 );
 
@@ -161,11 +130,7 @@ export const getAvailableBuses = api(
 export const getBusesByStatus = api(
   { method: 'GET', path: '/buses/by-status/:status', expose: true },
   async ({ status }: { status: string }): Promise<Buses> => {
-    try {
-      return await busRepository.findAllByStatus(status as BusStatus);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    return await busRepository.findAllByStatus(status as BusStatus);
   },
 );
 
@@ -180,11 +145,7 @@ export const getBusesByStatus = api(
 export const updateBusStatus = api(
   { method: 'PUT', path: '/buses/:id/status', expose: true },
   async ({ id, status }: { id: number; status: string }): Promise<Bus> => {
-    try {
-      return await busRepository.updateStatus(id, status as BusStatus);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    return await busRepository.updateStatus(id, status as BusStatus);
   },
 );
 
@@ -206,12 +167,48 @@ export const getAllowedBusStatusTransitions = api(
   }: {
     id: number;
   }): Promise<{ allowedTransitions: BusStatus[] }> => {
-    try {
-      const allowedTransitions =
-        await busRepository.getAllowedStatusTransitions(id);
-      return { allowedTransitions };
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    const allowedTransitions =
+      await busRepository.getAllowedStatusTransitions(id);
+    return { allowedTransitions };
+  },
+);
+
+/**
+ * Searches for buses by matching a search term against registration number, economic number, and vehicle ID.
+ * @param params - Search parameters
+ * @param params.term - The search term to match
+ * @returns {Promise<Buses>} List of matching buses
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchBuses = api(
+  { method: 'GET', path: '/buses/search', expose: true },
+  async ({ term }: { term: string }): Promise<Buses> => {
+    const buses = await busRepository.search(term);
+    return {
+      buses,
+    };
+  },
+);
+
+/**
+ * Searches for buses with pagination by matching a search term.
+ * @param params - Search and pagination parameters
+ * @param params.term - The search term to match
+ * @param params.page - Page number for pagination (optional, default: 1)
+ * @param params.pageSize - Number of items per page (optional, default: 10)
+ * @param params.orderBy - Sorting criteria (optional)
+ * @param params.filters - Additional filters to apply (optional)
+ * @returns {Promise<PaginatedBuses>} Paginated list of matching buses
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchBusesPaginated = api(
+  { method: 'POST', path: '/buses/search/paginated', expose: true },
+  async ({
+    term,
+    ...params
+  }: PaginationParamsBuses & {
+    term: string;
+  }): Promise<PaginatedBuses> => {
+    return await busRepository.searchPaginated(term, params);
   },
 );

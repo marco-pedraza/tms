@@ -10,9 +10,6 @@ import { PaginationParams } from '../../shared/types';
 import { db } from '../db-service';
 import { createSlug } from '../../shared/utils';
 
-type CreateCityPayloadWithSlug = CreateCityPayload & { slug: string };
-type UpdateCityPayloadWithSlug = UpdateCityPayload & { slug?: string };
-
 /**
  * Creates a repository for managing city entities
  * @returns {Object} An object containing city-specific operations and base CRUD operations
@@ -20,10 +17,12 @@ type UpdateCityPayloadWithSlug = UpdateCityPayload & { slug?: string };
 export const createCityRepository = () => {
   const baseRepository = createBaseRepository<
     City,
-    CreateCityPayloadWithSlug,
-    UpdateCityPayloadWithSlug,
+    CreateCityPayload & { slug: string },
+    UpdateCityPayload & { slug?: string },
     typeof cities
-  >(db, cities, 'City');
+  >(db, cities, 'City', {
+    searchableFields: [cities.name, cities.slug],
+  });
 
   /**
    * Creates a new city with auto-generated slug
@@ -31,14 +30,8 @@ export const createCityRepository = () => {
    * @returns The created city
    */
   const create = async (data: CreateCityPayload): Promise<City> => {
-    // Generate slug from the city name
     const slug = createSlug(data.name);
-
-    // Add slug to the data and create the city
-    return await baseRepository.create({
-      ...data,
-      slug,
-    });
+    return await baseRepository.create({ ...data, slug });
   };
 
   /**
@@ -48,14 +41,10 @@ export const createCityRepository = () => {
    * @returns The updated city
    */
   const update = async (id: number, data: UpdateCityPayload): Promise<City> => {
-    const updateData: UpdateCityPayloadWithSlug = {
-      ...data,
-    };
-
+    const updateData: UpdateCityPayload & { slug?: string } = { ...data };
     if (data.name) {
       updateData.slug = createSlug(data.name);
     }
-
     return await baseRepository.update(id, updateData);
   };
 

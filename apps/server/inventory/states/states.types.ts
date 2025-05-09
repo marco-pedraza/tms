@@ -1,6 +1,6 @@
-// Base interface
+// API types
 import { MinLen, MatchesRegexp, Min } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**
  * Base interface representing a state entity
@@ -33,19 +33,19 @@ export interface State {
  */
 export interface CreateStatePayload {
   /**
-   * The name of the state
+   * Name of the state
    * Must have at least 1 non-whitespace character
    */
   name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * The state code (e.g., "TX", "CA", "NY")
+   * State code (e.g., "TX", "CA", "NY")
    * Must have at least 1 non-whitespace character
    */
   code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * The ID of the country this state belongs to
+   * ID of the country this state belongs to
    * Must be a positive number
    */
   countryId: number & Min<1>;
@@ -62,19 +62,19 @@ export interface CreateStatePayload {
  */
 export interface UpdateStatePayload {
   /**
-   * The name of the state
+   * Name of the state
    * Must have at least 1 non-whitespace character
    */
   name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * The state code (e.g., "TX", "CA", "NY")
+   * State code (e.g., "TX", "CA", "NY")
    * Must have at least 1 non-whitespace character
    */
   code?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * The ID of the country this state belongs to
+   * ID of the country this state belongs to
    * Must be a positive number
    */
   countryId?: number & Min<1>;
@@ -93,7 +93,16 @@ export interface States {
   states: State[];
 }
 
+export interface StatesQueryOptions {
+  orderBy?: { field: keyof State; direction: 'asc' | 'desc' }[];
+  filters?: Partial<State>;
+}
+
 /**
  * Paginated response type for the list states endpoint
  */
 export type PaginatedStates = PaginatedResult<State>;
+
+export interface PaginationParamsStates
+  extends PaginationParams,
+    StatesQueryOptions {}

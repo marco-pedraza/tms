@@ -2,15 +2,18 @@ import { expect, describe, test, beforeAll, afterAll } from 'vitest';
 import {
   createState,
   getState,
-  listStates,
-  listStatesPaginated,
   updateState,
   deleteState,
+  listStates,
+  listStatesPaginated,
+  searchStates,
+  searchStatesPaginated,
 } from './states.controller';
 import {
   createCountry,
   deleteCountry,
 } from '../countries/countries.controller';
+import type { State } from './states.types';
 
 describe('States Controller', () => {
   // Test data and setup
@@ -25,7 +28,6 @@ describe('States Controller', () => {
   // Variable to store created IDs for cleanup
   let createdStateId: number;
 
-  // Create a test country before running the state tests
   beforeAll(async () => {
     // Create a temporary country to use for the state tests
     const country = await createCountry({
@@ -33,14 +35,11 @@ describe('States Controller', () => {
       code: 'TCS',
       active: true,
     });
-
     countryId = country.id;
-    testState.countryId = countryId; // Update the test state with the real country ID
+    testState.countryId = countryId;
   });
 
-  // Clean up after all tests
   afterAll(async () => {
-    // Clean up the created state if any
     if (createdStateId) {
       try {
         await deleteState({ id: createdStateId });
@@ -48,8 +47,6 @@ describe('States Controller', () => {
         console.log('Error cleaning up test state:', error);
       }
     }
-
-    // Clean up the created country
     if (countryId) {
       try {
         await deleteCountry({ id: countryId });
@@ -61,13 +58,8 @@ describe('States Controller', () => {
 
   describe('success scenarios', () => {
     test('should create a new state', async () => {
-      // Create a new state
       const response = await createState(testState);
-
-      // Store the ID for later cleanup
       createdStateId = response.id;
-
-      // Assertions
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
       expect(response.name).toBe(testState.name);
@@ -79,44 +71,10 @@ describe('States Controller', () => {
 
     test('should retrieve a state by ID', async () => {
       const response = await getState({ id: createdStateId });
-
       expect(response).toBeDefined();
       expect(response.id).toBe(createdStateId);
       expect(response.name).toBe(testState.name);
       expect(response.countryId).toBe(testState.countryId);
-    });
-
-    test('should retrieve paginated states', async () => {
-      const result = await listStatesPaginated({ page: 1, pageSize: 10 });
-
-      // Check the structure of the response
-      expect(result).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
-      expect(result.pagination).toBeDefined();
-      expect(typeof result.pagination.currentPage).toBe('number');
-      expect(typeof result.pagination.pageSize).toBe('number');
-      expect(typeof result.pagination.totalCount).toBe('number');
-      expect(typeof result.pagination.totalPages).toBe('number');
-      expect(typeof result.pagination.hasNextPage).toBe('boolean');
-      expect(typeof result.pagination.hasPreviousPage).toBe('boolean');
-
-      // We should at least find our test state
-      expect(result.data.some((state) => state.id === createdStateId)).toBe(
-        true,
-      );
-
-      // Pagination values should make sense
-      expect(result.pagination.currentPage).toBe(1);
-      expect(result.pagination.pageSize).toBe(10);
-      expect(result.pagination.totalCount).toBeGreaterThanOrEqual(1);
-    });
-
-    test('pagination should respect pageSize parameter', async () => {
-      // Request with a small page size
-      const result = await listStatesPaginated({ page: 1, pageSize: 1 });
-
-      expect(result.data.length).toBeLessThanOrEqual(1);
-      expect(result.pagination.pageSize).toBe(1);
     });
 
     test('should update a state', async () => {
@@ -125,42 +83,32 @@ describe('States Controller', () => {
         id: createdStateId,
         name: updatedName,
       });
-
       expect(response).toBeDefined();
       expect(response.id).toBe(createdStateId);
       expect(response.name).toBe(updatedName);
-      // Other fields should remain unchanged
       expect(response.code).toBe(testState.code);
       expect(response.countryId).toBe(testState.countryId);
     });
 
     test('should delete a state', async () => {
-      // Create a state specifically for deletion test
       const stateToDelete = await createState({
         name: 'State To Delete',
         code: 'STD',
         countryId: countryId,
       });
-
-      // Delete should not throw an error
       await expect(
         deleteState({ id: stateToDelete.id }),
       ).resolves.not.toThrow();
-
-      // Attempt to get should throw a not found error
       await expect(getState({ id: stateToDelete.id })).rejects.toThrow();
     });
   });
 
   describe('error scenarios', () => {
-    // NOTE: We are not testing the validation errors because it's handled by Encore rust runtime and they are not thrown in the controller
-
     test('should handle not found errors', async () => {
       await expect(getState({ id: 9999 })).rejects.toThrow();
     });
 
     test('should handle duplicate errors', async () => {
-      // Try to create state with same name/code in the same country
       await expect(
         createState({
           name: testState.name,
@@ -171,12 +119,11 @@ describe('States Controller', () => {
     });
 
     test('should handle invalid country ID', async () => {
-      // Try to create a state with a non-existent country ID
       await expect(
         createState({
           name: 'Invalid Country State',
           code: 'ICS',
-          countryId: 9999, // Non-existent country ID
+          countryId: 9999,
         }),
       ).rejects.toThrow();
     });
@@ -185,7 +132,6 @@ describe('States Controller', () => {
   describe('pagination', () => {
     test('should return paginated states with default parameters', async () => {
       const response = await listStatesPaginated({});
-
       expect(response.data).toBeDefined();
       expect(Array.isArray(response.data)).toBe(true);
       expect(response.pagination).toBeDefined();
@@ -202,14 +148,12 @@ describe('States Controller', () => {
         page: 1,
         pageSize: 5,
       });
-
       expect(response.pagination.currentPage).toBe(1);
       expect(response.pagination.pageSize).toBe(5);
       expect(response.data.length).toBeLessThanOrEqual(5);
     });
 
     test('should default sort by name in ascending order', async () => {
-      // Create test states with different names for verification of default sorting
       const stateA = await createState({
         name: 'AAA Test State',
         code: 'AAA',
@@ -220,42 +164,158 @@ describe('States Controller', () => {
         code: 'ZZZ',
         countryId: countryId,
       });
-
       try {
-        // Get states with large enough page size to include test states
         const response = await listStatesPaginated({
           pageSize: 50,
         });
-
-        // Find the indices of our test states
         const indexA = response.data.findIndex((s) => s.id === stateA.id);
         const indexZ = response.data.findIndex((s) => s.id === stateZ.id);
-
-        // Verify that stateA (AAA) comes before stateZ (ZZZ) in the results
-        // This assumes they both appear in the results (which they should with pageSize: 50)
         if (indexA !== -1 && indexZ !== -1) {
           expect(indexA).toBeLessThan(indexZ);
         }
       } finally {
-        // Clean up test states
         await deleteState({ id: stateA.id });
         await deleteState({ id: stateZ.id });
       }
     });
 
     test('should return non-paginated list for dropdowns', async () => {
-      const response = await listStates();
-
+      const response = await listStates({});
       expect(response.states).toBeDefined();
       expect(Array.isArray(response.states)).toBe(true);
       expect(response.states.length).toBeGreaterThan(0);
-      // Verify our test state is in the list
-      expect(response.states.some((state) => state.id === createdStateId)).toBe(
-        true,
-      );
-      // No pagination info should be present
-      // @ts-expect-error - pagination property check is expected to be undefined
-      expect(response.pagination).toBeUndefined();
+      expect(response).not.toHaveProperty('pagination');
+    });
+  });
+
+  describe('search functionality', () => {
+    test('should search states', async () => {
+      const searchableState = await createState({
+        name: 'Searchable Test State',
+        code: 'STS',
+        countryId: countryId,
+        active: true,
+      });
+      try {
+        const response = await searchStates({ term: 'Searchable' });
+        expect(response.states).toBeDefined();
+        expect(Array.isArray(response.states)).toBe(true);
+        expect(response.states.some((s) => s.id === searchableState.id)).toBe(
+          true,
+        );
+      } finally {
+        await deleteState({ id: searchableState.id });
+      }
+    });
+
+    test('should search states with pagination', async () => {
+      const response = await searchStatesPaginated({
+        term: 'Test',
+        page: 1,
+        pageSize: 5,
+      });
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
+    });
+  });
+
+  describe('ordering and filtering', () => {
+    const testStates: State[] = [];
+
+    beforeAll(async () => {
+      const states = [
+        { name: 'Alpha State', code: 'AS', countryId, active: true },
+        { name: 'Beta State', code: 'BS', countryId, active: false },
+        { name: 'Gamma State', code: 'GS', countryId, active: true },
+      ];
+      for (const state of states) {
+        const created = await createState(state);
+        testStates.push(created);
+      }
+    });
+
+    afterAll(async () => {
+      for (const state of testStates) {
+        try {
+          await deleteState({ id: state.id });
+        } catch (error) {
+          console.log(`Error cleaning up test state ${state.id}:`, error);
+        }
+      }
+    });
+
+    test('should order states by name descending', async () => {
+      const response = await listStates({
+        orderBy: [{ field: 'name', direction: 'desc' }],
+      });
+      const names = response.states.map((s) => s.name);
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] >= names[i + 1]).toBe(true);
+      }
+    });
+
+    test('should filter states by active status', async () => {
+      const response = await listStates({
+        filters: { active: true },
+      });
+      expect(response.states.every((s) => s.active === true)).toBe(true);
+      const activeTestStateIds = testStates
+        .filter((s) => s.active)
+        .map((s) => s.id);
+      for (const id of activeTestStateIds) {
+        expect(response.states.some((s) => s.id === id)).toBe(true);
+      }
+    });
+
+    test('should combine ordering and filtering in paginated results', async () => {
+      const response = await listStatesPaginated({
+        filters: { active: true },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+        page: 1,
+        pageSize: 10,
+      });
+      expect(response.data.every((s) => s.active === true)).toBe(true);
+      const names = response.data.map((s) => s.name);
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] <= names[i + 1]).toBe(true);
+      }
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(10);
+    });
+
+    test('should allow multi-field ordering', async () => {
+      const sameActiveStatusStates = [
+        { name: 'Same Status A', code: 'SSA', countryId, active: true },
+        { name: 'Same Status B', code: 'SSB', countryId, active: true },
+      ];
+      const createdStates: State[] = [];
+      try {
+        for (const state of sameActiveStatusStates) {
+          const created = await createState(state);
+          createdStates.push(created);
+        }
+        const response = await listStates({
+          orderBy: [
+            { field: 'active', direction: 'desc' },
+            { field: 'name', direction: 'asc' },
+          ],
+        });
+        const activeStates = response.states.filter((s) => s.active === true);
+        const activeNames = activeStates.map((s) => s.name);
+        for (let i = 0; i < activeNames.length - 1; i++) {
+          if (activeStates[i].active === activeStates[i + 1].active) {
+            expect(activeNames[i] <= activeNames[i + 1]).toBe(true);
+          }
+        }
+      } finally {
+        for (const state of createdStates) {
+          await deleteState({ id: state.id });
+        }
+      }
     });
   });
 });

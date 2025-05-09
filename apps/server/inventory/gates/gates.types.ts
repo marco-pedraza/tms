@@ -1,5 +1,5 @@
 import { Min } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**
  * Base interface representing a gate entity
@@ -55,14 +55,23 @@ export interface UpdateGatePayload {
 }
 
 /**
- * Response type for the list gates endpoint
+ * Response type for the list gates endpoint (non-paginated)
  */
 export interface Gates {
   /** List of gates */
   gates: Gate[];
 }
 
+export interface GatesQueryOptions {
+  orderBy?: { field: keyof Gate; direction: 'asc' | 'desc' }[];
+  filters?: Partial<Gate>;
+}
+
 /**
  * Paginated response type for the list gates endpoint
  */
 export type PaginatedGates = PaginatedResult<Gate>;
+
+export interface PaginationParamsGates
+  extends PaginationParams,
+    GatesQueryOptions {}

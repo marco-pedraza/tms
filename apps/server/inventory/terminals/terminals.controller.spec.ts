@@ -2,9 +2,12 @@ import { expect, describe, test, beforeAll, afterAll } from 'vitest';
 import {
   createTerminal,
   getTerminal,
-  listTerminals,
   updateTerminal,
   deleteTerminal,
+  listTerminalsPaginated,
+  listTerminals,
+  searchTerminals,
+  searchTerminalsPaginated,
 } from './terminals.controller';
 import { createCity, deleteCity } from '../cities/cities.controller';
 import { createState, deleteState } from '../states/states.controller';
@@ -13,7 +16,7 @@ import {
   deleteCountry,
 } from '../countries/countries.controller';
 import { createSlug } from '../../shared/utils';
-import { Facility, OperatingHours } from './terminals.types';
+import { Facility, OperatingHours, Terminal } from './terminals.types';
 
 describe('Terminals Controller', () => {
   // Test data and setup
@@ -88,8 +91,16 @@ describe('Terminals Controller', () => {
     for (const id of additionalTerminalIds) {
       try {
         await deleteTerminal({ id });
-      } catch (error) {
-        // Ignore errors in cleanup, terminal might have been deleted in test
+        // eslint-disable-next-line
+      } catch (error: any) {
+        // Opción 2: Ignorar error si ya no existe
+        if (
+          error?.name === 'NotFoundError' ||
+          (typeof error?.message === 'string' &&
+            error.message.toLowerCase().includes('not found'))
+        ) {
+          continue;
+        }
         console.error(`Error deleting additional terminal ${id}:`, error);
       }
     }
@@ -221,11 +232,13 @@ describe('Terminals Controller', () => {
       expect(hours.monday?.[0].close).toBe('12:00');
       expect(hours.monday?.[1].open).toBe('13:00');
       expect(hours.monday?.[1].close).toBe('20:00');
+
       // Verify slug has t prefix
       expect(terminalWithMultipleHours.slug).toMatch(/^t-/);
 
       // Clean up
       await deleteTerminal({ id: terminalWithMultipleHours.id });
+
       // Remove from cleanup list since we just deleted it
       additionalTerminalIds = additionalTerminalIds.filter(
         (id) => id !== terminalWithMultipleHours.id,
@@ -281,12 +294,13 @@ describe('Terminals Controller', () => {
       }
 
       // Test pagination with default parameters (page 1, pageSize 10)
-      const response = await listTerminals({});
+      const response = await listTerminalsPaginated({});
 
       // Assertions
       expect(response).toBeDefined();
       expect(response.data).toBeDefined();
       expect(Array.isArray(response.data)).toBe(true);
+
       // At least our created terminals should be in the list
       expect(response.data.length).toBeGreaterThanOrEqual(3);
 
@@ -297,7 +311,7 @@ describe('Terminals Controller', () => {
       expect(typeof response.pagination.totalCount).toBe('number');
 
       // Verify all terminals in response have t-prefixed slugs
-      response.data.forEach((terminal) => {
+      response.data.forEach((terminal: Terminal) => {
         expect(terminal.slug).toMatch(/^t-/);
       });
     });
@@ -319,6 +333,7 @@ describe('Terminals Controller', () => {
       expect(response.name).toBe(updateData.name);
       expect(response.latitude).toBe(updateData.latitude);
       expect(response.longitude).toBe(updateData.longitude);
+
       // Original data that wasn't updated should remain
       expect(response.address).toBe(testTerminal.address);
 
@@ -375,6 +390,7 @@ describe('Terminals Controller', () => {
           code: 'INCOMPLETE',
           active: true,
         };
+
         // @ts-expect-error - Intentionally sending incomplete data
         await createTerminal(incompleteData);
         expect(true).toBe(false); // Should not reach here
@@ -398,6 +414,7 @@ describe('Terminals Controller', () => {
             monday: [{ open: 'invalid', close: '20:00' }],
           },
         });
+
         expect(true).toBe(false); // Should not reach here
       } catch (error) {
         expect(error).toBeDefined();
@@ -416,6 +433,7 @@ describe('Terminals Controller', () => {
           code: testTerminal.code, // Same code as existing terminal
           active: true,
         });
+
         expect(true).toBe(false); // Should not reach here
       } catch (error) {
         expect(error).toBeDefined();
@@ -439,6 +457,7 @@ describe('Terminals Controller', () => {
           id: 9999999,
           name: 'This Should Fail',
         });
+
         expect(true).toBe(false); // Should not reach here
       } catch (error) {
         expect(error).toBeDefined();
@@ -453,6 +472,232 @@ describe('Terminals Controller', () => {
       } catch (error) {
         expect(error).toBeDefined();
       }
+    });
+  });
+
+  describe('ordering and filtering', () => {
+    const testTerminals: number[] = [];
+
+    beforeAll(async () => {
+      const terminals = [
+        {
+          name: 'Alpha Terminal',
+          address: 'Alpha St',
+          cityId: cityId,
+          latitude: 10,
+          longitude: 10,
+          code: 'ALPHA-T',
+          active: true,
+        },
+        {
+          name: 'Beta Terminal',
+          address: 'Beta St',
+          cityId: cityId,
+          latitude: 20,
+          longitude: 20,
+          code: 'BETA-T',
+          active: false,
+        },
+        {
+          name: 'Gamma Terminal',
+          address: 'Gamma St',
+          cityId: cityId,
+          latitude: 30,
+          longitude: 30,
+          code: 'GAMMA-T',
+          active: true,
+        },
+      ];
+
+      for (const terminal of terminals) {
+        const created = await createTerminal(terminal);
+        testTerminals.push(created.id);
+        additionalTerminalIds.push(created.id);
+      }
+    });
+
+    afterAll(async () => {
+      for (const id of testTerminals) {
+        try {
+          await deleteTerminal({ id });
+        } catch (error) {
+          console.error(`Error deleting test terminal ${id}:`, error);
+        }
+      }
+    });
+
+    test('should order terminals by name descending', async () => {
+      const response = await listTerminals({
+        orderBy: [{ field: 'name', direction: 'desc' }],
+      });
+
+      const names = response.terminals.map((t: Terminal) => t.name);
+
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] >= names[i + 1]).toBe(true);
+      }
+    });
+
+    test('should filter terminals by active status', async () => {
+      const response = await listTerminals({
+        filters: { active: true },
+      });
+
+      expect(response.terminals.every((t: Terminal) => t.active === true)).toBe(
+        true,
+      );
+
+      const activeTestTerminalIds: number[] = [];
+
+      for (const id of testTerminals) {
+        const terminal = await getTerminal({ id });
+        if (terminal.active) {
+          activeTestTerminalIds.push(id);
+        }
+      }
+
+      for (const id of activeTestTerminalIds) {
+        expect(response.terminals.some((t: Terminal) => t.id === id)).toBe(
+          true,
+        );
+      }
+    });
+
+    test('should filter terminals by cityId', async () => {
+      const response = await listTerminals({
+        filters: { cityId },
+      });
+
+      expect(
+        response.terminals.every((t: Terminal) => t.cityId === cityId),
+      ).toBe(true);
+    });
+
+    test('should combine ordering and filtering in paginated results', async () => {
+      const response = await listTerminalsPaginated({
+        filters: { active: true },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+        page: 1,
+        pageSize: 10,
+      });
+
+      expect(response.data.every((t: Terminal) => t.active === true)).toBe(
+        true,
+      );
+
+      const names = response.data.map((t: Terminal) => t.name);
+
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] <= names[i + 1]).toBe(true);
+      }
+
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(10);
+    });
+
+    test('should allow multi-field ordering', async () => {
+      const sameActiveStatusTerminals = [
+        {
+          name: 'Same Status A',
+          address: 'SSA St',
+          cityId: cityId,
+          latitude: 1,
+          longitude: 1,
+          code: 'SSA-T',
+          active: true,
+        },
+        {
+          name: 'Same Status B',
+          address: 'SSB St',
+          cityId: cityId,
+          latitude: 2,
+          longitude: 2,
+          code: 'SSB-T',
+          active: true,
+        },
+      ];
+
+      const createdTerminals: number[] = [];
+
+      try {
+        for (const terminal of sameActiveStatusTerminals) {
+          const created = await createTerminal(terminal);
+          createdTerminals.push(created.id);
+          additionalTerminalIds.push(created.id);
+        }
+
+        const response = await listTerminals({
+          orderBy: [
+            { field: 'active', direction: 'desc' },
+            { field: 'name', direction: 'asc' },
+          ],
+        });
+
+        const activeTerminals = response.terminals.filter(
+          (t: Terminal) => t.active === true,
+        );
+
+        const activeNames = activeTerminals.map((t: Terminal) => t.name);
+
+        for (let i = 0; i < activeNames.length - 1; i++) {
+          if (activeTerminals[i].active === activeTerminals[i + 1].active) {
+            expect(activeNames[i] <= activeNames[i + 1]).toBe(true);
+          }
+        }
+      } finally {
+        for (const id of createdTerminals) {
+          await deleteTerminal({ id });
+        }
+      }
+    });
+  });
+
+  describe('search functionality', () => {
+    test('should search terminals', async () => {
+      const searchableTerminal = await createTerminal({
+        name: 'Searchable Test Terminal',
+        address: 'Search St',
+        cityId: cityId,
+        latitude: 50,
+        longitude: 50,
+        code: 'SEARCH-T',
+        active: true,
+      });
+
+      additionalTerminalIds.push(searchableTerminal.id);
+
+      try {
+        const response = await searchTerminals({ term: 'Searchable' });
+
+        expect(response.terminals).toBeDefined();
+        expect(Array.isArray(response.terminals)).toBe(true);
+        expect(
+          response.terminals.some(
+            (t: Terminal) => t.id === searchableTerminal.id,
+          ),
+        ).toBe(true);
+      } finally {
+        await deleteTerminal({ id: searchableTerminal.id });
+        // Opción 1: Remover del array tras eliminar
+        additionalTerminalIds = additionalTerminalIds.filter(
+          (id) => id !== searchableTerminal.id,
+        );
+      }
+    });
+
+    test('should search terminals with pagination', async () => {
+      const response = await searchTerminalsPaginated({
+        term: 'Test',
+        page: 1,
+        pageSize: 5,
+      });
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
     });
   });
 });

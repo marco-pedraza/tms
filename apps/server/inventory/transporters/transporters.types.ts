@@ -1,5 +1,5 @@
 import { MinLen, MatchesRegexp, Min } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**
  * Base interface representing a transporter entity
@@ -176,6 +176,19 @@ export interface UpdateTransporterPayload {
 }
 
 /**
- * Paginated response type for the list transporters endpoint
+ * Response type for the list transporters endpoint (non-paginated)
  */
+export interface Transporters {
+  transporters: Transporter[];
+}
+
+export interface TransportersQueryOptions {
+  orderBy?: { field: keyof Transporter; direction: 'asc' | 'desc' }[];
+  filters?: Partial<Transporter>;
+}
+
 export type PaginatedTransporters = PaginatedResult<Transporter>;
+
+export interface PaginationParamsTransporters
+  extends PaginationParams,
+    TransportersQueryOptions {}

@@ -18,8 +18,10 @@ import {
   listDriversByBus,
   assignDriverToBus,
   removeDriverFromBus,
+  searchDrivers,
+  searchDriversPaginated,
 } from './drivers.controller';
-import { Drivers, Driver, DriverStatus } from './drivers.types';
+import { Driver, DriverStatus } from './drivers.types';
 import { transporterRepository } from '../transporters/transporters.repository';
 import { busLineRepository } from '../bus-lines/bus-lines.repository';
 import { serviceTypeRepository } from '../service-types/service-types.repository';
@@ -314,7 +316,7 @@ describe('Drivers Controller', () => {
       const response = await updateDriver({
         id: createdDriverId,
         fullName: updatedName,
-        status: updatedStatus,
+        status: updatedStatus as DriverStatus,
         statusDate: updatedStatusDate,
       });
 
@@ -457,12 +459,59 @@ describe('Drivers Controller', () => {
     });
 
     test('should return non-paginated list for dropdowns', async () => {
-      const response = (await listDrivers()) as Drivers;
+      const response = await listDrivers({});
 
       expect(response.drivers).toBeDefined();
       expect(Array.isArray(response.drivers)).toBe(true);
       // No pagination info should be present
-      expect((response as unknown).pagination).toBeUndefined();
+      // @ts-expect-error - response is of type Drivers
+      expect(response.pagination).toBeUndefined();
+    });
+  });
+
+  describe('search functionality', () => {
+    test('should search drivers', async () => {
+      // Create a unique driver for search testing
+      const searchableDriver = await createDriver({
+        driverKey: 'SRCH001',
+        fullName: 'Searchable Test Driver',
+        rfc: 'SRCH801201ABC',
+        curp: 'SRCH801201HDFXXX01',
+        imss: '55555555555',
+        email: 'searchable.driver@example.com',
+        phoneNumber: '5555555555',
+        driverType: 'STANDARD',
+        status: DriverStatus.ACTIVE,
+        statusDate: new Date(),
+      });
+
+      try {
+        // Search for the driver by term
+        const response = await searchDrivers({ term: 'Searchable' });
+
+        expect(response.drivers).toBeDefined();
+        expect(Array.isArray(response.drivers)).toBe(true);
+        expect(response.drivers.some((d) => d.id === searchableDriver.id)).toBe(
+          true,
+        );
+      } finally {
+        // Clean up
+        await deleteDriver({ id: searchableDriver.id });
+      }
+    });
+
+    test('should search drivers with pagination', async () => {
+      const response = await searchDriversPaginated({
+        term: 'Driver',
+        page: 1,
+        pageSize: 5,
+      });
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
     });
   });
 
@@ -866,6 +915,184 @@ describe('Drivers Controller', () => {
 
       // Transporter should still be assigned
       expect(response.transporterId).toBe(createdTransporterId);
+    });
+  });
+
+  describe('ordering and filtering', () => {
+    // Test drivers for ordering and filtering tests
+    const testDrivers: Driver[] = [];
+
+    beforeAll(async () => {
+      // Create test drivers with different properties
+      const drivers = [
+        {
+          driverKey: 'ORDR001',
+          fullName: 'Alpha Driver',
+          rfc: 'ALPH801201ABC',
+          curp: 'ALPH801201HDFXXX01',
+          email: 'alpha.driver@example.com',
+          phoneNumber: '5551234001',
+          driverType: 'STANDARD',
+          status: 'ACTIVE' as DriverStatus,
+          statusDate: new Date(),
+          active: true,
+        },
+        {
+          driverKey: 'ORDR002',
+          fullName: 'Beta Driver',
+          rfc: 'BETA801201ABC',
+          curp: 'BETA801201HDFXXX01',
+          email: 'beta.driver@example.com',
+          phoneNumber: '5551234002',
+          driverType: 'STANDARD',
+          status: 'ACTIVE' as DriverStatus, // Using ACTIVE since INACTIVE is not allowed as initial state
+          statusDate: new Date(),
+          active: false,
+        },
+        {
+          driverKey: 'ORDR003',
+          fullName: 'Gamma Driver',
+          rfc: 'GAMM801201ABC',
+          curp: 'GAMM801201HDFXXX01',
+          email: 'gamma.driver@example.com',
+          phoneNumber: '5551234003',
+          driverType: 'STANDARD',
+          status: 'ACTIVE' as DriverStatus,
+          statusDate: new Date(),
+          active: true,
+        },
+      ];
+
+      for (const driver of drivers) {
+        const created = await createDriver(driver);
+        testDrivers.push(created);
+      }
+    });
+
+    afterAll(async () => {
+      // Clean up test drivers
+      for (const driver of testDrivers) {
+        try {
+          await deleteDriver({ id: driver.id });
+        } catch (error) {
+          console.log(`Error cleaning up test driver ${driver.id}:`, error);
+        }
+      }
+    });
+
+    test('should order drivers by fullName descending', async () => {
+      const response = await listDrivers({
+        orderBy: [{ field: 'fullName', direction: 'desc' }],
+      });
+
+      const names = response.drivers.map((d) => d.fullName);
+      // Check if names are in descending order
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] >= names[i + 1]).toBe(true);
+      }
+    });
+
+    test('should filter drivers by active status', async () => {
+      const response = await listDrivers({
+        filters: { active: true },
+      });
+
+      // All returned drivers should be active
+      expect(response.drivers.every((d) => d.active === true)).toBe(true);
+      // Should include our active test drivers
+      const activeTestDriverIds = testDrivers
+        .filter((d) => d.active)
+        .map((d) => d.id);
+
+      for (const id of activeTestDriverIds) {
+        expect(response.drivers.some((d) => d.id === id)).toBe(true);
+      }
+    });
+
+    test('should combine ordering and filtering in paginated results', async () => {
+      const response = await listDriversPaginated({
+        filters: { active: true },
+        orderBy: [{ field: 'fullName', direction: 'asc' }],
+        page: 1,
+        pageSize: 10,
+      });
+
+      // Check filtering
+      expect(response.data.every((d) => d.active === true)).toBe(true);
+
+      // Check ordering (ascending)
+      const names = response.data.map((d) => d.fullName);
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] <= names[i + 1]).toBe(true);
+      }
+
+      // Check pagination properties
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(10);
+    });
+
+    test('should allow multi-field ordering', async () => {
+      // Create drivers with same active status but different names
+      const sameStatusDrivers = [
+        {
+          driverKey: 'MULT001',
+          fullName: 'Same Status A',
+          rfc: 'SSTA801201ABC',
+          curp: 'SSTA801201HDFXXX01',
+          email: 'status.a@example.com',
+          phoneNumber: '5559991001',
+          driverType: 'STANDARD',
+          status: 'ACTIVE' as DriverStatus,
+          statusDate: new Date(),
+          active: true,
+        },
+        {
+          driverKey: 'MULT002',
+          fullName: 'Same Status B',
+          rfc: 'SSTB801201ABC',
+          curp: 'SSTB801201HDFXXX01',
+          email: 'status.b@example.com',
+          phoneNumber: '5559991002',
+          driverType: 'STANDARD',
+          status: 'ACTIVE' as DriverStatus,
+          statusDate: new Date(),
+          active: true,
+        },
+      ];
+
+      const createdDrivers: Driver[] = [];
+
+      try {
+        for (const driver of sameStatusDrivers) {
+          const created = await createDriver(driver);
+          createdDrivers.push(created);
+        }
+
+        // Order by active status first, then by fullName
+        const response = await listDrivers({
+          orderBy: [
+            { field: 'active', direction: 'desc' },
+            { field: 'fullName', direction: 'asc' },
+          ],
+        });
+
+        // Get all active drivers and verify they're ordered by name
+        const activeDrivers = response.drivers.filter((d) => d.active === true);
+        const activeNames = activeDrivers.map((d) => d.fullName);
+
+        for (let i = 0; i < activeNames.length - 1; i++) {
+          if (activeDrivers[i].active === activeDrivers[i + 1].active) {
+            // If active status is the same, names should be in ascending order
+            expect(activeNames[i] <= activeNames[i + 1]).toBe(true);
+          }
+        }
+      } finally {
+        // Clean up
+        for (const driver of createdDrivers) {
+          await deleteDriver({ id: driver.id });
+        }
+      }
     });
   });
 });

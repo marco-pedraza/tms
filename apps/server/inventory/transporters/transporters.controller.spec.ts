@@ -2,10 +2,14 @@ import { expect, describe, test, beforeAll, afterAll } from 'vitest';
 import {
   createTransporter,
   getTransporter,
-  listTransporters,
   updateTransporter,
   deleteTransporter,
+  listTransporters,
+  listTransportersPaginated,
+  searchTransporters,
+  searchTransportersPaginated,
 } from './transporters.controller';
+import type { Transporter } from './transporters.types';
 import { createCity, deleteCity } from '../cities/cities.controller';
 import { createState, deleteState } from '../states/states.controller';
 import {
@@ -14,10 +18,11 @@ import {
 } from '../countries/countries.controller';
 
 describe('Transporters Controller', () => {
-  // Test data and setup
   let countryId: number;
   let stateId: number;
-  let cityId: number; // We need a valid city ID for headquarter
+  let cityId: number;
+  let createdTransporterId: number;
+  let additionalTransporterIds: number[] = [];
 
   const testTransporter = {
     name: 'Test Transporter',
@@ -31,100 +36,76 @@ describe('Transporters Controller', () => {
     active: true,
   };
 
-  // Variable to store created IDs for cleanup
-  let createdTransporterId: number;
-  // Array to track additional transporters created in tests
-  let additionalTransporterIds: number[] = [];
-
-  // Setup test dependencies - create country, state, and city
   beforeAll(async () => {
-    // Create a temporary country
     const country = await createCountry({
       name: 'Test Country for Transporters',
       code: 'TCT',
       active: true,
     });
     countryId = country.id;
-
-    // Create a temporary state using the country
     const state = await createState({
       name: 'Test State for Transporters',
       code: 'TST',
-      countryId: countryId,
+      countryId,
       active: true,
     });
     stateId = state.id;
-
-    // Create a temporary city using the state
     const city = await createCity({
       name: 'Test City for Transporters',
-      stateId: stateId,
+      stateId,
       latitude: 19.4326,
       longitude: -99.1332,
       timezone: 'America/Mexico_City',
-      slug: 'test-city-transporters',
       active: true,
     });
     cityId = city.id;
   });
 
-  // Clean up after all tests
   afterAll(async () => {
-    // Clean up any additional transporters created during tests
     for (const id of additionalTransporterIds) {
       try {
         await deleteTransporter({ id });
-      } catch (error) {
-        console.log(`Error cleaning up additional transporter ${id}:`, error);
+        // eslint-disable-next-line
+      } catch (error: any) {
+        if (
+          error?.name === 'NotFoundError' ||
+          (typeof error?.message === 'string' &&
+            error.message.toLowerCase().includes('not found'))
+        ) {
+          continue;
+        }
+
+        console.error(`Error deleting additional transporter ${id}:`, error);
       }
     }
-
-    // Clean up the main created transporter if any
     if (createdTransporterId) {
       try {
         await deleteTransporter({ id: createdTransporterId });
       } catch (error) {
-        console.log('Error cleaning up test transporter:', error);
+        console.error('Error deleting main test transporter:', error);
       }
     }
-
-    // Clean up the created city
-    if (cityId) {
-      try {
-        await deleteCity({ id: cityId });
-      } catch (error) {
-        console.log('Error cleaning up test city:', error);
-      }
+    try {
+      await deleteCity({ id: cityId });
+    } catch (error) {
+      console.error('Error deleting city:', error);
     }
-
-    // Clean up the created state
-    if (stateId) {
-      try {
-        await deleteState({ id: stateId });
-      } catch (error) {
-        console.log('Error cleaning up test state:', error);
-      }
+    try {
+      await deleteState({ id: stateId });
+    } catch (error) {
+      console.error('Error deleting state:', error);
     }
-
-    // Clean up the created country
-    if (countryId) {
-      try {
-        await deleteCountry({ id: countryId });
-      } catch (error) {
-        console.log('Error cleaning up test country:', error);
-      }
+    try {
+      await deleteCountry({ id: countryId });
+    } catch (error) {
+      console.error('Error deleting country:', error);
     }
   });
 
   describe('success scenarios', () => {
     test('should create a new transporter', async () => {
-      // Create a transporter without headquarter city
       const response = await createTransporter(testTransporter);
-
-      // Store the ID for later cleanup
       createdTransporterId = response.id;
-
-      // Assertions
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
       expect(response.name).toBe(testTransporter.name);
@@ -140,7 +121,6 @@ describe('Transporters Controller', () => {
     });
 
     test('should create a transporter with headquarter city', async () => {
-      // Create a transporter with headquarter city
       const transporterWithHeadquarter = await createTransporter({
         name: 'Transporter With Headquarter',
         code: 'TRN-HQ',
@@ -148,17 +128,10 @@ describe('Transporters Controller', () => {
         headquarterCityId: cityId,
         active: true,
       });
-
-      // Add to list of transporters to clean up
       additionalTransporterIds.push(transporterWithHeadquarter.id);
-
-      // Assertions
       expect(transporterWithHeadquarter).toBeDefined();
       expect(transporterWithHeadquarter.headquarterCityId).toBe(cityId);
-
-      // Clean up
       await deleteTransporter({ id: transporterWithHeadquarter.id });
-      // Remove from cleanup list since we just deleted it
       additionalTransporterIds = additionalTransporterIds.filter(
         (id) => id !== transporterWithHeadquarter.id,
       );
@@ -166,31 +139,24 @@ describe('Transporters Controller', () => {
 
     test('should retrieve a transporter by ID', async () => {
       const response = await getTransporter({ id: createdTransporterId });
-
       expect(response).toBeDefined();
       expect(response.id).toBe(createdTransporterId);
       expect(response.name).toBe(testTransporter.name);
       expect(response.code).toBe(testTransporter.code);
     });
 
-    test('should list all transporters', async () => {
+    test('should list all transporters (non-paginated)', async () => {
       const result = await listTransporters({});
-
       expect(result).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
-
-      // Verify our test transporter is in the list
+      expect(Array.isArray(result.transporters)).toBe(true);
       expect(
-        result.data.some(
-          (transporter) => transporter.id === createdTransporterId,
-        ),
+        result.transporters.some((t) => t.id === createdTransporterId),
       ).toBe(true);
+      expect(result).not.toHaveProperty('pagination');
     });
 
     test('should retrieve paginated transporters', async () => {
-      const result = await listTransporters({ page: 1, pageSize: 10 });
-
-      // Check the structure of the response
+      const result = await listTransportersPaginated({ page: 1, pageSize: 10 });
       expect(result).toBeDefined();
       expect(Array.isArray(result.data)).toBe(true);
       expect(result.pagination).toBeDefined();
@@ -200,24 +166,14 @@ describe('Transporters Controller', () => {
       expect(typeof result.pagination.totalPages).toBe('number');
       expect(typeof result.pagination.hasNextPage).toBe('boolean');
       expect(typeof result.pagination.hasPreviousPage).toBe('boolean');
-
-      // We should at least find our test transporter
-      expect(
-        result.data.some(
-          (transporter) => transporter.id === createdTransporterId,
-        ),
-      ).toBe(true);
-
-      // Pagination values should make sense
+      expect(result.data.some((t) => t.id === createdTransporterId)).toBe(true);
       expect(result.pagination.currentPage).toBe(1);
       expect(result.pagination.pageSize).toBe(10);
       expect(result.pagination.totalCount).toBeGreaterThanOrEqual(1);
     });
 
     test('pagination should respect pageSize parameter for transporters', async () => {
-      // Request with a small page size
-      const result = await listTransporters({ page: 1, pageSize: 1 });
-
+      const result = await listTransportersPaginated({ page: 1, pageSize: 1 });
       expect(result.data.length).toBeLessThanOrEqual(1);
       expect(result.pagination.pageSize).toBe(1);
     });
@@ -225,18 +181,15 @@ describe('Transporters Controller', () => {
     test('should update a transporter', async () => {
       const updatedName = 'Updated Test Transporter';
       const updatedPhone = '+9876543210';
-
       const response = await updateTransporter({
         id: createdTransporterId,
         name: updatedName,
         phone: updatedPhone,
       });
-
       expect(response).toBeDefined();
       expect(response.id).toBe(createdTransporterId);
       expect(response.name).toBe(updatedName);
       expect(response.phone).toBe(updatedPhone);
-      // Other fields should remain unchanged
       expect(response.code).toBe(testTransporter.code);
       expect(response.description).toBe(testTransporter.description);
     });
@@ -246,25 +199,23 @@ describe('Transporters Controller', () => {
         id: createdTransporterId,
         headquarterCityId: cityId,
       });
-
       expect(response).toBeDefined();
       expect(response.headquarterCityId).toBe(cityId);
     });
 
     test('should delete a transporter', async () => {
-      // Create a transporter specifically for deletion test
       const transporterToDelete = await createTransporter({
         name: 'Transporter To Delete',
         code: 'DEL-TRP',
         active: true,
       });
-
-      // Delete should not throw an error
+      additionalTransporterIds.push(transporterToDelete.id);
       await expect(
         deleteTransporter({ id: transporterToDelete.id }),
       ).resolves.not.toThrow();
-
-      // Attempt to get should throw a not found error
+      additionalTransporterIds = additionalTransporterIds.filter(
+        (id) => id !== transporterToDelete.id,
+      );
       await expect(
         getTransporter({ id: transporterToDelete.id }),
       ).rejects.toThrow();
@@ -272,33 +223,128 @@ describe('Transporters Controller', () => {
   });
 
   describe('error scenarios', () => {
-    // NOTE: We are not testing the validation errors because it's handled by Encore rust runtime and they are not thrown in the controller
-
     test('should handle not found errors', async () => {
       await expect(getTransporter({ id: 9999 })).rejects.toThrow();
     });
 
     test('should handle duplicate errors', async () => {
-      // Try to create transporter with same code as existing one
       await expect(
         createTransporter({
           name: 'Another Test Transporter',
-          code: testTransporter.code, // Using the same code as our main test transporter
+          code: testTransporter.code,
           active: true,
         }),
       ).rejects.toThrow();
     });
 
     test('should handle invalid headquarter city ID', async () => {
-      // Try to create a transporter with a non-existent city ID
       await expect(
         createTransporter({
           name: 'Invalid Headquarter Transporter',
           code: 'INV-HDQT',
-          headquarterCityId: 9999, // Non-existent city ID
+          headquarterCityId: 9999,
           active: true,
         }),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('pagination, ordering, and filtering', () => {
+    const testTransporters: Transporter[] = [];
+    beforeAll(async () => {
+      const transportersToCreate = [
+        { name: 'Alpha Transporter', code: 'ALPHA', active: true },
+        { name: 'Beta Transporter', code: 'BETA', active: false },
+        { name: 'Gamma Transporter', code: 'GAMMA', active: true },
+      ];
+      for (const t of transportersToCreate) {
+        const created = await createTransporter(t);
+        testTransporters.push(created);
+        additionalTransporterIds.push(created.id);
+      }
+    });
+    afterAll(async () => {
+      for (const t of testTransporters) {
+        try {
+          await deleteTransporter({ id: t.id });
+        } catch (error) {
+          console.error(`Error deleting test transporter ${t.id}:`, error);
+        }
+      }
+    });
+
+    test('should order transporters by name descending', async () => {
+      const response = await listTransporters({
+        orderBy: [{ field: 'name', direction: 'desc' }],
+      });
+      const names = response.transporters.map((t) => t.name);
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] >= names[i + 1]).toBe(true);
+      }
+    });
+
+    test('should filter transporters by active status', async () => {
+      const response = await listTransporters({ filters: { active: true } });
+      expect(response.transporters.every((t) => t.active === true)).toBe(true);
+    });
+
+    test('should filter transporters by code', async () => {
+      const response = await listTransporters({ filters: { code: 'ALPHA' } });
+      expect(response.transporters.every((t) => t.code === 'ALPHA')).toBe(true);
+    });
+
+    test('should combine ordering and filtering in paginated results', async () => {
+      const response = await listTransportersPaginated({
+        filters: { active: true },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+        page: 1,
+        pageSize: 10,
+      });
+      expect(response.data.every((t) => t.active === true)).toBe(true);
+      const names = response.data.map((t) => t.name);
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] <= names[i + 1]).toBe(true);
+      }
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(10);
+    });
+  });
+
+  describe('search functionality', () => {
+    test('should search transporters', async () => {
+      const searchableTransporter = await createTransporter({
+        name: 'Searchable Test Transporter',
+        code: 'SEARCH',
+        active: true,
+      });
+      additionalTransporterIds.push(searchableTransporter.id);
+      try {
+        const response = await searchTransporters({ term: 'Searchable' });
+        expect(response.transporters).toBeDefined();
+        expect(Array.isArray(response.transporters)).toBe(true);
+        expect(
+          response.transporters.some((t) => t.id === searchableTransporter.id),
+        ).toBe(true);
+      } finally {
+        await deleteTransporter({ id: searchableTransporter.id });
+        additionalTransporterIds = additionalTransporterIds.filter(
+          (id) => id !== searchableTransporter.id,
+        );
+      }
+    });
+
+    test('should search transporters with pagination', async () => {
+      const response = await searchTransportersPaginated({
+        term: 'Test',
+        page: 1,
+        pageSize: 5,
+      });
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
     });
   });
 });

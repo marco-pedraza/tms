@@ -4,18 +4,17 @@ import type {
   CreateTerminalPayload,
   UpdateTerminalPayload,
   Terminal,
+  Terminals,
   PaginatedTerminals,
+  PaginationParamsTerminals,
+  TerminalsQueryOptions,
 } from './terminals.types';
-import { PaginationParams } from '../../shared/types';
 
 /**
  * Creates a new terminal.
- * @param params - The terminal data to create
- * @returns {Promise<Terminal>} The created terminal
- * @throws {APIError} If the terminal creation fails
  */
 export const createTerminal = api(
-  { method: 'POST', path: '/terminals', expose: true },
+  { expose: true, method: 'POST', path: '/terminals' },
   async (params: CreateTerminalPayload): Promise<Terminal> => {
     return await terminalRepository.create(params);
   },
@@ -23,40 +22,42 @@ export const createTerminal = api(
 
 /**
  * Retrieves a terminal by its ID.
- * @param params - Object containing the terminal ID
- * @param params.id - The ID of the terminal to retrieve
- * @returns {Promise<Terminal>} The found terminal
- * @throws {APIError} If the terminal is not found or retrieval fails
  */
 export const getTerminal = api(
-  { method: 'GET', path: '/terminals/:id', expose: true },
+  { expose: true, method: 'GET', path: '/terminals/:id' },
   async ({ id }: { id: number }): Promise<Terminal> => {
     return await terminalRepository.findOne(id);
   },
 );
 
 /**
- * Retrieves terminals with pagination.
- * @param params - Pagination parameters
- * @returns {Promise<PaginatedTerminals>} Paginated list of terminals
- * @throws {APIError} If retrieval fails
+ * Retrieves all terminals without pagination (useful for dropdowns).
  */
 export const listTerminals = api(
-  { method: 'GET', path: '/terminals', expose: true },
-  async (params: PaginationParams): Promise<PaginatedTerminals> => {
+  { expose: true, method: 'POST', path: '/get-terminals' },
+  async (params: TerminalsQueryOptions): Promise<Terminals> => {
+    const terminals = await terminalRepository.findAll(params);
+    return {
+      terminals,
+    };
+  },
+);
+
+/**
+ * Retrieves terminals with pagination (useful for tables).
+ */
+export const listTerminalsPaginated = api(
+  { expose: true, method: 'POST', path: '/get-terminals/paginated' },
+  async (params: PaginationParamsTerminals): Promise<PaginatedTerminals> => {
     return await terminalRepository.findAllPaginated(params);
   },
 );
 
 /**
  * Updates an existing terminal.
- * @param params - Object containing the terminal ID and update data
- * @param params.id - The ID of the terminal to update
- * @returns {Promise<Terminal>} The updated terminal
- * @throws {APIError} If the terminal is not found or update fails
  */
 export const updateTerminal = api(
-  { method: 'PUT', path: '/terminals/:id', expose: true },
+  { expose: true, method: 'PUT', path: '/terminals/:id' },
   async ({
     id,
     ...data
@@ -67,14 +68,38 @@ export const updateTerminal = api(
 
 /**
  * Deletes a terminal by its ID.
- * @param params - Object containing the terminal ID
- * @param params.id - The ID of the terminal to delete
- * @returns {Promise<Terminal>} The deleted terminal
- * @throws {APIError} If the terminal is not found or deletion fails
  */
 export const deleteTerminal = api(
-  { method: 'DELETE', path: '/terminals/:id', expose: true },
+  { expose: true, method: 'DELETE', path: '/terminals/:id' },
   async ({ id }: { id: number }): Promise<Terminal> => {
     return await terminalRepository.delete(id);
+  },
+);
+
+/**
+ * Searches for terminals by matching a search term against name, code, and slug.
+ */
+export const searchTerminals = api(
+  { expose: true, method: 'GET', path: '/terminals/search' },
+  async ({ term }: { term: string }): Promise<Terminals> => {
+    const terminals = await terminalRepository.search(term);
+    return {
+      terminals,
+    };
+  },
+);
+
+/**
+ * Searches for terminals with pagination by matching a search term against name, code, and slug.
+ */
+export const searchTerminalsPaginated = api(
+  { expose: true, method: 'POST', path: '/terminals/search/paginated' },
+  async ({
+    term,
+    ...params
+  }: PaginationParamsTerminals & {
+    term: string;
+  }): Promise<PaginatedTerminals> => {
+    return await terminalRepository.searchPaginated(term, params);
   },
 );

@@ -2,10 +2,12 @@ import { expect, describe, test, beforeAll, afterAll } from 'vitest';
 import {
   createBusLine,
   getBusLine,
-  listBusLines,
-  listBusLinesPaginated,
   updateBusLine,
   deleteBusLine,
+  listBusLines,
+  listBusLinesPaginated,
+  searchBusLines,
+  searchBusLinesPaginated,
 } from './bus-lines.controller';
 import {
   createTransporter,
@@ -15,6 +17,7 @@ import {
   createServiceType,
   deleteServiceType,
 } from '../service-types/service-types.controller';
+import type { BusLine } from './bus-lines.types';
 
 describe('Bus Lines Controller', () => {
   // Test data and setup
@@ -65,8 +68,8 @@ describe('Bus Lines Controller', () => {
     for (const id of additionalBusLineIds) {
       try {
         await deleteBusLine({ id });
-      } catch (error) {
-        console.log(`Error cleaning up additional bus line ${id}:`, error);
+      } catch {
+        // Silent error handling for cleanup
       }
     }
 
@@ -74,8 +77,8 @@ describe('Bus Lines Controller', () => {
     if (createdBusLineId) {
       try {
         await deleteBusLine({ id: createdBusLineId });
-      } catch (error) {
-        console.log('Error cleaning up test bus line:', error);
+      } catch {
+        // Silent error handling for cleanup
       }
     }
 
@@ -83,8 +86,8 @@ describe('Bus Lines Controller', () => {
     if (serviceTypeId) {
       try {
         await deleteServiceType({ id: serviceTypeId });
-      } catch (error) {
-        console.log('Error cleaning up test service type:', error);
+      } catch {
+        // Silent error handling for cleanup
       }
     }
 
@@ -92,8 +95,8 @@ describe('Bus Lines Controller', () => {
     if (transporterId) {
       try {
         await deleteTransporter({ id: transporterId });
-      } catch (error) {
-        console.log('Error cleaning up test transporter:', error);
+      } catch {
+        // Silent error handling for cleanup
       }
     }
   });
@@ -162,7 +165,7 @@ describe('Bus Lines Controller', () => {
     });
 
     test('should list all bus lines', async () => {
-      const result = await listBusLines();
+      const result = await listBusLines({});
 
       expect(result).toBeDefined();
       expect(Array.isArray(result.busLines)).toBe(true);
@@ -171,6 +174,19 @@ describe('Bus Lines Controller', () => {
       expect(
         result.busLines.some((busLine) => busLine.id === createdBusLineId),
       ).toBe(true);
+    });
+
+    test('should list bus lines with custom query options', async () => {
+      const result = await listBusLines({
+        filters: { active: true },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.busLines)).toBe(true);
+      expect(result.busLines.every((busLine) => busLine.active === true)).toBe(
+        true,
+      );
     });
 
     test('should retrieve paginated bus lines', async () => {
@@ -305,6 +321,197 @@ describe('Bus Lines Controller', () => {
           active: true,
         }),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('ordering and filtering', () => {
+    const testBusLines: BusLine[] = [];
+
+    beforeAll(async () => {
+      const busLines = [
+        {
+          name: 'Alpha Bus Line',
+          code: 'ALPHA-BL',
+          transporterId,
+          serviceTypeId,
+          active: true,
+        },
+        {
+          name: 'Beta Bus Line',
+          code: 'BETA-BL',
+          transporterId,
+          serviceTypeId,
+          active: false,
+        },
+        {
+          name: 'Gamma Bus Line',
+          code: 'GAMMA-BL',
+          transporterId,
+          serviceTypeId,
+          active: true,
+        },
+      ];
+
+      for (const busLine of busLines) {
+        const created = await createBusLine(busLine);
+        testBusLines.push(created);
+        additionalBusLineIds.push(created.id);
+      }
+    });
+
+    afterAll(async () => {
+      for (const id of testBusLines.map((bl) => bl.id)) {
+        try {
+          await deleteBusLine({ id });
+        } catch (error) {
+          console.error(`Error deleting test bus line ${id}:`, error);
+        }
+      }
+    });
+
+    test('should order bus lines by name descending', async () => {
+      const response = await listBusLines({
+        orderBy: [{ field: 'name', direction: 'desc' }],
+      });
+
+      const names = response.busLines.map((bl) => bl.name);
+
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] >= names[i + 1]).toBe(true);
+      }
+    });
+
+    test('should filter bus lines by active status', async () => {
+      const response = await listBusLines({
+        filters: { active: true },
+      });
+
+      expect(response.busLines.every((bl) => bl.active === true)).toBe(true);
+
+      const activeTestBusLineIds = testBusLines
+        .filter((bl) => bl.active)
+        .map((bl) => bl.id);
+
+      for (const id of activeTestBusLineIds) {
+        expect(response.busLines.some((bl) => bl.id === id)).toBe(true);
+      }
+    });
+
+    test('should combine ordering and filtering in paginated results', async () => {
+      const response = await listBusLinesPaginated({
+        filters: { active: true },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+        page: 1,
+        pageSize: 10,
+      });
+
+      expect(response.data.every((bl) => bl.active === true)).toBe(true);
+
+      const names = response.data.map((bl) => bl.name);
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] <= names[i + 1]).toBe(true);
+      }
+
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(10);
+    });
+
+    test('should allow multi-field ordering', async () => {
+      const sameActiveStatusBusLines = [
+        {
+          name: 'Same Status A',
+          code: 'SSA-BL',
+          transporterId,
+          serviceTypeId,
+          active: true,
+        },
+        {
+          name: 'Same Status B',
+          code: 'SSB-BL',
+          transporterId,
+          serviceTypeId,
+          active: true,
+        },
+      ];
+
+      const createdBusLines: BusLine[] = [];
+
+      try {
+        for (const busLine of sameActiveStatusBusLines) {
+          const created = await createBusLine(busLine);
+          createdBusLines.push(created);
+          additionalBusLineIds.push(created.id);
+        }
+
+        const response = await listBusLines({
+          orderBy: [
+            { field: 'active', direction: 'desc' },
+            { field: 'name', direction: 'asc' },
+          ],
+        });
+
+        const activeBusLines = response.busLines.filter(
+          (bl) => bl.active === true,
+        );
+        const activeNames = activeBusLines.map((bl) => bl.name);
+
+        for (let i = 0; i < activeNames.length - 1; i++) {
+          if (activeBusLines[i].active === activeBusLines[i + 1].active) {
+            expect(activeNames[i] <= activeNames[i + 1]).toBe(true);
+          }
+        }
+      } finally {
+        for (const busLine of createdBusLines) {
+          await deleteBusLine({ id: busLine.id });
+          additionalBusLineIds = additionalBusLineIds.filter(
+            (id) => id !== busLine.id,
+          );
+        }
+      }
+    });
+  });
+
+  describe('search functionality', () => {
+    test('should search bus lines', async () => {
+      const searchableBusLine = await createBusLine({
+        name: 'Searchable Test Bus Line',
+        code: 'SEARCH-BL',
+        transporterId,
+        serviceTypeId,
+        active: true,
+      });
+
+      additionalBusLineIds.push(searchableBusLine.id);
+
+      try {
+        const response = await searchBusLines({ term: 'Searchable' });
+
+        expect(response.busLines).toBeDefined();
+        expect(Array.isArray(response.busLines)).toBe(true);
+        expect(
+          response.busLines.some((bl) => bl.id === searchableBusLine.id),
+        ).toBe(true);
+      } finally {
+        await deleteBusLine({ id: searchableBusLine.id });
+        additionalBusLineIds = additionalBusLineIds.filter(
+          (id) => id !== searchableBusLine.id,
+        );
+      }
+    });
+
+    test('should search bus lines with pagination', async () => {
+      const response = await searchBusLinesPaginated({
+        term: 'Test',
+        page: 1,
+        pageSize: 5,
+      });
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
     });
   });
 });

@@ -1,6 +1,6 @@
 // API types
 import { MinLen, MatchesRegexp } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**
  * Enum for driver status states
@@ -290,17 +290,17 @@ export interface CreateDriverPayload {
   /**
    * The transporter this driver is associated with
    */
-  transporterId?: number;
+  transporterId?: number | null;
 
   /**
    * The bus line this driver is associated with
    */
-  busLineId?: number;
+  busLineId?: number | null;
 
   /**
    * The bus this driver is assigned to
    */
-  busId?: number;
+  busId?: number | null;
 }
 
 /**
@@ -467,17 +467,17 @@ export interface UpdateDriverPayload {
   /**
    * The transporter this driver is associated with
    */
-  transporterId?: number;
+  transporterId?: number | null;
 
   /**
    * The bus line this driver is associated with
    */
-  busLineId?: number;
+  busLineId?: number | null;
 
   /**
    * The bus this driver is assigned to
    */
-  busId?: number;
+  busId?: number | null;
 }
 
 /**
@@ -489,9 +489,24 @@ export interface Drivers {
 }
 
 /**
+ * Query options for filtering and ordering drivers
+ */
+export interface DriversQueryOptions {
+  orderBy?: { field: keyof Driver; direction: 'asc' | 'desc' }[];
+  filters?: Partial<Driver>;
+}
+
+/**
  * Paginated list of drivers
  */
 export type PaginatedDrivers = PaginatedResult<Driver>;
+
+/**
+ * Pagination parameters with drivers query options
+ */
+export interface PaginationParamsDrivers
+  extends PaginationParams,
+    DriversQueryOptions {}
 
 /**
  * Response containing list of possible driver statuses

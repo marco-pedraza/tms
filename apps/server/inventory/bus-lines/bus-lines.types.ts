@@ -1,5 +1,5 @@
 import { MinLen, MatchesRegexp, Min } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**
  * Base interface representing a bus line entity
@@ -156,16 +156,29 @@ export interface UpdateBusLinePayload {
 }
 
 /**
+ * Response type for the list bus lines endpoint (non-paginated)
+ */
+export interface BusLines {
+  /** List of bus line entities */
+  busLines: BusLine[];
+}
+
+/**
+ * Query options for filtering and ordering bus lines
+ */
+export interface BusLinesQueryOptions {
+  orderBy?: { field: keyof BusLine; direction: 'asc' | 'desc' }[];
+  filters?: Partial<BusLine>;
+}
+
+/**
  * Paginated response type for the list bus lines endpoint
  */
 export type PaginatedBusLines = PaginatedResult<BusLine>;
 
 /**
- * Collection of bus lines
+ * Pagination parameters with bus lines query options
  */
-export interface BusLines {
-  /**
-   * List of bus line entities
-   */
-  busLines: BusLine[];
-}
+export interface PaginationParamsBusLines
+  extends PaginationParams,
+    BusLinesQueryOptions {}

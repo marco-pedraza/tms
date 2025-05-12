@@ -1,7 +1,7 @@
+import log from 'encore.dev/log';
 import * as Sentry from '@sentry/node';
 import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import { appMeta } from 'encore.dev';
-import log from 'encore.dev/log';
 import { getSentryDSN } from '../inventory/secrets';
 
 let isInitialized = false;

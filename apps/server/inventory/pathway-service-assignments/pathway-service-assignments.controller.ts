@@ -1,9 +1,9 @@
 import { api } from 'encore.dev/api';
-import { pathwayServiceAssignmentRepository } from './pathway-service-assignments.repository';
 import {
-  UpdatePathwayServiceAssignmentPayload,
   PathwayServiceAssignment,
+  UpdatePathwayServiceAssignmentPayload,
 } from './pathway-service-assignments.types';
+import { pathwayServiceAssignmentRepository } from './pathway-service-assignments.repository';
 
 /**
  * Updates an existing pathway service assignment's metadata

@@ -1,16 +1,16 @@
-import { expect, describe, test, beforeAll, afterAll } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { deleteSeatDiagram } from '../seat-diagrams/seat-diagrams.controller';
+import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
+import { seatLayoutModelRepository } from '../seat-layout-models/seat-layout-models.repository';
+import { SeatPosition, SeatType } from './bus-seats.types';
 import {
   createBusSeat,
   createBusSeatsBatch,
+  deleteBusSeat,
   getBusSeat,
   listBusSeatsBySeatDiagram,
   updateBusSeat,
-  deleteBusSeat,
 } from './bus-seats.controller';
-import { deleteSeatDiagram } from '../seat-diagrams/seat-diagrams.controller';
-import { SeatType, SeatPosition } from './bus-seats.types';
-import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
-import { seatLayoutModelRepository } from '../seat-layout-models/seat-layout-models.repository';
 
 describe('Bus Seats Controller', () => {
   // Test data and setup

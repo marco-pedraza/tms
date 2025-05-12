@@ -1,14 +1,14 @@
 import {
+  boolean,
+  integer,
   pgTable,
   serial,
   text,
-  varchar,
-  boolean,
   timestamp,
-  integer,
+  varchar,
 } from 'drizzle-orm/pg-core';
-import { transporters } from '../transporters/transporters.schema';
 import { serviceTypes } from '../service-types/service-types.schema';
+import { transporters } from '../transporters/transporters.schema';
 
 /**
  * Database table for bus lines (branded bus services operated by transporters)

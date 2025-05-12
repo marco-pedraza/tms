@@ -1,10 +1,10 @@
 import {
+  boolean,
+  integer,
   pgTable,
   serial,
   text,
   timestamp,
-  boolean,
-  integer,
 } from 'drizzle-orm/pg-core';
 import { countries } from '../countries/countries.schema';
 

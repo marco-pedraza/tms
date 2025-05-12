@@ -1,23 +1,23 @@
-import { expect, describe, test, afterAll, beforeAll } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { createTenant, deleteTenant } from '../tenants/tenants.controller';
+import type { CreateTenantPayload } from '../tenants/tenants.types';
+import type {
+  CreateDepartmentPayload,
+  Department,
+  UpdateDepartmentPayload,
+} from './departments.types';
 import {
   createDepartment,
+  deleteDepartment,
   getDepartment,
   listDepartments,
   listDepartmentsPaginated,
   listTenantDepartments,
   listTenantDepartmentsPaginated,
-  updateDepartment,
-  deleteDepartment,
   searchDepartments,
   searchDepartmentsPaginated,
+  updateDepartment,
 } from './departments.controller';
-import type {
-  CreateDepartmentPayload,
-  UpdateDepartmentPayload,
-  Department,
-} from './departments.types';
-import { createTenant, deleteTenant } from '../tenants/tenants.controller';
-import type { CreateTenantPayload } from '../tenants/tenants.types';
 
 describe('Departments Controller', () => {
   // Test data

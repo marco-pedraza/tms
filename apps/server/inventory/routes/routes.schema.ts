@@ -1,17 +1,17 @@
 import {
+  boolean,
+  integer,
   pgTable,
+  real,
   serial,
   text,
-  boolean,
   timestamp,
-  integer,
-  real,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { cities } from '../cities/cities.schema';
-import { terminals } from '../terminals/terminals.schema';
 import { pathways } from '../pathways/pathways.schema';
 import { routeSegments } from '../route-segment/route-segment.schema';
+import { terminals } from '../terminals/terminals.schema';
 
 export const routes = pgTable('routes', {
   id: serial('id').primaryKey(),

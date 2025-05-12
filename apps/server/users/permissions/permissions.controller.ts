@@ -1,14 +1,14 @@
 import { api } from 'encore.dev/api';
-import { permissionRepository } from './permissions.repository';
 import type {
   CreatePermissionPayload,
-  UpdatePermissionPayload,
+  PaginatedPermissions,
+  PaginationParamsPermissions,
   Permission,
   Permissions,
-  PaginatedPermissions,
   PermissionsQueryOptions,
-  PaginationParamsPermissions,
+  UpdatePermissionPayload,
 } from './permissions.types';
+import { permissionRepository } from './permissions.repository';
 
 /**
  * Creates a new permission.

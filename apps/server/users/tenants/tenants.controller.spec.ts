@@ -1,20 +1,20 @@
-import { describe, it, expect, afterAll, beforeAll } from 'vitest';
-import {
-  createTenant,
-  getTenant,
-  listTenants,
-  updateTenant,
-  deleteTenant,
-  listTenantsWithPagination,
-  getTenantsLegacy,
-  searchTenants,
-  searchTenantsPaginated,
-} from './tenants.controller';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type {
   CreateTenantPayload,
-  UpdateTenantPayload,
   Tenant,
+  UpdateTenantPayload,
 } from './tenants.types';
+import {
+  createTenant,
+  deleteTenant,
+  getTenant,
+  getTenantsLegacy,
+  listTenants,
+  listTenantsWithPagination,
+  searchTenants,
+  searchTenantsPaginated,
+  updateTenant,
+} from './tenants.controller';
 
 describe('Tenants Controller', () => {
   // Test data and IDs array for cleanup

@@ -1,12 +1,12 @@
 import { secret } from 'encore.dev/config';
-import { userRepository } from './users.repository';
-import type {
-  UpdateUserPayload,
-  SafeUser,
-  ChangePasswordPayload,
-} from './users.types';
 import { comparePasswords, hashPassword } from '../../shared/auth-utils';
 import { errors } from '../../shared/errors';
+import type {
+  ChangePasswordPayload,
+  SafeUser,
+  UpdateUserPayload,
+} from './users.types';
+import { userRepository } from './users.repository';
 
 const SALT_ROUNDS = parseInt(secret('SALT_ROUNDS')());
 

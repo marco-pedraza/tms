@@ -1,13 +1,13 @@
 import { api } from 'encore.dev/api';
-import { serviceTypeRepository } from './service-types.repository';
+import { PaginationParams } from '../../shared/types';
 import type {
+  CreateServiceTypePayload,
+  PaginatedServiceTypes,
   ServiceType,
   ServiceTypes,
-  PaginatedServiceTypes,
-  CreateServiceTypePayload,
   UpdateServiceTypePayload,
 } from './service-types.types';
-import { PaginationParams } from '../../shared/types';
+import { serviceTypeRepository } from './service-types.repository';
 
 /**
  * Creates a new service type

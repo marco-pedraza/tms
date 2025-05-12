@@ -1,13 +1,14 @@
 import {
+  integer,
   pgTable,
   serial,
   text,
   timestamp,
-  integer,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { permissions } from '../permissions/permissions.schema';
 import { tenants } from '../tenants/tenants.schema';
+
 /**
  * Schema for the roles table
  * Represents roles that can be assigned to users and contain multiple permissions

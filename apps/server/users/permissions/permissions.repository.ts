@@ -1,12 +1,12 @@
-import { permissions } from './permissions.schema';
-import type {
-  Permission,
-  CreatePermissionPayload,
-  UpdatePermissionPayload,
-} from './permissions.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { errors } from '../../shared/errors';
 import { db } from '../db-service';
+import { permissions } from './permissions.schema';
+import type {
+  CreatePermissionPayload,
+  Permission,
+  UpdatePermissionPayload,
+} from './permissions.types';
 
 /**
  * Creates a repository for managing permission entities

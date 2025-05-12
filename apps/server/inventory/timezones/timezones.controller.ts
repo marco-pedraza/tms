@@ -1,6 +1,6 @@
 import { api } from 'encore.dev/api';
-import { timezoneRepository } from './timezones.repository';
 import type { Timezone, Timezones } from './timezones.types';
+import { timezoneRepository } from './timezones.repository';
 
 /**
  * Retrieves a timezone by its ID.

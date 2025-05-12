@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, boolean } from 'drizzle-orm/pg-core';
+import { boolean, integer, pgTable, serial } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { routes } from '../routes/routes.schema';
 

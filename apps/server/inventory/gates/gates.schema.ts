@@ -1,9 +1,9 @@
 import {
+  boolean,
+  integer,
   pgTable,
   serial,
   timestamp,
-  boolean,
-  integer,
 } from 'drizzle-orm/pg-core';
 import { terminals } from '../terminals/terminals.schema';
 

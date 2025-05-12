@@ -1,31 +1,31 @@
-import { test, describe, beforeAll, afterAll, afterEach, expect } from 'vitest';
-import { State } from '../states/states.types';
-import { City } from '../cities/cities.types';
-import { Terminal } from '../terminals/terminals.types';
-import { getFactoryDb } from '../../tests/factories/factory-utils';
+import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { vi } from 'vitest';
 import {
-  stateFactory,
   cityFactory,
+  stateFactory,
   terminalFactory,
 } from '../../tests/factories';
+import { getFactoryDb } from '../../tests/factories/factory-utils';
+import { cityRepository } from '../cities/cities.repository';
+import { City } from '../cities/cities.types';
+import { countryRepository } from '../countries/countries.repository';
 import { db } from '../db-service';
+import { routeSegmentRepository } from '../route-segment/route-segment.repository';
+import { routeRepository } from '../routes/routes.repository';
+import { stateRepository } from '../states/states.repository';
+import { State } from '../states/states.types';
+import { terminalRepository } from '../terminals/terminals.repository';
+import { Terminal } from '../terminals/terminals.types';
 import {
+  createCompoundRoute,
   createRoute,
   deleteRoute,
   getRoute,
-  createCompoundRoute,
   getRouteWithFullDetails,
   listRoutes,
   searchRoutes,
   updateCompoundRouteSegments,
 } from './routes.controller';
-import { routeRepository } from '../routes/routes.repository';
-import { vi } from 'vitest';
-import { countryRepository } from '../countries/countries.repository';
-import { stateRepository } from '../states/states.repository';
-import { cityRepository } from '../cities/cities.repository';
-import { terminalRepository } from '../terminals/terminals.repository';
-import { routeSegmentRepository } from '../route-segment/route-segment.repository';
 
 describe('Routes Controller', () => {
   const factoryDb = getFactoryDb(db);

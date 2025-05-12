@@ -1,5 +1,5 @@
-import { AVAILABLE_TIMEZONES } from './timezones.constants';
 import { Timezone, Timezones } from './timezones.types';
+import { AVAILABLE_TIMEZONES } from './timezones.constants';
 
 /**
  * Repository for managing timezone data

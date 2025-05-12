@@ -1,9 +1,9 @@
+import log from 'encore.dev/log';
 import { SQLDatabase } from 'encore.dev/storage/sqldb';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import log from 'encore.dev/log';
+import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { appMeta } from 'encore.dev';
 import * as schema from './schema';
-import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 // Define a database named 'inventory-db', using the database migrations
 // in the "./migrations" folder. Encore automatically provisions,

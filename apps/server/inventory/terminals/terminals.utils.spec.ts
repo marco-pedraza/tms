@@ -1,12 +1,12 @@
-import { expect, describe, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { ValidationError } from '../../shared/errors';
+import { OperatingHours, TimeSlot } from './terminals.types';
 import {
   isValidTimeFormat,
   isValidTimeSlot,
-  validateOperatingHours,
   timeToMinutes,
+  validateOperatingHours,
 } from './terminals.utils';
-import { OperatingHours, TimeSlot } from './terminals.types';
 
 describe('Terminal Utils', () => {
   describe('isValidTimeFormat', () => {

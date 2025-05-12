@@ -2,5 +2,19 @@
   "singleQuote": true,
   "trailingComma": "all",
   "tabWidth": 2,
-  "useTabs": false
+  "useTabs": false,
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "importOrder": [
+    "^encore.dev/",
+    "^drizzle-orm/",
+    "<THIRD_PARTY_MODULES>",
+    "^@repo/",
+    "^\\.\\./",
+    "^\\./.*\\.schema$",
+    "^\\./.*\\.types$",
+    "^\\./.*\\.repository$",
+    "^\\./"
+  ],
+  "importOrderSeparation": false,
+  "importOrderSortSpecifiers": true
 }

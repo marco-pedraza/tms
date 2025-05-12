@@ -1,7 +1,7 @@
-import { Driver } from './drivers.types';
-import { driverRepository } from './drivers.repository';
 import { ValidationError } from '../../shared/errors';
 import { busLineRepository } from '../bus-lines/bus-lines.repository';
+import { Driver } from './drivers.types';
+import { driverRepository } from './drivers.repository';
 
 /**
  * Creates a use case module for driver operations that involve complex business logic

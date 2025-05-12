@@ -1,5 +1,5 @@
-import { TimeSlot, OperatingHours } from './terminals.types';
 import { ValidationError } from '../../shared/errors';
+import { OperatingHours, TimeSlot } from './terminals.types';
 
 /**
  * Regular expression for validating time in 24-hour format (HH:MM)

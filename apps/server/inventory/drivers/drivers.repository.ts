@@ -1,14 +1,14 @@
+import { createBaseRepository } from '@repo/base-repo';
+import { StateTransition, createBaseStateMachine } from '@repo/state-machine';
+import { db } from '../db-service';
 import { drivers } from './drivers.schema';
 import {
-  Driver,
   CreateDriverPayload,
-  UpdateDriverPayload,
-  Drivers,
+  Driver,
   DriverStatus,
+  Drivers,
+  UpdateDriverPayload,
 } from './drivers.types';
-import { createBaseRepository } from '@repo/base-repo';
-import { db } from '../db-service';
-import { createBaseStateMachine, StateTransition } from '@repo/state-machine';
 
 /**
  * Status transition map defining allowed transitions between driver statuses

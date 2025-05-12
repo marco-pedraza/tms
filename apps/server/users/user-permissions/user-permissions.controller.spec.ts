@@ -1,23 +1,9 @@
-import { describe, it, expect, afterAll } from 'vitest';
-import {
-  assignPermissionsToUser,
-  getUserPermissions,
-  assignRolesToUser,
-  getUserRoles,
-} from './user-permissions.controller';
-import type {
-  AssignPermissionsToUserPayload,
-  AssignRolesToUserPayload,
-} from './user-permissions.types';
-import { createTenant, deleteTenant } from '../tenants/tenants.controller';
-import type { CreateTenantPayload } from '../tenants/tenants.types';
+import { afterAll, describe, expect, it } from 'vitest';
 import {
   createDepartment,
   deleteDepartment,
 } from '../departments/departments.controller';
 import type { CreateDepartmentPayload } from '../departments/departments.types';
-import { createUser, deleteUser } from '../users/users.controller';
-import type { CreateUserPayload } from '../users/users.types';
 import {
   createPermission,
   deletePermission,
@@ -25,6 +11,20 @@ import {
 import type { CreatePermissionPayload } from '../permissions/permissions.types';
 import { createRole, deleteRole } from '../roles/roles.controller';
 import type { CreateRolePayload } from '../roles/roles.types';
+import { createTenant, deleteTenant } from '../tenants/tenants.controller';
+import type { CreateTenantPayload } from '../tenants/tenants.types';
+import { createUser, deleteUser } from '../users/users.controller';
+import type { CreateUserPayload } from '../users/users.types';
+import type {
+  AssignPermissionsToUserPayload,
+  AssignRolesToUserPayload,
+} from './user-permissions.types';
+import {
+  assignPermissionsToUser,
+  assignRolesToUser,
+  getUserPermissions,
+  getUserRoles,
+} from './user-permissions.controller';
 
 describe('User Permissions Controller', () => {
   // Test data

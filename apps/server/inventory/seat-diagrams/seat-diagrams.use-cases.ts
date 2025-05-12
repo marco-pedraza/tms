@@ -1,15 +1,15 @@
-import {
-  SeatDiagram,
-  SeatConfiguration,
-  Floor,
-  Space,
-  SpaceType,
-  FloorSeats,
-  BathroomLocation,
-} from './seat-diagrams.types';
-import { seatDiagramRepository } from './seat-diagrams.repository';
 import { busSeatRepository } from '../bus-seats/bus-seats.repository';
 import { CreateBusSeatPayload, SeatType } from '../bus-seats/bus-seats.types';
+import {
+  BathroomLocation,
+  Floor,
+  FloorSeats,
+  SeatConfiguration,
+  SeatDiagram,
+  Space,
+  SpaceType,
+} from './seat-diagrams.types';
+import { seatDiagramRepository } from './seat-diagrams.repository';
 
 // Constants for default values
 const DEFAULT_NUM_ROWS = 10;

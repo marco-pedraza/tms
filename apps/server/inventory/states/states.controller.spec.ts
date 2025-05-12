@@ -1,19 +1,19 @@
-import { expect, describe, test, beforeAll, afterAll } from 'vitest';
-import {
-  createState,
-  getState,
-  updateState,
-  deleteState,
-  listStates,
-  listStatesPaginated,
-  searchStates,
-  searchStatesPaginated,
-} from './states.controller';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
   createCountry,
   deleteCountry,
 } from '../countries/countries.controller';
 import type { State } from './states.types';
+import {
+  createState,
+  deleteState,
+  getState,
+  listStates,
+  listStatesPaginated,
+  searchStates,
+  searchStatesPaginated,
+  updateState,
+} from './states.controller';
 
 describe('States Controller', () => {
   // Test data and setup

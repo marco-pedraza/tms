@@ -1,14 +1,14 @@
 import { api } from 'encore.dev/api';
-import { tenantRepository } from './tenants.repository';
 import type {
   CreateTenantPayload,
-  UpdateTenantPayload,
-  Tenant,
   PaginatedTenants,
+  PaginationParamsTenants,
+  Tenant,
   Tenants,
   TenantsQueryOptions,
-  PaginationParamsTenants,
+  UpdateTenantPayload,
 } from './tenants.types';
+import { tenantRepository } from './tenants.repository';
 
 /**
  * Creates a new tenant.

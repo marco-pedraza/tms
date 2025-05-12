@@ -1,11 +1,11 @@
 import { api } from 'encore.dev/api';
-import { permissionGroupRepository } from './permission-groups.repository';
 import type {
+  CreatePermissionGroupPayload,
   PermissionGroup,
   PermissionGroups,
-  CreatePermissionGroupPayload,
   UpdatePermissionGroupPayload,
 } from './permission-groups.types';
+import { permissionGroupRepository } from './permission-groups.repository';
 
 /**
  * Creates a new permission group.

@@ -1,17 +1,17 @@
 import { api } from 'encore.dev/api';
-import { driverRepository } from './drivers.repository';
-import { driverUseCases } from './drivers.use-cases';
 import {
   CreateDriverPayload,
-  UpdateDriverPayload,
   Driver,
-  Drivers,
-  PaginatedDrivers,
   DriverStatus,
-  PossibleDriverStatuses,
+  Drivers,
   DriversQueryOptions,
+  PaginatedDrivers,
   PaginationParamsDrivers,
+  PossibleDriverStatuses,
+  UpdateDriverPayload,
 } from './drivers.types';
+import { driverRepository } from './drivers.repository';
+import { driverUseCases } from './drivers.use-cases';
 
 /**
  * Creates a new driver.

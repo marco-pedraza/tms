@@ -1,14 +1,14 @@
-import { busModels } from './bus-models.schema';
-import type {
-  BusModel,
-  CreateBusModelPayload,
-  UpdateBusModelPayload,
-  BusModels,
-  PaginatedBusModels,
-} from './bus-models.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
 import { db } from '../db-service';
+import { busModels } from './bus-models.schema';
+import type {
+  BusModel,
+  BusModels,
+  CreateBusModelPayload,
+  PaginatedBusModels,
+  UpdateBusModelPayload,
+} from './bus-models.types';
 
 /**
  * Creates a repository for managing bus model entities

@@ -1,13 +1,13 @@
 import { api } from 'encore.dev/api';
+import { PaginationParams } from '../../shared/types';
 import {
-  SeatLayoutModel,
   CreateSeatLayoutModelPayload,
-  UpdateSeatLayoutModelPayload,
-  SeatLayoutModels,
   PaginatedSeatLayoutModels,
+  SeatLayoutModel,
+  SeatLayoutModels,
+  UpdateSeatLayoutModelPayload,
 } from './seat-layout-models.types';
 import { seatLayoutModelRepository } from './seat-layout-models.repository';
-import { PaginationParams } from '../../shared/types';
 
 /**
  * Creates a new seat layout model.

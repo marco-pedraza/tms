@@ -1,26 +1,26 @@
-import { db } from '../db-service';
 import { NotFoundError } from '@repo/base-repo';
-import { roles, rolePermissions } from './roles.schema';
-import { permissions } from '../permissions/permissions.schema';
-import type {
-  Role,
-  RoleWithPermissions,
-  CreateRolePayload,
-  UpdateRolePayload,
-  PaginatedRoles,
-  PaginatedRolesWithPermissions,
-  AssignPermissionsToRolePayload,
-  RolesQueryOptions,
-  PaginationParamsRoles,
-} from './roles.types';
-import { Permission } from '../permissions/permissions.types';
-import { permissionRepository } from '../permissions/permissions.repository';
 import { createBaseRepository } from '@repo/base-repo';
 import {
   getRelatedEntities,
   updateManyToManyRelation,
 } from '../../shared/db-utils';
 import { errors } from '../../shared/errors';
+import { db } from '../db-service';
+import { permissionRepository } from '../permissions/permissions.repository';
+import { permissions } from '../permissions/permissions.schema';
+import { Permission } from '../permissions/permissions.types';
+import { rolePermissions, roles } from './roles.schema';
+import type {
+  AssignPermissionsToRolePayload,
+  CreateRolePayload,
+  PaginatedRoles,
+  PaginatedRolesWithPermissions,
+  PaginationParamsRoles,
+  Role,
+  RoleWithPermissions,
+  RolesQueryOptions,
+  UpdateRolePayload,
+} from './roles.types';
 
 // Error message constants
 const ERROR_PERMISSION_NOT_FOUND = (id: number) =>

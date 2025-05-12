@@ -1,7 +1,7 @@
-import { middleware, MiddlewareRequest, APICallMeta } from 'encore.dev/api';
+import { APICallMeta, MiddlewareRequest, middleware } from 'encore.dev/api';
 import { getAuthData } from '~encore/auth';
-import { userPermissionsRepository } from './user-permissions/user-permissions.repository';
 import { errors } from '../shared/errors';
+import { userPermissionsRepository } from './user-permissions/user-permissions.repository';
 
 /**
  * Error messages for authorization failures

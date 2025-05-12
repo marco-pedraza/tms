@@ -1,10 +1,10 @@
 import fs from 'fs';
-import path from 'path';
 import { glob } from 'glob';
+import path from 'path';
 import * as ts from 'typescript';
 import { permissionRepository } from '../../users/permissions/permissions.repository';
-import { userRepository } from '../../users/users/users.repository';
 import { userPermissionsRepository } from '../../users/user-permissions/user-permissions.repository';
+import { userRepository } from '../../users/users/users.repository';
 
 /**
  * Main function to seed permissions and assign them to system admins

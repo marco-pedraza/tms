@@ -1,14 +1,14 @@
 import { api } from 'encore.dev/api';
-import { gateRepository } from './gates.repository';
 import type {
   CreateGatePayload,
-  UpdateGatePayload,
   Gate,
   Gates,
+  GatesQueryOptions,
   PaginatedGates,
   PaginationParamsGates,
-  GatesQueryOptions,
+  UpdateGatePayload,
 } from './gates.types';
+import { gateRepository } from './gates.repository';
 
 /**
  * Creates a new gate.

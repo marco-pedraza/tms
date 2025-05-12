@@ -1,11 +1,11 @@
 import {
+  boolean,
+  integer,
   pgTable,
   serial,
-  varchar,
   text,
-  boolean,
   timestamp,
-  integer,
+  varchar,
 } from 'drizzle-orm/pg-core';
 import { cities } from '../cities/cities.schema';
 

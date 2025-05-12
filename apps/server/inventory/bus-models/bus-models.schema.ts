@@ -1,15 +1,15 @@
 import {
+  boolean,
+  integer,
+  jsonb,
   pgTable,
   serial,
   text,
   timestamp,
-  boolean,
-  integer,
-  jsonb,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { seatLayoutModels } from '../seat-layout-models/seat-layout-models.schema';
 import { buses } from '../buses/buses.schema';
+import { seatLayoutModels } from '../seat-layout-models/seat-layout-models.schema';
 
 /**
  * Database table for bus models

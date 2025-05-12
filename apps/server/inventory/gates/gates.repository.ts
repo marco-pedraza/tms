@@ -1,7 +1,7 @@
-import { gates } from './gates.schema';
-import type { Gate, CreateGatePayload, UpdateGatePayload } from './gates.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
+import { gates } from './gates.schema';
+import type { CreateGatePayload, Gate, UpdateGatePayload } from './gates.types';
 
 /**
  * Creates a repository for managing gate entities

@@ -1,11 +1,11 @@
-import { pathwayServices } from './pathway-services.schema';
-import type {
-  PathwayService,
-  CreatePathwayServicePayload,
-  UpdatePathwayServicePayload,
-} from './pathway-services.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
+import { pathwayServices } from './pathway-services.schema';
+import type {
+  CreatePathwayServicePayload,
+  PathwayService,
+  UpdatePathwayServicePayload,
+} from './pathway-services.types';
 
 export const createPathwayServiceRepository = () => {
   const baseRepository = createBaseRepository<

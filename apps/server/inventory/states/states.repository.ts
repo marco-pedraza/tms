@@ -1,11 +1,11 @@
-import { states } from './states.schema';
-import type {
-  State,
-  CreateStatePayload,
-  UpdateStatePayload,
-} from './states.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
+import { states } from './states.schema';
+import type {
+  CreateStatePayload,
+  State,
+  UpdateStatePayload,
+} from './states.types';
 
 /**
  * Creates a repository for managing state entities

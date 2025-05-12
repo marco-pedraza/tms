@@ -1,27 +1,27 @@
-import { expect, describe, test, beforeAll, afterAll } from 'vitest';
-import {
-  createTerminal,
-  getTerminal,
-  updateTerminal,
-  deleteTerminal,
-  listTerminalsPaginated,
-  listTerminals,
-  searchTerminals,
-  searchTerminalsPaginated,
-} from './terminals.controller';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { createSlug } from '../../shared/utils';
 import { createCity, deleteCity } from '../cities/cities.controller';
-import { createState, deleteState } from '../states/states.controller';
 import {
   createCountry,
   deleteCountry,
 } from '../countries/countries.controller';
-import { createSlug } from '../../shared/utils';
+import { createState, deleteState } from '../states/states.controller';
 import {
   Facility,
   OperatingHours,
   Terminal,
   TerminalWithCity,
 } from './terminals.types';
+import {
+  createTerminal,
+  deleteTerminal,
+  getTerminal,
+  listTerminals,
+  listTerminalsPaginated,
+  searchTerminals,
+  searchTerminalsPaginated,
+  updateTerminal,
+} from './terminals.controller';
 
 describe('Terminals Controller', () => {
   // Test data and setup

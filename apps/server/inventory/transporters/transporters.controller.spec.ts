@@ -1,21 +1,21 @@
-import { expect, describe, test, beforeAll, afterAll } from 'vitest';
-import {
-  createTransporter,
-  getTransporter,
-  updateTransporter,
-  deleteTransporter,
-  listTransporters,
-  listTransportersPaginated,
-  searchTransporters,
-  searchTransportersPaginated,
-} from './transporters.controller';
-import type { Transporter } from './transporters.types';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createCity, deleteCity } from '../cities/cities.controller';
-import { createState, deleteState } from '../states/states.controller';
 import {
   createCountry,
   deleteCountry,
 } from '../countries/countries.controller';
+import { createState, deleteState } from '../states/states.controller';
+import type { Transporter } from './transporters.types';
+import {
+  createTransporter,
+  deleteTransporter,
+  getTransporter,
+  listTransporters,
+  listTransportersPaginated,
+  searchTransporters,
+  searchTransportersPaginated,
+  updateTransporter,
+} from './transporters.controller';
 
 describe('Transporters Controller', () => {
   let countryId: number;

@@ -1,23 +1,23 @@
-import { expect, describe, test, beforeAll, afterAll } from 'vitest';
-import {
-  createBusLine,
-  getBusLine,
-  updateBusLine,
-  deleteBusLine,
-  listBusLines,
-  listBusLinesPaginated,
-  searchBusLines,
-  searchBusLinesPaginated,
-} from './bus-lines.controller';
-import {
-  createTransporter,
-  deleteTransporter,
-} from '../transporters/transporters.controller';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
   createServiceType,
   deleteServiceType,
 } from '../service-types/service-types.controller';
+import {
+  createTransporter,
+  deleteTransporter,
+} from '../transporters/transporters.controller';
 import type { BusLine } from './bus-lines.types';
+import {
+  createBusLine,
+  deleteBusLine,
+  getBusLine,
+  listBusLines,
+  listBusLinesPaginated,
+  searchBusLines,
+  searchBusLinesPaginated,
+  updateBusLine,
+} from './bus-lines.controller';
 
 describe('Bus Lines Controller', () => {
   // Test data and setup

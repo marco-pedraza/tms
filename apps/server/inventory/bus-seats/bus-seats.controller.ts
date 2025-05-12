@@ -1,12 +1,12 @@
 import { api } from 'encore.dev/api';
-import { busSeatRepository } from './bus-seats.repository';
 import {
-  CreateBusSeatPayload,
-  CreateBusSeatBatchPayload,
-  UpdateBusSeatPayload,
   BusSeat,
   BusSeats,
+  CreateBusSeatBatchPayload,
+  CreateBusSeatPayload,
+  UpdateBusSeatPayload,
 } from './bus-seats.types';
+import { busSeatRepository } from './bus-seats.repository';
 
 /**
  * Creates a new bus seat.

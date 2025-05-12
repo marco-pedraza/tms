@@ -1,12 +1,12 @@
+import { createBaseRepository } from '@repo/base-repo';
+import { db } from '../db-service';
 import { busSeats } from './bus-seats.schema';
 import type {
   BusSeat,
+  BusSeats,
   CreateBusSeatPayload,
   UpdateBusSeatPayload,
-  BusSeats,
 } from './bus-seats.types';
-import { createBaseRepository } from '@repo/base-repo';
-import { db } from '../db-service';
 
 /**
  * Creates a repository for managing bus seat entities

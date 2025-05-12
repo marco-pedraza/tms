@@ -1,14 +1,14 @@
-import { routes } from './routes.schema';
-import { routeSegments } from '../route-segment/route-segment.schema';
-import type {
-  Route,
-  CreateRoutePayload,
-  UpdateRoutePayload,
-  RouteWithFullDetails,
-} from './routes.types';
-import { createBaseRepository, NotFoundError } from '@repo/base-repo';
+import { and, asc, eq, inArray } from 'drizzle-orm';
+import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
-import { eq, and, asc, inArray } from 'drizzle-orm';
+import { routeSegments } from '../route-segment/route-segment.schema';
+import { routes } from './routes.schema';
+import type {
+  CreateRoutePayload,
+  Route,
+  RouteWithFullDetails,
+  UpdateRoutePayload,
+} from './routes.types';
 
 /**
  * Creates a repository for managing routes

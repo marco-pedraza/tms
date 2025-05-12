@@ -1,14 +1,14 @@
-import { permissionGroups } from './permission-groups.schema';
-import type {
-  PermissionGroup,
-  CreatePermissionGroupPayload,
-  UpdatePermissionGroupPayload,
-  PermissionGroups,
-} from './permission-groups.types';
+import { desc, eq, inArray } from 'drizzle-orm';
 import { createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
 import { permissions } from '../permissions/permissions.schema';
-import { eq, inArray, desc } from 'drizzle-orm';
+import { permissionGroups } from './permission-groups.schema';
+import type {
+  CreatePermissionGroupPayload,
+  PermissionGroup,
+  PermissionGroups,
+  UpdatePermissionGroupPayload,
+} from './permission-groups.types';
 
 export const createPermissionGroupRepository = () => {
   const baseRepository = createBaseRepository<

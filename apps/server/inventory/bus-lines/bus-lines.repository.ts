@@ -1,11 +1,11 @@
+import { createBaseRepository } from '@repo/base-repo';
+import { db } from '../db-service';
 import { busLines } from './bus-lines.schema';
 import type {
   BusLine,
   CreateBusLinePayload,
   UpdateBusLinePayload,
 } from './bus-lines.types';
-import { createBaseRepository } from '@repo/base-repo';
-import { db } from '../db-service';
 
 /**
  * Creates a repository for managing bus line entities

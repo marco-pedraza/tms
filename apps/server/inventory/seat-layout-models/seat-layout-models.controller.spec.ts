@@ -1,13 +1,13 @@
-import { expect, describe, test, afterAll } from 'vitest';
+import { afterAll, describe, expect, test } from 'vitest';
+import { BathroomLocation, FloorSeats } from './seat-layout-models.types';
 import {
+  createSeatLayoutModel,
+  deleteSeatLayoutModel,
   getSeatLayoutModel,
   listSeatLayoutModels,
   listSeatLayoutModelsPaginated,
-  createSeatLayoutModel,
   updateSeatLayoutModel,
-  deleteSeatLayoutModel,
 } from './seat-layout-models.controller';
-import { FloorSeats, BathroomLocation } from './seat-layout-models.types';
 
 describe('Seat Layout Models Controller', () => {
   // Test data and setup

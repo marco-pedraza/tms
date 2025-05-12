@@ -1,11 +1,11 @@
 import {
+  boolean,
+  integer,
+  json,
   pgTable,
+  serial,
   text,
   timestamp,
-  boolean,
-  json,
-  serial,
-  integer,
 } from 'drizzle-orm/pg-core';
 import { departments } from '../departments/departments.schema';
 import { tenants } from '../tenants/tenants.schema';

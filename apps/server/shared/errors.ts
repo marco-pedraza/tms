@@ -1,9 +1,9 @@
 import { APIError } from 'encore.dev/api';
 import {
-  NotFoundError,
-  ValidationError,
   DuplicateError,
   ForeignKeyError,
+  NotFoundError,
+  ValidationError,
 } from '@repo/base-repo';
 import { InvalidStateTransitionError } from '@repo/state-machine';
 

@@ -1,13 +1,13 @@
 import { api } from 'encore.dev/api';
-import { busModelRepository } from './bus-models.repository';
+import { PaginationParams } from '../../shared/types';
 import {
-  CreateBusModelPayload,
-  UpdateBusModelPayload,
   BusModel,
   BusModels,
+  CreateBusModelPayload,
   PaginatedBusModels,
+  UpdateBusModelPayload,
 } from './bus-models.types';
-import { PaginationParams } from '../../shared/types';
+import { busModelRepository } from './bus-models.repository';
 
 /**
  * Creates a new bus model.

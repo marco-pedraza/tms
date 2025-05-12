@@ -1,30 +1,30 @@
-import { describe, it, expect, afterAll, beforeAll } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
+  createPermission,
+  deletePermission,
+} from '../permissions/permissions.controller';
+import type { CreatePermissionPayload } from '../permissions/permissions.types';
+import { createTenant, deleteTenant } from '../tenants/tenants.controller';
+import type { CreateTenantPayload } from '../tenants/tenants.types';
+import type {
+  CreateRolePayload,
+  RoleWithPermissions,
+  UpdateRolePayload,
+} from './roles.types';
+import {
+  assignPermissionsToRole,
   createRole,
+  deleteRole,
   getRole,
   getRoleWithPermissions,
   listRoles,
   listRolesWithPagination,
   listTenantRoles,
   listTenantRolesWithPagination,
-  updateRole,
-  assignPermissionsToRole,
-  deleteRole,
   searchRoles,
   searchRolesPaginated,
+  updateRole,
 } from './roles.controller';
-import type {
-  CreateRolePayload,
-  UpdateRolePayload,
-  RoleWithPermissions,
-} from './roles.types';
-import { createTenant, deleteTenant } from '../tenants/tenants.controller';
-import type { CreateTenantPayload } from '../tenants/tenants.types';
-import {
-  createPermission,
-  deletePermission,
-} from '../permissions/permissions.controller';
-import type { CreatePermissionPayload } from '../permissions/permissions.types';
 
 describe('Roles Controller', () => {
   // Test data

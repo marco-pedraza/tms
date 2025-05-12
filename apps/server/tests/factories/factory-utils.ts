@@ -1,5 +1,5 @@
-import { Table } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { Table } from 'drizzle-orm';
 
 // We need to extract partial schemas because relations are not supported in the factory
 

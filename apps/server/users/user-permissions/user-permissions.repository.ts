@@ -1,25 +1,25 @@
+import { omitPasswordHash } from '../../shared/auth-utils';
+import {
+  getRelatedEntities,
+  updateManyToManyRelation,
+} from '../../shared/db-utils';
 import { errors } from '../../shared/errors';
-import { userRoles, userPermissions } from './user-permissions.schema';
-import { roles } from '../roles/roles.schema';
+import { db } from '../db-service';
+import { permissionRepository } from '../permissions/permissions.repository';
 import { permissions } from '../permissions/permissions.schema';
+import { Permission } from '../permissions/permissions.types';
+import { roleRepository } from '../roles/roles.repository';
+import { roles } from '../roles/roles.schema';
+import { Role, RoleWithPermissions } from '../roles/roles.types';
+import { userRepository } from '../users/users.repository';
+import { User } from '../users/users.types';
+import { userPermissions, userRoles } from './user-permissions.schema';
 import type {
   AssignPermissionsToUserPayload,
   AssignRolesToUserPayload,
   UserWithPermissions,
   UserWithRoles,
 } from './user-permissions.types';
-import { Permission } from '../permissions/permissions.types';
-import { Role, RoleWithPermissions } from '../roles/roles.types';
-import { permissionRepository } from '../permissions/permissions.repository';
-import { roleRepository } from '../roles/roles.repository';
-import { userRepository } from '../users/users.repository';
-import {
-  updateManyToManyRelation,
-  getRelatedEntities,
-} from '../../shared/db-utils';
-import { omitPasswordHash } from '../../shared/auth-utils';
-import { db } from '../db-service';
-import { User } from '../users/users.types';
 
 // Error message constants
 const ERROR_MESSAGES = {

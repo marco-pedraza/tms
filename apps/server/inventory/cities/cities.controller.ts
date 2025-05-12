@@ -1,14 +1,14 @@
 import { api } from 'encore.dev/api';
-import { cityRepository } from './cities.repository';
 import type {
-  CreateCityPayload,
-  UpdateCityPayload,
-  City,
   Cities,
+  CitiesQueryOptions,
+  City,
+  CreateCityPayload,
   PaginatedCities,
   PaginationParamsCities,
-  CitiesQueryOptions,
+  UpdateCityPayload,
 } from './cities.types';
+import { cityRepository } from './cities.repository';
 
 /**
  * Creates a new city.

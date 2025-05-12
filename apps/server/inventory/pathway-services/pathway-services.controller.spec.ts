@@ -1,13 +1,13 @@
-import { expect, describe, test, afterAll } from 'vitest';
+import { afterAll, describe, expect, test } from 'vitest';
+import { PaginationParams } from '../../shared/types';
 import {
   createPathwayService,
+  deletePathwayService,
   getPathwayService,
   listPathwayServices,
   listPathwayServicesPaginated,
   updatePathwayService,
-  deletePathwayService,
 } from './pathway-services.controller';
-import { PaginationParams } from '../../shared/types';
 
 describe('Pathway Services Controller', () => {
   // Test data and setup

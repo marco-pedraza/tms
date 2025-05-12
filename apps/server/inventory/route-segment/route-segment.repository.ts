@@ -1,11 +1,11 @@
-import { routeSegments } from './route-segment.schema';
-import {
-  RouteSegment,
-  CreateRouteSegmentPayload,
-  UpdateRouteSegmentPayload,
-} from './route-segment.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
+import { routeSegments } from './route-segment.schema';
+import {
+  CreateRouteSegmentPayload,
+  RouteSegment,
+  UpdateRouteSegmentPayload,
+} from './route-segment.types';
 
 export const createRouteSegmentRepository = () => {
   const baseRepository = createBaseRepository<

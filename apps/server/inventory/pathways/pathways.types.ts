@@ -1,7 +1,7 @@
-import { MinLen, MatchesRegexp, Min } from 'encore.dev/validate';
+import { MatchesRegexp, Min, MinLen } from 'encore.dev/validate';
 import { PaginatedResult } from '../../shared/types';
-import type { PathwayService } from '../pathway-services/pathway-services.types';
 import { PathwayServiceAssignment } from '../pathway-service-assignments/pathway-service-assignments.types';
+import type { PathwayService } from '../pathway-services/pathway-services.types';
 
 /**
  * Base interface representing a pathway entity

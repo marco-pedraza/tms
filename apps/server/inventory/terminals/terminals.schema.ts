@@ -1,12 +1,12 @@
 import {
-  pgTable,
-  serial,
-  text,
-  timestamp,
   boolean,
   integer,
   jsonb,
+  pgTable,
   real,
+  serial,
+  text,
+  timestamp,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { cities } from '../cities/cities.schema';

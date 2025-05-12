@@ -1,15 +1,15 @@
 import { api } from 'encore.dev/api';
-import { userRepository } from './users.repository';
 import type {
-  CreateUserPayload,
-  UpdateUserPayload,
-  SafeUser,
-  Users,
-  PaginatedUsers,
   ChangePasswordPayload,
-  UsersQueryOptions,
+  CreateUserPayload,
+  PaginatedUsers,
   PaginationParamsUsers,
+  SafeUser,
+  UpdateUserPayload,
+  Users,
+  UsersQueryOptions,
 } from './users.types';
+import { userRepository } from './users.repository';
 import { userUseCases } from './users.use-cases';
 
 /**

@@ -1,11 +1,11 @@
-import { tenants } from './tenants.schema';
-import type {
-  Tenant,
-  CreateTenantPayload,
-  UpdateTenantPayload,
-} from './tenants.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
+import { tenants } from './tenants.schema';
+import type {
+  CreateTenantPayload,
+  Tenant,
+  UpdateTenantPayload,
+} from './tenants.types';
 
 /**
  * Creates a repository for managing tenant entities

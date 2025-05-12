@@ -1,14 +1,14 @@
+import { createBaseRepository } from '@repo/base-repo';
+import { PaginationParams } from '../../shared/types';
+import { createSlug } from '../../shared/utils';
+import { db } from '../db-service';
 import { cities } from './cities.schema';
 import type {
   City,
   CreateCityPayload,
-  UpdateCityPayload,
   PaginatedCities,
+  UpdateCityPayload,
 } from './cities.types';
-import { createBaseRepository } from '@repo/base-repo';
-import { PaginationParams } from '../../shared/types';
-import { db } from '../db-service';
-import { createSlug } from '../../shared/utils';
 
 /**
  * Creates a repository for managing city entities

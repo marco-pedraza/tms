@@ -1,5 +1,5 @@
-import { tenantRepository } from '../../users/tenants/tenants.repository';
 import { departmentRepository } from '../../users/departments/departments.repository';
+import { tenantRepository } from '../../users/tenants/tenants.repository';
 import { userRepository } from '../../users/users/users.repository';
 
 // Define the secret at global scope as required by Encore

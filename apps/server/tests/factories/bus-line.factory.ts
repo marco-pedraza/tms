@@ -1,9 +1,9 @@
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
-import { transporterFactory } from './transporters.factory';
-import { serviceTypeFactory } from './service-type.factory';
 import { ID_OFFSET } from './constants';
 import { extractTablesFromSchema } from './factory-utils';
+import { serviceTypeFactory } from './service-type.factory';
+import { transporterFactory } from './transporters.factory';
 
 export const busLineFactory = defineFactory({
   schema: extractTablesFromSchema(schema),

@@ -1,7 +1,7 @@
 import { defineFactory } from '@praha/drizzle-factory';
+import { schema } from '../../db';
 import { ID_OFFSET } from './constants';
 import { extractTablesFromSchema } from './factory-utils';
-import { schema } from '../../db';
 
 export const serviceTypeFactory = defineFactory({
   schema: extractTablesFromSchema(schema),

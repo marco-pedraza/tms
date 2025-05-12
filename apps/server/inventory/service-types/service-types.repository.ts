@@ -1,13 +1,13 @@
-import { serviceTypes } from './service-types.schema';
-import type {
-  ServiceType,
-  CreateServiceTypePayload,
-  UpdateServiceTypePayload,
-  PaginatedServiceTypes,
-} from './service-types.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { PaginationParams } from '../../shared/types';
 import { db } from '../db-service';
+import { serviceTypes } from './service-types.schema';
+import type {
+  CreateServiceTypePayload,
+  PaginatedServiceTypes,
+  ServiceType,
+  UpdateServiceTypePayload,
+} from './service-types.types';
 
 export const createServiceTypeRepository = () => {
   const baseRepository = createBaseRepository<

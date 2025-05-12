@@ -1,12 +1,12 @@
 import { api } from 'encore.dev/api';
-import { userPermissionsRepository } from './user-permissions.repository';
+import { ValidationError } from '@repo/base-repo';
 import type {
   AssignPermissionsToUserPayload,
   AssignRolesToUserPayload,
   UserWithPermissions,
   UserWithRoles,
 } from './user-permissions.types';
-import { ValidationError } from '@repo/base-repo';
+import { userPermissionsRepository } from './user-permissions.repository';
 
 /**
  * Retrieves a user with their assigned roles.

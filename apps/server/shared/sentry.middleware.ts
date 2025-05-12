@@ -1,4 +1,4 @@
-import { middleware, MiddlewareRequest, Next } from 'encore.dev/api';
+import { MiddlewareRequest, Next, middleware } from 'encore.dev/api';
 import { initializeSentry } from './sentry';
 
 /**

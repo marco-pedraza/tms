@@ -1,19 +1,19 @@
-import { describe, it, expect, afterAll, beforeAll } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import type {
+  CreatePermissionPayload,
+  Permission,
+  UpdatePermissionPayload,
+} from './permissions.types';
 import {
   createPermission,
+  deletePermission,
   getPermission,
   listPermissions,
   listPermissionsWithPagination,
-  updatePermission,
-  deletePermission,
   searchPermissions,
   searchPermissionsPaginated,
+  updatePermission,
 } from './permissions.controller';
-import type {
-  CreatePermissionPayload,
-  UpdatePermissionPayload,
-  Permission,
-} from './permissions.types';
 
 describe('Permissions Controller', () => {
   // Test data and IDs array for cleanup

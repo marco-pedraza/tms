@@ -1,25 +1,25 @@
-import { describe, it, expect, afterAll, beforeAll } from 'vitest';
-import {
-  login,
-  refreshToken,
-  logout,
-  revokeAllTokens,
-} from './auth.controller';
-import type {
-  LoginPayload,
-  RefreshTokenPayload,
-  LogoutPayload,
-} from './auth.types';
-import { createUser, deleteUser } from '../users/users.controller';
-import type { CreateUserPayload } from '../users/users.types';
-import { createTenant, deleteTenant } from '../tenants/tenants.controller';
-import type { CreateTenantPayload } from '../tenants/tenants.types';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   createDepartment,
   deleteDepartment,
 } from '../departments/departments.controller';
 import type { CreateDepartmentPayload } from '../departments/departments.types';
+import { createTenant, deleteTenant } from '../tenants/tenants.controller';
+import type { CreateTenantPayload } from '../tenants/tenants.types';
+import { createUser, deleteUser } from '../users/users.controller';
+import type { CreateUserPayload } from '../users/users.types';
+import type {
+  LoginPayload,
+  LogoutPayload,
+  RefreshTokenPayload,
+} from './auth.types';
 import { authRepository } from './auth.repository';
+import {
+  login,
+  logout,
+  refreshToken,
+  revokeAllTokens,
+} from './auth.controller';
 
 describe('Auth Controller', () => {
   // Test data for reuse

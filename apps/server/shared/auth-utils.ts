@@ -1,7 +1,7 @@
-import { hash, compare } from 'bcrypt';
-import type { User, SafeUser } from '../users/users/users.types';
+import { compare, hash } from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import type { JwtPayload } from '../users/auth/auth.types';
+import type { SafeUser, User } from '../users/users/users.types';
 
 const DEFAULT_SALT_ROUNDS = 10;
 

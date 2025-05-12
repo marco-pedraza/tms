@@ -1,14 +1,14 @@
-import { refreshTokens } from './auth.schema';
-import { User } from '../users/users.types';
 import jwt from 'jsonwebtoken';
+import { createBaseRepository } from '@repo/base-repo';
+import { errors } from '../../shared/errors';
+import { db } from '../db-service';
+import { User } from '../users/users.types';
+import { refreshTokens } from './auth.schema';
 import {
-  RefreshToken,
   CreateRefreshToken,
+  RefreshToken,
   UpdateRefreshToken,
 } from './auth.types';
-import { errors } from '../../shared/errors';
-import { createBaseRepository } from '@repo/base-repo';
-import { db } from '../db-service';
 
 // Error message constants
 const ERROR_MESSAGES = {

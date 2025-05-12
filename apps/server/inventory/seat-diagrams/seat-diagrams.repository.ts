@@ -1,11 +1,11 @@
+import { createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
 import { seatDiagrams } from './seat-diagrams.schema';
 import {
-  SeatDiagram,
   CreateSeatDiagramPayload,
+  SeatDiagram,
   UpdateSeatDiagramPayload,
 } from './seat-diagrams.types';
-import { createBaseRepository } from '@repo/base-repo';
 
 /**
  * Creates a repository for managing seat diagram entities

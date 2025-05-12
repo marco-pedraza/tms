@@ -1,32 +1,32 @@
-import { expect, describe, test, afterAll, beforeAll } from 'vitest';
-import {
-  createUser,
-  getUser,
-  updateUser,
-  deleteUser,
-  listUsers,
-  listUsersPaginated,
-  listTenantUsers,
-  listTenantUsersPaginated,
-  listDepartmentUsers,
-  listDepartmentUsersPaginated,
-  searchUsers,
-  searchUsersPaginated,
-  changePassword,
-} from './users.controller';
-import type {
-  CreateUserPayload,
-  UpdateUserPayload,
-  ChangePasswordPayload,
-  SafeUser,
-} from './users.types';
-import { createTenant, deleteTenant } from '../tenants/tenants.controller';
-import type { CreateTenantPayload } from '../tenants/tenants.types';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
   createDepartment,
   deleteDepartment,
 } from '../departments/departments.controller';
 import type { CreateDepartmentPayload } from '../departments/departments.types';
+import { createTenant, deleteTenant } from '../tenants/tenants.controller';
+import type { CreateTenantPayload } from '../tenants/tenants.types';
+import type {
+  ChangePasswordPayload,
+  CreateUserPayload,
+  SafeUser,
+  UpdateUserPayload,
+} from './users.types';
+import {
+  changePassword,
+  createUser,
+  deleteUser,
+  getUser,
+  listDepartmentUsers,
+  listDepartmentUsersPaginated,
+  listTenantUsers,
+  listTenantUsersPaginated,
+  listUsers,
+  listUsersPaginated,
+  searchUsers,
+  searchUsersPaginated,
+  updateUser,
+} from './users.controller';
 
 describe('Users Controller', () => {
   // Test data and setup

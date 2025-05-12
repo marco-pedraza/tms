@@ -1,4 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+// Import mocked modules after mocking
+import log from 'encore.dev/log';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { logger } from './logger.middleware';
 
 // Mock encore.dev/log module
@@ -12,9 +14,6 @@ vi.mock('encore.dev/log', () => ({
 vi.mock('encore.dev/api', () => ({
   middleware: (_: unknown, handler: unknown) => handler,
 }));
-
-// Import mocked modules after mocking
-import log from 'encore.dev/log';
 
 // Define interfaces for test objects to avoid 'any' types
 interface MockRequestMeta {

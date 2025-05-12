@@ -1,4 +1,4 @@
-import { MinLen, MatchesRegexp, Min, Max } from 'encore.dev/validate';
+import { MatchesRegexp, Max, Min, MinLen } from 'encore.dev/validate';
 import { PaginatedResult } from '../../shared/types';
 
 // TODO: Implementar estas interfaces en un módulo compartido para ser reutilizadas

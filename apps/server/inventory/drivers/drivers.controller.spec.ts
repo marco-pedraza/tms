@@ -1,39 +1,39 @@
-import { expect, describe, test, beforeAll, afterAll } from 'vitest';
-import {
-  createDriver,
-  getDriver,
-  updateDriver,
-  deleteDriver,
-  listDrivers,
-  listDriversPaginated,
-  updateDriverStatus,
-  getDriverPossibleStatuses,
-  listDriversByStatus,
-  listDriversByTransporter,
-  listDriversByBusLine,
-  assignDriverToTransporter,
-  assignDriverToBusLine,
-  removeDriverFromTransporter,
-  removeDriverFromBusLine,
-  listDriversByBus,
-  assignDriverToBus,
-  removeDriverFromBus,
-  searchDrivers,
-  searchDriversPaginated,
-} from './drivers.controller';
-import { Driver, DriverStatus } from './drivers.types';
-import { transporterRepository } from '../transporters/transporters.repository';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { busLineRepository } from '../bus-lines/bus-lines.repository';
-import { serviceTypeRepository } from '../service-types/service-types.repository';
+import { busModelRepository } from '../bus-models/bus-models.repository';
 import { busRepository } from '../buses/buses.repository';
 import { BusStatus } from '../buses/buses.types';
+import { createBusWithSeatDiagram } from '../buses/buses.use-cases';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
-import { busModelRepository } from '../bus-models/bus-models.repository';
 import {
   createSeatLayoutModel,
   deleteSeatLayoutModel,
 } from '../seat-layout-models/seat-layout-models.controller';
-import { createBusWithSeatDiagram } from '../buses/buses.use-cases';
+import { serviceTypeRepository } from '../service-types/service-types.repository';
+import { transporterRepository } from '../transporters/transporters.repository';
+import { Driver, DriverStatus } from './drivers.types';
+import {
+  assignDriverToBus,
+  assignDriverToBusLine,
+  assignDriverToTransporter,
+  createDriver,
+  deleteDriver,
+  getDriver,
+  getDriverPossibleStatuses,
+  listDrivers,
+  listDriversByBus,
+  listDriversByBusLine,
+  listDriversByStatus,
+  listDriversByTransporter,
+  listDriversPaginated,
+  removeDriverFromBus,
+  removeDriverFromBusLine,
+  removeDriverFromTransporter,
+  searchDrivers,
+  searchDriversPaginated,
+  updateDriver,
+  updateDriverStatus,
+} from './drivers.controller';
 
 describe('Drivers Controller', () => {
   // Test data and setup

@@ -1,9 +1,9 @@
 import {
+  boolean,
   pgTable,
   serial,
-  varchar,
-  boolean,
   timestamp,
+  varchar,
 } from 'drizzle-orm/pg-core';
 
 /**

@@ -1,19 +1,19 @@
 import {
-  expect,
-  describe,
-  test,
-  beforeAll,
   afterAll,
+  beforeAll,
   beforeEach,
+  describe,
+  expect,
+  test,
 } from 'vitest';
-import { updatePathwayServiceAssignment } from './pathway-service-assignments.controller';
-import { pathwayServiceAssignmentRepository } from './pathway-service-assignments.repository';
-import type { PathwayServiceAssignment } from './pathway-service-assignments.types';
-import { createPathway, deletePathway } from '../pathways/pathways.controller';
 import {
   createPathwayService,
   deletePathwayService,
 } from '../pathway-services/pathway-services.controller';
+import { createPathway, deletePathway } from '../pathways/pathways.controller';
+import type { PathwayServiceAssignment } from './pathway-service-assignments.types';
+import { pathwayServiceAssignmentRepository } from './pathway-service-assignments.repository';
+import { updatePathwayServiceAssignment } from './pathway-service-assignments.controller';
 
 describe('Pathway Service Assignment Controller', () => {
   let testAssignment: PathwayServiceAssignment;

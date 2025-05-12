@@ -1,14 +1,14 @@
-import { departments } from './departments.schema';
-import type {
-  Department,
-  CreateDepartmentPayload,
-  UpdateDepartmentPayload,
-  PaginatedDepartments,
-  DepartmentsQueryOptions,
-  PaginationParamsDepartments,
-} from './departments.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
+import { departments } from './departments.schema';
+import type {
+  CreateDepartmentPayload,
+  Department,
+  DepartmentsQueryOptions,
+  PaginatedDepartments,
+  PaginationParamsDepartments,
+  UpdateDepartmentPayload,
+} from './departments.types';
 
 /**
  * Creates a repository for managing department entities

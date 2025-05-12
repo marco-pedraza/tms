@@ -1,21 +1,21 @@
 import { secret } from 'encore.dev/config';
-import { userRepository } from '../users/users.repository';
-import { authRepository } from './auth.repository';
 import {
   comparePasswords,
   generateAccessToken,
   generateRefreshToken,
   verifyToken,
 } from '../../shared/auth-utils';
+import { errors } from '../../shared/errors';
+import { userRepository } from '../users/users.repository';
+import { SafeUser } from '../users/users.types';
 import type {
+  JwtPayload,
   LoginPayload,
   LoginResponse,
-  RefreshTokenPayload,
   LogoutPayload,
-  JwtPayload,
+  RefreshTokenPayload,
 } from './auth.types';
-import { errors } from '../../shared/errors';
-import { SafeUser } from '../users/users.types';
+import { authRepository } from './auth.repository';
 
 // JWT configuration
 const JWT_SECRET = secret('JWT_SECRET')();

@@ -1,11 +1,11 @@
-import { transporters } from './transporters.schema';
-import type {
-  Transporter,
-  CreateTransporterPayload,
-  UpdateTransporterPayload,
-} from './transporters.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
+import { transporters } from './transporters.schema';
+import type {
+  CreateTransporterPayload,
+  Transporter,
+  UpdateTransporterPayload,
+} from './transporters.types';
 
 /**
  * Creates a repository for managing transporter entities

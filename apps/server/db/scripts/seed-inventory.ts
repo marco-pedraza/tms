@@ -1,28 +1,28 @@
+import { fakerES_MX as faker } from '@faker-js/faker';
+import { City } from '../../inventory/cities/cities.types';
+import { Country } from '../../inventory/countries/countries.types';
+import { db } from '../../inventory/db-service';
+import { PathwayService } from '../../inventory/pathway-services/pathway-services.types';
+import { pathwayUseCases } from '../../inventory/pathways/pathways.use-cases';
+import {
+  CreateSimpleRoutePayload,
+  Route,
+} from '../../inventory/routes/routes.types';
+import { routeUseCases } from '../../inventory/routes/routes.use-cases';
+import { State } from '../../inventory/states/states.types';
+import { Terminal } from '../../inventory/terminals/terminals.types';
+import { Transporter } from '../../inventory/transporters/transporters.types';
+import { createSlug } from '../../shared/utils';
 import {
   cityFactory,
   countryFactory,
   stateFactory,
   terminalFactory,
 } from '../../tests/factories';
-import { getFactoryDb } from '../../tests/factories/factory-utils';
-import { fakerES_MX as faker } from '@faker-js/faker';
-import { db } from '../../inventory/db-service';
-import { Country } from '../../inventory/countries/countries.types';
-import { State } from '../../inventory/states/states.types';
-import { City } from '../../inventory/cities/cities.types';
-import { Terminal } from '../../inventory/terminals/terminals.types';
-import { createSlug } from '../../shared/utils';
-import { transporterFactory } from '../../tests/factories/transporters.factory';
 import { busLineFactory } from '../../tests/factories/bus-line.factory';
-import { Transporter } from '../../inventory/transporters/transporters.types';
+import { getFactoryDb } from '../../tests/factories/factory-utils';
 import { pathwayServicesFactory } from '../../tests/factories/pathway-services.factory';
-import { PathwayService } from '../../inventory/pathway-services/pathway-services.types';
-import { routeUseCases } from '../../inventory/routes/routes.use-cases';
-import {
-  CreateSimpleRoutePayload,
-  Route,
-} from '../../inventory/routes/routes.types';
-import { pathwayUseCases } from '../../inventory/pathways/pathways.use-cases';
+import { transporterFactory } from '../../tests/factories/transporters.factory';
 
 const factoryDb = getFactoryDb(db);
 

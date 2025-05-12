@@ -2,8 +2,8 @@ import { api } from 'encore.dev/api';
 import type {
   LoginPayload,
   LoginResponse,
-  RefreshTokenPayload,
   LogoutPayload,
+  RefreshTokenPayload,
 } from './auth.types';
 import { authUseCases } from './auth.use-cases';
 

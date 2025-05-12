@@ -1,18 +1,18 @@
+import { eq, inArray } from 'drizzle-orm';
+import { NotFoundError, createBaseRepository } from '@repo/base-repo';
+import { createSlug } from '../../shared/utils';
+import { db } from '../db-service';
 import { terminals } from './terminals.schema';
 import type {
-  Terminal,
   CreateTerminalPayload,
-  UpdateTerminalPayload,
+  PaginatedTerminalsWithCity,
+  PaginationParamsTerminals,
+  Terminal,
   TerminalWithCity,
   TerminalsQueryOptions,
-  PaginationParamsTerminals,
-  PaginatedTerminalsWithCity,
+  UpdateTerminalPayload,
 } from './terminals.types';
-import { createBaseRepository, NotFoundError } from '@repo/base-repo';
-import { db } from '../db-service';
-import { eq, inArray } from 'drizzle-orm';
 import { validateOperatingHours } from './terminals.utils';
-import { createSlug } from '../../shared/utils';
 
 const SLUG_PREFIX = 't';
 /**

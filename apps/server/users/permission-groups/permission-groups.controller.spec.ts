@@ -1,11 +1,11 @@
-import { expect, describe, test, afterAll } from 'vitest';
+import { afterAll, describe, expect, test } from 'vitest';
+import type { PermissionGroup } from './permission-groups.types';
 import {
   createPermissionGroup,
+  deletePermissionGroup,
   listPermissionGroups,
   updatePermissionGroup,
-  deletePermissionGroup,
 } from './permission-groups.controller';
-import type { PermissionGroup } from './permission-groups.types';
 
 describe('Permission Groups Controller', () => {
   // Test data and setup

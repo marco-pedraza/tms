@@ -1,20 +1,20 @@
-import { expect, describe, test, beforeAll, afterAll } from 'vitest';
-import {
-  createCity,
-  getCity,
-  updateCity,
-  deleteCity,
-  listCities,
-  listCitiesPaginated,
-  searchCities,
-  searchCitiesPaginated,
-} from './cities.controller';
-import { createState, deleteState } from '../states/states.controller';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { createSlug } from '../../shared/utils';
 import {
   createCountry,
   deleteCountry,
 } from '../countries/countries.controller';
-import { createSlug } from '../../shared/utils';
+import { createState, deleteState } from '../states/states.controller';
+import {
+  createCity,
+  deleteCity,
+  getCity,
+  listCities,
+  listCitiesPaginated,
+  searchCities,
+  searchCitiesPaginated,
+  updateCity,
+} from './cities.controller';
 
 describe('Cities Controller', () => {
   let countryId: number;

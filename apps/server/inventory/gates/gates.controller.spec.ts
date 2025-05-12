@@ -1,23 +1,23 @@
-import { expect, describe, test, afterAll, beforeAll } from 'vitest';
-import {
-  createGate,
-  getGate,
-  updateGate,
-  deleteGate,
-  listGates,
-  listGatesPaginated,
-} from './gates.controller';
-import type { Gate } from './gates.types';
-import {
-  createTerminal,
-  deleteTerminal,
-} from '../terminals/terminals.controller';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createCity, deleteCity } from '../cities/cities.controller';
-import { createState, deleteState } from '../states/states.controller';
 import {
   createCountry,
   deleteCountry,
 } from '../countries/countries.controller';
+import { createState, deleteState } from '../states/states.controller';
+import {
+  createTerminal,
+  deleteTerminal,
+} from '../terminals/terminals.controller';
+import type { Gate } from './gates.types';
+import {
+  createGate,
+  deleteGate,
+  getGate,
+  listGates,
+  listGatesPaginated,
+  updateGate,
+} from './gates.controller';
 
 describe('Gates Controller', () => {
   // Test data and setup

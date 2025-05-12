@@ -1,29 +1,29 @@
-import { expect, describe, test, beforeAll, afterAll } from 'vitest';
-import {
-  createBus,
-  getBus,
-  listBuses,
-  listBusesPaginated,
-  updateBus,
-  deleteBus,
-  getBusesByModel,
-  getAvailableBuses,
-  getBusesByStatus,
-  updateBusStatus,
-  getAllowedBusStatusTransitions,
-  searchBuses,
-  searchBusesPaginated,
-} from './buses.controller';
-import { BusStatus, Bus, CreateBusPayload } from './buses.types';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
   createBusModel,
   deleteBusModel,
 } from '../bus-models/bus-models.controller';
+import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
 import {
   createSeatLayoutModel,
   deleteSeatLayoutModel,
 } from '../seat-layout-models/seat-layout-models.controller';
-import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
+import { Bus, BusStatus, CreateBusPayload } from './buses.types';
+import {
+  createBus,
+  deleteBus,
+  getAllowedBusStatusTransitions,
+  getAvailableBuses,
+  getBus,
+  getBusesByModel,
+  getBusesByStatus,
+  listBuses,
+  listBusesPaginated,
+  searchBuses,
+  searchBusesPaginated,
+  updateBus,
+  updateBusStatus,
+} from './buses.controller';
 
 describe('Buses Controller', () => {
   // Test data and setup

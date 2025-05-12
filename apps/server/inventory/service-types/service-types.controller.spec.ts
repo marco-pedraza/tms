@@ -1,11 +1,11 @@
-import { expect, describe, test, afterAll } from 'vitest';
+import { afterAll, describe, expect, test } from 'vitest';
 import {
   createServiceType,
+  deleteServiceType,
   getServiceType,
+  listServiceTypes,
   listServiceTypesPaginated,
   updateServiceType,
-  deleteServiceType,
-  listServiceTypes,
 } from './service-types.controller';
 
 describe('Service Types Controller', () => {

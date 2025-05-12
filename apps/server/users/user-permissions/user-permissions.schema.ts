@@ -1,7 +1,7 @@
-import { pgTable, serial, integer, timestamp } from 'drizzle-orm/pg-core';
-import { users } from '../users/users.schema';
-import { roles } from '../roles/roles.schema';
+import { integer, pgTable, serial, timestamp } from 'drizzle-orm/pg-core';
 import { permissions } from '../permissions/permissions.schema';
+import { roles } from '../roles/roles.schema';
+import { users } from '../users/users.schema';
 
 /**
  * Schema for the user_roles junction table

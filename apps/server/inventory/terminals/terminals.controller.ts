@@ -1,16 +1,16 @@
 import { api } from 'encore.dev/api';
-import { terminalRepository } from './terminals.repository';
 import type {
   CreateTerminalPayload,
-  UpdateTerminalPayload,
-  Terminal,
-  Terminals,
   PaginatedTerminals,
-  PaginationParamsTerminals,
-  TerminalsQueryOptions,
-  TerminalWithCity,
   PaginatedTerminalsWithCity,
+  PaginationParamsTerminals,
+  Terminal,
+  TerminalWithCity,
+  Terminals,
+  TerminalsQueryOptions,
+  UpdateTerminalPayload,
 } from './terminals.types';
+import { terminalRepository } from './terminals.repository';
 
 /**
  * Creates a new terminal.

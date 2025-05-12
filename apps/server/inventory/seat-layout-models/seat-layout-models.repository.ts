@@ -1,12 +1,12 @@
+import { createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
 import { seatLayoutModels } from './seat-layout-models.schema';
 import {
-  SeatLayoutModel,
   CreateSeatLayoutModelPayload,
-  UpdateSeatLayoutModelPayload,
+  SeatLayoutModel,
   SeatLayoutModels,
+  UpdateSeatLayoutModelPayload,
 } from './seat-layout-models.types';
-import { createBaseRepository } from '@repo/base-repo';
 
 /**
  * Creates a repository for managing seat layout model entities

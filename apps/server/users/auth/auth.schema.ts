@@ -1,10 +1,10 @@
 import {
+  boolean,
+  integer,
   pgTable,
   serial,
-  integer,
   text,
   timestamp,
-  boolean,
 } from 'drizzle-orm/pg-core';
 import { users } from '../users/users.schema';
 

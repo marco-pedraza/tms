@@ -1,15 +1,15 @@
-import { expect, describe, test, afterAll, beforeAll } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import type { Country } from './countries.types';
 import {
   createCountry,
-  getCountry,
-  updateCountry,
   deleteCountry,
+  getCountry,
   listCountries,
   listCountriesPaginated,
   searchCountries,
   searchCountriesPaginated,
+  updateCountry,
 } from './countries.controller';
-import type { Country } from './countries.types';
 
 describe('Countries Controller', () => {
   // Test data and setup

@@ -1,18 +1,18 @@
+import { and, eq } from 'drizzle-orm';
+import { createBaseRepository } from '@repo/base-repo';
+import { StateTransition, createBaseStateMachine } from '@repo/state-machine';
+import { db } from '../db-service';
 import { buses } from './buses.schema';
 import type {
   Bus,
-  CreateBusPayload,
-  UpdateBusPayload,
   Buses,
-  PaginatedBuses,
   BusesQueryOptions,
+  CreateBusPayload,
+  PaginatedBuses,
   PaginationParamsBuses,
+  UpdateBusPayload,
 } from './buses.types';
 import { BusStatus } from './buses.types';
-import { createBaseRepository } from '@repo/base-repo';
-import { db } from '../db-service';
-import { eq, and } from 'drizzle-orm';
-import { createBaseStateMachine, StateTransition } from '@repo/state-machine';
 
 // Define the state transitions for buses
 const busStatusTransitions: StateTransition<BusStatus>[] = [

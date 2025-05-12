@@ -1,14 +1,14 @@
+import { eq } from 'drizzle-orm';
+import { createBaseRepository } from '@repo/base-repo';
+import { NotFoundError } from '../../shared/errors';
+import { db } from '../db-service';
 import { pathways } from './pathways.schema';
 import type {
-  Pathway,
   CreatePathwayPayload,
-  UpdatePathwayPayload,
+  Pathway,
   PathwayWithServiceAssignments,
+  UpdatePathwayPayload,
 } from './pathways.types';
-import { createBaseRepository } from '@repo/base-repo';
-import { db } from '../db-service';
-import { eq } from 'drizzle-orm';
-import { NotFoundError } from '../../shared/errors';
 
 export const createPathwayRepository = () => {
   const baseRepository = createBaseRepository<

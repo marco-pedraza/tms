@@ -1,15 +1,15 @@
 import {
-  pgTable,
-  serial,
-  integer,
   boolean,
+  integer,
+  pgTable,
   real,
+  serial,
   timestamp,
   unique,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { pathways } from '../pathways/pathways.schema';
 import { pathwayServices } from '../pathway-services/pathway-services.schema';
+import { pathways } from '../pathways/pathways.schema';
 
 /**
  * Database table for pathway service assignments

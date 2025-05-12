@@ -1,29 +1,29 @@
-import { expect, describe, test, afterAll, beforeAll } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
+  createBusSeat,
+  deleteBusSeat,
+  listBusSeatsBySeatDiagram,
+} from '../bus-seats/bus-seats.controller';
+import { SeatType } from '../bus-seats/bus-seats.types';
+import { createSeatLayoutModel } from '../seat-layout-models/seat-layout-models.controller';
+import { SeatLayoutModel } from '../seat-layout-models/seat-layout-models.types';
+import {
+  BathroomLocation,
+  FloorSeats,
+  SeatConfiguration,
+  SpaceType,
+} from './seat-diagrams.types';
+import { seatDiagramRepository } from './seat-diagrams.repository';
+import {
+  createSeatsFromDiagramConfiguration,
+  deleteSeatDiagram,
   getSeatDiagram,
+  getSeatDiagramConfiguration,
   listSeatDiagrams,
   listSeatDiagramsPaginated,
   updateSeatDiagram,
-  deleteSeatDiagram,
-  getSeatDiagramConfiguration,
-  createSeatsFromDiagramConfiguration,
 } from './seat-diagrams.controller';
-import {
-  listBusSeatsBySeatDiagram,
-  deleteBusSeat,
-  createBusSeat,
-} from '../bus-seats/bus-seats.controller';
 import { seatDiagramUseCases } from './seat-diagrams.use-cases';
-import {
-  FloorSeats,
-  BathroomLocation,
-  SpaceType,
-  SeatConfiguration,
-} from './seat-diagrams.types';
-import { SeatType } from '../bus-seats/bus-seats.types';
-import { seatDiagramRepository } from './seat-diagrams.repository';
-import { createSeatLayoutModel } from '../seat-layout-models/seat-layout-models.controller';
-import { SeatLayoutModel } from '../seat-layout-models/seat-layout-models.types';
 
 describe('Seat Diagrams Controller', () => {
   // Test data and setup

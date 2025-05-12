@@ -1,16 +1,16 @@
-import { expect, describe, test, afterAll, beforeAll } from 'vitest';
-import {
-  createBusModel,
-  getBusModel,
-  listBusModels,
-  listBusModelsPaginated,
-  updateBusModel,
-  deleteBusModel,
-} from './bus-models.controller';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
   createSeatLayoutModel,
   deleteSeatLayoutModel,
 } from '../seat-layout-models/seat-layout-models.controller';
+import {
+  createBusModel,
+  deleteBusModel,
+  getBusModel,
+  listBusModels,
+  listBusModelsPaginated,
+  updateBusModel,
+} from './bus-models.controller';
 
 describe('Bus Models Controller', () => {
   let createdSeatLayoutModelId: number;

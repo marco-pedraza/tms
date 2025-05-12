@@ -1,6 +1,6 @@
-import { expect, describe, test } from 'vitest';
-import { listTimezones, getTimezone } from './timezones.controller';
+import { describe, expect, test } from 'vitest';
 import { AVAILABLE_TIMEZONES } from './timezones.constants';
+import { getTimezone, listTimezones } from './timezones.controller';
 
 describe('TimezoneController', () => {
   describe('listTimezones', () => {

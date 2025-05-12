@@ -1,10 +1,10 @@
 import {
+  boolean,
+  integer,
   pgTable,
+  serial,
   text,
   timestamp,
-  boolean,
-  serial,
-  integer,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { tenants } from '../tenants/tenants.schema';

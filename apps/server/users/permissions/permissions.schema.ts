@@ -1,6 +1,7 @@
-import { pgTable, serial, text, timestamp, integer } from 'drizzle-orm/pg-core';
-import { permissionGroups } from '../permission-groups/permission-groups.schema';
+import { integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { permissionGroups } from '../permission-groups/permission-groups.schema';
+
 /**
  * Schema for the permissions table
  * Represents individual permissions that can be assigned to roles or directly to users

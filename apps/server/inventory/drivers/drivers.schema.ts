@@ -1,15 +1,15 @@
 import {
+  boolean,
+  date,
+  integer,
   pgTable,
   serial,
   text,
   timestamp,
-  boolean,
-  integer,
-  date,
 } from 'drizzle-orm/pg-core';
-import { transporters } from '../transporters/transporters.schema';
 import { busLines } from '../bus-lines/bus-lines.schema';
 import { buses } from '../buses/buses.schema';
+import { transporters } from '../transporters/transporters.schema';
 
 export const drivers = pgTable('drivers', {
   id: serial('id').primaryKey(),

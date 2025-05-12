@@ -1,11 +1,11 @@
 import {
+  boolean,
+  integer,
+  jsonb,
   pgTable,
   serial,
   text,
   timestamp,
-  boolean,
-  integer,
-  jsonb,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { seatDiagrams } from '../seat-diagrams/seat-diagrams.schema';

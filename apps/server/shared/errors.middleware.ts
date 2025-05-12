@@ -1,6 +1,6 @@
-import { APICallMeta } from 'encore.dev';
-import { middleware, MiddlewareRequest, Next } from 'encore.dev/api';
+import { MiddlewareRequest, Next, middleware } from 'encore.dev/api';
 import log from 'encore.dev/log';
+import { APICallMeta } from 'encore.dev';
 import { parseApiError } from './errors';
 import { captureException } from './sentry';
 

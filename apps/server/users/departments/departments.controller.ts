@@ -1,14 +1,14 @@
 import { api } from 'encore.dev/api';
-import { departmentRepository } from './departments.repository';
 import type {
   CreateDepartmentPayload,
-  UpdateDepartmentPayload,
   Department,
-  PaginatedDepartments,
   Departments,
   DepartmentsQueryOptions,
+  PaginatedDepartments,
   PaginationParamsDepartments,
+  UpdateDepartmentPayload,
 } from './departments.types';
+import { departmentRepository } from './departments.repository';
 
 /**
  * Creates a new department.

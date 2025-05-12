@@ -1,11 +1,11 @@
 import {
+  boolean,
+  integer,
   pgTable,
+  real,
   serial,
   text,
   timestamp,
-  boolean,
-  integer,
-  real,
 } from 'drizzle-orm/pg-core';
 import { states } from '../states/states.schema';
 

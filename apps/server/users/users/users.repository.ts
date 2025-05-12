@@ -1,17 +1,17 @@
-import { users } from './users.schema';
-import type {
-  User,
-  SafeUser,
-  CreateUserPayload,
-  UpdateUserPayload,
-  PaginatedUsers,
-  UsersQueryOptions,
-  PaginationParamsUsers,
-} from './users.types';
+import { secret } from 'encore.dev/config';
 import { createBaseRepository } from '@repo/base-repo';
 import { hashPassword, omitPasswordHash } from '../../shared/auth-utils';
 import { db } from '../db-service';
-import { secret } from 'encore.dev/config';
+import { users } from './users.schema';
+import type {
+  CreateUserPayload,
+  PaginatedUsers,
+  PaginationParamsUsers,
+  SafeUser,
+  UpdateUserPayload,
+  User,
+  UsersQueryOptions,
+} from './users.types';
 
 // Get salt rounds from Encore secret
 const SALT_ROUNDS = parseInt(secret('SALT_ROUNDS')());

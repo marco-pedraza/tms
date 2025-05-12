@@ -1,10 +1,10 @@
+import { NotFoundError } from '../../shared/errors';
 import { busModelRepository } from '../bus-models/bus-models.repository';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
-import { seatLayoutModelRepository } from '../seat-layout-models/seat-layout-models.repository';
-import { busRepository } from './buses.repository';
-import { CreateBusPayload, Bus } from './buses.types';
 import { CreateSeatDiagramPayload } from '../seat-diagrams/seat-diagrams.types';
-import { NotFoundError } from '../../shared/errors';
+import { seatLayoutModelRepository } from '../seat-layout-models/seat-layout-models.repository';
+import { Bus, CreateBusPayload } from './buses.types';
+import { busRepository } from './buses.repository';
 
 /**
  * Creates a new bus with a seat diagram. The seat diagram can be created in two ways:

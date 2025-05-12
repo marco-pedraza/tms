@@ -1,4 +1,8 @@
-import { routeRepository } from './routes.repository';
+import { ValidationError } from '../../shared/errors';
+import { pathwayRepository } from '../pathways/pathways.repository';
+import { CreatePathwayPayload } from '../pathways/pathways.types';
+import { routeSegmentRepository } from '../route-segment/route-segment.repository';
+import { routeSegments } from '../route-segment/route-segment.schema';
 import { terminalRepository } from '../terminals/terminals.repository';
 import {
   CreateRoutePayload,
@@ -6,11 +10,7 @@ import {
   CreateSimpleRoutePayload,
   Route,
 } from './routes.types';
-import { CreatePathwayPayload } from '../pathways/pathways.types';
-import { pathwayRepository } from '../pathways/pathways.repository';
-import { routeSegmentRepository } from '../route-segment/route-segment.repository';
-import { routeSegments } from '../route-segment/route-segment.schema';
-import { ValidationError } from '../../shared/errors';
+import { routeRepository } from './routes.repository';
 
 const ROUTE_ERRORS = {
   SAME_TERMINAL: 'Origin and destination terminals cannot be the same',

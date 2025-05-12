@@ -1,9 +1,9 @@
 import { Min } from 'encore.dev/validate';
-import { Pathway, CreatePathwayPayload } from '../pathways/pathways.types';
-import { City } from '../cities/cities.types';
-import { Terminal } from '../terminals/terminals.types';
 import { PaginatedResult, PaginationParams } from '../../shared/types';
+import { City } from '../cities/cities.types';
+import { CreatePathwayPayload, Pathway } from '../pathways/pathways.types';
 import { RouteSegment } from '../route-segment/route-segment.types';
+import { Terminal } from '../terminals/terminals.types';
 
 /**
  * Base interface representing a route entity

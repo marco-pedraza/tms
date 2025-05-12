@@ -1,12 +1,12 @@
 import {
+  boolean,
+  integer,
+  jsonb,
   pgTable,
+  real,
   serial,
   text,
-  integer,
   timestamp,
-  boolean,
-  jsonb,
-  real,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { pathwayServiceAssignments } from '../pathway-service-assignments/pathway-service-assignments.schema';

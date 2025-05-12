@@ -1,5 +1,5 @@
 // API types
-import { MinLen, MatchesRegexp } from 'encore.dev/validate';
+import { MatchesRegexp, MinLen } from 'encore.dev/validate';
 import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**

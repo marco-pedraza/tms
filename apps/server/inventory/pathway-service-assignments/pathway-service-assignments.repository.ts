@@ -1,11 +1,11 @@
-import { pathwayServiceAssignments } from './pathway-service-assignments.schema';
-import type {
-  PathwayServiceAssignment,
-  CreatePathwayServiceAssignmentPayload,
-  UpdatePathwayServiceAssignmentPayload,
-} from './pathway-service-assignments.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
+import { pathwayServiceAssignments } from './pathway-service-assignments.schema';
+import type {
+  CreatePathwayServiceAssignmentPayload,
+  PathwayServiceAssignment,
+  UpdatePathwayServiceAssignmentPayload,
+} from './pathway-service-assignments.types';
 
 /**
  * Defining internal types to avoid exposing the sequence number to the outside world

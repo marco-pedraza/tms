@@ -5,8 +5,10 @@ import type {
   UpdateTenantPayload,
   Tenant,
   PaginatedTenants,
+  Tenants,
+  TenantsQueryOptions,
+  PaginationParamsTenants,
 } from './tenants.types';
-import { PaginationParams } from '../../shared/types';
 
 /**
  * Creates a new tenant.
@@ -36,14 +38,28 @@ export const getTenant = api(
 );
 
 /**
- * Retrieves tenants with pagination.
- * @param params - Pagination parameters
+ * Retrieves all tenants with optional filtering and ordering.
+ * @param params - Query options for filtering and ordering
+ * @returns {Promise<Tenants>} List of tenants
+ * @throws {APIError} If the retrieval fails
+ */
+export const listTenants = api(
+  { method: 'POST', path: '/get-tenants', expose: true, auth: true },
+  async (params: TenantsQueryOptions): Promise<Tenants> => {
+    const tenants = await tenantRepository.findAll(params);
+    return { tenants };
+  },
+);
+
+/**
+ * Retrieves tenants with pagination, filtering, and ordering.
+ * @param params - Pagination, filtering, and ordering parameters
  * @returns {Promise<PaginatedTenants>} Paginated list of tenants
  * @throws {APIError} If retrieval fails
  */
-export const listTenants = api(
-  { method: 'GET', path: '/tenants', expose: true, auth: true },
-  async (params: PaginationParams): Promise<PaginatedTenants> => {
+export const listTenantsWithPagination = api(
+  { method: 'POST', path: '/get-tenants/paginated', expose: true, auth: true },
+  async (params: PaginationParamsTenants): Promise<PaginatedTenants> => {
     return await tenantRepository.findAllPaginated(params);
   },
 );
@@ -76,5 +92,55 @@ export const deleteTenant = api(
   { method: 'DELETE', path: '/tenants/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Tenant> => {
     return await tenantRepository.delete(id);
+  },
+);
+
+/**
+ * Searches for tenants by matching a search term against name, code, and description.
+ * @param params - Search parameters
+ * @param params.term - The search term to match against tenant fields
+ * @returns {Promise<Tenants>} List of matching tenants
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchTenants = api(
+  { method: 'GET', path: '/tenants/search', expose: true, auth: true },
+  async ({ term }: { term: string }): Promise<Tenants> => {
+    const tenants = await tenantRepository.search(term);
+    return { tenants };
+  },
+);
+
+/**
+ * Searches for tenants with pagination by matching a search term.
+ * @param params - Search and pagination parameters
+ * @param params.term - The search term to match against tenant fields
+ * @returns {Promise<PaginatedTenants>} Paginated list of matching tenants
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchTenantsPaginated = api(
+  {
+    method: 'POST',
+    path: '/tenants/search/paginated',
+    expose: true,
+    auth: true,
+  },
+  async ({
+    term,
+    ...params
+  }: PaginationParamsTenants & { term: string }): Promise<PaginatedTenants> => {
+    return await tenantRepository.searchPaginated(term, params);
+  },
+);
+
+/**
+ * Maintains backward compatibility for listing tenants.
+ * @param params - Pagination parameters
+ * @returns {Promise<PaginatedTenants>} Paginated list of tenants
+ * @throws {APIError} If retrieval fails
+ */
+export const getTenantsLegacy = api(
+  { method: 'GET', path: '/tenants', expose: true, auth: true },
+  async (params: PaginationParamsTenants): Promise<PaginatedTenants> => {
+    return await tenantRepository.findAllPaginated(params);
   },
 );

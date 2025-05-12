@@ -2,19 +2,17 @@ import { db } from '../db-service';
 import { NotFoundError } from '@repo/base-repo';
 import { roles, rolePermissions } from './roles.schema';
 import { permissions } from '../permissions/permissions.schema';
-import { eq } from 'drizzle-orm';
 import type {
   Role,
   RoleWithPermissions,
   CreateRolePayload,
   UpdateRolePayload,
-  Roles,
-  RolesWithPermissions,
   PaginatedRoles,
   PaginatedRolesWithPermissions,
   AssignPermissionsToRolePayload,
+  RolesQueryOptions,
+  PaginationParamsRoles,
 } from './roles.types';
-import { PaginationParams } from '../../shared/types';
 import { Permission } from '../permissions/permissions.types';
 import { permissionRepository } from '../permissions/permissions.repository';
 import { createBaseRepository } from '@repo/base-repo';
@@ -33,13 +31,15 @@ const ERROR_ROLE_NOT_FOUND = (id: number) => `Role with id ${id} not found`;
  * Creates a repository for managing role entities
  * @returns {Object} An object containing role-specific operations and base CRUD operations
  */
-export const createRoleRepository = () => {
+export function createRoleRepository() {
   const baseRepository = createBaseRepository<
     Role,
     CreateRolePayload,
     UpdateRolePayload,
     typeof roles
-  >(db, roles, 'Role');
+  >(db, roles, 'Role', {
+    searchableFields: [roles.name],
+  });
 
   /**
    * Creates a new role
@@ -47,9 +47,7 @@ export const createRoleRepository = () => {
    * @returns Created role with permissions
    */
   // TODO Add transaction capabilities to base repository to be able to do a whole transaction with the create role and assign permissions
-  const create = async (
-    data: CreateRolePayload,
-  ): Promise<RoleWithPermissions> => {
+  async function create(data: CreateRolePayload): Promise<RoleWithPermissions> {
     const { permissionIds, ...roleData } = data;
 
     // The unique constraint will handle the uniqueness validation
@@ -60,16 +58,16 @@ export const createRoleRepository = () => {
     }
 
     return findOneWithPermissions(role.id);
-  };
+  }
 
   /**
    * Finds a role by ID with its permissions
    * @param id - ID of the role to find
    * @returns Found role with permissions
    */
-  const findOneWithPermissions = async (
+  async function findOneWithPermissions(
     id: number,
-  ): Promise<RoleWithPermissions> => {
+  ): Promise<RoleWithPermissions> {
     const role = await baseRepository.findOne(id);
     const permissionList = await getRelatedEntities<Permission>(
       db,
@@ -84,20 +82,18 @@ export const createRoleRepository = () => {
       ...role,
       permissions: permissionList,
     };
-  };
+  }
 
   /**
-   * Finds all roles with optional permissions
-   * @param includePermissions - Whether to include permissions in the result
-   * @returns All roles
+   * Finds all roles with optional filtering, ordering, and permissions
+   * @param options - Query options for filtering, ordering, and including permissions
+   * @returns List of roles
    */
-  const findAll = async (
-    includePermissions = false,
-  ): Promise<Roles | RolesWithPermissions> => {
-    const rolesList = await baseRepository.findAll();
+  async function findAll(options: RolesQueryOptions = {}): Promise<Role[]> {
+    const rolesList = await baseRepository.findAll(options);
 
-    if (!includePermissions) {
-      return { roles: rolesList };
+    if (!options.includePermissions) {
+      return rolesList;
     }
 
     const rolesWithPermissions = await Promise.all(
@@ -106,48 +102,40 @@ export const createRoleRepository = () => {
       }),
     );
 
-    return { roles: rolesWithPermissions };
-  };
+    return rolesWithPermissions as Role[];
+  }
 
   /**
-   * Finds all roles for a tenant
+   * Finds all roles for a tenant with optional filtering, ordering, and permissions
    * @param tenantId - ID of the tenant
-   * @param includePermissions - Whether to include permissions in the result
-   * @returns All roles for the tenant
+   * @param options - Query options for filtering, ordering, and including permissions
+   * @returns List of roles for the tenant
    */
-  const findAllByTenant = async (
+  async function findAllByTenant(
     tenantId: number,
-    includePermissions = false,
-  ): Promise<Roles | RolesWithPermissions> => {
-    const rolesList = await db
-      .select()
-      .from(roles)
-      .where(eq(roles.tenantId, tenantId));
+    options: RolesQueryOptions = {},
+  ): Promise<Role[]> {
+    const combinedOptions: RolesQueryOptions = {
+      ...options,
+      filters: {
+        ...(options.filters ?? {}),
+        tenantId,
+      },
+    };
 
-    if (!includePermissions) {
-      return { roles: rolesList };
-    }
-
-    const rolesWithPermissions = await Promise.all(
-      rolesList.map(async (role) => {
-        return await findOneWithPermissions(role.id);
-      }),
-    );
-
-    return { roles: rolesWithPermissions };
-  };
+    return await findAll(combinedOptions);
+  }
 
   /**
-   * Finds all roles with pagination
-   * @param params - Pagination parameters
-   * @param includePermissions - Whether to include permissions in the result
+   * Finds all roles with pagination, filtering, ordering, and optional permissions
+   * @param params - Pagination, filtering, and ordering parameters
    * @returns Paginated roles
    */
-  const findAllPaginated = async (
-    params: PaginationParams,
-    includePermissions = false,
-  ): Promise<PaginatedRoles | PaginatedRolesWithPermissions> => {
-    const result = await baseRepository.findAllPaginated(params);
+  async function findAllPaginated(
+    params: PaginationParamsRoles = {},
+  ): Promise<PaginatedRoles | PaginatedRolesWithPermissions> {
+    const { includePermissions, ...baseParams } = params;
+    const result = await baseRepository.findAllPaginated(baseParams);
 
     if (!includePermissions) {
       return result as PaginatedRoles;
@@ -163,7 +151,7 @@ export const createRoleRepository = () => {
       data: rolesWithPermissions,
       pagination: result.pagination,
     };
-  };
+  }
 
   /**
    * Updates a role
@@ -171,14 +159,14 @@ export const createRoleRepository = () => {
    * @param data - Role data to update
    * @returns Updated role with permissions
    */
-  const update = async (
+  async function update(
     id: number,
     data: UpdateRolePayload,
-  ): Promise<RoleWithPermissions> => {
+  ): Promise<RoleWithPermissions> {
     // The database constraint will validate uniqueness
     await baseRepository.update(id, data);
     return findOneWithPermissions(id);
-  };
+  }
 
   /**
    * Assigns permissions to a role
@@ -187,10 +175,10 @@ export const createRoleRepository = () => {
    * @returns Role with updated permissions
    * @throws {APIError} If role or permissions not found
    */
-  const assignPermissions = async (
+  async function assignPermissions(
     id: number,
     data: AssignPermissionsToRolePayload,
-  ): Promise<RoleWithPermissions> => {
+  ): Promise<RoleWithPermissions> {
     await baseRepository.findOne(id);
 
     // Validate all permissions exist
@@ -218,43 +206,76 @@ export const createRoleRepository = () => {
     );
 
     return findOneWithPermissions(id);
-  };
+  }
 
   /**
-   * Finds all roles for a tenant with pagination
+   * Finds all roles for a tenant with pagination, filtering, ordering, and optional permissions
    * @param tenantId - ID of the tenant
-   * @param params - Pagination parameters
-   * @param includePermissions - Whether to include permissions in the result
+   * @param params - Pagination, filtering, and ordering parameters
    * @returns Paginated roles for the tenant
    */
-  const findAllByTenantPaginated = async (
+  async function findAllByTenantPaginated(
     tenantId: number,
-    params: PaginationParams,
-    includePermissions = false,
-  ): Promise<PaginatedRoles | PaginatedRolesWithPermissions> => {
-    // Use the base repository's findByPaginated method which handles pagination logic
-    const result = await baseRepository.findByPaginated(
-      roles.tenantId,
-      tenantId,
-      params,
-    );
+    params: PaginationParamsRoles = {},
+  ): Promise<PaginatedRoles | PaginatedRolesWithPermissions> {
+    const combinedParams: PaginationParamsRoles = {
+      ...params,
+      filters: {
+        ...(params.filters ?? {}),
+        tenantId,
+      },
+    };
+
+    return await findAllPaginated(combinedParams);
+  }
+
+  /**
+   * Searches for roles by matching a search term against name and description
+   * @param term - The search term to match against role fields
+   * @param options - Additional options for filtering and ordering
+   * @returns List of matching roles
+   */
+  async function search(
+    term: string,
+    options: RolesQueryOptions = {},
+  ): Promise<Role[]> {
+    const roles = await baseRepository.search(term);
+
+    if (!options.includePermissions) {
+      return roles;
+    }
+
+    return (await Promise.all(
+      roles.map(async (role) => await findOneWithPermissions(role.id)),
+    )) as Role[];
+  }
+
+  /**
+   * Searches for roles with pagination by matching a search term
+   * @param term - The search term to match against role fields
+   * @param params - Pagination, filtering, and ordering parameters
+   * @returns Paginated list of matching roles
+   */
+  async function searchPaginated(
+    term: string,
+    params: PaginationParamsRoles = {},
+  ): Promise<PaginatedRoles | PaginatedRolesWithPermissions> {
+    const { includePermissions, ...baseParams } = params;
+    const result = await baseRepository.searchPaginated(term, baseParams);
 
     if (!includePermissions) {
       return result as PaginatedRoles;
     }
 
-    // TODO fix using db operations inside map with improved base repository
     const rolesWithPermissions = await Promise.all(
-      result.data.map(async (role) => {
-        return await findOneWithPermissions(role.id);
-      }),
+      result.data.map(async (role) => await findOneWithPermissions(role.id)),
     );
 
     return {
       data: rolesWithPermissions,
       pagination: result.pagination,
     };
-  };
+  }
 
   /**
    * Deletes a role
@@ -262,7 +283,7 @@ export const createRoleRepository = () => {
    * @returns The deleted role
    * @throws {APIError} If role not found
    */
-  const deleteRole = async (id: number): Promise<Role> => {
+  async function deleteRole(id: number): Promise<Role> {
     try {
       // Use the findOne method to verify the role exists before deletion
       await baseRepository.findOne(id);
@@ -275,7 +296,7 @@ export const createRoleRepository = () => {
       }
       throw error;
     }
-  };
+  }
 
   return {
     ...baseRepository,
@@ -287,9 +308,11 @@ export const createRoleRepository = () => {
     findAllPaginated,
     findAllByTenantPaginated,
     assignPermissions,
+    search,
+    searchPaginated,
     delete: deleteRole,
   };
-};
+}
 
 // Export the role repository instance
 export const roleRepository = createRoleRepository();

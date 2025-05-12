@@ -1,5 +1,5 @@
 import { MinLen, MatchesRegexp } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 import { Permission } from '../permissions/permissions.types';
 
 /**
@@ -84,6 +84,22 @@ export interface AssignPermissionsToRolePayload {
    */
   permissionIds: number[];
 }
+
+/**
+ * Query options for filtering and ordering roles
+ */
+export interface RolesQueryOptions {
+  orderBy?: { field: keyof Role; direction: 'asc' | 'desc' }[];
+  filters?: Partial<Role>;
+  includePermissions?: boolean;
+}
+
+/**
+ * Combined pagination and query options for roles
+ */
+export interface PaginationParamsRoles
+  extends PaginationParams,
+    RolesQueryOptions {}
 
 /**
  * Response type for the list roles endpoint

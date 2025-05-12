@@ -6,8 +6,9 @@ import type {
   Permission,
   Permissions,
   PaginatedPermissions,
+  PermissionsQueryOptions,
+  PaginationParamsPermissions,
 } from './permissions.types';
-import { PaginationParams } from '../../shared/types';
 
 /**
  * Creates a new permission.
@@ -37,26 +38,37 @@ export const getPermission = api(
 );
 
 /**
- * Retrieves all permissions.
+ * Retrieves all permissions with optional filtering and ordering.
+ * @param params - Query options for filtering and ordering
  * @returns {Promise<Permissions>} List of all permissions
  * @throws {APIError} If the retrieval fails
  */
 export const listPermissions = api(
   { method: 'POST', path: '/get-permissions', expose: true, auth: true },
-  async (): Promise<Permissions> => {
-    return await permissionRepository.findAll({});
+  async (params: PermissionsQueryOptions): Promise<Permissions> => {
+    const permissions = await permissionRepository.findAll(params);
+    return {
+      permissions,
+    };
   },
 );
 
 /**
- * Retrieves permissions with pagination.
- * @param params - Pagination parameters
+ * Retrieves permissions with pagination, filtering, and ordering.
+ * @param params - Pagination, filtering, and ordering parameters
  * @returns {Promise<PaginatedPermissions>} Paginated list of permissions
  * @throws {APIError} If retrieval fails
  */
 export const listPermissionsWithPagination = api(
-  { method: 'GET', path: '/permissions/paginated', expose: true, auth: true },
-  async (params: PaginationParams): Promise<PaginatedPermissions> => {
+  {
+    method: 'POST',
+    path: '/get-permissions/paginated',
+    expose: true,
+    auth: true,
+  },
+  async (
+    params: PaginationParamsPermissions,
+  ): Promise<PaginatedPermissions> => {
     return await permissionRepository.findAllPaginated(params);
   },
 );
@@ -89,5 +101,50 @@ export const deletePermission = api(
   { method: 'DELETE', path: '/permissions/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<Permission> => {
     return await permissionRepository.delete(id);
+  },
+);
+
+/**
+ * Searches for permissions by matching a search term against name, code, and description.
+ * @param params - Search parameters
+ * @param params.term - The search term to match against permission fields
+ * @returns {Promise<Permissions>} List of matching permissions
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchPermissions = api(
+  { method: 'GET', path: '/permissions/search', expose: true, auth: true },
+  async ({ term }: { term: string }): Promise<Permissions> => {
+    const permissions = await permissionRepository.search(term);
+    return {
+      permissions,
+    };
+  },
+);
+
+/**
+ * Searches for permissions with pagination by matching a search term against name, code, and description.
+ * @param params - Search and pagination parameters
+ * @param params.term - The search term to match against permission fields
+ * @param params.page - Page number for pagination (optional, default: 1)
+ * @param params.pageSize - Number of items per page (optional, default: 10)
+ * @param params.orderBy - Sorting criteria (optional)
+ * @param params.filters - Additional filters to apply (optional)
+ * @returns {Promise<PaginatedPermissions>} Paginated list of matching permissions
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchPermissionsPaginated = api(
+  {
+    method: 'POST',
+    path: '/permissions/search/paginated',
+    expose: true,
+    auth: true,
+  },
+  async ({
+    term,
+    ...params
+  }: PaginationParamsPermissions & {
+    term: string;
+  }): Promise<PaginatedPermissions> => {
+    return await permissionRepository.searchPaginated(term, params);
   },
 );

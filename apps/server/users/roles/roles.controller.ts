@@ -10,8 +10,9 @@ import type {
   PaginatedRoles,
   PaginatedRolesWithPermissions,
   AssignPermissionsToRolePayload,
+  RolesQueryOptions,
+  PaginationParamsRoles,
 } from './roles.types';
-import { PaginationParams } from '../../shared/types';
 
 /**
  * Creates a new role.
@@ -60,48 +61,60 @@ export const getRoleWithPermissions = api(
 );
 
 /**
- * Retrieves all roles.
- * @returns {Promise<Roles>} List of all roles
+ * Retrieves all roles with optional filtering, ordering, and permissions.
+ * @param params - Query options for filtering, ordering, and including permissions
+ * @returns {Promise<Roles>} List of roles
  * @throws {APIError} If the retrieval fails
  */
 export const listRoles = api(
-  { method: 'GET', path: '/roles', expose: true, auth: true },
-  async (): Promise<Roles> => {
-    return (await roleRepository.findAll(false)) as Roles;
+  { method: 'POST', path: '/get-roles', expose: true, auth: true },
+  async (params: RolesQueryOptions): Promise<Roles> => {
+    const roles = await roleRepository.findAll(params);
+    return { roles };
   },
 );
 
 /**
- * Retrieves all roles with their permissions.
+ * Retrieves all roles with their permissions (maintains backward compatibility).
  * @returns {Promise<RolesWithPermissions>} List of all roles with permissions
  * @throws {APIError} If the retrieval fails
  */
 export const listRolesWithPermissions = api(
   { method: 'GET', path: '/roles/with-permissions', expose: true, auth: true },
   async (): Promise<RolesWithPermissions> => {
-    return (await roleRepository.findAll(true)) as RolesWithPermissions;
+    const roles = await roleRepository.findAll({ includePermissions: true });
+    return { roles: roles as RoleWithPermissions[] };
   },
 );
 
 /**
- * Retrieves all roles for a tenant.
- * @param params - Object containing the tenant ID
+ * Retrieves all roles for a tenant with optional filtering and ordering.
+ * @param params - Object containing the tenant ID and query options
  * @param params.tenantId - The ID of the tenant
- * @returns {Promise<Roles>} List of all roles for the tenant
+ * @returns {Promise<Roles>} List of roles for the tenant
  * @throws {APIError} If the retrieval fails
  */
 export const listRolesByTenant = api(
-  { method: 'GET', path: '/tenants/:tenantId/roles', expose: true, auth: true },
-  async ({ tenantId }: { tenantId: number }): Promise<Roles> => {
-    return (await roleRepository.findAllByTenant(tenantId, false)) as Roles;
+  {
+    method: 'POST',
+    path: '/tenants/:tenantId/get-roles',
+    expose: true,
+    auth: true,
+  },
+  async ({
+    tenantId,
+    ...options
+  }: { tenantId: number } & RolesQueryOptions): Promise<Roles> => {
+    const roles = await roleRepository.findAllByTenant(tenantId, options);
+    return { roles };
   },
 );
 
 /**
- * Retrieves all roles for a tenant with their permissions.
+ * Retrieves all roles for a tenant with permissions (maintains backward compatibility).
  * @param params - Object containing the tenant ID
  * @param params.tenantId - The ID of the tenant
- * @returns {Promise<RolesWithPermissions>} List of all roles for the tenant with permissions
+ * @returns {Promise<RolesWithPermissions>} List of roles for the tenant with permissions
  * @throws {APIError} If the retrieval fails
  */
 export const listRolesByTenantWithPermissions = api(
@@ -112,31 +125,28 @@ export const listRolesByTenantWithPermissions = api(
     auth: true,
   },
   async ({ tenantId }: { tenantId: number }): Promise<RolesWithPermissions> => {
-    return (await roleRepository.findAllByTenant(
-      tenantId,
-      true,
-    )) as RolesWithPermissions;
+    const roles = await roleRepository.findAllByTenant(tenantId, {
+      includePermissions: true,
+    });
+    return { roles: roles as RoleWithPermissions[] };
   },
 );
 
 /**
- * Retrieves roles with pagination.
- * @param params - Pagination parameters
+ * Retrieves roles with pagination, filtering, and ordering.
+ * @param params - Pagination, filtering, and ordering parameters
  * @returns {Promise<PaginatedRoles>} Paginated list of roles
  * @throws {APIError} If retrieval fails
  */
 export const listRolesWithPagination = api(
-  { method: 'GET', path: '/roles/paginated', expose: true, auth: true },
-  async (params: PaginationParams): Promise<PaginatedRoles> => {
-    return (await roleRepository.findAllPaginated(
-      params,
-      false,
-    )) as PaginatedRoles;
+  { method: 'POST', path: '/get-roles/paginated', expose: true, auth: true },
+  async (params: PaginationParamsRoles): Promise<PaginatedRoles> => {
+    return (await roleRepository.findAllPaginated(params)) as PaginatedRoles;
   },
 );
 
 /**
- * Retrieves roles with permissions and pagination.
+ * Retrieves roles with permissions and pagination (maintains backward compatibility).
  * @param params - Pagination parameters
  * @returns {Promise<PaginatedRolesWithPermissions>} Paginated list of roles with permissions
  * @throws {APIError} If retrieval fails
@@ -148,11 +158,13 @@ export const listRolesWithPermissionsAndPagination = api(
     expose: true,
     auth: true,
   },
-  async (params: PaginationParams): Promise<PaginatedRolesWithPermissions> => {
-    return (await roleRepository.findAllPaginated(
-      params,
-      true,
-    )) as PaginatedRolesWithPermissions;
+  async (
+    params: PaginationParamsRoles,
+  ): Promise<PaginatedRolesWithPermissions> => {
+    return (await roleRepository.findAllPaginated({
+      ...params,
+      includePermissions: true,
+    })) as PaginatedRolesWithPermissions;
   },
 );
 
@@ -208,7 +220,7 @@ export const deleteRole = api(
 );
 
 /**
- * Retrieves roles for a tenant with pagination.
+ * Retrieves roles for a tenant with pagination, filtering, and ordering.
  * @param params - Object containing the tenant ID and pagination parameters
  * @param params.tenantId - The ID of the tenant
  * @returns {Promise<PaginatedRoles>} Paginated list of roles for the tenant
@@ -216,48 +228,57 @@ export const deleteRole = api(
  */
 export const listRolesByTenantWithPagination = api(
   {
-    method: 'GET',
-    path: '/tenants/:tenantId/roles/paginated',
+    method: 'POST',
+    path: '/tenants/:tenantId/get-roles/paginated',
     expose: true,
     auth: true,
   },
   async ({
     tenantId,
     ...params
-  }: PaginationParams & { tenantId: number }): Promise<PaginatedRoles> => {
+  }: PaginationParamsRoles & { tenantId: number }): Promise<PaginatedRoles> => {
     return (await roleRepository.findAllByTenantPaginated(
       tenantId,
       params,
-      false,
     )) as PaginatedRoles;
   },
 );
 
 /**
- * Retrieves roles for a tenant with permissions and pagination.
- * @param params - Object containing the tenant ID and pagination parameters
- * @param params.tenantId - The ID of the tenant
- * @returns {Promise<PaginatedRolesWithPermissions>} Paginated list of roles for the tenant with permissions
- * @throws {APIError} If retrieval fails
+ * Searches for roles by matching a search term against name and description.
+ * @param params - Search parameters
+ * @param params.term - The search term to match against role fields
+ * @returns {Promise<Roles>} List of matching roles
+ * @throws {APIError} If search fails or no searchable fields are configured
  */
-export const listRolesByTenantWithPermissionsAndPagination = api(
-  {
-    method: 'GET',
-    path: '/tenants/:tenantId/roles/with-permissions/paginated',
-    expose: true,
-    auth: true,
-  },
+export const searchRoles = api(
+  { method: 'GET', path: '/roles/search', expose: true, auth: true },
   async ({
-    tenantId,
+    term,
+    ...options
+  }: { term: string } & RolesQueryOptions): Promise<Roles> => {
+    const roles = await roleRepository.search(term, options);
+    return { roles };
+  },
+);
+
+/**
+ * Searches for roles with pagination by matching a search term.
+ * @param params - Search and pagination parameters
+ * @param params.term - The search term to match against role fields
+ * @returns {Promise<PaginatedRoles>} Paginated list of matching roles
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchRolesPaginated = api(
+  { method: 'POST', path: '/roles/search/paginated', expose: true, auth: true },
+  async ({
+    term,
     ...params
-  }: PaginationParams & {
-    tenantId: number;
-  }): Promise<PaginatedRolesWithPermissions> => {
-    return (await roleRepository.findAllByTenantPaginated(
-      tenantId,
+  }: PaginationParamsRoles & { term: string }): Promise<PaginatedRoles> => {
+    return (await roleRepository.searchPaginated(
+      term,
       params,
-      true,
-    )) as PaginatedRolesWithPermissions;
+    )) as PaginatedRoles;
   },
 );
 
@@ -276,7 +297,8 @@ export const listTenantRoles = api(
     auth: true,
   },
   async ({ tenantId }: { tenantId: number }): Promise<Roles> => {
-    return (await roleRepository.findAllByTenant(tenantId, false)) as Roles;
+    const roles = await roleRepository.findAllByTenant(tenantId, {});
+    return { roles };
   },
 );
 
@@ -297,11 +319,10 @@ export const listTenantRolesWithPagination = api(
   async ({
     tenantId,
     ...paginationParams
-  }: PaginationParams & { tenantId: number }): Promise<PaginatedRoles> => {
+  }: PaginationParamsRoles & { tenantId: number }): Promise<PaginatedRoles> => {
     return (await roleRepository.findAllByTenantPaginated(
       tenantId,
       paginationParams,
-      false,
     )) as PaginatedRoles;
   },
 );

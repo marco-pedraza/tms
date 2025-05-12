@@ -1,6 +1,6 @@
 // API types
 import { MinLen, MatchesRegexp } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**
  * Base interface representing a user entity
@@ -215,7 +215,16 @@ export interface Users {
   users: SafeUser[];
 }
 
+export interface UsersQueryOptions {
+  orderBy?: { field: keyof User; direction: 'asc' | 'desc' }[];
+  filters?: Partial<SafeUser>;
+}
+
 /**
  * Paginated response type for the list users endpoint
  */
 export type PaginatedUsers = PaginatedResult<SafeUser>;
+
+export interface PaginationParamsUsers
+  extends PaginationParams,
+    UsersQueryOptions {}

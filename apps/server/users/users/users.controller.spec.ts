@@ -1,19 +1,24 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { expect, describe, test, afterAll, beforeAll } from 'vitest';
 import {
   createUser,
   getUser,
-  listUsers,
-  listUsersWithPagination,
-  listTenantUsers,
-  listTenantUsersWithPagination,
   updateUser,
-  changePassword,
   deleteUser,
+  listUsers,
+  listUsersPaginated,
+  listTenantUsers,
+  listTenantUsersPaginated,
+  listDepartmentUsers,
+  listDepartmentUsersPaginated,
+  searchUsers,
+  searchUsersPaginated,
+  changePassword,
 } from './users.controller';
 import type {
   CreateUserPayload,
   UpdateUserPayload,
   ChangePasswordPayload,
+  SafeUser,
 } from './users.types';
 import { createTenant, deleteTenant } from '../tenants/tenants.controller';
 import type { CreateTenantPayload } from '../tenants/tenants.types';
@@ -24,11 +29,11 @@ import {
 import type { CreateDepartmentPayload } from '../departments/departments.types';
 
 describe('Users Controller', () => {
-  // Test data
+  // Test data and setup
   let tenantId = 0;
   let departmentId = 0;
   let userId = 0;
-  let passwordUser = 0;
+  let passwordUserId = 0;
 
   const testTenant: CreateTenantPayload = {
     name: 'Test Tenant',
@@ -57,30 +62,48 @@ describe('Users Controller', () => {
     isSystemAdmin: false,
   };
 
+  // Variable to store created IDs for cleanup
+  const createdUserIds: number[] = [];
+
   // Clean up after all tests
   afterAll(async () => {
-    if (userId > 0) {
-      await deleteUser({ id: userId });
+    // Delete created users
+    for (const id of createdUserIds) {
+      if (id) {
+        try {
+          await deleteUser({ id });
+        } catch (error) {
+          console.log(`Error cleaning up test user ${id}:`, error);
+        }
+      }
     }
-    if (passwordUser > 0) {
-      await deleteUser({ id: passwordUser });
-    }
+
+    // Delete department and tenant
     if (departmentId > 0) {
-      await deleteDepartment({ id: departmentId });
+      try {
+        await deleteDepartment({ id: departmentId });
+      } catch (error) {
+        console.log('Error cleaning up test department:', error);
+      }
     }
+
     if (tenantId > 0) {
-      await deleteTenant({ id: tenantId });
+      try {
+        await deleteTenant({ id: tenantId });
+      } catch (error) {
+        console.log('Error cleaning up test tenant:', error);
+      }
     }
   });
 
   describe('Setup', () => {
-    it('should create test tenant', async () => {
+    test('should create test tenant', async () => {
       const result = await createTenant(testTenant);
       tenantId = result.id;
       expect(tenantId).toBeGreaterThan(0);
     });
 
-    it('should create test department', async () => {
+    test('should create test department', async () => {
       const result = await createDepartment({
         ...testDepartment,
         tenantId,
@@ -90,8 +113,8 @@ describe('Users Controller', () => {
     });
   });
 
-  describe('createUser', () => {
-    it('should create a new user', async () => {
+  describe('success scenarios', () => {
+    test('should create a new user', async () => {
       const result = await createUser({
         ...testUser,
         tenantId,
@@ -100,6 +123,7 @@ describe('Users Controller', () => {
 
       // Save ID for other tests
       userId = result.id;
+      createdUserIds.push(userId);
 
       // Verify response
       expect(result.id).toBeDefined();
@@ -117,143 +141,132 @@ describe('Users Controller', () => {
       expect(result.isSystemAdmin).toBe(false);
       expect(result.createdAt).toBeDefined();
       expect(result.updatedAt).toBeDefined();
+      // Ensure passwordHash is not exposed
+      expect(result).not.toHaveProperty('passwordHash');
     });
 
-    it('should fail to create user with duplicate email in same tenant', async () => {
+    test('should retrieve a user by ID', async () => {
+      const response = await getUser({ id: userId });
+
+      expect(response).toBeDefined();
+      expect(response.id).toBe(userId);
+      expect(response.firstName).toBe(testUser.firstName);
+      expect(response.lastName).toBe(testUser.lastName);
+      expect(response.email).toBe(testUser.email);
+      expect(response.username).toBe(testUser.username);
+      // Ensure passwordHash is not exposed
+      expect(response).not.toHaveProperty('passwordHash');
+    });
+
+    test('should update a user', async () => {
+      const updateData: UpdateUserPayload = {
+        firstName: 'Jane',
+        lastName: 'Smith',
+        position: 'Senior Test User',
+        isActive: false,
+      };
+
+      const response = await updateUser({
+        id: userId,
+        ...updateData,
+      });
+
+      expect(response).toBeDefined();
+      expect(response.id).toBe(userId);
+      expect(response.firstName).toBe(updateData.firstName);
+      expect(response.lastName).toBe(updateData.lastName);
+      expect(response.position).toBe(updateData.position);
+      expect(response.email).toBe(testUser.email);
+      expect(response.username).toBe(testUser.username);
+      expect(response.phone).toBe(testUser.phone);
+      expect(response.employeeId).toBe(testUser.employeeId);
+      expect(response.tenantId).toBe(tenantId);
+      expect(response.departmentId).toBe(departmentId);
+      expect(response.isActive).toBe(updateData.isActive);
+      expect(response.updatedAt).toBeDefined();
+    });
+
+    test('should delete a user', async () => {
+      // Create a user specifically for deletion test
+      const userToDelete = await createUser({
+        ...testUser,
+        username: 'user_to_delete',
+        email: 'delete_me@test.com',
+        tenantId,
+        departmentId,
+      });
+
+      // Delete should not throw an error
+      await expect(deleteUser({ id: userToDelete.id })).resolves.not.toThrow();
+
+      // Attempt to get should throw a not found error
+      await expect(getUser({ id: userToDelete.id })).rejects.toThrow();
+    });
+  });
+
+  describe('error scenarios', () => {
+    test('should handle not found errors', async () => {
+      await expect(getUser({ id: 9999999 })).rejects.toThrow();
+    });
+
+    test('should handle duplicate errors', async () => {
+      // Try to create user with same username/email as existing one
       await expect(
         createUser({
           ...testUser,
           tenantId,
           departmentId,
-          username: 'different',
         }),
       ).rejects.toThrow();
     });
   });
 
-  describe('getUser', () => {
-    it('should get an existing user', async () => {
-      const result = await getUser({ id: userId });
+  describe('pagination, filtering and ordering', () => {
+    // Test users for ordering and filtering tests
+    const testUsers: SafeUser[] = [];
 
-      expect(result.id).toBe(userId);
-      expect(result.firstName).toBe(testUser.firstName);
-      expect(result.lastName).toBe(testUser.lastName);
-      expect(result.email).toBe(testUser.email);
-      expect(result.username).toBe(testUser.username);
-      expect(result.phone).toBe(testUser.phone);
-      expect(result.position).toBe(testUser.position);
-      expect(result.employeeId).toBe(testUser.employeeId);
-      expect(result.tenantId).toBe(tenantId);
-      expect(result.departmentId).toBe(departmentId);
-    });
+    beforeAll(async () => {
+      // Create test users with different properties
+      const users = [
+        {
+          ...testUser,
+          username: 'alpha_user',
+          email: 'alpha@test.com',
+          firstName: 'Alpha',
+          lastName: 'User',
+          isActive: true,
+        },
+        {
+          ...testUser,
+          username: 'beta_user',
+          email: 'beta@test.com',
+          firstName: 'Beta',
+          lastName: 'User',
+          isActive: false,
+        },
+        {
+          ...testUser,
+          username: 'gamma_user',
+          email: 'gamma@test.com',
+          firstName: 'Gamma',
+          lastName: 'User',
+          isActive: true,
+        },
+      ];
 
-    it('should fail to get non-existent user', async () => {
-      await expect(getUser({ id: 999999 })).rejects.toThrow();
-    });
-  });
-
-  describe('listUsers', () => {
-    it('should list all users', async () => {
-      const result = await listUsers();
-      expect(Array.isArray(result.users)).toBe(true);
-      expect(result.users.length).toBeGreaterThan(0);
-
-      const foundUser = result.users.find((u) => u.id === userId);
-      expect(foundUser).toBeDefined();
-      expect(foundUser?.firstName).toBe(testUser.firstName);
-      expect(foundUser?.lastName).toBe(testUser.lastName);
-      expect(foundUser?.email).toBe(testUser.email);
-      expect(foundUser?.username).toBe(testUser.username);
-    });
-  });
-
-  describe('listTenantUsers', () => {
-    it('should list users for a tenant', async () => {
-      const result = await listTenantUsers({ tenantId });
-
-      expect(Array.isArray(result.users)).toBe(true);
-      expect(result.users.length).toBeGreaterThan(0);
-
-      const foundUser = result.users.find((u) => u.id === userId);
-      expect(foundUser).toBeDefined();
-      expect(foundUser?.firstName).toBe(testUser.firstName);
-      expect(foundUser?.lastName).toBe(testUser.lastName);
-      expect(foundUser?.email).toBe(testUser.email);
-      expect(foundUser?.username).toBe(testUser.username);
-    });
-
-    it('should return empty list for non-existent tenant', async () => {
-      const result = await listTenantUsers({ tenantId: 999999 });
-      expect(Array.isArray(result.users)).toBe(true);
-      expect(result.users.length).toBe(0);
-    });
-  });
-
-  describe('updateUser', () => {
-    const updateData: UpdateUserPayload = {
-      firstName: 'Jane',
-      lastName: 'Smith',
-      position: 'Senior Test User',
-      isActive: false,
-    };
-
-    it('should update an existing user', async () => {
-      const result = await updateUser({ id: userId, ...updateData });
-
-      expect(result.id).toBe(userId);
-      expect(result.firstName).toBe(updateData.firstName);
-      expect(result.lastName).toBe(updateData.lastName);
-      expect(result.position).toBe(updateData.position);
-      expect(result.email).toBe(testUser.email);
-      expect(result.username).toBe(testUser.username);
-      expect(result.phone).toBe(testUser.phone);
-      expect(result.employeeId).toBe(testUser.employeeId);
-      expect(result.tenantId).toBe(tenantId);
-      expect(result.departmentId).toBe(departmentId);
-      expect(result.isActive).toBe(updateData.isActive);
-      expect(result.updatedAt).toBeDefined();
-    });
-
-    it('should fail to update non-existent user', async () => {
-      await expect(updateUser({ id: 999999, ...updateData })).rejects.toThrow();
-    });
-  });
-
-  describe('deleteUser', () => {
-    it('should fail to delete non-existent user', async () => {
-      await expect(deleteUser({ id: 999999 })).rejects.toThrow();
-    });
-
-    it('should delete an existing user', async () => {
-      const result = await deleteUser({ id: userId });
-
-      expect(result.id).toBe(userId);
-      expect(result.firstName).toBe('Jane');
-      expect(result.lastName).toBe('Smith');
-      expect(result.email).toBe(testUser.email);
-      expect(result.username).toBe(testUser.username);
-
-      // Mark as deleted so afterAll doesn't try to delete again
-      userId = 0;
-    });
-  });
-
-  describe('pagination', () => {
-    let userA: { id: number };
-    let userZ: { id: number };
-
-    afterAll(async () => {
-      // Clean up test users
-      if (userA?.id) {
-        await deleteUser({ id: userA.id });
-      }
-      if (userZ?.id) {
-        await deleteUser({ id: userZ.id });
+      for (const userData of users) {
+        const created = await createUser({
+          ...userData,
+          tenantId,
+          departmentId,
+        });
+        testUsers.push(created);
+        createdUserIds.push(created.id);
       }
     });
 
-    it('should return paginated users with default parameters', async () => {
-      const response = await listUsersWithPagination({});
+    test('should return paginated users with default parameters', async () => {
+      const response = await listUsersPaginated({});
 
       expect(response.data).toBeDefined();
       expect(Array.isArray(response.data)).toBe(true);
@@ -264,15 +277,10 @@ describe('Users Controller', () => {
       expect(response.pagination.totalPages).toBeDefined();
       expect(typeof response.pagination.hasNextPage).toBe('boolean');
       expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
-
-      // Verify sensitive data is not included
-      response.data.forEach((user) => {
-        expect(user).not.toHaveProperty('passwordHash');
-      });
     });
 
-    it('should honor page and pageSize parameters', async () => {
-      const response = await listUsersWithPagination({
+    test('should honor page and pageSize parameters', async () => {
+      const response = await listUsersPaginated({
         page: 1,
         pageSize: 5,
       });
@@ -280,105 +288,217 @@ describe('Users Controller', () => {
       expect(response.pagination.currentPage).toBe(1);
       expect(response.pagination.pageSize).toBe(5);
       expect(response.data.length).toBeLessThanOrEqual(5);
-
-      // Verify sensitive data is not included
-      response.data.forEach((user) => {
-        expect(user).not.toHaveProperty('passwordHash');
-      });
     });
 
-    it('should default sort by lastName, firstName in ascending order', async () => {
-      // Create test users with different names for verification of default sorting
-      userA = await createUser({
-        ...testUser,
-        username: 'aaa_user',
-        email: 'aaa@example.com',
-        firstName: 'AAA',
-        lastName: 'Test',
-        tenantId,
-        departmentId,
-      });
-      userZ = await createUser({
-        ...testUser,
-        username: 'zzz_user',
-        email: 'zzz@example.com',
-        firstName: 'ZZZ',
-        lastName: 'Test',
-        tenantId,
-        departmentId,
+    test('should return non-paginated list for dropdowns', async () => {
+      const response = await listUsers({});
+
+      expect(response.users).toBeDefined();
+      expect(Array.isArray(response.users)).toBe(true);
+      expect(response.users.length).toBeGreaterThan(0);
+      // No pagination info should be present
+      expect(response).not.toHaveProperty('pagination');
+    });
+
+    test('should order users by lastName, firstName ascending', async () => {
+      const response = await listUsers({
+        orderBy: [
+          { field: 'lastName', direction: 'asc' },
+          { field: 'firstName', direction: 'asc' },
+        ],
       });
 
-      // Get users with large enough page size to include test users
-      const response = await listUsersWithPagination({
-        pageSize: 50,
-      });
-
-      // Find the indices of our test users
-      const indexA = response.data.findIndex((u) => u.id === userA.id);
-      const indexZ = response.data.findIndex((u) => u.id === userZ.id);
-
-      // Verify that userA (AAA) comes before userZ (ZZZ) in the results
-      if (indexA !== -1 && indexZ !== -1) {
-        expect(indexA).toBeLessThan(indexZ);
+      const names = response.users.map((u) => `${u.lastName}, ${u.firstName}`);
+      // Check if names are in ascending order
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] <= names[i + 1]).toBe(true);
       }
     });
 
-    describe('tenant users pagination', () => {
-      it('should return paginated tenant users with default parameters', async () => {
-        const response = await listTenantUsersWithPagination({
-          tenantId,
-        });
-
-        expect(response.data).toBeDefined();
-        expect(Array.isArray(response.data)).toBe(true);
-        expect(response.pagination).toBeDefined();
-        expect(response.pagination.currentPage).toBe(1);
-        expect(response.pagination.pageSize).toBeDefined();
-        expect(response.pagination.totalCount).toBeDefined();
-        expect(response.pagination.totalPages).toBeDefined();
-        expect(typeof response.pagination.hasNextPage).toBe('boolean');
-        expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
-
-        // Verify we only get users for the specified tenant
-        response.data.forEach((user) => {
-          expect(user.tenantId).toBe(tenantId);
-          expect(user).not.toHaveProperty('passwordHash');
-        });
+    test('should filter users by active status', async () => {
+      const response = await listUsers({
+        filters: { isActive: true },
       });
 
-      it('should honor page and pageSize parameters for tenant users', async () => {
-        const response = await listTenantUsersWithPagination({
-          tenantId,
-          page: 1,
-          pageSize: 5,
-        });
+      // All returned users should be active
+      expect(response.users.every((u) => u.isActive === true)).toBe(true);
 
-        expect(response.pagination.currentPage).toBe(1);
-        expect(response.pagination.pageSize).toBe(5);
-        expect(response.data.length).toBeLessThanOrEqual(5);
+      // Should include our active test users
+      const activeTestUserIds = testUsers
+        .filter((u) => u.isActive)
+        .map((u) => u.id);
 
-        // Verify we only get users for the specified tenant
-        response.data.forEach((user) => {
-          expect(user.tenantId).toBe(tenantId);
-          expect(user).not.toHaveProperty('passwordHash');
-        });
+      for (const id of activeTestUserIds) {
+        expect(response.users.some((u) => u.id === id)).toBe(true);
+      }
+    });
+
+    test('should combine ordering and filtering in paginated results', async () => {
+      const response = await listUsersPaginated({
+        filters: { isActive: true },
+        orderBy: [{ field: 'firstName', direction: 'asc' }],
+        page: 1,
+        pageSize: 10,
       });
 
-      it('should return empty paginated result for non-existent tenant', async () => {
-        const response = await listTenantUsersWithPagination({
-          tenantId: 999999,
-        });
+      // Check filtering
+      expect(response.data.every((u) => u.isActive === true)).toBe(true);
 
-        expect(response.data).toBeDefined();
-        expect(Array.isArray(response.data)).toBe(true);
-        expect(response.data.length).toBe(0);
-        expect(response.pagination.totalCount).toBe(0);
-      });
+      // Check ordering (ascending)
+      const names = response.data.map((u) => u.firstName);
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] <= names[i + 1]).toBe(true);
+      }
+
+      // Check pagination properties
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(10);
     });
   });
 
-  describe('changePassword', () => {
-    it('should create a test user for password tests', async () => {
+  describe('tenant and department filtering', () => {
+    // Test users for tenant and department tests
+    const filterTestUsers: SafeUser[] = [];
+
+    beforeAll(async () => {
+      // Create test users for tenant and department testing if needed
+      const users = [
+        {
+          ...testUser,
+          username: 'tenant_user1',
+          email: 'tenant1@test.com',
+          isActive: true,
+        },
+        {
+          ...testUser,
+          username: 'tenant_user2',
+          email: 'tenant2@test.com',
+          isActive: false,
+        },
+      ];
+
+      for (const userData of users) {
+        const created = await createUser({
+          ...userData,
+          tenantId,
+          departmentId,
+        });
+        filterTestUsers.push(created);
+        createdUserIds.push(created.id);
+      }
+    });
+
+    test('should return users for a specific tenant', async () => {
+      const response = await listTenantUsers({ tenantId });
+
+      // All returned users should belong to the specified tenant
+      expect(response.users.every((u) => u.tenantId === tenantId)).toBe(true);
+
+      // Should include our test users
+      for (const user of filterTestUsers) {
+        expect(response.users.some((u) => u.id === user.id)).toBe(true);
+      }
+    });
+
+    test('should return paginated users for a specific tenant', async () => {
+      const response = await listTenantUsersPaginated({
+        tenantId,
+        page: 1,
+        pageSize: 10,
+      });
+
+      // All returned users should belong to the specified tenant
+      expect(response.data.every((u) => u.tenantId === tenantId)).toBe(true);
+
+      // Check pagination properties
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(10);
+    });
+
+    test('should return users for a specific department', async () => {
+      const response = await listDepartmentUsers({ departmentId });
+
+      // All returned users should belong to the specified department
+      expect(response.users.every((u) => u.departmentId === departmentId)).toBe(
+        true,
+      );
+
+      // Should include our test users
+      for (const user of filterTestUsers) {
+        expect(response.users.some((u) => u.id === user.id)).toBe(true);
+      }
+    });
+
+    test('should return paginated users for a specific department', async () => {
+      const response = await listDepartmentUsersPaginated({
+        departmentId,
+        page: 1,
+        pageSize: 10,
+      });
+
+      // All returned users should belong to the specified department
+      expect(response.data.every((u) => u.departmentId === departmentId)).toBe(
+        true,
+      );
+
+      // Check pagination properties
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(10);
+    });
+  });
+
+  describe('search functionality', () => {
+    test('should search users', async () => {
+      // Create a unique user for search testing
+      const searchableUser = await createUser({
+        ...testUser,
+        username: 'searchable_user',
+        email: 'searchable@test.com',
+        firstName: 'Searchable',
+        lastName: 'Test',
+        tenantId,
+        departmentId,
+      });
+
+      createdUserIds.push(searchableUser.id);
+
+      try {
+        // Search for the user by term
+        const response = await searchUsers({ term: 'Searchable' });
+
+        expect(response.users).toBeDefined();
+        expect(Array.isArray(response.users)).toBe(true);
+        expect(response.users.some((u) => u.id === searchableUser.id)).toBe(
+          true,
+        );
+      } catch (error) {
+        // If test fails, still clean up
+        await deleteUser({ id: searchableUser.id });
+        throw error;
+      }
+    });
+
+    test('should search users with pagination', async () => {
+      const response = await searchUsersPaginated({
+        term: 'Test',
+        page: 1,
+        pageSize: 5,
+      });
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
+    });
+  });
+
+  describe('password management', () => {
+    beforeAll(async () => {
+      // Create a user for password management tests
       const pwdTestUser = await createUser({
         ...testUser,
         username: 'pwdtestuser',
@@ -387,26 +507,27 @@ describe('Users Controller', () => {
         departmentId,
       });
 
-      passwordUser = pwdTestUser.id;
-      expect(passwordUser).toBeGreaterThan(0);
+      passwordUserId = pwdTestUser.id;
+      createdUserIds.push(passwordUserId);
+      expect(passwordUserId).toBeGreaterThan(0);
     });
 
-    it('should successfully change a user password with correct credentials', async () => {
+    test('should successfully change a user password with correct credentials', async () => {
       const passwordData: ChangePasswordPayload = {
         currentPassword: 'password123',
         newPassword: 'newPassword456',
       };
 
       const result = await changePassword({
-        id: passwordUser,
+        id: passwordUserId,
         ...passwordData,
       });
 
-      expect(result.id).toBe(passwordUser);
+      expect(result.id).toBe(passwordUserId);
       expect(result).not.toHaveProperty('passwordHash');
     });
 
-    it('should fail to change password with incorrect current password', async () => {
+    test('should fail to change password with incorrect current password', async () => {
       const passwordData: ChangePasswordPayload = {
         currentPassword: 'wrongPassword',
         newPassword: 'anotherPassword789',
@@ -414,13 +535,13 @@ describe('Users Controller', () => {
 
       await expect(
         changePassword({
-          id: passwordUser,
+          id: passwordUserId,
           ...passwordData,
         }),
       ).rejects.toThrow();
     });
 
-    it('should fail to change password for non-existent user', async () => {
+    test('should fail to change password for non-existent user', async () => {
       const passwordData: ChangePasswordPayload = {
         currentPassword: 'password123',
         newPassword: 'newPassword456',

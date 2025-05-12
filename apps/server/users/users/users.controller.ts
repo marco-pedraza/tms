@@ -7,8 +7,9 @@ import type {
   Users,
   PaginatedUsers,
   ChangePasswordPayload,
+  UsersQueryOptions,
+  PaginationParamsUsers,
 } from './users.types';
-import { PaginationParams } from '../../shared/types';
 import { userUseCases } from './users.use-cases';
 
 /**
@@ -39,115 +40,123 @@ export const getUser = api(
 );
 
 /**
- * Retrieves all users
+ * Retrieves all users with optional filtering and ordering (useful for dropdowns)
+ * @param params - Query options for filtering and ordering
  * @returns {Promise<Users>} List of all users (without password hashes)
  * @throws {APIError} If retrieval fails
  */
 export const listUsers = api(
-  { method: 'GET', path: '/users', expose: true, auth: true },
-  async (): Promise<Users> => {
-    const users = await userRepository.findAll();
+  { method: 'POST', path: '/get-users', expose: true, auth: true },
+  async (params: UsersQueryOptions): Promise<Users> => {
+    const users = await userRepository.findAll(params);
     return { users };
   },
 );
 
 /**
- * Retrieves users with pagination
- * @param params - Pagination parameters
+ * Retrieves users with pagination, filtering, and ordering (useful for tables)
+ * @param params - Pagination, filtering, and ordering parameters
  * @returns {Promise<PaginatedUsers>} Paginated list of users (without password hashes)
  * @throws {APIError} If retrieval fails
  */
-export const listUsersWithPagination = api(
-  { method: 'GET', path: '/users/paginated', expose: true, auth: true },
-  async (params: PaginationParams): Promise<PaginatedUsers> => {
+export const listUsersPaginated = api(
+  { method: 'POST', path: '/get-users/paginated', expose: true, auth: true },
+  async (params: PaginationParamsUsers): Promise<PaginatedUsers> => {
     return await userRepository.findAllPaginated(params);
   },
 );
 
 /**
- * Retrieves all users for a specific tenant
- * @param params - Object containing the tenant ID
+ * Retrieves users for a specific tenant with optional filtering and ordering
+ * @param params - Object containing the tenant ID and query options
  * @param params.tenantId - The ID of the tenant to get users for
  * @returns {Promise<Users>} List of users for the tenant (without password hashes)
  * @throws {APIError} If retrieval fails
  */
 export const listTenantUsers = api(
-  { method: 'GET', path: '/tenants/:tenantId/users', expose: true, auth: true },
-  async ({ tenantId }: { tenantId: number }): Promise<Users> => {
-    return await userRepository.findByTenant(tenantId);
+  {
+    method: 'POST',
+    path: '/tenants/:tenantId/users',
+    expose: true,
+    auth: true,
+  },
+  async ({
+    tenantId,
+    ...options
+  }: { tenantId: number } & UsersQueryOptions): Promise<Users> => {
+    const users = await userRepository.findByTenant(tenantId, options);
+    return { users };
   },
 );
 
 /**
- * Retrieves paginated users for a specific tenant
- * @param params - Object containing the tenant ID and pagination parameters
+ * Retrieves paginated users for a specific tenant with filtering and ordering
+ * @param params - Object containing the tenant ID and pagination/query parameters
  * @param params.tenantId - The ID of the tenant to get users for
- * @returns {Promise<PaginatedUsers>} Paginated list of users for the tenant (without password hashes)
+ * @returns {Promise<PaginatedUsers>} Paginated list of users for the tenant
  * @throws {APIError} If retrieval fails
  */
-export const listTenantUsersWithPagination = api(
+export const listTenantUsersPaginated = api(
   {
-    method: 'GET',
+    method: 'POST',
     path: '/tenants/:tenantId/users/paginated',
     expose: true,
     auth: true,
   },
   async ({
     tenantId,
-    ...paginationParams
+    ...params
   }: {
     tenantId: number;
-  } & PaginationParams): Promise<PaginatedUsers> => {
-    return await userRepository.findByTenantPaginated(
-      tenantId,
-      paginationParams,
-    );
+  } & PaginationParamsUsers): Promise<PaginatedUsers> => {
+    return await userRepository.findByTenantPaginated(tenantId, params);
   },
 );
 
 /**
- * Retrieves all users for a specific department
- * @param params - Object containing the department ID
+ * Retrieves users for a specific department with optional filtering and ordering
+ * @param params - Object containing the department ID and query options
  * @param params.departmentId - The ID of the department to get users for
  * @returns {Promise<Users>} List of users for the department (without password hashes)
  * @throws {APIError} If retrieval fails
  */
 export const listDepartmentUsers = api(
   {
-    method: 'GET',
+    method: 'POST',
     path: '/departments/:departmentId/users',
     expose: true,
     auth: true,
   },
-  async ({ departmentId }: { departmentId: number }): Promise<Users> => {
-    return await userRepository.findByDepartment(departmentId);
+  async ({
+    departmentId,
+    ...options
+  }: { departmentId: number } & UsersQueryOptions): Promise<Users> => {
+    const users = await userRepository.findByDepartment(departmentId, options);
+    return { users };
   },
 );
 
 /**
- * Retrieves paginated users for a specific department
- * @param params - Object containing the department ID and pagination parameters
+ * Retrieves paginated users for a specific department with filtering and ordering
+ * @param params - Object containing the department ID and pagination/query parameters
  * @param params.departmentId - The ID of the department to get users for
- * @returns {Promise<PaginatedUsers>} Paginated list of users for the department (without password hashes)
+ * @returns {Promise<PaginatedUsers>} Paginated list of users for the department
  * @throws {APIError} If retrieval fails
  */
-export const listDepartmentUsersWithPagination = api(
+export const listDepartmentUsersPaginated = api(
   {
-    method: 'GET',
+    method: 'POST',
     path: '/departments/:departmentId/users/paginated',
     expose: true,
     auth: true,
   },
   async ({
     departmentId,
-    ...paginationParams
+    ...params
   }: {
     departmentId: number;
-  } & PaginationParams): Promise<PaginatedUsers> => {
-    return await userRepository.findByDepartmentPaginated(
-      departmentId,
-      paginationParams,
-    );
+  } & PaginationParamsUsers): Promise<PaginatedUsers> => {
+    return await userRepository.findByDepartmentPaginated(departmentId, params);
   },
 );
 
@@ -196,5 +205,39 @@ export const deleteUser = api(
   { method: 'DELETE', path: '/users/:id', expose: true, auth: true },
   async ({ id }: { id: number }): Promise<SafeUser> => {
     return await userRepository.delete(id);
+  },
+);
+
+/**
+ * Searches for users by matching a search term against name, email, and username
+ * @param params - Search parameters
+ * @param params.term - The search term to match against user fields
+ * @returns {Promise<Users>} List of matching users (without password hashes)
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchUsers = api(
+  { method: 'GET', path: '/users/search', expose: true, auth: true },
+  async ({ term }: { term: string }): Promise<Users> => {
+    const users = await userRepository.search(term);
+    return { users };
+  },
+);
+
+/**
+ * Searches for users with pagination by matching a search term against name, email, and username
+ * @param params - Search and pagination parameters
+ * @param params.term - The search term to match against user fields
+ * @returns {Promise<PaginatedUsers>} Paginated list of matching users (without password hashes)
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchUsersPaginated = api(
+  { method: 'POST', path: '/users/search/paginated', expose: true, auth: true },
+  async ({
+    term,
+    ...params
+  }: PaginationParamsUsers & {
+    term: string;
+  }): Promise<PaginatedUsers> => {
+    return await userRepository.searchPaginated(term, params);
   },
 );

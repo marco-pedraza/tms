@@ -1,5 +1,5 @@
 import { MinLen, MatchesRegexp } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**
  * Base interface representing a permission entity
@@ -77,6 +77,21 @@ export interface Permissions {
   /** List of permissions */
   permissions: Permission[];
 }
+
+/**
+ * Query options for filtering and ordering permissions
+ */
+export interface PermissionsQueryOptions {
+  orderBy?: { field: keyof Permission; direction: 'asc' | 'desc' }[];
+  filters?: Partial<Permission>;
+}
+
+/**
+ * Combined pagination and query options for permissions
+ */
+export interface PaginationParamsPermissions
+  extends PaginationParams,
+    PermissionsQueryOptions {}
 
 /**
  * Paginated response type for the list permissions endpoint

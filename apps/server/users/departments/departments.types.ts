@@ -1,4 +1,4 @@
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 // API types
 
@@ -96,6 +96,21 @@ export interface Departments {
 }
 
 /**
+ * Query options for departments
+ */
+export interface DepartmentsQueryOptions {
+  orderBy?: { field: keyof Department; direction: 'asc' | 'desc' }[];
+  filters?: Partial<Department>;
+}
+
+/**
  * Paginated response type for the list departments endpoint
  */
 export type PaginatedDepartments = PaginatedResult<Department>;
+
+/**
+ * Combined pagination and query options for departments
+ */
+export interface PaginationParamsDepartments
+  extends PaginationParams,
+    DepartmentsQueryOptions {}

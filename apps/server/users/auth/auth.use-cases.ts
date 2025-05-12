@@ -15,6 +15,7 @@ import type {
   JwtPayload,
 } from './auth.types';
 import { errors } from '../../shared/errors';
+import { SafeUser } from '../users/users.types';
 
 // JWT configuration
 const JWT_SECRET = secret('JWT_SECRET')();
@@ -34,16 +35,16 @@ const ERROR_MESSAGES = {
  * Creates auth use cases to handle authentication business logic
  * @returns Object containing authentication use cases
  */
-export const createAuthUseCases = () => {
+export function createAuthUseCases() {
   /**
    * Authenticates a user and generates JWT tokens
    * @param credentials User login credentials
    * @returns User data and authentication tokens
    * @throws {APIError} If credentials are invalid
    */
-  const authenticateUser = async (
+  async function authenticateUser(
     credentials: LoginPayload,
-  ): Promise<LoginResponse> => {
+  ): Promise<LoginResponse> {
     const { username, password } = credentials;
 
     // Find user by username
@@ -94,7 +95,7 @@ export const createAuthUseCases = () => {
       accessToken,
       refreshToken,
     };
-  };
+  }
 
   /**
    * Refreshes an access token using a valid refresh token
@@ -102,9 +103,9 @@ export const createAuthUseCases = () => {
    * @returns New access and refresh tokens
    * @throws {APIError} If refresh token is invalid
    */
-  const refreshUserToken = async (
+  async function refreshUserToken(
     params: RefreshTokenPayload,
-  ): Promise<Omit<LoginResponse, 'user'>> => {
+  ): Promise<Omit<LoginResponse, 'user'>> {
     const { refreshToken: token } = params;
 
     try {
@@ -149,16 +150,16 @@ export const createAuthUseCases = () => {
     } catch {
       throw errors.unauthenticated(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
     }
-  };
+  }
 
   /**
    * Logs out a user by revoking their refresh token
    * @param params Refresh token to revoke
    * @returns Success message
    */
-  const logoutUser = async (
+  async function logoutUser(
     params: LogoutPayload,
-  ): Promise<{ message: string }> => {
+  ): Promise<{ message: string }> {
     const { refreshToken } = params;
 
     try {
@@ -168,7 +169,7 @@ export const createAuthUseCases = () => {
     } catch {
       return { message: ERROR_MESSAGES.LOGOUT_SUCCESS };
     }
-  };
+  }
 
   /**
    * Revokes all refresh tokens for a user
@@ -176,9 +177,9 @@ export const createAuthUseCases = () => {
    * @returns Number of tokens revoked
    * @throws {APIError} If userId is invalid or user doesn't exist
    */
-  const revokeAllUserTokens = async (
+  async function revokeAllUserTokens(
     userId: number,
-  ): Promise<{ count: number }> => {
+  ): Promise<{ count: number }> {
     // Validate userId
     if (!userId || isNaN(Number(userId))) {
       throw errors.invalidArgument(ERROR_MESSAGES.INVALID_USER_ID);
@@ -191,7 +192,7 @@ export const createAuthUseCases = () => {
     const count = await authRepository.revokeAllUserTokens(userId);
 
     return { count };
-  };
+  }
 
   /**
    * Verify a token and return its payload
@@ -199,12 +200,12 @@ export const createAuthUseCases = () => {
    * @param expectedType Type of token to expect
    * @returns Decoded token payload
    */
-  const verifyAuthToken = async (
+  async function verifyAuthToken(
     token: string,
     expectedType: 'access' | 'refresh',
-  ): Promise<JwtPayload> => {
+  ): Promise<JwtPayload> {
     return await verifyToken(token, expectedType, JWT_SECRET);
-  };
+  }
 
   /**
    * Verifies a token and checks if the corresponding user exists and is active
@@ -213,10 +214,10 @@ export const createAuthUseCases = () => {
    * @returns User object without sensitive data if token is valid
    * @throws {APIError} If token is invalid or user is not found/inactive
    */
-  const validateTokenAndUser = async (
+  async function validateTokenAndUser(
     token: string,
     expectedType: 'access' | 'refresh',
-  ): Promise<SafeUser> => {
+  ): Promise<SafeUser> {
     // Verify token
     const decoded = await verifyToken(token, expectedType, JWT_SECRET);
 
@@ -233,7 +234,7 @@ export const createAuthUseCases = () => {
 
     // Return the user object (without password hash)
     return user;
-  };
+  }
 
   return {
     authenticateUser,
@@ -243,6 +244,6 @@ export const createAuthUseCases = () => {
     verifyAuthToken,
     validateTokenAndUser,
   };
-};
+}
 
 export const authUseCases = createAuthUseCases();

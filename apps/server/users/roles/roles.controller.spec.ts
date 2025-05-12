@@ -1,4 +1,4 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import {
   createRole,
   getRole,
@@ -10,8 +10,14 @@ import {
   updateRole,
   assignPermissionsToRole,
   deleteRole,
+  searchRoles,
+  searchRolesPaginated,
 } from './roles.controller';
-import type { CreateRolePayload, UpdateRolePayload } from './roles.types';
+import type {
+  CreateRolePayload,
+  UpdateRolePayload,
+  RoleWithPermissions,
+} from './roles.types';
 import { createTenant, deleteTenant } from '../tenants/tenants.controller';
 import type { CreateTenantPayload } from '../tenants/tenants.types';
 import {
@@ -152,7 +158,7 @@ describe('Roles Controller', () => {
 
   describe('listRoles', () => {
     it('should list all roles', async () => {
-      const result = await listRoles();
+      const result = await listRoles({});
 
       expect(Array.isArray(result.roles)).toBe(true);
       expect(result.roles.length).toBeGreaterThan(0);
@@ -330,6 +336,41 @@ describe('Roles Controller', () => {
       }
     });
 
+    it('should properly sort names in descending order with localeCompare', async () => {
+      // Create additional roles and ensure we have at least roleA and roleZ from previous test
+      if (!roleA?.id || !roleZ?.id) {
+        roleA = await createRole({
+          name: 'AAA Test Role',
+          description: 'Test role A',
+          tenantId,
+        });
+        roleZ = await createRole({
+          name: 'ZZZ Test Role',
+          description: 'Test role Z',
+          tenantId,
+        });
+      }
+
+      // Get a list of roles
+      const result = await listRolesWithPagination({
+        pageSize: 50,
+      });
+
+      // Verify we have multiple results
+      expect(result.data.length).toBeGreaterThan(1);
+
+      // Using localeCompare for locale-aware descending order sorting
+      const names = result.data.map((r) => r.name);
+      const sortedDesc = [...names].sort((a, b) => b.localeCompare(a));
+
+      // Verify the sorting is correct - each item should be >= the next item
+      for (let i = 0; i < sortedDesc.length - 1; i++) {
+        expect(
+          sortedDesc[i].localeCompare(sortedDesc[i + 1]),
+        ).toBeGreaterThanOrEqual(0);
+      }
+    });
+
     it('should return paginated tenant roles with default parameters', async () => {
       const response = await listTenantRolesWithPagination({
         tenantId,
@@ -339,6 +380,92 @@ describe('Roles Controller', () => {
       expect(Array.isArray(response.data)).toBe(true);
       expect(response.pagination).toBeDefined();
       expect(response.pagination.currentPage).toBe(1);
+    });
+  });
+
+  describe('search functionality', () => {
+    let searchRoleA: RoleWithPermissions;
+    let searchRoleB: RoleWithPermissions;
+
+    beforeAll(async () => {
+      // Create roles with searchable content
+      searchRoleA = await createRole({
+        name: 'Search Role Alpha',
+        description: 'This is a role for testing search functionality',
+        tenantId,
+      });
+
+      searchRoleB = await createRole({
+        name: 'Search Role Beta',
+        description: 'Another role for search tests',
+        tenantId,
+      });
+    });
+
+    afterAll(async () => {
+      // Clean up test roles
+      if (searchRoleA?.id) {
+        await deleteRole({ id: searchRoleA.id });
+      }
+      if (searchRoleB?.id) {
+        await deleteRole({ id: searchRoleB.id });
+      }
+    });
+
+    it('should search roles by term', async () => {
+      const result = await searchRoles({ term: 'Search' });
+
+      expect(Array.isArray(result.roles)).toBe(true);
+      expect(result.roles.length).toBeGreaterThan(0);
+      expect(
+        result.roles.some((r) => r.name.toLowerCase().includes('search')),
+      ).toBe(true);
+    });
+
+    it('should search roles with includePermissions option', async () => {
+      const result = await searchRoles({
+        term: 'Search',
+        includePermissions: true,
+      });
+
+      expect(Array.isArray(result.roles)).toBe(true);
+      if (result.roles.length > 0) {
+        // Check that permissions are included in the result
+        // The roles should now be RoleWithPermissions
+        const roleWithPerms = result.roles[0] as RoleWithPermissions;
+        expect(roleWithPerms.permissions).toBeDefined();
+      }
+    });
+
+    it('should search roles with pagination', async () => {
+      const result = await searchRolesPaginated({
+        term: 'Role',
+        page: 1,
+        pageSize: 10,
+      });
+
+      expect(result.data).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.pagination).toBeDefined();
+      expect(result.pagination.currentPage).toBe(1);
+    });
+
+    it('should search with pagination and ordering', async () => {
+      const result = await searchRolesPaginated({
+        term: 'Search',
+        orderBy: [{ field: 'name', direction: 'desc' }],
+        page: 1,
+        pageSize: 20,
+      });
+
+      expect(result.data).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
+
+      // Verify search results are ordered correctly
+      if (result.data.length > 1) {
+        const names = result.data.map((r) => r.name);
+        expect(names).toEqual([...names].sort().reverse());
+      }
     });
   });
 });

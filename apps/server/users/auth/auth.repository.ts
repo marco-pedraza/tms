@@ -20,7 +20,11 @@ const ERROR_MESSAGES = {
 // Default refresh token expiry in milliseconds
 const DEFAULT_REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000;
 
-export const createAuthRepository = () => {
+/**
+ * Creates a repository for managing refresh tokens
+ * @returns {Object} An object containing refresh token operations
+ */
+export function createAuthRepository() {
   // Create base repository for refresh tokens
   const baseRepository = createBaseRepository<
     RefreshToken,
@@ -36,10 +40,10 @@ export const createAuthRepository = () => {
    * @returns The saved token record
    * @throws {APIError} If token is in invalid format
    */
-  const saveRefreshToken = async (
+  async function saveRefreshToken(
     user: User,
     token: string,
-  ): Promise<RefreshToken> => {
+  ): Promise<RefreshToken> {
     // Decode token to get expiration
     const decoded = jwt.decode(token);
     if (!decoded || typeof decoded === 'string' || !('exp' in decoded)) {
@@ -55,18 +59,16 @@ export const createAuthRepository = () => {
       expiresAt,
       isRevoked: false,
     });
-  };
+  }
 
   /**
    * Finds a refresh token by its token string
    * @param token JWT refresh token
    * @returns The token record if found
    */
-  const findRefreshToken = async (
-    token: string,
-  ): Promise<RefreshToken | null> => {
+  async function findRefreshToken(token: string): Promise<RefreshToken | null> {
     return await baseRepository.findBy(refreshTokens.token, token);
-  };
+  }
 
   /**
    * Revokes a refresh token
@@ -74,7 +76,7 @@ export const createAuthRepository = () => {
    * @returns The updated token record
    * @throws {APIError} If the token is not found
    */
-  const revokeRefreshToken = async (token: string): Promise<RefreshToken> => {
+  async function revokeRefreshToken(token: string): Promise<RefreshToken> {
     const tokenRecord = await findRefreshToken(token);
 
     if (!tokenRecord) {
@@ -82,14 +84,14 @@ export const createAuthRepository = () => {
     }
 
     return await baseRepository.update(tokenRecord.id, { isRevoked: true });
-  };
+  }
 
   /**
    * Revokes all refresh tokens for a user
    * @param userId User ID
    * @returns Number of tokens revoked
    */
-  const revokeAllUserTokens = async (userId: number): Promise<number> => {
+  async function revokeAllUserTokens(userId: number): Promise<number> {
     const tokensToRevoke = await baseRepository.findAllBy(
       refreshTokens.userId,
       userId,
@@ -103,7 +105,7 @@ export const createAuthRepository = () => {
 
     const results = await Promise.all(updatePromises);
     return results.length;
-  };
+  }
 
   /**
    * Replaces a refresh token with a new one
@@ -113,11 +115,11 @@ export const createAuthRepository = () => {
    * @returns New refresh token and record
    * @throws {APIError} If the old token is not found, is revoked, or belongs to a different user
    */
-  const rotateRefreshToken = async (
+  async function rotateRefreshToken(
     oldToken: string,
     user: User,
     newToken: string,
-  ): Promise<{ token: string; record: RefreshToken }> => {
+  ): Promise<{ token: string; record: RefreshToken }> {
     // Check if old token exists and is valid
     const tokenRecord = await findRefreshToken(oldToken);
 
@@ -137,17 +139,17 @@ export const createAuthRepository = () => {
     const newRecord = await saveRefreshToken(user, newToken);
 
     return { token: newToken, record: newRecord };
-  };
+  }
 
   /**
    * Checks if a refresh token is valid (exists and not revoked)
    * @param token JWT refresh token
    * @returns Whether the token is valid
    */
-  const isRefreshTokenValid = async (token: string): Promise<boolean> => {
+  async function isRefreshTokenValid(token: string): Promise<boolean> {
     const tokenRecord = await findRefreshToken(token);
-    return await Promise.resolve(!!tokenRecord && !tokenRecord.isRevoked);
-  };
+    return !!tokenRecord && !tokenRecord.isRevoked;
+  }
 
   return {
     ...baseRepository,
@@ -158,6 +160,7 @@ export const createAuthRepository = () => {
     rotateRefreshToken,
     isRefreshTokenValid,
   };
-};
+}
 
+// Export the auth repository instance
 export const authRepository = createAuthRepository();

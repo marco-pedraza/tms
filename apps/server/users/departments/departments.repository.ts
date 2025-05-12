@@ -4,62 +4,72 @@ import type {
   CreateDepartmentPayload,
   UpdateDepartmentPayload,
   PaginatedDepartments,
-  Departments,
+  DepartmentsQueryOptions,
+  PaginationParamsDepartments,
 } from './departments.types';
 import { createBaseRepository } from '@repo/base-repo';
-import { PaginationParams } from '../../shared/types';
 import { db } from '../db-service';
 
-export const createDepartmentRepository = () => {
+/**
+ * Creates a repository for managing department entities
+ * @returns {Object} An object containing department-specific operations and base CRUD operations
+ */
+export function createDepartmentRepository() {
   const baseRepository = createBaseRepository<
     Department,
     CreateDepartmentPayload,
     UpdateDepartmentPayload,
     typeof departments
-  >(db, departments, 'Department');
+  >(db, departments, 'Department', {
+    searchableFields: [departments.name, departments.code],
+  });
 
-  const create = async (data: CreateDepartmentPayload): Promise<Department> => {
-    return await baseRepository.create(data);
-  };
-
-  const update = async (
-    id: number,
-    data: UpdateDepartmentPayload,
-  ): Promise<Department> => {
-    return await baseRepository.update(id, data);
-  };
-
-  const findAllPaginated = async (
-    params: PaginationParams = {},
-  ): Promise<PaginatedDepartments> => {
-    return await baseRepository.findAllPaginated(params);
-  };
-
-  const findByTenant = async (tenantId: number): Promise<Departments> => {
-    const result =
-      (await baseRepository.findBy(departments.tenantId, tenantId)) || [];
-    return { departments: Array.isArray(result) ? result : [result] };
-  };
-
-  const findByTenantPaginated = async (
+  /**
+   * Finds departments by tenant ID with optional filtering and ordering
+   * @param tenantId Tenant ID
+   * @param options Query options for filtering and ordering
+   * @returns Array of departments
+   */
+  async function findByTenant(
     tenantId: number,
-    params: PaginationParams = {},
-  ): Promise<PaginatedDepartments> => {
-    return await baseRepository.findByPaginated(
-      departments.tenantId,
-      tenantId,
-      params,
-    );
-  };
+    options: DepartmentsQueryOptions = {},
+  ): Promise<Department[]> {
+    const mergedOptions: DepartmentsQueryOptions = {
+      ...options,
+      filters: {
+        ...(options.filters ?? {}),
+        tenantId,
+      },
+    };
+    return await baseRepository.findAll(mergedOptions);
+  }
+
+  /**
+   * Finds departments by tenant ID with pagination
+   * @param tenantId Tenant ID
+   * @param params Pagination, filtering, and ordering parameters
+   * @returns Paginated result of departments
+   */
+  async function findByTenantPaginated(
+    tenantId: number,
+    params: PaginationParamsDepartments = {},
+  ): Promise<PaginatedDepartments> {
+    const mergedParams: PaginationParamsDepartments = {
+      ...params,
+      filters: {
+        ...(params.filters ?? {}),
+        tenantId,
+      },
+    };
+    return await baseRepository.findAllPaginated(mergedParams);
+  }
 
   return {
     ...baseRepository,
-    create,
-    update,
-    findAllPaginated,
     findByTenant,
     findByTenantPaginated,
   };
-};
+}
 
+// Export the department repository instance
 export const departmentRepository = createDepartmentRepository();

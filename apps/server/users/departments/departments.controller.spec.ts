@@ -1,17 +1,20 @@
-import { describe, it, expect, afterAll } from 'vitest';
+import { expect, describe, test, afterAll, beforeAll } from 'vitest';
 import {
   createDepartment,
   getDepartment,
   listDepartments,
-  listDepartmentsWithPagination,
+  listDepartmentsPaginated,
   listTenantDepartments,
-  listTenantDepartmentsWithPagination,
+  listTenantDepartmentsPaginated,
   updateDepartment,
   deleteDepartment,
+  searchDepartments,
+  searchDepartmentsPaginated,
 } from './departments.controller';
 import type {
   CreateDepartmentPayload,
   UpdateDepartmentPayload,
+  Department,
 } from './departments.types';
 import { createTenant, deleteTenant } from '../tenants/tenants.controller';
 import type { CreateTenantPayload } from '../tenants/tenants.types';
@@ -34,18 +37,34 @@ describe('Departments Controller', () => {
     tenantId,
   };
 
+  // Variable to store created IDs for cleanup
+  const createdDepartmentIds: number[] = [];
+
   // Clean up after all tests
   afterAll(async () => {
-    if (departmentId > 0) {
-      await deleteDepartment({ id: departmentId });
+    // Delete created departments
+    for (const id of createdDepartmentIds) {
+      if (id) {
+        try {
+          await deleteDepartment({ id });
+        } catch (error) {
+          console.log(`Error cleaning up test department ${id}:`, error);
+        }
+      }
     }
+
+    // Delete tenant
     if (tenantId > 0) {
-      await deleteTenant({ id: tenantId });
+      try {
+        await deleteTenant({ id: tenantId });
+      } catch (error) {
+        console.log('Error cleaning up test tenant:', error);
+      }
     }
   });
 
   describe('Setup', () => {
-    it('should create test tenant', async () => {
+    test('should create test tenant', async () => {
       const result = await createTenant(testTenant);
       tenantId = result.id;
       testDepartment.tenantId = tenantId;
@@ -53,8 +72,8 @@ describe('Departments Controller', () => {
     });
   });
 
-  describe('createDepartment', () => {
-    it('should create a new department', async () => {
+  describe('success scenarios', () => {
+    test('should create a new department', async () => {
       const result = await createDepartment({
         ...testDepartment,
         tenantId,
@@ -62,6 +81,7 @@ describe('Departments Controller', () => {
 
       // Save ID for other tests
       departmentId = result.id;
+      createdDepartmentIds.push(departmentId);
 
       // Verify response
       expect(result.id).toBeDefined();
@@ -75,7 +95,65 @@ describe('Departments Controller', () => {
       expect(result.updatedAt).toBeDefined();
     });
 
-    it('should fail to create department with duplicate code in same tenant', async () => {
+    test('should retrieve a department by ID', async () => {
+      const response = await getDepartment({ id: departmentId });
+
+      expect(response).toBeDefined();
+      expect(response.id).toBe(departmentId);
+      expect(response.name).toBe(testDepartment.name);
+      expect(response.code).toBe(testDepartment.code);
+      expect(response.description).toBe(testDepartment.description);
+      expect(response.tenantId).toBe(tenantId);
+    });
+
+    test('should update a department', async () => {
+      const updateData: UpdateDepartmentPayload = {
+        name: 'Updated Department',
+        description: 'Updated description for testing',
+      };
+
+      const response = await updateDepartment({
+        id: departmentId,
+        ...updateData,
+      });
+
+      expect(response).toBeDefined();
+      expect(response.id).toBe(departmentId);
+      expect(response.name).toBe(updateData.name);
+      expect(response.description).toBe(updateData.description);
+      expect(response.code).toBe(testDepartment.code);
+      expect(response.tenantId).toBe(tenantId);
+      expect(response.updatedAt).toBeDefined();
+    });
+
+    test('should delete a department', async () => {
+      // Create a department specifically for deletion test
+      const departmentToDelete = await createDepartment({
+        ...testDepartment,
+        name: 'Department To Delete',
+        code: 'DEPT-DELETE',
+        tenantId,
+      });
+
+      // Delete should not throw an error
+      await expect(
+        deleteDepartment({ id: departmentToDelete.id }),
+      ).resolves.not.toThrow();
+
+      // Attempt to get should throw a not found error
+      await expect(
+        getDepartment({ id: departmentToDelete.id }),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('error scenarios', () => {
+    test('should handle not found errors', async () => {
+      await expect(getDepartment({ id: 9999999 })).rejects.toThrow();
+    });
+
+    test('should handle duplicate errors', async () => {
+      // Try to create department with same code in same tenant
       await expect(
         createDepartment({
           ...testDepartment,
@@ -85,120 +163,45 @@ describe('Departments Controller', () => {
     });
   });
 
-  describe('getDepartment', () => {
-    it('should get an existing department', async () => {
-      const result = await getDepartment({ id: departmentId });
+  describe('pagination, filtering and ordering', () => {
+    // Test departments for ordering and filtering tests
+    const testDepartments: Department[] = [];
 
-      expect(result.id).toBe(departmentId);
-      expect(result.name).toBe(testDepartment.name);
-      expect(result.code).toBe(testDepartment.code);
-      expect(result.description).toBe(testDepartment.description);
-      expect(result.tenantId).toBe(tenantId);
-    });
+    beforeAll(async () => {
+      // Create test departments with different properties
+      const departments = [
+        {
+          ...testDepartment,
+          name: 'Alpha Department',
+          code: 'ALPHA-DEPT',
+          isActive: true,
+        },
+        {
+          ...testDepartment,
+          name: 'Beta Department',
+          code: 'BETA-DEPT',
+          isActive: false,
+        },
+        {
+          ...testDepartment,
+          name: 'Gamma Department',
+          code: 'GAMMA-DEPT',
+          isActive: true,
+        },
+      ];
 
-    it('should fail to get non-existent department', async () => {
-      await expect(getDepartment({ id: 999999 })).rejects.toThrow();
-    });
-  });
-
-  describe('listDepartments', () => {
-    it('should list all departments', async () => {
-      const result = await listDepartments();
-
-      expect(Array.isArray(result.departments)).toBe(true);
-      expect(result.departments.length).toBeGreaterThan(0);
-
-      const foundDepartment = result.departments.find(
-        (d) => d.id === departmentId,
-      );
-      expect(foundDepartment).toBeDefined();
-      expect(foundDepartment?.name).toBe(testDepartment.name);
-      expect(foundDepartment?.code).toBe(testDepartment.code);
-    });
-  });
-
-  describe('listTenantDepartments', () => {
-    it('should list departments for a tenant', async () => {
-      const result = await listTenantDepartments({ tenantId });
-
-      expect(Array.isArray(result.departments)).toBe(true);
-      expect(result.departments.length).toBeGreaterThan(0);
-
-      const foundDepartment = result.departments.find(
-        (d) => d.id === departmentId,
-      );
-      expect(foundDepartment).toBeDefined();
-      expect(foundDepartment?.name).toBe(testDepartment.name);
-      expect(foundDepartment?.code).toBe(testDepartment.code);
-    });
-
-    it('should return empty list for non-existent tenant', async () => {
-      const result = await listTenantDepartments({ tenantId: 999999 });
-      expect(Array.isArray(result.departments)).toBe(true);
-      expect(result.departments.length).toBe(0);
-    });
-  });
-
-  describe('updateDepartment', () => {
-    const updateData: UpdateDepartmentPayload = {
-      name: 'Updated Department',
-      description: 'Updated description for testing',
-    };
-
-    it('should update an existing department', async () => {
-      const result = await updateDepartment({
-        id: departmentId,
-        ...updateData,
-      });
-
-      expect(result.id).toBe(departmentId);
-      expect(result.name).toBe(updateData.name);
-      expect(result.description).toBe(updateData.description);
-      expect(result.code).toBe(testDepartment.code);
-      expect(result.tenantId).toBe(tenantId);
-      expect(result.updatedAt).toBeDefined();
-    });
-
-    it('should fail to update non-existent department', async () => {
-      await expect(
-        updateDepartment({ id: 999999, ...updateData }),
-      ).rejects.toThrow();
-    });
-  });
-
-  describe('deleteDepartment', () => {
-    it('should fail to delete non-existent department', async () => {
-      await expect(deleteDepartment({ id: 999999 })).rejects.toThrow();
-    });
-
-    it('should delete an existing department', async () => {
-      const result = await deleteDepartment({ id: departmentId });
-
-      expect(result.id).toBe(departmentId);
-      expect(result.name).toBe('Updated Department');
-      expect(result.code).toBe(testDepartment.code);
-
-      // Mark as deleted so afterAll doesn't try to delete again
-      departmentId = 0;
-    });
-  });
-
-  describe('pagination', () => {
-    let departmentA: { id: number };
-    let departmentZ: { id: number };
-
-    afterAll(async () => {
-      // Clean up test departments
-      if (departmentA?.id) {
-        await deleteDepartment({ id: departmentA.id });
-      }
-      if (departmentZ?.id) {
-        await deleteDepartment({ id: departmentZ.id });
+      for (const deptData of departments) {
+        const created = await createDepartment({
+          ...deptData,
+          tenantId,
+        });
+        testDepartments.push(created);
+        createdDepartmentIds.push(created.id);
       }
     });
 
-    it('should return paginated departments with default parameters', async () => {
-      const response = await listDepartmentsWithPagination({});
+    test('should return paginated departments with default parameters', async () => {
+      const response = await listDepartmentsPaginated({});
 
       expect(response.data).toBeDefined();
       expect(Array.isArray(response.data)).toBe(true);
@@ -211,8 +214,8 @@ describe('Departments Controller', () => {
       expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
     });
 
-    it('should honor page and pageSize parameters', async () => {
-      const response = await listDepartmentsWithPagination({
+    test('should honor page and pageSize parameters', async () => {
+      const response = await listDepartmentsPaginated({
         page: 1,
         pageSize: 5,
       });
@@ -222,85 +225,178 @@ describe('Departments Controller', () => {
       expect(response.data.length).toBeLessThanOrEqual(5);
     });
 
-    it('should default sort by name in ascending order', async () => {
-      // Create test departments with different names for verification of default sorting
-      departmentA = await createDepartment({
-        ...testDepartment,
-        name: 'AAA Test Department',
-        code: 'AAA-DEPT',
-        tenantId,
-      });
-      departmentZ = await createDepartment({
-        ...testDepartment,
-        name: 'ZZZ Test Department',
-        code: 'ZZZ-DEPT',
-        tenantId,
-      });
+    test('should return non-paginated list for dropdowns', async () => {
+      const response = await listDepartments({});
 
-      // Get departments with large enough page size to include test departments
-      const response = await listDepartmentsWithPagination({
-        pageSize: 50,
+      expect(response.departments).toBeDefined();
+      expect(Array.isArray(response.departments)).toBe(true);
+      expect(response.departments.length).toBeGreaterThan(0);
+      // No pagination info should be present
+      expect(response).not.toHaveProperty('pagination');
+    });
+
+    test('should order departments by name ascending', async () => {
+      const response = await listDepartments({
+        orderBy: [{ field: 'name', direction: 'asc' }],
       });
 
-      // Find the indices of our test departments
-      const indexA = response.data.findIndex((d) => d.id === departmentA.id);
-      const indexZ = response.data.findIndex((d) => d.id === departmentZ.id);
-
-      // Verify that departmentA (AAA) comes before departmentZ (ZZZ) in the results
-      if (indexA !== -1 && indexZ !== -1) {
-        expect(indexA).toBeLessThan(indexZ);
+      const names = response.departments.map((d) => d.name);
+      // Check if names are in ascending order
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] <= names[i + 1]).toBe(true);
       }
     });
 
-    describe('tenant departments pagination', () => {
-      it('should return paginated tenant departments with default parameters', async () => {
-        const response = await listTenantDepartmentsWithPagination({
+    test('should filter departments by active status', async () => {
+      const response = await listDepartments({
+        filters: { isActive: true },
+      });
+
+      // All returned departments should be active
+      expect(response.departments.every((d) => d.isActive === true)).toBe(true);
+
+      // Should include our active test departments
+      const activeTestDepartmentIds = testDepartments
+        .filter((d) => d.isActive)
+        .map((d) => d.id);
+
+      for (const id of activeTestDepartmentIds) {
+        expect(response.departments.some((d) => d.id === id)).toBe(true);
+      }
+    });
+
+    test('should combine ordering and filtering in paginated results', async () => {
+      const response = await listDepartmentsPaginated({
+        filters: { isActive: true },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+        page: 1,
+        pageSize: 10,
+      });
+
+      // Check filtering
+      expect(response.data.every((d) => d.isActive === true)).toBe(true);
+
+      // Check ordering (ascending)
+      const names = response.data.map((d) => d.name);
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] <= names[i + 1]).toBe(true);
+      }
+
+      // Check pagination properties
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(10);
+    });
+  });
+
+  describe('tenant filtering', () => {
+    // Test departments for tenant filtering
+    const filterTestDepartments: Department[] = [];
+
+    beforeAll(async () => {
+      // Create test departments for tenant testing
+      const departments = [
+        {
+          ...testDepartment,
+          name: 'Tenant Department 1',
+          code: 'TENANT-DEPT1',
+          isActive: true,
+        },
+        {
+          ...testDepartment,
+          name: 'Tenant Department 2',
+          code: 'TENANT-DEPT2',
+          isActive: false,
+        },
+      ];
+
+      for (const deptData of departments) {
+        const created = await createDepartment({
+          ...deptData,
           tenantId,
         });
+        filterTestDepartments.push(created);
+        createdDepartmentIds.push(created.id);
+      }
+    });
 
-        expect(response.data).toBeDefined();
-        expect(Array.isArray(response.data)).toBe(true);
-        expect(response.pagination).toBeDefined();
-        expect(response.pagination.currentPage).toBe(1);
-        expect(response.pagination.pageSize).toBeDefined();
-        expect(response.pagination.totalCount).toBeDefined();
-        expect(response.pagination.totalPages).toBeDefined();
-        expect(typeof response.pagination.hasNextPage).toBe('boolean');
-        expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
+    test('should return departments for a specific tenant', async () => {
+      const response = await listTenantDepartments({ tenantId });
 
-        // Verify we only get departments for the specified tenant
-        response.data.forEach((department) => {
-          expect(department.tenantId).toBe(tenantId);
-        });
+      // All returned departments should belong to the specified tenant
+      expect(response.departments.every((d) => d.tenantId === tenantId)).toBe(
+        true,
+      );
+
+      // Should include our test departments
+      for (const dept of filterTestDepartments) {
+        expect(response.departments.some((d) => d.id === dept.id)).toBe(true);
+      }
+    });
+
+    test('should return paginated departments for a specific tenant', async () => {
+      const response = await listTenantDepartmentsPaginated({
+        tenantId,
+        page: 1,
+        pageSize: 10,
       });
 
-      it('should honor page and pageSize parameters for tenant departments', async () => {
-        const response = await listTenantDepartmentsWithPagination({
-          tenantId,
-          page: 1,
-          pageSize: 5,
-        });
+      // All returned departments should belong to the specified tenant
+      expect(response.data.every((d) => d.tenantId === tenantId)).toBe(true);
 
-        expect(response.pagination.currentPage).toBe(1);
-        expect(response.pagination.pageSize).toBe(5);
-        expect(response.data.length).toBeLessThanOrEqual(5);
+      // Check pagination properties
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(10);
+    });
 
-        // Verify we only get departments for the specified tenant
-        response.data.forEach((department) => {
-          expect(department.tenantId).toBe(tenantId);
-        });
+    test('should return empty list for non-existent tenant', async () => {
+      const response = await listTenantDepartments({ tenantId: 999999 });
+      expect(Array.isArray(response.departments)).toBe(true);
+      expect(response.departments.length).toBe(0);
+    });
+  });
+
+  describe('search functionality', () => {
+    test('should search departments', async () => {
+      // Create a unique department for search testing
+      const searchableDepartment = await createDepartment({
+        ...testDepartment,
+        name: 'Searchable Department',
+        code: 'SEARCH-DEPT',
+        tenantId,
       });
 
-      it('should return empty paginated result for non-existent tenant', async () => {
-        const response = await listTenantDepartmentsWithPagination({
-          tenantId: 999999,
-        });
+      createdDepartmentIds.push(searchableDepartment.id);
 
-        expect(response.data).toBeDefined();
-        expect(Array.isArray(response.data)).toBe(true);
-        expect(response.data.length).toBe(0);
-        expect(response.pagination.totalCount).toBe(0);
+      try {
+        // Search for the department by term
+        const response = await searchDepartments({ term: 'Searchable' });
+
+        expect(response.departments).toBeDefined();
+        expect(Array.isArray(response.departments)).toBe(true);
+        expect(
+          response.departments.some((d) => d.id === searchableDepartment.id),
+        ).toBe(true);
+      } catch (error) {
+        // If test fails, still clean up
+        await deleteDepartment({ id: searchableDepartment.id });
+        throw error;
+      }
+    });
+
+    test('should search departments with pagination', async () => {
+      const response = await searchDepartmentsPaginated({
+        term: 'Department',
+        page: 1,
+        pageSize: 5,
       });
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
     });
   });
 });

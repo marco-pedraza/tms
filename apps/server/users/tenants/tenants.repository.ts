@@ -3,47 +3,28 @@ import type {
   Tenant,
   CreateTenantPayload,
   UpdateTenantPayload,
-  PaginatedTenants,
 } from './tenants.types';
 import { createBaseRepository } from '@repo/base-repo';
-import { PaginationParams } from '../../shared/types';
 import { db } from '../db-service';
 
-export const createTenantRepository = () => {
+/**
+ * Creates a repository for managing tenant entities
+ * @returns {Object} An object containing tenant-specific operations and base CRUD operations
+ */
+export function createTenantRepository() {
   const baseRepository = createBaseRepository<
     Tenant,
     CreateTenantPayload,
     UpdateTenantPayload,
     typeof tenants
-  >(db, tenants, 'Tenant');
-
-  const create = async (data: CreateTenantPayload): Promise<Tenant> => {
-    return await baseRepository.create(data);
-  };
-
-  const update = async (
-    id: number,
-    data: UpdateTenantPayload,
-  ): Promise<Tenant> => {
-    return await baseRepository.update(id, data);
-  };
-
-  const findAllPaginated = async (
-    params: PaginationParams = {},
-  ): Promise<PaginatedTenants> => {
-    const { data, pagination } = await baseRepository.findAllPaginated(params);
-    return {
-      data,
-      pagination,
-    };
-  };
+  >(db, tenants, 'Tenant', {
+    searchableFields: [tenants.name, tenants.code],
+  });
 
   return {
     ...baseRepository,
-    create,
-    update,
-    findAllPaginated,
   };
-};
+}
 
+// Export the tenant repository instance
 export const tenantRepository = createTenantRepository();

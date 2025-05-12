@@ -1,4 +1,4 @@
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**
  * Represents a tenant entity
@@ -63,6 +63,21 @@ export interface UpdateTenantPayload {
    */
   isActive?: boolean;
 }
+
+/**
+ * Query options for filtering and ordering tenants
+ */
+export interface TenantsQueryOptions {
+  orderBy?: { field: keyof Tenant; direction: 'asc' | 'desc' }[];
+  filters?: Partial<Tenant>;
+}
+
+/**
+ * Combined pagination and query options for tenants
+ */
+export interface PaginationParamsTenants
+  extends PaginationParams,
+    TenantsQueryOptions {}
 
 /**
  * Response for listing all tenants

@@ -361,16 +361,36 @@ describe('Routes Controller', () => {
           isCompound: false as const,
         });
 
-        // Mock routeRepository.create to return an invalid ID
-        const routeRepositorySpy = vi.spyOn(routeRepository, 'create');
-        const invalidRouteId = 99999;
-        // @ts-expect-error - We're mocking the repository to return an invalid ID for testing purposes
-        routeRepositorySpy.mockResolvedValue({ id: invalidRouteId });
+        // Mock the transaction to fail during segment creation
+        const transactionSpy = vi.spyOn(routeRepository, 'transaction');
+        transactionSpy.mockImplementation(async (callback) => {
+          // Define partial mocks with only the methods we need
+          type PartialRouteRepo = Pick<typeof routeRepository, 'create'>;
+          type PartialRouteSegmentRepo = Pick<
+            typeof routeSegmentRepository,
+            'create'
+          >;
 
-        // Mock routeRepository.delete to verify it's called
-        const deleteSpy = vi.spyOn(routeRepository, 'delete');
-        // @ts-expect-error - We're mocking the repository to return a resolved promise for testing purposes
-        deleteSpy.mockImplementation(() => Promise.resolve());
+          // Create a mock txRepo that creates a route but fails on segment creation
+          const mockTxRepo: PartialRouteRepo = {
+            // This simulates the route creation working but segment creation failing
+            create: vi.fn().mockResolvedValue({ id: 99999 }),
+          };
+
+          // Create a mock tx object with a withTransaction method that returns a repo
+          // that will fail during segment creation
+          const mockTx = {
+            withTransaction: vi.fn().mockReturnValue({
+              create: vi.fn().mockImplementation(() => {
+                throw new Error('Simulated segment creation failure');
+              }),
+            } as PartialRouteSegmentRepo),
+          };
+
+          // Disable type checking for this specific callback call since we're using partial mocks
+          // @ts-expect-error - We're providing only the methods needed for the test
+          return await callback(mockTxRepo, mockTx);
+        });
 
         try {
           await createCompoundRoute({
@@ -384,9 +404,6 @@ describe('Routes Controller', () => {
           if (error instanceof Error) {
             expect(error.message).toBe('Failed to create all route segments');
           }
-
-          // Verify the compound route was deleted
-          expect(deleteSpy).toHaveBeenCalledWith(invalidRouteId);
         }
 
         // Verify the number of route segments remains the same
@@ -395,8 +412,7 @@ describe('Routes Controller', () => {
         expect(finalSegmentCount).toBe(initialSegmentCount);
 
         // Restore mocks
-        routeRepositorySpy.mockRestore();
-        deleteSpy.mockRestore();
+        transactionSpy.mockRestore();
       });
     });
 
@@ -779,11 +795,48 @@ describe('Routes Controller', () => {
           routeIds: [simpleRoute1Id, simpleRoute2Id],
         });
 
-        // Mock routeRepository.update to return an invalid ID
-        const updateSpy = vi.spyOn(routeRepository, 'update');
-        const invalidRouteId = Number.MAX_SAFE_INTEGER;
-        // @ts-expect-error - We're mocking the repository to return an invalid ID for testing purposes
-        updateSpy.mockResolvedValue({ id: invalidRouteId });
+        // Mock the transaction to fail during route update
+        const transactionSpy = vi.spyOn(routeRepository, 'transaction');
+        transactionSpy.mockImplementation(async (callback) => {
+          // Define partial mocks with only the methods we need
+          type PartialRouteRepo = Pick<typeof routeRepository, 'update'>;
+          type PartialRouteSegmentRepo = Pick<
+            typeof routeSegmentRepository,
+            'findAllBy' | 'delete' | 'create'
+          >;
+
+          // Create a mock txRepo that has the standard repository methods
+          const mockTxRepo: PartialRouteRepo & PartialRouteSegmentRepo = {
+            // Allow finding and deleting segments
+            findAllBy: vi.fn().mockResolvedValue([
+              {
+                id: 1,
+                parentRouteId: initialCompoundRoute.id,
+                segmentRouteId: simpleRoute1Id,
+              },
+              {
+                id: 2,
+                parentRouteId: initialCompoundRoute.id,
+                segmentRouteId: simpleRoute2Id,
+              },
+            ]),
+            delete: vi.fn().mockResolvedValue({}),
+            create: vi.fn().mockResolvedValue({}),
+            // But make the update fail
+            update: vi.fn().mockImplementation(() => {
+              throw new Error('Simulated update failure');
+            }),
+          };
+
+          // Create a mock tx object
+          const mockTx = {
+            withTransaction: vi.fn().mockReturnValue(mockTxRepo),
+          };
+
+          // Disable type checking for this specific callback call since we're using partial mocks
+          // @ts-expect-error - We're providing only the methods needed for the test
+          return await callback(mockTxRepo, mockTx);
+        });
 
         try {
           await updateCompoundRouteSegments({
@@ -798,11 +851,7 @@ describe('Routes Controller', () => {
           }
         }
 
-        // Verify the number of route segments remains the same
-        const finalSegments = await db.query.routeSegments.findMany();
-        const finalSegmentCount = finalSegments.length;
-        expect(finalSegmentCount).toBe(initialSegmentCount + 2); // Original segments are still there
-
+        // Since the transaction was rolled back, the original segments should still be intact
         // Verify the original route is still intact
         const originalRoute = await getRouteWithFullDetails({
           id: initialCompoundRoute.id,
@@ -815,8 +864,12 @@ describe('Routes Controller', () => {
           simpleRoute2Id,
         );
 
+        // Verify the number of route segments remains the same (plus the original 2 segments)
+        const finalSegments = await db.query.routeSegments.findMany();
+        expect(finalSegments.length).toBe(initialSegmentCount + 2);
+
         // Restore mocks
-        updateSpy.mockRestore();
+        transactionSpy.mockRestore();
       });
     });
 

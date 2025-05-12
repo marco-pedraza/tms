@@ -1009,4 +1009,152 @@ describe('BaseRepository', () => {
       expect(result[0].userName).toBe('John Smith');
     });
   });
+
+  describe('transaction and withTransaction', () => {
+    // Repositories are defined in the outer describe block
+    const postRepository = createBaseRepository<
+      Post,
+      CreatePost,
+      UpdatePost,
+      typeof posts
+    >(db, posts, 'Post');
+
+    it('should commit operations when transaction is successful', async () => {
+      let userId: number | undefined;
+      let postId: number | undefined;
+
+      await userRepository.transaction(async (txUserRepo, tx) => {
+        const user = await txUserRepo.create({
+          name: 'Tx User',
+          email: 'tx.user@example.com',
+        });
+        userId = user.id;
+
+        const txPostRepo = postRepository.withTransaction(tx);
+        const post = await txPostRepo.create({
+          title: 'Transactional Post',
+          content: 'This post was created in a transaction',
+          userId: user.id,
+        });
+        postId = post.id;
+      });
+
+      // Verify data was committed
+      expect(userId).toBeDefined();
+      expect(postId).toBeDefined();
+
+      if (userId) {
+        const createdUser = await userRepository.findOne(userId);
+        expect(createdUser).toBeDefined();
+        expect(createdUser.name).toBe('Tx User');
+      }
+
+      if (postId) {
+        const createdPost = await postRepository.findOne(postId);
+        expect(createdPost).toBeDefined();
+        expect(createdPost.title).toBe('Transactional Post');
+        if (userId) {
+          expect(createdPost.userId).toBe(userId);
+        }
+      }
+    });
+
+    it('should roll back operations when an error occurs within the transaction', async () => {
+      const initialUserEmail = 'rollback.user@example.com';
+      let tempUserId: number | undefined;
+
+      try {
+        await userRepository.transaction(async (txUserRepo) => {
+          const user = await txUserRepo.create({
+            name: 'Rollback User',
+            email: initialUserEmail,
+          });
+          tempUserId = user.id; // Store ID to check for non-existence later
+
+          // Simulate an error occurring after the first operation
+          throw new Error('Simulated error to trigger rollback');
+        });
+      } catch (error: unknown) {
+        // Check if it's an Error instance and then check the message
+        if (error instanceof Error) {
+          expect(error.message).toBe('Simulated error to trigger rollback');
+        } else {
+          // If it's not an Error instance, fail the test, as we expect an Error
+          expect(error).toBeInstanceOf(Error);
+        }
+      }
+
+      // Verify that the user was rolled back and does not exist
+      if (tempUserId) {
+        // If findOne throws NotFoundError, it means the user doesn't exist, which is correct
+        await expect(userRepository.findOne(tempUserId)).rejects.toThrow(
+          NotFoundError,
+        );
+      } else {
+        // Fallback check if tempUserId wasn't assigned (e.g., error before create completed)
+        // This also covers the case where the transaction itself failed to even start meaningfully
+        const foundByEmail = await userRepository.findBy(
+          users.email,
+          initialUserEmail,
+        );
+        expect(foundByEmail).toBeNull();
+      }
+    });
+
+    it('should allow multiple operations on different repos sharing the same transaction', async () => {
+      let post1Id: number | undefined;
+      let post2Id: number | undefined;
+      const originalUserName = 'MultiOp User';
+      const updatedUserName = 'MultiOp User Updated';
+
+      // First, create a user that we will update within the transaction
+      const initialUser = await userRepository.create({
+        name: originalUserName,
+        email: 'multiop@example.com',
+      });
+      const userId = initialUser.id;
+
+      await userRepository.transaction(async (txUserRepo, tx) => {
+        // 1. Create a post using the transaction
+        const txPostRepo = postRepository.withTransaction(tx);
+        const post1 = await txPostRepo.create({
+          title: 'Post 1 in MultiOp Tx',
+          content: 'Content 1',
+          userId: initialUser.id,
+        });
+        post1Id = post1.id;
+
+        // 2. Update the user using the transaction-scoped user repo
+        await txUserRepo.update(initialUser.id, { name: updatedUserName });
+
+        // 3. Create another post using the same transaction
+        const post2 = await txPostRepo.create({
+          title: 'Post 2 in MultiOp Tx',
+          content: 'Content 2',
+          userId: initialUser.id,
+        });
+        post2Id = post2.id;
+      });
+
+      // Verify all operations were committed
+      expect(userId).toBeDefined();
+      expect(post1Id).toBeDefined();
+      expect(post2Id).toBeDefined();
+
+      if (userId) {
+        const updatedUser = await userRepository.findOne(userId);
+        expect(updatedUser.name).toBe(updatedUserName); // Check update
+      }
+      if (post1Id) {
+        const createdPost1 = await postRepository.findOne(post1Id);
+        expect(createdPost1).toBeDefined();
+        expect(createdPost1.title).toBe('Post 1 in MultiOp Tx');
+      }
+      if (post2Id) {
+        const createdPost2 = await postRepository.findOne(post2Id);
+        expect(createdPost2).toBeDefined();
+        expect(createdPost2.title).toBe('Post 2 in MultiOp Tx');
+      }
+    });
+  });
 });

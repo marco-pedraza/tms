@@ -7,6 +7,3 @@ export * from './types';
 
 // Exportar utilidades de manejo de errores de PostgreSQL
 export { handlePostgresError, isPgError } from './postgres-error-handler';
-
-// Exportar la función withScopes
-export * from './with-scopes';

@@ -70,40 +70,44 @@ async function createSimpleRoute(payload: CreateSimpleRoutePayload) {
     throw new ValidationError(ROUTE_ERRORS.SAME_TERMINAL);
   }
 
-  // Create the pathway first
-  const pathwayPayload: CreatePathwayPayload = {
-    name: pathwayName || name, // Use pathwayName if provided, otherwise use route name
-    distance,
-    typicalTime,
-    meta,
-    tollRoad,
-    active,
-  };
-
+  // Extract city IDs outside the transaction as this is a validation step
   const { originCityId, destinationCityId } = await extractCityIds(payload);
 
-  const pathway = await pathwayRepository.create(pathwayPayload);
+  // Create the pathway and route in a single transaction
+  return routeRepository.transaction(async (txRouteRepo, tx) => {
+    const txPathwayRepo = pathwayRepository.withTransaction(tx);
 
-  // Create the route using the newly created pathway
-  const routePayload: CreateRoutePayloadWithCityIds = {
-    name,
-    description,
-    originTerminalId,
-    destinationTerminalId,
-    originCityId,
-    destinationCityId,
-    pathwayId: pathway.id,
-    distance,
-    baseTime,
-    isCompound,
-    connectionCount,
-    totalTravelTime: typicalTime,
-    totalDistance: distance,
-  };
+    // Create the pathway first
+    const pathwayPayload: CreatePathwayPayload = {
+      name: pathwayName ?? name, // Use pathwayName if provided, otherwise use route name
+      distance,
+      typicalTime,
+      meta,
+      tollRoad,
+      active,
+    };
 
-  const createdRoute = await routeRepository.create(routePayload);
+    const pathway = await txPathwayRepo.create(pathwayPayload);
 
-  return createdRoute;
+    // Create the route using the newly created pathway
+    const routePayload: CreateRoutePayloadWithCityIds = {
+      name,
+      description,
+      originTerminalId,
+      destinationTerminalId,
+      originCityId,
+      destinationCityId,
+      pathwayId: pathway.id,
+      distance,
+      baseTime,
+      isCompound,
+      connectionCount,
+      totalTravelTime: typicalTime,
+      totalDistance: distance,
+    };
+
+    return await txRouteRepo.create(routePayload);
+  });
 }
 
 function validateRouteIds(routeIds: number[], simpleRoutes: Route[]) {
@@ -145,6 +149,9 @@ function calculateRouteTotals(routes: Route[]) {
   };
 }
 
+/**
+ * Creates a compound route from multiple simple routes
+ */
 async function createCompoundRoute({
   name,
   description,
@@ -177,26 +184,37 @@ async function createCompoundRoute({
     simpleRoutesOrdered,
   );
 
-  // Create the parent route
-  const compoundRoute = await routeRepository.create(compoundRoutePayload);
+  // Use a single transaction for the entire operation
+  return routeRepository
+    .transaction(async (txRouteRepo, tx) => {
+      // Create a transaction-scoped version of the routeSegmentRepository
+      const txRouteSegmentRepo = routeSegmentRepository.withTransaction(tx);
 
-  // Create route segments in a separate transaction
-  await routeSegmentRepository.transaction(async (tx) => {
-    try {
-      for (const [index, route] of simpleRoutesOrdered.entries()) {
-        await tx.create({
-          parentRouteId: compoundRoute.id,
-          segmentRouteId: route.id,
-          sequence: index + 1,
-        });
+      // Create the parent route
+      const compoundRoute = await txRouteRepo.create(compoundRoutePayload);
+
+      // Create route segments within the same transaction
+      try {
+        for (const [index, route] of simpleRoutesOrdered.entries()) {
+          await txRouteSegmentRepo.create({
+            parentRouteId: compoundRoute.id,
+            segmentRouteId: route.id,
+            sequence: index + 1,
+          });
+        }
+      } catch {
+        // We don't need manual cleanup since the transaction will be rolled back automatically
+        throw new Error(ROUTE_ERRORS.FAILED_CREATE_SEGMENTS);
       }
-    } catch {
-      await routeRepository.delete(compoundRoute.id);
-      throw new Error(ROUTE_ERRORS.FAILED_CREATE_SEGMENTS);
-    }
-  });
 
-  return routeRepository.findOneWithFullDetails(compoundRoute.id);
+      // We need to retrieve the compound route with full details outside the transaction
+      // to ensure we have the latest data after the transaction completes
+      return compoundRoute.id;
+    })
+    .then((compoundRouteId) => {
+      // After transaction completes successfully, retrieve the route with full details
+      return routeRepository.findOneWithFullDetails(compoundRouteId);
+    });
 }
 
 function validateRouteConnections(routes: Route[]) {
@@ -245,11 +263,14 @@ function createCompoundRouteFromChildren(
     isCompound: true,
     connectionCount: routes.length - 1,
     distance: totalDistance,
-    totalDistance,
     totalTravelTime,
+    totalDistance,
   };
 }
 
+/**
+ * Updates the segments of an existing compound route
+ */
 async function updateCompoundRouteSegments({
   compoundRouteId,
   routeIds,
@@ -277,50 +298,59 @@ async function updateCompoundRouteSegments({
   }
 
   // Execute the update in a transaction
-  await routeSegmentRepository.transaction(async (tx) => {
-    try {
-      // Delete existing segments
-      const existingSegments = await routeSegmentRepository.findAllBy(
-        routeSegments.parentRouteId,
-        compoundRouteId,
-      );
+  return routeRepository
+    .transaction(async (txRouteRepo, tx) => {
+      // Create a transaction-scoped version of the routeSegmentRepository
+      const txRouteSegmentRepo = routeSegmentRepository.withTransaction(tx);
 
-      for (const segment of existingSegments) {
-        await tx.delete(segment.id);
-      }
+      try {
+        // Delete existing segments
+        const existingSegments = await txRouteSegmentRepo.findAllBy(
+          routeSegments.parentRouteId,
+          compoundRouteId,
+        );
 
-      // Create new segments
-      for (const [index, route] of simpleRoutesOrdered.entries()) {
-        await tx.create({
-          parentRouteId: compoundRouteId,
-          segmentRouteId: route.id,
-          sequence: index + 1,
+        for (const segment of existingSegments) {
+          await txRouteSegmentRepo.delete(segment.id);
+        }
+
+        // Create new segments
+        for (const [index, route] of simpleRoutesOrdered.entries()) {
+          await txRouteSegmentRepo.create({
+            parentRouteId: compoundRouteId,
+            segmentRouteId: route.id,
+            sequence: index + 1,
+          });
+        }
+
+        // Calculate and update route totals
+        const {
+          firstRoute,
+          lastRoute,
+          totalDistance,
+          totalTravelTime,
+          baseTime,
+        } = calculateRouteTotals(simpleRoutesOrdered);
+
+        await txRouteRepo.update(compoundRouteId, {
+          originTerminalId: firstRoute.originTerminalId,
+          destinationTerminalId: lastRoute.destinationTerminalId,
+          connectionCount: simpleRoutesOrdered.length - 1,
+          totalDistance,
+          totalTravelTime,
+          baseTime,
         });
+
+        return compoundRouteId;
+      } catch {
+        // Transaction will be rolled back automatically
+        throw new Error(ROUTE_ERRORS.FAILED_REPLACE_SEGMENTS);
       }
-
-      // Calculate and update route totals
-      const {
-        firstRoute,
-        lastRoute,
-        totalDistance,
-        totalTravelTime,
-        baseTime,
-      } = calculateRouteTotals(simpleRoutesOrdered);
-
-      await routeRepository.update(compoundRouteId, {
-        originTerminalId: firstRoute.originTerminalId,
-        destinationTerminalId: lastRoute.destinationTerminalId,
-        connectionCount: simpleRoutesOrdered.length - 1,
-        totalDistance,
-        totalTravelTime,
-        baseTime,
-      });
-    } catch {
-      throw new Error(ROUTE_ERRORS.FAILED_REPLACE_SEGMENTS);
-    }
-  });
-
-  return routeRepository.findOneWithFullDetails(compoundRouteId);
+    })
+    .then((routeId) => {
+      // After transaction completes successfully, retrieve the route with full details
+      return routeRepository.findOneWithFullDetails(routeId);
+    });
 }
 
 export const createRouteUseCases = () => {

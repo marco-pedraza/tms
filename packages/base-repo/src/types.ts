@@ -145,36 +145,6 @@ export type UniqueFieldConfig<TTable extends TableWithId> = {
 };
 
 /**
- * Represents a scope function that returns an SQL condition
- * @template TTable - The database table type
- */
-export type ScopeFunction<TTable extends TableWithId> = (
-  table: TTable,
-  db: TransactionalDB,
-) => SQL<unknown>;
-
-/**
- * Represents a scope factory function that returns a scope function
- * @template TTable - The database table type
- */
-export type ScopeFactoryFunction<TTable extends TableWithId> = (
-  ...args: unknown[]
-) => ScopeFunction<TTable>;
-
-/**
- * Collection of named scope functions
- * @template TTable - The database table type
- */
-export type ScopesConfig<TTable extends TableWithId> = {
-  [key: string]: ScopeFunction<TTable> | ScopeFactoryFunction<TTable>;
-};
-
-/**
- * Type for scope parameters - either a string name or an array with name and parameters
- */
-export type ScopeParams = string | [string, ...unknown[]];
-
-/**
  * Interface representing the base repository
  * @template T - The entity type
  * @template CreateT - The type for creating a new entity
@@ -229,6 +199,7 @@ export interface BaseRepository<
   transaction<R>(
     callback: (
       txRepo: BaseRepository<T, CreateT, UpdateT, TTable>,
+      tx: TransactionalDB,
     ) => Promise<R>,
   ): Promise<R>;
   search(term: string): Promise<T[]>;
@@ -250,51 +221,12 @@ export interface BaseRepository<
     baseWhere?: SQL;
     baseOrderBy?: SQL[];
   };
+  withTransaction: (
+    tx: TransactionalDB,
+  ) => BaseRepository<T, CreateT, UpdateT, TTable>;
   __internal?: {
     db: TransactionalDB;
     table: TTable;
     config?: RepositoryConfig;
   };
-}
-
-/**
- * Base repository enhanced with scoping capabilities
- * @template T - The entity type
- * @template CreateT - The type for creating a new entity
- * @template UpdateT - The type for updating an existing entity
- * @template TTable - The database table type
- */
-export interface ScopedRepository<
-  T,
-  CreateT,
-  UpdateT,
-  TTable extends TableWithId,
-> extends Omit<
-    BaseRepository<T, CreateT, UpdateT, TTable>,
-    'transaction' | 'search' | 'searchPaginated'
-  > {
-  scope(
-    scopeParams: ScopeParams,
-  ): ScopedRepository<T, CreateT, UpdateT, TTable>;
-  transaction<R>(
-    callback: (
-      txRepo: ScopedRepository<T, CreateT, UpdateT, TTable>,
-    ) => Promise<R>,
-  ): Promise<R>;
-  search(term: string): Promise<T[]>;
-  searchPaginated(
-    term: string,
-    params?: PaginationParams<T, TTable>,
-  ): Promise<{
-    data: T[];
-    pagination: PaginationMeta;
-  }>;
-}
-
-/**
- * Internal state for the scoped repository
- * @template TTable - The database table type
- */
-export interface ScopeState<TTable extends TableWithId> {
-  conditions: SQL<unknown>[];
 }

@@ -442,19 +442,26 @@ export const createBaseRepository = <
   /**
    * Executes operations within a database transaction
    * @template R - The return type of the transaction callback
-   * @param {Function} callback - Function to execute within the transaction
-   * @param {BaseRepository<T, CreateT, UpdateT, TTable>} callback.txRepo - Transaction-scoped repository passed to the callback
+   * @param {Function} callback - Function to execute within the transaction.
+   * It receives a transaction-scoped repository (`txRepo`) and the Drizzle transaction object (`tx`).
+   * @param {BaseRepository<T, CreateT, UpdateT, TTable>} callback.txRepo - Transaction-scoped repository passed to the callback.
+   * @param {TransactionalDB} callback.tx - The Drizzle transaction object, which can be used to create other transaction-scoped repositories using their `withTransaction` method.
    * @returns {Promise<R>} Result of the transaction
    * @description
-   * Creates a new transaction and passes a transaction-scoped repository to the callback.
-   * All operations performed using the transaction repository will be atomic - they will
-   * either all succeed or all fail together.
+   * Creates a new transaction. It passes a transaction-scoped version of the current repository (`txRepo`)
+   * and the raw Drizzle transaction object (`tx`) to the callback.
+   * All operations performed using `txRepo` or other repositories created with `tx` will be atomic -
+   * they will either all succeed or all fail together.
    *
    * @example
    * ```ts
-   * await repo.transaction(async (txRepo) => {
-   *   const user = await txRepo.create({ name: 'Alice' });
-   *   await txRepo.create({ name: 'Bob' });
+   * // Assuming `userRepository` and `profileRepository` are instances of BaseRepository
+   * await userRepository.transaction(async (txUserRepo, tx) => {
+   *   const profileTxRepo = profileRepository.withTransaction(tx);
+   *
+   *   const user = await txUserRepo.create({ name: 'Alice' });
+   *   await profileTxRepo.create({ userId: user.id, bio: 'Loves wonderland' });
+   *
    *   return user;
    * });
    * ```
@@ -462,6 +469,7 @@ export const createBaseRepository = <
   const transaction = <R>(
     callback: (
       txRepo: BaseRepository<T, CreateT, UpdateT, TTable>,
+      tx: TransactionalDB,
     ) => Promise<R>,
   ): Promise<R> => {
     return (db as DrizzleDB).transaction((tx: TransactionalDB) => {
@@ -471,7 +479,7 @@ export const createBaseRepository = <
         entityName,
         config,
       );
-      return callback(txRepository);
+      return callback(txRepository, tx);
     }) as Promise<R>;
   };
 
@@ -620,6 +628,37 @@ export const createBaseRepository = <
     }
   };
 
+  /**
+   * Creates a new repository instance that operates within the context of an existing transaction.
+   *
+   * @param {TransactionalDB} tx - The Drizzle transaction object to use.
+   * @returns {BaseRepository<T, CreateT, UpdateT, TTable>} A new repository instance bound to the provided transaction.
+   * @description
+   * This method allows sharing a single database transaction across multiple repository instances.
+   * Operations performed with the returned repository will be part of the transaction `tx`.
+   *
+   * @example
+   * ```ts
+   * // Assuming `userRepository` and `postRepository` are instances of BaseRepository
+   * await userRepository.transaction(async (txUserRepo, tx) => {
+   *   // Create a transaction-scoped postRepository
+   *   const txPostRepo = postRepository.withTransaction(tx);
+   *
+   *   const newUser = await txUserRepo.create({ name: 'Bob' });
+   *   await txPostRepo.create({ userId: newUser.id, title: 'My First Post' });
+   * });
+   * ```
+   */
+  const withTransaction = (
+    tx: TransactionalDB,
+  ): BaseRepository<T, CreateT, UpdateT, TTable> =>
+    createBaseRepository<T, CreateT, UpdateT, TTable>(
+      tx,
+      table,
+      entityName,
+      config,
+    );
+
   const repository: BaseRepository<T, CreateT, UpdateT, TTable> = {
     findOne,
     findAll,
@@ -638,6 +677,7 @@ export const createBaseRepository = <
     search,
     searchPaginated,
     buildQueryExpressions,
+    withTransaction,
     __internal: {
       db,
       table,

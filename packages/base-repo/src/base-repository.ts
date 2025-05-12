@@ -4,7 +4,7 @@
  */
 
 import { NotFoundError, DuplicateError } from './errors';
-import { eq, and, count, not, or } from 'drizzle-orm';
+import { eq, and, count, not, or, SQL } from 'drizzle-orm';
 import type {
   PaginationMeta,
   TableWithId,
@@ -26,6 +26,9 @@ import {
   applyOrdering,
   applySimpleFilters,
   applySearchConditions,
+  createSearchConditions,
+  createFilterConditions,
+  createOrderByExpressions,
 } from './query-utils';
 
 /**
@@ -551,6 +554,72 @@ export const createBaseRepository = <
     }
   };
 
+  /**
+   * Builds query conditions and ordering without executing the query
+   * @param {QueryOptions<T, TTable> & { searchTerm?: string }} params - Parameters for building the query
+   * @returns {{ baseWhere?: SQL, baseOrderBy?: SQL[] }} SQL expressions for where conditions and ordering
+   *
+   * @description
+   * This method exposes the internal query building logic used by methods like findAll and
+   * searchPaginated, allowing it to be reused in custom queries that may include relations
+   * or other complex structures.
+   *
+   * @example
+   * ```ts
+   * const { baseWhere, baseOrderBy } = userRepo.buildQuery({
+   *   filters: { isActive: true },
+   *   searchTerm: 'john',
+   *   orderBy: [{ field: 'createdAt', direction: 'desc' }]
+   * });
+   *
+   * const results = await db.query.users.findMany({
+   *   where: baseWhere,
+   *   orderBy: baseOrderBy,
+   *   with: { profile: true }
+   * });
+   * ```
+   */
+  const buildQueryExpressions = (
+    params?: QueryOptions<T, TTable> & { searchTerm?: string },
+  ): {
+    baseWhere?: SQL;
+    baseOrderBy?: SQL[];
+  } => {
+    try {
+      const { filters, orderBy, searchTerm } = params ?? {};
+      let baseWhere: SQL | undefined;
+
+      // Validate that searchable fields are configured when searchTerm is provided
+      if (
+        searchTerm &&
+        (!config?.searchableFields || config.searchableFields.length === 0)
+      ) {
+        throw new Error(`Searchable fields not defined for ${entityName}`);
+      }
+
+      // Generate SQL conditions from utility functions
+      if (searchTerm && config?.searchableFields?.length) {
+        // If we have a search term, use the search conditions (which can include filters)
+        baseWhere = createSearchConditions(searchTerm, config, table, filters);
+      } else if (filters && Object.keys(filters).length > 0) {
+        // If we only have filters, use the filter conditions
+        baseWhere = createFilterConditions(table, filters);
+      }
+
+      // Generate order by expressions if needed
+      const baseOrderBy = orderBy?.length
+        ? createOrderByExpressions(orderBy, table)
+        : undefined;
+
+      return {
+        baseWhere,
+        baseOrderBy,
+      };
+    } catch (error) {
+      throw handlePostgresError(error, entityName, 'buildQuery');
+    }
+  };
+
   const repository: BaseRepository<T, CreateT, UpdateT, TTable> = {
     findOne,
     findAll,
@@ -568,6 +637,7 @@ export const createBaseRepository = <
     transaction,
     search,
     searchPaginated,
+    buildQueryExpressions,
     __internal: {
       db,
       table,

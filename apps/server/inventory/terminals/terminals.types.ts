@@ -1,5 +1,6 @@
 import { MinLen, MatchesRegexp, Min, Max } from 'encore.dev/validate';
 import { PaginatedResult, PaginationParams } from '../../shared/types';
+import { City } from '../cities/cities.types';
 
 /**
  * Represents a facility available at a terminal
@@ -222,18 +223,24 @@ export interface UpdateTerminalPayload {
   active?: boolean;
 }
 
+export interface TerminalWithCity extends Terminal {
+  city: City;
+}
+
 /**
  * Response type for the list terminals endpoint
  */
 export interface Terminals {
   /** List of terminals */
-  terminals: Terminal[];
+  terminals: Terminal[] | TerminalWithCity[];
 }
 
 export interface TerminalsQueryOptions {
   orderBy?: { field: keyof Terminal; direction: 'asc' | 'desc' }[];
   filters?: Partial<Terminal>;
 }
+
+export type PaginatedTerminalsWithCity = PaginatedResult<TerminalWithCity>;
 
 export type PaginatedTerminals = PaginatedResult<Terminal>;
 

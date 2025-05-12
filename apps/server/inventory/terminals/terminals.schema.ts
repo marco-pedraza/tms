@@ -8,6 +8,7 @@ import {
   jsonb,
   real,
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import { cities } from '../cities/cities.schema';
 
 export const terminals = pgTable('terminals', {
@@ -28,3 +29,10 @@ export const terminals = pgTable('terminals', {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
+
+export const terminalsRelations = relations(terminals, ({ one }) => ({
+  city: one(cities, {
+    fields: [terminals.cityId],
+    references: [cities.id],
+  }),
+}));

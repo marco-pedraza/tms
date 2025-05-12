@@ -239,6 +239,17 @@ export interface BaseRepository<
     data: T[];
     pagination: PaginationMeta;
   }>;
+  /**
+   * Builds query conditions and ordering without executing the query
+   * @param params - Parameters for building the query
+   * @returns SQL expressions for where conditions and ordering
+   */
+  buildQueryExpressions(
+    params?: QueryOptions<T, TTable> & { searchTerm?: string },
+  ): {
+    baseWhere?: SQL;
+    baseOrderBy?: SQL[];
+  };
   __internal?: {
     db: TransactionalDB;
     table: TTable;

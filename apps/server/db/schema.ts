@@ -1,7 +1,10 @@
 export { countries } from '../inventory/countries/countries.schema';
 export { states } from '../inventory/states/states.schema';
 export { cities } from '../inventory/cities/cities.schema';
-export { terminals } from '../inventory/terminals/terminals.schema';
+export {
+  terminals,
+  terminalsRelations,
+} from '../inventory/terminals/terminals.schema';
 export { gates } from '../inventory/gates/gates.schema';
 export { transporters } from '../inventory/transporters/transporters.schema';
 export { serviceTypes } from '../inventory/service-types/service-types.schema';

@@ -28,6 +28,30 @@ export const createPaginationMeta = (
 };
 
 /**
+ * Creates order by expressions without modifying a query
+ * @param orderBy - Order by configuration
+ * @param table - The table to apply ordering to
+ * @returns Array of SQL order by expressions
+ */
+export const createOrderByExpressions = <TTable>(
+  orderBy: OrderBy<TTable>,
+  table: PgTable,
+): SQL[] => {
+  return orderBy.map((order) => {
+    const columnName = String(order.field);
+    const column = (table as unknown as Record<string, PgColumn>)[columnName];
+
+    if (!column) {
+      throw new Error(
+        `Invalid order field: ${columnName}. Field does not exist in the table.`,
+      );
+    }
+
+    return order.direction === 'asc' ? asc(column) : desc(column);
+  });
+};
+
+/**
  * Applies ordering to a query if ordering options are provided
  * @param query - The query to apply ordering to
  * @param orderBy - Optional ordering configuration
@@ -50,22 +74,37 @@ export const applyOrdering = <Q extends object, TTable>(
     return query;
   }
 
-  const orderByList = orderBy.map((order) => {
-    const columnName = String(order.field);
-    const column = (table as unknown as Record<string, PgColumn>)[columnName];
-
-    if (!column) {
-      throw new Error(
-        `Invalid order field: ${columnName}. Field does not exist in the table.`,
-      );
-    }
-
-    return order.direction === 'asc' ? asc(column) : desc(column);
-  });
-
+  const orderByList = createOrderByExpressions(orderBy, table);
   return (query as Record<string, (...args: unknown[]) => Q>).orderBy(
     ...orderByList,
   );
+};
+
+/**
+ * Creates filter conditions without modifying a query
+ * @param table - The table to create filters for
+ * @param filters - Filters object
+ * @returns SQL condition for the filters
+ */
+export const createFilterConditions = <T = unknown>(
+  table: PgTable,
+  filters: Filters<T>,
+): SQL | undefined => {
+  if (!filters || !Object.keys(filters).length) {
+    return undefined;
+  }
+
+  const conditions = Object.entries(filters).map(([field, value]) => {
+    const column = (table as unknown as Record<string, PgColumn>)[field];
+    if (!column) {
+      throw new Error(
+        `Invalid filter field: ${field}. Field does not exist in the table.`,
+      );
+    }
+    return eq(column, value);
+  });
+
+  return conditions.length > 0 ? and(...conditions) : undefined;
 };
 
 /**
@@ -91,28 +130,62 @@ export const applySimpleFilters = <Q extends object, T = unknown>(
     return query;
   }
 
-  const conditions = Object.entries(filters).map(([field, value]) => {
-    const column = (table as unknown as Record<string, PgColumn>)[field];
-    if (!column) {
-      throw new Error(
-        `Invalid filter field: ${field}. Field does not exist in the table.`,
-      );
-    }
-    return eq(column, value);
-  });
+  const filterCondition = createFilterConditions(table, filters);
+  if (!filterCondition) {
+    return query;
+  }
 
   // Check if the query already has a WHERE condition
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const existingWhere = (query as any)._where;
   const combinedConditions = existingWhere
-    ? and(existingWhere, ...conditions)
-    : and(...conditions);
+    ? and(existingWhere, filterCondition)
+    : filterCondition;
 
-  const finalQuery = (query as Record<string, (...args: unknown[]) => Q>).where(
+  return (query as Record<string, (...args: unknown[]) => Q>).where(
     combinedConditions,
   );
+};
 
-  return finalQuery;
+/**
+ * Creates search conditions without modifying a query
+ * @param searchTerm - The search term to look for
+ * @param config - Repository configuration containing searchableFields
+ * @param table - The table to create search for
+ * @param filters - Optional filters to combine with search
+ * @returns SQL condition for the search
+ */
+export const createSearchConditions = <T = unknown>(
+  searchTerm: string,
+  config: RepositoryConfig,
+  table: PgTable,
+  filters?: Filters<T>,
+): SQL | undefined => {
+  if (!config.searchableFields?.length) {
+    throw new Error(
+      'Searchable fields not defined in repository configuration',
+    );
+  }
+
+  // First escape backslashes (\ -> \\), then escape wildcard characters (% and _)
+  const escapedSearchTerm = searchTerm
+    .replace(/\\/g, '\\\\')
+    .replace(/([%_])/g, '\\$1');
+
+  // Create search conditions (OR between searchable fields)
+  const searchConditions = config.searchableFields.map((field) =>
+    ilike(field, `%${escapedSearchTerm}%`),
+  );
+
+  const searchWhere = or(...searchConditions);
+
+  // Create filter conditions
+  if (filters && Object.keys(filters).length > 0) {
+    const filterCondition = createFilterConditions(table, filters);
+    return filterCondition ? and(searchWhere, filterCondition) : searchWhere;
+  }
+
+  return searchWhere;
 };
 
 /**
@@ -140,41 +213,24 @@ export const applySearchConditions = <Q extends object, T = unknown>(
     return query;
   }
 
-  if (!config.searchableFields || !config.searchableFields.length) {
-    throw new Error(
-      'Searchable fields not defined in repository configuration',
-    );
-  }
-
-  // Escape wildcard characters (% and _) in the search term
-  const escapedSearchTerm = searchTerm.replace(/([%_])/g, '\\$1');
-
-  // Create search conditions (OR between searchable fields)
-  const searchConditions = config.searchableFields.map((field) =>
-    ilike(field, `%${escapedSearchTerm}%`),
+  const searchCondition = createSearchConditions(
+    searchTerm,
+    config,
+    table,
+    filters,
   );
-
-  // Create filter conditions
-  const filterConditions: SQL[] = [];
-  if (filters && Object.keys(filters).length > 0) {
-    Object.entries(filters).forEach(([field, value]) => {
-      const column = (table as unknown as Record<string, PgColumn>)[field];
-      if (!column) {
-        throw new Error(
-          `Invalid filter field: ${field}. Field does not exist in the table.`,
-        );
-      }
-      filterConditions.push(eq(column, value));
-    });
+  if (!searchCondition) {
+    return query;
   }
 
-  // Combine search (OR) with filters (AND)
-  const whereCondition =
-    filterConditions.length > 0
-      ? and(or(...searchConditions), ...filterConditions)
-      : or(...searchConditions);
+  // Check if the query already has a WHERE condition
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const existingWhere = (query as any)._where;
+  const combinedConditions = existingWhere
+    ? and(existingWhere, searchCondition)
+    : searchCondition;
 
   return (query as Record<string, (...args: unknown[]) => Q>).where(
-    whereCondition,
+    combinedConditions,
   );
 };

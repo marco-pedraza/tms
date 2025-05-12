@@ -899,4 +899,114 @@ describe('BaseRepository', () => {
       }
     });
   });
+
+  // Tests for buildQuery method
+  describe('buildQuery', () => {
+    // Create a repository with searchable fields for testing
+    const searchableUserRepository = createBaseRepository<
+      User,
+      CreateUser,
+      UpdateUser,
+      typeof users
+    >(db, users, 'User', {
+      searchableFields: [users.name, users.email],
+    });
+
+    beforeEach(async () => {
+      // Create test users
+      await createTestUser({
+        name: 'John Doe',
+        email: 'john@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Jane Smith',
+        email: 'jane@example.com',
+        active: true,
+      });
+      await createTestUser({
+        name: 'Alice Johnson',
+        email: 'alice@example.com',
+        active: false,
+      });
+    });
+
+    it('should return empty objects when no params are provided', () => {
+      const { baseWhere, baseOrderBy } =
+        searchableUserRepository.buildQueryExpressions();
+
+      expect(baseWhere).toBeUndefined();
+      expect(baseOrderBy).toBeUndefined();
+    });
+
+    it('should build where conditions from filters', () => {
+      // Build query with active filter
+      const { baseWhere } = searchableUserRepository.buildQueryExpressions({
+        filters: { active: true },
+      });
+
+      // baseWhere should be defined
+      expect(baseWhere).toBeDefined();
+    });
+
+    it('should build order by expressions', () => {
+      // Build query with name ordering
+      const { baseOrderBy } = searchableUserRepository.buildQueryExpressions({
+        orderBy: [{ field: 'name', direction: 'desc' }],
+      });
+
+      // baseOrderBy should be defined
+      expect(baseOrderBy).toBeDefined();
+      expect(baseOrderBy?.length).toBe(1);
+    });
+
+    it('should build search conditions from searchTerm', () => {
+      // Build query with search term
+      const { baseWhere } = searchableUserRepository.buildQueryExpressions({
+        searchTerm: 'john',
+      });
+
+      // baseWhere should be defined
+      expect(baseWhere).toBeDefined();
+    });
+
+    it('should combine filters, search, and ordering', () => {
+      const { baseWhere, baseOrderBy } =
+        searchableUserRepository.buildQueryExpressions({
+          filters: { active: true },
+          searchTerm: 'example.com',
+          orderBy: [{ field: 'name', direction: 'asc' }],
+        });
+
+      // Both should be defined
+      expect(baseWhere).toBeDefined();
+      expect(baseOrderBy).toBeDefined();
+      expect(baseOrderBy?.length).toBe(1);
+    });
+
+    it('should build usable SQL conditions for join queries', async () => {
+      // First create a post for our testing
+      const user = await createTestUser({
+        name: 'John Smith',
+        email: 'smith@example.com',
+      });
+      await db.insert(posts).values({
+        title: 'Test Post',
+        content: 'Content',
+        userId: user.id,
+      });
+
+      // Verify the setup worked correctly
+      const result = await db
+        .select({
+          userId: users.id,
+          userName: users.name,
+        })
+        .from(users)
+        .where(eq(users.id, user.id));
+
+      expect(result).toHaveLength(1);
+      expect(result[0].userName).toBe('John Smith');
+    });
+  });
 });

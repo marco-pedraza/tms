@@ -8,6 +8,8 @@ import type {
   PaginatedTerminals,
   PaginationParamsTerminals,
   TerminalsQueryOptions,
+  TerminalWithCity,
+  PaginatedTerminalsWithCity,
 } from './terminals.types';
 
 /**
@@ -25,8 +27,8 @@ export const createTerminal = api(
  */
 export const getTerminal = api(
   { expose: true, method: 'GET', path: '/terminals/:id' },
-  async ({ id }: { id: number }): Promise<Terminal> => {
-    return await terminalRepository.findOne(id);
+  async ({ id }: { id: number }): Promise<TerminalWithCity> => {
+    return await terminalRepository.findOneWithCity(id);
   },
 );
 
@@ -36,7 +38,7 @@ export const getTerminal = api(
 export const listTerminals = api(
   { expose: true, method: 'POST', path: '/get-terminals' },
   async (params: TerminalsQueryOptions): Promise<Terminals> => {
-    const terminals = await terminalRepository.findAll(params);
+    const terminals = await terminalRepository.findAllWithCity(params);
     return {
       terminals,
     };
@@ -48,7 +50,9 @@ export const listTerminals = api(
  */
 export const listTerminalsPaginated = api(
   { expose: true, method: 'POST', path: '/get-terminals/paginated' },
-  async (params: PaginationParamsTerminals): Promise<PaginatedTerminals> => {
+  async (
+    params: PaginationParamsTerminals,
+  ): Promise<PaginatedTerminalsWithCity> => {
     return await terminalRepository.findAllPaginated(params);
   },
 );

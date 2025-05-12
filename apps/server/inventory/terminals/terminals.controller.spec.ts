@@ -16,7 +16,12 @@ import {
   deleteCountry,
 } from '../countries/countries.controller';
 import { createSlug } from '../../shared/utils';
-import { Facility, OperatingHours, Terminal } from './terminals.types';
+import {
+  Facility,
+  OperatingHours,
+  Terminal,
+  TerminalWithCity,
+} from './terminals.types';
 
 describe('Terminals Controller', () => {
   // Test data and setup
@@ -698,6 +703,75 @@ describe('Terminals Controller', () => {
       expect(response.pagination).toBeDefined();
       expect(response.pagination.currentPage).toBe(1);
       expect(response.pagination.pageSize).toBe(5);
+    });
+  });
+
+  describe('city association tests', () => {
+    test('should retrieve a terminal with its associated city', async () => {
+      // Get terminal with city using the getTerminal endpoint
+      const terminalWithCity = await getTerminal({ id: createdTerminalId });
+
+      // Verify the terminal data
+      expect(terminalWithCity).toBeDefined();
+      expect(terminalWithCity.id).toBe(createdTerminalId);
+
+      // Verify the city data is loaded
+      expect(terminalWithCity.city).toBeDefined();
+      expect(terminalWithCity.city.id).toBe(cityId);
+      expect(terminalWithCity.city.name).toBe('Test City for Terminals');
+      expect(terminalWithCity.city.stateId).toBe(stateId);
+    });
+
+    test('should retrieve terminals with cities using listTerminals', async () => {
+      // Get all terminals with city using the listTerminals endpoint
+      const response = await listTerminals({});
+
+      // Verify the terminals list
+      expect(response).toBeDefined();
+      expect(response.terminals).toBeDefined();
+      expect(response.terminals.length).toBeGreaterThan(0);
+
+      // Find our test terminal and assert it exists
+      const foundTerminal = response.terminals.find(
+        (t) => t.id === createdTerminalId,
+      );
+      expect(foundTerminal).toBeDefined();
+
+      if (foundTerminal) {
+        // Verify city data is loaded for the terminal
+        // Type assertion since we know this is a TerminalWithCity
+        const terminalWithCity = foundTerminal as TerminalWithCity;
+        expect(terminalWithCity.city).toBeDefined();
+        expect(terminalWithCity.city.id).toBe(cityId);
+        expect(terminalWithCity.city.name).toBe('Test City for Terminals');
+      }
+    });
+
+    test('should retrieve terminals with cities using listTerminalsPaginated', async () => {
+      // Get paginated terminals with city data
+      const paginatedResponse = await listTerminalsPaginated({
+        page: 1,
+        pageSize: 10,
+      });
+
+      // Verify the pagination data
+      expect(paginatedResponse).toBeDefined();
+      expect(paginatedResponse.data).toBeDefined();
+      expect(paginatedResponse.pagination).toBeDefined();
+      expect(paginatedResponse.data.length).toBeGreaterThan(0);
+
+      // Find our test terminal and assert it exists
+      const foundTerminal = paginatedResponse.data.find(
+        (t) => t.id === createdTerminalId,
+      );
+      expect(foundTerminal).toBeDefined();
+
+      if (foundTerminal) {
+        // Verify city data is loaded for the terminal
+        expect(foundTerminal.city).toBeDefined();
+        expect(foundTerminal.city.id).toBe(cityId);
+        expect(foundTerminal.city.name).toBe('Test City for Terminals');
+      }
     });
   });
 });

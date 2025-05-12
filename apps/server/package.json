@@ -17,9 +17,11 @@
     "db:generate": "drizzle-kit generate",
     "encore:gen-client": "encore gen client --lang typescript --output ../../packages/ims-client/index.ts",
     "encore:check": "encore check",
-    "seed:permissions": "encore exec -- npx tsx db/scripts/seed-permissions.ts"
+    "seed:permissions": "encore exec -- npx tsx db/scripts/seed-permissions.ts",
+    "seed:inventory": "encore exec -- npx tsx db/scripts/seed-inventory.ts"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.7.0",
     "@praha/drizzle-factory": "^1.0.2",
     "@repo/eslint-config": "*",
     "@types/node": "^20.5.7",

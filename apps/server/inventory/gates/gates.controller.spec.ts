@@ -261,7 +261,7 @@ describe('Gates Controller', () => {
       for (const gate of testGates) {
         try {
           await deleteGate({ id: gate.id });
-        } catch (error) {
+        } catch {
           // Silent error handling for cleanup
         }
       }

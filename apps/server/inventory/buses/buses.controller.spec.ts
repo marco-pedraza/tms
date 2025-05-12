@@ -382,7 +382,7 @@ describe('Buses Controller', () => {
       for (const bus of testBuses) {
         try {
           await deleteBus({ id: bus.id });
-        } catch (error) {
+        } catch {
           // Silent error handling for cleanup
         }
       }

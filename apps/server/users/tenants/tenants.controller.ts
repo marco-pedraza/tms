@@ -131,16 +131,3 @@ export const searchTenantsPaginated = api(
     return await tenantRepository.searchPaginated(term, params);
   },
 );
-
-/**
- * Maintains backward compatibility for listing tenants.
- * @param params - Pagination parameters
- * @returns {Promise<PaginatedTenants>} Paginated list of tenants
- * @throws {APIError} If retrieval fails
- */
-export const getTenantsLegacy = api(
-  { method: 'GET', path: '/tenants', expose: true, auth: true },
-  async (params: PaginationParamsTenants): Promise<PaginatedTenants> => {
-    return await tenantRepository.findAllPaginated(params);
-  },
-);

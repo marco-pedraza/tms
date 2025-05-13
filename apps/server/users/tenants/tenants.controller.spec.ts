@@ -8,7 +8,6 @@ import {
   createTenant,
   deleteTenant,
   getTenant,
-  getTenantsLegacy,
   listTenants,
   listTenantsWithPagination,
   searchTenants,
@@ -435,17 +434,6 @@ describe('Tenants Controller', () => {
       expect(names).toEqual(
         [...names].sort((a, b) => a.localeCompare(b)).reverse(),
       );
-    });
-  });
-
-  describe('backward compatibility', () => {
-    it('should support legacy listTenants endpoint', async () => {
-      const result = await getTenantsLegacy({});
-
-      expect(result.data).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
-      expect(result.pagination).toBeDefined();
-      expect(result.pagination.currentPage).toBe(1);
     });
   });
 });

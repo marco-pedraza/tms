@@ -153,7 +153,7 @@ export const listRolesWithPagination = api(
  */
 export const listRolesWithPermissionsAndPagination = api(
   {
-    method: 'GET',
+    method: 'POST',
     path: '/roles/with-permissions/paginated',
     expose: true,
     auth: true,
@@ -252,7 +252,7 @@ export const listRolesByTenantWithPagination = api(
  * @throws {APIError} If search fails or no searchable fields are configured
  */
 export const searchRoles = api(
-  { method: 'GET', path: '/roles/search', expose: true, auth: true },
+  { method: 'POST', path: '/roles/search', expose: true, auth: true },
   async ({
     term,
     ...options
@@ -311,7 +311,7 @@ export const listTenantRoles = api(
  */
 export const listTenantRolesWithPagination = api(
   {
-    method: 'GET',
+    method: 'POST',
     path: '/tenants/:tenantId/roles-paginated',
     expose: true,
     auth: true,

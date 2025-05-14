@@ -29,13 +29,13 @@ export const createPermissionGroupRepository = () => {
     }
 
     // Use a transaction to create the group and assign permissions
-    return await baseRepository.transaction(async (txRepo) => {
+    return await baseRepository.transaction(async (txRepo, tx) => {
       // Create the permission group
       const createdGroup = await txRepo.create(groupData);
 
       // Update permissions to be associated with this group using inArray for better performance
       if (permissionIds.length > 0) {
-        await txRepo.__internal.db
+        await tx
           .update(permissions)
           .set({ permissionGroupId: createdGroup.id })
           .where(inArray(permissions.id, permissionIds));
@@ -57,21 +57,21 @@ export const createPermissionGroupRepository = () => {
     }
 
     // Use a transaction to update the group and reassign permissions
-    return await baseRepository.transaction(async (txRepo) => {
+    return await baseRepository.transaction(async (txRepo, tx) => {
       // First check if the group exists
 
       // Update the group data
       const updatedGroup = await txRepo.update(id, groupData);
 
       // Remove this group ID from any permissions currently assigned to it
-      await txRepo.__internal.db
+      await tx
         .update(permissions)
         .set({ permissionGroupId: null })
         .where(eq(permissions.permissionGroupId, id));
 
       // Assign the specified permissions to this group using inArray for better performance
       if (permissionIds.length > 0) {
-        await txRepo.__internal.db
+        await tx
           .update(permissions)
           .set({ permissionGroupId: id })
           .where(inArray(permissions.id, permissionIds));

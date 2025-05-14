@@ -5,188 +5,181 @@ alwaysApply: false
 ---
 # Types Patterns
 
-## Rules for Type Definitions
+## Core Type Structure
 
-1. Type structure should follow:
+Each feature should have these core type definitions:
 
-   - Base entity interfaces (e.g., `Country`, `State`)
-   - Creation payloads (e.g., `CreateCountryPayload`, `CreateStatePayload`)
-   - Update payloads (e.g., `UpdateCountryPayload`, `UpdateStatePayload`)
-   - List responses (e.g., `Countries`, `States`)
-   - Paginated responses (e.g., `PaginatedCountries`, `PaginatedStates`)
+1. **Base Entity Interface** - Represents the database entity
+   ```typescript
+   export interface Country {
+     id: number;
+     name: string;
+     code: string;
+     active: boolean;
+     createdAt: Date | null;
+     updatedAt: Date | null;
+   }
+   ```
 
-2. Use descriptive JSDoc comments for all types and properties
+2. **Create Payload** - DTO for creating new entities with validations
+   ```typescript
+   export interface CreateCountryPayload {
+     name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+     code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+     active?: boolean;
+   }
+   ```
 
-3. Include validation decorators from Encore for input types
+3. **Update Payload** - DTO for updating entities with all fields optional
+   ```typescript
+   export interface UpdateCountryPayload {
+     name?: string & MinLen<1>;
+     code?: string & MinLen<1>;
+     active?: boolean;
+   }
+   ```
 
-4. Keep types in `*.types.ts` files
+4. **Query Options** - Filtering and ordering parameters
+   ```typescript
+   export interface CountriesQueryOptions {
+     orderBy?: { field: keyof Country; direction: 'asc' | 'desc' }[];
+     filters?: Partial<Country>;
+   }
+   ```
 
-5. Use consistent naming patterns across all features
+5. **List Response** - Response for listing entities
+   ```typescript
+   export interface Countries {
+     countries: Country[];
+   }
+   ```
 
-## Type Definitions Example
+6. **Pagination Parameters** - Extends PaginationParams with query options
+   ```typescript
+   export interface PaginationParamsCountries
+     extends PaginationParams, CountriesQueryOptions {}
+   ```
+
+7. **Paginated Response** - Generic paginated result type
+   ```typescript
+   export type PaginatedCountries = PaginatedResult<Country>;
+   ```
+
+## Additional Type Patterns
+
+### 1. Entity Relationships
+
+For entities with relationships, define extended interfaces:
 
 ```typescript
-import { MinLen, MatchesRegexp } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
-
-/**
- * Base interface representing a country entity
- */
-export interface Country {
-  /** Unique identifier for the country */
+// Base entity
+export interface Terminal {
   id: number;
-
-  /** Name of the country */
   name: string;
-
-  /** Whether the country is currently active in the system */
-  active: boolean;
-
-  /** ISO country code (e.g., "US", "CA", "MX") */
-  code: string;
-
-  /** Timestamp when the country record was created */
-  createdAt: Date | null;
-
-  /** Timestamp when the country record was last updated */
-  updatedAt: Date | null;
+  cityId: number;
+  // ...other properties
 }
 
-/**
- * Input for creating a new country
- */
-export interface CreateCountryPayload {
-  /**
-   * Name of the country
-   * Must have at least 1 non-whitespace character
-   */
-  name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+// Extended entity with relationships
+export interface TerminalWithCity extends Terminal {
+  city: City;
+}
+```
 
-  /**
-   * ISO country code (e.g., "US", "CA", "MX")
-   * Must have at least 1 non-whitespace character
-   */
-  code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+### 2. Compound Types
 
-  /**
-   * Whether the country is active
-   * @default true
-   */
-  active?: boolean;
+When a feature has complex operations, define specialized payload types:
+
+```typescript
+// Basic route creation payload
+export interface CreateRoutePayload {
+  name: string;
+  distance: number;
+  // ...other fields
 }
 
-/**
- * Input for updating a country
- */
-export interface UpdateCountryPayload {
-  /**
-   * Name of the country
-   * Must have at least 1 non-whitespace character
-   */
-  name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+// Specialized payload for creating a simple route with pathway
+export interface CreateSimpleRoutePayload
+  extends Omit<
+    CreateRoutePayload,
+    'pathwayId' | 'distance' | 'totalDistance'
+  > {
+  // Additional fields specific to this operation
+  pathwayName?: string;
+  isCompound: false;
+}
+```
 
-  /**
-   * ISO country code (e.g., "US", "CA", "MX")
-   * Must have at least 1 non-whitespace character
-   */
-  code?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+### 3. Complex Entity Types
 
-  /**
-   * Whether the country is active
-   */
-  active?: boolean;
+For entities with nested structures, define helper interfaces:
+
+```typescript
+// Helper interface for nested structure
+export interface Facility {
+  name: string;
+  description?: string;
+  icon?: string;
 }
 
-/**
- * Response type for the list countries endpoint
- */
-export interface Countries {
-  /** List of countries */
-  countries: Country[];
+// Helper interface for nested structure
+export interface TimeSlot {
+  open: string;
+  close: string;
 }
 
-/**
- * Response type for paginated country list
- */
-export type PaginatedCountries = PaginatedResult<Country>;
-
-/**
- * Shared pagination types
- */
-export interface PaginationParams {
-  /** Page number (1-based) */
-  page?: number;
-  /** Number of items per page */
-  pageSize?: number;
-  /** Column to sort by */
-  sortBy?: string;
-  /** Sort direction */
-  sortDirection?: 'asc' | 'desc';
+// Main entity interface using nested types
+export interface Terminal {
+  // ...base fields
+  facilities?: Facility[];
+  operatingHours?: OperatingHours;
 }
+```
 
-/**
- * Pagination metadata
- */
-export interface PaginationMeta {
-  /** Current page number (1-based) */
-  currentPage: number;
-  /** Number of items per page */
-  pageSize: number;
-  /** Total number of items across all pages */
-  totalCount: number;
-  /** Total number of pages */
-  totalPages: number;
-  /** Whether there is a next page available */
-  hasNextPage: boolean;
-  /** Whether there is a previous page available */
-  hasPreviousPage: boolean;
-}
+## Type Best Practices
 
-## Best Practices
+1. **Documentation**
+   - Use JSDoc comments for all entity interfaces and complex types
+   - Document validation constraints directly in JSDoc
+   - Add `@default` tags for fields with default values
 
-1. **Type Organization**
-   - Group related types together
-   - Use interfaces for objects
-   - Use types for unions and intersections
-   - Keep types focused and specific
-   - Place shared types in `shared/types.ts`
-
-2. **Documentation**
-   - Include JSDoc comments for all types
-   - Document validation rules
-   - Explain complex type relationships
-   - Add examples for non-obvious usage
+2. **Validation**
+   - Use Encore's validation decorators on input DTOs:
+     - `MinLen<1>` for required string fields
+     - `MatchesRegexp<'.*\\S.*'>` for non-empty strings
+     - `Min<1>` for required IDs
+     - `Min<0>` for non-negative numeric values
 
 3. **Naming Conventions**
-   - Use PascalCase for type names
-   - Use consistent suffixes:
-     - `Payload` for input DTOs
-     - `Meta` for metadata types
-     - `Params` for parameter types
-     - `Paginated` prefix for paginated results
+   - Use consistent naming patterns:
+     - Entity interface: `Feature` (ex: `Country`, `Terminal`)
+     - Create DTO: `CreateFeaturePayload` (ex: `CreateCountryPayload`)
+     - Update DTO: `UpdateFeaturePayload` (ex: `UpdateTerminalPayload`)
+     - List response: `Features` (ex: `Countries`, `Terminals`)
+     - With relations: `FeatureWithRelation` (ex: `TerminalWithCity`)
+     - Query options: `FeaturesQueryOptions` (ex: `TerminalsQueryOptions`)
+     - Pagination params: `PaginationParamsFeatures` (ex: `PaginationParamsTerminals`)
 
-4. **Type Safety**
-   - Use strict types
-   - Avoid any type
-   - Leverage TypeScript features
-   - Use generics appropriately (e.g., `PaginatedResult<T>`)
+4. **Type Composition**
+   - Use `extends` for specializing interfaces
+   - Use `Omit<T, K>` to exclude fields when extending
+   - Use `Partial<T>` for making all fields optional
+   - Use `Pick<T, K>` to select specific fields
+   - Use union types for fields with multiple possible values
 
-5. **Validation**
-   - Apply validation decorators from Encore
-   - Define clear constraints
-   - Document validation rules
-   - Use shared validation types
+5. **Shared Types**
+   - Import shared pagination types from `../../shared/types.ts`
+   - Import related entity types (ex: `import { City } from '../cities/cities.types';`)
+   - Use `PaginatedResult<T>` for all paginated responses
 
-6. **Reusability**
-   - Create generic types for common patterns (e.g., `PaginatedResult<T>`)
-   - Share common interfaces in `shared/types.ts`
-   - Use type composition
-   - Export reusable types
+## Type Creation Checklist
 
-7. **Maintenance**
-   - Keep types up to date
-   - Remove unused types
-   - Document breaking changes
-   - Version types appropriately
-```
+- [ ] Create base entity interface with all DB fields
+- [ ] Add detailed JSDoc comments to all entity properties
+- [ ] Create CreateXPayload with appropriate validations
+- [ ] Create UpdateXPayload with all fields optional
+- [ ] Define query options interface with orderBy and filters
+- [ ] Create list response interface (ex: `Features`) that returns array of entities
+- [ ] Define pagination parameters that extend from shared types
+- [ ] Create extended interfaces for entities with relationships
 

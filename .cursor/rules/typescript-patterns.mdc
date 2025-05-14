@@ -16,21 +16,40 @@ alwaysApply: false
    - `PascalCase` for classes, interfaces, types, and enums
    - `UPPER_SNAKE_CASE` for important constants
 
-3. Always document code with JSDoc, not only complex code:
+3. Prefer function declarations over arrow functions:
+
+   ```typescript
+   // Preferred
+   function calculateTotal(price: number, quantity: number): number {
+     return price * quantity;
+   }
+
+   // Instead of
+   const calculateTotal = (price: number, quantity: number): number => {
+     return price * quantity;
+   };
+   ```
+
+4. Use arrow functions primarily for:
+   - Callbacks, especially when they need to capture `this`
+   - Anonymous functions passed as arguments
+   - Simple one-line functions
+
+5. Always document code with JSDoc, not only complex code:
 
    - Functions and methods with descriptions, parameters, and return values
    - Interfaces and types with property descriptions
    - Classes with general description
 
-4. Avoid any/unknown types unless absolutely necessary
+6. Avoid any/unknown types unless absolutely necessary
 
-5. Use explicit types to improve readability and assist inference
+7. Use explicit types to improve readability and assist inference
 
-6. Keep files modular and focused on a single responsibility
+8. Keep files modular and focused on a single responsibility
 
-7. Organize and group imports by source
+9. Organize and group imports by source
 
-8. Use type declarations to improve readability
+10. Use type declarations to improve readability
 
 ## JSDoc Documentation Examples
 
@@ -49,6 +68,32 @@ alwaysApply: false
 function calculateOrderTotal(items: OrderItem[], taxRate: number, discount?: number): number {
   // Implementation...
 }
+```
+
+### Other Function Patterns
+
+```typescript
+// Class method declaration style
+class OrderService {
+  /**
+   * Processes an order and returns the result
+   * @param orderId - The ID of the order to process
+   * @returns Processing result with status
+   */
+  processOrder(orderId: number): ProcessingResult {
+    // Implementation...
+  }
+
+  // Avoid using arrow functions for methods unless you need lexical 'this'
+}
+
+// Example of appropriate arrow function usage (callback)
+const orderData = orders.map((order) => {
+  return {
+    id: order.id,
+    total: calculateOrderTotal(order.items, 0.16)
+  };
+});
 ```
 
 ### Interface Documentation
@@ -90,21 +135,46 @@ interface Product {
 
 ## Best Practices
 
+### Function Declarations
+
+- Use function declarations for most functions:
+  ```typescript
+  function processData(data: InputData): OutputData { ... }
+  ```
+- Apply function declaration pattern consistently across repositories, controllers, and use cases
+- Function declarations provide better readability, hoisting benefits, and clearer stack traces
+- Reserve arrow functions for callbacks, event handlers, and simple one-liners:
+  ```typescript
+  const doubleValues = numbers.map(n => n * 2);
+  ```
+
 ### Typing
 
 - Use interfaces for objects and types for unions, intersections, and utility types
 - Leverage generics to create reusable code
 - Use conditional typing when appropriate
 - Prefer more specific types over generic types
-- Use explicit return types for public functions
+- Use explicit return types for all public functions
+- Type function declarations consistently:
+  ```typescript
+  function getName(userId: number): Promise<string> { ... }
+  ```
 
 ### Organization
 
-- Keep files a manageable size (< 300 lines)
+- Keep files a manageable size (< 500 lines)
 - Use named exports instead of default exports
 - Group related code in appropriate files
 - Separate business logic from UI components
 - Maintain a coherent folder structure
+- Export function declarations directly:
+  ```typescript
+  // Preferred
+  export function validateUser(user: User): ValidationResult { ... }
+
+  // Avoid
+  export const validateUser = (user: User): ValidationResult => { ... }
+  ```
 
 ### Validation and Security
 

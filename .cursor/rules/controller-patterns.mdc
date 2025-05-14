@@ -5,53 +5,54 @@ alwaysApply: false
 ---
 # Controller Patterns
 
-## Rules for Controllers
+## Core Principles
 
 1. Controllers should ONLY:
 
-   - Define API routes and endpoints
+   - Define API routes and endpoints with Encore's `api` function
    - Handle request/response transformation
-   - Manage error handling through the shared `parseApiError` utility
-   - Call repository methods directly for CRUD operations
+   - Delegate operations to repositories or use cases
+   - Maintain clean separation from business logic
 
-2. No business logic in controllers
+2. Use middleware for error handling (no try/catch needed in controllers)
 
-3. Use HTTP status codes consistently through Encore's APIError:
+3. Use HTTP methods and status codes consistently:
 
-   - 200: Success
-   - 201: Created
-   - 204: No Content
-   - 400: Bad Request (ErrCode.InvalidArgument)
-   - 404: Not Found (ErrCode.NotFound)
-   - 409: Conflict (ErrCode.AlreadyExists)
-   - 500: Internal Server Error (ErrCode.Internal)
+   - GET: Retrieve resources
+   - POST: Create resources, perform operations and list entities with complex conditionals
+   - PUT: Update resources
+   - DELETE: Remove resources
+   - PATCH: Partial updates (less common)
 
-4. All endpoints must use shared error handling
+4. Expose endpoints with the `expose: true` option
 
-5. Use clear and consistent route naming:
+5. Use clear and consistent route naming patterns:
 
-   - GET /entities - List
-   - GET /entities/:id - Get One
-   - POST /entities - Create
-   - PUT /entities/:id - Update
-   - DELETE /entities/:id - Delete
+   - GET /resources/:id - Get one resource by ID
+   - GET /resources - List all resources (deprecated)
+   - POST /get-resources - Get filtered resources
+   - POST /get-resources/paginated - Get paginated resources
+   - POST /resources - Create resource
+   - PUT /resources/:id - Update resource
+   - DELETE /resources/:id - Delete resource
+   - GET /resources/search - Search resources
+   - POST /resources/search/paginated - Search resources with pagination
 
-6. Document all endpoints with clear descriptions
-
-7. Use descriptive names for endpoint functions (e.g., `createEntity`, `getEntity`, etc.)
+6. Document all endpoints with JSDoc comments
 
 ## Implementation Example
 
 ```typescript
-import { api } from 'encore.dev';
-import { APIError } from 'encore.dev/api';
-import { parseApiError } from '../../shared/errors';
+import { api } from 'encore.dev/api';
 import { countryRepository } from './countries.repository';
 import type {
   Country,
   Countries,
   CreateCountryPayload,
   UpdateCountryPayload,
+  PaginatedCountries,
+  PaginationParamsCountries,
+  CountriesQueryOptions,
 } from './countries.types';
 
 /**
@@ -61,15 +62,10 @@ import type {
  * @throws {APIError} If the country creation fails
  */
 export const createCountry = api(
-  { method: 'POST', path: '/countries' },
+  { expose: true, method: 'POST', path: '/countries' },
   async (params: CreateCountryPayload): Promise<Country> => {
-    try {
-      return await countryRepository.create(params);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
-  }
+    return await countryRepository.create(params);
+  },
 );
 
 /**
@@ -80,176 +76,303 @@ export const createCountry = api(
  * @throws {APIError} If the country is not found or retrieval fails
  */
 export const getCountry = api(
-  { method: 'GET', path: '/countries/:id' },
+  { expose: true, method: 'GET', path: '/countries/:id' },
   async ({ id }: { id: number }): Promise<Country> => {
-    try {
-      return await countryRepository.findOne(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
-  }
+    return await countryRepository.findOne(id);
+  },
 );
 
 /**
- * Retrieves all countries.
+ * Retrieves all countries without pagination (useful for dropdowns).
  * @returns {Promise<Countries>} An object containing an array of countries
- * @throws {APIError} If the retrieval fails
+ * @throws {APIError} If retrieval fails
  */
 export const listCountries = api(
-  { method: 'GET', path: '/countries' },
-  async (): Promise<Countries> => {
-    try {
-      return await countryRepository.findAll();
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
-  }
+  { expose: true, method: 'POST', path: '/get-countries' },
+  async (params: CountriesQueryOptions): Promise<Countries> => {
+    const countries = await countryRepository.findAll(params);
+    return {
+      countries,
+    };
+  },
+);
+
+/**
+ * Retrieves countries with pagination (useful for tables).
+ * @param params - Pagination parameters
+ * @returns {Promise<PaginatedCountries>} Paginated list of countries
+ * @throws {APIError} If retrieval fails
+ */
+export const listCountriesPaginated = api(
+  { expose: true, method: 'POST', path: '/get-countries/paginated' },
+  async (params: PaginationParamsCountries): Promise<PaginatedCountries> => {
+    return await countryRepository.findAllPaginated(params);
+  },
 );
 
 /**
  * Updates an existing country.
  * @param params - Object containing the country ID and update data
  * @param params.id - The ID of the country to update
- * @param params.data - The country data to update
  * @returns {Promise<Country>} The updated country
  * @throws {APIError} If the country is not found or update fails
  */
 export const updateCountry = api(
-  { method: 'PUT', path: '/countries/:id' },
-  async ({ id, ...data }: UpdateCountryPayload & { id: number }): Promise<Country> => {
-    try {
-      return await countryRepository.update(id, data);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
-  }
+  { expose: true, method: 'PUT', path: '/countries/:id' },
+  async ({
+    id,
+    ...data
+  }: UpdateCountryPayload & { id: number }): Promise<Country> => {
+    return await countryRepository.update(id, data);
+  },
 );
 
 /**
- * Deletes a country by its ID.
- * @param params - Object containing the country ID
- * @param params.id - The ID of the country to delete
- * @returns {Promise<Country>} The deleted country
- * @throws {APIError} If the country is not found or deletion fails
+ * Searches for countries by matching a search term against name and code.
+ * @param params - Search parameters
+ * @param params.term - The search term to match against country name and code
+ * @returns {Promise<Countries>} List of matching countries
+ * @throws {APIError} If search fails or no searchable fields are configured
  */
-export const deleteCountry = api(
-  { method: 'DELETE', path: '/countries/:id' },
-  async ({ id }: { id: number }): Promise<Country> => {
-    try {
-      return await countryRepository.delete(id);
-    } catch (error) {
-      const parsedError = parseApiError(error);
-      throw parsedError;
-    }
-  }
+export const searchCountries = api(
+  { expose: true, method: 'GET', path: '/countries/search' },
+  async ({ term }: { term: string }): Promise<Countries> => {
+    const countries = await countryRepository.search(term);
+    return {
+      countries,
+    };
+  },
+);
+
+/**
+ * Searches for countries with pagination by matching a search term against name and code.
+ * @param params - Search and pagination parameters
+ * @param params.term - The search term to match against country name and code
+ * @param params.page - Page number for pagination (optional, default: 1)
+ * @param params.pageSize - Number of items per page (optional, default: 10)
+ * @param params.orderBy - Sorting criteria (optional)
+ * @param params.filters - Additional filters to apply (optional)
+ * @returns {Promise<PaginatedCountries>} Paginated list of matching countries
+ * @throws {APIError} If search fails or no searchable fields are configured
+ */
+export const searchCountriesPaginated = api(
+  { expose: true, method: 'POST', path: '/countries/search/paginated' },
+  async ({
+    term,
+    ...params
+  }: PaginationParamsCountries & {
+    term: string;
+  }): Promise<PaginatedCountries> => {
+    return await countryRepository.searchPaginated(term, params);
+  },
 );
 ```
 
-## Best Practices
+## Controller Best Practices
 
-1. **Direct Repository Usage**
+1. **Feature-First Organization**
 
-   - Call repository methods directly for CRUD operations
-   - No need for intermediate use cases unless complex business logic is required
-   - Use repository instances as singletons
+   - Group all endpoints for a feature in a single controller file
+   - Keep endpoints for the same resource together
+   - Use descriptive function names matching operations
 
-2. **Error Handling**
+2. **Simplification**
 
-   - Use the shared `parseApiError` utility consistently
-   - Wrap all repository calls in try/catch blocks
-   - Transform domain errors to appropriate API errors
+   - Rely on middleware for error handling (no try/catch needed)
+   - Delegate directly to repositories for CRUD operations
+   - Call use cases for complex business operations
+   - Keep controller functions short and focused
 
-3. **Request/Response**
+3. **Type Safety**
 
-   - Strong typing with payload types
-   - Clear parameter documentation
-   - Consistent response structures
-   - Proper validation handling
+   - Import all types from feature's `.types.ts` file
+   - Use proper type annotations for parameters and returns
+   - Ensure consistent response structures
 
-4. **Code Structure**
+4. **Documentation**
 
-   - Keep controllers thin
-   - No business logic
-   - Consistent naming for endpoints
-   - Clear documentation
-   - Homogeneous code structure
+   - Document all endpoints with JSDoc comments
+   - Include descriptions of possible error scenarios
+   - Document parameters and return types
+   - Add notes for any special handling
 
-5. **When to Add a Use Case**
-   - Only add a use case when complex business logic is needed
-   - Examples of when to use a use case:
-     - Operations involving multiple repositories
-     - Complex data transformations
-     - Integration with external services
-     - Complex business rules processing
+5. **Use Case Integration**
 
-## Testing
+   - For CRUD operations: call repository directly
+   - For complex operations: delegate to use cases
+   - Example endpoints using use cases:
+     ```typescript
+     export const createRoute = api(
+       { method: 'POST', path: '/routes', expose: true },
+       async (params: CreateSimpleRoutePayload): Promise<Route> => {
+         return await routeUseCases.createSimpleRoute(params);
+       },
+     );
+     ```
 
-1. **Unit Tests**
-   - Mock repository calls
-   - Test error handling
-   - Verify correct API error mapping
-   - Test request/response transformation
+## Controller Testing
+
+We test controllers using integration tests with a real database instead of mocks. Vitest is used as the testing framework.
 
 ```typescript
-import { countryRepository } from './countries.repository';
-import { createCountry } from './countries.controller';
+import { expect, describe, test, afterAll, beforeAll } from 'vitest';
+import { createCountry, getCountry, updateCountry, deleteCountry } from './countries.controller';
 
-jest.mock('./countries.repository');
+describe('Countries Controller', () => {
+  // Test data and setup
+  const testCountry = {
+    name: 'Test Country',
+    code: 'TC',
+    active: true,
+  };
 
-describe('Country Controller', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+  // Variable to store created IDs for cleanup
+  let createdCountryId: number;
+
+  afterAll(async () => {
+    // Clean up test data
+    if (createdCountryId) {
+      try {
+        await deleteCountry({ id: createdCountryId });
+      } catch (error) {
+        console.log('Error cleaning up test country:', error);
+      }
+    }
   });
 
-  describe('createCountry', () => {
-    it('should create a country successfully', async () => {
-      const mockCountry = { id: 1, name: 'Test', code: 'TST' };
-      (countryRepository.create as jest.Mock).mockResolvedValue(mockCountry);
+  describe('success scenarios', () => {
+    test('should create a new country', async () => {
+      // Create a new country
+      const response = await createCountry(testCountry);
 
-      const result = await createCountry({ name: 'Test', code: 'TST' });
+      // Store the ID for later cleanup
+      createdCountryId = response.id;
 
-      expect(result).toEqual(mockCountry);
-      expect(countryRepository.create).toHaveBeenCalledWith({
-        name: 'Test',
-        code: 'TST',
-      });
+      // Assertions
+      expect(response).toBeDefined();
+      expect(response.id).toBeDefined();
+      expect(response.name).toBe(testCountry.name);
+      expect(response.code).toBe(testCountry.code);
     });
 
-    it('should handle validation errors', async () => {
-      const errorMessage = 'Country with this code already exists';
-      (countryRepository.create as jest.Mock).mockRejectedValue(new Error(errorMessage));
+    test('should retrieve a country by ID', async () => {
+      const response = await getCountry({ id: createdCountryId });
 
-      await expect(createCountry({ name: 'Test', code: 'TST' })).rejects.toThrow();
+      expect(response).toBeDefined();
+      expect(response.id).toBe(createdCountryId);
+      expect(response.name).toBe(testCountry.name);
+    });
+
+    test('should update a country', async () => {
+      const updatedName = 'Updated Test Country';
+      const response = await updateCountry({
+        id: createdCountryId,
+        name: updatedName,
+      });
+
+      expect(response).toBeDefined();
+      expect(response.id).toBe(createdCountryId);
+      expect(response.name).toBe(updatedName);
+    });
+  });
+
+  describe('error scenarios', () => {
+    test('should handle not found errors', async () => {
+      await expect(getCountry({ id: 9999 })).rejects.toThrow();
     });
   });
 });
 ```
 
-## Common Patterns
+## Common Controller Patterns
 
-1. **Route Organization**
+### Standard Endpoints for Resources
 
-   - Group related endpoints together
-   - Use consistent route naming
-   - Follow REST conventions
+All resources should implement these standard endpoints:
 
-2. **Parameter Handling**
+1. **Create Resource**
+   ```typescript
+   export const createResource = api(
+     { expose: true, method: 'POST', path: '/resources' },
+     async (params: CreateResourcePayload): Promise<Resource> => {
+       return await resourceRepository.create(params);
+     },
+   );
+   ```
 
-   - Validate required parameters
-   - Use proper types for parameters
-   - Document parameter constraints
+2. **Get Resource by ID**
+   ```typescript
+   export const getResource = api(
+     { expose: true, method: 'GET', path: '/resources/:id' },
+     async ({ id }: { id: number }): Promise<ResourceWithRelations> => {
+       return await resourceRepository.findOneWithRelations(id);
+     },
+   );
+   ```
 
-3. **Response Formatting**
+3. **List Resources (with filters)**
+   ```typescript
+   export const listResources = api(
+     { expose: true, method: 'POST', path: '/get-resources' },
+     async (params: ResourceQueryOptions): Promise<Resources> => {
+       const resources = await resourceRepository.findAll(params);
+       return { resources };
+     },
+   );
+   ```
 
-   - Consistent response structures
-   - Proper error responses
-   - Clear success messages
+4. **List Resources with Pagination**
+   ```typescript
+   export const listResourcesPaginated = api(
+     { expose: true, method: 'POST', path: '/get-resources/paginated' },
+     async (params: PaginationParamsResources): Promise<PaginatedResources> => {
+       return await resourceRepository.findAllPaginated(params);
+     },
+   );
+   ```
 
-4. **Documentation**
-   - Clear endpoint descriptions
-   - Parameter documentation
-   - Response type documentation
-   - Error scenarios documentation
+5. **Update Resource**
+   ```typescript
+   export const updateResource = api(
+     { expose: true, method: 'PUT', path: '/resources/:id' },
+     async ({ id, ...data }: UpdateResourcePayload & { id: number }): Promise<Resource> => {
+       return await resourceRepository.update(id, data);
+     },
+   );
+   ```
+
+6. **Delete Resource**
+   ```typescript
+   export const deleteResource = api(
+     { expose: true, method: 'DELETE', path: '/resources/:id' },
+     async ({ id }: { id: number }): Promise<Resource> => {
+       return await resourceRepository.delete(id);
+     },
+   );
+   ```
+
+7. **Search Resources**
+   ```typescript
+   export const searchResources = api(
+     { expose: true, method: 'GET', path: '/resources/search' },
+     async ({ term }: { term: string }): Promise<Resources> => {
+       const resources = await resourceRepository.search(term);
+       return { resources };
+     },
+   );
+   ```
+
+8. **Search Resources with Pagination**
+   ```typescript
+   export const searchResourcesPaginated = api(
+     { expose: true, method: 'POST', path: '/resources/search/paginated' },
+     async ({
+       term,
+       ...params
+     }: PaginationParamsResources & {
+       term: string;
+     }): Promise<PaginatedResources> => {
+       return await resourceRepository.searchPaginated(term, params);
+     },
+   );
+   ```

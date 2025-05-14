@@ -18,11 +18,14 @@ Use cases in our Encore application are optional service layers that encapsulate
    - Additional validations beyond basic CRUD are needed
    - Operations involve multiple steps or transactions
    - Business rules need to be enforced
+   - Data needs to be transformed between related entities
+   - Operations need to work across entity boundaries
 
 2. **Skip Use Cases When:**
    - Only basic CRUD operations are needed
    - No complex business logic is involved
    - Single repository operations are sufficient
+   - No data transformation or cross-entity logic is required
 
 ## Rules for Use Cases
 
@@ -33,21 +36,24 @@ Use cases in our Encore application are optional service layers that encapsulate
    - Cross-repository operations
    - Advanced validation rules
    - Domain-specific business rules
+   - Transaction management across multiple repositories
 
 2. Use cases should NOT:
 
    - Directly access the database (use repositories instead)
    - Duplicate repository logic
-   - Handle basic CRUD operations
+   - Handle basic CRUD operations without additional complexity
 
 3. Keep methods focused and descriptive:
 
    - Use clear method naming that describes the business operation
    - Keep methods small and single-purpose
    - Document complex business rules with JSDoc
+   - Define private helper functions for reusable logic
 
 4. Error handling:
 
+   - Define a constant object for domain-specific error messages
    - Use appropriate error classes from shared error utilities
    - Add context to repository errors when needed
    - Handle business rule violations explicitly
@@ -57,10 +63,18 @@ Use cases in our Encore application are optional service layers that encapsulate
 ## Implementation Example
 
 ```typescript
-import { NotFoundError, ValidationError } from '../../shared/errors';
+import { ValidationError } from '../../shared/errors';
 import { createProductRepository } from '../products/product.repository';
 import { createInventoryRepository } from '../inventory/inventory.repository';
 import type { CreateOrderPayload, Order, OrderItem } from './order.types';
+
+// Define domain-specific error messages as constants
+const ORDER_ERRORS = {
+  INSUFFICIENT_STOCK: (product: string) => `Insufficient stock for product: ${product}`,
+  ALREADY_CANCELLED: 'Order is already cancelled',
+  CANNOT_CANCEL_DELIVERED: 'Cannot cancel a delivered order',
+  VALIDATION_FAILED: 'Order validation failed'
+};
 
 /**
  * Creates a use case for managing orders with complex business logic
@@ -69,6 +83,7 @@ import type { CreateOrderPayload, Order, OrderItem } from './order.types';
 export const createOrderUseCase = () => {
   const productRepository = createProductRepository();
   const inventoryRepository = createInventoryRepository();
+  const orderRepository = createOrderRepository();
 
   /**
    * Validates order items availability
@@ -84,7 +99,7 @@ export const createOrderUseCase = () => {
       const inventory = await inventoryRepository.findByProductId(item.productId);
 
       if (!inventory || inventory.quantity < item.quantity) {
-        throw new ValidationError(`Insufficient stock for product: ${product.name}`);
+        throw new ValidationError(ORDER_ERRORS.INSUFFICIENT_STOCK(product.name));
       }
     }
   };
@@ -95,8 +110,11 @@ export const createOrderUseCase = () => {
    * @param trx Transaction instance
    */
   const updateInventoryLevels = async (items: OrderItem[], trx?: unknown): Promise<void> => {
+    // Create scoped repository with the transaction
+    const txInventoryRepo = inventoryRepository.withTransaction(trx);
+
     for (const item of items) {
-      await inventoryRepository.decrementStock(item.productId, item.quantity, trx);
+      await txInventoryRepo.decrementStock(item.productId, item.quantity);
     }
   };
 
@@ -112,17 +130,21 @@ export const createOrderUseCase = () => {
       await validateOrderItems(data.items);
 
       // Start transaction for order creation and inventory updates
-      const order = await orderRepository.transaction(async (trx) => {
-        // Create the order
-        const newOrder = await orderRepository.create(data, trx);
+      return orderRepository
+        .transaction(async (txOrderRepo, trx) => {
+          // Create the order
+          const newOrder = await txOrderRepo.create(data);
 
-        // Update inventory for each item
-        await updateInventoryLevels(data.items, trx);
+          // Update inventory for each item
+          await updateInventoryLevels(data.items, trx);
 
-        return newOrder;
-      });
-
-      return order;
+          // Return the order ID for post-processing
+          return newOrder.id;
+        })
+        .then((orderId) => {
+          // After transaction completes successfully, retrieve order with full details
+          return orderRepository.findOneWithDetails(orderId);
+        });
     } catch (error) {
       if (error instanceof Error) {
         throw new ValidationError(error.message);
@@ -133,34 +155,96 @@ export const createOrderUseCase = () => {
 
   /**
    * Cancels an order and restores inventory
+   * @param orderId The ID of the order to cancel
+   * @returns The cancelled order
+   * @throws {ValidationError} If the order cannot be cancelled
    */
   const cancelOrder = async (orderId: number): Promise<Order> => {
     const order = await orderRepository.findOne(orderId);
 
     if (order.status === 'CANCELLED') {
-      throw new ValidationError('Order is already cancelled');
+      throw new ValidationError(ORDER_ERRORS.ALREADY_CANCELLED);
     }
 
     if (order.status === 'DELIVERED') {
-      throw new ValidationError('Cannot cancel a delivered order');
+      throw new ValidationError(ORDER_ERRORS.CANNOT_CANCEL_DELIVERED);
     }
 
-    return orderRepository.transaction(async (trx) => {
-      // Update order status
-      const cancelledOrder = await orderRepository.update(orderId, { status: 'CANCELLED' }, trx);
+    return orderRepository
+      .transaction(async (txOrderRepo, trx) => {
+        // Create scoped repository with the transaction
+        const txInventoryRepo = inventoryRepository.withTransaction(trx);
 
-      // Restore inventory levels
-      for (const item of order.items) {
-        await inventoryRepository.incrementStock(item.productId, item.quantity, trx);
-      }
+        // Update order status
+        await txOrderRepo.update(orderId, { status: 'CANCELLED' });
 
-      return cancelledOrder;
-    });
+        // Restore inventory levels
+        for (const item of order.items) {
+          await txInventoryRepo.incrementStock(item.productId, item.quantity);
+        }
+
+        // Return the order ID for post-processing
+        return orderId;
+      })
+      .then((orderId) => {
+        // After transaction completes successfully, retrieve order with full details
+        return orderRepository.findOneWithDetails(orderId);
+      });
+  };
+
+  /**
+   * Creates a compound order from multiple existing orders
+   * @param orderIds Array of order IDs to combine
+   * @param customerId Customer ID for the compound order
+   * @returns The created compound order
+   * @throws {ValidationError} If orders cannot be combined
+   */
+  const createCompoundOrder = async (
+    orderIds: number[],
+    customerId: number
+  ): Promise<Order> => {
+    // Validate the orders exist and are valid for combining
+    const orders = await Promise.all(
+      orderIds.map(id => orderRepository.findOne(id))
+    );
+
+    // Validate all orders belong to the same customer
+    if (!orders.every(order => order.customerId === customerId)) {
+      throw new ValidationError('Orders must belong to the same customer');
+    }
+
+    // Create compound order transaction
+    return orderRepository
+      .transaction(async (txOrderRepo, trx) => {
+        // Create compound order
+        const compoundOrder = await txOrderRepo.create({
+          customerId,
+          status: 'PENDING',
+          isCompound: true,
+          items: orders.flatMap(order => order.items),
+          // Additional compound order fields
+        });
+
+        // Update source orders
+        for (const order of orders) {
+          await txOrderRepo.update(order.id, {
+            parentOrderId: compoundOrder.id,
+            status: 'COMPOUNDED'
+          });
+        }
+
+        return compoundOrder.id;
+      })
+      .then((orderId) => {
+        // After transaction completes, retrieve compound order with full details
+        return orderRepository.findOneWithFullDetails(orderId);
+      });
   };
 
   return {
     createOrder,
     cancelOrder,
+    createCompoundOrder
   };
 };
 
@@ -186,27 +270,45 @@ export const orderUseCase = createOrderUseCase();
 
 3. **Error Handling**
 
-   - Use domain-specific errors
+   - Define domain-specific error messages as constants
+   - Use appropriate error classes (ValidationError, NotFoundError, etc.)
    - Add context to repository errors
-   - Handle business rule violations
+   - Handle business rule violations with clear messaging
    - Maintain transaction integrity
 
-4. **Code Organization**
+4. **Transaction Management**
 
-   - Keep methods focused
-   - Use clear naming
-   - Document complex logic
-   - Follow single responsibility principle
+   - Use the primary repository's transaction for the main entity
+   - Use the `.withTransaction(tx)` pattern for secondary repositories
+   - Structure transaction blocks with clear steps
+   - Return minimal data from transaction blocks (usually just IDs)
+   - Use `.then()` for post-transaction retrieval of complete entities
 
-5. **Testing**
+5. **Compound Operations**
+
+   - Implement patterns for combining related entities
+   - Use clear validation before starting transactions
+   - Define relationships between composite and component entities
+   - Maintain data integrity across entity boundaries
+
+6. **Code Organization**
+
+   - Keep methods focused on a single responsibility
+   - Use clear, descriptive naming
+   - Document complex logic with JSDoc
+   - Group related functions together
+
+7. **Testing**
 
    - Mock repository dependencies
    - Test business rules thoroughly
    - Cover error scenarios
    - Verify transaction rollbacks
+   - Test compound operations carefully
 
-6. **Performance**
-   - Use transactions appropriately
+8. **Performance**
+   - Use transactions efficiently
    - Optimize database operations
-   - Handle bulk operations efficiently
-   - Consider caching when needed
+   - Handle bulk operations in batches
+   - Consider caching for frequently accessed data
+   - Minimize redundant database calls

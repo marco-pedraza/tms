@@ -7,215 +7,283 @@ alwaysApply: false
 
 ## Overview
 
-This document defines the standard error handling patterns in our Encore application. We use a centralized approach with consistent error types and handling across all layers of the application.
+This document defines the centralized error handling approach used in our Encore application. We use a middleware-based system that automatically transforms domain errors to appropriate API responses.
 
-## Error Types
+## Centralized Error Handling
 
-### Base Error Classes
+### Error Types
+
+We use domain-specific error classes imported from base utilities:
 
 ```typescript
-// shared/errors.ts
-import { APIError, ErrCode } from 'encore.dev/api';
+// From shared/errors.ts
+import {
+  NotFoundError,
+  ValidationError,
+  DuplicateError,
+  ForeignKeyError
+} from '@repo/base-repo';
+import { InvalidStateTransitionError } from '@repo/state-machine';
 
-/**
- * Base error for resources not found
- */
-export class NotFoundError extends Error {
-  constructor(message: string = 'Resource not found') {
+// Custom authentication/authorization errors
+export class AuthenticationError extends Error {
+  constructor(message: string = 'Authentication failed') {
     super(message);
-    this.name = 'NotFoundError';
+    this.name = 'AuthenticationError';
   }
 }
 
-/**
- * Base error for validation failures
- */
-export class ValidationError extends Error {
-  constructor(message: string) {
+export class UnauthorizedError extends Error {
+  constructor(message: string = 'Access denied: insufficient permissions') {
     super(message);
-    this.name = 'ValidationError';
-  }
-}
-
-/**
- * Base error for duplicate resource errors
- */
-export class DuplicateError extends Error {
-  constructor(message: string = 'Resource already exists') {
-    super(message);
-    this.name = 'DuplicateError';
+    this.name = 'UnauthorizedError';
   }
 }
 ```
 
-### Error Mapping
+### Standardized API Error Factory
+
+We provide a utility for creating consistent API errors:
 
 ```typescript
-/**
- * Maps domain errors to Encore APIError with appropriate codes
- * @param error - The error to handle
- * @returns {APIError} Mapped API error
- */
+export const errors = {
+  notFound: (message = 'Resource not found', details?: Record<string, any>) =>
+    APIError.notFound(message).withDetails(details ?? {}),
+
+  invalidArgument: (message = 'Invalid argument provided', details?) =>
+    APIError.invalidArgument(message).withDetails(details ?? {}),
+
+  alreadyExists: (message = 'Resource already exists', details?) =>
+    APIError.alreadyExists(message).withDetails(details ?? {}),
+
+  // ...other API error factories
+};
+```
+
+### Error Mapping Function
+
+The central error mapping function converts domain errors to API errors:
+
+```typescript
 export const parseApiError = (error: unknown): APIError => {
   if (error instanceof NotFoundError) {
-    return new APIError(ErrCode.NotFound, error.message);
+    return errors.notFound(error.message);
   }
   if (error instanceof ValidationError) {
-    return new APIError(ErrCode.InvalidArgument, error.message);
+    return errors.invalidArgument(error.message);
   }
   if (error instanceof DuplicateError) {
-    return new APIError(ErrCode.AlreadyExists, error.message);
+    return errors.alreadyExists(error.message);
   }
-  return new APIError(ErrCode.Internal, 'Internal server error');
+  if (error instanceof ForeignKeyError) {
+    // Map foreign key errors to NotFound for consistent API behavior
+    return errors.notFound(error.message);
+  }
+  if (error instanceof AuthenticationError) {
+    return errors.unauthenticated(error.message);
+  }
+  if (error instanceof UnauthorizedError) {
+    return errors.permissionDenied(error.message);
+  }
+  if (error instanceof InvalidStateTransitionError) {
+    return errors.failedPrecondition(error.message);
+  }
+  return errors.internal(
+    error instanceof Error ? error.message : 'An unexpected error occurred',
+  );
 };
+```
+
+## Middleware-Based Error Handling
+
+Our application uses a middleware to centralize error handling across all endpoints:
+
+```typescript
+// shared/errors.middleware.ts
+export const errorsMiddleware = middleware(
+  {},
+  async (req: MiddlewareRequest, next: Next) => {
+    try {
+      // Continue to the next middleware or controller
+      return await next(req);
+    } catch (error) {
+      // Get request metadata for logging
+      const apiCallMeta = req.requestMeta as APICallMeta;
+      const path = apiCallMeta.pathAndQuery || 'unknown';
+
+      // Log the error with structured metadata
+      logError(error, path, apiCallMeta.api.service, apiCallMeta.headers.host);
+
+      // Report error to monitoring system (if applicable)
+      if (!shouldExcludeFromSentry(error)) {
+        captureException(error, {
+          path,
+          service: apiCallMeta.api.service,
+          // Additional context
+        });
+      }
+
+      // If the error is already an APIError, rethrow it
+      if (error instanceof Error && error.name === 'APIError') {
+        throw error;
+      }
+
+      // Otherwise, transform it to the appropriate APIError
+      throw parseApiError(error);
+    }
+  },
+);
 ```
 
 ## Usage Patterns
 
 ### 1. In Repositories
 
-Repositories throw domain-specific errors for data access issues:
+Repositories use domain-specific errors directly from `@repo/base-repo`:
 
 ```typescript
 // feature/repository.ts
-export const createFeatureRepository = () => {
-  const findOne = async (id: number): Promise<Entity> => {
-    const [entity] = await db.select().from(schema).where(eq(schema.id, id)).limit(1);
+export function createFeatureRepository() {
+  // Base repository provides standard CRUD operations with error handling
 
-    if (!entity) {
-      throw new NotFoundError('Entity not found');
+  // Add custom methods that throw domain-specific errors
+  async function findOneWithRelations(id: number) {
+    const result = await db.query.features.findFirst({
+      where: eq(features.id, id),
+      with: { relatedEntity: true },
+    });
+
+    if (!result) {
+      throw new NotFoundError(`Feature with id ${id} not found`);
     }
 
-    return entity;
-  };
-
-  const validateUniqueness = async (name: string, excludeId?: number): Promise<void> => {
-    const existing = await findByName(name);
-    if (existing && existing.id !== excludeId) {
-      throw new DuplicateError('Entity with this name already exists');
-    }
-  };
+    return result;
+  }
 
   return {
-    findOne,
-    validateUniqueness,
-    // ... other methods
+    ...baseRepository,
+    findOneWithRelations,
   };
-};
+}
 ```
 
 ### 2. In Controllers
 
-Controllers catch domain errors and map them to API errors:
+With middleware-based error handling, controllers are simplified:
 
 ```typescript
 // feature/controller.ts
 export const getEntity = api(
-  { method: 'GET', path: '/entities/:id' },
+  { method: 'GET', path: '/entities/:id', expose: true },
   async ({ id }: { id: number }): Promise<Entity> => {
-    try {
-      return await entityRepository.findOne(id);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    // No try/catch needed - errors propagate to middleware
+    return await entityRepository.findOne(id);
   }
 );
 
 export const createEntity = api(
-  { method: 'POST', path: '/entities' },
+  { method: 'POST', path: '/entities', expose: true },
   async (params: CreateEntityPayload): Promise<Entity> => {
-    try {
-      return await entityRepository.create(params);
-    } catch (error) {
-      throw parseApiError(error);
-    }
+    // No try/catch needed - errors propagate to middleware
+    return await entityRepository.create(params);
   }
 );
 ```
 
-### 3. In Use Cases (When Used)
+### 3. In Use Cases
 
-Use cases add business context to errors:
+Use cases throw domain-specific errors to indicate business rule violations:
 
 ```typescript
-// feature/usecase.ts
-export const createFeatureUseCase = () => {
-  const processComplexOperation = async (data: ComplexPayload) => {
-    try {
-      // Validate business rules
-      if (!isValidOperation(data)) {
-        throw new ValidationError('Invalid operation parameters');
-      }
-
-      // Coordinate multiple repositories
-      const result = await repository.transaction(async (trx) => {
-        // ... complex logic
-      });
-
-      return result;
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        throw error;
-      }
-      throw new ValidationError('Operation failed: ' + error.message);
+// feature/use-cases.ts
+export function createFeatureUseCases() {
+  async function complexOperation(data) {
+    // Validate business rules
+    if (!isValidOperation(data)) {
+      throw new ValidationError('Operation not allowed: invalid parameters');
     }
-  };
 
-  return {
-    processComplexOperation,
-  };
-};
+    // For domain-specific error messages, use constants
+    const ERRORS = {
+      INVALID_CONNECTION: (idA, idB) =>
+        `Invalid connection between ${idA} and ${idB}: mismatched terminals`,
+    };
+
+    if (someBusinessRuleViolation) {
+      throw new ValidationError(ERRORS.INVALID_CONNECTION(data.sourceId, data.targetId));
+    }
+
+    // Transactions with error handling
+    return repository.transaction(async (txRepo, tx) => {
+      // Operation logic using txRepo
+      // Errors will cause transaction rollback
+    });
+  }
+
+  return { complexOperation };
+}
 ```
 
 ## Error Mapping Table
 
-| Domain Error    | API Error Code          | HTTP Status | Use Case                    |
-| --------------- | ----------------------- | ----------- | --------------------------- |
-| NotFoundError   | ErrCode.NotFound        | 404         | Resource doesn't exist      |
-| ValidationError | ErrCode.InvalidArgument | 400         | Invalid input/parameters    |
-| DuplicateError  | ErrCode.AlreadyExists   | 409         | Unique constraint violation |
-| Other Errors    | ErrCode.Internal        | 500         | Unexpected errors           |
+| Domain Error              | API Error Code          | HTTP Status | Use Case                        |
+| ------------------------- | ----------------------- | ----------- | ------------------------------- |
+| NotFoundError             | ErrCode.NotFound        | 404         | Resource doesn't exist          |
+| ValidationError           | ErrCode.InvalidArgument | 400         | Invalid input/parameters        |
+| DuplicateError            | ErrCode.AlreadyExists   | 409         | Unique constraint violation     |
+| ForeignKeyError           | ErrCode.NotFound        | 404         | Referenced entity doesn't exist |
+| AuthenticationError       | ErrCode.Unauthenticated | 401         | Authentication failure          |
+| UnauthorizedError         | ErrCode.PermissionDenied| 403         | Insufficient permissions        |
+| InvalidStateTransitionError | ErrCode.FailedPrecondition | 400   | Invalid state/operation         |
+| Other Errors              | ErrCode.Internal        | 500         | Unexpected errors               |
 
-## Best Practices
+## Sentry Integration
 
-1. **Error Creation**
+We use Sentry for error tracking with selective error reporting:
 
-   - Use descriptive error messages
-   - Include relevant context
-   - Keep messages user-friendly
-   - Avoid exposing internal details
+```typescript
+// List of error types that should not be sent to Sentry
+const EXCLUDED_SENTRY_ERRORS = [
+  'NotFoundError',   // Resource not found errors (404)
+  'ValidationError', // Validation errors (400)
+  'DuplicateError',  // Duplicate resource errors (409)
+];
 
-2. **Error Handling**
+// Checks if an error should be excluded from Sentry reporting
+function shouldExcludeFromSentry(error: Error | unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return EXCLUDED_SENTRY_ERRORS.includes(error.name);
+}
+```
 
-   - Catch errors at appropriate levels
-   - Transform errors consistently
-   - Log errors with context
-   - Maintain error hierarchy
+## Error Handling Best Practices
 
-3. **Repository Layer**
+1. **Domain Error Usage**
+   - Use domain-specific errors from `@repo/base-repo`
+   - Throw `NotFoundError` when entities don't exist
+   - Throw `ValidationError` for validation failures
+   - Throw `DuplicateError` for unique constraint violations
+   - Use meaningful error messages with specific details
 
-   - Throw specific domain errors
-   - Include relevant error context
-   - Handle database errors appropriately
-   - Validate data constraints
+2. **Business Rule Validation**
+   - Define error message constants in feature scope
+   - Use error message templates with specific values
+   - Throw `ValidationError` for business rule violations
 
-4. **Controller Layer**
+3. **Controller Implementation**
+   - Keep controllers simple and lean
+   - Let middleware handle error transformation
+   - No need for try/catch blocks in most cases
+   - Document possible error scenarios in JSDoc
 
-   - Use parseApiError consistently
-   - Handle all possible errors
-   - Return appropriate status codes
-   - Keep error responses consistent
+4. **Use Case Error Handling**
+   - Focus on business-specific error scenarios
+   - Use meaningful error messages with context
+   - Define error constants near relevant operations
+   - Ensure error messages are user-friendly
 
-5. **Use Case Layer**
-
-   - Add business context to errors
-   - Handle complex validation errors
-   - Maintain transaction integrity
-   - Provide clear error messages
-
-6. **General Guidelines**
-   - Never expose stack traces
-   - Log errors for debugging
-   - Use consistent error patterns
-   - Document error scenarios
-   - Test error cases thoroughly
+5. **General Guidelines**
+   - Never expose sensitive information in errors
+   - Use structured logging for all errors
+   - Include request context in error logs
+   - Test error cases in integration tests

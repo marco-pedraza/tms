@@ -3,7 +3,6 @@ description: Structure and patterns for features in Encore-based applications
 globs: **/server/**
 alwaysApply: false
 ---
-
 # Feature Structure Pattern
 
 ## Overview
@@ -18,9 +17,12 @@ apps/
     ├── db/                   # Root-level database configuration and aggregation
     │   ├── database.ts       # Database connection configuration
     │   ├── schema.ts         # Schema exports aggregation
-    │   ├── index.ts         # Database exports aggregation
-    │   ├── migrations/       # Database migrations
-    │   └── schemas/          # Reserved for shared schemas (if needed)
+    │   ├── index.ts          # Database exports aggregation
+    │   ├── scripts/          # Database scripts (seeding, etc.)
+    │   │   ├── seed-admin.ts        # Admin user seeding
+    │   │   ├── seed-inventory.ts    # Inventory data seeding
+    │   │   └── seed-permissions.ts  # Permissions seeding
+    │   └── migrations/       # Database migrations
     ├── inventory/            # Subsystem for inventory management
     │   ├── countries/        # Feature: countries management
     │   │   ├── countries.repository.ts       # Data access layer (Repository)
@@ -38,8 +40,7 @@ apps/
     │   └── ...
     └── shared/               # Utilities shared across subsystems
         ├── errors.ts         # Centralized error handling
-        ├── validators.ts     # Shared validation utilities
-        └── base-repository.ts # Base repository implementation
+        ├── types.ts          # Shared utility types
 ```
 
 ## Feature Structure
@@ -47,13 +48,19 @@ apps/
 Each feature follows this structure:
 
 ```
-feature-name/                 # Example: countries/
-├── feature-name.repository.ts        # Data access layer (Repository)
-├── feature-name.controller.ts        # Encore API endpoints
-├── feature-name.types.ts             # Type definitions
-├── feature-name.schema.ts            # Database schema definition
-└── feature-name.controller.spec.ts   # Unit tests for controller
+feature-name/                        # Example: countries/
+├── feature-name.repository.ts       # Data access layer (Repository)
+├── feature-name.controller.ts       # Encore API endpoints
+├── feature-name.types.ts            # Type definitions
+├── feature-name.schema.ts           # Database schema definition
+├── feature-name.use-cases.ts        # Complex business logic (optional)
+└── feature-name.controller.spec.ts  # Unit tests for controller
 ```
+
+Not all files are required for every feature:
+
+- **Simple features** (like Countries): Only need repository, controller, types, schema
+- **Complex features** (like Routes or Buses): Need additional use-cases.ts for business logic
 
 ## Repository Pattern
 
@@ -68,16 +75,75 @@ The Repository pattern is used for features that primarily deal with CRUD operat
 
 The Repository pattern should be the default choice for all features. Most features will only need a repository since they primarily deal with CRUD operations and data validation.
 
-### When to Add a Handler
+### When to Add a Use Case
 
-Handlers are optional and should only be added when:
+Use cases are optional and should only be added when:
 
 - Complex business logic that goes beyond CRUD operations is needed
 - Operations need to coordinate multiple repositories
 - Feature requires orchestration of multiple services or external integrations
 - There's significant data transformation or business rules processing
+- Operations require transactional integrity across multiple entities
+- Features need compound operations that create or manipulate multiple related entities
+- Complex validation rules that span multiple entities are required
 
-In most cases, a repository alone is sufficient. Only create a handler when there's a clear need for complex business logic that can't be handled appropriately in the repository layer.
+In most cases, a repository alone is sufficient. Only create a use case when there's a clear need for complex business logic that can't be handled appropriately in the repository layer.
+
+Use cases should be implemented in a separate `feature-name.use-cases.ts` file with the following structure:
+
+```typescript
+import { featureRepository } from './feature-name.repository';
+import { relatedRepository } from '../related-feature/related-feature.repository';
+import { ValidationError } from '../../shared/errors';
+import type { FeatureType, RelatedType } from './feature-name.types';
+
+// Feature-specific error messages
+const FEATURE_ERRORS = {
+  VALIDATION_ERROR: 'Specific validation error message',
+  RELATION_ERROR: 'Error message about relations',
+  // Other domain-specific error messages
+};
+
+/**
+ * Creates use cases for the feature
+ * @returns Object with feature-specific use case functions
+ */
+export function createFeatureUseCases() {
+  // Initialize repositories
+  const repository = featureRepository;
+  const relatedRepo = relatedRepository;
+
+  // Private helper functions
+  async function validateSomething(data) {
+    // Validation logic
+  }
+
+  // Public use case functions
+  async function complexOperation(data) {
+    // Use repository.transaction for transactional operations
+    return repository.transaction(async function(txRepo, tx) {
+      // Use withTransaction for related repositories
+      const txRelatedRepo = relatedRepo.withTransaction(tx);
+
+      // Perform operations
+
+      // Return minimal data (usually just ID)
+      return result.id;
+    }).then(function(id) {
+      // After transaction completes, fetch complete entity
+      return repository.findOneWithDetails(id);
+    });
+  }
+
+  return {
+    complexOperation,
+    // Other public use case functions
+  };
+}
+
+// Export the use case instance
+export const featureUseCases = createFeatureUseCases();
+```
 
 ## Type Structure
 

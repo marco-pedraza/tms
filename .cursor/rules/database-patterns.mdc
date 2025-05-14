@@ -7,7 +7,20 @@ alwaysApply: false
 
 ## Overview
 
-This document outlines the database structure and patterns in our application, following the Repository pattern and Locality of Behavior (LoB) principle. Database schemas are co-located with their respective features, while shared database configuration and base repository implementations are maintained at the root level.
+This document defines database patterns in our Encore application, following the Repository pattern and Locality of Behavior (LoB) principle. Each feature defines its schema in its own directory, while a central schema.ts file aggregates them for migrations.
+
+### Key Principles:
+
+1. **Complete Base Repository**: Base implementation encapsulates CRUD operations and common functionality. Don't create unnecessary wrappers.
+
+2. **Minimal Extension**: Only implement custom methods when needed:
+   - Loading relationships (with Drizzle's relations)
+   - Validating domain-specific rules
+   - Transforming data before/after database operations
+
+3. **Function Declarations**: Use `function` declarations instead of arrow functions
+
+4. **Configuration Over Implementation**: Use options to configure behavior rather than overriding methods
 
 ## Directory Structure
 
@@ -27,50 +40,257 @@ apps/server/
 
 ## Core Components
 
-### 1. Base Repository Implementation
+### 1. Base Repository Implementation and Available Methods
+
+The base repository provides a complete set of CRUD operations and common functionality. **You should not re-implement these methods** in feature repositories unless you need to add specific validation or transformation logic.
 
 ```typescript
-// shared/base-repository.ts
-import { db } from '../db';
-import type { PgTable } from 'drizzle-orm/pg-core';
-import { NotFoundError, DuplicateError } from '../shared/errors';
-import { eq } from 'drizzle-orm';
+// Available methods in the base repository:
+interface BaseRepository<TEntity, TCreatePayload, TUpdatePayload> {
+  // Core CRUD operations
+  findOne(id: number): Promise<TEntity>;
+  create(data: TCreatePayload): Promise<TEntity>;
+  update(id: number, data: TUpdatePayload): Promise<TEntity>;
+  delete(id: number): Promise<TEntity>;
 
-export const createBaseRepository = <
-  TEntity,
-  TCreatePayload,
-  TUpdatePayload,
-  TSchema extends PgTable,
->(
-  schema: TSchema,
-  entityName: string
-) => {
-  const findOne = async (id: number): Promise<TEntity> => {
-    const [entity] = await db.select().from(schema).where(eq(schema.id, id)).limit(1);
+  // Collection operations
+  findAll(params?: QueryOptions): Promise<TEntity[]>;
+  findAllPaginated(params?: PaginationParams): Promise<PaginatedResult<TEntity>>;
 
-    if (!entity) {
-      throw new NotFoundError(`${entityName} not found`);
-    }
+  // Search operations
+  search(term: string): Promise<TEntity[]>;
+  searchPaginated(term: string, params?: PaginationParams): Promise<PaginatedResult<TEntity>>;
 
-    return entity as TEntity;
-  };
+  // Transaction support
+  transaction<T>(callback: (txRepo: any, tx: PgTransaction) => Promise<T>): Promise<T>;
+  withTransaction(tx: PgTransaction): BaseRepository<TEntity, TCreatePayload, TUpdatePayload>;
 
-  const create = async (data: TCreatePayload): Promise<TEntity> => {
-    const [entity] = await db.insert(schema).values(data).returning();
-    return entity as TEntity;
-  };
+  // Query helpers
+  buildQueryExpressions(params?: QueryOptions): { baseWhere: SQL, baseOrderBy: SQL };
+}
 
-  // ... other base operations
+export interface BaseRepositoryOptions<TSchema> {
+  searchableFields?: TSchema[];
+  orderByField?: TSchema;
+  orderDirection?: 'asc' | 'desc';
+}
 
-  return {
-    findOne,
-    create,
-    // ... other operations
-  };
-};
 ```
 
-### 2. Feature Schema Definition
+### 2. Creating Feature Repositories
+
+When creating a feature repository, follow these guidelines:
+
+```typescript
+import { featureSchema } from './feature.schema';
+import type { FeatureEntity, CreateFeaturePayload, UpdateFeaturePayload } from './feature.types';
+import { createBaseRepository } from '@repo/base-repo';
+import { db } from '../db-service';
+
+// Use function declaration instead of arrow functions
+export function createFeatureRepository() {
+  // Configure the base repository with types and options
+  const baseRepository = createBaseRepository<
+    FeatureEntity,                // Import from types.ts, don't redefine
+    CreateFeaturePayload,         // Import from types.ts
+    UpdateFeaturePayload,         // Import from types.ts
+    typeof featureSchema          // Schema from schema.ts
+  >(db, featureSchema, 'Feature', {
+    searchableFields: [featureSchema.name], // Fields for text search
+  });
+
+  // ONLY add custom methods when needed, such as:
+  // 1. Loading relationships (with Drizzle's "with" functionality)
+  async function findOneWithRelations(id: number) {
+    const result = await db.query.features.findFirst({
+      where: eq(featureSchema.id, id),
+      with: {
+        relatedEntity: true,
+      },
+    });
+
+    if (!result) throw new NotFoundError(`Feature not found`);
+    return result;
+  }
+
+  // 2. Custom validations/transformations before database operations
+  async function create(data: CreateFeaturePayload) {
+    // Validate or transform data before creating
+    validateData(data);
+
+    // No need to create a wrapper if no additional logic is needed
+    return baseRepository.create(data);
+  }
+
+  return {
+    ...baseRepository,           // Spread ALL base repository methods
+    findOneWithRelations,        // Add custom methods only when needed
+    create,                      // Override base methods only when necessary
+  };
+}
+
+// Export the instance to use throughout the application
+export const featureRepository = createFeatureRepository();
+```
+
+### 3. Minimal Repository Example (Countries)
+
+```typescript
+// inventory/countries/countries.repository.ts
+import { countries } from './countries.schema';
+import type {
+  Country,
+  CreateCountryPayload,
+  UpdateCountryPayload,
+} from './countries.types';
+import { createBaseRepository } from '@repo/base-repo';
+import { db } from '../db-service';
+
+/**
+ * Creates a repository for managing country entities
+ */
+export function createCountryRepository() {
+  // No custom methods needed - just configure the base repository
+  return createBaseRepository<
+    Country,
+    CreateCountryPayload,
+    UpdateCountryPayload,
+    typeof countries
+  >(db, countries, 'Country', {
+    searchableFields: [countries.name, countries.code],
+  });
+}
+
+export const countryRepository = createCountryRepository();
+```
+
+### 4. Repository with Relationships (Terminals)
+
+```typescript
+// inventory/terminals/terminals.repository.ts
+import { terminals } from './terminals.schema';
+import type {
+  Terminal,
+  CreateTerminalPayload,
+  UpdateTerminalPayload,
+  TerminalWithCity,
+} from './terminals.types';
+import { createBaseRepository } from '@repo/base-repo';
+import { db } from '../db-service';
+import { eq } from 'drizzle-orm';
+import { validateOperatingHours } from './terminals.utils';
+import { createSlug } from '../../shared/utils';
+
+/**
+ * Creates a repository for managing terminal entities
+ */
+export function createTerminalRepository() {
+  const baseRepository = createBaseRepository<
+    Terminal,
+    CreateTerminalPayload & { slug: string },
+    UpdateTerminalPayload & { slug?: string },
+    typeof terminals
+  >(db, terminals, 'Terminal', {
+    searchableFields: [terminals.name, terminals.code, terminals.slug],
+  });
+
+  /**
+   * Finds a terminal with its associated city
+   * Custom method to load relationship data
+   */
+  async function findOneWithCity(id: number): Promise<TerminalWithCity> {
+    const terminal = await db.query.terminals.findFirst({
+      where: eq(terminals.id, id),
+      with: { city: true }, // Load the city relationship
+    });
+
+    if (!terminal) {
+      throw new NotFoundError('Terminal not found');
+    }
+
+    return terminal;
+  }
+
+  /**
+   * Creates a new terminal with auto-generated slug and validation
+   * Custom validation and data transformation before create
+   */
+  async function create(data: CreateTerminalPayload): Promise<Terminal> {
+    // Domain-specific validation
+    if (data.operatingHours) {
+      validateOperatingHours(data.operatingHours);
+    }
+
+    // Generate a slug from the name
+    const slug = createSlug(data.name, 't');
+
+    // Use base repository create with enhanced data
+    return await baseRepository.create({ ...data, slug });
+  }
+
+  return {
+    ...baseRepository,
+    findOneWithCity,
+    create,
+    // Add other custom methods as needed
+  };
+}
+
+export const terminalRepository = createTerminalRepository();
+```
+
+### 5. Transaction and Compound Operations
+
+```typescript
+// Example using transaction for operations across multiple repositories
+async function createCompoundEntity(data) {
+  // Use transaction to ensure all-or-nothing operation
+  return mainRepository.transaction(async (txMainRepo, tx) => {
+    // Create transaction-scoped repositories
+    const txRelatedRepo = relatedRepository.withTransaction(tx);
+
+    // Create main entity
+    const entity = await txMainRepo.create({
+      name: data.name,
+      // other fields
+    });
+
+    // Create related entities in the same transaction
+    await txRelatedRepo.create({
+      mainEntityId: entity.id,
+      // other fields
+    });
+
+    // Return only the ID from within the transaction
+    return entity.id;
+  }).then(id => {
+    // After transaction completes successfully, retrieve with full details
+    return mainRepository.findOneWithDetails(id);
+  });
+}
+```
+
+## Repository Best Practices
+
+1. **Use Function Declarations**: Prefer `function createRepository()` over arrow functions
+2. **Import Types**: Get types from `types.ts`, not inline declarations
+3. **Configure Options**: Set `searchableFields` instead of overriding search methods
+4. **Minimal Extensions**: Only add methods when base repository is insufficient
+5. **Clear Purpose**: Each custom method should solve a specific use case
+6. **Transaction Support**: Use `withTransaction` to coordinate complex operations
+7. **Handle Relations**: Use Drizzle's `with` functionality to load relationships
+
+## Common Repository Patterns
+
+1. **Minimal Repository**: Just configure base repository, no custom methods (Countries)
+2. **Repository with Relationships**: Add methods for eager-loading relations (Terminals, Routes)
+3. **Repository with Validation**: Override create/update to add validation (Terminals)
+4. **Repository with Transformations**: Transform data before/after operations (Slugs)
+5. **Repository with Transactions**: Coordinate operations across repositories (RouteSegments)
+
+## Schema Definition Patterns
+
+### 1. Simple Schema (No Relations)
 
 ```typescript
 // inventory/countries/countries.schema.ts
@@ -86,124 +306,73 @@ export const countries = pgTable('countries', {
 });
 ```
 
-### 3. Feature Repository Implementation
+### 2. Schema with Relations
 
 ```typescript
-// inventory/countries/countries.repository.ts
-import { countries } from './countries.schema';
-import type {
-  Country,
-  CreateCountryPayload,
-  UpdateCountryPayload,
-  Countries,
-} from './countries.types';
-import { createBaseRepository } from '../../shared/base-repository';
+// inventory/routes/routes.schema.ts
+import { pgTable, serial, text, integer, real, boolean, timestamp } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { cities } from '../cities/cities.schema';
+import { terminals } from '../terminals/terminals.schema';
+import { pathways } from '../pathways/pathways.schema';
 
-export const createCountryRepository = () => {
-  const baseRepository = createBaseRepository<
-    Country,
-    CreateCountryPayload,
-    UpdateCountryPayload,
-    typeof countries
-  >(countries, 'Country');
+// Define the table schema
+export const routes = pgTable('routes', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  originCityId: integer('origin_city_id')
+    .notNull()
+    .references(() => cities.id),
+  destinationCityId: integer('destination_city_id')
+    .notNull()
+    .references(() => cities.id),
+  distance: real('distance').notNull(),
+  // Other fields...
+});
 
-  const validateUniqueNameAndCode = async (
-    name: string,
-    code: string,
-    excludeId?: number
-  ): Promise<void> => {
-    await baseRepository.validateUniqueness(
-      [
-        { field: countries.name, value: name },
-        { field: countries.code, value: code },
-      ],
-      excludeId,
-      'Country with this name or code already exists'
-    );
-  };
-
-  const create = async (data: CreateCountryPayload): Promise<Country> => {
-    await validateUniqueNameAndCode(data.name, data.code);
-    return baseRepository.create(data);
-  };
-
-  return {
-    ...baseRepository,
-    create,
-    // ... other extended operations
-  };
-};
-
-// Export the repository instance
-export const countryRepository = createCountryRepository();
+// Define relations (for Drizzle ORM's relationship loading)
+export const routesRelations = relations(routes, ({ one, many }) => ({
+  originCity: one(cities, {
+    fields: [routes.originCityId],
+    references: [cities.id],
+  }),
+  destinationCity: one(cities, {
+    fields: [routes.destinationCityId],
+    references: [cities.id],
+  }),
+  // Other relations...
+}));
 ```
 
-## Key Principles
+### 3. Aggregating Schemas for Migrations
 
-1. **Repository Pattern**
+All schemas are exported in `db/schema.ts` for Drizzle to generate migrations:
 
-   - Use base repository for common CRUD operations
-   - Extend base repository for feature-specific operations
-   - Keep database access isolated in repositories
+```typescript
+// db/schema.ts
+export { countries } from '../inventory/countries/countries.schema';
+export { states } from '../inventory/states/states.schema';
+export { cities } from '../inventory/cities/cities.schema';
+export {
+  terminals,
+  terminalsRelations,
+} from '../inventory/terminals/terminals.schema';
+// ... other exports
+```
 
-2. **Locality of Behavior**
-
-   - Schema definitions belong with their feature
-   - Repositories are co-located with their schemas
-   - Direct schema references between features
-
-3. **Type Safety**
-   - Use TypeScript generics for type safety
-   - Define clear interfaces for entities and payloads
-   - Leverage Drizzle ORM for type inference
-
-## Best Practices
-
-1. **Schema Design**
-
-   - Use consistent naming (snake_case for DB, camelCase in code)
-   - Include standard fields (id, created_at, updated_at)
-   - Define explicit relationships with foreign keys
-   - Use appropriate column types and constraints
-
-2. **Repository Implementation**
-
-   - Extend base repository for custom needs
-   - Implement feature-specific validations
-   - Handle transactions when needed
-   - Use meaningful error messages
-
-3. **Code Organization**
-
-   - Export schemas to central schema.ts
-   - Keep repositories focused and single-purpose
-   - Document complex queries or validations
-   - Follow consistent naming patterns
-
-4. **Performance**
-   - Use appropriate indexes
-   - Optimize queries for common operations
-   - Handle bulk operations efficiently
-   - Consider pagination for large datasets
 
 ## Adding New Features
 
-1. Create schema definition in feature directory
-2. Export schema in `db/schema.ts`
-3. Create repository extending base repository
-4. Generate and run migrations
-5. Implement feature-specific operations
+1. Create schema in feature directory (`feature.schema.ts`)
+2. Export schema in central `db/schema.ts`
+3. Create repository (`function createRepository()`)
+4. Generate migrations (`drizzle-kit generate`)
+5. Implement controller with Encore APIs
 
-## Migration Management
+## Repository Creation Checklist
 
-1. **Generation**
-
-   - Use Drizzle Kit for migration generation
-   - Review generated migrations carefully
-   - Add meaningful migration names
-
-2. **Deployment**
-   - Test migrations in development first
-   - Have rollback plans for complex migrations
-   - Consider data migration needs
-   - Deploy during low-traffic periods
+- [ ] Import types from `.types.ts` file
+- [ ] Use function declaration, not arrow function
+- [ ] Configure searchable fields appropriately
+- [ ] Only add custom methods when needed
+- [ ] Export singleton instance

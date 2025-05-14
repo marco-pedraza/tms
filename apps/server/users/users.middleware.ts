@@ -1,6 +1,9 @@
-import { APICallMeta, MiddlewareRequest, middleware } from 'encore.dev/api';
+import { MiddlewareRequest, middleware } from 'encore.dev/api';
+import log from 'encore.dev/log';
+import { APICallMeta } from 'encore.dev';
 import { getAuthData } from '~encore/auth';
 import { errors } from '../shared/errors';
+import { auditsRepository } from './audits/audits.repository';
 import { userPermissionsRepository } from './user-permissions/user-permissions.repository';
 
 /**
@@ -38,6 +41,21 @@ export const usersMiddleware = middleware(
     // Get the current service and endpoint from the request
     const service = currentRequest.api.service;
     const endpoint = currentRequest.api.endpoint;
+
+    // Create audit entry for this action - non-blocking to avoid affecting request performance
+    auditsRepository
+      .create({
+        userId: user.id,
+        service: service,
+        endpoint: endpoint,
+        details: currentRequest.parsedPayload,
+        ipAddress: req.data.ip,
+        userAgent: req.data.userAgent,
+      })
+      .catch((error) => {
+        // Log the error but don't fail the request
+        log.error('Failed to create audit entry', { error });
+      });
 
     // Create permission code in format "service:endpoint"
     const requiredPermission = `${service}:${endpoint}`;

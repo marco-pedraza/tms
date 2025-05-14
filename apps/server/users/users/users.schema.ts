@@ -7,6 +7,8 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { audits } from '../audits/audits.schema';
 import { departments } from '../departments/departments.schema';
 import { tenants } from '../tenants/tenants.schema';
 
@@ -33,3 +35,10 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
+
+/**
+ * Defines the relations for the users table
+ */
+export const userRelations = relations(users, ({ many }) => ({
+  audits: many(audits),
+}));

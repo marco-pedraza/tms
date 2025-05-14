@@ -5,6 +5,7 @@ import * as ts from 'typescript';
 import { permissionRepository } from '../../users/permissions/permissions.repository';
 import { userPermissionsRepository } from '../../users/user-permissions/user-permissions.repository';
 import { userRepository } from '../../users/users/users.repository';
+import { users } from '../../users/users/users.schema';
 
 /**
  * Main function to seed permissions and assign them to system admins

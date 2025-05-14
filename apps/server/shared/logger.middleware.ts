@@ -35,6 +35,10 @@ export const logger = middleware(
       user_agent: userAgent,
     });
 
+    // Add request data to the request object
+    req.data.ip = ip;
+    req.data.userAgent = userAgent;
+
     // Continue to the next middleware or controller
     return await next(req);
   },

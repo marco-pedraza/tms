@@ -1,5 +1,5 @@
 {
-  "id": "126d341a-de2f-48a6-aefd-5b23afab4f4e",
+  "id": "14308342-be4f-4b99-860c-a118dc5d5386",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -1508,20 +1508,14 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.permissions": {
-      "name": "permissions",
+    "public.permission_groups": {
+      "name": "permission_groups",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
           "type": "serial",
           "primaryKey": true,
-          "notNull": true
-        },
-        "code": {
-          "name": "code",
-          "type": "text",
-          "primaryKey": false,
           "notNull": true
         },
         "name": {
@@ -1553,6 +1547,85 @@
       },
       "indexes": {},
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "permission_groups_name_unique": {
+          "name": "permission_groups_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.permissions": {
+      "name": "permissions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "permission_group_id": {
+          "name": "permission_group_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "permissions_permission_group_id_permission_groups_id_fk": {
+          "name": "permissions_permission_group_id_permission_groups_id_fk",
+          "tableFrom": "permissions",
+          "tableTo": "permission_groups",
+          "columnsFrom": [
+            "permission_group_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "cascade"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "permissions_code_unique": {
@@ -2057,6 +2130,78 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.seat_diagram_zones": {
+      "name": "seat_diagram_zones",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "seat_diagram_id": {
+          "name": "seat_diagram_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "row_numbers": {
+          "name": "row_numbers",
+          "type": "integer[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price_multiplier": {
+          "name": "price_multiplier",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'1.0'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "seat_diagram_zones_seat_diagram_id_seat_diagrams_id_fk": {
+          "name": "seat_diagram_zones_seat_diagram_id_seat_diagrams_id_fk",
+          "tableFrom": "seat_diagram_zones",
+          "tableTo": "seat_diagrams",
+          "columnsFrom": [
+            "seat_diagram_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.seat_diagrams": {
       "name": "seat_diagrams",
       "schema": "",
@@ -2166,6 +2311,78 @@
             "id"
           ],
           "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.seat_layout_model_zones": {
+      "name": "seat_layout_model_zones",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "seat_layout_model_id": {
+          "name": "seat_layout_model_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "row_numbers": {
+          "name": "row_numbers",
+          "type": "integer[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price_multiplier": {
+          "name": "price_multiplier",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'1.0'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "seat_layout_model_zones_seat_layout_model_id_seat_layout_models_id_fk": {
+          "name": "seat_layout_model_zones_seat_layout_model_id_seat_layout_models_id_fk",
+          "tableFrom": "seat_layout_model_zones",
+          "tableTo": "seat_layout_models",
+          "columnsFrom": [
+            "seat_layout_model_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },

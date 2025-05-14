@@ -3,7 +3,9 @@ import {
   createBusModel,
   deleteBusModel,
 } from '../bus-models/bus-models.controller';
+import { seatDiagramZoneRepository } from '../seat-diagram-zones/seat-diagram-zones.repository';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
+import { createSeatLayoutModelZone } from '../seat-layout-model-zones/seat-layout-model-zones.controller';
 import {
   createSeatLayoutModel,
   deleteSeatLayoutModel,
@@ -83,6 +85,16 @@ describe('Buses Controller', () => {
       active: true,
     });
 
+    defaultSeatLayoutModelId = seatLayoutModel.id;
+
+    // Create a zone for the seat layout model
+    await createSeatLayoutModelZone({
+      seatLayoutModelId: seatLayoutModel.id,
+      name: 'Premium Zone',
+      rowNumbers: [1, 2, 3],
+      priceMultiplier: 1.5,
+    });
+
     // Create a temporary bus model to use for the bus tests
     const busModel = await createBusModel({
       defaultSeatLayoutModelId: seatLayoutModel.id,
@@ -96,7 +108,6 @@ describe('Buses Controller', () => {
     });
 
     busModelId = busModel.id;
-    defaultSeatLayoutModelId = seatLayoutModel.id;
 
     // Update the test bus with the real IDs
     testBus.modelId = busModelId;
@@ -141,7 +152,7 @@ describe('Buses Controller', () => {
   });
 
   describe('success scenarios', () => {
-    test('should create a new bus with seat diagram', async () => {
+    test('should create a new bus with seat diagram and zones', async () => {
       // Create a new bus
       const response = await createBus(testBus);
 
@@ -173,6 +184,21 @@ describe('Buses Controller', () => {
       expect(seatDiagram.numFloors).toBe(1);
       expect(seatDiagram.totalSeats).toBe(40);
       expect(seatDiagram.active).toBe(true);
+
+      // Verify that zones were properly cloned to the seat diagram
+      const diagramZones = await seatDiagramZoneRepository.findAll({
+        filters: {
+          seatDiagramId: response.seatDiagramId,
+        },
+      });
+
+      expect(diagramZones).toBeDefined();
+      expect(diagramZones.length).toBe(1); // We created one zone for the layout model
+
+      const diagramZone = diagramZones[0];
+      expect(diagramZone.name).toBe('Premium Zone');
+      expect(diagramZone.rowNumbers).toEqual([1, 2, 3]);
+      expect(Number(diagramZone.priceMultiplier)).toBe(1.5);
     });
 
     test('should retrieve a bus by ID', async () => {
@@ -304,7 +330,6 @@ describe('Buses Controller', () => {
       const searchableBus = await createBus({
         registrationNumber: 'SEARCH123',
         modelId: testBus.modelId,
-        seatDiagramId: testBus.seatDiagramId,
         economicNumber: 'SEARCHABLE',
       });
 
@@ -348,7 +373,6 @@ describe('Buses Controller', () => {
         {
           registrationNumber: 'ORDR001',
           modelId: testBus.modelId,
-          seatDiagramId: testBus.seatDiagramId,
           economicNumber: 'ALPHA',
           status: BusStatus.ACTIVE,
           active: true,
@@ -356,7 +380,6 @@ describe('Buses Controller', () => {
         {
           registrationNumber: 'ORDR002',
           modelId: testBus.modelId,
-          seatDiagramId: testBus.seatDiagramId,
           economicNumber: 'BETA',
           status: BusStatus.MAINTENANCE,
           active: false,
@@ -364,7 +387,6 @@ describe('Buses Controller', () => {
         {
           registrationNumber: 'ORDR003',
           modelId: testBus.modelId,
-          seatDiagramId: testBus.seatDiagramId,
           economicNumber: 'GAMMA',
           status: BusStatus.ACTIVE,
           active: true,
@@ -446,7 +468,6 @@ describe('Buses Controller', () => {
         {
           registrationNumber: 'MULTI1',
           modelId: testBus.modelId,
-          seatDiagramId: testBus.seatDiagramId,
           economicNumber: 'MULTI-A',
           status: BusStatus.ACTIVE,
           active: true,
@@ -454,7 +475,6 @@ describe('Buses Controller', () => {
         {
           registrationNumber: 'MULTI2',
           modelId: testBus.modelId,
-          seatDiagramId: testBus.seatDiagramId,
           economicNumber: 'MULTI-B',
           status: BusStatus.ACTIVE,
           active: true,

@@ -115,10 +115,17 @@
       "breakpoints": true
     },
     {
-      "idx": 14,
+      "idx": 16,
       "version": "7",
       "when": 1746738959194,
       "tag": "20250508211559_create_permission_groups_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1746810189101,
+      "tag": "20250509170003_create_zones_tables",
       "breakpoints": true
     }
   ]

@@ -36,6 +36,14 @@ export {
   seatDiagramsRelations,
 } from '../inventory/seat-diagrams/seat-diagrams.schema';
 export {
+  seatLayoutModelZones,
+  seatLayoutModelZonesRelations,
+} from '../inventory/seat-layout-model-zones/seat-layout-model-zones.schema';
+export {
+  seatDiagramZones,
+  seatDiagramZonesRelations,
+} from '../inventory/seat-diagram-zones/seat-diagram-zones.schema';
+export {
   busModels,
   busModelsRelations,
 } from '../inventory/bus-models/bus-models.schema';

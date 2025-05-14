@@ -1,10 +1,18 @@
 import { NotFoundError } from '../../shared/errors';
 import { busModelRepository } from '../bus-models/bus-models.repository';
+import { seatDiagramZoneRepository } from '../seat-diagram-zones/seat-diagram-zones.repository';
+import { CreateSeatDiagramZonePayload } from '../seat-diagram-zones/seat-diagram-zones.types';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
 import { CreateSeatDiagramPayload } from '../seat-diagrams/seat-diagrams.types';
+import { seatLayoutModelZoneRepository } from '../seat-layout-model-zones/seat-layout-model-zones.repository';
 import { seatLayoutModelRepository } from '../seat-layout-models/seat-layout-models.repository';
 import { Bus, CreateBusPayload } from './buses.types';
 import { busRepository } from './buses.repository';
+
+// Internal type for repository create method
+type CreateZoneWithDiagramId = CreateSeatDiagramZonePayload & {
+  seatDiagramId: number;
+};
 
 /**
  * Creates a new bus with a seat diagram. The seat diagram can be created in two ways:
@@ -53,14 +61,41 @@ export const createBusWithSeatDiagram = async (
     active: true,
   };
 
-  // Create the seat diagram
-  const seatDiagram = await seatDiagramRepository.create(seatDiagramPayload);
+  // Get layout zones before starting transaction
+  const layoutZones = await seatLayoutModelZoneRepository.findAll({
+    filters: {
+      seatLayoutModelId: seatLayoutModel.id,
+    },
+  });
 
-  // Create the bus with the new seat diagram
-  const busData = {
-    ...data,
-    seatDiagramId: seatDiagram.id,
-  };
+  // Execute all database operations in a transaction
+  return await seatDiagramRepository.transaction(
+    async (txSeatDiagramRepo, tx) => {
+      // Create transaction-scoped repositories
+      const txSeatDiagramZoneRepo =
+        seatDiagramZoneRepository.withTransaction(tx);
+      const txBusRepo = busRepository.withTransaction(tx);
 
-  return await busRepository.create(busData);
+      // Create the seat diagram within transaction
+      const seatDiagram = await txSeatDiagramRepo.create(seatDiagramPayload);
+
+      // Clone each zone to the diagram within transaction
+      for (const zone of layoutZones) {
+        await txSeatDiagramZoneRepo.create({
+          name: zone.name,
+          rowNumbers: zone.rowNumbers,
+          priceMultiplier: zone.priceMultiplier,
+          seatDiagramId: seatDiagram.id,
+        } as CreateZoneWithDiagramId);
+      }
+
+      // Create the bus with the new seat diagram within transaction
+      const busData = {
+        ...data,
+        seatDiagramId: seatDiagram.id,
+      };
+
+      return await txBusRepo.create(busData);
+    },
+  );
 };

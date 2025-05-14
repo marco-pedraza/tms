@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 language: en-US
-tone_instructions: ''
+tone_instructions: 'You are an expert code reviewer in TypeScript, JavaScript, and NodeJS. You work in an enterprise software developer team, providing concise and clear code review advice. You only elaborate or provide detailed explanations when requested.'
 early_access: true
 enable_free_tier: true
 auto_resolve_threads: true
@@ -21,14 +21,100 @@ reviews:
   assess_linked_issues: true
   related_issues: true
   related_prs: true
-  suggested_labels: true
+  suggested_labels: false
   auto_apply_labels: false
   suggested_reviewers: true
-  auto_assign_reviewers: false
+  auto_assign_reviewers: true
   poem: true
   labeling_instructions: []
   path_filters: []
-  path_instructions: []
+  path_instructions:
+    # General code standards
+    - path: "**/*.{ts,tsx}"
+      instructions: |
+        Prefer code and comments in English to maximize team readability and consistency.
+        Focus on architectural patterns and overall code organization.
+        Evaluate domain modeling and separation of concerns.
+        Identify maintainability issues.
+
+    # Frontend (Next.js)
+    - path: "apps/web/**/*.{ts,tsx}"
+      instructions: |
+        This is a frontend application built with Next.js, confirm that the code adheres to the following:
+        - Component composition follows proper reusability patterns
+        - Data flow and state management approaches are appropriate
+        - Error boundaries are properly implemented
+        - Performance optimizations are applied where necessary
+        - UI components follow accessibility best practices
+
+    # Backend (Encore)
+    - path: "apps/server/**/*.ts"
+      instructions: |
+        This is a backend application built with Encore, confirm that the code adheres to the following:
+        - API contract design is consistent and follows standards
+        - Error handling strategies are properly implemented
+        - Implementation is free of security vulnerabilities
+
+    - path: "apps/server/**/*controller.ts"
+      instructions: |
+        Verify controllers follow single responsibility principle.
+        Check that business logic is not in controllers.
+        Ensure consistent error handling through parseApiError.
+        Evaluate API endpoint design and naming conventions.
+        Assess input validation approaches.
+
+    - path: "apps/server/**/*repository.ts"
+      instructions: |
+        Verify repositories properly extend base patterns.
+        Check for proper transaction handling in complex operations.
+        Evaluate query performance considerations.
+        Look for proper error handling for database operations.
+        Verify domain model integrity is maintained.
+
+    - path: "apps/server/**/*.types.ts"
+      instructions: |
+        Check for domain model consistency across related types.
+        Verify proper validation decorators are used.
+        Assess type hierarchy and inheritance patterns.
+        Look for reuse of common type patterns.
+
+    - path: "apps/server/**/*schema.ts"
+      instructions: |
+        Verify proper relationship modeling between entities.
+        Assess naming consistency with domain model.
+        Look for proper constraints for data integrity.
+
+    - path: "apps/server/db/**/*.ts"
+      instructions: |
+        Evaluate database access patterns and connection management.
+        Check migration strategies and backward compatibility.
+        Assess error handling for database operations.
+        Look for query optimization opportunities.
+
+    - path: "apps/server/**/*.test.ts"
+      instructions: |
+        Evaluate test organization and test case naming clarity.
+        Review test assertions for meaningful validation.
+        Check mocking strategies for external dependencies.
+        Assess test maintainability and readability.
+        Look for test setup duplication that could be refactored.
+
+    # Shared packages
+    - path: "packages/**/*.ts"
+      instructions: |
+        Evaluate API design and interface contracts.
+        Check for proper abstraction and encapsulation.
+        Assess dependency management and coupling.
+        Look for code duplication across packages.
+        Verify proper error handling strategies.
+
+    # Documentation
+    - path: "apps/docs/**"
+      instructions: |
+        Ensure documentation accurately reflects behavior and is updated alongside code changes.
+        Verify examples are clear and functional.
+        Look for missing sections or outdated information.
+
   abort_on_close: true
   auto_review:
     enabled: true
@@ -36,7 +122,14 @@ reviews:
     ignore_title_keywords: []
     labels: []
     drafts: true
-    base_branches: []
+    base_branches:
+      - "enhancement/*"
+      - "feature/*"
+      - "fix/*"
+      - "ft/*"
+      - "refactor/*"
+      - "release/*"
+      - "web/*"
   finishing_touches:
     docstrings:
       enabled: true
@@ -109,7 +202,6 @@ reviews:
       enabled: false
 chat:
   auto_reply: true
-  create_issues: true
   integrations:
     jira:
       usage: disabled

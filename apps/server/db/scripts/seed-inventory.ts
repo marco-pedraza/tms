@@ -1,4 +1,7 @@
 import { fakerES_MX as faker } from '@faker-js/faker';
+import { BusLine } from '../../inventory/bus-lines/bus-lines.types';
+import { BusModel } from '../../inventory/bus-models/bus-models.types';
+import { Bus } from '../../inventory/buses/buses.types';
 import { City } from '../../inventory/cities/cities.types';
 import { Country } from '../../inventory/countries/countries.types';
 import { db } from '../../inventory/db-service';
@@ -16,12 +19,17 @@ import { createSlug } from '../../shared/utils';
 import {
   cityFactory,
   countryFactory,
+  driverFactory,
   stateFactory,
   terminalFactory,
 } from '../../tests/factories';
 import { busLineFactory } from '../../tests/factories/bus-line.factory';
+import { busModelFactory } from '../../tests/factories/bus-models.factory';
+import { busFactory } from '../../tests/factories/buses.factory';
 import { getFactoryDb } from '../../tests/factories/factory-utils';
 import { pathwayServicesFactory } from '../../tests/factories/pathway-services.factory';
+import { seatDiagramZoneFactory } from '../../tests/factories/seat-diagram-zones.factory';
+import { seatDiagramFactory } from '../../tests/factories/seat-diagrams.factory';
 import { transporterFactory } from '../../tests/factories/transporters.factory';
 
 const factoryDb = getFactoryDb(db);
@@ -315,6 +323,117 @@ async function assignServicesToAllPathways(
   console.log('Assigned pathway services to all pathways of simple routes');
 }
 
+async function seedBusModels() {
+  const BUS_MODEL_COUNT = 5;
+  const busModelPayloads = Array.from({ length: BUS_MODEL_COUNT }, () => ({}));
+  const busModels = await busModelFactory(factoryDb).create(busModelPayloads);
+  console.log(
+    `Seeded ${busModels.length} bus models (with ${busModels.length} seat layout models)`,
+  );
+  return busModels;
+}
+
+async function seedBuses(busModels: BusModel[]) {
+  const BUS_COUNT = 40;
+
+  // First, create seat layout models and seat diagrams
+  const busPayloads = await Promise.all(
+    Array.from({ length: BUS_COUNT }, async () => {
+      const busModel = busModels[Math.floor(Math.random() * busModels.length)];
+
+      // Create a seat diagram using the bus model's default seat layout model
+      const seatDiagram = await seatDiagramFactory(factoryDb).create();
+
+      return {
+        modelId: busModel.id,
+        seatDiagramId: seatDiagram.id,
+      };
+    }),
+  );
+
+  const buses = await busFactory(factoryDb).create(busPayloads);
+  console.log(
+    `Seeded ${buses.length} buses (with ${buses.length} seat layout models and ${buses.length} seat diagrams)`,
+  );
+  return buses;
+}
+
+async function seedDiagramZones(buses: Bus[]) {
+  // Extract unique seat diagram IDs from buses
+  const uniqueSeatDiagramIds = Array.from(
+    new Set(buses.map((bus) => bus.seatDiagramId)),
+  );
+
+  const diagramZonePayloads = [];
+
+  // Create 1 to 2 zones for each seat diagram
+  for (const diagramId of uniqueSeatDiagramIds) {
+    const zoneCount = 1 + Math.floor(Math.random() * 2); // 1 to 2 zones
+
+    // Create first zone (business)
+    diagramZonePayloads.push({
+      seatDiagramId: diagramId,
+      params: {
+        zoneType: 0, // Business
+      },
+    });
+
+    // If we need a second zone, create it as premium
+    if (zoneCount === 2) {
+      diagramZonePayloads.push({
+        seatDiagramId: diagramId,
+        params: {
+          zoneType: 1, // Premium
+        },
+      });
+    }
+  }
+
+  const diagramZones =
+    await seatDiagramZoneFactory(factoryDb).create(diagramZonePayloads);
+  console.log(`Seeded ${diagramZones.length} diagram zones`);
+  return diagramZones;
+}
+
+async function seedDrivers(
+  transporters: Transporter[],
+  busLines: BusLine[],
+  buses: Bus[],
+) {
+  const DRIVER_COUNT = 80;
+  const driverPayloads = Array.from({ length: DRIVER_COUNT }, () => {
+    // First select a random transporter
+    const transporter =
+      transporters[Math.floor(Math.random() * transporters.length)];
+
+    // Then filter busLines to only those belonging to the selected transporter
+    const transporterBusLines = busLines.filter(
+      (line) => line.transporterId === transporter.id,
+    );
+
+    // If no busLines for this transporter, skip this iteration
+    if (transporterBusLines.length === 0) {
+      return null;
+    }
+
+    // Select a random busLine from the filtered list
+    const busLine =
+      transporterBusLines[
+        Math.floor(Math.random() * transporterBusLines.length)
+      ];
+
+    return {
+      transporterId: transporter.id,
+      busLineId: busLine.id,
+      busId: buses[Math.floor(Math.random() * buses.length)].id,
+    };
+  }).filter(Boolean); // Remove any null entries
+
+  const drivers = await driverFactory(factoryDb).create(driverPayloads);
+  console.log(`Seeded ${drivers.length} drivers`);
+  return drivers;
+}
+
 async function seedInventory() {
   try {
     const countries = await seedCountries();
@@ -326,12 +445,17 @@ async function seedInventory() {
     const cities = await seedCities(states);
     const terminals = await seedTerminals(cities);
     const transporters = await seedTransporters(cities);
-    await seedBusLines(transporters);
+    const busLines = await seedBusLines(transporters);
     const pathwayServices = (await seedPathwayServices()) as PathwayService[];
     // Seed simple and compound routes
     const simpleRoutes = await seedSimpleRoutes(terminals);
     await assignServicesToAllPathways(simpleRoutes, pathwayServices);
     await seedCompoundRoutes(simpleRoutes);
+    const busModels = (await seedBusModels()) as BusModel[];
+    const buses = (await seedBuses(busModels)) as Bus[];
+    await seedDiagramZones(buses);
+    await seedDrivers(transporters, busLines as BusLine[], buses);
+
     console.log('Inventory seeding completed successfully!');
   } catch (error) {
     console.error('Error during inventory seeding:', error);

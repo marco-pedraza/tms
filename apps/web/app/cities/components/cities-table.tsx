@@ -170,10 +170,6 @@ export default function CitiesTable() {
     router.push(`/cities/${id}/edit`);
   };
 
-  const onAdd = () => {
-    router.push('/cities/new');
-  };
-
   // Prepare translations object for the columns factory
   const translations: TranslationObject = {
     fields: {
@@ -211,7 +207,7 @@ export default function CitiesTable() {
         isLoading={isLoading}
         hasError={!!error}
         onRetry={refetch}
-        onAdd={onAdd}
+        addHref="/cities/new"
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

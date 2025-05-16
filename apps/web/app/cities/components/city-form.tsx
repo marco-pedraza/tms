@@ -18,13 +18,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import imsClient from '@/lib/ims-client';
-import {
-  latitudeSchema,
-  longitudeSchema,
-  nameSchema,
-} from '@/lib/schemas/common';
-import { hasFieldErrors } from '@/lib/utils';
+import { latitudeSchema, longitudeSchema, nameSchema } from '@/schemas/common';
+import imsClient from '@/services/ims-client';
+import hasFieldErrors from '@/utils/has-field-errors';
 
 type State = states.State;
 type Timezone = timezones.Timezone;
@@ -73,7 +69,7 @@ function CityForm({
   // Fetch states for the dropdown
   const { data: statesData, isLoading: isLoadingStates } = useQuery({
     queryKey: ['states'],
-    queryFn: async () => await imsClient.inventory.listStates(),
+    queryFn: async () => await imsClient.inventory.listStates({}),
   });
 
   // Fetch timezones for the dropdown

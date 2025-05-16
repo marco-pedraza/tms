@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import type { states } from '@repo/ims-client';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
-import imsClient from '@/lib/ims-client';
+import imsClient from '@/services/ims-client';
 import type { StateFormValues } from '@/states/components/state-form';
 
 interface MutationMessages {

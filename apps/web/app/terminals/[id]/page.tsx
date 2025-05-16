@@ -19,11 +19,11 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { createGoogleMapsLink } from '@/lib/utils';
 import TerminalSkeleton from '@/terminals/components/terminal-skeleton';
 import useQueryTerminal from '@/terminals/hooks/use-query-terminal';
 import useTerminalDetailsParams from '@/terminals/hooks/use-terminal-details-params';
 import useTerminalMutations from '@/terminals/hooks/use-terminal-mutations';
+import createGoogleMapsLink from '@/utils/create-google-maps-link';
 
 type OperatingHours = terminals.OperatingHours;
 

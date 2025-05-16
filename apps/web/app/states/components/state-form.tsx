@@ -18,8 +18,8 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import useQueryCountries from '@/countries/hooks/use-query-countries';
-import { codeSchema, nameSchema } from '@/lib/schemas/common';
-import { hasFieldErrors } from '@/lib/utils';
+import { codeSchema, nameSchema } from '@/schemas/common';
+import hasFieldErrors from '@/utils/has-field-errors';
 
 type Country = countries.Country;
 

@@ -4,7 +4,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import type { terminals } from '@repo/ims-client';
-import imsClient from '@/lib/ims-client';
+import imsClient from '@/services/ims-client';
 
 interface QueryTerminalError extends Error {
   code?: string;

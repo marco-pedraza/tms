@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import client from '@/lib/ims-client';
+import client from '@/services/ims-client';
 
 /**
  * Custom hook for querying states with pagination

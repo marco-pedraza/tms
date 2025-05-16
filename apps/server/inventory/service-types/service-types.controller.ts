@@ -16,6 +16,7 @@ import { serviceTypeRepository } from './service-types.repository';
  */
 export const createServiceType = api(
   {
+    expose: true,
     method: 'POST',
     path: '/service-types',
   },
@@ -31,6 +32,7 @@ export const createServiceType = api(
  */
 export const getServiceType = api(
   {
+    expose: true,
     method: 'GET',
     path: '/service-types/:id',
   },
@@ -45,6 +47,7 @@ export const getServiceType = api(
  */
 export const listServiceTypes = api(
   {
+    expose: true,
     method: 'GET',
     path: '/service-types',
   },
@@ -61,6 +64,7 @@ export const listServiceTypes = api(
  */
 export const listServiceTypesPaginated = api(
   {
+    expose: true,
     method: 'GET',
     path: '/service-types/paginated',
   },
@@ -76,6 +80,7 @@ export const listServiceTypesPaginated = api(
  */
 export const updateServiceType = api(
   {
+    expose: true,
     method: 'PUT',
     path: '/service-types/:id',
   },
@@ -94,6 +99,7 @@ export const updateServiceType = api(
  */
 export const deleteServiceType = api(
   {
+    expose: true,
     method: 'DELETE',
     path: '/service-types/:id',
   },

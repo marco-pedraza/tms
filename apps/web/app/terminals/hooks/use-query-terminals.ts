@@ -1,6 +1,6 @@
 import { UseQueryResult, useQuery } from '@tanstack/react-query';
 import type { terminals } from '@repo/ims-client';
-import client from '@/lib/ims-client';
+import client from '@/services/ims-client';
 
 type QueryTerminalsError = Error;
 

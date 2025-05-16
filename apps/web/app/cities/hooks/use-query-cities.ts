@@ -1,6 +1,6 @@
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import type { cities } from '@repo/ims-client';
-import imsClient from '@/lib/ims-client';
+import imsClient from '@/services/ims-client';
 
 type QueryCitiesError = Error;
 

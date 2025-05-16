@@ -12,7 +12,7 @@ import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { createGoogleMapsLink } from '@/lib/utils';
+import createGoogleMapsLink from '@/utils/create-google-maps-link';
 
 export default function CityDetailsPage() {
   const tCities = useTranslations('cities');

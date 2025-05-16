@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import {
   Header,
   HeaderGroup,
@@ -5,6 +6,7 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 import { DatabaseIcon, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -18,14 +20,16 @@ import {
 interface DataTableEmptyProps<TData> {
   table: TableType<TData>;
   columnsCount: number;
-  onAdd: () => void;
+  addHref: string;
 }
 
 function DataTableEmpty<TData>({
   table,
   columnsCount,
-  onAdd,
+  addHref,
 }: DataTableEmptyProps<TData>) {
+  const t = useTranslations('common');
+
   return (
     <div className="w-full border rounded-md">
       <div className="relative">
@@ -57,14 +61,14 @@ function DataTableEmpty<TData>({
                   <div className="flex flex-col items-center justify-center py-12">
                     <DatabaseIcon className="h-12 w-12 text-muted-foreground mb-4" />
                     <h3 className="text-lg font-medium mb-4">
-                      No hay datos disponibles
+                      {t('table.empty')}
                     </h3>
-                    {onAdd && (
-                      <Button onClick={onAdd} size="sm">
+                    <Link href={addHref}>
+                      <Button size="sm">
                         <Plus className="h-4 w-4 mr-2" />
-                        Agregar datos
+                        {t('table.add')}
                       </Button>
-                    )}
+                    </Link>
                   </div>
                 </TableCell>
               </TableRow>

@@ -21,7 +21,6 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import imsClient from '@/lib/ims-client';
 import {
   codeSchema,
   facilitiesSchema,
@@ -30,8 +29,9 @@ import {
   nameSchema,
   operatingHoursSchema,
   phoneSchema,
-} from '@/lib/schemas/common';
-import { hasFieldErrors } from '@/lib/utils';
+} from '@/schemas/common';
+import imsClient from '@/services/ims-client';
+import hasFieldErrors from '@/utils/has-field-errors';
 
 // Days of the week
 const daysOfWeek = [
@@ -118,7 +118,7 @@ function TerminalForm({
   // Fetch cities for the dropdown
   const { data: citiesData, isLoading: isLoadingCities } = useQuery({
     queryKey: ['cities'],
-    queryFn: async () => await imsClient.inventory.listCities(),
+    queryFn: async () => await imsClient.inventory.listCities({}),
   });
 
   const form = useForm({

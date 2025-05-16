@@ -158,10 +158,6 @@ export default function CountriesTable() {
     router.push(`/countries/${id}/edit`);
   };
 
-  const onAdd = () => {
-    router.push('/countries/new');
-  };
-
   // Prepare translations object for the columns factory only
   const translations: CommonTranslations = {
     fields: {
@@ -198,7 +194,7 @@ export default function CountriesTable() {
         isLoading={isLoading}
         hasError={!!error}
         onRetry={refetch}
-        onAdd={onAdd}
+        addHref="/countries/new"
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

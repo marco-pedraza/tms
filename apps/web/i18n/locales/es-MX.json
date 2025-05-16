@@ -37,11 +37,17 @@
       "longitude": "Longitud",
       "slug": "Slug",
       "coordinates": "Coordenadas",
-      "location": "Ubicación"
+      "location": "Ubicación",
+      "phone": "Teléfono",
+      "email": "Correo Electrónico",
+      "website": "Sitio Web",
+      "logoUrl": "URL del Logo",
+      "description": "Descripción"
     },
     "sections": {
       "basicInfo": "Información Básica",
-      "systemInfo": "Información del Sistema"
+      "systemInfo": "Información del Sistema",
+      "contactInfo": "Información de Contacto"
     },
     "crud": {
       "create": {
@@ -73,6 +79,34 @@
       "friday": "Viernes",
       "saturday": "Sábado",
       "sunday": "Domingo"
+    },
+    "table": {
+      "add": "Agregar datos",
+      "empty": "No hay datos disponibles"
+    }
+  },
+  "sidebar": {
+    "title": "IMS.ai",
+    "inventory": {
+      "title": "Inventario",
+      "countries": "Países",
+      "states": "Estados",
+      "cities": "Ciudades",
+      "terminals": "Terminales",
+      "transporters": "Transportistas",
+      "serviceTypes": "Tipos de Servicio",
+      "busLines": "Líneas de Autobus",
+      "routes": "Rutas",
+      "pathways": "Trayectos",
+      "pathwayServices": "Servicios de Trayecto",
+      "services": "Servicios",
+      "drivers": "Conductores",
+      "busModels": "Modelos de Autobus",
+      "buses": "Autobuses"
+    },
+    "planning": {
+      "title": "Planeación",
+      "busPlans": "Roles"
     }
   },
   "countries": {
@@ -317,6 +351,169 @@
         "hour": "Hora",
         "minute": "Min",
         "period": "AM/PM"
+      }
+    }
+  },
+  "transporters": {
+    "title": "Transportistas",
+    "description": "Administra información de transportistas para el Sistema de Inventario de Autobuses",
+    "actions": {
+      "create": "Crear Transportista",
+      "update": "Actualizar Transportista",
+      "backToList": "Volver a transportistas"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Transportista no encontrado",
+        "description": "No pudimos encontrar el transportista que buscas. Es posible que haya sido eliminado o que no exista."
+      }
+    },
+    "details": {
+      "description": "Detalles del transportista"
+    },
+    "fields": {
+      "licenseNumber": "Número de Licencia",
+      "headquarterCity": "Ciudad Sede"
+    },
+    "sections": {
+      "busLines": "Líneas de Autobus"
+    },
+    "form": {
+      "title": "Información del transportista",
+      "placeholders": {
+        "name": "Ej: Autobuses de México",
+        "code": "Ej: AMX",
+        "description": "Ej: Transporte de pasajeros y carga",
+        "website": "Ej: https://autobusesdemexico.com",
+        "email": "Ej: info@autobusesdemexico.com",
+        "phone": "Ej: (33) 1234-5678",
+        "licenseNumber": "Ej: 1234567890",
+        "headquarterCity": "Selecciona una ciudad",
+        "logoUrl": "Ej: https://autobusesdemexico.com/logo.png"
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando transportista...",
+        "success": "Transportista creado correctamente",
+        "error": "No pudimos crear el transportista"
+      },
+      "update": {
+        "loading": "Actualizando transportista...",
+        "success": "Transportista actualizado correctamente",
+        "error": "No pudimos actualizar el transportista"
+      },
+      "delete": {
+        "loading": "Eliminando transportista...",
+        "success": "Transportista eliminado correctamente",
+        "error": "No pudimos eliminar el transportista"
+      }
+    }
+  },
+  "serviceTypes": {
+    "title": "Tipos de Servicio",
+    "description": "Administra información de tipos de servicio para el Sistema de Inventario de Autobuses",
+    "actions": {
+      "create": "Crear Tipo de Servicio",
+      "update": "Actualizar Tipo de Servicio",
+      "backToList": "Volver a tipos de servicio"
+    },
+    "fields": {
+      "name": "Nombre",
+      "description": "Descripción",
+      "active": "Activo"
+    },
+    "form": {
+      "title": "Información del tipo de servicio",
+      "placeholders": {
+        "name": "Ej: Servicio de Transporte",
+        "description": "Ej: Transporte de pasajeros y carga"
+      }
+    },
+    "edit": {
+      "title": "Editar Tipo de Servicio",
+      "description": "Actualiza la información del tipo de servicio"
+    },
+    "details": {
+      "description": "Detalles del tipo de servicio"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Tipo de servicio no encontrado",
+        "description": "No pudimos encontrar el tipo de servicio que buscas. Es posible que haya sido eliminado o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando tipo de servicio...",
+        "success": "Tipo de servicio creado correctamente",
+        "error": "No pudimos crear el tipo de servicio"
+      },
+      "update": {
+        "loading": "Actualizando tipo de servicio...",
+        "success": "Tipo de servicio actualizado correctamente",
+        "error": "No pudimos actualizar el tipo de servicio"
+      },
+      "delete": {
+        "loading": "Eliminando tipo de servicio...",
+        "success": "Tipo de servicio eliminado correctamente",
+        "error": "No pudimos eliminar el tipo de servicio"
+      }
+    }
+  },
+  "busLines": {
+    "title": "Líneas de Autobus",
+    "description": "Administra información de líneas de autobus para el Sistema de Inventario de Autobuses",
+    "actions": {
+      "create": "Crear Línea de Autobus",
+      "update": "Actualizar Línea de Autobus",
+      "backToList": "Volver a líneas de autobus"
+    },
+    "fields": {
+      "transporter": "Grupo de Transporte",
+      "serviceType": "Tipo de Servicio",
+      "logo": "Logo",
+      "primaryColor": "Color Primario",
+      "secondaryColor": "Color Secundario"
+    },
+    "sections": {
+      "visualInfo": "Información Visual"
+    },
+    "form": {
+      "title": "Información de la línea de autobus",
+      "placeholders": {
+        "name": "Ej: Línea 1",
+        "description": "Ej: Línea que conecta Ciudad de México con Guadalajara"
+      }
+    },
+    "edit": {
+      "title": "Editar Línea de Autobus",
+      "description": "Actualiza la información de la línea de autobus"
+    },
+    "details": {
+      "description": "Detalles de la línea de autobus"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Línea de autobus no encontrada",
+        "description": "No pudimos encontrar la línea de autobus que buscas. Es posible que haya sido eliminada o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando línea de autobus...",
+        "success": "Línea de autobus creada correctamente",
+        "error": "No pudimos crear la línea de autobus"
+      },
+      "update": {
+        "loading": "Actualizando línea de autobus...",
+        "success": "Línea de autobus actualizada correctamente",
+        "error": "No pudimos actualizar la línea de autobus"
+      },
+      "delete": {
+        "loading": "Eliminando línea de autobus...",
+        "success": "Línea de autobus eliminada correctamente",
+        "error": "No pudimos eliminar la línea de autobus"
       }
     }
   }

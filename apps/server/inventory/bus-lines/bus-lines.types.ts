@@ -36,10 +36,10 @@ export interface BusLine {
   active: boolean;
 
   /** Timestamp when the bus line record was created */
-  createdAt: Date | null;
+  createdAt: Date;
 
   /** Timestamp when the bus line record was last updated */
-  updatedAt: Date | null;
+  updatedAt: Date;
 }
 
 /**

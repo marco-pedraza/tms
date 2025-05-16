@@ -20,7 +20,7 @@ const usePaginatedQuery = <T>({
   const [pageSize] = useState(initialPageSize);
   const { data, isLoading, error, refetch } = useQuery<T>({
     queryKey: [...queryKey, pageIndex, pageSize],
-    queryFn: async () => queryFn(pageIndex, pageSize),
+    queryFn: () => queryFn(pageIndex, pageSize),
     placeholderData: keepPreviousData,
   });
 

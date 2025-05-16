@@ -158,10 +158,6 @@ export default function StatesTable() {
     router.push(`/states/${id}/edit`);
   };
 
-  const onAdd = () => {
-    router.push('/states/new');
-  };
-
   // Prepare translations object for the columns factory only
   const translations: CommonTranslations = {
     fields: {
@@ -198,7 +194,7 @@ export default function StatesTable() {
         isLoading={isLoading}
         hasError={!!error}
         onRetry={refetch}
-        onAdd={onAdd}
+        addHref="/states/new"
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

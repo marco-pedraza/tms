@@ -36,12 +36,12 @@ interface DataTableProps<TData> {
   pagination?: DataTablePagination;
   initialPagination?: Partial<DataTablePagination>;
   onRetry: () => void;
-  onAdd: () => void;
   onPreviousPage?: () => void;
   onNextPage?: () => void;
   onSetPageSize?: (pageSize: number) => void;
   onLastPage?: () => void;
   onFirstPage?: () => void;
+  addHref: string;
 }
 
 export function DataTable<TData>({
@@ -53,12 +53,12 @@ export function DataTable<TData>({
   pagination,
   initialPagination,
   onRetry,
-  onAdd,
   onPreviousPage,
   onNextPage,
   onSetPageSize,
   onLastPage,
   onFirstPage,
+  addHref,
 }: DataTableProps<TData>) {
   const manualPagination = Boolean(pagination);
   const table = useReactTable({
@@ -140,7 +140,7 @@ export function DataTable<TData>({
       <DataTableEmpty
         table={table}
         columnsCount={columns.length}
-        onAdd={onAdd}
+        addHref={addHref}
       />
     );
   }

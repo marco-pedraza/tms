@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { cities } from '@repo/ims-client';
 import type { CityFormValues } from '@/cities/components/city-form';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
-import imsClient from '@/lib/ims-client';
+import imsClient from '@/services/ims-client';
 
 interface MutationMessages {
   loading: string;

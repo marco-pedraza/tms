@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import type { terminals } from '@repo/ims-client';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
-import imsClient from '@/lib/ims-client';
+import imsClient from '@/services/ims-client';
 import type { TerminalFormValues } from '@/terminals/components/terminal-form';
 
 interface MutationMessages {

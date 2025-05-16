@@ -3,16 +3,16 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import QueryClientProvider from '@/components/query-client-provider';
-import { SideNav } from '@/components/side-nav';
+import Sidebar from '@/components/sidebar';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
 const geistSans = localFont({
-  src: './fonts/GeistVF.woff',
+  src: '../fonts/GeistVF.woff',
   variable: '--font-geist-sans',
 });
 const geistMono = localFont({
-  src: './fonts/GeistMonoVF.woff',
+  src: '../fonts/GeistMonoVF.woff',
   variable: '--font-geist-mono',
 });
 
@@ -36,7 +36,7 @@ export default async function RootLayout({
           <NextIntlClientProvider>
             <div className="flex min-h-screen">
               <aside className="w-64 border-r bg-background">
-                <SideNav />
+                <Sidebar />
               </aside>
               <main className="flex-1 px-24 py-6">{children}</main>
             </div>

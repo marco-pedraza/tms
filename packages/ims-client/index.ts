@@ -109,8 +109,11 @@ export namespace inventory {
             this.createPathway = this.createPathway.bind(this)
             this.createPathwayService = this.createPathwayService.bind(this)
             this.createRoute = this.createRoute.bind(this)
+            this.createSeatDiagramZone = this.createSeatDiagramZone.bind(this)
             this.createSeatLayoutModel = this.createSeatLayoutModel.bind(this)
+            this.createSeatLayoutModelZone = this.createSeatLayoutModelZone.bind(this)
             this.createSeatsFromDiagramConfiguration = this.createSeatsFromDiagramConfiguration.bind(this)
+            this.createServiceType = this.createServiceType.bind(this)
             this.createState = this.createState.bind(this)
             this.createTerminal = this.createTerminal.bind(this)
             this.createTransporter = this.createTransporter.bind(this)
@@ -126,7 +129,10 @@ export namespace inventory {
             this.deletePathwayService = this.deletePathwayService.bind(this)
             this.deleteRoute = this.deleteRoute.bind(this)
             this.deleteSeatDiagram = this.deleteSeatDiagram.bind(this)
+            this.deleteSeatDiagramZone = this.deleteSeatDiagramZone.bind(this)
             this.deleteSeatLayoutModel = this.deleteSeatLayoutModel.bind(this)
+            this.deleteSeatLayoutModelZone = this.deleteSeatLayoutModelZone.bind(this)
+            this.deleteServiceType = this.deleteServiceType.bind(this)
             this.deleteState = this.deleteState.bind(this)
             this.deleteTerminal = this.deleteTerminal.bind(this)
             this.deleteTransporter = this.deleteTransporter.bind(this)
@@ -150,7 +156,10 @@ export namespace inventory {
             this.getRouteWithFullDetails = this.getRouteWithFullDetails.bind(this)
             this.getSeatDiagram = this.getSeatDiagram.bind(this)
             this.getSeatDiagramConfiguration = this.getSeatDiagramConfiguration.bind(this)
+            this.getSeatDiagramZone = this.getSeatDiagramZone.bind(this)
             this.getSeatLayoutModel = this.getSeatLayoutModel.bind(this)
+            this.getSeatLayoutModelZone = this.getSeatLayoutModelZone.bind(this)
+            this.getServiceType = this.getServiceType.bind(this)
             this.getState = this.getState.bind(this)
             this.getTerminal = this.getTerminal.bind(this)
             this.getTimezone = this.getTimezone.bind(this)
@@ -184,6 +193,8 @@ export namespace inventory {
             this.listSeatDiagramsPaginated = this.listSeatDiagramsPaginated.bind(this)
             this.listSeatLayoutModels = this.listSeatLayoutModels.bind(this)
             this.listSeatLayoutModelsPaginated = this.listSeatLayoutModelsPaginated.bind(this)
+            this.listServiceTypes = this.listServiceTypes.bind(this)
+            this.listServiceTypesPaginated = this.listServiceTypesPaginated.bind(this)
             this.listStates = this.listStates.bind(this)
             this.listStatesPaginated = this.listStatesPaginated.bind(this)
             this.listTerminals = this.listTerminals.bind(this)
@@ -191,6 +202,10 @@ export namespace inventory {
             this.listTimezones = this.listTimezones.bind(this)
             this.listTransporters = this.listTransporters.bind(this)
             this.listTransportersPaginated = this.listTransportersPaginated.bind(this)
+            this.listZonesByDiagram = this.listZonesByDiagram.bind(this)
+            this.listZonesByDiagramPaginated = this.listZonesByDiagramPaginated.bind(this)
+            this.listZonesByLayoutModel = this.listZonesByLayoutModel.bind(this)
+            this.listZonesByLayoutModelPaginated = this.listZonesByLayoutModelPaginated.bind(this)
             this.removeDriverFromBus = this.removeDriverFromBus.bind(this)
             this.removeDriverFromBusLine = this.removeDriverFromBusLine.bind(this)
             this.removeDriverFromTransporter = this.removeDriverFromTransporter.bind(this)
@@ -228,7 +243,10 @@ export namespace inventory {
             this.updatePathwayService = this.updatePathwayService.bind(this)
             this.updatePathwayServiceAssignment = this.updatePathwayServiceAssignment.bind(this)
             this.updateSeatDiagram = this.updateSeatDiagram.bind(this)
+            this.updateSeatDiagramZone = this.updateSeatDiagramZone.bind(this)
             this.updateSeatLayoutModel = this.updateSeatLayoutModel.bind(this)
+            this.updateSeatLayoutModelZone = this.updateSeatLayoutModelZone.bind(this)
+            this.updateServiceType = this.updateServiceType.bind(this)
             this.updateState = this.updateState.bind(this)
             this.updateTerminal = this.updateTerminal.bind(this)
             this.updateTransporter = this.updateTransporter.bind(this)
@@ -455,6 +473,35 @@ export namespace inventory {
         }
 
         /**
+         * Creates a new seat diagram zone.
+         * @param params - The zone data to create
+         * @returns {Promise<SeatDiagramZone>} The created zone
+         * @throws {APIError} If creation fails
+         */
+        public async createSeatDiagramZone(seatDiagramId: number, params: {
+    /**
+     * Name of the zone
+     * Must have at least 1 character
+     */
+    name: string
+
+    /**
+     * Array of row numbers that belong to this zone
+     */
+    rowNumbers: number[]
+
+    /**
+     * Price multiplier for seats in this zone
+     * @default 1.0
+     */
+    priceMultiplier?: number
+}): Promise<seat_diagram_zones.SeatDiagramZone> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/seat-diagrams/${encodeURIComponent(seatDiagramId)}/zones`, JSON.stringify(params))
+            return await resp.json() as seat_diagram_zones.SeatDiagramZone
+        }
+
+        /**
          * Creates a new seat layout model.
          * @param params - Data for the new seat layout model
          * @returns {Promise<SeatLayoutModel>} The created seat layout model
@@ -464,6 +511,35 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/seat-layout-models`, JSON.stringify(params))
             return await resp.json() as seat_layout_models.SeatLayoutModel
+        }
+
+        /**
+         * Creates a new seat layout model zone.
+         * @param params - The zone data to create
+         * @returns {Promise<SeatLayoutModelZone>} The created zone
+         * @throws {APIError} If creation fails
+         */
+        public async createSeatLayoutModelZone(seatLayoutModelId: number, params: {
+    /**
+     * Name of the zone
+     * Must have at least 1 character
+     */
+    name: string
+
+    /**
+     * Array of row numbers that belong to this zone
+     */
+    rowNumbers: number[]
+
+    /**
+     * Price multiplier for seats in this zone
+     * @default 1.0
+     */
+    priceMultiplier?: number
+}): Promise<seat_layout_model_zones.SeatLayoutModelZone> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/seat-layout-models/${encodeURIComponent(seatLayoutModelId)}/zones`, JSON.stringify(params))
+            return await resp.json() as seat_layout_model_zones.SeatLayoutModelZone
         }
 
         /**
@@ -481,6 +557,17 @@ export namespace inventory {
             return await resp.json() as {
     seatsCreated: number
 }
+        }
+
+        /**
+         * Creates a new service type
+         * @param payload - Service type data to create
+         * @returns The newly created service type
+         */
+        public async createServiceType(params: service_types.CreateServiceTypePayload): Promise<service_types.ServiceType> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/service-types`, JSON.stringify(params))
+            return await resp.json() as service_types.ServiceType
         }
 
         /**
@@ -665,6 +752,18 @@ export namespace inventory {
         }
 
         /**
+         * Deletes a seat diagram zone.
+         * @param params - Object containing the zone ID and diagram ID
+         * @param params.id - The ID of the zone to delete
+         * @param params.seatDiagramId - The ID of the diagram the zone belongs to
+         * @returns {Promise<void>} No content on success
+         * @throws {APIError} If deletion fails or zone doesn't exist
+         */
+        public async deleteSeatDiagramZone(seatDiagramId: number, id: number): Promise<void> {
+            await this.baseClient.callTypedAPI("DELETE", `/seat-diagrams/${encodeURIComponent(seatDiagramId)}/zones/${encodeURIComponent(id)}`)
+        }
+
+        /**
          * Deletes a seat layout model by its ID.
          * @param params - Object containing the seat layout model ID
          * @param params.id - The ID of the seat layout model to delete
@@ -675,6 +774,31 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/seat-layout-models/${encodeURIComponent(id)}`)
             return await resp.json() as seat_layout_models.SeatLayoutModel
+        }
+
+        /**
+         * Deletes a seat layout model zone by its ID.
+         * @param params - Object containing the zone ID and model ID
+         * @param params.id - The ID of the zone to delete
+         * @param params.seatLayoutModelId - The ID of the model the zone belongs to
+         * @returns {Promise<SeatLayoutModelZone>} The deleted zone
+         * @throws {APIError} If deletion fails or zone doesn't exist
+         */
+        public async deleteSeatLayoutModelZone(seatLayoutModelId: number, id: number): Promise<seat_layout_model_zones.SeatLayoutModelZone> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/seat-layout-models/${encodeURIComponent(seatLayoutModelId)}/zones/${encodeURIComponent(id)}`)
+            return await resp.json() as seat_layout_model_zones.SeatLayoutModelZone
+        }
+
+        /**
+         * Deletes a service type
+         * @param params - Object containing the service type ID to delete
+         * @returns The deleted service type
+         */
+        public async deleteServiceType(id: number): Promise<service_types.ServiceType> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/service-types/${encodeURIComponent(id)}`)
+            return await resp.json() as service_types.ServiceType
         }
 
         /**
@@ -966,6 +1090,20 @@ export namespace inventory {
         }
 
         /**
+         * Retrieves a seat diagram zone by its ID.
+         * @param params - Object containing the zone ID and diagram ID
+         * @param params.id - The ID of the zone to retrieve
+         * @param params.seatDiagramId - The ID of the diagram the zone belongs to
+         * @returns {Promise<SeatDiagramZone>} The requested zone
+         * @throws {APIError} If retrieval fails or zone doesn't exist
+         */
+        public async getSeatDiagramZone(seatDiagramId: number, id: number): Promise<seat_diagram_zones.SeatDiagramZone> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/seat-diagrams/${encodeURIComponent(seatDiagramId)}/zones/${encodeURIComponent(id)}`)
+            return await resp.json() as seat_diagram_zones.SeatDiagramZone
+        }
+
+        /**
          * Retrieves a seat layout model by its ID.
          * @param params - Object containing the seat layout model ID
          * @param params.id - The ID of the seat layout model to retrieve
@@ -976,6 +1114,31 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/seat-layout-models/${encodeURIComponent(id)}`)
             return await resp.json() as seat_layout_models.SeatLayoutModel
+        }
+
+        /**
+         * Retrieves a seat layout model zone by its ID.
+         * @param params - Object containing the zone ID and model ID
+         * @param params.id - The ID of the zone to retrieve
+         * @param params.seatLayoutModelId - The ID of the model the zone belongs to
+         * @returns {Promise<SeatLayoutModelZone>} The requested zone
+         * @throws {APIError} If retrieval fails or zone doesn't exist
+         */
+        public async getSeatLayoutModelZone(seatLayoutModelId: number, id: number): Promise<seat_layout_model_zones.SeatLayoutModelZone> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/seat-layout-models/${encodeURIComponent(seatLayoutModelId)}/zones/${encodeURIComponent(id)}`)
+            return await resp.json() as seat_layout_model_zones.SeatLayoutModelZone
+        }
+
+        /**
+         * Gets a service type by ID
+         * @param params - Object containing the service type ID
+         * @returns The requested service type
+         */
+        public async getServiceType(id: number): Promise<service_types.ServiceType> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/service-types/${encodeURIComponent(id)}`)
+            return await resp.json() as service_types.ServiceType
         }
 
         /**
@@ -1384,6 +1547,33 @@ export namespace inventory {
         }
 
         /**
+         * List service types
+         * @returns List of service types
+         */
+        public async listServiceTypes(): Promise<service_types.ServiceTypes> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/service-types`)
+            return await resp.json() as service_types.ServiceTypes
+        }
+
+        /**
+         * List service types with pagination
+         * @param params - Pagination parameters
+         * @returns Paginated list of service types
+         */
+        public async listServiceTypesPaginated(params: shared.PaginationParams): Promise<service_types.PaginatedServiceTypes> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                page:     params.page === undefined ? undefined : String(params.page),
+                pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/service-types/paginated`, undefined, {query})
+            return await resp.json() as service_types.PaginatedServiceTypes
+        }
+
+        /**
          * Retrieves all states without pagination (useful for dropdowns).
          */
         public async listStates(params: states.StatesQueryOptions): Promise<states.States> {
@@ -1450,6 +1640,118 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/get-transporters/paginated`, JSON.stringify(params))
             return await resp.json() as transporters.PaginatedTransporters
+        }
+
+        /**
+         * Retrieves all zones for a specific seat diagram without pagination.
+         * @param params - Object containing the seat diagram ID
+         * @param params.seatDiagramId - The ID of the seat diagram
+         * @returns {Promise<SeatDiagramZones>} List of zones for the seat diagram
+         * @throws {APIError} If retrieval fails
+         */
+        public async listZonesByDiagram(seatDiagramId: number, params: {
+    orderBy?: {
+        field: "id" | "seatDiagramId" | "name" | "rowNumbers" | "priceMultiplier" | "createdAt" | "updatedAt"
+        direction: "asc" | "desc"
+    }[]
+    filters?: {
+        id?: number
+        seatDiagramId?: number
+        name?: string
+        rowNumbers?: number[]
+        priceMultiplier?: number
+        createdAt?: string
+        updatedAt?: string
+    }
+}): Promise<seat_diagram_zones.SeatDiagramZones> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/seat-diagrams/${encodeURIComponent(seatDiagramId)}/get-zones`, JSON.stringify(params))
+            return await resp.json() as seat_diagram_zones.SeatDiagramZones
+        }
+
+        /**
+         * Retrieves zones for a specific seat diagram with pagination.
+         * @param params - Object containing the seat diagram ID and pagination parameters
+         * @param params.seatDiagramId - The ID of the seat diagram
+         * @returns {Promise<PaginatedSeatDiagramZones>} Paginated list of zones for the seat diagram
+         * @throws {APIError} If retrieval fails
+         */
+        public async listZonesByDiagramPaginated(seatDiagramId: number, params: {
+    page?: number
+    pageSize?: number
+    orderBy?: {
+        field: "id" | "seatDiagramId" | "name" | "rowNumbers" | "priceMultiplier" | "createdAt" | "updatedAt"
+        direction: "asc" | "desc"
+    }[]
+    filters?: {
+        id?: number
+        seatDiagramId?: number
+        name?: string
+        rowNumbers?: number[]
+        priceMultiplier?: number
+        createdAt?: string
+        updatedAt?: string
+    }
+}): Promise<seat_diagram_zones.PaginatedSeatDiagramZones> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/seat-diagrams/${encodeURIComponent(seatDiagramId)}/get-zones/paginated`, JSON.stringify(params))
+            return await resp.json() as seat_diagram_zones.PaginatedSeatDiagramZones
+        }
+
+        /**
+         * Retrieves all zones for a specific seat layout model without pagination.
+         * @param params - Object containing the seat layout model ID
+         * @param params.seatLayoutModelId - The ID of the seat layout model
+         * @returns {Promise<SeatLayoutModelZones>} List of zones for the seat layout model
+         * @throws {APIError} If retrieval fails
+         */
+        public async listZonesByLayoutModel(seatLayoutModelId: number, params: {
+    orderBy?: {
+        field: "id" | "seatLayoutModelId" | "name" | "rowNumbers" | "priceMultiplier" | "createdAt" | "updatedAt"
+        direction: "asc" | "desc"
+    }[]
+    filters?: {
+        id?: number
+        seatLayoutModelId?: number
+        name?: string
+        rowNumbers?: number[]
+        priceMultiplier?: number
+        createdAt?: string
+        updatedAt?: string
+    }
+}): Promise<seat_layout_model_zones.SeatLayoutModelZones> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/seat-layout-models/${encodeURIComponent(seatLayoutModelId)}/get-zones`, JSON.stringify(params))
+            return await resp.json() as seat_layout_model_zones.SeatLayoutModelZones
+        }
+
+        /**
+         * Retrieves zones for a specific seat layout model with pagination.
+         * @param params - Object containing the seat layout model ID and pagination parameters
+         * @param params.seatLayoutModelId - The ID of the seat layout model
+         * @returns {Promise<PaginatedSeatLayoutModelZones>} Paginated list of zones for the seat layout model
+         * @throws {APIError} If retrieval fails
+         */
+        public async listZonesByLayoutModelPaginated(seatLayoutModelId: number, params: {
+    page?: number
+    pageSize?: number
+    orderBy?: {
+        field: "id" | "seatLayoutModelId" | "name" | "rowNumbers" | "priceMultiplier" | "createdAt" | "updatedAt"
+        direction: "asc" | "desc"
+    }[]
+    filters?: {
+        id?: number
+        seatLayoutModelId?: number
+        name?: string
+        rowNumbers?: number[]
+        priceMultiplier?: number
+        createdAt?: string
+        updatedAt?: string
+    }
+}): Promise<seat_layout_model_zones.PaginatedSeatLayoutModelZones> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/seat-layout-models/${encodeURIComponent(seatLayoutModelId)}/get-zones/paginated`, JSON.stringify(params))
+            return await resp.json() as seat_layout_model_zones.PaginatedSeatLayoutModelZones
         }
 
         /**
@@ -1540,8 +1842,8 @@ export namespace inventory {
         primaryColor?: string | null
         secondaryColor?: string | null
         active?: boolean
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string
+        updatedAt?: string
     }
     term: string
 }): Promise<bus_lines.PaginatedBusLines> {
@@ -2060,12 +2362,6 @@ export namespace inventory {
      * Must be a positive number
      */
     modelId?: number
-
-    /**
-     * ID of the seat diagram
-     * Must be a positive number
-     */
-    seatDiagramId?: number
 
     /**
      * Bus type code
@@ -2945,6 +3241,34 @@ export namespace inventory {
         }
 
         /**
+         * Updates an existing seat diagram zone.
+         * @param params - The zone data to update with ID
+         * @returns {Promise<SeatDiagramZone>} The updated zone
+         * @throws {APIError} If update fails or zone doesn't exist
+         */
+        public async updateSeatDiagramZone(seatDiagramId: number, id: number, params: {
+    /**
+     * Name of the zone
+     * Must have at least 1 character
+     */
+    name?: string
+
+    /**
+     * Array of row numbers that belong to this zone
+     */
+    rowNumbers?: number[]
+
+    /**
+     * Price multiplier for seats in this zone
+     */
+    priceMultiplier?: number
+}): Promise<seat_diagram_zones.SeatDiagramZone> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PATCH", `/seat-diagrams/${encodeURIComponent(seatDiagramId)}/zones/${encodeURIComponent(id)}`, JSON.stringify(params))
+            return await resp.json() as seat_diagram_zones.SeatDiagramZone
+        }
+
+        /**
          * Updates an existing seat layout model.
          * @param params - Object containing the seat layout model ID and update data
          * @param params.id - The ID of the seat layout model to update
@@ -3004,6 +3328,63 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PATCH", `/seat-layout-models/${encodeURIComponent(id)}`, JSON.stringify(params))
             return await resp.json() as seat_layout_models.SeatLayoutModel
+        }
+
+        /**
+         * Updates an existing seat layout model zone.
+         * @param params - Object containing the zone ID, model ID and update data
+         * @param params.id - The ID of the zone to update
+         * @param params.seatLayoutModelId - The ID of the model the zone belongs to
+         * @returns {Promise<SeatLayoutModelZone>} The updated zone
+         * @throws {APIError} If update fails or zone doesn't exist
+         */
+        public async updateSeatLayoutModelZone(seatLayoutModelId: number, id: number, params: {
+    /**
+     * Name of the zone
+     * Must have at least 1 character
+     */
+    name?: string
+
+    /**
+     * Array of row numbers that belong to this zone
+     */
+    rowNumbers?: number[]
+
+    /**
+     * Price multiplier for seats in this zone
+     */
+    priceMultiplier?: number
+}): Promise<seat_layout_model_zones.SeatLayoutModelZone> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PATCH", `/seat-layout-models/${encodeURIComponent(seatLayoutModelId)}/zones/${encodeURIComponent(id)}`, JSON.stringify(params))
+            return await resp.json() as seat_layout_model_zones.SeatLayoutModelZone
+        }
+
+        /**
+         * Updates an existing service type
+         * @param params - Object containing ID and update data
+         * @returns The updated service type
+         */
+        public async updateServiceType(id: number, params: {
+    /**
+     * Name of the service type
+     * Must have at least 1 non-whitespace character
+     */
+    name?: string
+
+    /**
+     * Description of the service type
+     */
+    description?: string
+
+    /**
+     * Whether the service type is active
+     */
+    active?: boolean
+}): Promise<service_types.ServiceType> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/service-types/${encodeURIComponent(id)}`, JSON.stringify(params))
+            return await resp.json() as service_types.ServiceType
         }
 
         /**
@@ -3367,6 +3748,7 @@ export namespace users {
             this.getUserRoles = this.getUserRoles.bind(this)
             this.getUserWithPermissions = this.getUserWithPermissions.bind(this)
             this.getUserWithRoles = this.getUserWithRoles.bind(this)
+            this.listAuditsPaginated = this.listAuditsPaginated.bind(this)
             this.listDepartmentUsers = this.listDepartmentUsers.bind(this)
             this.listDepartmentUsersPaginated = this.listDepartmentUsersPaginated.bind(this)
             this.listDepartments = this.listDepartments.bind(this)
@@ -3807,6 +4189,17 @@ export namespace users {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/users/${encodeURIComponent(userId)}/roles`)
             return await resp.json() as user_permissions.UserWithRoles
+        }
+
+        /**
+         * Retrieves paginated audit entries with optional filtering
+         * @param params - Pagination parameters with optional filtering (by service, userId, etc.)
+         * @returns {Promise<PaginatedAudits>} Paginated list of audit entries
+         */
+        public async listAuditsPaginated(params: audits.PaginationParamsAudits): Promise<audits.PaginatedAudits> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/audits/paginated`, JSON.stringify(params))
+            return await resp.json() as audits.PaginatedAudits
         }
 
         /**
@@ -4456,6 +4849,19 @@ export namespace users {
          */
         public async searchRoles(params: {
     term: string
+    orderBy?: {
+        field: "id" | "name" | "description" | "tenantId" | "createdAt" | "updatedAt"
+        direction: "asc" | "desc"
+    }[]
+    filters?: {
+        id?: number
+        name?: string
+        description?: string | null
+        tenantId?: number
+        createdAt?: string | null
+        updatedAt?: string | null
+    }
+    includePermissions?: boolean
 }): Promise<roles.Roles> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/roles/search`, JSON.stringify(params))
@@ -4818,6 +5224,74 @@ export namespace users {
     }
 }
 
+export namespace audits {
+    export interface Audit {
+        /**
+         * Unique identifier for the audit record
+         */
+        id: number
+
+        /**
+         * ID of the user this audit is for
+         */
+        userId: number
+
+        /**
+         * The service or module that initiated the audit entry
+         */
+        service: string
+
+        /**
+         * The specific API endpoint accessed
+         */
+        endpoint: string | null
+
+        /**
+         * Content of the audit entry with detailed information
+         */
+        details: { [key: string]: any } | null
+
+        /**
+         * IP address from which the audit was performed
+         */
+        ipAddress: string | null
+
+        /**
+         * User agent of the browser/application that performed the audit
+         */
+        userAgent: string | null
+
+        /**
+         * Timestamp when the audit record was created
+         */
+        createdAt: string
+    }
+
+    export interface PaginatedAudits {
+        data: Audit[]
+        pagination: shared.PaginationMeta
+    }
+
+    export interface PaginationParamsAudits {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "userId" | "service" | "endpoint" | "details" | "ipAddress" | "userAgent" | "createdAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            userId?: number
+            service?: string
+            endpoint?: string | null
+            details?: { [key: string]: any } | null
+            ipAddress?: string | null
+            userAgent?: string | null
+            createdAt?: string
+        }
+    }
+}
+
 export namespace auth {
     export interface LoginPayload {
         /**
@@ -4918,12 +5392,12 @@ export namespace bus_lines {
         /**
          * Timestamp when the bus line record was created
          */
-        createdAt: string | null
+        createdAt: string
 
         /**
          * Timestamp when the bus line record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string
     }
 
     export interface BusLines {
@@ -4949,8 +5423,8 @@ export namespace bus_lines {
             primaryColor?: string | null
             secondaryColor?: string | null
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string
+            updatedAt?: string
         }
     }
 
@@ -5031,8 +5505,8 @@ export namespace bus_lines {
             primaryColor?: string | null
             secondaryColor?: string | null
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string
+            updatedAt?: string
         }
     }
 }
@@ -5622,10 +6096,10 @@ export namespace buses {
         modelId: number
 
         /**
-         * ID of the seat diagram
+         * ID of the seat layout model
          * Must be a positive number
          */
-        seatDiagramId?: number
+        seatLayoutModelId?: number
 
         /**
          * Bus type code
@@ -7804,6 +8278,57 @@ export namespace routes {
     }
 }
 
+export namespace seat_diagram_zones {
+    export interface PaginatedSeatDiagramZones {
+        data: SeatDiagramZone[]
+        pagination: shared.PaginationMeta
+    }
+
+    export interface SeatDiagramZone {
+        /**
+         * Unique identifier for the zone
+         */
+        id: number
+
+        /**
+         * Reference to the seat diagram
+         */
+        seatDiagramId: number
+
+        /**
+         * Name of the zone
+         */
+        name: string
+
+        /**
+         * Array of row numbers that belong to this zone
+         */
+        rowNumbers: number[]
+
+        /**
+         * Price multiplier for seats in this zone
+         */
+        priceMultiplier: number
+
+        /**
+         * Timestamp when the zone was created
+         */
+        createdAt: string
+
+        /**
+         * Timestamp when the zone was last updated
+         */
+        updatedAt: string
+    }
+
+    export interface SeatDiagramZones {
+        /**
+         * List of seat diagram zones
+         */
+        seatDiagramZones: SeatDiagramZone[]
+    }
+}
+
 export namespace seat_diagrams {
     export interface BathroomLocation {
         /**
@@ -7982,6 +8507,57 @@ export namespace seat_diagrams {
     export type SpaceType = "seat" | "hallway" | "bathroom" | "empty"
 }
 
+export namespace seat_layout_model_zones {
+    export interface PaginatedSeatLayoutModelZones {
+        data: SeatLayoutModelZone[]
+        pagination: shared.PaginationMeta
+    }
+
+    export interface SeatLayoutModelZone {
+        /**
+         * Unique identifier for the zone
+         */
+        id: number
+
+        /**
+         * Reference to the seat layout model
+         */
+        seatLayoutModelId: number
+
+        /**
+         * Name of the zone
+         */
+        name: string
+
+        /**
+         * Array of row numbers that belong to this zone
+         */
+        rowNumbers: number[]
+
+        /**
+         * Price multiplier for seats in this zone
+         */
+        priceMultiplier: number
+
+        /**
+         * Timestamp when the zone was created
+         */
+        createdAt: string
+
+        /**
+         * Timestamp when the zone was last updated
+         */
+        updatedAt: string
+    }
+
+    export interface SeatLayoutModelZones {
+        /**
+         * List of seat layout model zones
+         */
+        seatLayoutModelZones: SeatLayoutModelZone[]
+    }
+}
+
 export namespace seat_layout_models {
     export interface BathroomLocation {
         /**
@@ -8145,6 +8721,68 @@ export namespace seat_layout_models {
     }
 }
 
+export namespace service_types {
+    export interface CreateServiceTypePayload {
+        /**
+         * Name of the service type
+         * Must have at least 1 non-whitespace character
+         */
+        name: string
+
+        /**
+         * Description of the service type (optional)
+         */
+        description?: string
+
+        /**
+         * Whether the service type is active
+         * @default true
+         */
+        active?: boolean
+    }
+
+    export interface PaginatedServiceTypes {
+        data: ServiceType[]
+        pagination: shared.PaginationMeta
+    }
+
+    export interface ServiceType {
+        /**
+         * Unique identifier for the service type
+         */
+        id: number
+
+        /**
+         * Name of the service type
+         */
+        name: string
+
+        /**
+         * Description of what this service type represents
+         */
+        description: string
+
+        /**
+         * Whether this service type is currently active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when this service type was created
+         */
+        createdAt: string
+
+        /**
+         * Timestamp when this service type was last updated
+         */
+        updatedAt: string
+    }
+
+    export interface ServiceTypes {
+        serviceTypes: ServiceType[]
+    }
+}
+
 export namespace shared {
     export interface PaginationMeta {
         /**
@@ -8176,6 +8814,11 @@ export namespace shared {
          * Whether there is a previous page available
          */
         hasPreviousPage: boolean
+    }
+
+    export interface PaginationParams {
+        page?: number
+        pageSize?: number
     }
 
     export interface PaginationParams {

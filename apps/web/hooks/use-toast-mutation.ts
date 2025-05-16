@@ -43,17 +43,14 @@ export function useToastMutation<TData, TVariables>({
    */
   const mutateWithToast = async (variables: TVariables) => {
     try {
-      const promiseResult = await toast.promise(
-        mutation.mutateAsync(variables),
-        {
-          loading: messages.loading,
-          success: messages.success,
-          error: messages.error,
-        },
-      );
+      const promise = toast.promise(mutation.mutateAsync(variables), {
+        loading: messages.loading,
+        success: messages.success,
+        error: messages.error,
+      });
 
       // Unwrap the result to get the actual data
-      const response = await promiseResult.unwrap();
+      const response = await promise.unwrap();
 
       // Handle business logic
       onSuccess(response);

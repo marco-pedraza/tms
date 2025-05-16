@@ -180,10 +180,6 @@ export default function TerminalsTable() {
     router.push(`/terminals/${id}/edit`);
   };
 
-  const onAdd = () => {
-    router.push('/terminals/new');
-  };
-
   // Prepare translations object for the columns factory
   const translations: TranslationObject = {
     fields: {
@@ -222,7 +218,7 @@ export default function TerminalsTable() {
         isLoading={isLoading}
         hasError={!!error}
         onRetry={refetch}
-        onAdd={onAdd}
+        addHref="/terminals/new"
       />
       <AlertDialog
         open={!!deleteId}

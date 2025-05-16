@@ -7,6 +7,7 @@ import useCityDetailsParams from '@/cities/hooks/use-city-details-params';
 import useCityMutations from '@/cities/hooks/use-city-mutations';
 import useQueryCity from '@/cities/hooks/use-query-city';
 import PageHeader from '@/components/page-header';
+import routes from '@/services/routes';
 
 export default function EditCityPage() {
   const tCities = useTranslations('cities');
@@ -35,7 +36,7 @@ export default function EditCityPage() {
       <PageHeader
         title={tCities('edit.title')}
         description={data?.name}
-        backHref="/cities"
+        backHref={routes.cities.index}
       />
       <CityForm
         defaultValues={data}

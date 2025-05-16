@@ -18,6 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import routes from '@/services/routes';
 
 type City = cities.City;
 
@@ -163,11 +164,11 @@ export default function CitiesTable() {
   };
 
   const getViewHref = (id: string) => {
-    return `/cities/${id}`;
+    return routes.cities.getDetailsRoute(id);
   };
 
   const handleEdit = (id: string) => {
-    router.push(`/cities/${id}/edit`);
+    router.push(routes.cities.getEditRoute(id));
   };
 
   // Prepare translations object for the columns factory
@@ -207,7 +208,7 @@ export default function CitiesTable() {
         isLoading={isLoading}
         hasError={!!error}
         onRetry={refetch}
-        addHref="/cities/new"
+        addHref={routes.cities.new}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

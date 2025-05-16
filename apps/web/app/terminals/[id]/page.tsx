@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import routes from '@/services/routes';
 import TerminalSkeleton from '@/terminals/components/terminal-skeleton';
 import useQueryTerminal from '@/terminals/hooks/use-query-terminal';
 import useTerminalDetailsParams from '@/terminals/hooks/use-terminal-details-params';
@@ -106,12 +107,12 @@ export default function TerminalDetailsPage() {
       <PageHeader
         title={terminal.name}
         description={tTerminals('details.description')}
-        backHref="/terminals"
+        backHref={routes.terminals.index}
       />
 
       <div className="flex justify-end mb-6">
         <ActionButtons
-          editHref={`/terminals/${terminal.id}/edit`}
+          editHref={routes.terminals.getEditRoute(terminal.id.toString())}
           onDelete={handleDelete}
           editLabel={tCommon('actions.edit')}
           deleteLabel={tCommon('actions.delete')}

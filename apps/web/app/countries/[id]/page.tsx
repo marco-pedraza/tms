@@ -11,6 +11,7 @@ import CountrySkeleton from '@/countries/components/country-skeleton';
 import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
 import useCountryMutations from '@/countries/hooks/use-country-mutations';
 import useQueryCountry from '@/countries/hooks/use-query-country';
+import routes from '@/services/routes';
 
 export default function CountryDetailsPage() {
   const tCountries = useTranslations('countries');
@@ -45,12 +46,12 @@ export default function CountryDetailsPage() {
       <PageHeader
         title={country.name}
         description={tCountries('details.description')}
-        backHref="/countries"
+        backHref={routes.countries.index}
       />
 
       <div className="flex justify-end mb-6">
         <ActionButtons
-          editHref={`/countries/${country.id}/edit`}
+          editHref={routes.countries.getEditRoute(country.id.toString())}
           onDelete={handleDelete}
           editLabel={tCommon('actions.edit')}
           deleteLabel={tCommon('actions.delete')}

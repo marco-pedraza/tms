@@ -1,8 +1,8 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import ServiceTypesTable from '@/app/service-types/components/service-types-table';
 import PageHeader from '@/components/page-header';
+import ServiceTypesTable from '@/service-types/components/service-types-table';
 import routes from '@/services/routes';
 
 export default function ServiceTypesPage() {

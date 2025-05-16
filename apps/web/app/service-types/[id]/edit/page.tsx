@@ -9,17 +9,16 @@ import ServiceTypeSkeleton from '@/service-types/components/service-type-skeleto
 import useQueryServiceType from '@/service-types/hooks/use-query-service-type';
 import useServiceTypeDetailsParams from '@/service-types/hooks/use-service-type-details-params';
 import useServiceTypeMutations from '@/service-types/hooks/use-service-type-mutations';
+import routes from '@/services/routes';
 
 export default function EditServiceTypePage() {
   const tServiceTypes = useTranslations('serviceTypes');
   const tCommon = useTranslations('common');
   const { serviceTypeId, isValidId } = useServiceTypeDetailsParams();
-
   const { data: serviceType, isLoading } = useQueryServiceType({
     serviceTypeId,
     enabled: isValidId,
   });
-
   const { updateServiceType } = useServiceTypeMutations();
 
   const handleSubmit = async (values: ServiceTypeFormValues) => {
@@ -39,7 +38,7 @@ export default function EditServiceTypePage() {
       <PageHeader
         title={tServiceTypes('edit.title')}
         description={`${serviceType.name}`}
-        backHref={`/service-types/${serviceTypeId}`}
+        backHref={routes.serviceTypes.getDetailsRoute(serviceTypeId.toString())}
         backLabel={tServiceTypes('actions.backToList')}
       />
       <ServiceTypeForm

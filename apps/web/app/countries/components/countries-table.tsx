@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import useCountryMutations from '@/countries/hooks/use-country-mutations';
 import useQueryCountries from '@/countries/hooks/use-query-countries';
+import routes from '@/services/routes';
 
 type Country = countries.Country;
 
@@ -151,11 +152,11 @@ export default function CountriesTable() {
   };
 
   const getViewHref = (id: string) => {
-    return `/countries/${id}`;
+    return routes.countries.getDetailsRoute(id);
   };
 
   const handleEdit = (id: string) => {
-    router.push(`/countries/${id}/edit`);
+    router.push(routes.countries.getEditRoute(id));
   };
 
   // Prepare translations object for the columns factory only
@@ -194,7 +195,7 @@ export default function CountriesTable() {
         isLoading={isLoading}
         hasError={!!error}
         onRetry={refetch}
-        addHref="/countries/new"
+        addHref={routes.countries.new}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

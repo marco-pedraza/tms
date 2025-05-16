@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { terminals } from '@repo/ims-client';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
 import imsClient from '@/services/ims-client';
+import routes from '@/services/routes';
 import type { TerminalFormValues } from '@/terminals/components/terminal-form';
 
 interface MutationMessages {
@@ -80,7 +81,7 @@ export default function useTerminalMutations() {
     messages: createMessages,
     onSuccess: (data: terminals.Terminal) => {
       invalidateTerminals();
-      router.push(`/terminals/${data.id}`);
+      router.push(routes.terminals.getDetailsRoute(data.id.toString()));
     },
   });
 
@@ -118,7 +119,7 @@ export default function useTerminalMutations() {
     messages: updateMessages,
     onSuccess: (data: terminals.Terminal) => {
       invalidateTerminals();
-      router.push(`/terminals/${data.id}`);
+      router.push(routes.terminals.getDetailsRoute(data.id.toString()));
     },
   });
 
@@ -144,7 +145,7 @@ export default function useTerminalMutations() {
     messages: deleteMessages,
     onSuccess: () => {
       invalidateTerminals();
-      router.push('/terminals');
+      router.push(routes.terminals.index);
     },
   });
 

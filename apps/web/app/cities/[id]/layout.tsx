@@ -5,6 +5,7 @@ import CityNotFound from '@/cities/components/city-not-found';
 import useCityDetailsParams from '@/cities/hooks/use-city-details-params';
 import useQueryCity from '@/cities/hooks/use-query-city';
 import LoadError from '@/components/load-error';
+import routes from '@/services/routes';
 
 /**
  * Layout component for city detail pages
@@ -31,7 +32,10 @@ export default function CityLayout({
 
   if (status === 'error') {
     return (
-      <LoadError backHref="/cities" backLabel={tCities('actions.backToList')} />
+      <LoadError
+        backHref={routes.cities.index}
+        backLabel={tCities('actions.backToList')}
+      />
     );
   }
 

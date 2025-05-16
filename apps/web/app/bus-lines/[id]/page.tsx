@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import useBusLineMutations from '@/app/bus-lines/hooks/use-bus-line-mutations';
 import BusLineSkeleton from '@/bus-lines/components/bus-line-skeleton';
 import useBusLineDetailsParams from '@/bus-lines/hooks/use-bus-line-details-params';
+import useBusLineMutations from '@/bus-lines/hooks/use-bus-line-mutations';
 import useQueryBusLine from '@/bus-lines/hooks/use-query-bus-line';
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';

@@ -8,6 +8,7 @@ import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import useQueryCountry from '@/countries/hooks/use-query-country';
+import routes from '@/services/routes';
 import StateSkeleton from '@/states/components/state-skeleton';
 import useQueryState from '@/states/hooks/use-query-state';
 import useStateDetailsParams from '@/states/hooks/use-state-details-params';
@@ -50,12 +51,12 @@ export default function StateDetailsPage() {
       <PageHeader
         title={state.name}
         description={tStates('details.description')}
-        backHref="/states"
+        backHref={routes.states.index}
       />
 
       <div className="flex justify-end mb-6">
         <ActionButtons
-          editHref={`/states/${state.id}/edit`}
+          editHref={routes.states.getEditRoute(state.id.toString())}
           onDelete={handleDelete}
           editLabel={tCommon('actions.edit')}
           deleteLabel={tCommon('actions.delete')}

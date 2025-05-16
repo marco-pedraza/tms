@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
+import routes from '@/services/routes';
 import TransporterForm, {
   TransporterFormValues,
 } from '@/transporters/components/transporter-form';
@@ -37,7 +38,7 @@ export default function EditTransporterPage() {
       <PageHeader
         title={tTransporters('details.description')}
         description={`${data?.name} (${data?.code})`}
-        backHref="/transporters"
+        backHref={routes.transporters.index}
       />
       <TransporterForm
         defaultValues={{

@@ -4,11 +4,13 @@ import { busLinesColumnsFactory } from '@/bus-lines/components/bus-lines-table';
 import useBusLineMutations from '@/bus-lines/hooks/use-bus-line-mutations';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable } from '@/components/data-table';
+import routes from '@/services/routes';
 import useQueryTransporterBusLines from '@/transporters/hooks/use-query-transporter-bus-lines';
 import useTransporterDetailsParams from '@/transporters/hooks/use-transporter-details-params';
 
 export default function TransporterBusLinesTable() {
-  const t = useTranslations('common');
+  const tCommon = useTranslations('common');
+  const tBusLines = useTranslations('busLines');
   const { transporterId, isValidId } = useTransporterDetailsParams();
   const {
     data: busLines,
@@ -30,10 +32,8 @@ export default function TransporterBusLinesTable() {
 
   const columns = busLinesColumnsFactory({
     onDelete: setDeleteId,
-    viewLabel: t('actions.view'),
-    editLabel: t('actions.edit'),
-    deleteLabel: t('actions.delete'),
-    moreLabel: t('actions.more'),
+    tCommon,
+    tBusLines,
   });
 
   return (
@@ -44,7 +44,7 @@ export default function TransporterBusLinesTable() {
         isLoading={isLoading}
         hasError={!!error}
         onRetry={refetch}
-        addHref="/bus-lines/new"
+        addHref={routes.busLines.new}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

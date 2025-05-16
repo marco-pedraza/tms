@@ -9,6 +9,7 @@ import CountryFormSkeleton from '@/countries/components/country-form-skeleton';
 import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
 import useCountryMutations from '@/countries/hooks/use-country-mutations';
 import useQueryCountry from '@/countries/hooks/use-query-country';
+import routes from '@/services/routes';
 
 export default function EditCountryPage() {
   const tCountries = useTranslations('countries');
@@ -37,7 +38,7 @@ export default function EditCountryPage() {
       <PageHeader
         title={tCountries('details.description')}
         description={`${data?.name} (${data?.code})`}
-        backHref="/countries"
+        backHref={routes.countries.index}
       />
       <CountryForm
         defaultValues={data}

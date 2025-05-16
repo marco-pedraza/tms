@@ -25,6 +25,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import routes from '@/services/routes';
 import useQueryTerminals from '@/terminals/hooks/use-query-terminals';
 import useTerminalMutations from '@/terminals/hooks/use-terminal-mutations';
 
@@ -173,11 +174,11 @@ export default function TerminalsTable() {
   };
 
   const getViewHref = (id: string) => {
-    return `/terminals/${id}`;
+    return routes.terminals.getDetailsRoute(id);
   };
 
   const handleEdit = (id: string) => {
-    router.push(`/terminals/${id}/edit`);
+    router.push(routes.terminals.getEditRoute(id));
   };
 
   // Prepare translations object for the columns factory
@@ -218,7 +219,7 @@ export default function TerminalsTable() {
         isLoading={isLoading}
         hasError={!!error}
         onRetry={refetch}
-        addHref="/terminals/new"
+        addHref={routes.terminals.new}
       />
       <AlertDialog
         open={!!deleteId}

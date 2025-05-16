@@ -1,11 +1,10 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import ServiceTypeForm, {
-  ServiceTypeFormValues,
-} from '@/app/service-types/components/service-type-form';
-import useServiceTypeMutations from '@/app/service-types/hooks/use-service-type-mutations';
 import PageHeader from '@/components/page-header';
+import ServiceTypeForm from '@/service-types/components/service-type-form';
+import useServiceTypeMutations from '@/service-types/hooks/use-service-type-mutations';
+import routes from '@/services/routes';
 
 export default function NewServiceTypePage() {
   const t = useTranslations('serviceTypes');
@@ -16,7 +15,7 @@ export default function NewServiceTypePage() {
     <div>
       <PageHeader
         title={t('actions.create')}
-        backHref="/service-types"
+        backHref={routes.serviceTypes.index}
         backLabel={t('actions.backToList')}
       />
       <ServiceTypeForm

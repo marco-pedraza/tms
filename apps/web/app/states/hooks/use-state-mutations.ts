@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { states } from '@repo/ims-client';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
 import imsClient from '@/services/ims-client';
+import routes from '@/services/routes';
 import type { StateFormValues } from '@/states/components/state-form';
 
 interface MutationMessages {
@@ -73,7 +74,7 @@ export default function useStateMutations() {
     messages: createMessages,
     onSuccess: (data: states.State) => {
       invalidateStates();
-      router.push(`/states/${data.id}`);
+      router.push(routes.states.getDetailsRoute(data.id.toString()));
     },
   });
 
@@ -99,7 +100,7 @@ export default function useStateMutations() {
     messages: updateMessages,
     onSuccess: (data: states.State) => {
       invalidateStates();
-      router.push(`/states/${data.id}`);
+      router.push(routes.states.getDetailsRoute(data.id.toString()));
     },
   });
 
@@ -125,7 +126,7 @@ export default function useStateMutations() {
     messages: deleteMessages,
     onSuccess: () => {
       invalidateStates();
-      router.push('/states');
+      router.push(routes.states.index);
     },
   });
 

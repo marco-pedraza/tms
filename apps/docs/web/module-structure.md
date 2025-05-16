@@ -187,6 +187,7 @@ Example page structure:
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
 import EntityTable from '@/module-name/components/entity-table';
+import routes from '@/services/route';
 
 export default function ModuleNamePage() {
   const t = useTranslations('module-name');
@@ -196,7 +197,7 @@ export default function ModuleNamePage() {
       <PageHeader
         title={t('title')}
         description={t('description')}
-        createHref="/module-name/new"
+        createHref={routes.module.new}
         createLabel={t('actions.create')}
       />
       <EntityTable />

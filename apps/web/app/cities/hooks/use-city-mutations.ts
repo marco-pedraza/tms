@@ -5,6 +5,7 @@ import type { cities } from '@repo/ims-client';
 import type { CityFormValues } from '@/cities/components/city-form';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
 import imsClient from '@/services/ims-client';
+import routes from '@/services/routes';
 
 interface MutationMessages {
   loading: string;
@@ -73,7 +74,7 @@ export default function useCityMutations() {
     messages: createMessages,
     onSuccess: (data: cities.City) => {
       invalidateCities();
-      router.push(`/cities/${data.id}`);
+      router.push(routes.cities.getDetailsRoute(data.id.toString()));
     },
   });
 
@@ -99,7 +100,7 @@ export default function useCityMutations() {
     messages: updateMessages,
     onSuccess: (data: cities.City) => {
       invalidateCities();
-      router.push(`/cities/${data.id}`);
+      router.push(routes.cities.getDetailsRoute(data.id.toString()));
     },
   });
 
@@ -125,7 +126,7 @@ export default function useCityMutations() {
     messages: deleteMessages,
     onSuccess: () => {
       invalidateCities();
-      router.push('/cities');
+      router.push(routes.cities.index);
     },
   });
 

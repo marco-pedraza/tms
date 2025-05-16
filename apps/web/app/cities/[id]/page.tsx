@@ -12,6 +12,7 @@ import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import routes from '@/services/routes';
 import createGoogleMapsLink from '@/utils/create-google-maps-link';
 
 export default function CityDetailsPage() {
@@ -48,12 +49,12 @@ export default function CityDetailsPage() {
       <PageHeader
         title={city.name}
         description={tCities('details.description')}
-        backHref="/cities"
+        backHref={routes.cities.index}
       />
 
       <div className="flex justify-end mb-6">
         <ActionButtons
-          editHref={`/cities/${city.id}/edit`}
+          editHref={routes.cities.getEditRoute(city.id.toString())}
           onDelete={handleDelete}
           editLabel={tCommon('actions.edit')}
           deleteLabel={tCommon('actions.delete')}

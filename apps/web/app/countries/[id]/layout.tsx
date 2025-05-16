@@ -5,6 +5,7 @@ import LoadError from '@/components/load-error';
 import CountryNotFound from '@/countries/components/country-not-found';
 import useCountryDetailsParams from '@/countries/hooks/use-country-details-params';
 import useQueryCountry from '@/countries/hooks/use-query-country';
+import routes from '@/services/routes';
 
 export default function CountryLayout({
   children,
@@ -26,7 +27,7 @@ export default function CountryLayout({
   if (status === 'error') {
     return (
       <LoadError
-        backHref="/countries"
+        backHref={routes.countries.index}
         backLabel={tCountries('actions.backToList')}
       />
     );

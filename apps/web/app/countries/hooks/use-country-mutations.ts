@@ -5,6 +5,7 @@ import type { countries } from '@repo/ims-client';
 import type { CountryFormValues } from '@/countries/components/country-form';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
 import imsClient from '@/services/ims-client';
+import routes from '@/services/routes';
 
 interface MutationMessages {
   loading: string;
@@ -73,7 +74,7 @@ export default function useCountryMutations() {
     messages: createMessages,
     onSuccess: (data: countries.Country) => {
       invalidateCountries();
-      router.push(`/countries/${data.id}`);
+      router.push(routes.countries.getDetailsRoute(data.id.toString()));
     },
   });
 
@@ -99,7 +100,7 @@ export default function useCountryMutations() {
     messages: updateMessages,
     onSuccess: (data: countries.Country) => {
       invalidateCountries();
-      router.push(`/countries/${data.id}`);
+      router.push(routes.countries.getDetailsRoute(data.id.toString()));
     },
   });
 
@@ -125,7 +126,7 @@ export default function useCountryMutations() {
     messages: deleteMessages,
     onSuccess: () => {
       invalidateCountries();
-      router.push('/countries');
+      router.push(routes.countries.index);
     },
   });
 

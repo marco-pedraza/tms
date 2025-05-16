@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { service_types } from '@repo/ims-client';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
 import imsClient from '@/services/ims-client';
+import routes from '@/services/routes';
 
 export default function useServiceTypeMutations() {
   const t = useTranslations('serviceTypes');
@@ -30,7 +31,7 @@ export default function useServiceTypeMutations() {
     messages: createMessages,
     onSuccess: (data: service_types.ServiceType) => {
       invalidateServiceTypes();
-      router.push(`/service-types/${data.id}`);
+      router.push(routes.serviceTypes.getDetailsRoute(data.id.toString()));
     },
   });
 
@@ -49,7 +50,7 @@ export default function useServiceTypeMutations() {
     messages: deleteMessages,
     onSuccess: () => {
       invalidateServiceTypes();
-      router.push('/service-types');
+      router.push(routes.serviceTypes.index);
     },
   });
 
@@ -74,7 +75,7 @@ export default function useServiceTypeMutations() {
     messages: updateMessages,
     onSuccess: (data: service_types.ServiceType) => {
       invalidateServiceTypes();
-      router.push(`/service-types/${data.id}`);
+      router.push(routes.serviceTypes.getDetailsRoute(data.id.toString()));
     },
   });
 

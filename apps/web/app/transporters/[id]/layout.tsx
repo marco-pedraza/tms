@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import LoadError from '@/components/load-error';
+import routes from '@/services/routes';
 import TransporterNotFound from '@/transporters/components/transporter-not-found';
 import useQueryTransporter from '@/transporters/hooks/use-query-transporter';
 import useTransporterDetailsParams from '@/transporters/hooks/use-transporter-details-params';
@@ -26,7 +27,7 @@ export default function TransporterLayout({
   if (status === 'error') {
     return (
       <LoadError
-        backHref="/transporters"
+        backHref={routes.transporters.index}
         backLabel={tTransporters('actions.backToList')}
       />
     );

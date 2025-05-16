@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
+import routes from '@/services/routes';
 import TerminalForm, {
   type TerminalFormValues,
 } from '@/terminals/components/terminal-form';
@@ -53,7 +54,7 @@ export default function EditTerminalPage() {
       <PageHeader
         title={t('edit.title')}
         description={t('edit.description')}
-        backHref={`/terminals/${terminalId}`}
+        backHref={routes.terminals.getDetailsRoute(terminalId.toString())}
       />
       <TerminalForm
         defaultValues={defaultValues}

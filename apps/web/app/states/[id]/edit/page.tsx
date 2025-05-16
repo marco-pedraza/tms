@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
+import routes from '@/services/routes';
 import StateForm, { StateFormValues } from '@/states/components/state-form';
 import StateFormSkeleton from '@/states/components/state-form-skeleton';
 import useQueryState from '@/states/hooks/use-query-state';
@@ -35,7 +36,7 @@ export default function EditStatePage() {
       <PageHeader
         title={tStates('edit.title')}
         description={`${data?.name} (${data?.code})`}
-        backHref={`/states/${stateId}`}
+        backHref={routes.states.getDetailsRoute(stateId.toString())}
       />
       <StateForm
         defaultValues={data}

@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import LoadError from '@/components/load-error';
+import routes from '@/services/routes';
 import TerminalNotFound from '@/terminals/components/terminal-not-found';
 import useQueryTerminal from '@/terminals/hooks/use-query-terminal';
 import useTerminalDetailsParams from '@/terminals/hooks/use-terminal-details-params';
@@ -26,7 +27,7 @@ export default function TerminalLayout({
   if (status === 'error') {
     return (
       <LoadError
-        backHref="/terminals"
+        backHref={routes.terminals.index}
         backLabel={tTerminals('actions.backToList')}
       />
     );

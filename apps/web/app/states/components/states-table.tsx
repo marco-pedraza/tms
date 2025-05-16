@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DropdownMenuContent } from '@/components/ui/dropdown-menu';
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
+import routes from '@/services/routes';
 import { useQueryStates } from '@/states/hooks/use-query-states';
 import useStateMutations from '@/states/hooks/use-state-mutations';
 
@@ -151,11 +152,11 @@ export default function StatesTable() {
   };
 
   const getViewHref = (id: string) => {
-    return `/states/${id}`;
+    return routes.states.getDetailsRoute(id);
   };
 
   const handleEdit = (id: string) => {
-    router.push(`/states/${id}/edit`);
+    router.push(routes.states.getEditRoute(id));
   };
 
   // Prepare translations object for the columns factory only
@@ -194,7 +195,7 @@ export default function StatesTable() {
         isLoading={isLoading}
         hasError={!!error}
         onRetry={refetch}
-        addHref="/states/new"
+        addHref={routes.states.new}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

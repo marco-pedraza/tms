@@ -11,6 +11,7 @@ import {
 import { getTranslations } from 'next-intl/server';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import routes from '@/services/routes';
 
 export default async function HomePage() {
   const t = await getTranslations('countries');
@@ -30,7 +31,7 @@ export default async function HomePage() {
             <p className="text-sm text-muted-foreground mb-4">
               {t('description')}
             </p>
-            <Link href="/countries">
+            <Link href={routes.countries.index}>
               <Button className="w-full">Ver {t('title')}</Button>
             </Link>
           </CardContent>
@@ -47,7 +48,7 @@ export default async function HomePage() {
             <p className="text-sm text-muted-foreground mb-4">
               {tStates('description')}
             </p>
-            <Link href="/states">
+            <Link href={routes.states.index}>
               <Button className="w-full">Ver {tStates('title')}</Button>
             </Link>
           </CardContent>
@@ -64,7 +65,7 @@ export default async function HomePage() {
             <p className="text-sm text-muted-foreground mb-4">
               {tCities('description')}
             </p>
-            <Link href="/cities">
+            <Link href={routes.cities.index}>
               <Button className="w-full">Ver {tCities('title')}</Button>
             </Link>
           </CardContent>
@@ -79,7 +80,7 @@ export default async function HomePage() {
             <p className="text-sm text-muted-foreground mb-4">
               Administra información de terminales
             </p>
-            <Link href="/terminals">
+            <Link href={routes.terminals.index}>
               <Button className="w-full">Ver Terminales</Button>
             </Link>
           </CardContent>
@@ -96,7 +97,7 @@ export default async function HomePage() {
             <p className="text-sm text-muted-foreground mb-4">
               Administra información de grupos de transporte
             </p>
-            <Link href="/transporters">
+            <Link href={routes.transporters.index}>
               <Button className="w-full">Ver Grupos de Transporte</Button>
             </Link>
           </CardContent>
@@ -113,7 +114,7 @@ export default async function HomePage() {
             <p className="text-sm text-muted-foreground mb-4">
               Administra información de líneas de autobus
             </p>
-            <Link href="/buslines">
+            <Link href={routes.busLines.index}>
               <Button className="w-full">Ver Líneas de Autobus</Button>
             </Link>
           </CardContent>
@@ -128,7 +129,7 @@ export default async function HomePage() {
             <p className="text-sm text-muted-foreground mb-4">
               Administra información de rutas
             </p>
-            <Link href="/routes">
+            <Link href={routes.routes.index}>
               <Button className="w-full">Ver Rutas</Button>
             </Link>
           </CardContent>

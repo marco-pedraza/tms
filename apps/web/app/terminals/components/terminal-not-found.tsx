@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 import NotFound from '@/components/not-found';
+import routes from '@/services/routes';
 
 export default function TerminalNotFound() {
   const tTerminals = useTranslations('terminals');
@@ -8,7 +9,7 @@ export default function TerminalNotFound() {
     <NotFound
       title={tTerminals('errors.notFound.title')}
       description={tTerminals('errors.notFound.description')}
-      backHref="/terminals"
+      backHref={routes.terminals.index}
       backLabel={tTerminals('actions.backToList')}
     />
   );

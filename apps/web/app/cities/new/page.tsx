@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import CityForm from '@/cities/components/city-form';
 import useCityMutations from '@/cities/hooks/use-city-mutations';
 import PageHeader from '@/components/page-header';
+import routes from '@/services/routes';
 
 export default function NewCityPage() {
   const { createCity } = useCityMutations();
@@ -15,7 +16,7 @@ export default function NewCityPage() {
       <PageHeader
         title={t('new.title')}
         description={t('new.description')}
-        backHref="/cities"
+        backHref={routes.cities.index}
         backLabel={t('actions.backToList')}
       />
 

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import routes from '@/services/routes';
 
 export default function TransporterNotFound() {
   const t = useTranslations('transporters');
@@ -14,7 +15,7 @@ export default function TransporterNotFound() {
       <p className="text-muted-foreground mt-2">
         {t('errors.notFound.description')}
       </p>
-      <Link href="/transporters" className="mt-6">
+      <Link href={routes.transporters.index} className="mt-6">
         <Button variant="secondary">
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t('actions.backToList')}

@@ -1,3 +1,7 @@
+/**
+ * This is a centralized place to define all the routes in the application.
+ * It is used to avoid hardcoding routes in the application and to make it easier to change routes.
+ */
 const routes = {
   index: '/',
   countries: {

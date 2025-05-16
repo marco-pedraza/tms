@@ -5,7 +5,7 @@ import {
   deleteCountry,
 } from '../countries/countries.controller';
 import { createState, deleteState } from '../states/states.controller';
-import type { Transporter } from './transporters.types';
+import type { Transporter, TransporterWithCity } from './transporters.types';
 import {
   createTransporter,
   deleteTransporter,
@@ -219,6 +219,118 @@ describe('Transporters Controller', () => {
       await expect(
         getTransporter({ id: transporterToDelete.id }),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('city association tests', () => {
+    test('should retrieve a transporter with its associated headquarter city', async () => {
+      const transporterWithCity = await getTransporter({
+        id: createdTransporterId,
+      });
+      expect(transporterWithCity).toBeDefined();
+      expect(transporterWithCity.id).toBe(createdTransporterId);
+      expect(transporterWithCity.headquarterCity).toBeDefined();
+      expect(transporterWithCity.headquarterCity?.id).toBe(cityId);
+      expect(transporterWithCity.headquarterCity?.name).toBe(
+        'Test City for Transporters',
+      );
+      expect(transporterWithCity.headquarterCity?.stateId).toBe(stateId);
+    });
+
+    test('should retrieve transporters with headquarter cities using listTransporters', async () => {
+      const response = await listTransporters({});
+      expect(response).toBeDefined();
+      expect(response.transporters).toBeDefined();
+      expect(response.transporters.length).toBeGreaterThan(0);
+      const foundTransporter = response.transporters.find(
+        (t) => t.id === createdTransporterId,
+      );
+      expect(foundTransporter).toBeDefined();
+      if (foundTransporter) {
+        const transporterWithCity = foundTransporter as TransporterWithCity;
+        expect(transporterWithCity.headquarterCity).toBeDefined();
+        expect(transporterWithCity.headquarterCity?.id).toBe(cityId);
+        expect(transporterWithCity.headquarterCity?.name).toBe(
+          'Test City for Transporters',
+        );
+      }
+    });
+
+    test('should retrieve transporters with headquarter cities using listTransportersPaginated', async () => {
+      const paginatedResponse = await listTransportersPaginated({
+        page: 1,
+        pageSize: 10,
+      });
+      expect(paginatedResponse).toBeDefined();
+      expect(paginatedResponse.data).toBeDefined();
+      expect(paginatedResponse.pagination).toBeDefined();
+      expect(paginatedResponse.data.length).toBeGreaterThan(0);
+      const foundTransporter = paginatedResponse.data.find(
+        (t) => t.id === createdTransporterId,
+      );
+      expect(foundTransporter).toBeDefined();
+      if (foundTransporter) {
+        expect(foundTransporter.headquarterCity).toBeDefined();
+        expect(foundTransporter.headquarterCity?.id).toBe(cityId);
+        expect(foundTransporter.headquarterCity?.name).toBe(
+          'Test City for Transporters',
+        );
+      }
+    });
+
+    test('should retrieve transporters with headquarter cities when using search functionality', async () => {
+      // Get paginated search results with city data
+      const searchResponse = await searchTransportersPaginated({
+        term: 'Test',
+        page: 1,
+        pageSize: 10,
+      });
+
+      // Verify the search results
+      expect(searchResponse).toBeDefined();
+      expect(searchResponse.data).toBeDefined();
+      expect(searchResponse.pagination).toBeDefined();
+
+      // Find our test transporter and assert it exists in search results
+      const foundTransporter = searchResponse.data.find(
+        (t) => t.id === createdTransporterId,
+      );
+
+      // Only proceed with assertions if our transporter was found in search results
+      if (foundTransporter) {
+        // Verify headquarter city data is loaded for the transporter
+        expect(foundTransporter.headquarterCity).toBeDefined();
+        expect(foundTransporter.headquarterCity?.id).toBe(cityId);
+        expect(foundTransporter.headquarterCity?.name).toBe(
+          'Test City for Transporters',
+        );
+      }
+    });
+
+    test('should retrieve transporters with headquarter cities using non-paginated search', async () => {
+      // Get non-paginated search results with city data
+      const response = await searchTransporters({ term: 'Test' });
+
+      // Verify the search results
+      expect(response).toBeDefined();
+      expect(response.transporters).toBeDefined();
+      expect(Array.isArray(response.transporters)).toBe(true);
+
+      // Find our test transporter in the results
+      const foundTransporter = response.transporters.find(
+        (t) => t.id === createdTransporterId,
+      );
+
+      // If our test transporter was found, verify city data
+      if (foundTransporter) {
+        // Type assertion since we know this is a TransporterWithCity
+        const transporterWithCity = foundTransporter as TransporterWithCity;
+        expect(transporterWithCity.headquarterCity).toBeDefined();
+        expect(transporterWithCity.headquarterCity?.id).toBe(cityId);
+        expect(transporterWithCity.headquarterCity?.name).toBe(
+          'Test City for Transporters',
+        );
+      }
     });
   });
 

@@ -1176,13 +1176,13 @@ export namespace inventory {
          * Retrieves a transporter by its ID.
          * @param params - Object containing the transporter ID
          * @param params.id - The ID of the transporter to retrieve
-         * @returns {Promise<Transporter>} The found transporter
+         * @returns {Promise<TransporterWithCity>} The found transporter with city info
          * @throws {APIError} If the transporter is not found or retrieval fails
          */
-        public async getTransporter(id: number): Promise<transporters.Transporter> {
+        public async getTransporter(id: number): Promise<transporters.TransporterWithCity> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/transporters/${encodeURIComponent(id)}`)
-            return await resp.json() as transporters.Transporter
+            return await resp.json() as transporters.TransporterWithCity
         }
 
         /**
@@ -1621,7 +1621,7 @@ export namespace inventory {
 
         /**
          * Retrieves all transporters without pagination (useful for dropdowns).
-         * @returns {Promise<Transporters>} An object containing an array of transporters
+         * @returns {Promise<Transporters>} An object containing an array of transporters with city info
          * @throws {APIError} If retrieval fails
          */
         public async listTransporters(params: transporters.TransportersQueryOptions): Promise<transporters.Transporters> {
@@ -1633,13 +1633,13 @@ export namespace inventory {
         /**
          * Retrieves transporters with pagination (useful for tables).
          * @param params - Pagination parameters
-         * @returns {Promise<PaginatedTransporters>} Paginated list of transporters
+         * @returns {Promise<PaginatedTransportersWithCity>} Paginated list of transporters with city info
          * @throws {APIError} If retrieval fails
          */
-        public async listTransportersPaginated(params: transporters.PaginationParamsTransporters): Promise<transporters.PaginatedTransporters> {
+        public async listTransportersPaginated(params: transporters.PaginationParamsTransporters): Promise<transporters.PaginatedTransportersWithCity> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/get-transporters/paginated`, JSON.stringify(params))
-            return await resp.json() as transporters.PaginatedTransporters
+            return await resp.json() as transporters.PaginatedTransportersWithCity
         }
 
         /**
@@ -2273,7 +2273,7 @@ export namespace inventory {
          * Searches for transporters by matching a search term against name and code.
          * @param params - Search parameters
          * @param params.term - The search term to match against transporter name and code
-         * @returns {Promise<Transporters>} List of matching transporters
+         * @returns {Promise<Transporters>} List of matching transporters with city info
          * @throws {APIError} If search fails or no searchable fields are configured
          */
         public async searchTransporters(params: {
@@ -2297,7 +2297,7 @@ export namespace inventory {
          * @param params.pageSize - Number of items per page (optional, default: 10)
          * @param params.orderBy - Sorting criteria (optional)
          * @param params.filters - Additional filters to apply (optional)
-         * @returns {Promise<PaginatedTransporters>} Paginated list of matching transporters
+         * @returns {Promise<PaginatedTransportersWithCity>} Paginated list of matching transporters with city info
          * @throws {APIError} If search fails or no searchable fields are configured
          */
         public async searchTransportersPaginated(params: {
@@ -2324,10 +2324,10 @@ export namespace inventory {
         updatedAt?: string | null
     }
     term: string
-}): Promise<transporters.PaginatedTransporters> {
+}): Promise<transporters.PaginatedTransportersWithCity> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/transporters/search/paginated`, JSON.stringify(params))
-            return await resp.json() as transporters.PaginatedTransporters
+            return await resp.json() as transporters.PaginatedTransportersWithCity
         }
 
         /**
@@ -9448,8 +9448,8 @@ export namespace transporters {
         active?: boolean
     }
 
-    export interface PaginatedTransporters {
-        data: Transporter[]
+    export interface PaginatedTransportersWithCity {
+        data: TransporterWithCity[]
         pagination: shared.PaginationMeta
     }
 
@@ -9550,8 +9550,81 @@ export namespace transporters {
         updatedAt: string | null
     }
 
+    export interface TransporterWithCity {
+        headquarterCity: cities.City | null
+        /**
+         * Unique identifier for the transporter
+         */
+        id: number
+
+        /**
+         * Name of the transportation company
+         */
+        name: string
+
+        /**
+         * Unique business code for the transporter
+         */
+        code: string
+
+        /**
+         * Description of the transporter
+         */
+        description: string | null
+
+        /**
+         * Website URL of the transporter
+         */
+        website: string | null
+
+        /**
+         * Contact email of the transporter
+         */
+        email: string | null
+
+        /**
+         * Contact phone number of the transporter
+         */
+        phone: string | null
+
+        /**
+         * ID of the city where the transporter is headquartered
+         */
+        headquarterCityId: number | null
+
+        /**
+         * URL to the transporter's logo
+         */
+        logoUrl: string | null
+
+        /**
+         * Additional contact information
+         */
+        contactInfo: string | null
+
+        /**
+         * Regulatory license number
+         */
+        licenseNumber: string | null
+
+        /**
+         * Whether the transporter is currently active in the system
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the transporter record was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the transporter record was last updated
+         */
+        updatedAt: string | null
+    }
+
     export interface Transporters {
-        transporters: Transporter[]
+        transporters: Transporter[] | TransporterWithCity[]
     }
 
     export interface TransportersQueryOptions {

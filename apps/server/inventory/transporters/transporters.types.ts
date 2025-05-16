@@ -1,5 +1,6 @@
 import { MatchesRegexp, Min, MinLen } from 'encore.dev/validate';
 import { PaginatedResult, PaginationParams } from '../../shared/types';
+import { City } from '../cities/cities.types';
 
 /**
  * Base interface representing a transporter entity
@@ -46,6 +47,13 @@ export interface Transporter {
 
   /** Timestamp when the transporter record was last updated */
   updatedAt: Date | null;
+}
+
+/**
+ * Transporter entity with related city information
+ */
+export interface TransporterWithCity extends Transporter {
+  headquarterCity: City | null;
 }
 
 /**
@@ -179,7 +187,7 @@ export interface UpdateTransporterPayload {
  * Response type for the list transporters endpoint (non-paginated)
  */
 export interface Transporters {
-  transporters: Transporter[];
+  transporters: Transporter[] | TransporterWithCity[];
 }
 
 export interface TransportersQueryOptions {
@@ -188,6 +196,8 @@ export interface TransportersQueryOptions {
 }
 
 export type PaginatedTransporters = PaginatedResult<Transporter>;
+export type PaginatedTransportersWithCity =
+  PaginatedResult<TransporterWithCity>;
 
 export interface PaginationParamsTransporters
   extends PaginationParams,

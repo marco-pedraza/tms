@@ -7,6 +7,7 @@ import {
   timestamp,
   varchar,
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import { cities } from '../cities/cities.schema';
 
 /**
@@ -28,3 +29,13 @@ export const transporters = pgTable('transporters', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
+
+/**
+ * Relations for the transporters table
+ */
+export const transportersRelations = relations(transporters, ({ one }) => ({
+  headquarterCity: one(cities, {
+    fields: [transporters.headquarterCityId],
+    references: [cities.id],
+  }),
+}));

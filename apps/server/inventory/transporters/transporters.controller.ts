@@ -1,9 +1,10 @@
 import { api } from 'encore.dev/api';
 import type {
   CreateTransporterPayload,
-  PaginatedTransporters,
+  PaginatedTransportersWithCity,
   PaginationParamsTransporters,
   Transporter,
+  TransporterWithCity,
   Transporters,
   TransportersQueryOptions,
   UpdateTransporterPayload,
@@ -27,25 +28,25 @@ export const createTransporter = api(
  * Retrieves a transporter by its ID.
  * @param params - Object containing the transporter ID
  * @param params.id - The ID of the transporter to retrieve
- * @returns {Promise<Transporter>} The found transporter
+ * @returns {Promise<TransporterWithCity>} The found transporter with city info
  * @throws {APIError} If the transporter is not found or retrieval fails
  */
 export const getTransporter = api(
   { expose: true, method: 'GET', path: '/transporters/:id' },
-  async ({ id }: { id: number }): Promise<Transporter> => {
-    return await transporterRepository.findOne(id);
+  async ({ id }: { id: number }): Promise<TransporterWithCity> => {
+    return await transporterRepository.findOneWithCity(id);
   },
 );
 
 /**
  * Retrieves all transporters without pagination (useful for dropdowns).
- * @returns {Promise<Transporters>} An object containing an array of transporters
+ * @returns {Promise<Transporters>} An object containing an array of transporters with city info
  * @throws {APIError} If retrieval fails
  */
 export const listTransporters = api(
   { expose: true, method: 'POST', path: '/get-transporters' },
   async (params: TransportersQueryOptions): Promise<Transporters> => {
-    const transporters = await transporterRepository.findAll(params);
+    const transporters = await transporterRepository.findAllWithCity(params);
     return {
       transporters,
     };
@@ -55,14 +56,14 @@ export const listTransporters = api(
 /**
  * Retrieves transporters with pagination (useful for tables).
  * @param params - Pagination parameters
- * @returns {Promise<PaginatedTransporters>} Paginated list of transporters
+ * @returns {Promise<PaginatedTransportersWithCity>} Paginated list of transporters with city info
  * @throws {APIError} If retrieval fails
  */
 export const listTransportersPaginated = api(
   { expose: true, method: 'POST', path: '/get-transporters/paginated' },
   async (
     params: PaginationParamsTransporters,
-  ): Promise<PaginatedTransporters> => {
+  ): Promise<PaginatedTransportersWithCity> => {
     return await transporterRepository.findAllPaginated(params);
   },
 );
@@ -102,7 +103,7 @@ export const deleteTransporter = api(
  * Searches for transporters by matching a search term against name and code.
  * @param params - Search parameters
  * @param params.term - The search term to match against transporter name and code
- * @returns {Promise<Transporters>} List of matching transporters
+ * @returns {Promise<Transporters>} List of matching transporters with city info
  * @throws {APIError} If search fails or no searchable fields are configured
  */
 export const searchTransporters = api(
@@ -123,7 +124,7 @@ export const searchTransporters = api(
  * @param params.pageSize - Number of items per page (optional, default: 10)
  * @param params.orderBy - Sorting criteria (optional)
  * @param params.filters - Additional filters to apply (optional)
- * @returns {Promise<PaginatedTransporters>} Paginated list of matching transporters
+ * @returns {Promise<PaginatedTransportersWithCity>} Paginated list of matching transporters with city info
  * @throws {APIError} If search fails or no searchable fields are configured
  */
 export const searchTransportersPaginated = api(
@@ -133,7 +134,7 @@ export const searchTransportersPaginated = api(
     ...params
   }: PaginationParamsTransporters & {
     term: string;
-  }): Promise<PaginatedTransporters> => {
+  }): Promise<PaginatedTransportersWithCity> => {
     return await transporterRepository.searchPaginated(term, params);
   },
 );

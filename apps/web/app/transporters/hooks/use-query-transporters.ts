@@ -9,10 +9,10 @@ import imsClient from '@/services/ims-client';
  * It handles query setup, caching, and error handling.
  */
 export default function useQueryTransporters(): UseQueryResult<
-  transporters.PaginatedTransporters,
+  transporters.PaginatedTransportersWithCity,
   APIError
 > {
-  return useQuery<transporters.PaginatedTransporters, APIError>({
+  return useQuery<transporters.PaginatedTransportersWithCity, APIError>({
     queryKey: ['transporters'],
     queryFn: () => imsClient.inventory.listTransportersPaginated({}),
   });

@@ -42,7 +42,12 @@
       "email": "Correo Electrónico",
       "website": "Sitio Web",
       "logoUrl": "URL del Logo",
-      "description": "Descripción"
+      "description": "Descripción",
+      "transporter": "Transportista",
+      "serviceType": "Tipo de Servicio",
+      "logo": "Logo",
+      "primaryColor": "Color Primario",
+      "secondaryColor": "Color Secundario"
     },
     "sections": {
       "basicInfo": "Información Básica",
@@ -483,7 +488,9 @@
       "title": "Información de la línea de autobus",
       "placeholders": {
         "name": "Ej: Línea 1",
-        "description": "Ej: Línea que conecta Ciudad de México con Guadalajara"
+        "description": "Ej: Línea que conecta Ciudad de México con Guadalajara",
+        "code": "Ej: L1",
+        "logo": "URL o selecciona un archivo de imagen"
       }
     },
     "edit": {

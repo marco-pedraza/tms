@@ -56,3 +56,9 @@ DO $$ BEGIN
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "cities_name_index" ON "cities" USING btree ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "cities_state_id_index" ON "cities" USING btree ("state_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "gates_terminal_id_index" ON "gates" USING btree ("terminal_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "terminals_name_index" ON "terminals" USING btree ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "terminals_city_id_index" ON "terminals" USING btree ("city_id");

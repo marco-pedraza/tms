@@ -1,4 +1,5 @@
 import {
+  index,
   integer,
   pgTable,
   serial,
@@ -25,28 +26,26 @@ export const roles = pgTable(
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
-  (table) => {
-    return {
-      // Add a composite unique constraint on name + tenantId
-      namePerTenantIdx: uniqueIndex('roles_name_tenant_id_idx').on(
-        table.name,
-        table.tenantId,
-      ),
-    };
-  },
+  (table) => [
+    uniqueIndex().on(table.name, table.tenantId), // Composite unique constraint on name + tenantId
+  ],
 );
 
 /**
  * Schema for the role_permissions junction table
  * Links roles to their permissions
  */
-export const rolePermissions = pgTable('role_permissions', {
-  id: serial('id').primaryKey(),
-  roleId: integer('role_id')
-    .notNull()
-    .references(() => roles.id, { onDelete: 'cascade' }),
-  permissionId: integer('permission_id')
-    .notNull()
-    .references(() => permissions.id, { onDelete: 'cascade' }),
-  createdAt: timestamp('created_at').defaultNow(),
-});
+export const rolePermissions = pgTable(
+  'role_permissions',
+  {
+    id: serial('id').primaryKey(),
+    roleId: integer('role_id')
+      .notNull()
+      .references(() => roles.id, { onDelete: 'cascade' }),
+    permissionId: integer('permission_id')
+      .notNull()
+      .references(() => permissions.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (table) => [index().on(table.roleId, table.permissionId)],
+);

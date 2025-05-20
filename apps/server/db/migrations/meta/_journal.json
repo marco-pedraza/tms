@@ -54,77 +54,70 @@
     {
       "idx": 7,
       "version": "7",
-      "when": 1743639209209,
-      "tag": "20250403001329_creates_unique_contraints_for_departments",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1743640083246,
-      "tag": "20250403002803_creates_unique_contraints_for_roles",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
       "when": 1744653817301,
       "tag": "20250414180337_creates_drivers_refresh_tokens_table",
       "breakpoints": true
     },
     {
-      "idx": 10,
+      "idx": 8,
       "version": "7",
       "when": 1744670622367,
       "tag": "20250414224341_creates_seat_layout_table",
       "breakpoints": true
     },
     {
-      "idx": 11,
+      "idx": 9,
       "version": "7",
       "when": 1744670622467,
       "tag": "20250414224342_create_seat_diagrams_table",
       "breakpoints": true
     },
     {
-      "idx": 12,
+      "idx": 10,
       "version": "7",
       "when": 1744670623467,
       "tag": "20250414224343_create_bus_models_tables",
       "breakpoints": true
     },
     {
-      "idx": 13,
+      "idx": 11,
       "version": "7",
       "when": 1744843137136,
       "tag": "20250416223857_create_bus_table",
       "breakpoints": true
     },
     {
-      "idx": 14,
+      "idx": 12,
       "version": "7",
       "when": 1745456437954,
       "tag": "20250424010037_creates_pathways_tables",
       "breakpoints": true
     },
     {
-      "idx": 15,
+      "idx": 13,
       "version": "7",
       "when": 1746653888109,
       "tag": "20250507213808_create_route_tables",
       "breakpoints": true
     },
     {
-      "idx": 16,
+      "idx": 14,
       "version": "7",
       "when": 1746738959194,
       "tag": "20250508211559_create_permission_groups_tables",
       "breakpoints": true
     },
     {
-      "idx": 17,
+      "idx": 15,
       "version": "7",
       "when": 1747262417861,
+      "tag": "20250509170003_create_zones_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1747694417861,
       "tag": "20250514224017_create_audits_table",
       "breakpoints": true
     }

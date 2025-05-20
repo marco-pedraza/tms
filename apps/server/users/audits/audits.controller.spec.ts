@@ -85,7 +85,16 @@ describe('Audits Controller', () => {
 
   // Clean up after all tests
   afterAll(async () => {
-    // Clean up test user
+    // Clean up audit records first
+    for (const auditId of createdAuditIds) {
+      try {
+        await auditsRepository.delete(auditId);
+      } catch (error) {
+        console.log(`Error cleaning up audit record ${auditId}:`, error);
+      }
+    }
+
+    // Clean up test user after audits are deleted
     if (testUserId) {
       try {
         await deleteUser({ id: testUserId });

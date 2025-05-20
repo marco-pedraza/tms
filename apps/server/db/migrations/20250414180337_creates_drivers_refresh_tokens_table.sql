@@ -1,4 +1,4 @@
-CREATE TABLE "drivers" (
+CREATE TABLE IF NOT EXISTS "drivers" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"driver_key" text NOT NULL,
 	"full_name" text NOT NULL,
@@ -30,6 +30,7 @@ CREATE TABLE "drivers" (
 	"company" text,
 	"transporter_id" integer,
 	"bus_line_id" integer,
+	"bus_id" integer,
 	"active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now(),
@@ -38,7 +39,7 @@ CREATE TABLE "drivers" (
 	CONSTRAINT "drivers_curp_unique" UNIQUE("curp")
 );
 --> statement-breakpoint
-CREATE TABLE "refresh_tokens" (
+CREATE TABLE IF NOT EXISTS "refresh_tokens" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" integer NOT NULL,
 	"token" text NOT NULL,
@@ -48,6 +49,28 @@ CREATE TABLE "refresh_tokens" (
 	CONSTRAINT "refresh_tokens_token_unique" UNIQUE("token")
 );
 --> statement-breakpoint
-ALTER TABLE "drivers" ADD CONSTRAINT "drivers_transporter_id_transporters_id_fk" FOREIGN KEY ("transporter_id") REFERENCES "public"."transporters"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "drivers" ADD CONSTRAINT "drivers_bus_line_id_bus_lines_id_fk" FOREIGN KEY ("bus_line_id") REFERENCES "public"."bus_lines"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+DO $$ BEGIN
+ ALTER TABLE "drivers" ADD CONSTRAINT "drivers_transporter_id_transporters_id_fk" FOREIGN KEY ("transporter_id") REFERENCES "public"."transporters"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "drivers" ADD CONSTRAINT "drivers_bus_line_id_bus_lines_id_fk" FOREIGN KEY ("bus_line_id") REFERENCES "public"."bus_lines"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "drivers_full_name_index" ON "drivers" USING btree ("full_name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "drivers_email_index" ON "drivers" USING btree ("email");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "drivers_phone_number_index" ON "drivers" USING btree ("phone_number");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "drivers_transporter_id_index" ON "drivers" USING btree ("transporter_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "drivers_bus_line_id_index" ON "drivers" USING btree ("bus_line_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "drivers_status_index" ON "drivers" USING btree ("status");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "refresh_tokens_user_id_index" ON "refresh_tokens" USING btree ("user_id");

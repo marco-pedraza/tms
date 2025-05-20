@@ -32,17 +32,15 @@ export const pathwayServiceAssignments = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => {
-    return {
-      // There cannot be two assignments of the same service to the same pathway
-      uniqueServicePerPathway: unique().on(
-        table.pathwayId,
-        table.pathwayServiceId,
-      ),
-      // There cannot be two services with the same sequence in the same pathway
-      uniqueSequencePerPathway: unique().on(table.pathwayId, table.sequence),
-    };
-  },
+  (table) => ({
+    // There cannot be two assignments of the same service to the same pathway
+    uniqueServicePerPathway: unique().on(
+      table.pathwayId,
+      table.pathwayServiceId,
+    ),
+    // There cannot be two services with the same sequence in the same pathway
+    uniqueSequencePerPathway: unique().on(table.pathwayId, table.sequence),
+  }),
 );
 
 /**

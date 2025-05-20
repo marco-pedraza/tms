@@ -19,7 +19,7 @@ export const createSeatLayoutModelRepository = () => {
     UpdateSeatLayoutModelPayload,
     typeof seatLayoutModels
   >(db, seatLayoutModels, 'Seat Layout Model', {
-    searchableFields: [seatLayoutModels.name, seatLayoutModels.description],
+    searchableFields: [seatLayoutModels.name],
   });
 
   const findAll = async (): Promise<SeatLayoutModels> => {

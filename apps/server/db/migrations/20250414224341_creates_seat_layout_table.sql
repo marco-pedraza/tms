@@ -12,3 +12,5 @@ CREATE TABLE IF NOT EXISTS "seat_layout_models" (
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "seat_layout_models_name_index" ON "seat_layout_models" USING btree ("name");

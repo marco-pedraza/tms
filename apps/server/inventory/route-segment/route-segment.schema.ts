@@ -1,18 +1,25 @@
-import { boolean, integer, pgTable, serial } from 'drizzle-orm/pg-core';
+import { boolean, index, integer, pgTable, serial } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { routes } from '../routes/routes.schema';
 
-export const routeSegments = pgTable('route_segments', {
-  id: serial('id').primaryKey(),
-  parentRouteId: integer('parent_route_id')
-    .notNull()
-    .references(() => routes.id, { onDelete: 'cascade' }),
-  segmentRouteId: integer('segment_route_id')
-    .notNull()
-    .references(() => routes.id),
-  sequence: integer('sequence').notNull(),
-  active: boolean('active').notNull().default(true),
-});
+export const routeSegments = pgTable(
+  'route_segments',
+  {
+    id: serial('id').primaryKey(),
+    parentRouteId: integer('parent_route_id')
+      .notNull()
+      .references(() => routes.id, { onDelete: 'cascade' }),
+    segmentRouteId: integer('segment_route_id')
+      .notNull()
+      .references(() => routes.id),
+    sequence: integer('sequence').notNull(),
+    active: boolean('active').notNull().default(true),
+  },
+  (table) => [
+    index().on(table.parentRouteId, table.sequence),
+    index().on(table.segmentRouteId),
+  ],
+);
 
 export const routeSegmentsRelations = relations(routeSegments, ({ one }) => ({
   parentRoute: one(routes, {

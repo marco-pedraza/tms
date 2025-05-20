@@ -29,3 +29,8 @@ DO $$ BEGIN
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "seat_diagram_zones_name_index" ON "seat_diagram_zones" USING btree ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "seat_diagram_zones_seat_diagram_id_index" ON "seat_diagram_zones" USING btree ("seat_diagram_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "seat_layout_model_zones_name_index" ON "seat_layout_model_zones" USING btree ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "seat_layout_model_zones_seat_layout_model_id_index" ON "seat_layout_model_zones" USING btree ("seat_layout_model_id");

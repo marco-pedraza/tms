@@ -68,3 +68,9 @@ DO $$ BEGIN
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "routes_name_index" ON "routes" USING btree ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "routes_origin_city_id_destination_city_id_index" ON "routes" USING btree ("origin_city_id","destination_city_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "routes_origin_terminal_id_destination_terminal_id_index" ON "routes" USING btree ("origin_terminal_id","destination_terminal_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "route_segments_parent_route_id_sequence_index" ON "route_segments" USING btree ("parent_route_id","sequence");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "route_segments_segment_route_id_index" ON "route_segments" USING btree ("segment_route_id");

@@ -20,7 +20,9 @@ export const createBusModelRepository = () => {
     CreateBusModelPayload,
     UpdateBusModelPayload,
     typeof busModels
-  >(db, busModels, 'Bus Model');
+  >(db, busModels, 'Bus Model', {
+    searchableFields: [busModels.manufacturer, busModels.model],
+  });
 
   /**
    * Creates a new bus model

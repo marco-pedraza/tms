@@ -1,4 +1,5 @@
 import {
+  index,
   integer,
   numeric,
   pgTable,
@@ -12,17 +13,21 @@ import { seatLayoutModels } from '../seat-layout-models/seat-layout-models.schem
 /**
  * Database table for seat layout model zones
  */
-export const seatLayoutModelZones = pgTable('seat_layout_model_zones', {
-  id: serial('id').primaryKey(),
-  seatLayoutModelId: integer('seat_layout_model_id')
-    .notNull()
-    .references(() => seatLayoutModels.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(),
-  rowNumbers: integer('row_numbers').array().notNull(),
-  priceMultiplier: numeric('price_multiplier').notNull().default('1.0'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+export const seatLayoutModelZones = pgTable(
+  'seat_layout_model_zones',
+  {
+    id: serial('id').primaryKey(),
+    seatLayoutModelId: integer('seat_layout_model_id')
+      .notNull()
+      .references(() => seatLayoutModels.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    rowNumbers: integer('row_numbers').array().notNull(),
+    priceMultiplier: numeric('price_multiplier').notNull().default('1.0'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [index().on(table.name), index().on(table.seatLayoutModelId)],
+);
 
 /**
  * Relations for seat layout model zones

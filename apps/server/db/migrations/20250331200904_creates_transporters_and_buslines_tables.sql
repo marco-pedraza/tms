@@ -49,19 +49,19 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "bus_lines" ADD CONSTRAINT "bus_lines_service_type_id_service_types_id_fk" FOREIGN KEY ("service_type_id") REFERENCES "public"."service_types"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
  ALTER TABLE "transporters" ADD CONSTRAINT "transporters_headquarter_city_id_cities_id_fk" FOREIGN KEY ("headquarter_city_id") REFERENCES "public"."cities"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "roles" ADD CONSTRAINT "roles_tenant_id_tenants_id_fk" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "bus_lines" ADD CONSTRAINT "bus_lines_service_type_id_service_types_id_fk" FOREIGN KEY ("service_type_id") REFERENCES "public"."service_types"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "bus_lines_name_index" ON "bus_lines" USING btree ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "bus_lines_transporter_id_index" ON "bus_lines" USING btree ("transporter_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "bus_lines_service_type_id_index" ON "bus_lines" USING btree ("service_type_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transporters_name_index" ON "transporters" USING btree ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "transporters_headquarter_city_id_index" ON "transporters" USING btree ("headquarter_city_id");

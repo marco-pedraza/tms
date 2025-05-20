@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   integer,
   pgTable,
   real,
@@ -13,35 +14,43 @@ import { pathways } from '../pathways/pathways.schema';
 import { routeSegments } from '../route-segment/route-segment.schema';
 import { terminals } from '../terminals/terminals.schema';
 
-export const routes = pgTable('routes', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  description: text('description'),
-  active: boolean('active').notNull().default(true),
-  originCityId: integer('origin_city_id')
-    .notNull()
-    .references(() => cities.id),
-  destinationCityId: integer('destination_city_id')
-    .notNull()
-    .references(() => cities.id),
-  originTerminalId: integer('origin_terminal_id')
-    .notNull()
-    .references(() => terminals.id),
-  destinationTerminalId: integer('destination_terminal_id')
-    .notNull()
-    .references(() => terminals.id),
-  pathwayId: integer('pathway_id')
-    .references(() => pathways.id)
-    .unique(),
-  distance: real('distance').notNull(),
-  baseTime: integer('base_time').notNull(),
-  isCompound: boolean('is_compound').notNull().default(false),
-  connectionCount: integer('connection_count').notNull().default(0),
-  totalTravelTime: integer('total_travel_time').notNull(),
-  totalDistance: real('total_distance').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+export const routes = pgTable(
+  'routes',
+  {
+    id: serial('id').primaryKey(),
+    name: text('name').notNull(),
+    description: text('description'),
+    active: boolean('active').notNull().default(true),
+    originCityId: integer('origin_city_id')
+      .notNull()
+      .references(() => cities.id),
+    destinationCityId: integer('destination_city_id')
+      .notNull()
+      .references(() => cities.id),
+    originTerminalId: integer('origin_terminal_id')
+      .notNull()
+      .references(() => terminals.id),
+    destinationTerminalId: integer('destination_terminal_id')
+      .notNull()
+      .references(() => terminals.id),
+    pathwayId: integer('pathway_id')
+      .references(() => pathways.id)
+      .unique(),
+    distance: real('distance').notNull(),
+    baseTime: integer('base_time').notNull(),
+    isCompound: boolean('is_compound').notNull().default(false),
+    connectionCount: integer('connection_count').notNull().default(0),
+    totalTravelTime: integer('total_travel_time').notNull(),
+    totalDistance: real('total_distance').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index().on(table.name),
+    index().on(table.originCityId, table.destinationCityId),
+    index().on(table.originTerminalId, table.destinationTerminalId),
+  ],
+);
 
 export const routesRelations = relations(routes, ({ one, many }) => ({
   originCity: one(cities, {

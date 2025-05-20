@@ -15,4 +15,10 @@ CREATE TABLE IF NOT EXISTS "seat_diagrams" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "seat_diagrams" ADD CONSTRAINT "seat_diagrams_seat_layout_model_id_seat_layout_models_id_fk" FOREIGN KEY ("seat_layout_model_id") REFERENCES "public"."seat_layout_models"("id") ON DELETE no action ON UPDATE no action;
+DO $$ BEGIN
+ ALTER TABLE "seat_diagrams" ADD CONSTRAINT "seat_diagrams_seat_layout_model_id_seat_layout_models_id_fk" FOREIGN KEY ("seat_layout_model_id") REFERENCES "public"."seat_layout_models"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "seat_diagrams_name_index" ON "seat_diagrams" USING btree ("name");

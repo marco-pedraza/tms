@@ -28,16 +28,12 @@ export const audits = pgTable(
     userAgent: text('user_agent'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
-  (table) => ({
-    // Index on createdAt for efficient time-based querying
-    createdAtIdx: index('audits_created_at_idx').on(table.createdAt),
-
-    // Index on userAgent for analytics and user behavior analysis
-    userAgentIdx: index('audits_user_agent_idx').on(table.userAgent),
-
-    // Index on ipAddress for security analysis and filtering
-    ipAddressIdx: index('audits_ip_address_idx').on(table.ipAddress),
-  }),
+  (table) => [
+    index().on(table.userId),
+    index().on(table.service),
+    index().on(table.endpoint),
+    index().on(table.ipAddress),
+  ],
 );
 
 /**

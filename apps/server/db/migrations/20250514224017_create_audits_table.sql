@@ -1,4 +1,4 @@
-CREATE TABLE "audits" (
+CREATE TABLE IF NOT EXISTS "audits" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" integer NOT NULL,
 	"service" text NOT NULL,
@@ -9,7 +9,13 @@ CREATE TABLE "audits" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "audits" ADD CONSTRAINT "audits_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "audits_created_at_idx" ON "audits" USING btree ("created_at");--> statement-breakpoint
-CREATE INDEX "audits_user_agent_idx" ON "audits" USING btree ("user_agent");--> statement-breakpoint
-CREATE INDEX "audits_ip_address_idx" ON "audits" USING btree ("ip_address");
+DO $$ BEGIN
+ ALTER TABLE "audits" ADD CONSTRAINT "audits_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audits_user_id_index" ON "audits" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audits_service_index" ON "audits" USING btree ("service");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audits_endpoint_index" ON "audits" USING btree ("endpoint");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "audits_ip_address_index" ON "audits" USING btree ("ip_address");

@@ -1,4 +1,4 @@
-CREATE TABLE "bus_models" (
+CREATE TABLE IF NOT EXISTS "bus_models" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"default_seat_layout_model_id" integer NOT NULL,
 	"manufacturer" text NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE "bus_models" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "bus_seats" (
+CREATE TABLE IF NOT EXISTS "bus_seats" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"seat_diagram_id" integer NOT NULL,
 	"seat_number" text NOT NULL,
@@ -29,6 +29,19 @@ CREATE TABLE "bus_seats" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "bus_seats" ADD CONSTRAINT "bus_seats_seat_diagram_id_seat_diagrams_id_fk" FOREIGN KEY ("seat_diagram_id") REFERENCES "public"."seat_diagrams"("id") ON DELETE no action ON UPDATE no action;
+DO $$ BEGIN
+ ALTER TABLE "bus_models" ADD CONSTRAINT "bus_models_default_seat_layout_model_id_seat_layout_models_id_fk" FOREIGN KEY ("default_seat_layout_model_id") REFERENCES "public"."seat_layout_models"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
 --> statement-breakpoint
-ALTER TABLE "bus_models" ADD CONSTRAINT "bus_models_default_seat_layout_model_id_seat_layout_models_id_fk" FOREIGN KEY ("default_seat_layout_model_id") REFERENCES "public"."seat_layout_models"("id") ON DELETE no action ON UPDATE no action;
+DO $$ BEGIN
+ ALTER TABLE "bus_seats" ADD CONSTRAINT "bus_seats_seat_diagram_id_seat_diagrams_id_fk" FOREIGN KEY ("seat_diagram_id") REFERENCES "public"."seat_diagrams"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "bus_models_default_seat_layout_model_id_index" ON "bus_models" USING btree ("default_seat_layout_model_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "bus_models_manufacturer_index" ON "bus_models" USING btree ("manufacturer");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "bus_models_model_index" ON "bus_models" USING btree ("model");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "bus_seats_seat_diagram_id_index" ON "bus_seats" USING btree ("seat_diagram_id");

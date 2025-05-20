@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   integer,
   pgTable,
   serial,
@@ -23,13 +24,8 @@ export const departments = pgTable(
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
-  (table) => {
-    return {
-      // Add a composite unique constraint on code + tenantId
-      codePerTenantIdx: uniqueIndex('departments_code_tenant_id_idx').on(
-        table.code,
-        table.tenantId,
-      ),
-    };
-  },
+  (table) => [
+    uniqueIndex().on(table.code, table.tenantId), // Composite unique constraint on code + tenantId
+    index().on(table.name),
+  ],
 );

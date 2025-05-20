@@ -1,5 +1,6 @@
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -16,24 +17,30 @@ import { seatLayoutModels } from '../seat-layout-models/seat-layout-models.schem
 /**
  * Database table for seat diagrams
  */
-export const seatDiagrams = pgTable('seat_diagrams', {
-  id: serial('id').primaryKey(),
-  seatLayoutModelId: integer('seat_layout_model_id')
-    .notNull()
-    .references(() => seatLayoutModels.id),
-  name: text('name').notNull(),
-  maxCapacity: integer('max_capacity').notNull(),
-  allowsAdjacentSeat: boolean('allows_adjacent_seat').notNull().default(false), // Allows one passenger to purchase two adjacent seats
-  observations: text('observations'),
-  numFloors: integer('num_floors').notNull().default(1),
-  seatsPerFloor: jsonb('seats_per_floor').notNull(), // Configuration of seats per floor
-  bathroomRows: jsonb('bathroom_rows').default([]).notNull(), // Rows with bathrooms
-  totalSeats: integer('total_seats').notNull(),
-  isFactoryDefault: boolean('is_factory_default').notNull().default(true),
-  active: boolean('active').notNull().default(true),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+export const seatDiagrams = pgTable(
+  'seat_diagrams',
+  {
+    id: serial('id').primaryKey(),
+    seatLayoutModelId: integer('seat_layout_model_id')
+      .notNull()
+      .references(() => seatLayoutModels.id),
+    name: text('name').notNull(),
+    maxCapacity: integer('max_capacity').notNull(),
+    allowsAdjacentSeat: boolean('allows_adjacent_seat')
+      .notNull()
+      .default(false), // Allows one passenger to purchase two adjacent seats
+    observations: text('observations'),
+    numFloors: integer('num_floors').notNull().default(1),
+    seatsPerFloor: jsonb('seats_per_floor').notNull(), // Configuration of seats per floor
+    bathroomRows: jsonb('bathroom_rows').default([]).notNull(), // Rows with bathrooms
+    totalSeats: integer('total_seats').notNull(),
+    isFactoryDefault: boolean('is_factory_default').notNull().default(true),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (table) => [index().on(table.name)],
+);
 
 /**
  * Relations for seat diagrams

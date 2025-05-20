@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX IF NOT EXISTS "roles_name_tenant_id_idx" ON "roles" USING btree ("name","tenant_id");

@@ -17,8 +17,8 @@
     "db:generate": "drizzle-kit generate",
     "encore:gen-client": "encore gen client --lang typescript --output ../../packages/ims-client/index.ts",
     "encore:check": "encore check",
-    "seed:permissions": "encore exec -- npx tsx db/scripts/seed-permissions.ts",
-    "seed:inventory": "encore exec -- npx tsx db/scripts/seed-inventory.ts"
+    "seed:permissions": "encore exec -- npx tsx db/scripts/seed-permissions.ts --seed",
+    "seed:inventory": "encore exec -- npx tsx db/scripts/seed-inventory.ts --seed"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.7.0",
@@ -41,7 +41,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "bcrypt": "^5.1.1",
     "drizzle-orm": "^0.36.0",
-    "encore.dev": "^1.46.22",
+    "encore.dev": "^1.47.0",
     "glob": "^10.4.5",
     "jsonwebtoken": "^9.0.2",
     "object-assign": "^4.1.1",

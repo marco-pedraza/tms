@@ -8,7 +8,7 @@ const DEFAULT_PASSWORD = 'admin123';
 /**
  * Main function to seed admin user with required tenant and department
  */
-async function seedAdmin() {
+export async function seedAdmin(): Promise<void> {
   try {
     console.log('Starting admin user seeding...');
 
@@ -53,9 +53,17 @@ async function seedAdmin() {
     console.log('Admin user seeding completed successfully!');
   } catch (error) {
     console.error('Error seeding admin user:', error);
-    process.exit(1);
+    throw error; // Let the caller handle the error instead of exiting
   }
 }
 
-// Run the script
-seedAdmin().then(() => process.exit(0));
+// Check if script should run directly based on flag
+const shouldRunSeeder = process.argv.includes('--seed');
+if (shouldRunSeeder) {
+  seedAdmin()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error('Unhandled error in seedAdmin script:', error);
+      process.exit(1);
+    });
+}

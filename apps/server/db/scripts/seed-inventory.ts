@@ -434,7 +434,7 @@ async function seedDrivers(
   return drivers;
 }
 
-async function seedInventory() {
+export async function seedInventory(): Promise<void> {
   try {
     const countries = await seedCountries();
     const mexicoCountry = countries.find((country) => country.code === 'MX');
@@ -459,13 +459,16 @@ async function seedInventory() {
     console.log('Inventory seeding completed successfully!');
   } catch (error) {
     console.error('Error during inventory seeding:', error);
-    process.exit(1);
+    throw error; // Let the caller handle the error instead of exiting
   }
 }
 
-seedInventory()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error('Unhandled error during inventory seeding:', error);
-    process.exit(1);
-  });
+const shouldRunSeeder = process.argv.includes('--seed');
+if (shouldRunSeeder) {
+  seedInventory()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error('Unhandled error in seedInventory script:', error);
+      process.exit(1);
+    });
+}

@@ -10,7 +10,7 @@ import { users } from '../../users/users/users.schema';
 /**
  * Main function to seed permissions and assign them to system admins
  */
-async function seedPermissions() {
+export async function seedPermissions(): Promise<void> {
   try {
     console.log('Starting permissions seeding...');
 
@@ -138,7 +138,7 @@ async function seedPermissions() {
     console.log('Permission assignment to system admins completed!');
   } catch (error) {
     console.error('Error seeding permissions:', error);
-    process.exit(1);
+    throw error; // Let the caller handle the error instead of exiting
   }
 }
 
@@ -227,5 +227,13 @@ function extractApiEndpoints(
   return permissions;
 }
 
-// Run the script
-seedPermissions().then(() => process.exit(0));
+// Check if script should run directly based on flag
+const shouldRunSeeder = process.argv.includes('--seed');
+if (shouldRunSeeder) {
+  seedPermissions()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error('Unhandled error in seedPermissions script:', error);
+      process.exit(1);
+    });
+}

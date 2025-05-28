@@ -1,0 +1,44 @@
+name: Client/Server Integrity
+
+on:
+  pull_request:
+    paths:
+      - "apps/server/**"
+
+jobs:
+  type-safety:
+    name: E2E Type Safety
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+
+      - name: Download Encore CLI script
+        uses: sozo-design/curl@v1.0.2
+        with:
+          args: --output install.sh -L https://encore.dev/install.sh
+
+      - name: Install Encore CLI
+        run: |
+          bash install.sh
+          echo "$HOME/.encore/bin" >> $GITHUB_PATH
+
+      - name: Run Encore Check
+        run: npm run encore:check
+
+      - name: Generate IMS API client
+        run: npm run encore:gen-client
+
+      - name: Run Type Checking
+        run: npm run check-types
+
+      - name: Check for IMS Client Changes
+        if: success()
+        run: |
+          # Only check the generated client files
+          if ! git diff --quiet packages/ims-client/index.ts; then
+            echo "::error::IMS API client is out of date. Please run 'npm run encore:gen-client' locally and commit the changes."
+            exit 1
+          fi

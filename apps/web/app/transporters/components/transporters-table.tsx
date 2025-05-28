@@ -5,8 +5,10 @@ import Link from 'next/link';
 import { MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { transporters } from '@repo/ims-client';
+import useQueryCities from '@/cities/hooks/use-query-cities';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
+import { FilterConfig } from '@/components/data-table/data-table-header';
 import IsActiveBadge from '@/components/is-active-badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +22,11 @@ import routes from '@/services/routes';
 import useQueryTransporters from '@/transporters/hooks/use-query-transporters';
 import useTransporterMutations from '@/transporters/hooks/use-transporter-mutations';
 import type { UseTranslationsResult } from '@/types/UseTranslationsResult';
+
+const statusOptions = [
+  { label: 'Activo', value: true },
+  { label: 'Inactivo', value: false },
+];
 
 interface TransportersColumnsFactoryProps {
   onDelete: (id: number) => void;
@@ -54,6 +61,12 @@ function transportersColumnsFactory({
         const active = row.original.active;
         return <IsActiveBadge isActive={active} />;
       },
+    },
+    {
+      id: 'headquarterCityId',
+      accessorKey: 'headquarterCity.name',
+      header: tTransporters('fields.headquarterCity'),
+      sortable: true,
     },
     {
       accessorKey: 'email',
@@ -116,30 +129,44 @@ export default function TransportersTable() {
     sortingUrlState,
     setPaginationUrlState,
     setSortingUrlState,
+    searchUrlState,
+    setSearchUrlState,
+    filtersUrlState,
+    setFiltersUrlState,
   } = useTableUrlState<transporters.Transporter>();
   const { data, isLoading, error, refetch } = useQueryTransporters({
     page: paginationUrlState.page,
     pageSize: paginationUrlState.pageSize,
-    searchTerm: '',
+    searchTerm: searchUrlState,
     orderBy: sortingUrlState,
-    filters: {},
+    filters: filtersUrlState,
   });
-  const {
-    onPreviousPage,
-    onNextPage,
-    onLastPage,
-    onFirstPage,
-    setPageSize,
-    onSortingChange,
-  } = useServerTableEvents({
+  const { onSortingChange, onPaginationChange } = useServerTableEvents({
     paginationUrlState,
     sortingUrlState,
     setPaginationUrlState,
     setSortingUrlState,
-    totalPagesCount: data?.pagination.totalPages ?? 0,
   });
+  const { data: cities } = useQueryCities();
   const { deleteTransporter } = useTransporterMutations();
   const [deleteId, setDeleteId] = useState<number>();
+
+  const filtersConfig: FilterConfig[] = [
+    {
+      name: tCommon('fields.active'),
+      key: 'active',
+      options: statusOptions,
+    },
+    {
+      name: tTransporters('fields.headquarterCity'),
+      key: 'headquarterCityId',
+      options:
+        cities?.cities.map((city) => ({
+          label: city.name,
+          value: city.id,
+        })) ?? [],
+    },
+  ];
 
   const onConfirmDelete = () => {
     if (!deleteId) return;
@@ -167,13 +194,14 @@ export default function TransportersTable() {
           pageSize: paginationUrlState.pageSize,
           pageCount: data?.pagination.totalPages ?? 0,
         }}
-        onPreviousPage={onPreviousPage}
-        onNextPage={onNextPage}
-        onLastPage={onLastPage}
-        onFirstPage={onFirstPage}
-        onSetPageSize={setPageSize}
         onSortingChange={onSortingChange}
         sorting={sortingUrlState}
+        initialSearchValue={searchUrlState}
+        onSearchChange={setSearchUrlState}
+        filtersConfig={filtersConfig}
+        filtersState={filtersUrlState}
+        onFiltersChange={setFiltersUrlState}
+        onPaginationChange={onPaginationChange}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

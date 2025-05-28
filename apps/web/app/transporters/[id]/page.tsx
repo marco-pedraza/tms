@@ -133,7 +133,7 @@ export default function TransporterPage() {
               <dt className="font-medium">
                 {tTransporters('fields.headquarterCity')}
               </dt>
-              <dd>{transporter.headquarterCityId}</dd>
+              <dd>{transporter.headquarterCity?.name ?? '-'}</dd>
 
               <dt className="font-medium">{tCommon('fields.createdAt')}</dt>
               <dd>{new Date(transporter.createdAt ?? '').toLocaleString()}</dd>

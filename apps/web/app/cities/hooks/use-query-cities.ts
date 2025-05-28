@@ -12,11 +12,11 @@ type QueryCitiesError = Error;
  *
  */
 export default function useQueryCities(): UseQueryResult<
-  cities.PaginatedCities,
+  cities.Cities,
   QueryCitiesError
 > {
   return useQuery({
     queryKey: ['cities'],
-    queryFn: async () => await imsClient.inventory.listCitiesPaginated({}),
+    queryFn: async () => await imsClient.inventory.listCities({}),
   });
 }

@@ -34,10 +34,9 @@ export default function useQueryCity({
     queryFn: () => imsClient.inventory.getCity(cityId),
     initialData: () =>
       queryClient
-        .getQueryData<cities.PaginatedCities>(['cities'])
-        ?.data.find((city) => city.id === cityId),
+        .getQueryData<cities.Cities>(['cities'])
+        ?.cities.find((city) => city.id === cityId),
     initialDataUpdatedAt: () =>
-      queryClient.getQueryState<cities.PaginatedCities>(['cities'])
-        ?.dataUpdatedAt,
+      queryClient.getQueryState<cities.Cities>(['cities'])?.dataUpdatedAt,
   });
 }

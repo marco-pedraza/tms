@@ -87,7 +87,12 @@
     },
     "table": {
       "add": "Agregar datos",
-      "empty": "No hay datos disponibles"
+      "empty": "No hay datos disponibles",
+      "not_results": "No se encontraron resultados",
+      "filters": {
+        "all": "Todos",
+        "clear": "Limpiar filtros"
+      }
     }
   },
   "sidebar": {

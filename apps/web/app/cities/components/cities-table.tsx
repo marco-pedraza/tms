@@ -201,7 +201,7 @@ export default function CitiesTable() {
   return (
     <>
       <DataTable
-        data={data?.data ?? []}
+        data={data?.cities ?? []}
         columns={columns}
         isLoading={isLoading}
         hasError={!!error}

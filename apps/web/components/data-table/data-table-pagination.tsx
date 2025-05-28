@@ -16,20 +16,10 @@ import {
 
 interface DataTablePaginationProps<TData> {
   table: Table<TData>;
-  handleSetPageSize: (pageSize: number) => void;
-  handleFirstPage: () => void;
-  handlePreviousPage: () => void;
-  handleNextPage: () => void;
-  handleLastPage: () => void;
 }
 
 function DataTablePagination<TData>({
   table,
-  handleSetPageSize,
-  handleFirstPage,
-  handleLastPage,
-  handlePreviousPage,
-  handleNextPage,
 }: DataTablePaginationProps<TData>) {
   return (
     <div className="flex items-center justify-between px-4 py-4 border-t">
@@ -43,7 +33,7 @@ function DataTablePagination<TData>({
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value: string) => {
-              handleSetPageSize(Number(value));
+              table.setPageSize(Number(value));
             }}
           >
             <SelectTrigger className="h-8 w-[70px]">
@@ -62,7 +52,7 @@ function DataTablePagination<TData>({
           <Button
             variant="outline"
             className="hidden h-8 w-8 p-0 lg:flex"
-            onClick={handleFirstPage}
+            onClick={table.firstPage}
             disabled={!table.getCanPreviousPage()}
           >
             <span className="sr-only">Ir a la primera página</span>
@@ -71,7 +61,7 @@ function DataTablePagination<TData>({
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={handlePreviousPage}
+            onClick={table.previousPage}
             disabled={!table.getCanPreviousPage()}
           >
             <span className="sr-only">Ir a la página anterior</span>
@@ -80,7 +70,7 @@ function DataTablePagination<TData>({
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
-            onClick={handleNextPage}
+            onClick={table.nextPage}
             disabled={!table.getCanNextPage()}
           >
             <span className="sr-only">Ir a la página siguiente</span>
@@ -89,7 +79,7 @@ function DataTablePagination<TData>({
           <Button
             variant="outline"
             className="hidden h-8 w-8 p-0 lg:flex"
-            onClick={handleLastPage}
+            onClick={table.lastPage}
             disabled={!table.getCanNextPage()}
           >
             <span className="sr-only">Ir a la última página</span>

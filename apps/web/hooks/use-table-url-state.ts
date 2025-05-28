@@ -16,7 +16,7 @@ export type TableUrlState<SortFields extends object> = {
   };
   sorting: SortBy<SortFields>;
   filters: {
-    [key: string]: string | number;
+    [key: string]: string | number | boolean;
   };
   search: string;
 };
@@ -54,9 +54,15 @@ const mapUrlStateToTableUrlState = <SortFields extends object>(
     }
   });
   filtersKeys.forEach((key) => {
-    const [field, value] = key.split(':');
-    if (field) {
-      filters[field] = value as string | number;
+    const [field, value] = key.split(':').map((part) => part.trim());
+    if (field && value) {
+      if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
+        filters[field] = value.toLowerCase() === 'true';
+      } else if (!isNaN(Number(value)) && value.trim() !== '') {
+        filters[field] = Number(value);
+      } else {
+        filters[field] = value;
+      }
     }
   });
 
@@ -93,12 +99,16 @@ interface UseTableUrlStateResult<SortFields extends object> {
     paginationUrlState: TableUrlState<SortFields>['pagination'],
   ) => void;
   sortingUrlState: TableUrlState<SortFields>['sorting'];
+  searchUrlState: TableUrlState<SortFields>['search'];
   setSortingUrlState: (
     sortingUrlState: TableUrlState<SortFields>['sorting'],
   ) => void;
   filtersUrlState: TableUrlState<SortFields>['filters'];
   setFiltersUrlState: (
     filtersUrlState: TableUrlState<SortFields>['filters'],
+  ) => void;
+  setSearchUrlState: (
+    searchUrlState: TableUrlState<SortFields>['search'],
   ) => void;
 }
 
@@ -142,6 +152,23 @@ export default function useTableUrlState<
       mapTableUrlStateToUrlState({
         ...tableUrlState,
         filters: filtersUrlState,
+        pagination: {
+          page: 1,
+          pageSize: 10,
+        },
+      }),
+    );
+  };
+
+  const setSearchUrlState = (searchUrlState: string) => {
+    setUrl(
+      mapTableUrlStateToUrlState({
+        ...tableUrlState,
+        search: searchUrlState,
+        pagination: {
+          page: 1,
+          pageSize: 10,
+        },
       }),
     );
   };
@@ -153,5 +180,7 @@ export default function useTableUrlState<
     setSortingUrlState,
     filtersUrlState: tableUrlState.filters,
     setFiltersUrlState,
+    searchUrlState: tableUrlState.search,
+    setSearchUrlState,
   };
 }

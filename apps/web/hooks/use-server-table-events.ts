@@ -1,4 +1,8 @@
-import { OnChangeFn, SortingState } from '@tanstack/react-table';
+import {
+  OnChangeFn,
+  PaginationState,
+  SortingState,
+} from '@tanstack/react-table';
 import type { TableUrlState } from '@/hooks/use-table-url-state';
 
 interface ServerTableEventsProps<SortFields extends object> {
@@ -10,7 +14,6 @@ interface ServerTableEventsProps<SortFields extends object> {
   setSortingUrlState: (
     sortingUrlState: TableUrlState<SortFields>['sorting'],
   ) => void;
-  totalPagesCount: number;
 }
 
 export default function useServerTableEvents<SortFields extends object>({
@@ -18,40 +21,20 @@ export default function useServerTableEvents<SortFields extends object>({
   sortingUrlState,
   setPaginationUrlState,
   setSortingUrlState,
-  totalPagesCount,
 }: ServerTableEventsProps<SortFields>) {
-  const onPreviousPage = () => {
+  const onPaginationChange: OnChangeFn<PaginationState> = (
+    paginationUpdater,
+  ) => {
+    const pagination =
+      typeof paginationUpdater === 'function'
+        ? paginationUpdater({
+            pageIndex: paginationUrlState.page - 1,
+            pageSize: paginationUrlState.pageSize,
+          })
+        : paginationUpdater;
     setPaginationUrlState({
-      page: paginationUrlState.page - 1,
-      pageSize: paginationUrlState.pageSize,
-    });
-  };
-
-  const onNextPage = () => {
-    setPaginationUrlState({
-      page: paginationUrlState.page + 1,
-      pageSize: paginationUrlState.pageSize,
-    });
-  };
-
-  const onLastPage = () => {
-    setPaginationUrlState({
-      page: totalPagesCount === 0 ? 1 : totalPagesCount,
-      pageSize: paginationUrlState.pageSize,
-    });
-  };
-
-  const onFirstPage = () => {
-    setPaginationUrlState({
-      page: 1,
-      pageSize: paginationUrlState.pageSize,
-    });
-  };
-
-  const setPageSize = (pageSize: number) => {
-    setPaginationUrlState({
-      page: paginationUrlState.page,
-      pageSize,
+      page: pagination.pageIndex + 1,
+      pageSize: pagination.pageSize,
     });
   };
 
@@ -80,11 +63,7 @@ export default function useServerTableEvents<SortFields extends object>({
   };
 
   return {
-    onPreviousPage,
-    onNextPage,
-    onLastPage,
-    onFirstPage,
-    setPageSize,
     onSortingChange,
+    onPaginationChange,
   };
 }

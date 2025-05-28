@@ -19,7 +19,7 @@ export default function useQueryTransporter({
   transporterId,
   enabled = true,
 }: UseQueryTransporterProps): UseQueryResult<
-  transporters.Transporter,
+  transporters.TransporterWithCity,
   APIError
 > {
   const queryClient = useQueryClient();

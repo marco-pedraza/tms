@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { NotFoundError } from '@repo/base-repo';
 import {
   createBusModel,
   deleteBusModel,
@@ -31,6 +32,8 @@ describe('Buses Controller', () => {
   // Test data and setup
   let busModelId: number; // We need a valid bus model ID for bus tests
   let defaultSeatLayoutModelId: number; // We need a valid default seat layout model ID for bus tests
+  let alternativeBusModelId: number; // Alternative bus model for testing model change
+  let alternativeSeatLayoutModelId: number; // Alternative seat layout model
 
   const testBus: CreateBusPayload = {
     registrationNumber: 'TEST001',
@@ -62,6 +65,7 @@ describe('Buses Controller', () => {
   // Variables to store created IDs for cleanup
   let createdBusId: number;
   let createdSeatDiagramId: number;
+  let updatedSeatDiagramId: number; // To track new seat diagram ID after model update
 
   // Create test dependencies before running the bus tests
   beforeAll(async () => {
@@ -109,6 +113,68 @@ describe('Buses Controller', () => {
 
     busModelId = busModel.id;
 
+    // Create an alternative seat layout model with different configuration
+    const alternativeSeatLayout = await createSeatLayoutModel({
+      name: 'Alternative Seat Layout Model',
+      description: 'Alternative Seat Layout Model Description',
+      maxCapacity: 72,
+      numFloors: 2,
+      seatsPerFloor: [
+        {
+          floorNumber: 1,
+          numRows: 8,
+          seatsLeft: 2,
+          seatsRight: 2,
+        },
+        {
+          floorNumber: 2,
+          numRows: 10,
+          seatsLeft: 1,
+          seatsRight: 3,
+        },
+      ],
+      bathroomRows: [
+        {
+          floorNumber: 1,
+          rowNumber: 9,
+        },
+      ],
+      totalSeats: 72,
+      isFactoryDefault: true,
+      active: true,
+    });
+
+    alternativeSeatLayoutModelId = alternativeSeatLayout.id;
+
+    // Create different zones for the alternative seat layout
+    await createSeatLayoutModelZone({
+      seatLayoutModelId: alternativeSeatLayout.id,
+      name: 'VIP Zone',
+      rowNumbers: [1, 2],
+      priceMultiplier: 2.0,
+    });
+
+    await createSeatLayoutModelZone({
+      seatLayoutModelId: alternativeSeatLayout.id,
+      name: 'Standard Zone',
+      rowNumbers: [3, 4, 5, 6, 7, 8],
+      priceMultiplier: 1.0,
+    });
+
+    // Create an alternative bus model
+    const alternativeBusModel = await createBusModel({
+      defaultSeatLayoutModelId: alternativeSeatLayout.id,
+      manufacturer: 'AlternativeManufacturer',
+      model: 'AlternativeModel-Bus',
+      year: 2024,
+      seatingCapacity: 72,
+      numFloors: 2,
+      amenities: ['WiFi', 'USB'],
+      active: true,
+    });
+
+    alternativeBusModelId = alternativeBusModel.id;
+
     // Update the test bus with the real IDs
     testBus.modelId = busModelId;
   });
@@ -123,7 +189,16 @@ describe('Buses Controller', () => {
       }
     }
 
-    // Clean up the created seat diagram directly if needed
+    // Clean up the updated seat diagram if any
+    if (updatedSeatDiagramId) {
+      try {
+        await seatDiagramRepository.delete(updatedSeatDiagramId);
+      } catch {
+        // Silent error handling for cleanup
+      }
+    }
+
+    // Clean up the created seat diagram
     if (createdSeatDiagramId) {
       try {
         await seatDiagramRepository.delete(createdSeatDiagramId);
@@ -141,10 +216,28 @@ describe('Buses Controller', () => {
       }
     }
 
+    // Clean up the alternative bus model
+    if (alternativeBusModelId) {
+      try {
+        await deleteBusModel({ id: alternativeBusModelId });
+      } catch {
+        // Silent error handling for cleanup
+      }
+    }
+
     // Clean up the created seat layout model if any
     if (defaultSeatLayoutModelId) {
       try {
         await deleteSeatLayoutModel({ id: defaultSeatLayoutModelId });
+      } catch {
+        // Silent error handling for cleanup
+      }
+    }
+
+    // Clean up the alternative seat layout model
+    if (alternativeSeatLayoutModelId) {
+      try {
+        await deleteSeatLayoutModel({ id: alternativeSeatLayoutModelId });
       } catch {
         // Silent error handling for cleanup
       }
@@ -256,6 +349,93 @@ describe('Buses Controller', () => {
       expect(response).toBeDefined();
       expect(response.allowedTransitions).toBeDefined();
       expect(Array.isArray(response.allowedTransitions)).toBe(true);
+    });
+
+    test('should update bus seat diagram when model is changed', async () => {
+      // Store the original seat diagram ID for comparison
+      const originalSeatDiagramId = createdSeatDiagramId;
+
+      // Verify that the original diagram zones exist before the change
+      const originalZones = await seatDiagramZoneRepository.findAll({
+        filters: {
+          seatDiagramId: originalSeatDiagramId,
+        },
+      });
+      expect(originalZones.length).toBeGreaterThan(0); // Ensure there were zones
+
+      // Update the bus with a new model
+      const response = await updateBus({
+        id: createdBusId,
+        modelId: alternativeBusModelId,
+      });
+
+      // Verify bus is updated with the new model
+      expect(response).toBeDefined();
+      expect(response.id).toBe(createdBusId);
+      expect(response.modelId).toBe(alternativeBusModelId);
+
+      // Verify seat diagram ID has changed
+      expect(response.seatDiagramId).toBeDefined();
+      expect(response.seatDiagramId).not.toBe(originalSeatDiagramId);
+
+      // Store the new seat diagram ID for cleanup
+      updatedSeatDiagramId = response.seatDiagramId;
+
+      // Verify the new seat diagram was created correctly
+      const seatDiagram =
+        await seatDiagramRepository.findOne(updatedSeatDiagramId);
+      expect(seatDiagram).toBeDefined();
+      expect(seatDiagram.seatLayoutModelId).toBe(alternativeSeatLayoutModelId);
+      expect(seatDiagram.maxCapacity).toBe(72); // Alternative model has 72 seats
+      expect(seatDiagram.numFloors).toBe(2); // Alternative model has 2 floors
+      expect(seatDiagram.totalSeats).toBe(72);
+
+      // Verify that new zones were properly created for the seat diagram
+      const diagramZones = await seatDiagramZoneRepository.findAll({
+        filters: {
+          seatDiagramId: updatedSeatDiagramId,
+        },
+      });
+
+      expect(diagramZones).toBeDefined();
+      expect(diagramZones.length).toBe(2); // We created two zones for the alternative layout
+
+      // Find and verify the VIP zone using repository's findAll with specific filters
+      const vipZones = await seatDiagramZoneRepository.findAll({
+        filters: {
+          seatDiagramId: updatedSeatDiagramId,
+          name: 'VIP Zone',
+        },
+      });
+      const vipZone = vipZones.length > 0 ? vipZones[0] : null;
+      expect(vipZone).toBeDefined();
+      expect(vipZone?.rowNumbers).toEqual([1, 2]);
+      expect(Number(vipZone?.priceMultiplier)).toBe(2.0);
+
+      // Find and verify the Standard zone using repository's findAll with specific filters
+      const standardZones = await seatDiagramZoneRepository.findAll({
+        filters: {
+          seatDiagramId: updatedSeatDiagramId,
+          name: 'Standard Zone',
+        },
+      });
+      const standardZone = standardZones.length > 0 ? standardZones[0] : null;
+      expect(standardZone).toBeDefined();
+      expect(standardZone?.rowNumbers).toEqual([3, 4, 5, 6, 7, 8]);
+      expect(Number(standardZone?.priceMultiplier)).toBe(1.0);
+
+      // Verify that the original diagram zones were deleted
+      const deletedDiagramZones = await seatDiagramZoneRepository.findAll({
+        filters: {
+          seatDiagramId: originalSeatDiagramId,
+        },
+      });
+      expect(deletedDiagramZones.length).toBe(0); // No zones from the previous diagram should remain
+
+      // Verify that the original diagram was deleted
+      await expect(
+        seatDiagramRepository.findOne(originalSeatDiagramId),
+      ).rejects.toThrow(NotFoundError);
     });
   });
 

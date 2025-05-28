@@ -1,4 +1,5 @@
 import { createBaseRepository } from '@repo/base-repo';
+import type { TransactionalDB } from '@repo/base-repo';
 import { db } from '../db-service';
 import { seatDiagramZones } from './seat-diagram-zones.schema';
 import {
@@ -41,9 +42,50 @@ export const createSeatDiagramZoneRepository = () => {
     return results.length > 0 ? results[0] : null;
   };
 
+  /**
+   * Creates a new repository instance that operates within the context of an existing transaction.
+   * @param tx - The Drizzle transaction object to use.
+   * @returns A new repository instance bound to the provided transaction.
+   */
+  const withTransaction = (tx: TransactionalDB) => {
+    const txBaseRepo = baseRepository.withTransaction(tx);
+
+    /**
+     * Deletes all zones for a specific seat diagram within a transaction
+     * @param seatDiagramId - The ID of the seat diagram
+     * @returns Promise<number> The number of zones deleted
+     */
+    const deleteByDiagramId = async (
+      seatDiagramId: number,
+    ): Promise<number> => {
+      const { baseWhere } = txBaseRepo.buildQueryExpressions({
+        filters: { seatDiagramId },
+      });
+
+      if (!baseWhere) {
+        throw new Error(
+          'Failed to build where clause for seat diagram zone deletion',
+        );
+      }
+
+      const deletedZones = await tx
+        .delete(seatDiagramZones)
+        .where(baseWhere)
+        .returning();
+
+      return deletedZones.length;
+    };
+
+    return {
+      ...txBaseRepo,
+      deleteByDiagramId,
+    };
+  };
+
   return {
     ...baseRepository,
     findOneForDiagram,
+    withTransaction,
   };
 };
 

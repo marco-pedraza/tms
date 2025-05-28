@@ -10,7 +10,10 @@ import {
   UpdateBusPayload,
 } from './buses.types';
 import { busRepository } from './buses.repository';
-import { createBusWithSeatDiagram } from './buses.use-cases';
+import {
+  createBusWithSeatDiagram,
+  updateBusWithSeatDiagram,
+} from './buses.use-cases';
 
 /**
  * Creates a new bus.
@@ -76,7 +79,8 @@ export const listBusesPaginated = api(
 export const updateBus = api(
   { method: 'PUT', path: '/buses/:id', expose: true },
   async ({ id, ...data }: UpdateBusPayload & { id: number }): Promise<Bus> => {
-    return await busRepository.update(id, data);
+    const bus = await busRepository.findOne(id);
+    return await updateBusWithSeatDiagram(bus, data);
   },
 );
 

@@ -141,11 +141,9 @@ const citiesColumnsFactory = (
 export default function CitiesTable() {
   const tCities = useTranslations('cities');
   const tCommon = useTranslations('common');
-
   const router = useRouter();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const { deleteCity } = useCityMutations();
-
   const { data, isLoading, error, refetch } = useQueryCities();
 
   const handleDelete = (id: string) => {

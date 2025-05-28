@@ -2,12 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { transporters } from '@repo/ims-client';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
-import { DataTable } from '@/components/data-table';
+import { DataTable, DataTableColumnDef } from '@/components/data-table';
 import IsActiveBadge from '@/components/is-active-badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,6 +14,8 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import useServerTableEvents from '@/hooks/use-server-table-events';
+import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
 import useQueryTransporters from '@/transporters/hooks/use-query-transporters';
 import useTransporterMutations from '@/transporters/hooks/use-transporter-mutations';
@@ -30,15 +31,17 @@ function transportersColumnsFactory({
   onDelete,
   tCommon,
   tTransporters,
-}: TransportersColumnsFactoryProps): ColumnDef<transporters.Transporter>[] {
+}: TransportersColumnsFactoryProps): DataTableColumnDef<transporters.Transporter>[] {
   return [
     {
       accessorKey: 'name',
       header: tCommon('fields.name'),
+      sortable: true,
     },
     {
       accessorKey: 'code',
       header: tCommon('fields.code'),
+      sortable: true,
     },
     {
       accessorKey: 'licenseNumber',
@@ -108,7 +111,33 @@ function transportersColumnsFactory({
 export default function TransportersTable() {
   const tCommon = useTranslations('common');
   const tTransporters = useTranslations('transporters');
-  const { data, isLoading, error, refetch } = useQueryTransporters();
+  const {
+    paginationUrlState,
+    sortingUrlState,
+    setPaginationUrlState,
+    setSortingUrlState,
+  } = useTableUrlState<transporters.Transporter>();
+  const { data, isLoading, error, refetch } = useQueryTransporters({
+    page: paginationUrlState.page,
+    pageSize: paginationUrlState.pageSize,
+    searchTerm: '',
+    orderBy: sortingUrlState,
+    filters: {},
+  });
+  const {
+    onPreviousPage,
+    onNextPage,
+    onLastPage,
+    onFirstPage,
+    setPageSize,
+    onSortingChange,
+  } = useServerTableEvents({
+    paginationUrlState,
+    sortingUrlState,
+    setPaginationUrlState,
+    setSortingUrlState,
+    totalPagesCount: data?.pagination.totalPages ?? 0,
+  });
   const { deleteTransporter } = useTransporterMutations();
   const [deleteId, setDeleteId] = useState<number>();
 
@@ -133,6 +162,18 @@ export default function TransportersTable() {
         hasError={!!error}
         onRetry={refetch}
         addHref={routes.transporters.new}
+        pagination={{
+          pageIndex: paginationUrlState.page - 1,
+          pageSize: paginationUrlState.pageSize,
+          pageCount: data?.pagination.totalPages ?? 0,
+        }}
+        onPreviousPage={onPreviousPage}
+        onNextPage={onNextPage}
+        onLastPage={onLastPage}
+        onFirstPage={onFirstPage}
+        onSetPageSize={setPageSize}
+        onSortingChange={onSortingChange}
+        sorting={sortingUrlState}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

@@ -193,6 +193,7 @@ export interface Transporters {
 export interface TransportersQueryOptions {
   orderBy?: { field: keyof Transporter; direction: 'asc' | 'desc' }[];
   filters?: Partial<Transporter>;
+  searchTerm?: string;
 }
 
 export type PaginatedTransporters = PaginatedResult<Transporter>;

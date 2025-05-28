@@ -4,12 +4,16 @@ import {
   type ColumnDef,
   type Header,
   type HeaderGroup,
+  OnChangeFn,
   type PaginationState,
+  SortingState,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { ChevronDown } from 'lucide-react';
+import { ChevronUp } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -18,22 +22,28 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { SortBy } from '@/types/sort-by';
 import DataTableEmpty from './data-table-empty';
 import DataTableError from './data-table-error';
 import DataTableLoading from './data-table-loading';
 import DataTablePagination from './data-table-pagination';
 
 interface DataTablePagination extends PaginationState {
-  pageCount: number;
+  pageCount?: number;
 }
 
-interface DataTableProps<TData> {
+export type DataTableColumnDef<TData> = ColumnDef<TData> & {
+  sortable?: boolean;
+};
+
+interface DataTableProps<TData extends object> {
   data: TData[];
-  columns: ColumnDef<TData>[];
+  columns: DataTableColumnDef<TData>[];
   isLoading: boolean;
   errorMessage?: string;
   hasError: boolean;
   pagination?: DataTablePagination;
+  sorting?: SortBy<TData>;
   initialPagination?: Partial<DataTablePagination>;
   onRetry: () => void;
   onPreviousPage?: () => void;
@@ -42,9 +52,11 @@ interface DataTableProps<TData> {
   onLastPage?: () => void;
   onFirstPage?: () => void;
   addHref: string;
+  onPaginationChange?: OnChangeFn<PaginationState>;
+  onSortingChange?: OnChangeFn<SortingState>;
 }
 
-export function DataTable<TData>({
+export function DataTable<TData extends object>({
   data,
   columns,
   isLoading = false,
@@ -59,8 +71,17 @@ export function DataTable<TData>({
   onLastPage,
   onFirstPage,
   addHref,
+  onPaginationChange,
+  onSortingChange,
+  sorting,
 }: DataTableProps<TData>) {
-  const manualPagination = Boolean(pagination);
+  const manualPagination = Boolean(pagination?.pageCount);
+  const sortingState: SortingState =
+    sorting?.map((sort) => ({
+      id: sort.field.toString(),
+      desc: sort.direction === 'desc',
+    })) ?? [];
+
   const table = useReactTable({
     data,
     columns,
@@ -69,16 +90,19 @@ export function DataTable<TData>({
     manualPagination,
     state: {
       ...(pagination && { pagination }),
+      ...(sortingState && { sorting: sortingState }),
     },
+    onPaginationChange,
     initialState: {
       pagination: {
         pageIndex: initialPagination?.pageIndex ?? 0,
         pageSize: initialPagination?.pageSize ?? 10,
       },
+      ...(sortingState && { sorting: sortingState }),
     },
-    ...(pagination?.pageCount && { pageCount: pagination.pageCount }),
+    pageCount: pagination?.pageCount,
+    onSortingChange,
   });
-
   const handleSetPageSize = (pageSize: number) => {
     if (manualPagination && onSetPageSize) {
       onSetPageSize(pageSize);
@@ -153,22 +177,70 @@ export function DataTable<TData>({
             <TableHeader>
               {table
                 .getHeaderGroups()
-                .map((headerGroup: HeaderGroup<TData>) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map(
-                      (header: Header<TData, unknown>) => (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                        </TableHead>
-                      ),
-                    )}
-                  </TableRow>
-                ))}
+                .map((headerGroup: HeaderGroup<TData>) => {
+                  return (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map(
+                        (header: Header<TData, unknown>) => {
+                          const columnDef = header.column
+                            .columnDef as DataTableColumnDef<TData>;
+                          const direction = header.column.getIsSorted();
+                          const isSortable = columnDef.sortable;
+                          return (
+                            <TableHead
+                              key={header.id}
+                              className={
+                                isSortable
+                                  ? 'cursor-pointer select-none'
+                                  : undefined
+                              }
+                              onClick={
+                                isSortable
+                                  ? () => {
+                                      const isDesc =
+                                        header.column.getIsSorted() === 'desc';
+                                      if (isDesc) {
+                                        header.column.clearSorting();
+                                      } else {
+                                        header.column.toggleSorting(
+                                          header.column.getIsSorted() === 'asc',
+                                        );
+                                      }
+                                    }
+                                  : undefined
+                              }
+                            >
+                              <div className="flex items-center gap-1">
+                                <span>
+                                  {header.isPlaceholder
+                                    ? null
+                                    : flexRender(
+                                        header.column.columnDef.header,
+                                        header.getContext(),
+                                      )}
+                                </span>
+                                {isSortable ? (
+                                  <div className="flex flex-col h-4 justify-center">
+                                    {direction === 'asc' ? (
+                                      <ChevronUp className="h-4 w-4" />
+                                    ) : direction === 'desc' ? (
+                                      <ChevronDown className="h-4 w-4" />
+                                    ) : (
+                                      <div className="flex flex-col opacity-30">
+                                        <ChevronUp className="h-3 w-3 -mb-1" />
+                                        <ChevronDown className="h-3 w-3" />
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : null}
+                              </div>
+                            </TableHead>
+                          );
+                        },
+                      )}
+                    </TableRow>
+                  );
+                })}
             </TableHeader>
             <TableBody>
               {table.getRowModel().rows.map((row) => (

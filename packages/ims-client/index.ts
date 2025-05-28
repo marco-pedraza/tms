@@ -2325,6 +2325,7 @@ export namespace inventory {
         createdAt?: string | null
         updatedAt?: string | null
     }
+    searchTerm?: string
     term: string
 }): Promise<transporters.PaginatedTransportersWithCity> {
             // Now make the actual call to the API
@@ -9478,6 +9479,7 @@ export namespace transporters {
             createdAt?: string | null
             updatedAt?: string | null
         }
+        searchTerm?: string
     }
 
     export interface Transporter {
@@ -9650,6 +9652,7 @@ export namespace transporters {
             createdAt?: string | null
             updatedAt?: string | null
         }
+        searchTerm?: string
     }
 }
 

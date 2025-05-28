@@ -64,6 +64,12 @@ export const listTransportersPaginated = api(
   async (
     params: PaginationParamsTransporters,
   ): Promise<PaginatedTransportersWithCity> => {
+    if (params.searchTerm) {
+      return await transporterRepository.searchPaginated(
+        params.searchTerm,
+        params,
+      );
+    }
     return await transporterRepository.findAllPaginated(params);
   },
 );

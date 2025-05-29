@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import useQueryCountries from '@/countries/hooks/use-query-countries';
+import useQueryAllCountries from '@/countries/hooks/use-query-all-countries';
 import { codeSchema, nameSchema } from '@/schemas/common';
 import hasFieldErrors from '@/utils/has-field-errors';
 
@@ -45,7 +45,7 @@ export default function StateForm({
 }: StateFormProps) {
   const tStates = useTranslations('states');
   const tCommon = useTranslations('common');
-  const { data: countriesData } = useQueryCountries();
+  const { data: countriesData } = useQueryAllCountries();
 
   const form = useForm({
     defaultValues: defaultValues ?? {
@@ -126,7 +126,7 @@ export default function StateForm({
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {countriesData?.data?.map((country: Country) => (
+                    {countriesData?.countries.map((country: Country) => (
                       <SelectItem
                         key={country.id}
                         value={country.id.toString()}

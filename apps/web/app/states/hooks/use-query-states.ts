@@ -1,14 +1,18 @@
-import { useQuery } from '@tanstack/react-query';
-import client from '@/services/ims-client';
+import { APIError, states } from '@repo/ims-client';
+import createCollectionQuery from '@/hooks/use-query-collection';
+import imsClient from '@/services/ims-client';
 
 /**
- * Custom hook for querying states with pagination
+ * Custom hook for querying a paginated list of states.
  *
- * @returns Query result containing states data
+ * This hook provides a reusable query for fetching states with pagination.
+ * It handles query setup, caching, and error handling.
  */
-export function useQueryStates() {
-  return useQuery({
-    queryKey: ['states'],
-    queryFn: () => client.inventory.listStatesPaginated({}),
-  });
-}
+export default createCollectionQuery<
+  states.State,
+  states.PaginatedStates,
+  APIError
+>({
+  queryKey: ['states'],
+  queryFn: (params) => imsClient.inventory.listStatesPaginated(params),
+});

@@ -1,21 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { transporters } from '@repo/ims-client';
-import useQueryCities from '@/cities/hooks/use-query-cities';
+import useQueryAllCities from '@/app/cities/hooks/use-query-all-cities';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
 import { FilterConfig } from '@/components/data-table/data-table-header';
 import IsActiveBadge from '@/components/is-active-badge';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
@@ -23,19 +15,12 @@ import useQueryTransporters from '@/transporters/hooks/use-query-transporters';
 import useTransporterMutations from '@/transporters/hooks/use-transporter-mutations';
 import type { UseTranslationsResult } from '@/types/UseTranslationsResult';
 
-const statusOptions = [
-  { label: 'Activo', value: true },
-  { label: 'Inactivo', value: false },
-];
-
 interface TransportersColumnsFactoryProps {
-  onDelete: (id: number) => void;
   tCommon: UseTranslationsResult;
   tTransporters: UseTranslationsResult;
 }
 
 function transportersColumnsFactory({
-  onDelete,
   tCommon,
   tTransporters,
 }: TransportersColumnsFactoryProps): DataTableColumnDef<transporters.Transporter>[] {
@@ -76,48 +61,6 @@ function transportersColumnsFactory({
       accessorKey: 'phone',
       header: tCommon('fields.phone'),
     },
-    {
-      id: 'actions',
-      header: '',
-      cell: ({ row }) => {
-        const record = row.original;
-        return (
-          <div className="flex items-center justify-end gap-2">
-            <Link
-              href={routes.transporters.getDetailsRoute(record.id.toString())}
-            >
-              <Button variant="ghost" size="sm">
-                {tCommon('actions.view')}
-              </Button>
-            </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">{tCommon('actions.more')}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <Link
-                  href={routes.transporters.getEditRoute(record.id.toString())}
-                >
-                  <Button variant="ghost" className="w-full justify-start">
-                    {tCommon('actions.edit')}
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => onDelete(record.id)}
-                >
-                  {tCommon('actions.delete')}
-                </Button>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
-      },
-    },
   ];
 }
 
@@ -147,7 +90,7 @@ export default function TransportersTable() {
     setPaginationUrlState,
     setSortingUrlState,
   });
-  const { data: cities } = useQueryCities();
+  const { data: cities } = useQueryAllCities();
   const { deleteTransporter } = useTransporterMutations();
   const [deleteId, setDeleteId] = useState<number>();
 
@@ -155,7 +98,10 @@ export default function TransportersTable() {
     {
       name: tCommon('fields.active'),
       key: 'active',
-      options: statusOptions,
+      options: [
+        { label: tCommon('status.active'), value: true },
+        { label: tCommon('status.inactive'), value: false },
+      ],
     },
     {
       name: tTransporters('fields.headquarterCity'),
@@ -175,7 +121,6 @@ export default function TransportersTable() {
   };
 
   const columns = transportersColumnsFactory({
-    onDelete: setDeleteId,
     tCommon,
     tTransporters,
   });
@@ -202,6 +147,8 @@ export default function TransportersTable() {
         filtersState={filtersUrlState}
         onFiltersChange={setFiltersUrlState}
         onPaginationChange={onPaginationChange}
+        onDelete={setDeleteId}
+        routes={routes.transporters}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

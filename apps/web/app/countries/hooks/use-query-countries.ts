@@ -1,8 +1,6 @@
-import { UseQueryResult, useQuery } from '@tanstack/react-query';
-import type { countries } from '@repo/ims-client';
+import type { APIError, countries } from '@repo/ims-client';
+import createCollectionQuery from '@/hooks/use-query-collection';
 import imsClient from '@/services/ims-client';
-
-type QueryCountriesError = Error;
 
 /**
  * Custom hook for querying a paginated list of countries.
@@ -10,12 +8,11 @@ type QueryCountriesError = Error;
  * This hook provides a reusable query for fetching countries with pagination.
  * It handles query setup, caching, and error handling.
  */
-export default function useQueryCountries(): UseQueryResult<
+export default createCollectionQuery<
+  countries.Country,
   countries.PaginatedCountries,
-  QueryCountriesError
-> {
-  return useQuery({
-    queryKey: ['countries'],
-    queryFn: () => imsClient.inventory.listCountriesPaginated({}),
-  });
-}
+  APIError
+>({
+  queryKey: ['countries'],
+  queryFn: (params) => imsClient.inventory.listCountriesPaginated(params),
+});

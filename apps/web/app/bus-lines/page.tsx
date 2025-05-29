@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import BusLinesTable from '@/bus-lines/components/bus-lines-table';
 import PageHeader from '@/components/page-header';
@@ -16,7 +17,9 @@ export default function BusLinesPage() {
         createHref={routes.busLines.new}
         createLabel={t('actions.create')}
       />
-      <BusLinesTable />
+      <Suspense>
+        <BusLinesTable />
+      </Suspense>
     </div>
   );
 }

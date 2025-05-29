@@ -63,7 +63,7 @@ export default function FilterSelect({
                 const isSelected = selectedValue === option.value;
                 return (
                   <CommandItem
-                    key={option.value}
+                    key={option.value.toString()}
                     onSelect={() => {
                       if (!isSelected) {
                         onChange(option.value);

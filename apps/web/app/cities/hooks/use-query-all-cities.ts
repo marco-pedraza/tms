@@ -1,0 +1,19 @@
+import { UseQueryResult, useQuery } from '@tanstack/react-query';
+import type { APIError, cities } from '@repo/ims-client';
+import imsClient from '@/services/ims-client';
+
+/**
+ * Custom hook for querying all cities.
+ *
+ * This hook provides a reusable query for fetching cities with pagination.
+ * It handles query setup, caching, and error handling.
+ */
+export default function useQueryAllCities(): UseQueryResult<
+  cities.Cities,
+  APIError
+> {
+  return useQuery<cities.Cities, APIError>({
+    queryKey: ['allCities'],
+    queryFn: () => imsClient.inventory.listCities({}),
+  });
+}

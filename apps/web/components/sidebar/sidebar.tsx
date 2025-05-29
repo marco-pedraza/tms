@@ -7,15 +7,15 @@ import {
   Building,
   Building2,
   Bus,
-  FileText,
+  // FileText,
   Globe,
   Map,
-  Navigation,
+  // Navigation,
   Package,
-  PlaneLanding,
-  Route,
-  Settings,
-  Users,
+  // PlaneLanding,
+  // Route,
+  // Settings,
+  // Users,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import routes from '@/services/routes';
@@ -74,7 +74,7 @@ export default function Sidebar() {
           icon={Bus}
           label={tSidebar('inventory.busLines')}
         />
-        <SidebarLink
+        {/* <SidebarLink
           href={routes.routes.index}
           icon={Route}
           label={tSidebar('inventory.routes')}
@@ -108,10 +108,10 @@ export default function Sidebar() {
           href={routes.buses.index}
           icon={Bus}
           label={tSidebar('inventory.buses')}
-        />
+        /> */}
       </SidebarSection>
 
-      <SidebarSection
+      {/* <SidebarSection
         title={tSidebar('planning.title')}
         icon={<PlaneLanding className="h-4 w-4" />}
         defaultOpen={true}
@@ -121,7 +121,7 @@ export default function Sidebar() {
           icon={FileText}
           label={tSidebar('planning.busPlans')}
         />
-      </SidebarSection>
+      </SidebarSection> */}
     </nav>
   );
 }

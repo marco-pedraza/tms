@@ -1,112 +1,45 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { service_types } from '@repo/ims-client';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
-import { DataTable } from '@/components/data-table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DataTable, DataTableColumnDef } from '@/components/data-table';
+import IsActiveBadge from '@/components/is-active-badge';
+import useServerTableEvents from '@/hooks/use-server-table-events';
+import useTableUrlState from '@/hooks/use-table-url-state';
 import useQueryServiceTypes from '@/service-types/hooks/use-query-service-types';
 import useServiceTypeMutations from '@/service-types/hooks/use-service-type-mutations';
 import routes from '@/services/routes';
+import { UseTranslationsResult } from '@/types/UseTranslationsResult';
+
+interface ServiceTypesColumnsFactoryProps {
+  tCommon: UseTranslationsResult;
+  tServiceTypes: UseTranslationsResult;
+}
 
 function serviceTypesColumnsFactory({
-  onDelete,
-  viewLabel,
-  editLabel,
-  deleteLabel,
-  moreLabel,
-  nameLabel,
-  descriptionLabel,
-  activeLabel,
-  statusActive,
-  statusInactive,
-}: {
-  onDelete: (id: number) => void;
-  viewLabel: string;
-  editLabel: string;
-  deleteLabel: string;
-  moreLabel: string;
-  nameLabel: string;
-  descriptionLabel: string;
-  activeLabel: string;
-  statusActive: string;
-  statusInactive: string;
-}): ColumnDef<service_types.ServiceType>[] {
+  tCommon,
+  tServiceTypes,
+}: ServiceTypesColumnsFactoryProps): DataTableColumnDef<service_types.ServiceType>[] {
   return [
     {
       accessorKey: 'name',
-      header: nameLabel,
+      header: tServiceTypes('fields.name'),
+      sortable: true,
     },
     {
       accessorKey: 'description',
-      header: descriptionLabel,
+      header: tServiceTypes('fields.description'),
+      sortable: true,
     },
     {
       accessorKey: 'active',
-      header: activeLabel,
+      header: tCommon('fields.status'),
+      sortable: true,
       cell: ({ row }) => {
-        const active = row.getValue('active');
-        return active ? (
-          <Badge variant="outline" className="bg-green-100 text-green-800">
-            {statusActive}
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="bg-red-100 text-red-800">
-            {statusInactive}
-          </Badge>
-        );
-      },
-    },
-    {
-      id: 'actions',
-      header: '',
-      cell: ({ row }) => {
-        const record = row.original;
-        return (
-          <div className="flex items-center justify-end gap-2">
-            <Link
-              href={routes.serviceTypes.getDetailsRoute(record.id.toString())}
-            >
-              <Button variant="ghost" size="sm">
-                {viewLabel}
-              </Button>
-            </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">{moreLabel}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <Link
-                  href={routes.serviceTypes.getEditRoute(record.id.toString())}
-                >
-                  <Button variant="ghost" className="w-full justify-start">
-                    {editLabel}
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-red-600 hover:text-red-700"
-                  onClick={() => onDelete(record.id)}
-                >
-                  {deleteLabel}
-                </Button>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
+        const active = row.original.active;
+        return <IsActiveBadge isActive={active} />;
       },
     },
   ];
@@ -115,29 +48,35 @@ function serviceTypesColumnsFactory({
 export default function ServiceTypesTable() {
   const tCommon = useTranslations('common');
   const tServiceTypes = useTranslations('serviceTypes');
-
-  const { data, isLoading, error, refetch } = useQueryServiceTypes();
+  const {
+    paginationUrlState,
+    sortingUrlState,
+    setPaginationUrlState,
+    setSortingUrlState,
+  } = useTableUrlState<service_types.ServiceType>();
+  const { data, isLoading, error, refetch } = useQueryServiceTypes({
+    page: paginationUrlState.page,
+    pageSize: paginationUrlState.pageSize,
+    orderBy: sortingUrlState,
+    searchTerm: '',
+    filters: {},
+  });
+  const { onSortingChange, onPaginationChange } = useServerTableEvents({
+    paginationUrlState,
+    sortingUrlState,
+    setPaginationUrlState,
+    setSortingUrlState,
+  });
   const { deleteServiceType } = useServiceTypeMutations();
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<number>();
 
   const onConfirmDelete = () => {
     if (!deleteId) return;
     deleteServiceType.mutateWithToast(deleteId);
-    setDeleteId(null);
+    setDeleteId(undefined);
   };
 
-  const columns = serviceTypesColumnsFactory({
-    onDelete: setDeleteId,
-    viewLabel: tCommon('actions.view'),
-    editLabel: tCommon('actions.edit'),
-    deleteLabel: tCommon('actions.delete'),
-    moreLabel: tCommon('actions.more'),
-    nameLabel: tServiceTypes('fields.name'),
-    descriptionLabel: tServiceTypes('fields.description'),
-    activeLabel: tServiceTypes('fields.active'),
-    statusActive: tCommon('status.active'),
-    statusInactive: tCommon('status.inactive'),
-  });
+  const columns = serviceTypesColumnsFactory({ tCommon, tServiceTypes });
 
   return (
     <>
@@ -148,10 +87,20 @@ export default function ServiceTypesTable() {
         hasError={!!error}
         onRetry={refetch}
         addHref={routes.serviceTypes.new}
+        onDelete={setDeleteId}
+        routes={routes.serviceTypes}
+        pagination={{
+          pageIndex: paginationUrlState.page - 1,
+          pageSize: paginationUrlState.pageSize,
+          pageCount: data?.pagination.totalPages ?? 0,
+        }}
+        onPaginationChange={onPaginationChange}
+        sorting={sortingUrlState}
+        onSortingChange={onSortingChange}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}
-        onOpenChange={() => setDeleteId(null)}
+        onOpenChange={() => setDeleteId(undefined)}
         onConfirm={onConfirmDelete}
       />
     </>

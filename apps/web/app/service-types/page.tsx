@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
 import ServiceTypesTable from '@/service-types/components/service-types-table';
@@ -16,7 +17,9 @@ export default function ServiceTypesPage() {
         createHref={routes.serviceTypes.new}
         createLabel={t('actions.create')}
       />
-      <ServiceTypesTable />
+      <Suspense>
+        <ServiceTypesTable />
+      </Suspense>
     </div>
   );
 }

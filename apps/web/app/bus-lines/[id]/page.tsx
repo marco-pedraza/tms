@@ -1,7 +1,7 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element */
 import { useState } from 'react';
-import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import BusLineSkeleton from '@/bus-lines/components/bus-line-skeleton';
 import useBusLineDetailsParams from '@/bus-lines/hooks/use-bus-line-details-params';
@@ -106,11 +106,10 @@ export default function BusLinePage() {
               <dt className="font-medium">{tBusLines('fields.logo')}</dt>
               <dd>
                 <div className="w-32 h-16 bg-gray-100 flex items-center justify-center rounded border">
-                  <Image
+                  <img
                     src={busLine.logoUrl || '/placeholder.svg'}
                     alt={`Logo de ${busLine.name}`}
                     className="max-w-full max-h-full object-contain"
-                    fill
                   />
                 </div>
               </dd>

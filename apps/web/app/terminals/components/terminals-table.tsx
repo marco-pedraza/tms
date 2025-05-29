@@ -1,148 +1,63 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { type ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { terminals } from '@repo/ims-client';
-import { DataTable } from '@/components/data-table';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import { DataTable, DataTableColumnDef } from '@/components/data-table';
+import IsActiveBadge from '@/components/is-active-badge';
+import useServerTableEvents from '@/hooks/use-server-table-events';
+import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
 import useQueryTerminals from '@/terminals/hooks/use-query-terminals';
 import useTerminalMutations from '@/terminals/hooks/use-terminal-mutations';
+import { UseTranslationsResult } from '@/types/UseTranslationsResult';
 
-type Terminal = terminals.Terminal;
-
-interface TranslationObject {
-  fields: {
-    name: string;
-    code: string;
-    city: string;
-    slug: string;
-    status: string;
-    createdAt: string;
-    actions: string;
-  };
-  status: {
-    active: string;
-    inactive: string;
-  };
-  actions: {
-    view: string;
-    edit: string;
-    delete: string;
-    more: string;
-  };
+interface TerminalsColumnsFactoryProps {
+  tCommon: UseTranslationsResult;
+  tTerminals: UseTranslationsResult;
 }
 
-const terminalsColumnsFactory = (
-  getViewHref: (id: string) => string,
-  onDelete: (id: string) => void,
-  onEdit: (id: string) => void,
-  translations: TranslationObject,
-): ColumnDef<Terminal>[] => {
+const terminalsColumnsFactory = ({
+  tCommon,
+  tTerminals,
+}: TerminalsColumnsFactoryProps): DataTableColumnDef<terminals.Terminal>[] => {
   return [
     {
       accessorKey: 'name',
-      header: translations.fields.name,
+      header: tCommon('fields.name'),
+      sortable: true,
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue('name')}</div>
       ),
     },
     {
       accessorKey: 'code',
-      header: translations.fields.code,
+      header: tCommon('fields.code'),
+      sortable: true,
       cell: ({ row }) => <div>{row.getValue('code')}</div>,
     },
     {
       accessorKey: 'slug',
-      header: translations.fields.slug,
+      header: tTerminals('fields.slug'),
       cell: ({ row }) => <div>{row.getValue('slug')}</div>,
     },
     {
       accessorKey: 'active',
-      header: translations.fields.status,
+      header: tCommon('fields.status'),
+      sortable: true,
       cell: ({ row }) => {
-        const active = row.getValue('active');
-        return active ? (
-          <Badge variant="outline" className="bg-green-100">
-            {translations.status.active}
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="bg-red-100">
-            {translations.status.inactive}
-          </Badge>
-        );
+        const active = row.original.active;
+        return <IsActiveBadge isActive={active} />;
       },
     },
     {
       accessorKey: 'createdAt',
-      header: translations.fields.createdAt,
+      header: tCommon('fields.createdAt'),
+      sortable: true,
       cell: ({ row }) => {
         const value = row.getValue('createdAt');
         return value ? new Date(value as string).toLocaleDateString() : '-';
-      },
-    },
-    {
-      id: 'actions',
-      header: translations.fields.actions,
-      cell: ({ row }) => {
-        const record = row.original;
-        return (
-          <div className="flex items-center justify-end gap-2">
-            <Link href={getViewHref(record.id.toString())}>
-              <Button variant="ghost" size="sm">
-                {translations.actions.view}
-              </Button>
-            </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">{translations.actions.more}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    onEdit(record.id.toString());
-                  }}
-                >
-                  {translations.actions.edit}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    onDelete(record.id.toString());
-                  }}
-                >
-                  {translations.actions.delete}
-                </Button>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
       },
     },
   ];
@@ -151,65 +66,35 @@ const terminalsColumnsFactory = (
 export default function TerminalsTable() {
   const tTerminals = useTranslations('terminals');
   const tCommon = useTranslations('common');
-
-  const router = useRouter();
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<number>();
   const { deleteTerminal } = useTerminalMutations();
-
-  const { data, isLoading, error, refetch } = useQueryTerminals();
-
-  const handleDelete = (id: string) => {
-    const numericId = parseInt(id);
-    if (isNaN(numericId)) {
-      console.error('Invalid terminal ID:', id);
-      return;
-    }
-    setDeleteId(numericId);
-  };
+  const {
+    paginationUrlState,
+    sortingUrlState,
+    setPaginationUrlState,
+    setSortingUrlState,
+  } = useTableUrlState<terminals.Terminal>();
+  const { data, isLoading, error, refetch } = useQueryTerminals({
+    page: paginationUrlState.page,
+    pageSize: paginationUrlState.pageSize,
+    orderBy: sortingUrlState,
+    searchTerm: '',
+    filters: {},
+  });
+  const { onSortingChange, onPaginationChange } = useServerTableEvents({
+    paginationUrlState,
+    sortingUrlState,
+    setPaginationUrlState,
+    setSortingUrlState,
+  });
 
   const confirmDelete = () => {
     if (!deleteId) return;
     deleteTerminal.mutateWithToast(deleteId);
-    setDeleteId(null);
+    setDeleteId(undefined);
   };
 
-  const getViewHref = (id: string) => {
-    return routes.terminals.getDetailsRoute(id);
-  };
-
-  const handleEdit = (id: string) => {
-    router.push(routes.terminals.getEditRoute(id));
-  };
-
-  // Prepare translations object for the columns factory
-  const translations: TranslationObject = {
-    fields: {
-      name: tCommon('fields.name'),
-      code: tCommon('fields.code'),
-      city: tTerminals('fields.city'),
-      slug: tTerminals('fields.slug'),
-      status: tCommon('fields.status'),
-      createdAt: tCommon('fields.createdAt'),
-      actions: tCommon('fields.actions'),
-    },
-    status: {
-      active: tCommon('status.active'),
-      inactive: tCommon('status.inactive'),
-    },
-    actions: {
-      view: tCommon('actions.view'),
-      edit: tCommon('actions.edit'),
-      delete: tCommon('actions.delete'),
-      more: tCommon('actions.more'),
-    },
-  };
-
-  const columns = terminalsColumnsFactory(
-    getViewHref,
-    handleDelete,
-    handleEdit,
-    translations,
-  );
+  const columns = terminalsColumnsFactory({ tCommon, tTerminals });
 
   return (
     <>
@@ -220,33 +105,22 @@ export default function TerminalsTable() {
         hasError={!!error}
         onRetry={refetch}
         addHref={routes.terminals.new}
-      />
-      <AlertDialog
-        open={!!deleteId}
-        onOpenChange={() => {
-          setDeleteId(null);
+        pagination={{
+          pageIndex: paginationUrlState.page - 1,
+          pageSize: paginationUrlState.pageSize,
+          pageCount: data?.pagination.totalPages ?? 0,
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {tCommon('crud.delete.confirm')}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {tCommon('crud.delete.description')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{tCommon('actions.cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground"
-            >
-              {tCommon('actions.delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onPaginationChange={onPaginationChange}
+        sorting={sortingUrlState}
+        onSortingChange={onSortingChange}
+        onDelete={setDeleteId}
+        routes={routes.terminals}
+      />
+      <ConfirmDeleteDialog
+        isOpen={!!deleteId}
+        onOpenChange={() => setDeleteId(undefined)}
+        onConfirm={confirmDelete}
+      />
     </>
   );
 }

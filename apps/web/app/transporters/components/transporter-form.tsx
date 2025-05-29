@@ -2,7 +2,7 @@ import { useForm } from '@tanstack/react-form';
 import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
-import useQueryCities from '@/cities/hooks/use-query-cities';
+import useQueryAllCities from '@/cities/hooks/use-query-all-cities';
 import FormLayout from '@/components/form/form-layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,7 +47,7 @@ export default function TransporterForm({
 }: TransporterFormProps) {
   const tTransporters = useTranslations('transporters');
   const tCommon = useTranslations('common');
-  const { data: cities } = useQueryCities();
+  const { data: cities } = useQueryAllCities();
 
   const form = useForm({
     defaultValues: defaultValues ?? {

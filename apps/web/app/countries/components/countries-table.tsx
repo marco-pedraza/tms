@@ -1,191 +1,91 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { type ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { countries } from '@repo/ims-client';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
-import { DataTable } from '@/components/data-table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DataTable, DataTableColumnDef } from '@/components/data-table';
+import IsActiveBadge from '@/components/is-active-badge';
 import useCountryMutations from '@/countries/hooks/use-country-mutations';
 import useQueryCountries from '@/countries/hooks/use-query-countries';
+import useServerTableEvents from '@/hooks/use-server-table-events';
+import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
+import { UseTranslationsResult } from '@/types/UseTranslationsResult';
 
-type Country = countries.Country;
-
-interface CommonTranslations {
-  fields: {
-    name: string;
-    code: string;
-    status: string;
-    createdAt: string;
-    actions: string;
-  };
-  status: {
-    active: string;
-    inactive: string;
-  };
-  actions: {
-    view: string;
-    edit: string;
-    delete: string;
-    more: string;
-  };
+interface CountriesColumnsFactoryProps {
+  tCommon: UseTranslationsResult;
 }
 
-const countriesColumnsFactory = (
-  getViewHref: (id: string) => string,
-  onDelete: (id: string) => void,
-  onEdit: (id: string) => void,
-  translations: CommonTranslations,
-): ColumnDef<Country>[] => {
+const countriesColumnsFactory = ({
+  tCommon,
+}: CountriesColumnsFactoryProps): DataTableColumnDef<countries.Country>[] => {
   return [
     {
       accessorKey: 'name',
-      header: translations.fields.name,
+      header: tCommon('fields.name'),
+      sortable: true,
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue('name')}</div>
       ),
     },
     {
       accessorKey: 'code',
-      header: translations.fields.code,
+      header: tCommon('fields.code'),
+      sortable: true,
     },
     {
       accessorKey: 'active',
-      header: translations.fields.status,
+      header: tCommon('fields.status'),
+      sortable: true,
       cell: ({ row }) => {
-        const active = row.getValue('active');
-        return active ? (
-          <Badge variant="outline" className="bg-green-100">
-            {translations.status.active}
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="bg-red-100">
-            {translations.status.inactive}
-          </Badge>
-        );
+        const active = row.original.active;
+        return <IsActiveBadge isActive={active} />;
       },
     },
     {
       accessorKey: 'createdAt',
-      header: translations.fields.createdAt,
+      header: tCommon('fields.createdAt'),
+      sortable: true,
       cell: ({ row }) => {
         const value = row.getValue('createdAt');
         return value ? new Date(value as string).toLocaleDateString() : '-';
-      },
-    },
-    {
-      id: 'actions',
-      header: translations.fields.actions,
-      cell: ({ row }) => {
-        const record = row.original;
-        return (
-          <div className="flex items-center justify-end gap-2">
-            <Link href={getViewHref(record.id.toString())}>
-              <Button variant="ghost" size="sm">
-                {translations.actions.view}
-              </Button>
-            </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">{translations.actions.more}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => onEdit(record.id.toString())}
-                >
-                  {translations.actions.edit}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => onDelete(record.id.toString())}
-                >
-                  {translations.actions.delete}
-                </Button>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
       },
     },
   ];
 };
 
 export default function CountriesTable() {
-  const t = useTranslations('common');
-
-  const router = useRouter();
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const tCommon = useTranslations('common');
+  const [deleteId, setDeleteId] = useState<number>();
   const { deleteCountry } = useCountryMutations();
-
-  const { data, isLoading, error, refetch } = useQueryCountries();
-
-  const handleDelete = (id: string) => {
-    const numericId = parseInt(id);
-    if (isNaN(numericId)) {
-      console.error('Invalid country ID:', id);
-      return;
-    }
-    setDeleteId(numericId);
-  };
+  const {
+    paginationUrlState,
+    sortingUrlState,
+    setPaginationUrlState,
+    setSortingUrlState,
+  } = useTableUrlState<countries.Country>();
+  const { data, isLoading, error, refetch } = useQueryCountries({
+    page: paginationUrlState.page,
+    pageSize: paginationUrlState.pageSize,
+    orderBy: sortingUrlState,
+    searchTerm: '',
+    filters: {},
+  });
+  const { onSortingChange, onPaginationChange } = useServerTableEvents({
+    paginationUrlState,
+    sortingUrlState,
+    setPaginationUrlState,
+    setSortingUrlState,
+  });
 
   const confirmDelete = () => {
     if (!deleteId) return;
     deleteCountry.mutateWithToast(deleteId);
-    setDeleteId(null);
+    setDeleteId(undefined);
   };
 
-  const getViewHref = (id: string) => {
-    return routes.countries.getDetailsRoute(id);
-  };
-
-  const handleEdit = (id: string) => {
-    router.push(routes.countries.getEditRoute(id));
-  };
-
-  // Prepare translations object for the columns factory only
-  const translations: CommonTranslations = {
-    fields: {
-      name: t('fields.name'),
-      code: t('fields.code'),
-      status: t('fields.status'),
-      createdAt: t('fields.createdAt'),
-      actions: t('fields.actions'),
-    },
-    status: {
-      active: t('status.active'),
-      inactive: t('status.inactive'),
-    },
-    actions: {
-      view: t('actions.view'),
-      edit: t('actions.edit'),
-      delete: t('actions.delete'),
-      more: t('actions.more'),
-    },
-  };
-
-  const columns = countriesColumnsFactory(
-    getViewHref,
-    handleDelete,
-    handleEdit,
-    translations,
-  );
+  const columns = countriesColumnsFactory({ tCommon });
 
   return (
     <>
@@ -196,10 +96,20 @@ export default function CountriesTable() {
         hasError={!!error}
         onRetry={refetch}
         addHref={routes.countries.new}
+        onDelete={setDeleteId}
+        routes={routes.countries}
+        pagination={{
+          pageIndex: paginationUrlState.page - 1,
+          pageSize: paginationUrlState.pageSize,
+          pageCount: data?.pagination.totalPages ?? 0,
+        }}
+        onPaginationChange={onPaginationChange}
+        sorting={sortingUrlState}
+        onSortingChange={onSortingChange}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}
-        onOpenChange={() => setDeleteId(null)}
+        onOpenChange={() => setDeleteId(undefined)}
         onConfirm={confirmDelete}
       />
     </>

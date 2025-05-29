@@ -1,12 +1,47 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { busLinesColumnsFactory } from '@/bus-lines/components/bus-lines-table';
+import { bus_lines } from '@repo/ims-client';
 import useBusLineMutations from '@/bus-lines/hooks/use-bus-line-mutations';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
-import { DataTable } from '@/components/data-table';
+import { DataTable, DataTableColumnDef } from '@/components/data-table';
+import IsActiveBadge from '@/components/is-active-badge';
 import routes from '@/services/routes';
 import useQueryTransporterBusLines from '@/transporters/hooks/use-query-transporter-bus-lines';
 import useTransporterDetailsParams from '@/transporters/hooks/use-transporter-details-params';
+import { UseTranslationsResult } from '@/types/UseTranslationsResult';
+
+interface TransporterBusLinesColumnsFactoryProps {
+  tCommon: UseTranslationsResult;
+  tBusLines: UseTranslationsResult;
+}
+
+function transporterBusLinesColumnsFactory({
+  tCommon,
+  tBusLines,
+}: TransporterBusLinesColumnsFactoryProps): DataTableColumnDef<bus_lines.BusLine>[] {
+  return [
+    {
+      accessorKey: 'name',
+      header: tCommon('fields.name'),
+    },
+    {
+      accessorKey: 'code',
+      header: tCommon('fields.code'),
+    },
+    {
+      accessorKey: 'serviceTypeId',
+      header: tBusLines('fields.serviceType'),
+    },
+    {
+      accessorKey: 'active',
+      header: tCommon('fields.active'),
+      cell: ({ row }) => {
+        const active = row.original.active;
+        return <IsActiveBadge isActive={active} />;
+      },
+    },
+  ];
+}
 
 export default function TransporterBusLinesTable() {
   const tCommon = useTranslations('common');
@@ -22,16 +57,15 @@ export default function TransporterBusLinesTable() {
     enabled: isValidId,
   });
   const { deleteBusLine } = useBusLineMutations();
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<number>();
 
   const onConfirmDelete = () => {
     if (!deleteId) return;
     deleteBusLine.mutateWithToast(deleteId);
-    setDeleteId(null);
+    setDeleteId(undefined);
   };
 
-  const columns = busLinesColumnsFactory({
-    onDelete: setDeleteId,
+  const columns = transporterBusLinesColumnsFactory({
     tCommon,
     tBusLines,
   });
@@ -45,10 +79,12 @@ export default function TransporterBusLinesTable() {
         hasError={!!error}
         onRetry={refetch}
         addHref={routes.busLines.new}
+        onDelete={setDeleteId}
+        routes={routes.busLines}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}
-        onOpenChange={() => setDeleteId(null)}
+        onOpenChange={() => setDeleteId(undefined)}
         onConfirm={onConfirmDelete}
       />
     </>

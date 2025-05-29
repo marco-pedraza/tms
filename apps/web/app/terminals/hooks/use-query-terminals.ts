@@ -1,8 +1,6 @@
-import { UseQueryResult, useQuery } from '@tanstack/react-query';
-import type { terminals } from '@repo/ims-client';
-import client from '@/services/ims-client';
-
-type QueryTerminalsError = Error;
+import type { APIError, terminals } from '@repo/ims-client';
+import createCollectionQuery from '@/hooks/use-query-collection';
+import imsClient from '@/services/ims-client';
 
 /**
  * Custom hook for querying a paginated list of terminals.
@@ -10,12 +8,11 @@ type QueryTerminalsError = Error;
  * This hook provides a reusable query for fetching terminals with pagination.
  * It handles query setup, caching, and error handling.
  */
-export default function useQueryTerminals(): UseQueryResult<
+export default createCollectionQuery<
+  terminals.Terminal,
   terminals.PaginatedTerminals,
-  QueryTerminalsError
-> {
-  return useQuery({
-    queryKey: ['terminals'],
-    queryFn: () => client.inventory.listTerminals({}),
-  });
-}
+  APIError
+>({
+  queryKey: ['terminals'],
+  queryFn: (params) => imsClient.inventory.listTerminalsPaginated(params),
+});

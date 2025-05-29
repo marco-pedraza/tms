@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
 import routes from '@/services/routes';
@@ -19,7 +20,9 @@ export default function TerminalsPage() {
         createHref={routes.terminals.new}
         createLabel={t('actions.create')}
       />
-      <TerminalsTable />
+      <Suspense>
+        <TerminalsTable />
+      </Suspense>
     </div>
   );
 }

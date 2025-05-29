@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
 import CountriesTable from '@/countries/components/countries-table';
@@ -16,7 +17,9 @@ export default function CountriesPage() {
         createHref={routes.countries.new}
         createLabel={t('actions.create')}
       />
-      <CountriesTable />
+      <Suspense>
+        <CountriesTable />
+      </Suspense>
     </div>
   );
 }

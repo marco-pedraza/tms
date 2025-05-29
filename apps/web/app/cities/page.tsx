@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import CitiesTable from '@/cities/components/cities-table';
 import PageHeader from '@/components/page-header';
@@ -19,7 +20,9 @@ export default function CitiesPage() {
         createHref={routes.cities.new}
         createLabel={t('actions.create')}
       />
-      <CitiesTable />
+      <Suspense>
+        <CitiesTable />
+      </Suspense>
     </div>
   );
 }

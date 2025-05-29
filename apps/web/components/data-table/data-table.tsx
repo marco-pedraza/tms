@@ -23,6 +23,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { SortBy } from '@/types/sort-by';
+import DataTableActionsCell from './data-table-actions-cell';
 import DataTableEmpty from './data-table-empty';
 import DataTableError from './data-table-error';
 import DataTableHeader, { FilterConfig } from './data-table-header';
@@ -57,9 +58,18 @@ interface DataTableProps<TData extends object> {
   onFiltersChange?: (
     value: Record<string, FilterSelectOption['value']>,
   ) => void;
+  onDelete: (id: number) => void;
+  routes: {
+    getDetailsRoute: (id: string) => string;
+    getEditRoute: (id: string) => string;
+  };
 }
 
-export function DataTable<TData extends object>({
+interface TableData {
+  id: number;
+}
+
+export function DataTable<TData extends TableData>({
   data,
   columns,
   isLoading = false,
@@ -76,6 +86,8 @@ export function DataTable<TData extends object>({
   filtersConfig = [],
   filtersState = {},
   onFiltersChange = () => {},
+  onDelete,
+  routes,
 }: DataTableProps<TData>) {
   const sortingState: SortingState =
     sorting?.map((sort) => ({
@@ -206,6 +218,7 @@ export function DataTable<TData extends object>({
                             );
                           },
                         )}
+                        <TableHead key="actions" />
                       </TableRow>
                     );
                   })}
@@ -233,6 +246,17 @@ export function DataTable<TData extends object>({
                         )}
                       </TableCell>
                     ))}
+                    <TableCell>
+                      <DataTableActionsCell
+                        detailsHref={routes.getDetailsRoute(
+                          row.original.id.toString(),
+                        )}
+                        editHref={routes.getEditRoute(
+                          row.original.id.toString(),
+                        )}
+                        onDelete={() => onDelete(row.original.id)}
+                      />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -1,138 +1,63 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { type ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { cities } from '@repo/ims-client';
+import { cities } from '@repo/ims-client';
 import useCityMutations from '@/cities/hooks/use-city-mutations';
 import useQueryCities from '@/cities/hooks/use-query-cities';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
-import { DataTable } from '@/components/data-table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DataTable, DataTableColumnDef } from '@/components/data-table';
+import IsActiveBadge from '@/components/is-active-badge';
+import useServerTableEvents from '@/hooks/use-server-table-events';
+import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
+import { UseTranslationsResult } from '@/types/UseTranslationsResult';
 
-type City = cities.City;
-
-interface TranslationObject {
-  fields: {
-    name: string;
-    slug: string;
-    timezone: string;
-    status: string;
-    createdAt: string;
-    actions: string;
-  };
-  status: {
-    active: string;
-    inactive: string;
-  };
-  actions: {
-    view: string;
-    edit: string;
-    delete: string;
-    more: string;
-  };
+interface CitiesColumnsFactoryProps {
+  tCommon: UseTranslationsResult;
+  tCities: UseTranslationsResult;
 }
 
-const citiesColumnsFactory = (
-  getViewHref: (id: string) => string,
-  onDelete: (id: string) => void,
-  onEdit: (id: string) => void,
-  translations: TranslationObject,
-): ColumnDef<City>[] => {
+const citiesColumnsFactory = ({
+  tCommon,
+  tCities,
+}: CitiesColumnsFactoryProps): DataTableColumnDef<cities.City>[] => {
   return [
     {
       accessorKey: 'name',
-      header: translations.fields.name,
+      header: tCommon('fields.name'),
+      sortable: true,
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue('name')}</div>
       ),
     },
     {
       accessorKey: 'slug',
-      header: translations.fields.slug,
+      header: tCommon('fields.slug'),
+      sortable: true,
       cell: ({ row }) => <div>{row.getValue('slug')}</div>,
     },
     {
       accessorKey: 'timezone',
-      header: translations.fields.timezone,
+      header: tCities('fields.timezone'),
       cell: ({ row }) => <div>{row.getValue('timezone')}</div>,
     },
     {
       accessorKey: 'active',
-      header: translations.fields.status,
+      header: tCommon('fields.status'),
+      sortable: true,
       cell: ({ row }) => {
-        const active = row.getValue('active');
-        return active ? (
-          <Badge variant="outline" className="bg-green-100">
-            {translations.status.active}
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="bg-red-100">
-            {translations.status.inactive}
-          </Badge>
-        );
+        const active = row.original.active;
+        return <IsActiveBadge isActive={active} />;
       },
     },
     {
       accessorKey: 'createdAt',
-      header: translations.fields.createdAt,
+      header: tCommon('fields.createdAt'),
+      sortable: true,
       cell: ({ row }) => {
         const value = row.getValue('createdAt');
         return value ? new Date(value as string).toLocaleDateString() : '-';
-      },
-    },
-    {
-      id: 'actions',
-      header: translations.fields.actions,
-      cell: ({ row }) => {
-        const record = row.original;
-        return (
-          <div className="flex items-center justify-end gap-2">
-            <Link href={getViewHref(record.id.toString())}>
-              <Button variant="ghost" size="sm">
-                {translations.actions.view}
-              </Button>
-            </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">{translations.actions.more}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    onEdit(record.id.toString());
-                  }}
-                >
-                  {translations.actions.edit}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    onDelete(record.id.toString());
-                  }}
-                >
-                  {translations.actions.delete}
-                </Button>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
       },
     },
   ];
@@ -141,77 +66,60 @@ const citiesColumnsFactory = (
 export default function CitiesTable() {
   const tCities = useTranslations('cities');
   const tCommon = useTranslations('common');
-  const router = useRouter();
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<number>();
   const { deleteCity } = useCityMutations();
-  const { data, isLoading, error, refetch } = useQueryCities();
-
-  const handleDelete = (id: string) => {
-    const numericId = parseInt(id);
-    if (isNaN(numericId)) {
-      console.error('Invalid city ID:', id);
-      return;
-    }
-    setDeleteId(numericId);
-  };
+  const {
+    paginationUrlState,
+    sortingUrlState,
+    setPaginationUrlState,
+    setSortingUrlState,
+  } = useTableUrlState<cities.City>();
+  const { data, isLoading, error, refetch } = useQueryCities({
+    page: paginationUrlState.page,
+    pageSize: paginationUrlState.pageSize,
+    orderBy: sortingUrlState,
+    searchTerm: '',
+    filters: {},
+  });
+  const { onSortingChange, onPaginationChange } = useServerTableEvents({
+    paginationUrlState,
+    sortingUrlState,
+    setPaginationUrlState,
+    setSortingUrlState,
+  });
 
   const confirmDelete = () => {
     if (!deleteId) return;
     deleteCity.mutateWithToast(deleteId);
-    setDeleteId(null);
+    setDeleteId(undefined);
   };
 
-  const getViewHref = (id: string) => {
-    return routes.cities.getDetailsRoute(id);
-  };
-
-  const handleEdit = (id: string) => {
-    router.push(routes.cities.getEditRoute(id));
-  };
-
-  // Prepare translations object for the columns factory
-  const translations: TranslationObject = {
-    fields: {
-      name: tCommon('fields.name'),
-      slug: tCommon('fields.slug'),
-      timezone: tCities('fields.timezone'),
-      status: tCommon('fields.status'),
-      createdAt: tCommon('fields.createdAt'),
-      actions: tCommon('fields.actions'),
-    },
-    status: {
-      active: tCommon('status.active'),
-      inactive: tCommon('status.inactive'),
-    },
-    actions: {
-      view: tCommon('actions.view'),
-      edit: tCommon('actions.edit'),
-      delete: tCommon('actions.delete'),
-      more: tCommon('actions.more'),
-    },
-  };
-
-  const columns = citiesColumnsFactory(
-    getViewHref,
-    handleDelete,
-    handleEdit,
-    translations,
-  );
+  const columns = citiesColumnsFactory({ tCommon, tCities });
 
   return (
     <>
       <DataTable
-        data={data?.cities ?? []}
+        data={data?.data ?? []}
         columns={columns}
         isLoading={isLoading}
         hasError={!!error}
         onRetry={refetch}
         addHref={routes.cities.new}
+        pagination={{
+          pageIndex: paginationUrlState.page - 1,
+          pageSize: paginationUrlState.pageSize,
+          pageCount: data?.pagination.totalPages ?? 0,
+        }}
+        onPaginationChange={onPaginationChange}
+        sorting={sortingUrlState}
+        onSortingChange={onSortingChange}
+        onDelete={setDeleteId}
+        routes={routes.cities}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}
         onOpenChange={() => {
-          setDeleteId(null);
+          setDeleteId(undefined);
         }}
         onConfirm={confirmDelete}
       />

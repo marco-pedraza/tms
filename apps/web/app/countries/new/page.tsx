@@ -8,7 +8,6 @@ import routes from '@/services/routes';
 
 export default function NewCountryPage() {
   const t = useTranslations('countries');
-  const tCommon = useTranslations('common');
   const { createCountry } = useCountryMutations();
 
   return (
@@ -18,10 +17,7 @@ export default function NewCountryPage() {
         backHref={routes.countries.index}
         backLabel={t('actions.backToList')}
       />
-      <CountryForm
-        onSubmit={createCountry.mutateWithToast}
-        submitButtonText={tCommon('actions.create')}
-      />
+      <CountryForm onSubmit={createCountry.mutateWithToast} />
     </div>
   );
 }

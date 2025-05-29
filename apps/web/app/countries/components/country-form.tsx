@@ -1,36 +1,26 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
-import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import FormFooter from '@/components/form/form-footer';
+import FormLayout from '@/components/form/form-layout';
+import useForm from '@/hooks/use-form';
 import { codeSchema, nameSchema } from '@/schemas/common';
-import hasFieldErrors from '@/utils/has-field-errors';
 
-const editCountrySchema = z.object({
+const countryFormSchema = z.object({
   name: nameSchema,
   code: codeSchema(2, 2),
   active: z.boolean(),
 });
 
-export type CountryFormValues = z.infer<typeof editCountrySchema>;
+export type CountryFormValues = z.infer<typeof countryFormSchema>;
 
 interface CountryFormProps {
   defaultValues?: CountryFormValues;
-  onSubmit: (values: CountryFormValues) => Promise<unknown>;
-  submitButtonText?: string;
+  onSubmit: (values: CountryFormValues) => void;
 }
 
-function CountryForm({
-  defaultValues,
-  onSubmit,
-  submitButtonText,
-}: CountryFormProps) {
+function CountryForm({ defaultValues, onSubmit }: CountryFormProps) {
   const tCountries = useTranslations('countries');
   const tCommon = useTranslations('common');
 
@@ -41,7 +31,7 @@ function CountryForm({
       active: false,
     },
     validators: {
-      onChange: editCountrySchema,
+      onChange: countryFormSchema,
     },
     onSubmit: (values) => {
       onSubmit(values.value);
@@ -56,76 +46,40 @@ function CountryForm({
         form.handleSubmit();
       }}
     >
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>{tCountries('form.title')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <form.Field name="name">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="name">{tCommon('fields.name')}</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value ?? ''}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={tCountries('form.placeholders.name')}
-                  aria-invalid={hasFieldErrors(field)}
-                />
-              </div>
-            )}
-          </form.Field>
+      <FormLayout title={tCountries('form.title')}>
+        <form.AppField name="name">
+          {(field) => (
+            <field.TextInput
+              label={tCommon('fields.name')}
+              placeholder={tCountries('form.placeholders.name')}
+            />
+          )}
+        </form.AppField>
 
-          <form.Field name="code">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="code">{tCommon('fields.code')}</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value ?? ''}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={tCountries('form.placeholders.code')}
-                  aria-invalid={hasFieldErrors(field)}
-                  maxLength={2}
-                />
-                <p className="text-sm text-muted-foreground">
-                  {tCountries('form.codeHelp')}
-                </p>
-              </div>
-            )}
-          </form.Field>
+        <form.AppField name="code">
+          {(field) => (
+            <field.TextInput
+              label={tCommon('fields.code')}
+              placeholder={tCountries('form.placeholders.code')}
+              maxLength={2}
+            />
+          )}
+        </form.AppField>
 
-          <form.Field name="active">
-            {(field) => (
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id={field.name}
-                  checked={field.state.value ?? false}
-                  onCheckedChange={(checked: boolean) =>
-                    field.handleChange(checked)
-                  }
-                />
-                <Label htmlFor={field.name}>{tCommon('fields.active')}</Label>
-              </div>
-            )}
-          </form.Field>
+        <form.AppField name="active">
+          {(field) => <field.SwitchInput label={tCommon('fields.active')} />}
+        </form.AppField>
 
-          <form.Subscribe
-            selector={(state) => [state.canSubmit, state.isSubmitting]}
-          >
-            {([canSubmit, isSubmitting]: [boolean, boolean]) => (
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="submit" disabled={!canSubmit || isSubmitting}>
-                  {isSubmitting && <Loader2 className="animate-spin" />}
-                  {submitButtonText ?? tCommon('actions.create')}
-                </Button>
-              </div>
-            )}
-          </form.Subscribe>
-        </CardContent>
-      </Card>
+        <FormFooter>
+          <form.AppForm>
+            <form.SubmitButton>
+              {defaultValues
+                ? tCountries('actions.update')
+                : tCountries('actions.create')}
+            </form.SubmitButton>
+          </form.AppForm>
+        </FormFooter>
+      </FormLayout>
     </form>
   );
 }

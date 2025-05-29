@@ -13,7 +13,6 @@ import routes from '@/services/routes';
 
 export default function EditCountryPage() {
   const tCountries = useTranslations('countries');
-  const tCommon = useTranslations('common');
   const { countryId, isValidId } = useCountryDetailsParams();
   const { data, isLoading } = useQueryCountry({
     countryId,
@@ -21,9 +20,8 @@ export default function EditCountryPage() {
   });
   const { updateCountry } = useCountryMutations();
 
-  const handleSubmit = (values: CountryFormValues) => {
-    return updateCountry.mutateWithToast({ id: countryId, values });
-  };
+  const handleSubmit = (values: CountryFormValues) =>
+    updateCountry.mutateWithToast({ id: countryId, values });
 
   if (isLoading) {
     return <CountryFormSkeleton />;
@@ -40,11 +38,7 @@ export default function EditCountryPage() {
         description={`${data?.name} (${data?.code})`}
         backHref={routes.countries.index}
       />
-      <CountryForm
-        defaultValues={data}
-        onSubmit={handleSubmit}
-        submitButtonText={tCommon('actions.update')}
-      />
+      <CountryForm defaultValues={data} onSubmit={handleSubmit} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS "seat_diagrams" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"seat_layout_model_id" integer NOT NULL,
+	"bus_diagram_model_id" integer NOT NULL,
 	"name" text NOT NULL,
 	"max_capacity" integer NOT NULL,
 	"allows_adjacent_seat" boolean DEFAULT false NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS "seat_diagrams" (
 );
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "seat_diagrams" ADD CONSTRAINT "seat_diagrams_seat_layout_model_id_seat_layout_models_id_fk" FOREIGN KEY ("seat_layout_model_id") REFERENCES "public"."seat_layout_models"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "seat_diagrams" ADD CONSTRAINT "seat_diagrams_bus_diagram_model_id_bus_diagram_models_id_fk" FOREIGN KEY ("bus_diagram_model_id") REFERENCES "public"."bus_diagram_models"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

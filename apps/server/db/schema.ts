@@ -32,17 +32,17 @@ export { refreshTokens } from '../users/auth/auth.schema';
 export { audits, auditRelations } from '../users/audits/audits.schema';
 export { drivers } from '../inventory/drivers/drivers.schema';
 export {
-  seatLayoutModels,
-  seatLayoutModelsRelations,
-} from '../inventory/seat-layout-models/seat-layout-models.schema';
+  busDiagramModels,
+  busDiagramModelsRelations,
+} from '../inventory/bus-diagram-models/bus-diagram-models.schema';
 export {
   seatDiagrams,
   seatDiagramsRelations,
 } from '../inventory/seat-diagrams/seat-diagrams.schema';
 export {
-  seatLayoutModelZones,
-  seatLayoutModelZonesRelations,
-} from '../inventory/seat-layout-model-zones/seat-layout-model-zones.schema';
+  busDiagramModelZones,
+  busDiagramModelZonesRelations,
+} from '../inventory/bus-diagram-model-zones/bus-diagram-model-zones.schema';
 export {
   seatDiagramZones,
   seatDiagramZonesRelations,

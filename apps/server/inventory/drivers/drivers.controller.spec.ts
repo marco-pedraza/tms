@@ -1,14 +1,14 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import {
+  createBusDiagramModel,
+  deleteBusDiagramModel,
+} from '../bus-diagram-models/bus-diagram-models.controller';
 import { busLineRepository } from '../bus-lines/bus-lines.repository';
 import { busModelRepository } from '../bus-models/bus-models.repository';
 import { busRepository } from '../buses/buses.repository';
 import { BusStatus } from '../buses/buses.types';
 import { createBusWithSeatDiagram } from '../buses/buses.use-cases';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
-import {
-  createSeatLayoutModel,
-  deleteSeatLayoutModel,
-} from '../seat-layout-models/seat-layout-models.controller';
 import { serviceTypeRepository } from '../service-types/service-types.repository';
 import { transporterRepository } from '../transporters/transporters.repository';
 import { Driver, DriverStatus } from './drivers.types';
@@ -75,7 +75,7 @@ describe('Drivers Controller', () => {
   let createdBusLineId: number;
   let createdServiceTypeId: number;
   let createdBusId: number;
-  let createdSeatLayoutModelId: number;
+  let createdBusDiagramModelId: number;
   let createdSeatDiagramId: number;
   let createdBusModelId: number;
 
@@ -112,9 +112,9 @@ describe('Drivers Controller', () => {
       });
       createdBusLineId = testBusLine.id;
 
-      // Create test seat diagram first
-      const testSeatLayoutModel = await createSeatLayoutModel({
-        name: 'Test Seat Layout Model',
+      // Create test bus diagram model first
+      const testBusDiagramModel = await createBusDiagramModel({
+        name: 'Test Bus Diagram Model',
         description: 'Test Description',
         maxCapacity: 40,
         numFloors: 1,
@@ -131,11 +131,11 @@ describe('Drivers Controller', () => {
         isFactoryDefault: true,
         active: true,
       });
-      createdSeatLayoutModelId = testSeatLayoutModel.id;
+      createdBusDiagramModelId = testBusDiagramModel.id;
 
       // Create a test bus model
       const testBusModel = await busModelRepository.create({
-        defaultSeatLayoutModelId: testSeatLayoutModel.id,
+        defaultBusDiagramModelId: testBusDiagramModel.id,
         manufacturer: 'Test Manufacturer',
         model: 'Test Model',
         year: 2023,
@@ -217,12 +217,12 @@ describe('Drivers Controller', () => {
       }
     }
 
-    // Clean up test seat layout model
-    if (createdSeatLayoutModelId) {
+    // Clean up test bus diagram model
+    if (createdBusDiagramModelId) {
       try {
-        await deleteSeatLayoutModel({ id: createdSeatLayoutModelId });
+        await deleteBusDiagramModel({ id: createdBusDiagramModelId });
       } catch (error) {
-        console.log('Error cleaning up test seat layout model:', error);
+        console.log('Error cleaning up test bus diagram model:', error);
       }
     }
 

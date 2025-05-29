@@ -1,5 +1,5 @@
 {
-  "id": "6afc0585-d67c-4580-9fc5-a28a177e26c6",
+  "id": "55d88fb7-964e-425e-9f16-413c67882f26",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -135,6 +135,216 @@
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.bus_diagram_model_zones": {
+      "name": "bus_diagram_model_zones",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "bus_diagram_model_id": {
+          "name": "bus_diagram_model_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "row_numbers": {
+          "name": "row_numbers",
+          "type": "integer[]",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price_multiplier": {
+          "name": "price_multiplier",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'1.0'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bus_diagram_model_zones_name_index": {
+          "name": "bus_diagram_model_zones_name_index",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bus_diagram_model_zones_bus_diagram_model_id_index": {
+          "name": "bus_diagram_model_zones_bus_diagram_model_id_index",
+          "columns": [
+            {
+              "expression": "bus_diagram_model_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bus_diagram_model_zones_bus_diagram_model_id_bus_diagram_models_id_fk": {
+          "name": "bus_diagram_model_zones_bus_diagram_model_id_bus_diagram_models_id_fk",
+          "tableFrom": "bus_diagram_model_zones",
+          "tableTo": "bus_diagram_models",
+          "columnsFrom": [
+            "bus_diagram_model_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.bus_diagram_models": {
+      "name": "bus_diagram_models",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "max_capacity": {
+          "name": "max_capacity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "num_floors": {
+          "name": "num_floors",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "seats_per_floor": {
+          "name": "seats_per_floor",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bathroom_rows": {
+          "name": "bathroom_rows",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "total_seats": {
+          "name": "total_seats",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_factory_default": {
+          "name": "is_factory_default",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bus_diagram_models_name_index": {
+          "name": "bus_diagram_models_name_index",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -320,8 +530,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "default_seat_layout_model_id": {
-          "name": "default_seat_layout_model_id",
+        "default_bus_diagram_model_id": {
+          "name": "default_bus_diagram_model_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -399,11 +609,11 @@
         }
       },
       "indexes": {
-        "bus_models_default_seat_layout_model_id_index": {
-          "name": "bus_models_default_seat_layout_model_id_index",
+        "bus_models_default_bus_diagram_model_id_index": {
+          "name": "bus_models_default_bus_diagram_model_id_index",
           "columns": [
             {
-              "expression": "default_seat_layout_model_id",
+              "expression": "default_bus_diagram_model_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -446,12 +656,12 @@
         }
       },
       "foreignKeys": {
-        "bus_models_default_seat_layout_model_id_seat_layout_models_id_fk": {
-          "name": "bus_models_default_seat_layout_model_id_seat_layout_models_id_fk",
+        "bus_models_default_bus_diagram_model_id_bus_diagram_models_id_fk": {
+          "name": "bus_models_default_bus_diagram_model_id_bus_diagram_models_id_fk",
           "tableFrom": "bus_models",
-          "tableTo": "seat_layout_models",
+          "tableTo": "bus_diagram_models",
           "columnsFrom": [
-            "default_seat_layout_model_id"
+            "default_bus_diagram_model_id"
           ],
           "columnsTo": [
             "id"
@@ -1243,21 +1453,6 @@
           "columns": [
             {
               "expression": "name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "departments_code_index": {
-          "name": "departments_code_index",
-          "columns": [
-            {
-              "expression": "code",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2941,8 +3136,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "seat_layout_model_id": {
-          "name": "seat_layout_model_id",
+        "bus_diagram_model_id": {
+          "name": "bus_diagram_model_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -3045,12 +3240,12 @@
         }
       },
       "foreignKeys": {
-        "seat_diagrams_seat_layout_model_id_seat_layout_models_id_fk": {
-          "name": "seat_diagrams_seat_layout_model_id_seat_layout_models_id_fk",
+        "seat_diagrams_bus_diagram_model_id_bus_diagram_models_id_fk": {
+          "name": "seat_diagrams_bus_diagram_model_id_bus_diagram_models_id_fk",
           "tableFrom": "seat_diagrams",
-          "tableTo": "seat_layout_models",
+          "tableTo": "bus_diagram_models",
           "columnsFrom": [
-            "seat_layout_model_id"
+            "bus_diagram_model_id"
           ],
           "columnsTo": [
             "id"
@@ -3059,216 +3254,6 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.seat_layout_model_zones": {
-      "name": "seat_layout_model_zones",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "seat_layout_model_id": {
-          "name": "seat_layout_model_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "row_numbers": {
-          "name": "row_numbers",
-          "type": "integer[]",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "price_multiplier": {
-          "name": "price_multiplier",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'1.0'"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "seat_layout_model_zones_name_index": {
-          "name": "seat_layout_model_zones_name_index",
-          "columns": [
-            {
-              "expression": "name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "seat_layout_model_zones_seat_layout_model_id_index": {
-          "name": "seat_layout_model_zones_seat_layout_model_id_index",
-          "columns": [
-            {
-              "expression": "seat_layout_model_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "seat_layout_model_zones_seat_layout_model_id_seat_layout_models_id_fk": {
-          "name": "seat_layout_model_zones_seat_layout_model_id_seat_layout_models_id_fk",
-          "tableFrom": "seat_layout_model_zones",
-          "tableTo": "seat_layout_models",
-          "columnsFrom": [
-            "seat_layout_model_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.seat_layout_models": {
-      "name": "seat_layout_models",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "max_capacity": {
-          "name": "max_capacity",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "num_floors": {
-          "name": "num_floors",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 1
-        },
-        "seats_per_floor": {
-          "name": "seats_per_floor",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "bathroom_rows": {
-          "name": "bathroom_rows",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'[]'::jsonb"
-        },
-        "total_seats": {
-          "name": "total_seats",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "is_factory_default": {
-          "name": "is_factory_default",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "active": {
-          "name": "active",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "seat_layout_models_name_index": {
-          "name": "seat_layout_models_name_index",
-          "columns": [
-            {
-              "expression": "name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},

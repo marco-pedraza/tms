@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS "bus_models" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"default_seat_layout_model_id" integer NOT NULL,
+	"default_bus_diagram_model_id" integer NOT NULL,
 	"manufacturer" text NOT NULL,
 	"model" text NOT NULL,
 	"year" integer NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS "bus_seats" (
 );
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "bus_models" ADD CONSTRAINT "bus_models_default_seat_layout_model_id_seat_layout_models_id_fk" FOREIGN KEY ("default_seat_layout_model_id") REFERENCES "public"."seat_layout_models"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "bus_models" ADD CONSTRAINT "bus_models_default_bus_diagram_model_id_bus_diagram_models_id_fk" FOREIGN KEY ("default_bus_diagram_model_id") REFERENCES "public"."bus_diagram_models"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -41,7 +41,7 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "bus_models_default_seat_layout_model_id_index" ON "bus_models" USING btree ("default_seat_layout_model_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "bus_models_default_bus_diagram_model_id_index" ON "bus_models" USING btree ("default_bus_diagram_model_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "bus_models_manufacturer_index" ON "bus_models" USING btree ("manufacturer");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "bus_models_model_index" ON "bus_models" USING btree ("model");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "bus_seats_seat_diagram_id_index" ON "bus_seats" USING btree ("seat_diagram_id");

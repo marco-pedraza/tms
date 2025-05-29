@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS "seat_layout_models" (
+CREATE TABLE IF NOT EXISTS "bus_diagram_models" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
 	"description" text,
@@ -13,4 +13,4 @@ CREATE TABLE IF NOT EXISTS "seat_layout_models" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "seat_layout_models_name_index" ON "seat_layout_models" USING btree ("name");
+CREATE INDEX IF NOT EXISTS "bus_diagram_models_name_index" ON "bus_diagram_models" USING btree ("name");

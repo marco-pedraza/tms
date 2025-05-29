@@ -1,15 +1,15 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { seatLayoutModelRepository } from '../seat-layout-models/seat-layout-models.repository';
+import { busDiagramModelRepository } from '../bus-diagram-models/bus-diagram-models.repository';
 import {
-  createSeatLayoutModelZone,
-  deleteSeatLayoutModelZone,
-  getSeatLayoutModelZone,
-  listZonesByLayoutModel,
-  listZonesByLayoutModelPaginated,
-  updateSeatLayoutModelZone,
-} from './seat-layout-model-zones.controller';
+  createBusDiagramModelZone,
+  deleteBusDiagramModelZone,
+  getBusDiagramModelZone,
+  listZonesByDiagramModel,
+  listZonesByDiagramModelPaginated,
+  updateBusDiagramModelZone,
+} from './bus-diagram-model-zones.controller';
 
-describe('Seat Layout Model Zones Controller', () => {
+describe('Bus Diagram Model Zones Controller', () => {
   // Test data and setup
   const testZone: {
     name: string;
@@ -21,15 +21,15 @@ describe('Seat Layout Model Zones Controller', () => {
     priceMultiplier: 1.5,
   };
 
-  let seatLayoutModelId: number;
+  let busDiagramModelId: number;
   let createdZoneId: number;
 
-  // Create a test layout model for zones to reference
+  // Create a test diagram model for zones to reference
   beforeAll(async () => {
-    // Create a layout model
-    const layoutModel = await seatLayoutModelRepository.create({
-      name: 'Test Layout Model for Zones',
-      description: 'Test layout model for zone testing',
+    // Create a diagram model
+    const diagramModel = await busDiagramModelRepository.create({
+      name: 'Test Bus Diagram Model for Zones',
+      description: 'Test diagram model for zone testing',
       maxCapacity: 40,
       numFloors: 1,
       seatsPerFloor: [
@@ -46,25 +46,25 @@ describe('Seat Layout Model Zones Controller', () => {
       active: true,
     });
 
-    seatLayoutModelId = layoutModel.id;
+    busDiagramModelId = diagramModel.id;
   });
 
   // Cleanup after tests
   afterAll(async () => {
     if (createdZoneId) {
       try {
-        await deleteSeatLayoutModelZone({
+        await deleteBusDiagramModelZone({
           id: createdZoneId,
-          seatLayoutModelId,
+          busDiagramModelId,
         });
       } catch {
         // Silent error handling for cleanup
       }
     }
 
-    if (seatLayoutModelId) {
+    if (busDiagramModelId) {
       try {
-        await seatLayoutModelRepository.delete(seatLayoutModelId);
+        await busDiagramModelRepository.delete(busDiagramModelId);
       } catch {
         // Silent error handling for cleanup
       }
@@ -72,10 +72,10 @@ describe('Seat Layout Model Zones Controller', () => {
   });
 
   describe('success scenarios', () => {
-    test('should create a new seat layout model zone', async () => {
-      const response = await createSeatLayoutModelZone({
+    test('should create a new bus diagram model zone', async () => {
+      const response = await createBusDiagramModelZone({
         ...testZone,
-        seatLayoutModelId,
+        busDiagramModelId,
       });
 
       // Store the ID for later cleanup
@@ -87,42 +87,42 @@ describe('Seat Layout Model Zones Controller', () => {
       expect(response.name).toBe(testZone.name);
       expect(response.rowNumbers).toEqual(testZone.rowNumbers);
       expect(Number(response.priceMultiplier)).toBe(testZone.priceMultiplier);
-      expect(response.seatLayoutModelId).toBe(seatLayoutModelId);
+      expect(response.busDiagramModelId).toBe(busDiagramModelId);
       expect(response.createdAt).toBeDefined();
     });
 
-    test('should retrieve a seat layout model zone by ID', async () => {
-      const response = await getSeatLayoutModelZone({
+    test('should retrieve a bus diagram model zone by ID', async () => {
+      const response = await getBusDiagramModelZone({
         id: createdZoneId,
-        seatLayoutModelId,
+        busDiagramModelId,
       });
 
       expect(response).toBeDefined();
       expect(response.id).toBe(createdZoneId);
       expect(response.name).toBe(testZone.name);
-      expect(response.seatLayoutModelId).toBe(seatLayoutModelId);
+      expect(response.busDiagramModelId).toBe(busDiagramModelId);
     });
 
-    test('should retrieve all zones for a seat layout model', async () => {
-      const response = await listZonesByLayoutModel({
-        seatLayoutModelId,
+    test('should retrieve all zones for a bus diagram model', async () => {
+      const response = await listZonesByDiagramModel({
+        busDiagramModelId,
       });
 
       expect(response).toBeDefined();
-      expect(response.seatLayoutModelZones).toBeDefined();
-      expect(Array.isArray(response.seatLayoutModelZones)).toBe(true);
-      expect(response.seatLayoutModelZones.length).toBeGreaterThan(0);
+      expect(response.busDiagramModelZones).toBeDefined();
+      expect(Array.isArray(response.busDiagramModelZones)).toBe(true);
+      expect(response.busDiagramModelZones.length).toBeGreaterThan(0);
       expect(
-        response.seatLayoutModelZones.some((zone) => zone.id === createdZoneId),
+        response.busDiagramModelZones.some((zone) => zone.id === createdZoneId),
       ).toBe(true);
     });
 
-    test('should update a seat layout model zone', async () => {
+    test('should update a bus diagram model zone', async () => {
       const updatedName = 'Updated Premium Zone';
       const updatedRowNumbers = [1, 2, 3, 4];
-      const response = await updateSeatLayoutModelZone({
+      const response = await updateBusDiagramModelZone({
         id: createdZoneId,
-        seatLayoutModelId,
+        busDiagramModelId,
         name: updatedName,
         rowNumbers: updatedRowNumbers,
       });
@@ -133,10 +133,10 @@ describe('Seat Layout Model Zones Controller', () => {
       expect(response.rowNumbers).toEqual(updatedRowNumbers);
     });
 
-    test('should delete a seat layout model zone', async () => {
+    test('should delete a bus diagram model zone', async () => {
       // Create a zone specifically for deletion test
-      const zoneToDelete = await createSeatLayoutModelZone({
-        seatLayoutModelId,
+      const zoneToDelete = await createBusDiagramModelZone({
+        busDiagramModelId,
         name: 'Zone To Delete',
         rowNumbers: [5, 6],
         priceMultiplier: 1.2,
@@ -144,18 +144,18 @@ describe('Seat Layout Model Zones Controller', () => {
 
       // Delete should not throw an error
       await expect(
-        deleteSeatLayoutModelZone({ id: zoneToDelete.id, seatLayoutModelId }),
+        deleteBusDiagramModelZone({ id: zoneToDelete.id, busDiagramModelId }),
       ).resolves.not.toThrow();
 
       // Attempt to get should throw a not found error
       await expect(
-        getSeatLayoutModelZone({ id: zoneToDelete.id, seatLayoutModelId }),
+        getBusDiagramModelZone({ id: zoneToDelete.id, busDiagramModelId }),
       ).rejects.toThrow();
     });
 
-    test('should return paginated seat layout model zones', async () => {
-      const response = await listZonesByLayoutModelPaginated({
-        seatLayoutModelId,
+    test('should return paginated bus diagram model zones', async () => {
+      const response = await listZonesByDiagramModelPaginated({
+        busDiagramModelId,
         page: 1,
         pageSize: 10,
       });
@@ -170,14 +170,14 @@ describe('Seat Layout Model Zones Controller', () => {
   describe('error scenarios', () => {
     test('should handle not found errors', async () => {
       await expect(
-        getSeatLayoutModelZone({ id: 9999, seatLayoutModelId }),
+        getBusDiagramModelZone({ id: 9999, busDiagramModelId }),
       ).rejects.toThrow();
     });
 
     test('should handle incorrect parent resource relationship', async () => {
-      // We expect an error when the seatLayoutModelId doesn't match the zone's model
+      // We expect an error when the busDiagramModelId doesn't match the zone's model
       await expect(
-        getSeatLayoutModelZone({ id: createdZoneId, seatLayoutModelId: 9999 }),
+        getBusDiagramModelZone({ id: createdZoneId, busDiagramModelId: 9999 }),
       ).rejects.toThrow();
     });
   });

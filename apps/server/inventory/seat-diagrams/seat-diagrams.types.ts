@@ -91,8 +91,8 @@ export interface SeatDiagram {
   /** Unique identifier for the seat diagram */
   id: number;
 
-  /** Seat Layout Model ID (reference to seat_layout_models) */
-  seatLayoutModelId: number;
+  /** Bus Diagram Model ID (reference to bus_diagram_models) */
+  busDiagramModelId: number;
 
   /** Name of the diagram */
   name: string;
@@ -136,10 +136,10 @@ export interface SeatDiagram {
  */
 export interface CreateSeatDiagramPayload {
   /**
-   * Seat Layout Model ID (reference to seat_layout_models)
-   * Required reference to a seat layout model template
+   * Bus Diagram Model ID (reference to bus_diagram_models)
+   * Required reference to a bus diagram model template
    */
-  seatLayoutModelId: number;
+  busDiagramModelId: number;
 
   /**
    * Name of the diagram

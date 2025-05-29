@@ -1,16 +1,16 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { NotFoundError } from '@repo/base-repo';
+import { createBusDiagramModelZone } from '../bus-diagram-model-zones/bus-diagram-model-zones.controller';
+import {
+  createBusDiagramModel,
+  deleteBusDiagramModel,
+} from '../bus-diagram-models/bus-diagram-models.controller';
 import {
   createBusModel,
   deleteBusModel,
 } from '../bus-models/bus-models.controller';
 import { seatDiagramZoneRepository } from '../seat-diagram-zones/seat-diagram-zones.repository';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
-import { createSeatLayoutModelZone } from '../seat-layout-model-zones/seat-layout-model-zones.controller';
-import {
-  createSeatLayoutModel,
-  deleteSeatLayoutModel,
-} from '../seat-layout-models/seat-layout-models.controller';
 import { Bus, BusStatus, CreateBusPayload } from './buses.types';
 import {
   createBus,
@@ -31,9 +31,9 @@ import {
 describe('Buses Controller', () => {
   // Test data and setup
   let busModelId: number; // We need a valid bus model ID for bus tests
-  let defaultSeatLayoutModelId: number; // We need a valid default seat layout model ID for bus tests
+  let defaultBusDiagramModelId: number; // We need a valid default bus diagram model ID for bus tests
   let alternativeBusModelId: number; // Alternative bus model for testing model change
-  let alternativeSeatLayoutModelId: number; // Alternative seat layout model
+  let alternativeBusDiagramModelId: number; // Alternative bus diagram model
 
   const testBus: CreateBusPayload = {
     registrationNumber: 'TEST001',
@@ -69,10 +69,10 @@ describe('Buses Controller', () => {
 
   // Create test dependencies before running the bus tests
   beforeAll(async () => {
-    // Create a temporary seat layout model to use for the bus tests
-    const seatLayoutModel = await createSeatLayoutModel({
-      name: 'Test Seat Layout Model',
-      description: 'Test Seat Layout Model Description',
+    // Create a temporary bus diagram model to use for the bus tests
+    const busDiagramModel = await createBusDiagramModel({
+      name: 'Test Bus Diagram Model',
+      description: 'Test Bus Diagram Model Description',
       maxCapacity: 40,
       numFloors: 1,
       seatsPerFloor: [
@@ -89,11 +89,11 @@ describe('Buses Controller', () => {
       active: true,
     });
 
-    defaultSeatLayoutModelId = seatLayoutModel.id;
+    defaultBusDiagramModelId = busDiagramModel.id;
 
-    // Create a zone for the seat layout model
-    await createSeatLayoutModelZone({
-      seatLayoutModelId: seatLayoutModel.id,
+    // Create a zone for the bus diagram model
+    await createBusDiagramModelZone({
+      busDiagramModelId: busDiagramModel.id,
       name: 'Premium Zone',
       rowNumbers: [1, 2, 3],
       priceMultiplier: 1.5,
@@ -101,7 +101,7 @@ describe('Buses Controller', () => {
 
     // Create a temporary bus model to use for the bus tests
     const busModel = await createBusModel({
-      defaultSeatLayoutModelId: seatLayoutModel.id,
+      defaultBusDiagramModelId: busDiagramModel.id,
       manufacturer: 'TestManufacturer',
       model: 'TestModel-Bus',
       year: 2023,
@@ -113,10 +113,10 @@ describe('Buses Controller', () => {
 
     busModelId = busModel.id;
 
-    // Create an alternative seat layout model with different configuration
-    const alternativeSeatLayout = await createSeatLayoutModel({
-      name: 'Alternative Seat Layout Model',
-      description: 'Alternative Seat Layout Model Description',
+    // Create an alternative bus diagram model with different configuration
+    const alternativeBusDiagramModel = await createBusDiagramModel({
+      name: 'Alternative Bus Diagram Model',
+      description: 'Alternative Bus Diagram Model Description',
       maxCapacity: 72,
       numFloors: 2,
       seatsPerFloor: [
@@ -144,18 +144,18 @@ describe('Buses Controller', () => {
       active: true,
     });
 
-    alternativeSeatLayoutModelId = alternativeSeatLayout.id;
+    alternativeBusDiagramModelId = alternativeBusDiagramModel.id;
 
-    // Create different zones for the alternative seat layout
-    await createSeatLayoutModelZone({
-      seatLayoutModelId: alternativeSeatLayout.id,
+    // Create different zones for the alternative bus diagram model
+    await createBusDiagramModelZone({
+      busDiagramModelId: alternativeBusDiagramModel.id,
       name: 'VIP Zone',
       rowNumbers: [1, 2],
       priceMultiplier: 2.0,
     });
 
-    await createSeatLayoutModelZone({
-      seatLayoutModelId: alternativeSeatLayout.id,
+    await createBusDiagramModelZone({
+      busDiagramModelId: alternativeBusDiagramModel.id,
       name: 'Standard Zone',
       rowNumbers: [3, 4, 5, 6, 7, 8],
       priceMultiplier: 1.0,
@@ -163,7 +163,7 @@ describe('Buses Controller', () => {
 
     // Create an alternative bus model
     const alternativeBusModel = await createBusModel({
-      defaultSeatLayoutModelId: alternativeSeatLayout.id,
+      defaultBusDiagramModelId: alternativeBusDiagramModel.id,
       manufacturer: 'AlternativeManufacturer',
       model: 'AlternativeModel-Bus',
       year: 2024,
@@ -216,6 +216,15 @@ describe('Buses Controller', () => {
       }
     }
 
+    // Clean up the created bus diagram model if any
+    if (defaultBusDiagramModelId) {
+      try {
+        await deleteBusDiagramModel({ id: defaultBusDiagramModelId });
+      } catch {
+        // Silent error handling for cleanup
+      }
+    }
+
     // Clean up the alternative bus model
     if (alternativeBusModelId) {
       try {
@@ -225,19 +234,10 @@ describe('Buses Controller', () => {
       }
     }
 
-    // Clean up the created seat layout model if any
-    if (defaultSeatLayoutModelId) {
+    // Clean up the alternative bus diagram model
+    if (alternativeBusDiagramModelId) {
       try {
-        await deleteSeatLayoutModel({ id: defaultSeatLayoutModelId });
-      } catch {
-        // Silent error handling for cleanup
-      }
-    }
-
-    // Clean up the alternative seat layout model
-    if (alternativeSeatLayoutModelId) {
-      try {
-        await deleteSeatLayoutModel({ id: alternativeSeatLayoutModelId });
+        await deleteBusDiagramModel({ id: alternativeBusDiagramModelId });
       } catch {
         // Silent error handling for cleanup
       }
@@ -385,7 +385,7 @@ describe('Buses Controller', () => {
       const seatDiagram =
         await seatDiagramRepository.findOne(updatedSeatDiagramId);
       expect(seatDiagram).toBeDefined();
-      expect(seatDiagram.seatLayoutModelId).toBe(alternativeSeatLayoutModelId);
+      expect(seatDiagram.busDiagramModelId).toBe(alternativeBusDiagramModelId);
       expect(seatDiagram.maxCapacity).toBe(72); // Alternative model has 72 seats
       expect(seatDiagram.numFloors).toBe(2); // Alternative model has 2 floors
       expect(seatDiagram.totalSeats).toBe(72);

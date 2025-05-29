@@ -1,12 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { createBusDiagramModel } from '../bus-diagram-models/bus-diagram-models.controller';
+import { BusDiagramModel } from '../bus-diagram-models/bus-diagram-models.types';
 import {
   createBusSeat,
   deleteBusSeat,
   listBusSeatsBySeatDiagram,
 } from '../bus-seats/bus-seats.controller';
 import { SeatType } from '../bus-seats/bus-seats.types';
-import { createSeatLayoutModel } from '../seat-layout-models/seat-layout-models.controller';
-import { SeatLayoutModel } from '../seat-layout-models/seat-layout-models.types';
 import {
   BathroomLocation,
   FloorSeats,
@@ -39,9 +39,9 @@ describe('Seat Diagrams Controller', () => {
     rowNumber: 5,
   };
 
-  // Before creating the seat diagram, create a seat layout model
-  const testLayoutModel = {
-    name: 'Test Layout Model',
+  // Before creating the seat diagram, create a bus diagram model
+  const testDiagramModel = {
+    name: 'Test Bus Diagram Model',
     description: 'A test model',
     maxCapacity: 50,
     numFloors: 1,
@@ -59,7 +59,7 @@ describe('Seat Diagrams Controller', () => {
     seatsPerFloor: FloorSeats[];
     bathroomRows: BathroomLocation[];
     totalSeats: number;
-    seatLayoutModelId: number;
+    busDiagramModelId: number;
   };
 
   let complexSeatDiagram: {
@@ -70,7 +70,7 @@ describe('Seat Diagrams Controller', () => {
     seatsPerFloor: FloorSeats[];
     bathroomRows: BathroomLocation[];
     totalSeats: number;
-    seatLayoutModelId: number;
+    busDiagramModelId: number;
   };
 
   const updatePayload = {
@@ -83,16 +83,16 @@ describe('Seat Diagrams Controller', () => {
   let additionalDiagramId: number | undefined;
   let useCaseDiagramId: number;
 
-  let layoutModelResponse: SeatLayoutModel;
+  let diagramModelResponse: BusDiagramModel;
   let theoreticalConfig: SeatConfiguration;
   let actualConfig: SeatConfiguration;
   let seatsCreated: number;
 
   beforeAll(async () => {
-    layoutModelResponse = await createSeatLayoutModel(testLayoutModel);
+    diagramModelResponse = await createBusDiagramModel(testDiagramModel);
 
     basicSeatDiagram = {
-      seatLayoutModelId: layoutModelResponse.id,
+      busDiagramModelId: diagramModelResponse.id,
       name: 'Test Diagram',
       maxCapacity: 50,
       numFloors: 1,
@@ -102,9 +102,9 @@ describe('Seat Diagrams Controller', () => {
       totalSeats: 40,
     };
 
-    // Define complexSeatDiagram here after layoutModelResponse is available
+    // Define complexSeatDiagram here after diagramModelResponse is available
     complexSeatDiagram = {
-      seatLayoutModelId: layoutModelResponse.id,
+      busDiagramModelId: diagramModelResponse.id,
       name: 'Test Theoretical Diagram',
       maxCapacity: 60,
       numFloors: 2,
@@ -215,8 +215,8 @@ describe('Seat Diagrams Controller', () => {
       expect(response.maxCapacity).toBe(updatePayload.maxCapacity);
       // Fields not in updatePayload should remain unchanged
       expect(response.numFloors).toBe(basicSeatDiagram.numFloors);
-      expect(response.seatLayoutModelId).toBe(
-        basicSeatDiagram.seatLayoutModelId,
+      expect(response.busDiagramModelId).toBe(
+        basicSeatDiagram.busDiagramModelId,
       );
     });
 
@@ -235,7 +235,7 @@ describe('Seat Diagrams Controller', () => {
           },
         ],
         totalSeats: 32,
-        seatLayoutModelId: layoutModelResponse.id,
+        busDiagramModelId: diagramModelResponse.id,
       });
 
       additionalDiagramId = diagramToDelete.id;

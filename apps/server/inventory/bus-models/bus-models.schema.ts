@@ -9,8 +9,8 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { busDiagramModels } from '../bus-diagram-models/bus-diagram-models.schema';
 import { buses } from '../buses/buses.schema';
-import { seatLayoutModels } from '../seat-layout-models/seat-layout-models.schema';
 
 /**
  * Database table for bus models
@@ -19,9 +19,9 @@ export const busModels = pgTable(
   'bus_models',
   {
     id: serial('id').primaryKey(),
-    defaultSeatLayoutModelId: integer('default_seat_layout_model_id')
+    defaultBusDiagramModelId: integer('default_bus_diagram_model_id')
       .notNull()
-      .references(() => seatLayoutModels.id),
+      .references(() => busDiagramModels.id),
     manufacturer: text('manufacturer').notNull(),
     model: text('model').notNull(),
     year: integer('year').notNull(),
@@ -35,7 +35,7 @@ export const busModels = pgTable(
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
   (table) => [
-    index().on(table.defaultSeatLayoutModelId),
+    index().on(table.defaultBusDiagramModelId),
     index().on(table.manufacturer),
     index().on(table.model),
   ],
@@ -45,9 +45,9 @@ export const busModels = pgTable(
  * Relations for bus models
  */
 export const busModelsRelations = relations(busModels, ({ one, many }) => ({
-  defaultSeatLayoutModel: one(seatLayoutModels, {
-    fields: [busModels.defaultSeatLayoutModelId],
-    references: [seatLayoutModels.id],
+  defaultBusDiagramModel: one(busDiagramModels, {
+    fields: [busModels.defaultBusDiagramModelId],
+    references: [busDiagramModels.id],
   }),
   buses: many(buses),
 }));

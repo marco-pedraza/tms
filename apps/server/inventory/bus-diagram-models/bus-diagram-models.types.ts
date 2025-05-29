@@ -30,22 +30,22 @@ export interface BathroomLocation {
 }
 
 /**
- * Represents a seat layout model (template) in the database
+ * Represents a bus diagram model (template) in the database
  */
-export interface SeatLayoutModel {
-  /** Unique identifier for the seat layout model */
+export interface BusDiagramModel {
+  /** Unique identifier for the bus diagram model */
   id: number;
 
-  /** Name of the seat layout model */
+  /** Name of the bus diagram model */
   name: string;
 
-  /** Description of the seat layout model */
+  /** Description of the bus diagram model */
   description: string | null;
 
   /** Maximum capacity */
   maxCapacity: number;
 
-  /** Number of floors in the seat layout model */
+  /** Number of floors in the bus diagram model */
   numFloors: number;
 
   /** Configuration of seats per floor */
@@ -60,28 +60,28 @@ export interface SeatLayoutModel {
   /** Indicates if this is a factory default model */
   isFactoryDefault: boolean;
 
-  /** Whether the seat layout model is active */
+  /** Whether the bus diagram model is active */
   active: boolean;
 
-  /** Timestamp when the seat layout model was created */
+  /** Timestamp when the bus diagram model was created */
   createdAt: Date;
 
-  /** Timestamp when the seat layout model was last updated */
+  /** Timestamp when the bus diagram model was last updated */
   updatedAt: Date;
 }
 
 /**
- * Input for creating a new seat layout model
+ * Input for creating a new bus diagram model
  */
-export interface CreateSeatLayoutModelPayload {
+export interface CreateBusDiagramModelPayload {
   /**
-   * Name of the seat layout model
+   * Name of the bus diagram model
    * Must have at least 1 character
    */
   name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * Description of the seat layout model
+   * Description of the bus diagram model
    */
   description?: string;
 
@@ -92,7 +92,7 @@ export interface CreateSeatLayoutModelPayload {
   maxCapacity: number;
 
   /**
-   * Number of floors in the seat layout model
+   * Number of floors in the bus diagram model
    * Must be a positive number
    */
   numFloors: number;
@@ -120,24 +120,24 @@ export interface CreateSeatLayoutModelPayload {
   isFactoryDefault?: boolean;
 
   /**
-   * Whether the seat layout model is active
+   * Whether the bus diagram model is active
    * @default true
    */
   active?: boolean;
 }
 
 /**
- * Input for updating a seat layout model
+ * Input for updating a bus diagram model
  */
-export interface UpdateSeatLayoutModelPayload {
+export interface UpdateBusDiagramModelPayload {
   /**
-   * Name of the seat layout model
+   * Name of the bus diagram model
    * Must have at least 1 character
    */
   name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * Description of the seat layout model
+   * Description of the bus diagram model
    */
   description?: string;
 
@@ -148,7 +148,7 @@ export interface UpdateSeatLayoutModelPayload {
   maxCapacity?: number;
 
   /**
-   * Number of floors in the seat layout model
+   * Number of floors in the bus diagram model
    * Must be a positive number
    */
   numFloors?: number;
@@ -174,20 +174,20 @@ export interface UpdateSeatLayoutModelPayload {
   isFactoryDefault?: boolean;
 
   /**
-   * Whether the seat layout model is active
+   * Whether the bus diagram model is active
    */
   active?: boolean;
 }
 
 /**
- * Response containing a list of seat layout models
+ * Response containing a list of bus diagram models
  */
-export interface SeatLayoutModels {
-  /** List of seat layout models */
-  seatLayoutModels: SeatLayoutModel[];
+export interface BusDiagramModels {
+  /** List of bus diagram models */
+  busDiagramModels: BusDiagramModel[];
 }
 
 /**
- * Paginated result of seat layout models
+ * Paginated result of bus diagram models
  */
-export type PaginatedSeatLayoutModels = PaginatedResult<SeatLayoutModel>;
+export type PaginatedBusDiagramModels = PaginatedResult<BusDiagramModel>;

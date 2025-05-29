@@ -1,9 +1,9 @@
 import { fakerES_MX as faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
+import { busDiagramModelFactory } from './bus-diagram-models.factory';
 import { ID_OFFSET } from './constants';
 import { extractTablesFromSchema } from './factory-utils';
-import { seatLayoutModelFactory } from './seat-layout-models.factory';
 
 export const busModelFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
@@ -46,8 +46,8 @@ export const busModelFactory = defineFactory({
 
     return {
       id: sequence + ID_OFFSET,
-      defaultSeatLayoutModelId: () =>
-        use(seatLayoutModelFactory)
+      defaultBusDiagramModelId: () =>
+        use(busDiagramModelFactory)
           .create()
           .then((model) => model.id),
       manufacturer: faker.helpers.arrayElement(manufacturers),

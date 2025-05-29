@@ -12,10 +12,10 @@ import { relations } from 'drizzle-orm';
 import { seatDiagrams } from '../seat-diagrams/seat-diagrams.schema';
 
 /**
- * Database table for seat layout models (templates for seat diagrams)
+ * Database table for bus diagram models (templates for seat diagrams)
  */
-export const seatLayoutModels = pgTable(
-  'seat_layout_models',
+export const busDiagramModels = pgTable(
+  'bus_diagram_models',
   {
     id: serial('id').primaryKey(),
     name: text('name').notNull(),
@@ -34,10 +34,10 @@ export const seatLayoutModels = pgTable(
 );
 
 /**
- * Relations for seat layout models
+ * Relations for bus diagram models
  */
-export const seatLayoutModelsRelations = relations(
-  seatLayoutModels,
+export const busDiagramModelsRelations = relations(
+  busDiagramModels,
   ({ many }) => ({
     seatDiagrams: many(seatDiagrams),
   }),

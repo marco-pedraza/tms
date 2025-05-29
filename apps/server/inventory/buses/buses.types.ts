@@ -144,10 +144,10 @@ export interface CreateBusPayload {
   modelId: number;
 
   /**
-   * ID of the seat layout model
+   * ID of the bus diagram model
    * Must be a positive number
    */
-  seatLayoutModelId?: number;
+  busDiagramModelId?: number;
 
   /**
    * Bus type code

@@ -9,10 +9,10 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { busDiagramModels } from '../bus-diagram-models/bus-diagram-models.schema';
 import { busModels } from '../bus-models/bus-models.schema';
 import { busSeats } from '../bus-seats/bus-seats.schema';
 import { buses } from '../buses/buses.schema';
-import { seatLayoutModels } from '../seat-layout-models/seat-layout-models.schema';
 
 /**
  * Database table for seat diagrams
@@ -21,9 +21,9 @@ export const seatDiagrams = pgTable(
   'seat_diagrams',
   {
     id: serial('id').primaryKey(),
-    seatLayoutModelId: integer('seat_layout_model_id')
+    busDiagramModelId: integer('bus_diagram_model_id')
       .notNull()
-      .references(() => seatLayoutModels.id),
+      .references(() => busDiagramModels.id),
     name: text('name').notNull(),
     maxCapacity: integer('max_capacity').notNull(),
     allowsAdjacentSeat: boolean('allows_adjacent_seat')
@@ -51,9 +51,9 @@ export const seatDiagramsRelations = relations(
     busSeats: many(busSeats),
     busModel: one(busModels),
     bus: one(buses),
-    seatLayoutModel: one(seatLayoutModels, {
-      fields: [seatDiagrams.seatLayoutModelId],
-      references: [seatLayoutModels.id],
+    busDiagramModel: one(busDiagramModels, {
+      fields: [seatDiagrams.busDiagramModelId],
+      references: [busDiagramModels.id],
     }),
   }),
 );

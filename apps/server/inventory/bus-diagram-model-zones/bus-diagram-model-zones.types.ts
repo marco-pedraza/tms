@@ -2,14 +2,14 @@ import { MatchesRegexp, Min, MinLen } from 'encore.dev/validate';
 import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**
- * Represents a zone in a seat layout model
+ * Represents a zone in a bus diagram model
  */
-export interface SeatLayoutModelZone {
+export interface BusDiagramModelZone {
   /** Unique identifier for the zone */
   id: number;
 
-  /** Reference to the seat layout model */
-  seatLayoutModelId: number;
+  /** Reference to the bus diagram model */
+  busDiagramModelId: number;
 
   /** Name of the zone */
   name: string;
@@ -28,9 +28,9 @@ export interface SeatLayoutModelZone {
 }
 
 /**
- * Input for creating a new seat layout model zone
+ * Input for creating a new bus diagram model zone
  */
-export interface CreateSeatLayoutModelZonePayload {
+export interface CreateBusDiagramModelZonePayload {
   /**
    * Name of the zone
    * Must have at least 1 character
@@ -50,9 +50,9 @@ export interface CreateSeatLayoutModelZonePayload {
 }
 
 /**
- * Input for updating a seat layout model zone
+ * Input for updating a bus diagram model zone
  */
-export interface UpdateSeatLayoutModelZonePayload {
+export interface UpdateBusDiagramModelZonePayload {
   /**
    * Name of the zone
    * Must have at least 1 character
@@ -71,31 +71,31 @@ export interface UpdateSeatLayoutModelZonePayload {
 }
 
 /**
- * Response containing a list of seat layout model zones
+ * Response containing a list of bus diagram model zones
  */
-export interface SeatLayoutModelZones {
-  /** List of seat layout model zones */
-  seatLayoutModelZones: SeatLayoutModelZone[];
+export interface BusDiagramModelZones {
+  /** List of bus diagram model zones */
+  busDiagramModelZones: BusDiagramModelZone[];
 }
 
 /**
- * Query options for seat layout model zones
+ * Query options for bus diagram model zones
  */
-export interface SeatLayoutModelZoneQueryOptions {
-  seatLayoutModelId?: number;
-  orderBy?: { field: keyof SeatLayoutModelZone; direction: 'asc' | 'desc' }[];
-  filters?: Partial<SeatLayoutModelZone>;
+export interface BusDiagramModelZoneQueryOptions {
+  busDiagramModelId?: number;
+  orderBy?: { field: keyof BusDiagramModelZone; direction: 'asc' | 'desc' }[];
+  filters?: Partial<BusDiagramModelZone>;
 }
 
 /**
- * Paginated response type for the list seat layout model zones endpoint
+ * Paginated response type for the list bus diagram model zones endpoint
  */
-export type PaginatedSeatLayoutModelZones =
-  PaginatedResult<SeatLayoutModelZone>;
+export type PaginatedBusDiagramModelZones =
+  PaginatedResult<BusDiagramModelZone>;
 
 /**
- * Pagination parameters for the list seat layout model zones endpoint
+ * Pagination parameters for the list bus diagram model zones endpoint
  */
-export interface PaginationParamsSeatLayoutModelZones
+export interface PaginationParamsBusDiagramModelZones
   extends PaginationParams,
-    SeatLayoutModelZoneQueryOptions {}
+    BusDiagramModelZoneQueryOptions {}

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { busDiagramModelRepository } from '../bus-diagram-models/bus-diagram-models.repository';
 import { deleteSeatDiagram } from '../seat-diagrams/seat-diagrams.controller';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
-import { seatLayoutModelRepository } from '../seat-layout-models/seat-layout-models.repository';
 import { SeatPosition, SeatType } from './bus-seats.types';
 import {
   createBusSeat,
@@ -39,10 +39,10 @@ describe('Bus Seats Controller', () => {
 
   // Create a test seat diagram before running the bus seat tests
   beforeAll(async () => {
-    // Create a test seat layout model first
-    const layoutModel = await seatLayoutModelRepository.create({
-      name: 'Test Seat Layout Model',
-      description: 'Auto-generated layout for Test Seat Diagram',
+    // Create a test bus diagram model first
+    const diagramModel = await busDiagramModelRepository.create({
+      name: 'Test Bus Diagram Model',
+      description: 'Auto-generated model for Test Seat Diagram',
       maxCapacity: 40,
       numFloors: 1,
       seatsPerFloor: [
@@ -59,9 +59,9 @@ describe('Bus Seats Controller', () => {
       active: true,
     });
 
-    // Create the seat diagram with the layout model as template
+    // Create the seat diagram with the diagram model as template
     const seatDiagram = await seatDiagramRepository.create({
-      seatLayoutModelId: layoutModel.id,
+      busDiagramModelId: diagramModel.id,
       name: 'Test Seat Diagram',
       maxCapacity: 40,
       numFloors: 1,

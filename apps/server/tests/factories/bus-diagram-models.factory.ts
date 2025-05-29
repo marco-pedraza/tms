@@ -4,9 +4,9 @@ import { schema } from '../../db';
 import { ID_OFFSET } from './constants';
 import { extractTablesFromSchema } from './factory-utils';
 
-export const seatLayoutModelFactory = defineFactory({
+export const busDiagramModelFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
-  table: 'seatLayoutModels',
+  table: 'busDiagramModels',
   resolver: ({ sequence }) => {
     const floorCount = faker.helpers.maybe(() => 2, { probability: 0.25 }) || 1;
     const layoutNames = [

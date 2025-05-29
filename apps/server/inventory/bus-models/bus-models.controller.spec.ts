@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
-  createSeatLayoutModel,
-  deleteSeatLayoutModel,
-} from '../seat-layout-models/seat-layout-models.controller';
+  createBusDiagramModel,
+  deleteBusDiagramModel,
+} from '../bus-diagram-models/bus-diagram-models.controller';
 import {
   createBusModel,
   deleteBusModel,
@@ -13,9 +13,9 @@ import {
 } from './bus-models.controller';
 
 describe('Bus Models Controller', () => {
-  let createdSeatLayoutModelId: number;
+  let createdBusDiagramModelId: number;
   let testBusModelData: {
-    defaultSeatLayoutModelId: number;
+    defaultBusDiagramModelId: number;
     manufacturer: string;
     model: string;
     year: number;
@@ -32,9 +32,9 @@ describe('Bus Models Controller', () => {
   let additionalModelId: number;
 
   beforeAll(async () => {
-    // Create a test seat layout model
-    const seatLayoutModel = await createSeatLayoutModel({
-      name: 'Test Seat Layout Model',
+    // Create a test bus diagram model
+    const busDiagramModel = await createBusDiagramModel({
+      name: 'Test Bus Diagram Model',
       description: 'A test model',
       maxCapacity: 40,
       numFloors: 1,
@@ -51,11 +51,11 @@ describe('Bus Models Controller', () => {
       isFactoryDefault: true,
       active: true,
     });
-    createdSeatLayoutModelId = seatLayoutModel.id;
+    createdBusDiagramModelId = busDiagramModel.id;
 
     // Now store basic test data
     testBusModelData = {
-      defaultSeatLayoutModelId: createdSeatLayoutModelId,
+      defaultBusDiagramModelId: createdBusDiagramModelId,
       manufacturer: 'TestManufacturer',
       model: 'TestModel-1',
       year: 2023,
@@ -88,12 +88,12 @@ describe('Bus Models Controller', () => {
       }
     }
 
-    // Clean up the created seat layout model if any
-    if (createdSeatLayoutModelId) {
+    // Clean up the created bus diagram model if any
+    if (createdBusDiagramModelId) {
       try {
-        await deleteSeatLayoutModel({ id: createdSeatLayoutModelId });
+        await deleteBusDiagramModel({ id: createdBusDiagramModelId });
       } catch (error) {
-        console.log('Error cleaning up test seat layout model:', error);
+        console.log('Error cleaning up test bus diagram model:', error);
       }
     }
   });
@@ -109,8 +109,8 @@ describe('Bus Models Controller', () => {
       // Assertions
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
-      expect(response.defaultSeatLayoutModelId).toBe(
-        testBusModelData.defaultSeatLayoutModelId,
+      expect(response.defaultBusDiagramModelId).toBe(
+        testBusModelData.defaultBusDiagramModelId,
       );
       expect(response.manufacturer).toBe(testBusModelData.manufacturer);
       expect(response.model).toBe(testBusModelData.model);
@@ -130,7 +130,7 @@ describe('Bus Models Controller', () => {
 
       expect(response).toBeDefined();
       expect(response.id).toBe(createdBusModelId);
-      expect(response.defaultSeatLayoutModelId).toBe(createdSeatLayoutModelId);
+      expect(response.defaultBusDiagramModelId).toBe(createdBusDiagramModelId);
       expect(response.manufacturer).toBe(testBusModelData.manufacturer);
       expect(response.model).toBe(testBusModelData.model);
       expect(response.year).toBe(testBusModelData.year);
@@ -181,8 +181,8 @@ describe('Bus Models Controller', () => {
       // Fields not in updateData should remain unchanged
       expect(response.year).toBe(testBusModelData.year);
       expect(response.numFloors).toBe(testBusModelData.numFloors);
-      expect(response.defaultSeatLayoutModelId).toBe(
-        testBusModelData.defaultSeatLayoutModelId,
+      expect(response.defaultBusDiagramModelId).toBe(
+        testBusModelData.defaultBusDiagramModelId,
       );
     });
 
@@ -208,7 +208,7 @@ describe('Bus Models Controller', () => {
     test('should delete a bus model', async () => {
       // Create a new bus model specifically for deletion test
       const modelToDelete = {
-        defaultSeatLayoutModelId: createdSeatLayoutModelId,
+        defaultBusDiagramModelId: createdBusDiagramModelId,
         manufacturer: 'DeleteTestManufacturer',
         model: 'DeleteTest-1',
         year: 2023,

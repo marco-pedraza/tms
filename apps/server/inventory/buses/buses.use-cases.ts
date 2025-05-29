@@ -1,12 +1,12 @@
 import { NotFoundError } from '../../shared/errors';
+import { busDiagramModelZoneRepository } from '../bus-diagram-model-zones/bus-diagram-model-zones.repository';
+import { BusDiagramModelZone } from '../bus-diagram-model-zones/bus-diagram-model-zones.types';
+import { busDiagramModelRepository } from '../bus-diagram-models/bus-diagram-models.repository';
 import { busModelRepository } from '../bus-models/bus-models.repository';
 import { seatDiagramZoneRepository } from '../seat-diagram-zones/seat-diagram-zones.repository';
 import { CreateSeatDiagramZonePayload } from '../seat-diagram-zones/seat-diagram-zones.types';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
 import { CreateSeatDiagramPayload } from '../seat-diagrams/seat-diagrams.types';
-import { seatLayoutModelZoneRepository } from '../seat-layout-model-zones/seat-layout-model-zones.repository';
-import { SeatLayoutModelZone } from '../seat-layout-model-zones/seat-layout-model-zones.types';
-import { seatLayoutModelRepository } from '../seat-layout-models/seat-layout-models.repository';
 import { Bus, CreateBusPayload, UpdateBusPayload } from './buses.types';
 import { busRepository } from './buses.repository';
 
@@ -22,10 +22,10 @@ type UpdateBusWithSeatDiagramPayload = UpdateBusPayload & {
 
 /**
  * Creates a new bus with a seat diagram. The seat diagram can be created in two ways:
- * 1. Using a specific seat layout model ID provided in the payload
- * 2. Using the default seat layout model from the bus model
+ * 1. Using a specific bus diagram model ID provided in the payload
+ * 2. Using the default bus diagram model from the bus model
  *
- * In both cases, the seat layout model is copied to a new seat diagram,
+ * In both cases, the bus diagram model is copied to a new seat diagram,
  * allowing each bus to have its own independent seat diagram that can be modified
  * without affecting other buses.
  *
@@ -34,7 +34,7 @@ type UpdateBusWithSeatDiagramPayload = UpdateBusPayload & {
  *
  * @param data - The bus data to create
  * @returns {Promise<Bus>} The created bus with its seat diagram
- * @throws {NotFoundError} If the bus model or seat layout model is not found
+ * @throws {NotFoundError} If the bus model or bus diagram model is not found
  */
 export const createBusWithSeatDiagram = async (
   data: CreateBusPayload,
@@ -45,32 +45,32 @@ export const createBusWithSeatDiagram = async (
     throw new NotFoundError('Bus model not found');
   }
 
-  // Use provided seat layout model or fallback to bus model's default
-  const seatLayoutModelId =
-    data.seatLayoutModelId ?? busModel.defaultSeatLayoutModelId;
-  const seatLayoutModel =
-    await seatLayoutModelRepository.findOne(seatLayoutModelId);
-  if (!seatLayoutModel) {
-    throw new NotFoundError('Seat layout model not found');
+  // Use provided bus diagram model or fallback to bus model's default
+  const busDiagramModelId =
+    data.busDiagramModelId ?? busModel.defaultBusDiagramModelId;
+  const busDiagramModel =
+    await busDiagramModelRepository.findOne(busDiagramModelId);
+  if (!busDiagramModel) {
+    throw new NotFoundError('Bus diagram model not found');
   }
 
-  // Create a new seat diagram based on the layout model
+  // Create a new seat diagram based on the diagram model
   const seatDiagramPayload: CreateSeatDiagramPayload = {
-    seatLayoutModelId: seatLayoutModel.id,
+    busDiagramModelId: busDiagramModel.id,
     name: `${busModel.manufacturer} ${busModel.model} - ${data.registrationNumber}`,
     maxCapacity: busModel.seatingCapacity,
     numFloors: busModel.numFloors,
-    seatsPerFloor: seatLayoutModel.seatsPerFloor,
-    bathroomRows: seatLayoutModel.bathroomRows,
-    totalSeats: seatLayoutModel.totalSeats,
-    isFactoryDefault: seatLayoutModel.isFactoryDefault,
+    seatsPerFloor: busDiagramModel.seatsPerFloor,
+    bathroomRows: busDiagramModel.bathroomRows,
+    totalSeats: busDiagramModel.totalSeats,
+    isFactoryDefault: busDiagramModel.isFactoryDefault,
     active: true,
   };
 
-  // Get layout zones before starting transaction
-  const layoutZones = await seatLayoutModelZoneRepository.findAll({
+  // Get diagram zones before starting transaction
+  const diagramZones = await busDiagramModelZoneRepository.findAll({
     filters: {
-      seatLayoutModelId: seatLayoutModel.id,
+      busDiagramModelId: busDiagramModel.id,
     },
   });
 
@@ -86,7 +86,7 @@ export const createBusWithSeatDiagram = async (
       const seatDiagram = await txSeatDiagramRepo.create(seatDiagramPayload);
 
       // Clone each zone to the diagram within transaction
-      for (const zone of layoutZones) {
+      for (const zone of diagramZones) {
         await txSeatDiagramZoneRepo.create({
           name: zone.name,
           rowNumbers: zone.rowNumbers,
@@ -110,21 +110,21 @@ export const createBusWithSeatDiagram = async (
  * Replaces a bus's seat diagram with a new one in a transaction.
  * This function:
  * 1. Creates a new seat diagram
- * 2. Clones zones from layout to the new diagram
+ * 2. Clones zones from bus diagram model to the new diagram
  * 3. Updates the bus with the new seat diagram ID
  * 4. Deletes the old seat diagram and its zones
  *
  * @param bus - The existing bus
  * @param data - The update payload
  * @param seatDiagramPayload - Data for creating the new seat diagram
- * @param layoutZones - Zones to clone to the new diagram
+ * @param busDiagramZones - Zones to clone to the new diagram
  * @returns {Promise<Bus>} The updated bus
  */
-const replaceSeaDiagramInTransaction = async (
+const replaceSeatDiagramInTransaction = async (
   bus: Bus,
   data: UpdateBusPayload,
   seatDiagramPayload: CreateSeatDiagramPayload,
-  layoutZones: SeatLayoutModelZone[],
+  busDiagramZones: BusDiagramModelZone[],
 ): Promise<Bus> => {
   return await seatDiagramRepository.transaction(
     async (txSeatDiagramRepo, tx) => {
@@ -137,7 +137,7 @@ const replaceSeaDiagramInTransaction = async (
       const seatDiagram = await txSeatDiagramRepo.create(seatDiagramPayload);
 
       // Clone each zone to the diagram within transaction
-      for (const zone of layoutZones) {
+      for (const zone of busDiagramZones) {
         await txSeatDiagramZoneRepo.create({
           name: zone.name,
           rowNumbers: zone.rowNumbers,
@@ -173,8 +173,8 @@ const replaceSeaDiagramInTransaction = async (
  * Updates a bus and its seat diagram if needed.
  * When the bus model is changed, this process:
  * 1. Deletes the current seat diagram and its zones
- * 2. Creates a new seat diagram based on the new bus model's seat layout
- * 3. Clones the seat layout zones to the new seat diagram
+ * 2. Creates a new seat diagram based on the new bus model's bus diagram model
+ * 3. Clones the bus diagram model zones to the new seat diagram
  * 4. Updates the bus with the new seat diagram ID
  *
  * For updates that don't change the model, a regular update is performed.
@@ -202,36 +202,36 @@ export const updateBusWithSeatDiagram = async (
   // Get the new bus model
   const busModel = await busModelRepository.findOne(data.modelId);
 
-  // Get the seat layout model from the new bus model
-  const seatLayoutModelId = busModel.defaultSeatLayoutModelId;
-  const seatLayoutModel =
-    await seatLayoutModelRepository.findOne(seatLayoutModelId);
+  // Get the bus diagram model from the new bus model
+  const busDiagramModelId = busModel.defaultBusDiagramModelId;
+  const busDiagramModel =
+    await busDiagramModelRepository.findOne(busDiagramModelId);
 
-  // Create a new seat diagram based on the layout model
+  // Create a new seat diagram based on the bus diagram model
   const seatDiagramPayload: CreateSeatDiagramPayload = {
-    seatLayoutModelId: seatLayoutModel.id,
+    busDiagramModelId: busDiagramModel.id,
     name: `${busModel.manufacturer} ${busModel.model} - ${bus.registrationNumber}`,
     maxCapacity: busModel.seatingCapacity,
     numFloors: busModel.numFloors,
-    seatsPerFloor: seatLayoutModel.seatsPerFloor,
-    bathroomRows: seatLayoutModel.bathroomRows,
-    totalSeats: seatLayoutModel.totalSeats,
-    isFactoryDefault: seatLayoutModel.isFactoryDefault,
+    seatsPerFloor: busDiagramModel.seatsPerFloor,
+    bathroomRows: busDiagramModel.bathroomRows,
+    totalSeats: busDiagramModel.totalSeats,
+    isFactoryDefault: busDiagramModel.isFactoryDefault,
     active: true,
   };
 
-  // Get layout zones before starting transaction
-  const layoutZones = await seatLayoutModelZoneRepository.findAll({
+  // Get bus diagram zones before starting transaction
+  const busDiagramZones = await busDiagramModelZoneRepository.findAll({
     filters: {
-      seatLayoutModelId: seatLayoutModel.id,
+      busDiagramModelId: busDiagramModel.id,
     },
   });
 
   // Execute all database operations in a transaction
-  return await replaceSeaDiagramInTransaction(
+  return await replaceSeatDiagramInTransaction(
     bus,
     data,
     seatDiagramPayload,
-    layoutZones,
+    busDiagramZones,
   );
 };

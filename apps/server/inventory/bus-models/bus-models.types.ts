@@ -8,8 +8,8 @@ export interface BusModel {
   /** Unique identifier for the bus model */
   id: number;
 
-  /** Default seat layout model ID */
-  defaultSeatLayoutModelId: number;
+  /** Default bus diagram model ID */
+  defaultBusDiagramModelId: number;
 
   /** Manufacturer of the bus */
   manufacturer: string;
@@ -50,10 +50,10 @@ export interface BusModel {
  */
 export interface CreateBusModelPayload {
   /**
-   * Default seat layout model ID
+   * Default bus diagram model ID
    * Must be a positive number
    */
-  defaultSeatLayoutModelId: number;
+  defaultBusDiagramModelId: number;
 
   /**
    * Manufacturer of the bus
@@ -113,9 +113,9 @@ export interface CreateBusModelPayload {
  */
 export interface UpdateBusModelPayload {
   /**
-   * Default seat layout model ID
+   * Default bus diagram model ID
    */
-  defaultSeatLayoutModelId?: number;
+  defaultBusDiagramModelId?: number;
 
   /**
    * Manufacturer of the bus

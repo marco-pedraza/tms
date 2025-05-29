@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { busDiagramModelRepository } from '../bus-diagram-models/bus-diagram-models.repository';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
-import { seatLayoutModelRepository } from '../seat-layout-models/seat-layout-models.repository';
 import {
   createSeatDiagramZone,
   deleteSeatDiagramZone,
@@ -24,14 +24,14 @@ describe('Seat Diagram Zones Controller', () => {
 
   let seatDiagramId: number;
   let createdZoneId: number;
-  let createdLayoutModelId: number;
+  let createdDiagramModelId: number;
 
   // Create a test diagram for zones to reference
   beforeAll(async () => {
-    // First create a layout model
-    const layoutModel = await seatLayoutModelRepository.create({
-      name: 'Test Layout for Diagram Zones',
-      description: 'Test layout model for diagram zone testing',
+    // First create a bus diagram model
+    const diagramModel = await busDiagramModelRepository.create({
+      name: 'Test Bus Diagram Model for Diagram Zones',
+      description: 'Test diagram model for diagram zone testing',
       maxCapacity: 40,
       numFloors: 1,
       seatsPerFloor: [
@@ -48,16 +48,16 @@ describe('Seat Diagram Zones Controller', () => {
       active: true,
     });
 
-    createdLayoutModelId = layoutModel.id;
+    createdDiagramModelId = diagramModel.id;
 
-    // Then create a diagram based on this layout
+    // Then create a diagram based on this model
     const diagram = await seatDiagramRepository.create({
-      seatLayoutModelId: layoutModel.id,
+      busDiagramModelId: diagramModel.id,
       name: 'Test Diagram for Zones',
       maxCapacity: 40,
       allowsAdjacentSeat: false,
       numFloors: 1,
-      seatsPerFloor: layoutModel.seatsPerFloor,
+      seatsPerFloor: diagramModel.seatsPerFloor,
       bathroomRows: [],
       totalSeats: 40,
       isFactoryDefault: true,
@@ -88,9 +88,9 @@ describe('Seat Diagram Zones Controller', () => {
       }
     }
 
-    if (createdLayoutModelId) {
+    if (createdDiagramModelId) {
       try {
-        await seatLayoutModelRepository.delete(createdLayoutModelId);
+        await busDiagramModelRepository.delete(createdDiagramModelId);
       } catch {
         // Silent error handling for cleanup
       }

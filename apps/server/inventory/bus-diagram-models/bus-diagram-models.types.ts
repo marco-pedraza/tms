@@ -19,17 +19,6 @@ export interface FloorSeats {
 }
 
 /**
- * Bathroom row configuration
- */
-export interface BathroomLocation {
-  /** Floor number */
-  floorNumber: number;
-
-  /** Row number */
-  rowNumber: number;
-}
-
-/**
  * Represents a bus diagram model (template) in the database
  */
 export interface BusDiagramModel {
@@ -50,9 +39,6 @@ export interface BusDiagramModel {
 
   /** Configuration of seats per floor */
   seatsPerFloor: FloorSeats[];
-
-  /** Rows with bathrooms */
-  bathroomRows: BathroomLocation[];
 
   /** Total number of seats */
   totalSeats: number;
@@ -103,12 +89,6 @@ export interface CreateBusDiagramModelPayload {
   seatsPerFloor: FloorSeats[];
 
   /**
-   * Rows with bathrooms
-   * @default []
-   */
-  bathroomRows?: BathroomLocation[];
-
-  /**
    * Total number of seats
    */
   totalSeats: number;
@@ -157,11 +137,6 @@ export interface UpdateBusDiagramModelPayload {
    * Configuration of seats per floor
    */
   seatsPerFloor?: FloorSeats[];
-
-  /**
-   * Rows with bathrooms
-   */
-  bathroomRows?: BathroomLocation[];
 
   /**
    * Total number of seats

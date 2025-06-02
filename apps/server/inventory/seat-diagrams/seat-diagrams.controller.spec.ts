@@ -1,21 +1,15 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createBusDiagramModel } from '../bus-diagram-models/bus-diagram-models.controller';
 import { BusDiagramModel } from '../bus-diagram-models/bus-diagram-models.types';
-import {
-  createBusSeat,
-  deleteBusSeat,
-  listBusSeatsBySeatDiagram,
-} from '../bus-seats/bus-seats.controller';
+import { createBusSeat } from '../bus-seats/bus-seats.controller';
 import { SeatType } from '../bus-seats/bus-seats.types';
 import {
-  BathroomLocation,
   FloorSeats,
   SeatConfiguration,
   SpaceType,
 } from './seat-diagrams.types';
 import { seatDiagramRepository } from './seat-diagrams.repository';
 import {
-  createSeatsFromDiagramConfiguration,
   deleteSeatDiagram,
   getSeatDiagram,
   getSeatDiagramConfiguration,
@@ -34,11 +28,6 @@ describe('Seat Diagrams Controller', () => {
     seatsRight: 2,
   };
 
-  const testBathroomLocation: BathroomLocation = {
-    floorNumber: 1,
-    rowNumber: 5,
-  };
-
   // Before creating the seat diagram, create a bus diagram model
   const testDiagramModel = {
     name: 'Test Bus Diagram Model',
@@ -46,7 +35,6 @@ describe('Seat Diagrams Controller', () => {
     maxCapacity: 50,
     numFloors: 1,
     seatsPerFloor: [testFloorSeats],
-    bathroomRows: [testBathroomLocation],
     totalSeats: 40,
     isFactoryDefault: true,
   };
@@ -55,9 +43,7 @@ describe('Seat Diagrams Controller', () => {
     name: string;
     maxCapacity: number;
     numFloors: number;
-    allowsAdjacentSeat: boolean;
     seatsPerFloor: FloorSeats[];
-    bathroomRows: BathroomLocation[];
     totalSeats: number;
     busDiagramModelId: number;
   };
@@ -66,9 +52,7 @@ describe('Seat Diagrams Controller', () => {
     name: string;
     maxCapacity: number;
     numFloors: number;
-    allowsAdjacentSeat: boolean;
     seatsPerFloor: FloorSeats[];
-    bathroomRows: BathroomLocation[];
     totalSeats: number;
     busDiagramModelId: number;
   };
@@ -86,7 +70,6 @@ describe('Seat Diagrams Controller', () => {
   let diagramModelResponse: BusDiagramModel;
   let theoreticalConfig: SeatConfiguration;
   let actualConfig: SeatConfiguration;
-  let seatsCreated: number;
 
   beforeAll(async () => {
     diagramModelResponse = await createBusDiagramModel(testDiagramModel);
@@ -96,9 +79,7 @@ describe('Seat Diagrams Controller', () => {
       name: 'Test Diagram',
       maxCapacity: 50,
       numFloors: 1,
-      allowsAdjacentSeat: true,
       seatsPerFloor: [testFloorSeats],
-      bathroomRows: [testBathroomLocation],
       totalSeats: 40,
     };
 
@@ -108,7 +89,6 @@ describe('Seat Diagrams Controller', () => {
       name: 'Test Theoretical Diagram',
       maxCapacity: 60,
       numFloors: 2,
-      allowsAdjacentSeat: true,
       seatsPerFloor: [
         {
           floorNumber: 1,
@@ -121,12 +101,6 @@ describe('Seat Diagrams Controller', () => {
           numRows: 4,
           seatsLeft: 2,
           seatsRight: 2,
-        },
-      ],
-      bathroomRows: [
-        {
-          floorNumber: 1,
-          rowNumber: 3,
         },
       ],
       totalSeats: 32,
@@ -168,11 +142,7 @@ describe('Seat Diagrams Controller', () => {
       expect(response.name).toBe(basicSeatDiagram.name);
       expect(response.maxCapacity).toBe(basicSeatDiagram.maxCapacity);
       expect(response.numFloors).toBe(basicSeatDiagram.numFloors);
-      expect(response.allowsAdjacentSeat).toBe(
-        basicSeatDiagram.allowsAdjacentSeat,
-      );
       expect(response.seatsPerFloor).toEqual(basicSeatDiagram.seatsPerFloor);
-      expect(response.bathroomRows).toEqual(basicSeatDiagram.bathroomRows);
       expect(response.totalSeats).toBe(basicSeatDiagram.totalSeats);
       expect(response.active).toBeDefined();
       expect(response.createdAt).toBeDefined();
@@ -310,100 +280,29 @@ describe('Seat Diagrams Controller', () => {
 
       // Check floor 1 configuration - add bounds checking
       expect(theoreticalConfig.floors.length).toBeGreaterThan(0);
-      const floor1 = (() => {
-        // Create a Map to safely access the floors by index
-        const floorsMap = new Map<number, unknown>();
-        if (theoreticalConfig.floors) {
-          theoreticalConfig.floors.forEach((floor, idx) =>
-            floorsMap.set(idx, floor),
-          );
-        }
-        return floorsMap.get(0);
-      })();
-      expect(floor1).not.toBeNull();
+      const floor1 = theoreticalConfig.floors[0];
+      expect(floor1).toBeDefined();
       expect(floor1.floorNumber).toBe(1);
       expect(floor1.rows).toBeDefined();
 
-      // Safe access to seatsPerFloor[0] using a Map
-      const floorConfig0 = (() => {
-        // Create a Map to safely access seatsPerFloor by index
-        const configMap = new Map<number, unknown>();
-        if (complexSeatDiagram.seatsPerFloor) {
-          complexSeatDiagram.seatsPerFloor.forEach((config, idx) =>
-            configMap.set(idx, config),
-          );
-        }
-        return configMap.get(0);
-      })();
-      expect(floorConfig0).not.toBeNull();
+      // Safe access to seatsPerFloor[0]
+      const floorConfig0 = complexSeatDiagram.seatsPerFloor[0];
+      expect(floorConfig0).toBeDefined();
       expect(floor1.rows.length).toBe(floorConfig0.numRows);
 
-      // Verify bathroom row
-      const bathroomRowIndex = (() => {
-        // Create a Map to safely access bathroomRows by index
-        const bathroomRowsMap = new Map<number, unknown>();
-        if (complexSeatDiagram.bathroomRows) {
-          complexSeatDiagram.bathroomRows.forEach((row, idx) =>
-            bathroomRowsMap.set(idx, row),
-          );
-        }
-        const bathroom = bathroomRowsMap.get(0);
-        return bathroom ? bathroom.rowNumber - 1 : 0;
-      })();
-
-      // Add bounds checking before accessing arrays with variable indices
-      expect(bathroomRowIndex).toBeGreaterThanOrEqual(0);
-      expect(bathroomRowIndex).toBeLessThan(floor1.rows.length);
-
-      // Use safe array access with null fallback and bounds checking
-      const bathroomRow = (() => {
-        // Create a Map to safely access the rows by index
-        const rowsMap = new Map<number, unknown>();
-        if (floor1?.rows) {
-          floor1.rows.forEach((row, idx) => rowsMap.set(idx, row));
-        }
-        return rowsMap.get(bathroomRowIndex);
-      })();
-
-      expect(bathroomRow).not.toBeNull();
-      expect(
-        bathroomRow.some((space) => space.type === SpaceType.BATHROOM),
-      ).toBe(true);
-
       // Verify regular rows have the correct number of seats
-      const regularRowIndices = [0, 1, 3, 4]; // All rows except bathroom row
+      const regularRowIndices = [0, 1, 2, 3, 4]; // All rows are regular now
       for (const rowIndex of regularRowIndices) {
         // Add bounds checking
         expect(rowIndex).toBeLessThan(floor1.rows.length);
 
-        // Use safe array access with null fallback and bounds checking
-        const row = (() => {
-          // Create a Map to safely access the rows by index
-          const rowsMap = new Map<number, unknown>();
-          if (floor1?.rows) {
-            floor1.rows.forEach((row, idx) => rowsMap.set(idx, row));
-          }
-          return rowsMap.get(rowIndex);
-        })();
+        const row = floor1.rows[rowIndex];
+        expect(row).toBeDefined();
 
-        expect(row).not.toBeNull();
         // Count the number of seats in the row
         const seatCount = row.filter(
           (space) => space.type === SpaceType.SEAT,
         ).length;
-
-        // Safe access to seatsPerFloor[0] using a Map
-        const floorConfig0 = (() => {
-          // Create a Map to safely access seatsPerFloor by index
-          const configMap = new Map<number, unknown>();
-          if (complexSeatDiagram.seatsPerFloor) {
-            complexSeatDiagram.seatsPerFloor.forEach((config, idx) =>
-              configMap.set(idx, config),
-            );
-          }
-          return configMap.get(0);
-        })();
-        expect(floorConfig0).not.toBeNull();
 
         expect(seatCount).toBe(
           floorConfig0.seatsLeft + floorConfig0.seatsRight,
@@ -411,60 +310,21 @@ describe('Seat Diagrams Controller', () => {
       }
 
       // Verify total seat count matches expected
-      // Safe access to seatsPerFloor using Maps
-      const floorConfigFirst = (() => {
-        // Create a Map to safely access seatsPerFloor by index
-        const configMap = new Map<number, unknown>();
-        if (complexSeatDiagram.seatsPerFloor) {
-          complexSeatDiagram.seatsPerFloor.forEach((config, idx) =>
-            configMap.set(idx, config),
-          );
-        }
-        return configMap.get(0);
-      })();
+      const floorConfigFirst = complexSeatDiagram.seatsPerFloor[0];
+      const floorConfig1 = complexSeatDiagram.seatsPerFloor[1];
 
-      const floorConfig1 = (() => {
-        // Create a Map to safely access seatsPerFloor by index
-        const configMap = new Map<number, unknown>();
-        if (complexSeatDiagram.seatsPerFloor) {
-          complexSeatDiagram.seatsPerFloor.forEach((config, idx) =>
-            configMap.set(idx, config),
-          );
-        }
-        return configMap.get(1);
-      })();
-
-      expect(floorConfigFirst).not.toBeNull();
-      expect(floorConfig1).not.toBeNull();
+      expect(floorConfigFirst).toBeDefined();
+      expect(floorConfig1).toBeDefined();
 
       const expectedTotalSeats =
-        // Floor 1: 4 regular rows * (2 left + 2 right seats)
-        (floorConfigFirst.numRows - 1) *
+        // Floor 1: 5 regular rows * (2 left + 2 right seats)
+        floorConfigFirst.numRows *
           (floorConfigFirst.seatsLeft + floorConfigFirst.seatsRight) +
         // Floor 2: 4 regular rows * (2 left + 2 right seats)
         floorConfig1.numRows *
           (floorConfig1.seatsLeft + floorConfig1.seatsRight);
 
       expect(theoreticalConfig.totalSeats).toBe(expectedTotalSeats);
-    });
-
-    test('should create actual seats matching the theoretical model', async () => {
-      // Create seats from the theoretical configuration
-      const response = await createSeatsFromDiagramConfiguration({
-        id: useCaseDiagramId,
-      });
-
-      seatsCreated = response.seatsCreated;
-      expect(seatsCreated).toBeDefined();
-      expect(seatsCreated).toBeGreaterThan(0);
-      expect(seatsCreated).toBe(theoreticalConfig.totalSeats);
-
-      // Fetch the actual seats created
-      const seatsResponse = await listBusSeatsBySeatDiagram({
-        seatDiagramId: useCaseDiagramId,
-      });
-      expect(seatsResponse.busSeats).toBeDefined();
-      expect(seatsResponse.busSeats.length).toBe(seatsCreated);
     });
 
     test('should generate seat configuration matching the theoretical model', async () => {
@@ -489,31 +349,12 @@ describe('Seat Diagrams Controller', () => {
         // Add bounds checking for array accesses
         expect(i).toBeLessThan(theoreticalConfig.floors.length);
 
-        // Use safe array access with null fallback and bounds checking
-        const actualFloor = (() => {
-          // Create a Map to safely access the floors by index
-          const floorsMap = new Map<number, unknown>();
-          if (actualConfig.floors) {
-            actualConfig.floors.forEach((floor, idx) =>
-              floorsMap.set(idx, floor),
-            );
-          }
-          return floorsMap.get(i);
-        })();
+        // Use safe array access with bounds checking
+        const actualFloor = actualConfig.floors[i];
+        const theoreticalFloor = theoreticalConfig.floors[i];
 
-        const theoreticalFloor = (() => {
-          // Create a Map to safely access the floors by index
-          const floorsMap = new Map<number, unknown>();
-          if (theoreticalConfig.floors) {
-            theoreticalConfig.floors.forEach((floor, idx) =>
-              floorsMap.set(idx, floor),
-            );
-          }
-          return floorsMap.get(i);
-        })();
-
-        expect(actualFloor).not.toBeNull();
-        expect(theoreticalFloor).not.toBeNull();
+        expect(actualFloor).toBeDefined();
+        expect(theoreticalFloor).toBeDefined();
         expect(actualFloor.floorNumber).toBe(theoreticalFloor.floorNumber);
         expect(actualFloor.rows.length).toBe(theoreticalFloor.rows.length);
 
@@ -522,29 +363,11 @@ describe('Seat Diagrams Controller', () => {
           // Add bounds checking
           expect(j).toBeLessThan(theoreticalFloor.rows.length);
 
-          // Use safe array access with null fallback and bounds checking
-          const actualRow = (() => {
-            // Create a Map to safely access the rows by index
-            const rowsMap = new Map<number, unknown>();
-            if (actualFloor?.rows) {
-              actualFloor.rows.forEach((row, idx) => rowsMap.set(idx, row));
-            }
-            return rowsMap.get(j);
-          })();
+          const actualRow = actualFloor.rows[j];
+          const theoreticalRow = theoreticalFloor.rows[j];
 
-          const theoreticalRow = (() => {
-            // Create a Map to safely access the rows by index
-            const rowsMap = new Map<number, unknown>();
-            if (theoreticalFloor?.rows) {
-              theoreticalFloor.rows.forEach((row, idx) =>
-                rowsMap.set(idx, row),
-              );
-            }
-            return rowsMap.get(j);
-          })();
-
-          expect(actualRow).not.toBeNull();
-          expect(theoreticalRow).not.toBeNull();
+          expect(actualRow).toBeDefined();
+          expect(theoreticalRow).toBeDefined();
           expect(actualRow.length).toBe(theoreticalRow.length);
 
           // Count seat types in each row
@@ -568,203 +391,64 @@ describe('Seat Diagrams Controller', () => {
       }
     });
 
-    test('should convert deleted seat space to hallway in the diagram', async () => {
-      // Create seats from the theoretical configuration first
-      await createSeatsFromDiagramConfiguration({ id: useCaseDiagramId });
+    test('should create custom seat and override theoretical configuration', async () => {
+      // Ensure we have a valid diagram ID from the previous test
+      expect(useCaseDiagramId).toBeDefined();
+      expect(useCaseDiagramId).toBeGreaterThan(0);
 
-      // Get initial configuration to identify a seat to delete
-      const initialConfig = await getSeatDiagramConfiguration({
-        id: useCaseDiagramId,
-      });
-
-      // Find a seat to delete - selecting a seat from first floor, first row
-      expect(initialConfig.floors.length).toBeGreaterThan(0);
-      const floor1 = (() => {
-        // Create a Map to safely access the floors by index
-        const floorsMap = new Map<number, unknown>();
-        if (initialConfig.floors) {
-          initialConfig.floors.forEach((floor, idx) =>
-            floorsMap.set(idx, floor),
-          );
-        }
-        return floorsMap.get(0);
-      })();
-      expect(floor1).not.toBeNull();
-      expect(floor1.rows.length).toBeGreaterThan(0);
-      const firstRow = (() => {
-        // Create a Map to safely access the rows by index
-        const rowsMap = new Map<number, unknown>();
-        if (floor1?.rows) {
-          floor1.rows.forEach((row, idx) => rowsMap.set(idx, row));
-        }
-        return rowsMap.get(0);
-      })();
-      expect(firstRow).not.toBeNull();
-
-      // Find a seat to delete safely
-      const seatToDelete = firstRow.find(
-        (space) => space.type === SpaceType.SEAT,
-      );
-      expect(seatToDelete).toBeDefined();
-
-      // Position info to identify the seat in the configuration
-      const seatX = firstRow.indexOf(seatToDelete);
-      expect(seatX).toBeGreaterThanOrEqual(0);
-
-      // Get the actual seats to find the one at this position
-      const seatsResponse = await listBusSeatsBySeatDiagram({
-        seatDiagramId: useCaseDiagramId,
-      });
-      const targetSeat = seatsResponse.busSeats.find(
-        (seat) =>
-          seat.position.x === seatX &&
-          seat.position.y === 1 && // Position y is 1-indexed in the database
-          seat.floorNumber === 1,
-      );
-
-      expect(targetSeat).toBeDefined();
-
-      // Delete the seat
-      await deleteBusSeat({ id: targetSeat.id });
-
-      // Get the updated configuration
-      const updatedConfig = await getSeatDiagramConfiguration({
-        id: useCaseDiagramId,
-      });
-
-      // Check that the space is now a hallway
-      expect(updatedConfig.floors.length).toBeGreaterThan(0);
-      const updatedFloor1 = (() => {
-        // Create a Map to safely access the floors by index
-        const floorsMap = new Map<number, unknown>();
-        if (updatedConfig.floors) {
-          updatedConfig.floors.forEach((floor, idx) =>
-            floorsMap.set(idx, floor),
-          );
-        }
-        return floorsMap.get(0);
-      })();
-      expect(updatedFloor1).not.toBeNull();
-      expect(updatedFloor1.rows.length).toBeGreaterThan(0);
-      const updatedFirstRow = (() => {
-        // Create a Map to safely access the rows by index
-        const rowsMap = new Map<number, unknown>();
-        if (updatedFloor1?.rows) {
-          updatedFloor1.rows.forEach((row, idx) => rowsMap.set(idx, row));
-        }
-        return rowsMap.get(0);
-      })();
-      expect(updatedFirstRow).not.toBeNull();
-
-      // Using a safer approach with bounds checking
-      const updatedSpace = (() => {
-        // Create a Map to safely access the spaces by index
-        const spacesMap = new Map<number, unknown>();
-        if (updatedFirstRow) {
-          updatedFirstRow.forEach((space, idx) => spacesMap.set(idx, space));
-        }
-        return spacesMap.get(seatX);
-      })();
-
-      expect(updatedSpace).not.toBeNull();
-      expect(updatedSpace.type).toBe(SpaceType.HALLWAY);
-    });
-
-    test('should restore seat in the same position when recreated', async () => {
-      // From the previous test, we have deleted a seat at (x, y) = (seatX, 0) on floor 1
-      // Get the current configuration to confirm the hallway position
+      // Get the initial theoretical configuration (no existing seats)
       const initialConfig = await getSeatDiagramConfiguration({
         id: useCaseDiagramId,
       });
       expect(initialConfig.floors.length).toBeGreaterThan(0);
-      const floor1 = (() => {
-        // Create a Map to safely access the floors by index
-        const floorsMap = new Map<number, unknown>();
-        if (initialConfig.floors) {
-          initialConfig.floors.forEach((floor, idx) =>
-            floorsMap.set(idx, floor),
-          );
-        }
-        return floorsMap.get(0);
-      })();
-      expect(floor1).not.toBeNull();
+      const floor1 = initialConfig.floors[0];
+      expect(floor1).toBeDefined();
       expect(floor1.rows.length).toBeGreaterThan(0);
-      const firstRow = (() => {
-        // Create a Map to safely access the rows by index
-        const rowsMap = new Map<number, unknown>();
-        if (floor1?.rows) {
-          floor1.rows.forEach((row, idx) => rowsMap.set(idx, row));
-        }
-        return rowsMap.get(0);
-      })();
-      expect(firstRow).not.toBeNull();
+      const firstRow = floor1.rows[0];
+      expect(firstRow).toBeDefined();
 
-      // Find the first hallway space (which was our deleted seat)
-      const hallwayIndex = firstRow.findIndex(
-        (space) => space.type === SpaceType.HALLWAY,
-      );
-      expect(hallwayIndex).not.toBe(-1);
+      // In a theoretical configuration, position 0 should be a seat
+      const initialSpace = firstRow[0];
+      expect(initialSpace).toBeDefined();
+      expect(initialSpace.type).toBe(SpaceType.SEAT);
 
-      // Create a new seat at the same position
+      // Now create a custom seat at position 0
       const createSeatPayload = {
         seatDiagramId: useCaseDiagramId,
-        seatNumber: 'RESTORED',
+        seatNumber: 'CUSTOM_01',
         floorNumber: 1,
         seatType: SeatType.REGULAR,
-        amenities: ['USB'],
+        amenities: ['USB', 'WIFI'],
         position: {
-          x: hallwayIndex,
-          y: 1, // Database is 1-indexed for position.y
+          x: 0, // First position on the left side
+          y: 1, // First row (1-indexed in database)
         },
-        meta: { restored: true },
+        meta: { custom: true },
         active: true,
       };
 
       // Create the seat
       await createBusSeat(createSeatPayload);
 
-      // Get the updated configuration
+      // Get the updated configuration (should now show the custom seat)
       const updatedConfig = await getSeatDiagramConfiguration({
         id: useCaseDiagramId,
       });
 
-      // Check if the space is now a seat again
+      // Check if the space now has our custom seat data
       expect(updatedConfig.floors.length).toBeGreaterThan(0);
-      const updatedFloor1 = (() => {
-        // Create a Map to safely access the floors by index
-        const floorsMap = new Map<number, unknown>();
-        if (updatedConfig.floors) {
-          updatedConfig.floors.forEach((floor, idx) =>
-            floorsMap.set(idx, floor),
-          );
-        }
-        return floorsMap.get(0);
-      })();
-      expect(updatedFloor1).not.toBeNull();
+      const updatedFloor1 = updatedConfig.floors[0];
+      expect(updatedFloor1).toBeDefined();
       expect(updatedFloor1.rows.length).toBeGreaterThan(0);
-      const updatedFirstRow = (() => {
-        // Create a Map to safely access the rows by index
-        const rowsMap = new Map<number, unknown>();
-        if (updatedFloor1?.rows) {
-          updatedFloor1.rows.forEach((row, idx) => rowsMap.set(idx, row));
-        }
-        return rowsMap.get(0);
-      })();
-      expect(updatedFirstRow).not.toBeNull();
+      const updatedFirstRow = updatedFloor1.rows[0];
+      expect(updatedFirstRow).toBeDefined();
 
-      // Using a safer approach with bounds checking
-      const updatedSpace = (() => {
-        // Create a Map to safely access the spaces by index
-        const spacesMap = new Map<number, unknown>();
-        if (updatedFirstRow) {
-          updatedFirstRow.forEach((space, idx) => spacesMap.set(idx, space));
-        }
-        return spacesMap.get(hallwayIndex);
-      })();
-
-      expect(updatedSpace).not.toBeNull();
+      const updatedSpace = updatedFirstRow[0];
+      expect(updatedSpace).toBeDefined();
       expect(updatedSpace.type).toBe(SpaceType.SEAT);
-      expect(updatedSpace.seatNumber).toBe('RESTORED');
+      expect(updatedSpace.seatNumber).toBe('CUSTOM_01');
+      expect(updatedSpace.amenities).toContain('USB');
+      expect(updatedSpace.amenities).toContain('WIFI');
     });
   });
 });

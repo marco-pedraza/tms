@@ -40,7 +40,6 @@ describe('Bus Diagram Model Zones Controller', () => {
           seatsRight: 2,
         },
       ],
-      bathroomRows: [],
       totalSeats: 40,
       isFactoryDefault: true,
       active: true,

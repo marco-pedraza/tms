@@ -114,7 +114,6 @@ export namespace inventory {
             this.createPathwayService = this.createPathwayService.bind(this)
             this.createRoute = this.createRoute.bind(this)
             this.createSeatDiagramZone = this.createSeatDiagramZone.bind(this)
-            this.createSeatsFromDiagramConfiguration = this.createSeatsFromDiagramConfiguration.bind(this)
             this.createServiceType = this.createServiceType.bind(this)
             this.createState = this.createState.bind(this)
             this.createTerminal = this.createTerminal.bind(this)
@@ -542,23 +541,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/seat-diagrams/${encodeURIComponent(seatDiagramId)}/zones`, JSON.stringify(params))
             return await resp.json() as seat_diagram_zones.SeatDiagramZone
-        }
-
-        /**
-         * Creates physical bus seat records from the theoretical seat configuration of a seat diagram.
-         * @param params - Object containing the seat diagram ID
-         * @param params.id - The ID of the seat diagram to create seats for
-         * @returns {Promise<{seatsCreated: number}>} The number of seats created
-         * @throws {APIError} If the seat diagram is not found or seat creation fails
-         */
-        public async createSeatsFromDiagramConfiguration(id: number): Promise<{
-    seatsCreated: number
-}> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/seat-diagrams/${encodeURIComponent(id)}/create-seats`)
-            return await resp.json() as {
-    seatsCreated: number
-}
         }
 
         /**
@@ -2559,11 +2541,6 @@ export namespace inventory {
     seatsPerFloor?: bus_diagram_models.FloorSeats[]
 
     /**
-     * Rows with bathrooms
-     */
-    bathroomRows?: bus_diagram_models.BathroomLocation[]
-
-    /**
      * Total number of seats
      */
     totalSeats?: number
@@ -3291,11 +3268,6 @@ export namespace inventory {
     maxCapacity?: number
 
     /**
-     * Indicates if the diagram allows purchasing adjacent seats
-     */
-    allowsAdjacentSeat?: boolean
-
-    /**
      * Observations about the diagram
      */
     observations?: string
@@ -3309,11 +3281,6 @@ export namespace inventory {
      * Configuration of seats per floor
      */
     seatsPerFloor?: seat_diagrams.FloorSeats[]
-
-    /**
-     * Rows with bathrooms
-     */
-    bathroomRows?: seat_diagrams.BathroomLocation[]
 
     /**
      * Total number of seats
@@ -5392,18 +5359,6 @@ export namespace bus_diagram_model_zones {
 }
 
 export namespace bus_diagram_models {
-    export interface BathroomLocation {
-        /**
-         * Floor number
-         */
-        floorNumber: number
-
-        /**
-         * Row number
-         */
-        rowNumber: number
-    }
-
     export interface BusDiagramModel {
         /**
          * Unique identifier for the bus diagram model
@@ -5434,11 +5389,6 @@ export namespace bus_diagram_models {
          * Configuration of seats per floor
          */
         seatsPerFloor: FloorSeats[]
-
-        /**
-         * Rows with bathrooms
-         */
-        bathroomRows: BathroomLocation[]
 
         /**
          * Total number of seats
@@ -5501,12 +5451,6 @@ export namespace bus_diagram_models {
          * Configuration of seats per floor
          */
         seatsPerFloor: FloorSeats[]
-
-        /**
-         * Rows with bathrooms
-         * @default []
-         */
-        bathroomRows?: BathroomLocation[]
 
         /**
          * Total number of seats
@@ -8547,18 +8491,6 @@ export namespace seat_diagram_zones {
 }
 
 export namespace seat_diagrams {
-    export interface BathroomLocation {
-        /**
-         * Floor number
-         */
-        floorNumber: number
-
-        /**
-         * Row number
-         */
-        rowNumber: number
-    }
-
     export interface Floor {
         /**
          * Floor number
@@ -8637,11 +8569,6 @@ export namespace seat_diagrams {
         numFloors: number
 
         /**
-         * Indicates if the diagram allows purchasing adjacent seats
-         */
-        allowsAdjacentSeat: boolean
-
-        /**
          * Observations about the diagram
          */
         observations?: string
@@ -8650,11 +8577,6 @@ export namespace seat_diagrams {
          * Configuration of seats per floor
          */
         seatsPerFloor: FloorSeats[]
-
-        /**
-         * Rows with bathrooms
-         */
-        bathroomRows: BathroomLocation[]
 
         /**
          * Total number of seats

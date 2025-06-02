@@ -23,7 +23,6 @@ export const busDiagramModels = pgTable(
     maxCapacity: integer('max_capacity').notNull(),
     numFloors: integer('num_floors').notNull().default(1),
     seatsPerFloor: jsonb('seats_per_floor').notNull(), // Configuration of seats per floor
-    bathroomRows: jsonb('bathroom_rows').default([]).notNull(), // Rows with bathrooms
     totalSeats: integer('total_seats').notNull(),
     isFactoryDefault: boolean('is_factory_default').notNull().default(true),
     active: boolean('active').notNull().default(true),

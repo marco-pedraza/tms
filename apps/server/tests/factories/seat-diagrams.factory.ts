@@ -40,14 +40,6 @@ export const seatDiagramFactory = defineFactory({
       0,
     );
 
-    // Generate bathroom row (only on the first floor)
-    const bathroomRows = [
-      {
-        floorNumber: 1,
-        rowNumber: seatsPerFloor[0].rows + 1, // Place bathroom after last seat row on first floor
-      },
-    ];
-
     return {
       id: sequence + ID_OFFSET,
       busDiagramModelId: () =>
@@ -57,14 +49,11 @@ export const seatDiagramFactory = defineFactory({
       name: `${faker.helpers.arrayElement(layoutNames)} Diagram ${faker.number.int({ min: 100, max: 999 })}`,
       description: faker.lorem.sentence(),
       maxCapacity: totalSeats + faker.number.int({ min: 0, max: 6 }), // Slight buffer for staff
-      allowsAdjacentSeat:
-        faker.helpers.maybe(() => true, { probability: 0.3 }) || false,
       observations: faker.helpers.maybe(() => faker.lorem.paragraph(), {
         probability: 0.5,
       }),
       numFloors: floorCount,
       seatsPerFloor,
-      bathroomRows,
       totalSeats,
       isFactoryDefault:
         faker.helpers.maybe(() => false, { probability: 0.1 }) || true,

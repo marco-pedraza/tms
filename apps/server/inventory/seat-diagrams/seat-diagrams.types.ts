@@ -29,17 +29,6 @@ export interface FloorSeats {
 }
 
 /**
- * Bathroom row configuration
- */
-export interface BathroomLocation {
-  /** Floor number */
-  floorNumber: number;
-
-  /** Row number */
-  rowNumber: number;
-}
-
-/**
  * Seat configuration type for seat layout
  */
 export interface SeatConfiguration {
@@ -103,17 +92,11 @@ export interface SeatDiagram {
   /** Number of floors in the bus */
   numFloors: number;
 
-  /** Indicates if the diagram allows purchasing adjacent seats */
-  allowsAdjacentSeat: boolean;
-
   /** Observations about the diagram */
   observations?: string;
 
   /** Configuration of seats per floor */
   seatsPerFloor: FloorSeats[];
-
-  /** Rows with bathrooms */
-  bathroomRows: BathroomLocation[];
 
   /** Total number of seats */
   totalSeats: number;
@@ -154,12 +137,6 @@ export interface CreateSeatDiagramPayload {
   maxCapacity: number;
 
   /**
-   * Indicates if the diagram allows purchasing adjacent seats
-   * @default false
-   */
-  allowsAdjacentSeat?: boolean;
-
-  /**
    * Observations about the diagram
    */
   observations?: string;
@@ -174,12 +151,6 @@ export interface CreateSeatDiagramPayload {
    * Configuration of seats per floor
    */
   seatsPerFloor: FloorSeats[];
-
-  /**
-   * Rows with bathrooms
-   * @default []
-   */
-  bathroomRows?: BathroomLocation[];
 
   /**
    * Total number of seats
@@ -216,11 +187,6 @@ export interface UpdateSeatDiagramPayload {
   maxCapacity?: number;
 
   /**
-   * Indicates if the diagram allows purchasing adjacent seats
-   */
-  allowsAdjacentSeat?: boolean;
-
-  /**
    * Observations about the diagram
    */
   observations?: string;
@@ -234,11 +200,6 @@ export interface UpdateSeatDiagramPayload {
    * Configuration of seats per floor
    */
   seatsPerFloor?: FloorSeats[];
-
-  /**
-   * Rows with bathrooms
-   */
-  bathroomRows?: BathroomLocation[];
 
   /**
    * Total number of seats

@@ -1,5 +1,5 @@
 {
-  "id": "55d88fb7-964e-425e-9f16-413c67882f26",
+  "id": "44649379-ff5f-41a7-a537-467bb428c724",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -284,13 +284,6 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
-        },
-        "bathroom_rows": {
-          "name": "bathroom_rows",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'[]'::jsonb"
         },
         "total_seats": {
           "name": "total_seats",
@@ -3154,13 +3147,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "allows_adjacent_seat": {
-          "name": "allows_adjacent_seat",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
         "observations": {
           "name": "observations",
           "type": "text",
@@ -3179,13 +3165,6 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
-        },
-        "bathroom_rows": {
-          "name": "bathroom_rows",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'[]'::jsonb"
         },
         "total_seats": {
           "name": "total_seats",

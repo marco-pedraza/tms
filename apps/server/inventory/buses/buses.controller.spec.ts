@@ -83,7 +83,6 @@ describe('Buses Controller', () => {
           seatsRight: 2,
         },
       ],
-      bathroomRows: [],
       totalSeats: 40,
       isFactoryDefault: true,
       active: true,
@@ -131,12 +130,6 @@ describe('Buses Controller', () => {
           numRows: 10,
           seatsLeft: 1,
           seatsRight: 3,
-        },
-      ],
-      bathroomRows: [
-        {
-          floorNumber: 1,
-          rowNumber: 9,
         },
       ],
       totalSeats: 72,

@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS "bus_diagram_models" (
 	"max_capacity" integer NOT NULL,
 	"num_floors" integer DEFAULT 1 NOT NULL,
 	"seats_per_floor" jsonb NOT NULL,
-	"bathroom_rows" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"total_seats" integer NOT NULL,
 	"is_factory_default" boolean DEFAULT true NOT NULL,
 	"active" boolean DEFAULT true NOT NULL,

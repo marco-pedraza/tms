@@ -53,7 +53,6 @@ describe('Bus Seats Controller', () => {
           seatsRight: 2,
         },
       ],
-      bathroomRows: [],
       totalSeats: 40,
       isFactoryDefault: true,
       active: true,
@@ -65,7 +64,6 @@ describe('Bus Seats Controller', () => {
       name: 'Test Seat Diagram',
       maxCapacity: 40,
       numFloors: 1,
-      allowsAdjacentSeat: false,
       seatsPerFloor: [
         {
           floorNumber: 1,
@@ -74,7 +72,6 @@ describe('Bus Seats Controller', () => {
           seatsRight: 2,
         },
       ],
-      bathroomRows: [],
       totalSeats: 40,
       isFactoryDefault: true,
       active: true,

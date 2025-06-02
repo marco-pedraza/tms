@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, test } from 'vitest';
-import { BathroomLocation, FloorSeats } from './bus-diagram-models.types';
+import { FloorSeats } from './bus-diagram-models.types';
 import {
   createBusDiagramModel,
   deleteBusDiagramModel,
@@ -18,18 +18,12 @@ describe('Bus Diagram Models Controller', () => {
     seatsRight: 2,
   };
 
-  const testBathroomLocation: BathroomLocation = {
-    floorNumber: 1,
-    rowNumber: 5,
-  };
-
   const testBusDiagramModel = {
     name: 'Test Bus Diagram Model',
     description: 'A test model',
     maxCapacity: 50,
     numFloors: 1,
     seatsPerFloor: [testFloorSeats],
-    bathroomRows: [testBathroomLocation],
     totalSeats: 40,
     isFactoryDefault: true,
   };
@@ -81,7 +75,6 @@ describe('Bus Diagram Models Controller', () => {
       expect(response.maxCapacity).toBe(testBusDiagramModel.maxCapacity);
       expect(response.numFloors).toBe(testBusDiagramModel.numFloors);
       expect(response.seatsPerFloor).toEqual(testBusDiagramModel.seatsPerFloor);
-      expect(response.bathroomRows).toEqual(testBusDiagramModel.bathroomRows);
       expect(response.totalSeats).toBe(testBusDiagramModel.totalSeats);
       expect(response.active).toBeDefined();
       expect(response.createdAt).toBeDefined();
@@ -146,7 +139,6 @@ describe('Bus Diagram Models Controller', () => {
             seatsRight: 2,
           },
         ],
-        bathroomRows: [],
         totalSeats: 32,
         isFactoryDefault: false,
       });

@@ -96,19 +96,3 @@ export const getSeatDiagramConfiguration = api(
     return await seatDiagramUseCases.buildSeatConfiguration(id);
   },
 );
-
-/**
- * Creates physical bus seat records from the theoretical seat configuration of a seat diagram.
- * @param params - Object containing the seat diagram ID
- * @param params.id - The ID of the seat diagram to create seats for
- * @returns {Promise<{seatsCreated: number}>} The number of seats created
- * @throws {APIError} If the seat diagram is not found or seat creation fails
- */
-export const createSeatsFromDiagramConfiguration = api(
-  { method: 'POST', path: '/seat-diagrams/:id/create-seats', expose: true },
-  async ({ id }: { id: number }): Promise<{ seatsCreated: number }> => {
-    const seatsCreated =
-      await seatDiagramUseCases.createSeatsFromTheoreticalConfiguration(id);
-    return { seatsCreated };
-  },
-);

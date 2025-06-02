@@ -1,7 +1,6 @@
 import { busSeatRepository } from '../bus-seats/bus-seats.repository';
-import { CreateBusSeatPayload, SeatType } from '../bus-seats/bus-seats.types';
+import { BusSeat } from '../bus-seats/bus-seats.types';
 import {
-  BathroomLocation,
   Floor,
   FloorSeats,
   SeatConfiguration,
@@ -21,32 +20,12 @@ const DEFAULT_ROW_NUMBER = 1;
 const DEFAULT_COLUMN_NUMBER = 0;
 const INITIAL_SEAT_NUMBER_COUNTER = 1;
 const INITIAL_TOTAL_SEATS = 0;
-const DEFAULT_SEAT_FLOOR_PREFIX = 'Floor ';
-const DEFAULT_IS_ACTIVE = true;
 
 /**
  * Creates the seat diagram use cases
  * @returns Object with use case functions
  */
 export const createSeatDiagramUseCases = () => {
-  /**
-   * Checks if a row is a bathroom row
-   * @param bathroomRows - Array of bathroom locations
-   * @param floorNum - Current floor number
-   * @param rowNum - Current row number
-   * @returns boolean indicating if the row is a bathroom row
-   */
-  const isBathroomRow = (
-    bathroomRows: BathroomLocation[],
-    floorNum: number,
-    rowNum: number,
-  ): boolean => {
-    return bathroomRows.some(
-      (location) =>
-        location.floorNumber === floorNum && location.rowNumber === rowNum,
-    );
-  };
-
   /**
    * Gets floor seat configuration or provides defaults
    * @param seatsPerFloor - The seatsPerFloor array from the model
@@ -58,32 +37,19 @@ export const createSeatDiagramUseCases = () => {
     floorNum: number,
   ): FloorSeats => {
     // Try to find floor-specific configuration
-    return seatsPerFloor.find((config) => config.floorNumber === floorNum);
-  };
-
-  /**
-   * Creates a bathroom row with appropriate spacing
-   * @param totalSpaces - Total number of spaces in the row
-   * @returns Array of spaces representing a bathroom row
-   */
-  const createBathroomRow = (totalSpaces: number): Space[] => {
-    const bathroomRow: Space[] = [];
-    const middlePosition = Math.floor(totalSpaces / 2);
-
-    // Fill with hallway spaces before the bathroom
-    for (let i = 0; i < middlePosition; i++) {
-      bathroomRow.push({ type: SpaceType.HALLWAY });
+    const config = seatsPerFloor.find(
+      (config) => config.floorNumber === floorNum,
+    );
+    if (!config) {
+      // Return default configuration if not found
+      return {
+        floorNumber: floorNum,
+        numRows: DEFAULT_NUM_ROWS,
+        seatsLeft: 2,
+        seatsRight: 2,
+      };
     }
-
-    // Add the bathroom
-    bathroomRow.push({ type: SpaceType.BATHROOM });
-
-    // Fill with hallway spaces after the bathroom
-    for (let i = middlePosition + 1; i < totalSpaces; i++) {
-      bathroomRow.push({ type: SpaceType.HALLWAY });
-    }
-
-    return bathroomRow;
+    return config;
   };
 
   /**
@@ -179,23 +145,12 @@ export const createSeatDiagramUseCases = () => {
   };
 
   /**
-   * Find maximum row number for a floor
-   * @param bathrooms - Array of bathroom locations
-   * @param floorNum - Current floor number
-   * @param defaultRowCount - Default row count
-   * @returns Maximum row number
+   * Gets the maximum row number for a floor based on its configuration
+   * @param floorConfig - Floor configuration containing numRows
+   * @returns Maximum row number for the floor
    */
-  const findMaxRowNumber = (
-    bathrooms: BathroomLocation[],
-    floorNum: number,
-    defaultRowCount: number,
-  ): number => {
-    const maxBathroomRow = bathrooms
-      .filter((br) => br.floorNumber === floorNum)
-      .reduce((max, br) => Math.max(max, br.rowNumber), 0);
-
-    // Use the provided defaultRowCount which comes from floorConfig.numRows or the default
-    return Math.max(maxBathroomRow, defaultRowCount);
+  const getMaxRowNumber = (floorConfig: FloorSeats): number => {
+    return floorConfig.numRows || DEFAULT_NUM_ROWS;
   };
 
   /**
@@ -203,16 +158,20 @@ export const createSeatDiagramUseCases = () => {
    * @param seats - Array of seats
    * @returns Map of rows to seat arrays
    */
-  const groupSeatsByRow = (seats: unknown[]): Map<number, unknown[]> => {
+  const groupSeatsByRow = (seats: BusSeat[]): Map<number, BusSeat[]> => {
     return seats.reduce((acc, seat) => {
-      // Use position.y as row indicator
-      const y = seat.position?.y || DEFAULT_ROW_NUMBER; // Default to row 1 if position not specified
+      // Use position.y as row indicator with safe access pattern
+      const y =
+        seat.position?.y !== undefined ? seat.position.y : DEFAULT_ROW_NUMBER; // Default to row 1 if position not specified
       if (!acc.has(y)) {
         acc.set(y, []);
       }
-      acc.get(y).push(seat);
+      const rowSeats = acc.get(y);
+      if (rowSeats) {
+        rowSeats.push(seat);
+      }
       return acc;
-    }, new Map<number, unknown[]>());
+    }, new Map<number, BusSeat[]>());
   };
 
   /**
@@ -220,12 +179,16 @@ export const createSeatDiagramUseCases = () => {
    * @param seats - Array of seats for a single row
    * @returns Map of columns to seats
    */
-  const groupSeatsByColumn = (seats: unknown[]): Map<number, unknown> => {
+  const groupSeatsByColumn = (seats: BusSeat[]): Map<number, BusSeat> => {
     return seats.reduce((acc, seat) => {
-      const x = seat.position?.x || DEFAULT_COLUMN_NUMBER;
+      // Use explicit safe access pattern for position.x
+      const x =
+        seat.position?.x !== undefined
+          ? seat.position.x
+          : DEFAULT_COLUMN_NUMBER;
       acc.set(x, seat);
       return acc;
-    }, new Map<number, unknown>());
+    }, new Map<number, BusSeat>());
   };
 
   /**
@@ -235,7 +198,7 @@ export const createSeatDiagramUseCases = () => {
    * @returns Array of spaces for the row
    */
   const createRowFromExistingSeats = (
-    rowSeats: unknown[],
+    rowSeats: BusSeat[],
     floorConfig: FloorSeats,
   ): Space[] => {
     if (rowSeats.length === 0) {
@@ -309,8 +272,6 @@ export const createSeatDiagramUseCases = () => {
     floorNum: number,
     processRow: (
       rowNum: number,
-      floorNum: number,
-      hasBathroom: boolean,
       floorConfig: FloorSeats,
       context: SeatContext,
     ) => [Space[], SeatContext],
@@ -320,31 +281,16 @@ export const createSeatDiagramUseCases = () => {
     const seatsPerFloor = model.seatsPerFloor || [];
     const floorConfig = getFloorConfig(seatsPerFloor, floorNum);
 
-    const rowCount = floorConfig.numRows || DEFAULT_NUM_ROWS;
-
-    // Find maximum row number
-    const maxRow = findMaxRowNumber(
-      model.bathroomRows || [],
-      floorNum,
-      rowCount,
-    );
+    // Get maximum row number for this floor
+    const maxRow = getMaxRowNumber(floorConfig);
 
     let updatedContext = { ...context };
 
     // Process each row
     for (let rowNum = 1; rowNum <= maxRow; rowNum++) {
-      // Check if this is a bathroom row
-      const hasBathroom = isBathroomRow(
-        model.bathroomRows || [],
-        floorNum,
-        rowNum,
-      );
-
       // Process this row
       const [rowSpaces, newContext] = processRow(
         rowNum,
-        floorNum,
-        hasBathroom,
         floorConfig,
         updatedContext,
       );
@@ -431,7 +377,7 @@ export const createSeatDiagramUseCases = () => {
    */
   const getConfigurationFromExistingSeats = (
     model: SeatDiagram,
-    seats: unknown[],
+    seats: BusSeat[],
   ): SeatConfiguration => {
     // Group seats by floor number
     const seatsByFloor = seats.reduce((acc, seat) => {
@@ -439,9 +385,12 @@ export const createSeatDiagramUseCases = () => {
       if (!acc.has(floorNum)) {
         acc.set(floorNum, []);
       }
-      acc.get(floorNum).push(seat);
+      const floorSeats = acc.get(floorNum);
+      if (floorSeats) {
+        floorSeats.push(seat);
+      }
       return acc;
-    }, new Map<number, unknown[]>());
+    }, new Map<number, BusSeat[]>());
 
     // Create a function to process each floor for existing seats
     const processFloor = (
@@ -456,30 +405,23 @@ export const createSeatDiagramUseCases = () => {
       // Create a function to process each row for existing seats
       const processRow = (
         rowNum: number,
-        floorNum: number,
-        hasBathroom: boolean,
         floorConfig: FloorSeats,
         context: SeatContext,
       ): [Space[], SeatContext] => {
-        if (hasBathroom) {
-          // For bathroom rows, create a bathroom row
-          return [createBathroomRow(calculateRowWidth(floorConfig)), context];
-        } else {
-          // For regular rows, create a row with seats or hallways
-          const rowSeats = seatsByY.get(rowNum) ?? [];
-          const floorNumRows = floorConfig?.numRows || DEFAULT_NUM_ROWS;
+        // For regular rows, create a row with seats or hallways
+        const rowSeats = seatsByY.get(rowNum) ?? [];
+        const floorNumRows = floorConfig?.numRows || DEFAULT_NUM_ROWS;
 
-          // Check if this row should exist
-          if (
-            rowSeats.length === 0 &&
-            rowNum > maxRowNum &&
-            rowNum > floorNumRows
-          ) {
-            return [null, context]; // Skip this row
-          }
-
-          return [createRowFromExistingSeats(rowSeats, floorConfig), context];
+        // Check if this row should exist
+        if (
+          rowSeats.length === 0 &&
+          rowNum > maxRowNum &&
+          rowNum > floorNumRows
+        ) {
+          return [[], context]; // Skip this row
         }
+
+        return [createRowFromExistingSeats(rowSeats, floorConfig), context];
       };
 
       return createFloor(model, floorNum, processRow, context);
@@ -487,7 +429,7 @@ export const createSeatDiagramUseCases = () => {
 
     return createConfiguration(model, processFloor, {
       totalSeats: seats.length,
-      seatNumberCounter: INITIAL_SEAT_NUMBER_COUNTER, // Using constant but value is driven by existing seats, could be misleading? Let's keep it for now.
+      seatNumberCounter: INITIAL_SEAT_NUMBER_COUNTER,
     });
   };
 
@@ -507,15 +449,10 @@ export const createSeatDiagramUseCases = () => {
       // Create a function to process each row for theoretical configuration
       const processRow = (
         rowNum: number,
-        floorNum: number,
-        hasBathroom: boolean,
         floorConfig: FloorSeats,
         context: SeatContext,
       ): [Space[], SeatContext] => {
-        if (hasBathroom) {
-          // For bathroom rows, create a bathroom row
-          return [createBathroomRow(calculateRowWidth(floorConfig)), context];
-        } else if (rowNum <= (floorConfig?.numRows || DEFAULT_NUM_ROWS)) {
+        if (rowNum <= (floorConfig?.numRows || DEFAULT_NUM_ROWS)) {
           // For regular rows within the row count, create a regular row with seats
           const [rowSpaces, newSeatCounter, seatsAdded] = createRegularRow(
             floorConfig,
@@ -531,7 +468,7 @@ export const createSeatDiagramUseCases = () => {
           return [rowSpaces, updatedContext];
         }
 
-        return [null, context]; // Skip other rows
+        return [[], context]; // Skip other rows
       };
 
       return createFloor(model, floorNum, processRow, context);
@@ -543,171 +480,8 @@ export const createSeatDiagramUseCases = () => {
     });
   };
 
-  /**
-   * Collects all seat spaces from a configuration
-   * @param configuration - The seat configuration to extract seats from
-   * @returns Array of collected seat spaces with floor, row, and position information
-   */
-  const collectSeatSpaces = (
-    configuration: SeatConfiguration,
-  ): {
-    space: Space;
-    floorNumber: number;
-    rowIndex: number;
-    colIndex: number;
-    rowLength: number;
-  }[] => {
-    const seats = [];
-
-    // Process each floor
-    for (const floor of configuration.floors) {
-      const floorNumber = floor.floorNumber;
-
-      // Process each row
-      for (let rowIndex = 0; rowIndex < floor.rows.length; rowIndex++) {
-        const row = safeGetRow(floor.rows, rowIndex);
-        if (!row) continue;
-
-        // Process each space in the row
-        for (let colIndex = 0; colIndex < row.length; colIndex++) {
-          const space = safeGetSpace(row, colIndex);
-          if (!space) continue;
-
-          // Collect only actual seats
-          if (space.type === SpaceType.SEAT && space.seatNumber) {
-            seats.push({
-              space,
-              floorNumber,
-              rowIndex,
-              colIndex,
-              rowLength: row.length,
-            });
-          }
-        }
-      }
-    }
-
-    return seats;
-  };
-
-  /**
-   * Creates seat payload for storing in the database
-   * @param seatDiagramId - Seat diagram ID
-   * @param seatNumber - Seat number
-   * @param floorNumber - Floor number
-   * @param rowIndex - Row index
-   * @param colIndex - Column index
-   * @param rowNumber - Row number
-   * @returns CreateBusSeatPayload object
-   */
-  const createSeatPayload = (
-    seatDiagramId: number,
-    seatNumber: string,
-    floorNumber: number,
-    rowIndex: number,
-    colIndex: number,
-    rowNumber: number,
-    rowLength: number,
-  ): CreateBusSeatPayload => {
-    return {
-      seatDiagramId,
-      seatNumber,
-      floorNumber,
-      seatFloor: `${DEFAULT_SEAT_FLOOR_PREFIX}${floorNumber}`,
-      seatType: SeatType.REGULAR, // Using enum, which is good
-      amenities: DEFAULT_AMENITIES, // Use constant for empty array
-      position: {
-        x: colIndex,
-        y: rowNumber,
-      },
-      meta: {
-        rowIndex,
-        colIndex,
-        isAisle: false, // Hardcoded false is likely specific logic, not a default
-        isWindow: colIndex === 0 || colIndex === rowLength - 1, // Specific logic
-        isLegroom: rowIndex === 0, // Specific logic
-        created: new Date().toISOString(), // Dynamic value, not a default
-      },
-      active: DEFAULT_IS_ACTIVE, // Use constant for true
-      reclinementAngle: DEFAULT_RECLINEMENT_ANGLE, // Use constant
-    };
-  };
-
-  /**
-   * Safely gets a row from an array using Map for protection
-   * @param rows - Array of rows
-   * @param index - Index to access
-   * @returns The row at the index or undefined
-   */
-  const safeGetRow = (rows: unknown[], index: number): unknown | undefined => {
-    const rowsMap = new Map<number, unknown>();
-    rows.forEach((row, idx) => rowsMap.set(idx, row));
-    return rowsMap.get(index);
-  };
-
-  /**
-   * Safely gets a space from a row using Map for protection
-   * @param row - Array of spaces
-   * @param index - Index to access
-   * @returns The space at the index or undefined
-   */
-  const safeGetSpace = (row: unknown[], index: number): unknown | undefined => {
-    const spacesMap = new Map<number, unknown>();
-    row.forEach((space, idx) => spacesMap.set(idx, space));
-    return spacesMap.get(index);
-  };
-
-  /**
-   * Creates actual bus seats from a theoretical configuration
-   * @param seatDiagramId - The ID of the seat diagram
-   * @returns {Promise<number>} The number of seats created
-   */
-  const createSeatsFromTheoreticalConfiguration = async (
-    seatDiagramId: number,
-  ): Promise<number> => {
-    // First, check if we already have seats for this diagram
-    const existingSeatsResult =
-      await busSeatRepository.findAllBySeatDiagram(seatDiagramId);
-    if (existingSeatsResult.busSeats.length > 0) {
-      return existingSeatsResult.busSeats.length; // Seats already exist
-    }
-
-    // Generate theoretical configuration
-    const diagram = await seatDiagramRepository.findOne(seatDiagramId);
-    const configuration = buildTheoreticalConfiguration(diagram);
-
-    // Collect all seat spaces from the configuration
-    const seatSpaces = collectSeatSpaces(configuration);
-
-    // Convert seat spaces to seat payloads
-    const seatPayloads: CreateBusSeatPayload[] = seatSpaces.map(
-      ({ space, floorNumber, rowIndex, colIndex, rowLength }) => {
-        const rowNumber = rowIndex + 1;
-
-        return createSeatPayload(
-          seatDiagramId,
-          space.seatNumber,
-          floorNumber,
-          rowIndex,
-          colIndex,
-          rowNumber,
-          rowLength,
-        );
-      },
-    );
-
-    // Create all seats in a batch
-    if (seatPayloads.length > 0) {
-      const result = await busSeatRepository.createBatch(seatPayloads);
-      return result.busSeats.length;
-    }
-
-    return 0;
-  };
-
   return {
     buildSeatConfiguration,
-    createSeatsFromTheoreticalConfiguration,
     buildTheoreticalConfiguration,
   };
 };

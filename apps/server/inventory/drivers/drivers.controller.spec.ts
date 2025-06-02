@@ -126,7 +126,6 @@ describe('Drivers Controller', () => {
             seatsRight: 2,
           },
         ],
-        bathroomRows: [],
         totalSeats: 40,
         isFactoryDefault: true,
         active: true,

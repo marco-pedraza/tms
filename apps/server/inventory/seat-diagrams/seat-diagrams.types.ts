@@ -1,5 +1,5 @@
 import { MatchesRegexp, MinLen } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
+import { FloorSeats, PaginatedResult } from '../../shared/types';
 
 /**
  * Space type in seat diagram layout
@@ -9,23 +9,7 @@ export enum SpaceType {
   HALLWAY = 'hallway',
   BATHROOM = 'bathroom',
   EMPTY = 'empty',
-}
-
-/**
- * Seat configuration for a specific floor
- */
-export interface FloorSeats {
-  /** Floor number */
-  floorNumber: number;
-
-  /** Number of rows in this floor */
-  numRows: number;
-
-  /** Number of seats on the left side per row for this floor */
-  seatsLeft: number;
-
-  /** Number of seats on the right side per row for this floor */
-  seatsRight: number;
+  STAIRS = 'stairs',
 }
 
 /**
@@ -103,6 +87,9 @@ export interface SeatDiagram {
 
   /** Indicates if this is a factory default diagram */
   isFactoryDefault: boolean;
+
+  /** Indicates if the diagram has been modified from the base model */
+  isModified: boolean;
 
   /** Whether the seat diagram is active */
   active: boolean;

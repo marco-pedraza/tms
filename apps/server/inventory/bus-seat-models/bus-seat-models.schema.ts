@@ -7,20 +7,21 @@ import {
   serial,
   text,
   timestamp,
+  unique,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { seatDiagrams } from '../seat-diagrams/seat-diagrams.schema';
+import { busDiagramModels } from '../bus-diagram-models/bus-diagram-models.schema';
 
 /**
- * Database table for bus seats
+ * Database table for bus seat models (templates for bus seats)
  */
-export const busSeats = pgTable(
-  'bus_seats',
+export const busSeatModels = pgTable(
+  'bus_seat_models',
   {
     id: serial('id').primaryKey(),
-    seatDiagramId: integer('seat_diagram_id')
+    busDiagramModelId: integer('bus_diagram_model_id')
       .notNull()
-      .references(() => seatDiagrams.id, { onDelete: 'cascade' }),
+      .references(() => busDiagramModels.id, { onDelete: 'cascade' }),
     seatNumber: text('seat_number').notNull(),
     floorNumber: integer('floor_number').notNull().default(1),
     seatType: text('seat_type').notNull(), // Regular/Premium/VIP/etc.
@@ -32,15 +33,18 @@ export const busSeats = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => [index().on(table.seatDiagramId)],
+  (table) => [
+    index().on(table.busDiagramModelId),
+    unique().on(table.busDiagramModelId, table.seatNumber),
+  ],
 );
 
 /**
- * Relations for bus seats
+ * Relations for bus seat models
  */
-export const busSeatsRelations = relations(busSeats, ({ one }) => ({
-  seatDiagram: one(seatDiagrams, {
-    fields: [busSeats.seatDiagramId],
-    references: [seatDiagrams.id],
+export const busSeatModelsRelations = relations(busSeatModels, ({ one }) => ({
+  busDiagramModel: one(busDiagramModels, {
+    fields: [busSeatModels.busDiagramModelId],
+    references: [busDiagramModels.id],
   }),
 }));

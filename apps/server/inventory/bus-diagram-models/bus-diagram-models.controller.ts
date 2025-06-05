@@ -8,9 +8,10 @@ import {
   UpdateBusDiagramModelPayload,
 } from './bus-diagram-models.types';
 import { busDiagramModelRepository } from './bus-diagram-models.repository';
+import { busDiagramModelUseCases } from './bus-diagram-models.use-cases';
 
 /**
- * Creates a new bus diagram model.
+ * Creates a new bus diagram model and automatically generates seat models in a single transaction.
  * @param params - Data for the new bus diagram model
  * @returns {Promise<BusDiagramModel>} The created bus diagram model
  * @throws {APIError} If creation fails or validation fails
@@ -18,7 +19,7 @@ import { busDiagramModelRepository } from './bus-diagram-models.repository';
 export const createBusDiagramModel = api(
   { expose: true, method: 'POST', path: '/bus-diagram-models' },
   async (params: CreateBusDiagramModelPayload): Promise<BusDiagramModel> => {
-    return await busDiagramModelRepository.create(params);
+    return await busDiagramModelUseCases.createBusDiagramModelWithSeats(params);
   },
 );
 

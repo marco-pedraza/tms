@@ -10,16 +10,16 @@ export interface SeatPosition {
 }
 
 /**
- * Base interface representing a bus seat entity
+ * Base interface representing a bus seat model entity
  */
-export interface BusSeat {
-  /** Unique identifier for the bus seat */
+export interface BusSeatModel {
+  /** Unique identifier for the bus seat model */
   id: number;
 
-  /** ID of the seat diagram this seat belongs to */
-  seatDiagramId: number;
+  /** Bus diagram model ID (reference to bus_diagram_models) */
+  busDiagramModelId: number;
 
-  /** Seat number (e.g., "1A", "2B") */
+  /** Seat number */
   seatNumber: string;
 
   /** Floor number */
@@ -40,25 +40,25 @@ export interface BusSeat {
   /** Additional metadata for the seat (flexible JSON structure) */
   meta: Record<string, unknown>;
 
-  /** Whether the seat is active */
+  /** Whether the seat model is active */
   active: boolean;
 
-  /** Timestamp when the seat was created */
+  /** Timestamp when the seat model was created */
   createdAt: Date;
 
-  /** Timestamp when the seat was last updated */
+  /** Timestamp when the seat model was last updated */
   updatedAt: Date;
 }
 
 /**
- * Input for creating a new bus seat
+ * Input for creating a new bus seat model
  */
-export interface CreateBusSeatPayload {
+export interface CreateBusSeatModelPayload {
   /**
-   * ID of the seat diagram this seat belongs to
+   * ID of the bus diagram model this seat model belongs to
    * Must be a positive number
    */
-  seatDiagramId: number;
+  busDiagramModelId: number;
 
   /**
    * Seat number (e.g., "1A", "2B")
@@ -101,31 +101,31 @@ export interface CreateBusSeatPayload {
   meta?: Record<string, unknown>;
 
   /**
-   * Whether the seat is active
+   * Whether the seat model is active
    * @default true
    */
   active?: boolean;
 }
 
 /**
- * Input for creating multiple bus seats in a batch
+ * Input for creating multiple bus seat models in a batch
  */
-export interface CreateBusSeatBatchPayload {
+export interface CreateBusSeatModelBatchPayload {
   /**
-   * Array of bus seats to create
+   * Array of bus seat models to create
    */
-  seats: CreateBusSeatPayload[];
+  seatModels: CreateBusSeatModelPayload[];
 }
 
 /**
- * Input for updating a bus seat
+ * Input for updating a bus seat model
  */
-export interface UpdateBusSeatPayload {
+export interface UpdateBusSeatModelPayload {
   /**
-   * ID of the seat diagram this seat belongs to
+   * ID of the bus diagram model this seat model belongs to
    * Must be a positive number
    */
-  seatDiagramId?: number;
+  busDiagramModelId?: number;
 
   /**
    * Seat number (e.g., "1A", "2B")
@@ -164,20 +164,20 @@ export interface UpdateBusSeatPayload {
   meta?: Record<string, unknown>;
 
   /**
-   * Whether the seat is active
+   * Whether the seat model is active
    */
   active?: boolean;
 }
 
 /**
- * Response containing a list of bus seats
+ * Response containing a list of bus seat models
  */
-export interface BusSeats {
-  /** List of bus seats */
-  busSeats: BusSeat[];
+export interface BusSeatModels {
+  /** List of bus seat models */
+  busSeatModels: BusSeatModel[];
 }
 
 /**
- * Paginated list of bus seats
+ * Paginated list of bus seat models
  */
-export type PaginatedBusSeats = PaginatedResult<BusSeat>;
+export type PaginatedBusSeatModels = PaginatedResult<BusSeatModel>;

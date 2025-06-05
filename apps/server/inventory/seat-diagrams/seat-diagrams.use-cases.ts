@@ -1,8 +1,8 @@
+import { FloorSeats } from '../../shared/types';
 import { busSeatRepository } from '../bus-seats/bus-seats.repository';
 import { BusSeat } from '../bus-seats/bus-seats.types';
 import {
   Floor,
-  FloorSeats,
   SeatConfiguration,
   SeatDiagram,
   Space,

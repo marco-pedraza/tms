@@ -31,6 +31,7 @@ export const seatDiagrams = pgTable(
     seatsPerFloor: jsonb('seats_per_floor').notNull(), // Configuration of seats per floor
     totalSeats: integer('total_seats').notNull(),
     isFactoryDefault: boolean('is_factory_default').notNull().default(true),
+    isModified: boolean('is_modified').notNull().default(false),
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),

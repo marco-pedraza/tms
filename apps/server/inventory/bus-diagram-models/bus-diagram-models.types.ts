@@ -1,22 +1,5 @@
 import { MatchesRegexp, MinLen } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
-
-/**
- * Seat configuration for a specific floor
- */
-export interface FloorSeats {
-  /** Floor number */
-  floorNumber: number;
-
-  /** Number of rows in this floor */
-  numRows: number;
-
-  /** Number of seats on the left side per row for this floor */
-  seatsLeft: number;
-
-  /** Number of seats on the right side per row for this floor */
-  seatsRight: number;
-}
+import { FloorSeats, PaginatedResult } from '../../shared/types';
 
 /**
  * Represents a bus diagram model (template) in the database

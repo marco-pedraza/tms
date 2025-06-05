@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { SeatType } from '../../shared/types';
 import { busDiagramModelRepository } from '../bus-diagram-models/bus-diagram-models.repository';
 import { deleteSeatDiagram } from '../seat-diagrams/seat-diagrams.controller';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
-import { SeatPosition, SeatType } from './bus-seats.types';
+import { SeatPosition } from './bus-seats.types';
 import {
   createBusSeat,
   createBusSeatsBatch,

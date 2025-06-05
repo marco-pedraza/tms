@@ -12,7 +12,7 @@ import type {
  * Creates a repository for managing bus seat entities
  * @returns {Object} An object containing bus seat-specific operations and base CRUD operations
  */
-export const createBusSeatRepository = () => {
+export function createBusSeatRepository() {
   const baseRepository = createBaseRepository<
     BusSeat,
     CreateBusSeatPayload,
@@ -25,55 +25,35 @@ export const createBusSeatRepository = () => {
    * @param seatDiagramId - The seat diagram ID to filter by
    * @returns {Promise<BusSeats>} Object containing array of seats for the specified seat diagram
    */
-  const findAllBySeatDiagram = async (
-    seatDiagramId: number,
-  ): Promise<BusSeats> => {
-    const results = await baseRepository.findAllBy(
-      busSeats.seatDiagramId,
-      seatDiagramId,
-      {
+  function findAllBySeatDiagram(seatDiagramId: number): Promise<BusSeats> {
+    return baseRepository
+      .findAllBy(busSeats.seatDiagramId, seatDiagramId, {
         orderBy: [{ field: 'seatNumber', direction: 'asc' }],
-      },
-    );
-
-    return {
-      busSeats: results,
-    };
-  };
+      })
+      .then((results) => ({ busSeats: results }));
+  }
 
   /**
    * Creates multiple bus seats in a batch
    * @param data - Array of bus seat data to create
    * @returns {Promise<BusSeats>} Object containing array of created bus seats
    */
-  const createBatch = async (
-    data: CreateBusSeatPayload[],
-  ): Promise<BusSeats> => {
-    return await db.transaction(async (tx) => {
-      // Create a local baseRepository that uses the transaction
-      const txBaseRepository = createBaseRepository<
-        BusSeat,
-        CreateBusSeatPayload,
-        UpdateBusSeatPayload,
-        typeof busSeats
-      >(tx, busSeats, 'Bus Seat');
-
+  function createBatch(data: CreateBusSeatPayload[]): Promise<BusSeats> {
+    return baseRepository.transaction(async (txRepo) => {
       const createdSeats = await Promise.all(
-        data.map(async (seatData) => await txBaseRepository.create(seatData)),
+        data.map((seatData) => txRepo.create(seatData)),
       );
 
-      return {
-        busSeats: createdSeats,
-      };
+      return { busSeats: createdSeats };
     });
-  };
+  }
 
   return {
     ...baseRepository,
     findAllBySeatDiagram,
     createBatch,
   };
-};
+}
 
 // Export the bus seat repository instance
 export const busSeatRepository = createBusSeatRepository();

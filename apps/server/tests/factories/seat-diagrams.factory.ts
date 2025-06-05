@@ -57,6 +57,8 @@ export const seatDiagramFactory = defineFactory({
       totalSeats,
       isFactoryDefault:
         faker.helpers.maybe(() => false, { probability: 0.1 }) || true,
+      isModified:
+        faker.helpers.maybe(() => true, { probability: 0.3 }) || false,
       active: faker.helpers.maybe(() => false, { probability: 0.1 }) || true,
       createdAt: new Date(),
       updatedAt: new Date(),

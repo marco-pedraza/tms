@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS "seat_diagrams" (
 	"seats_per_floor" jsonb NOT NULL,
 	"total_seats" integer NOT NULL,
 	"is_factory_default" boolean DEFAULT true NOT NULL,
+	"is_modified" boolean DEFAULT false NOT NULL,
 	"active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL

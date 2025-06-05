@@ -55,6 +55,10 @@ export {
   busSeats,
   busSeatsRelations,
 } from '../inventory/bus-seats/bus-seats.schema';
+export {
+  busSeatModels,
+  busSeatModelsRelations,
+} from '../inventory/bus-seat-models/bus-seat-models.schema';
 export { buses, busesRelations } from '../inventory/buses/buses.schema';
 export {
   pathways,

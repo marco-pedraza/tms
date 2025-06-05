@@ -1,10 +1,15 @@
 /**
- * NOTE: These types are duplicated from @repo/base-repo due to Encore limitations.
- * Encore has issues recognizing types imported from external packages,
- * so we need to maintain a local copy of these types.
+ * Shared types for the application.
+ *
+ * NOTE: Some types (PaginatedResult, PaginationMeta, PaginationParams) are duplicated
+ * from @repo/base-repo due to Encore limitations. Encore has issues recognizing types
+ * imported from external packages, so we need to maintain a local copy of these types.
  * If types are updated in @repo/base-repo, make sure to update them here as well.
  *
- * Original reference: packages/base-repo/src/types.ts
+ * Other types in this file are domain-specific shared Value Objects used across
+ * multiple bounded contexts within this application.
+ *
+ * Original reference for base types: packages/base-repo/src/types.ts
  */
 
 /**
@@ -39,4 +44,39 @@ export interface PaginationMeta {
 export interface PaginationParams {
   page?: number;
   pageSize?: number;
+}
+
+/**
+ * Seat configuration for a specific floor
+ * This is a shared Value Object used across multiple bounded contexts:
+ * - bus-diagram-models (templates)
+ * - seat-diagrams (instances)
+ * - bus-seat-models (seat templates)
+ */
+export interface FloorSeats {
+  /** Floor number */
+  floorNumber: number;
+
+  /** Number of rows in this floor */
+  numRows: number;
+
+  /** Number of seats on the left side per row for this floor */
+  seatsLeft: number;
+
+  /** Number of seats on the right side per row for this floor */
+  seatsRight: number;
+}
+
+/**
+ * Enum for seat types
+ * This is a shared Value Object used across multiple bounded contexts:
+ * - bus-seats (actual seat instances)
+ * - bus-seat-models (seat templates)
+ */
+export enum SeatType {
+  REGULAR = 'regular',
+  PREMIUM = 'premium',
+  VIP = 'vip',
+  BUSINESS = 'business',
+  EXECUTIVE = 'executive',
 }

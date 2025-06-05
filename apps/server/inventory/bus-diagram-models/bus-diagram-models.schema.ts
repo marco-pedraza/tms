@@ -9,6 +9,7 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { busSeatModels } from '../bus-seat-models/bus-seat-models.schema';
 import { seatDiagrams } from '../seat-diagrams/seat-diagrams.schema';
 
 /**
@@ -39,5 +40,6 @@ export const busDiagramModelsRelations = relations(
   busDiagramModels,
   ({ many }) => ({
     seatDiagrams: many(seatDiagrams),
+    busSeatModels: many(busSeatModels),
   }),
 );

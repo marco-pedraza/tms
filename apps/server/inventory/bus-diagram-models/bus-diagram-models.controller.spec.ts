@@ -1,5 +1,9 @@
 import { afterAll, describe, expect, test } from 'vitest';
-import { FloorSeats } from './bus-diagram-models.types';
+import { vi } from 'vitest';
+import { FloorSeats } from '../../shared/types';
+import { busSeatModelRepository } from '../bus-seat-models/bus-seat-models.repository';
+import { busSeatModels } from '../bus-seat-models/bus-seat-models.schema';
+import { busSeatModelUseCases } from '../bus-seat-models/bus-seat-models.use-cases';
 import {
   createBusDiagramModel,
   deleteBusDiagramModel,
@@ -60,14 +64,14 @@ describe('Bus Diagram Models Controller', () => {
   });
 
   describe('success scenarios', () => {
-    test('should create a new bus diagram model', async () => {
+    test('should create a new bus diagram model and automatically generate seat models', async () => {
       // Create a new bus diagram model
       const response = await createBusDiagramModel(testBusDiagramModel);
 
       // Store the ID for later cleanup
       createdBusDiagramModelId = response.id;
 
-      // Assertions
+      // Assertions for diagram model
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
       expect(response.name).toBe(testBusDiagramModel.name);
@@ -79,6 +83,36 @@ describe('Bus Diagram Models Controller', () => {
       expect(response.active).toBeDefined();
       expect(response.createdAt).toBeDefined();
       expect(response.updatedAt).toBeDefined();
+
+      // Verify that seat models were created automatically (atomicity test)
+      const seatModelsResult = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        createdBusDiagramModelId,
+        {
+          orderBy: [{ field: 'seatNumber', direction: 'asc' }],
+        },
+      );
+
+      // Expected seats calculation: Floor 1: 10 rows × (2 left + 2 right) = 40 seats
+      expect(seatModelsResult).toHaveLength(40);
+
+      // Verify seat model properties
+      const firstSeat = seatModelsResult[0];
+      expect(firstSeat.busDiagramModelId).toBe(createdBusDiagramModelId);
+      expect(firstSeat.floorNumber).toBe(1);
+      expect(firstSeat.seatNumber).toBeDefined();
+      expect(firstSeat.position).toBeDefined();
+      expect(firstSeat.position.x).toBeGreaterThanOrEqual(0);
+      expect(firstSeat.position.y).toBeGreaterThanOrEqual(1);
+      expect(firstSeat.active).toBe(true);
+
+      // Verify all seats have sequential numbers
+      const seatNumbers = seatModelsResult
+        .map((s) => parseInt(s.seatNumber))
+        .sort((a: number, b: number) => a - b);
+
+      expect(seatNumbers[0]).toBe(1);
+      expect(seatNumbers[seatNumbers.length - 1]).toBe(40);
     });
 
     test('should retrieve a bus diagram model by ID', async () => {
@@ -163,6 +197,41 @@ describe('Bus Diagram Models Controller', () => {
   describe('error scenarios', () => {
     test('should handle not found errors', async () => {
       await expect(getBusDiagramModel({ id: 9999 })).rejects.toThrow();
+    });
+
+    test('should rollback diagram model creation if seat models creation fails', async () => {
+      // Get initial count of diagram models
+      const initialDiagramModels = await listBusDiagramModels();
+      const initialCount = initialDiagramModels.busDiagramModels.length;
+
+      // Mock the seat model use case to fail
+      const originalCreateSeatModels =
+        busSeatModelUseCases.createSeatModelsFromDiagramModel;
+
+      // Replace the method with a mock that throws an error
+      busSeatModelUseCases.createSeatModelsFromDiagramModel = vi
+        .fn()
+        .mockRejectedValue(new Error('Seat models creation failed'));
+
+      try {
+        // Attempt to create a diagram model - this should fail and rollback
+        await createBusDiagramModel(testBusDiagramModel);
+
+        // If we reach here, the test should fail
+        expect('Transaction should have failed').toBe(false);
+      } catch (error) {
+        // Expected error
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toBe('Seat models creation failed');
+      } finally {
+        // Restore the original method
+        busSeatModelUseCases.createSeatModelsFromDiagramModel =
+          originalCreateSeatModels;
+      }
+
+      // Verify that no new diagram model was created (transaction was rolled back)
+      const finalDiagramModels = await listBusDiagramModels();
+      expect(finalDiagramModels.busDiagramModels).toHaveLength(initialCount);
     });
 
     // NOTE: We are not testing validation errors because they're handled by Encore's rust runtime

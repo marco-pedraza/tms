@@ -1,5 +1,5 @@
 {
-  "id": "44649379-ff5f-41a7-a537-467bb428c724",
+  "id": "9b0d7971-d78a-472a-9069-2c4a72c34208",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -669,6 +669,136 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.bus_seat_models": {
+      "name": "bus_seat_models",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "bus_diagram_model_id": {
+          "name": "bus_diagram_model_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "seat_number": {
+          "name": "seat_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "floor_number": {
+          "name": "floor_number",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "seat_type": {
+          "name": "seat_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amenities": {
+          "name": "amenities",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "reclinement_angle": {
+          "name": "reclinement_angle",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "position": {
+          "name": "position",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "meta": {
+          "name": "meta",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bus_seat_models_bus_diagram_model_id_index": {
+          "name": "bus_seat_models_bus_diagram_model_id_index",
+          "columns": [
+            {
+              "expression": "bus_diagram_model_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bus_seat_models_bus_diagram_model_id_bus_diagram_models_id_fk": {
+          "name": "bus_seat_models_bus_diagram_model_id_bus_diagram_models_id_fk",
+          "tableFrom": "bus_seat_models",
+          "tableTo": "bus_diagram_models",
+          "columnsFrom": [
+            "bus_diagram_model_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "bus_seat_models_bus_diagram_model_id_seat_number_unique": {
+          "name": "bus_seat_models_bus_diagram_model_id_seat_number_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "bus_diagram_model_id",
+            "seat_number"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.bus_seats": {
       "name": "bus_seats",
       "schema": "",
@@ -780,7 +910,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -3178,6 +3308,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": true
+        },
+        "is_modified": {
+          "name": "is_modified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "active": {
           "name": "active",

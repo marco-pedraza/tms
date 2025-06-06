@@ -141,6 +141,7 @@ export namespace inventory {
             this.getAvailableBuses = this.getAvailableBuses.bind(this)
             this.getBus = this.getBus.bind(this)
             this.getBusDiagramModel = this.getBusDiagramModel.bind(this)
+            this.getBusDiagramModelSeats = this.getBusDiagramModelSeats.bind(this)
             this.getBusDiagramModelZone = this.getBusDiagramModelZone.bind(this)
             this.getBusLine = this.getBusLine.bind(this)
             this.getBusModel = this.getBusModel.bind(this)
@@ -246,6 +247,7 @@ export namespace inventory {
             this.updatePathway = this.updatePathway.bind(this)
             this.updatePathwayService = this.updatePathwayService.bind(this)
             this.updatePathwayServiceAssignment = this.updatePathwayServiceAssignment.bind(this)
+            this.updateSeatConfiguration = this.updateSeatConfiguration.bind(this)
             this.updateSeatDiagram = this.updateSeatDiagram.bind(this)
             this.updateSeatDiagramZone = this.updateSeatDiagramZone.bind(this)
             this.updateServiceType = this.updateServiceType.bind(this)
@@ -869,6 +871,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/bus-diagram-models/${encodeURIComponent(id)}`)
             return await resp.json() as bus_diagram_models.BusDiagramModel
+        }
+
+        /**
+         * Retrieves all seat models for a specific bus diagram model.
+         * @param params - Object containing the bus diagram model ID
+         * @param params.id - The ID of the bus diagram model to get seats for
+         * @returns {Promise<BusSeatModels>} Object containing array of seat models
+         * @throws {APIError} If retrieval fails or the bus diagram model doesn't exist
+         */
+        public async getBusDiagramModelSeats(id: number): Promise<bus_seat_models.BusSeatModels> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/bus-diagram-models/${encodeURIComponent(id)}/seats`)
+            return await resp.json() as bus_seat_models.BusSeatModels
         }
 
         /**
@@ -3259,6 +3274,25 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PATCH", `/pathway-service-assignments/${encodeURIComponent(id)}`, JSON.stringify(params))
             return await resp.json() as pathway_service_assignments.PathwayServiceAssignment
+        }
+
+        /**
+         * Updates the seat configuration of a template seat layout in a single batch operation.
+         * @param params - Object containing the bus diagram model ID and seat configurations
+         * @param params.id - The ID of the bus diagram model to update
+         * @param params.seats - Array of seat configurations to update/create/deactivate
+         * @returns {Promise<UpdatedSeatConfiguration>} Statistics about the update operation and updated seat models
+         * @throws {APIError} If the update fails, validation fails, or the bus diagram model doesn't exist
+         */
+        public async updateSeatConfiguration(id: number, params: {
+    /**
+     * Array of space configurations to update/create/deactivate
+     */
+    seats: bus_seat_models.SeatConfigurationInput[]
+}): Promise<bus_seat_models.UpdatedSeatConfiguration> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/bus-diagram-models/${encodeURIComponent(id)}/update-seats`, JSON.stringify(params))
+            return await resp.json() as bus_seat_models.UpdatedSeatConfiguration
         }
 
         /**
@@ -5802,6 +5836,366 @@ export namespace bus_models {
     export interface PaginatedBusModels {
         data: BusModel[]
         pagination: shared.PaginationMeta
+    }
+}
+
+export namespace bus_seat_models {
+    export interface BathroomBusSeatModel {
+        /**
+         * Type of space
+         */
+        spaceType: "bathroom"
+
+        /**
+         * Unique identifier for the bus seat model
+         */
+        id: number
+
+        /**
+         * Bus diagram model ID (reference to bus_diagram_models)
+         */
+        busDiagramModelId: number
+
+        /**
+         * Floor number
+         */
+        floorNumber: number
+
+        /**
+         * Seat amenities (primarily for SEAT space types)
+         */
+        amenities: string[]
+
+        /**
+         * Position coordinates in the bus layout
+         */
+        position: SeatPosition
+
+        /**
+         * Additional metadata for the space (flexible JSON structure)
+         */
+        meta: { [key: string]: any }
+
+        /**
+         * Whether the space model is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the space model was created
+         */
+        createdAt: string
+
+        /**
+         * Timestamp when the space model was last updated
+         */
+        updatedAt: string
+    }
+
+    export type BusSeatModel = SeatBusSeatModel | HallwayBusSeatModel | BathroomBusSeatModel | EmptyBusSeatModel | StairsBusSeatModel
+
+    export interface BusSeatModels {
+        /**
+         * List of bus seat models
+         */
+        busSeatModels: BusSeatModel[]
+    }
+
+    export interface EmptyBusSeatModel {
+        /**
+         * Type of space
+         */
+        spaceType: "empty"
+
+        /**
+         * Unique identifier for the bus seat model
+         */
+        id: number
+
+        /**
+         * Bus diagram model ID (reference to bus_diagram_models)
+         */
+        busDiagramModelId: number
+
+        /**
+         * Floor number
+         */
+        floorNumber: number
+
+        /**
+         * Seat amenities (primarily for SEAT space types)
+         */
+        amenities: string[]
+
+        /**
+         * Position coordinates in the bus layout
+         */
+        position: SeatPosition
+
+        /**
+         * Additional metadata for the space (flexible JSON structure)
+         */
+        meta: { [key: string]: any }
+
+        /**
+         * Whether the space model is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the space model was created
+         */
+        createdAt: string
+
+        /**
+         * Timestamp when the space model was last updated
+         */
+        updatedAt: string
+    }
+
+    export interface HallwayBusSeatModel {
+        /**
+         * Type of space
+         */
+        spaceType: "hallway"
+
+        /**
+         * Unique identifier for the bus seat model
+         */
+        id: number
+
+        /**
+         * Bus diagram model ID (reference to bus_diagram_models)
+         */
+        busDiagramModelId: number
+
+        /**
+         * Floor number
+         */
+        floorNumber: number
+
+        /**
+         * Seat amenities (primarily for SEAT space types)
+         */
+        amenities: string[]
+
+        /**
+         * Position coordinates in the bus layout
+         */
+        position: SeatPosition
+
+        /**
+         * Additional metadata for the space (flexible JSON structure)
+         */
+        meta: { [key: string]: any }
+
+        /**
+         * Whether the space model is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the space model was created
+         */
+        createdAt: string
+
+        /**
+         * Timestamp when the space model was last updated
+         */
+        updatedAt: string
+    }
+
+    export interface SeatBusSeatModel {
+        /**
+         * Type of space
+         */
+        spaceType: "seat"
+
+        /**
+         * Seat number (required for SEAT space types)
+         */
+        seatNumber: string
+
+        /**
+         * Type of seat (required for SEAT space types)
+         */
+        seatType: shared.SeatType
+
+        /**
+         * Angle of reclinement in degrees (only for SEAT space types)
+         */
+        reclinementAngle?: number
+
+        /**
+         * Unique identifier for the bus seat model
+         */
+        id: number
+
+        /**
+         * Bus diagram model ID (reference to bus_diagram_models)
+         */
+        busDiagramModelId: number
+
+        /**
+         * Floor number
+         */
+        floorNumber: number
+
+        /**
+         * Seat amenities (primarily for SEAT space types)
+         */
+        amenities: string[]
+
+        /**
+         * Position coordinates in the bus layout
+         */
+        position: SeatPosition
+
+        /**
+         * Additional metadata for the space (flexible JSON structure)
+         */
+        meta: { [key: string]: any }
+
+        /**
+         * Whether the space model is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the space model was created
+         */
+        createdAt: string
+
+        /**
+         * Timestamp when the space model was last updated
+         */
+        updatedAt: string
+    }
+
+    export interface SeatConfigurationInput {
+        /**
+         * Type of space (seat, stairs, hallway, etc.)
+         * @default SpaceType.SEAT
+         */
+        spaceType?: shared.SpaceType
+
+        /**
+         * Seat number (e.g., "1A", "2B") - required only for SEAT space types
+         */
+        seatNumber?: string
+
+        /**
+         * Floor number (required for space identification)
+         * @default 1
+         */
+        floorNumber: number
+
+        /**
+         * Type of seat (only applicable for SEAT space types)
+         * @default SeatType.REGULAR
+         */
+        seatType?: shared.SeatType
+
+        /**
+         * Space amenities
+         * @default []
+         */
+        amenities?: string[]
+
+        /**
+         * Angle of reclinement in degrees (only for SEAT space types)
+         */
+        reclinementAngle?: number
+
+        /**
+         * Position coordinates in the bus layout (required for space identification)
+         */
+        position: SeatPosition
+
+        /**
+         * Whether the space is active
+         * @default true
+         */
+        active?: boolean
+    }
+
+    export interface SeatPosition {
+        x: number
+        y: number
+    }
+
+    export interface StairsBusSeatModel {
+        /**
+         * Type of space
+         */
+        spaceType: "stairs"
+
+        /**
+         * Unique identifier for the bus seat model
+         */
+        id: number
+
+        /**
+         * Bus diagram model ID (reference to bus_diagram_models)
+         */
+        busDiagramModelId: number
+
+        /**
+         * Floor number
+         */
+        floorNumber: number
+
+        /**
+         * Seat amenities (primarily for SEAT space types)
+         */
+        amenities: string[]
+
+        /**
+         * Position coordinates in the bus layout
+         */
+        position: SeatPosition
+
+        /**
+         * Additional metadata for the space (flexible JSON structure)
+         */
+        meta: { [key: string]: any }
+
+        /**
+         * Whether the space model is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the space model was created
+         */
+        createdAt: string
+
+        /**
+         * Timestamp when the space model was last updated
+         */
+        updatedAt: string
+    }
+
+    export interface UpdatedSeatConfiguration {
+        /**
+         * Number of spaces created
+         */
+        seatsCreated: number
+
+        /**
+         * Number of spaces updated
+         */
+        seatsUpdated: number
+
+        /**
+         * Number of spaces deactivated
+         */
+        seatsDeactivated: number
+
+        /**
+         * Total number of active seats (SEAT space types only)
+         */
+        totalActiveSeats: number
     }
 }
 
@@ -8796,6 +9190,8 @@ export namespace shared {
     }
 
     export type SeatType = "regular" | "premium" | "vip" | "business" | "executive"
+
+    export type SpaceType = "seat" | "hallway" | "bathroom" | "empty" | "stairs"
 }
 
 export namespace states {

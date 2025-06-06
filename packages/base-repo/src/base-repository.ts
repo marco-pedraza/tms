@@ -367,6 +367,25 @@ export const createBaseRepository = <
   };
 
   /**
+   * Counts entities in the table with optional filters
+   * @param {QueryOptions<T>} options - Additional options for the query
+   * @param {Record<string, unknown>} [options.filters] - Simple equality filters to apply
+   * @returns {Promise<number>} The count of entities matching the filters
+   */
+  const countAll = async (
+    options?: QueryOptions<T, TTable>,
+  ): Promise<number> => {
+    try {
+      let countQuery = db.select({ count: count() }).from(table);
+      countQuery = applySimpleFilters(countQuery, table, options?.filters);
+      const [countResult] = await countQuery;
+      return Number(countResult?.count ?? 0);
+    } catch (error) {
+      throw handlePostgresError(error, entityName, 'countAll');
+    }
+  };
+
+  /**
    * Validates that a set of fields have unique values in the table
    * @param {UniqueFieldConfig<TTable>[]} fields - Array of field configurations to validate
    * @param {number} [excludeId] - Optional ID to exclude from the validation
@@ -671,6 +690,7 @@ export const createBaseRepository = <
     findBy,
     findByPaginated,
     existsBy,
+    countAll,
     validateUniqueness,
     validateRelationExists,
     transaction,

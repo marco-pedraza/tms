@@ -186,6 +186,7 @@ export interface BaseRepository<
     value: T[K],
     excludeId?: number,
   ): Promise<boolean>;
+  countAll(options?: QueryOptions<T, TTable>): Promise<number>;
   validateUniqueness(
     fields: UniqueFieldConfig<TTable>[],
     excludeId?: number,

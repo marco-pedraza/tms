@@ -34,17 +34,19 @@ export function createBusSeatRepository() {
   }
 
   /**
-   * Creates multiple bus seats in a batch
+   * Creates multiple bus seats in a single batch insert operation
    * @param data - Array of bus seat data to create
    * @returns {Promise<BusSeats>} Object containing array of created bus seats
    */
   function createBatch(data: CreateBusSeatPayload[]): Promise<BusSeats> {
-    return baseRepository.transaction(async (txRepo) => {
-      const createdSeats = await Promise.all(
-        data.map((seatData) => txRepo.create(seatData)),
-      );
+    return baseRepository.transaction(async (txRepo, tx) => {
+      // Cast to the expected schema type for batch insert
+      const createdSeats = await tx
+        .insert(busSeats)
+        .values(data as (typeof busSeats.$inferInsert)[])
+        .returning();
 
-      return { busSeats: createdSeats };
+      return { busSeats: createdSeats as BusSeat[] };
     });
   }
 

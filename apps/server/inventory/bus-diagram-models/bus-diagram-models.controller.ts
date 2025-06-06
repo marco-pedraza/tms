@@ -1,6 +1,12 @@
 import { api } from 'encore.dev/api';
 import { PaginationParams } from '../../shared/types';
 import {
+  UpdateSeatConfigurationPayload,
+  UpdatedSeatConfiguration,
+} from '../bus-seat-models/bus-seat-models.types';
+import { BusSeatModels } from '../bus-seat-models/bus-seat-models.types';
+import { busSeatModelUseCases } from '../bus-seat-models/bus-seat-models.use-cases';
+import {
   BusDiagramModel,
   BusDiagramModels,
   CreateBusDiagramModelPayload,
@@ -97,5 +103,39 @@ export const deleteBusDiagramModel = api(
   { expose: true, method: 'DELETE', path: '/bus-diagram-models/:id' },
   async ({ id }: { id: number }): Promise<BusDiagramModel> => {
     return await busDiagramModelRepository.delete(id);
+  },
+);
+
+/**
+ * Updates the seat configuration of a template seat layout in a single batch operation.
+ * @param params - Object containing the bus diagram model ID and seat configurations
+ * @param params.id - The ID of the bus diagram model to update
+ * @param params.seats - Array of seat configurations to update/create/deactivate
+ * @returns {Promise<UpdatedSeatConfiguration>} Statistics about the update operation and updated seat models
+ * @throws {APIError} If the update fails, validation fails, or the bus diagram model doesn't exist
+ */
+export const updateSeatConfiguration = api(
+  { expose: true, method: 'PUT', path: '/bus-diagram-models/:id/update-seats' },
+  async ({
+    id,
+    seats,
+  }: {
+    id: number;
+  } & UpdateSeatConfigurationPayload): Promise<UpdatedSeatConfiguration> => {
+    return await busSeatModelUseCases.batchUpdateSeatConfiguration(id, seats);
+  },
+);
+
+/**
+ * Retrieves all seat models for a specific bus diagram model.
+ * @param params - Object containing the bus diagram model ID
+ * @param params.id - The ID of the bus diagram model to get seats for
+ * @returns {Promise<BusSeatModels>} Object containing array of seat models
+ * @throws {APIError} If retrieval fails or the bus diagram model doesn't exist
+ */
+export const getBusDiagramModelSeats = api(
+  { expose: true, method: 'GET', path: '/bus-diagram-models/:id/seats' },
+  async ({ id }: { id: number }): Promise<BusSeatModels> => {
+    return await busDiagramModelUseCases.getBusDiagramModelSeats(id);
   },
 );

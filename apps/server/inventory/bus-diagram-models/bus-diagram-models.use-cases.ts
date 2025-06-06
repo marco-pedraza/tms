@@ -1,3 +1,5 @@
+import { busSeatModelRepository } from '../bus-seat-models/bus-seat-models.repository';
+import type { BusSeatModels } from '../bus-seat-models/bus-seat-models.types';
 import { busSeatModelUseCases } from '../bus-seat-models/bus-seat-models.use-cases';
 import type {
   BusDiagramModel,
@@ -42,8 +44,38 @@ export function createBusDiagramModelUseCases() {
       });
   }
 
+  /**
+   * Retrieves all seat models for a specific bus diagram model.
+   * This operation coordinates multiple repositories and applies business rules
+   * such as filtering only active seats and proper ordering.
+   * @param diagramModelId - The ID of the bus diagram model to get seats for
+   * @returns {Promise<BusSeatModels>} Object containing array of seat models
+   * @throws {NotFoundError} If the bus diagram model doesn't exist
+   * @throws {ValidationError} If retrieval fails
+   */
+  async function getBusDiagramModelSeats(
+    diagramModelId: number,
+  ): Promise<BusSeatModels> {
+    // Verify the diagram model exists first
+    await busDiagramModelRepository.findOne(diagramModelId);
+
+    // Get all seat models for this diagram model with business rules applied
+    const seatModels = await busSeatModelRepository.findAll({
+      filters: {
+        busDiagramModelId: diagramModelId,
+        active: true, // Only active seats
+      },
+      orderBy: [{ field: 'seatNumber', direction: 'asc' }], // Ordered by seat number
+    });
+
+    return {
+      busSeatModels: seatModels,
+    };
+  }
+
   return {
     createBusDiagramModelWithSeats,
+    getBusDiagramModelSeats,
   };
 }
 

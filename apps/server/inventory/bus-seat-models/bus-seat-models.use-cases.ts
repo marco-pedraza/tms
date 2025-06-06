@@ -1,156 +1,28 @@
 import type { TransactionalDB } from '@repo/base-repo';
-import { ValidationError } from '../../shared/errors';
-import { FloorSeats, SeatType } from '../../shared/types';
+import { SpaceType } from '../../shared/types';
 import { busDiagramModelRepository } from '../bus-diagram-models/bus-diagram-models.repository';
+import type { BusDiagramModel } from '../bus-diagram-models/bus-diagram-models.types';
 import { busSeatModels } from './bus-seat-models.schema';
-import { CreateBusSeatModelPayload } from './bus-seat-models.types';
+import {
+  BusSeatModel,
+  SeatConfigurationInput,
+  UpdatedSeatConfiguration,
+} from './bus-seat-models.types';
 import { busSeatModelRepository } from './bus-seat-models.repository';
-
-// Constants for default values
-const DEFAULT_NUM_ROWS = 10;
-const DEFAULT_SEAT_TYPE = SeatType.REGULAR;
-const DEFAULT_AMENITIES: string[] = [];
-const DEFAULT_RECLINEMENT_ANGLE = 120;
-const DEFAULT_IS_ACTIVE = true;
-const INITIAL_SEAT_NUMBER_COUNTER = 1;
-
-// Domain-specific error messages
-const BUS_SEAT_MODEL_ERRORS = {
-  INVALID_FLOOR_CONFIG: 'Invalid seatsPerFloor configuration',
-} as const;
+import {
+  createNewSeatPayload,
+  createPositionKey,
+  createSeatUpdateData,
+  generateAllSeatModels,
+  needsSeatUpdate,
+  validateSeatConfigurationPayload,
+} from './bus-seat-models.domain';
 
 /**
  * Creates the bus seat model use cases
  * @returns Object with use case functions
  */
 export function createBusSeatModelUseCases() {
-  /**
-   * Gets floor seat configuration or provides defaults
-   * @param seatsPerFloor - The seatsPerFloor array from the bus diagram model
-   * @param floorNum - The floor number to get configuration for
-   * @returns FloorSeats with configuration for the specified floor
-   */
-  function getFloorConfig(
-    seatsPerFloor: FloorSeats[],
-    floorNum: number,
-  ): FloorSeats {
-    // Try to find floor-specific configuration
-    const config = seatsPerFloor.find(
-      (config) => config.floorNumber === floorNum,
-    );
-    if (!config) {
-      // Return default configuration if not found
-      return {
-        floorNumber: floorNum,
-        numRows: DEFAULT_NUM_ROWS,
-        seatsLeft: 2,
-        seatsRight: 2,
-      };
-    }
-    return config;
-  }
-
-  /**
-   * Creates seat model payload for storing in the database
-   * @param busDiagramModelId - Bus diagram model ID
-   * @param seatNumber - Seat number
-   * @param floorNumber - Floor number
-   * @param rowIndex - Row index (0-based)
-   * @param colIndex - Column index (0-based)
-   * @param rowLength - Total length of the row
-   * @returns CreateBusSeatModelPayload object
-   */
-  function createSeatModelPayload(
-    busDiagramModelId: number,
-    seatNumber: string,
-    floorNumber: number,
-    rowIndex: number,
-    colIndex: number,
-    rowLength: number,
-  ): CreateBusSeatModelPayload {
-    const rowNumber = rowIndex + 1; // Convert to 1-based row number
-
-    return {
-      busDiagramModelId,
-      seatNumber,
-      floorNumber,
-      seatType: DEFAULT_SEAT_TYPE,
-      amenities: DEFAULT_AMENITIES,
-      position: {
-        x: colIndex,
-        y: rowNumber,
-      },
-      meta: {
-        rowIndex,
-        colIndex,
-        isWindow: colIndex === 0 || colIndex === rowLength - 1,
-        isLegroom: rowIndex === 0,
-        created: new Date().toISOString(),
-      },
-      active: DEFAULT_IS_ACTIVE,
-      reclinementAngle: DEFAULT_RECLINEMENT_ANGLE,
-    };
-  }
-
-  /**
-   * Generates seat model payloads for a single floor
-   * @param busDiagramModelId - Bus diagram model ID
-   * @param floorConfig - Floor configuration
-   * @param seatNumberCounter - Current seat number counter (will be modified)
-   * @returns [Array of seat model payloads, updated seat counter]
-   */
-  function generateFloorSeatModels(
-    busDiagramModelId: number,
-    floorConfig: FloorSeats,
-    seatNumberCounter: number,
-  ): [CreateBusSeatModelPayload[], number] {
-    const seatModels: CreateBusSeatModelPayload[] = [];
-    let currentSeatCounter = seatNumberCounter;
-
-    // Calculate total width of row (left seats + aisle + right seats)
-    const rowWidth = floorConfig.seatsLeft + 1 + floorConfig.seatsRight;
-
-    // Generate seats for each row
-    for (let rowIndex = 0; rowIndex < floorConfig.numRows; rowIndex++) {
-      // Generate left side seats
-      for (let leftSeat = 0; leftSeat < floorConfig.seatsLeft; leftSeat++) {
-        const seatNumber = String(currentSeatCounter++);
-        const colIndex = leftSeat;
-
-        seatModels.push(
-          createSeatModelPayload(
-            busDiagramModelId,
-            seatNumber,
-            floorConfig.floorNumber,
-            rowIndex,
-            colIndex,
-            rowWidth,
-          ),
-        );
-      }
-
-      // Skip the aisle (middle position)
-      // Generate right side seats
-      for (let rightSeat = 0; rightSeat < floorConfig.seatsRight; rightSeat++) {
-        const seatNumber = String(currentSeatCounter++);
-        const colIndex = floorConfig.seatsLeft + 1 + rightSeat; // +1 for aisle
-
-        seatModels.push(
-          createSeatModelPayload(
-            busDiagramModelId,
-            seatNumber,
-            floorConfig.floorNumber,
-            rowIndex,
-            colIndex,
-            rowWidth,
-          ),
-        );
-      }
-    }
-
-    return [seatModels, currentSeatCounter];
-  }
-
   /**
    * Creates seat models from a bus diagram model configuration within a transaction
    * This method is designed to be called from within an existing transaction to ensure
@@ -166,41 +38,25 @@ export function createBusSeatModelUseCases() {
     busDiagramModelId: number,
     tx: TransactionalDB,
   ): Promise<number> {
-    // Create transaction-scoped repositories
-    const txSeatRepo = busSeatModelRepository.withTransaction(tx);
+    // Create transaction-scoped repository for diagram models
     const txDiagramRepo = busDiagramModelRepository.withTransaction(tx);
 
     // Get the bus diagram model using transaction-scoped repository
     const diagramModel = await txDiagramRepo.findOne(busDiagramModelId);
-    const seatsPerFloor = diagramModel.seatsPerFloor as FloorSeats[];
-    const allSeatModels: CreateBusSeatModelPayload[] = [];
-    let seatNumberCounter = INITIAL_SEAT_NUMBER_COUNTER;
 
-    // Generate seat models for each floor
-    for (let floorNum = 1; floorNum <= diagramModel.numFloors; floorNum++) {
-      const floorConfig = getFloorConfig(seatsPerFloor, floorNum);
+    // Generate all seat models using the domain function
+    const allSeatModels = generateAllSeatModels(
+      diagramModel,
+      busDiagramModelId,
+    );
 
-      const [floorSeatModels, updatedCounter] = generateFloorSeatModels(
-        busDiagramModelId,
-        floorConfig,
-        seatNumberCounter,
-      );
+    // Create all seat models using batch insert for better performance
+    const createdSeatModels = await tx
+      .insert(busSeatModels)
+      .values(allSeatModels)
+      .returning();
 
-      allSeatModels.push(...floorSeatModels);
-      seatNumberCounter = updatedCounter;
-    }
-
-    // Create all seat models using the transaction-scoped repository
-    if (allSeatModels.length > 0) {
-      const createdSeatModels = await Promise.all(
-        allSeatModels.map(
-          async (seatModelData) => await txSeatRepo.create(seatModelData),
-        ),
-      );
-      return createdSeatModels.length;
-    } else {
-      throw new ValidationError(BUS_SEAT_MODEL_ERRORS.INVALID_FLOOR_CONFIG);
-    }
+    return createdSeatModels.length;
   }
 
   /**
@@ -231,41 +87,196 @@ export function createBusSeatModelUseCases() {
       // Get the bus diagram model using transaction-scoped repository
       const diagramModel =
         await txBusDiagramModelRepo.findOne(busDiagramModelId);
-      const seatsPerFloor = diagramModel.seatsPerFloor as FloorSeats[];
-      const allSeatModels: CreateBusSeatModelPayload[] = [];
-      let seatNumberCounter = INITIAL_SEAT_NUMBER_COUNTER;
 
-      // Generate seat models for each floor
-      for (let floorNum = 1; floorNum <= diagramModel.numFloors; floorNum++) {
-        const floorConfig = getFloorConfig(seatsPerFloor, floorNum);
+      // Generate all seat models using the domain function
+      const allSeatModels = generateAllSeatModels(
+        diagramModel,
+        busDiagramModelId,
+      );
 
-        const [floorSeatModels, updatedCounter] = generateFloorSeatModels(
+      // Create new seat models using batch insert for better performance
+      const createdSeatModels = await tx
+        .insert(busSeatModels)
+        .values(allSeatModels)
+        .returning();
+
+      return createdSeatModels.length;
+    });
+  }
+
+  /**
+   * Processes a single incoming seat configuration (create or update)
+   * @param incomingSeat - Incoming seat configuration
+   * @param existingSeat - Existing seat model (if any)
+   * @param busDiagramModelId - Bus diagram model ID
+   * @param diagramModel - Bus diagram model for meta calculations
+   * @param txRepo - Transaction repository
+   * @returns Promise with processing result
+   */
+  async function processIncomingSeatConfiguration(
+    incomingSeat: SeatConfigurationInput & { seatKey: string },
+    existingSeat: BusSeatModel | undefined,
+    busDiagramModelId: number,
+    diagramModel: BusDiagramModel,
+    txRepo: ReturnType<typeof busSeatModelRepository.withTransaction>,
+  ): Promise<{ created: boolean; updated: boolean }> {
+    if (!existingSeat) {
+      // Create new space (seat, stairs, hallway, etc.)
+      const newSeatPayload = createNewSeatPayload(
+        incomingSeat,
+        busDiagramModelId,
+        diagramModel,
+      );
+      await txRepo.create(newSeatPayload);
+      return { created: true, updated: false };
+    } else {
+      // Check if update is needed using the helper function
+      const incomingSpaceType = incomingSeat.spaceType ?? SpaceType.SEAT;
+      const needsUpdate = needsSeatUpdate(
+        incomingSpaceType,
+        incomingSeat,
+        existingSeat,
+      );
+
+      if (needsUpdate) {
+        const updateData = createSeatUpdateData(
+          incomingSpaceType,
+          incomingSeat,
+          existingSeat,
+          diagramModel,
+        );
+
+        await txRepo.update(existingSeat.id, updateData);
+        return { created: false, updated: true };
+      }
+
+      return { created: false, updated: false };
+    }
+  }
+
+  /**
+   * Deactivates seats that are not present in the incoming configuration
+   * @param existingSeats - Array of existing seat models
+   * @param incomingSeatKeys - Set of position keys from incoming configuration
+   * @param txRepo - Transaction repository
+   * @returns Promise with number of seats deactivated
+   */
+  async function deactivateUnusedSeats(
+    existingSeats: BusSeatModel[],
+    incomingSeatKeys: Set<string>,
+    txRepo: ReturnType<typeof busSeatModelRepository.withTransaction>,
+  ): Promise<number> {
+    let seatsDeactivated = 0;
+
+    for (const existingSeat of existingSeats) {
+      const key = createPositionKey(
+        existingSeat.floorNumber,
+        existingSeat.position,
+      );
+      if (!incomingSeatKeys.has(key) && existingSeat.active) {
+        await txRepo.update(existingSeat.id, { active: false });
+        seatsDeactivated++;
+      }
+    }
+
+    return seatsDeactivated;
+  }
+
+  /**
+   * Updates seat configuration of a template seat layout in a single batch operation
+   * @param busDiagramModelId - The ID of the bus diagram model to update
+   * @param seatConfigurations - Array of seat configurations to process
+   * @returns Promise with statistics about the update operation
+   * @throws {ValidationError} If validation fails
+   */
+  async function batchUpdateSeatConfiguration(
+    busDiagramModelId: number,
+    seatConfigurations: SeatConfigurationInput[],
+  ): Promise<UpdatedSeatConfiguration> {
+    return await busSeatModelRepository.transaction(async (txRepo, tx) => {
+      // Create transaction-scoped repositories
+      const txDiagramRepo = busDiagramModelRepository.withTransaction(tx);
+
+      // Validate bus diagram model exists
+      const diagramModel = await txDiagramRepo.findOne(busDiagramModelId);
+
+      // Get existing seat models
+      const existingSeats = await txRepo.findAllBy(
+        busSeatModels.busDiagramModelId,
+        busDiagramModelId,
+      );
+
+      // Validate payload including position limits
+      validateSeatConfigurationPayload(seatConfigurations, diagramModel);
+
+      // Create lookup maps for processing
+      const existingSeatMap = new Map<string, BusSeatModel>();
+      existingSeats.forEach((seat) => {
+        const key = createPositionKey(seat.floorNumber, seat.position);
+        existingSeatMap.set(key, seat);
+      });
+
+      // Build incoming seat map for processing
+      const incomingSeatKeys = new Set<string>();
+      const incomingSeats = seatConfigurations.map((config) => {
+        const key = createPositionKey(config.floorNumber, config.position);
+        incomingSeatKeys.add(key);
+
+        return { ...config, seatKey: key };
+      });
+
+      let seatsCreated = 0;
+      let seatsUpdated = 0;
+
+      // Process each incoming seat configuration
+      for (const incomingSeat of incomingSeats) {
+        const existingSeat = existingSeatMap.get(incomingSeat.seatKey);
+
+        const result = await processIncomingSeatConfiguration(
+          incomingSeat,
+          existingSeat,
           busDiagramModelId,
-          floorConfig,
-          seatNumberCounter,
+          diagramModel,
+          txRepo,
         );
 
-        allSeatModels.push(...floorSeatModels);
-        seatNumberCounter = updatedCounter;
+        if (result.created) seatsCreated++;
+        if (result.updated) seatsUpdated++;
       }
 
-      // Create new seat models using the transaction-scoped repository
-      if (allSeatModels.length > 0) {
-        const createdSeatModels = await Promise.all(
-          allSeatModels.map(
-            async (seatModelData) => await txRepo.create(seatModelData),
-          ),
-        );
-        return createdSeatModels.length;
-      } else {
-        throw new ValidationError(BUS_SEAT_MODEL_ERRORS.INVALID_FLOOR_CONFIG);
-      }
+      // Deactivate seats not in payload
+      const seatsDeactivated = await deactivateUnusedSeats(
+        existingSeats,
+        incomingSeatKeys,
+        txRepo,
+      );
+
+      // Update diagram model with new total seats count (only SEAT space types)
+      const totalActiveSeats = await txRepo.countAll({
+        filters: {
+          busDiagramModelId,
+          active: true,
+          spaceType: SpaceType.SEAT,
+        },
+      });
+
+      await txDiagramRepo.update(diagramModel.id, {
+        totalSeats: totalActiveSeats,
+      });
+
+      return {
+        seatsCreated,
+        seatsUpdated,
+        seatsDeactivated,
+        totalActiveSeats,
+      };
     });
   }
 
   return {
     createSeatModelsFromDiagramModel,
     regenerateSeatModels,
+    batchUpdateSeatConfiguration,
   };
 }
 

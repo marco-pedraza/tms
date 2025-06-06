@@ -80,3 +80,16 @@ export enum SeatType {
   BUSINESS = 'business',
   EXECUTIVE = 'executive',
 }
+
+/**
+ * Enum for space types
+ * This is a shared Value Object used across multiple bounded contexts:
+ * - bus-seat-models
+ */
+export enum SpaceType {
+  SEAT = 'seat',
+  HALLWAY = 'hallway',
+  BATHROOM = 'bathroom',
+  EMPTY = 'empty',
+  STAIRS = 'stairs',
+}

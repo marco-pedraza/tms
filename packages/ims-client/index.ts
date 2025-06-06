@@ -222,6 +222,7 @@ export namespace inventory {
             this.searchDriversPaginated = this.searchDriversPaginated.bind(this)
             this.searchRoutes = this.searchRoutes.bind(this)
             this.searchRoutesPaginated = this.searchRoutesPaginated.bind(this)
+            this.searchServiceTypes = this.searchServiceTypes.bind(this)
             this.searchStates = this.searchStates.bind(this)
             this.searchStatesPaginated = this.searchStatesPaginated.bind(this)
             this.searchTerminals = this.searchTerminals.bind(this)
@@ -544,7 +545,7 @@ export namespace inventory {
         }
 
         /**
-         * Creates a new service type
+         * Creates a new service type.
          * @param payload - Service type data to create
          * @returns The newly created service type
          */
@@ -775,7 +776,7 @@ export namespace inventory {
         }
 
         /**
-         * Deletes a service type
+         * Deletes a service type by its ID.
          * @param params - Object containing the service type ID to delete
          * @returns The deleted service type
          */
@@ -1115,7 +1116,7 @@ export namespace inventory {
         }
 
         /**
-         * Gets a service type by ID
+         * Retrieves a service type by its ID.
          * @param params - Object containing the service type ID
          * @returns The requested service type
          */
@@ -1531,29 +1532,24 @@ export namespace inventory {
         }
 
         /**
-         * List service types
+         * Retrieves all service types without pagination (useful for dropdowns).
+         * @param params - Query options for filtering and sorting
          * @returns List of service types
          */
-        public async listServiceTypes(): Promise<service_types.ServiceTypes> {
+        public async listServiceTypes(params: service_types.ServiceTypesQueryOptions): Promise<service_types.ServiceTypes> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/service-types`)
+            const resp = await this.baseClient.callTypedAPI("POST", `/get-service-types`, JSON.stringify(params))
             return await resp.json() as service_types.ServiceTypes
         }
 
         /**
-         * List service types with pagination
-         * @param params - Pagination parameters
+         * Retrieves service types with pagination (useful for tables).
+         * @param params - Pagination and query parameters
          * @returns Paginated list of service types
          */
-        public async listServiceTypesPaginated(params: shared.PaginationParams): Promise<service_types.PaginatedServiceTypes> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:     params.page === undefined ? undefined : String(params.page),
-                pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
-            })
-
+        public async listServiceTypesPaginated(params: service_types.PaginationParamsServiceTypes): Promise<service_types.PaginatedServiceTypes> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/service-types/paginated`, undefined, {query})
+            const resp = await this.baseClient.callTypedAPI("POST", `/get-service-types/paginated`, JSON.stringify(params))
             return await resp.json() as service_types.PaginatedServiceTypes
         }
 
@@ -2160,6 +2156,24 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/routes/search/paginated`, JSON.stringify(params))
             return await resp.json() as routes.PaginatedRoutes
+        }
+
+        /**
+         * Searches for service types by matching a search term against name.
+         * @param params - Search parameters
+         * @returns List of matching service types
+         */
+        public async searchServiceTypes(params: {
+    term: string
+}): Promise<service_types.ServiceTypes> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                term: params.term,
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/service-types/search`, undefined, {query})
+            return await resp.json() as service_types.ServiceTypes
         }
 
         /**
@@ -3331,7 +3345,7 @@ export namespace inventory {
         }
 
         /**
-         * Updates an existing service type
+         * Updates an existing service type.
          * @param params - Object containing ID and update data
          * @returns The updated service type
          */
@@ -8630,6 +8644,24 @@ export namespace service_types {
         pagination: shared.PaginationMeta
     }
 
+    export interface PaginationParamsServiceTypes {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "description" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            description?: string
+            active?: boolean
+            createdAt?: string
+            updatedAt?: string
+        }
+        searchTerm?: string
+    }
+
     export interface ServiceType {
         /**
          * Unique identifier for the service type
@@ -8664,6 +8696,22 @@ export namespace service_types {
 
     export interface ServiceTypes {
         serviceTypes: ServiceType[]
+    }
+
+    export interface ServiceTypesQueryOptions {
+        orderBy?: {
+            field: "id" | "name" | "description" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            description?: string
+            active?: boolean
+            createdAt?: string
+            updatedAt?: string
+        }
+        searchTerm?: string
     }
 }
 
@@ -8720,11 +8768,6 @@ export namespace shared {
          * Whether there is a previous page available
          */
         hasPreviousPage: boolean
-    }
-
-    export interface PaginationParams {
-        page?: number
-        pageSize?: number
     }
 
     export interface PaginationParams {

@@ -1,5 +1,5 @@
 import { MinLen } from 'encore.dev/validate';
-import { PaginatedResult } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '../../shared/types';
 
 /**
  * ServiceType from database
@@ -70,6 +70,22 @@ export interface UpdateServiceTypePayload {
 }
 
 /**
+ * Query options for filtering service types
+ */
+export interface ServiceTypesQueryOptions {
+  orderBy?: { field: keyof ServiceType; direction: 'asc' | 'desc' }[];
+  filters?: Partial<ServiceType>;
+  searchTerm?: string;
+}
+
+/**
  * Paginated ServiceTypes response type
  */
 export type PaginatedServiceTypes = PaginatedResult<ServiceType>;
+
+/**
+ * Pagination parameters for service types with query options
+ */
+export interface PaginationParamsServiceTypes
+  extends PaginationParams,
+    ServiceTypesQueryOptions {}

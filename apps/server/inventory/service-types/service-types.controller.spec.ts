@@ -5,6 +5,7 @@ import {
   getServiceType,
   listServiceTypes,
   listServiceTypesPaginated,
+  searchServiceTypes,
   updateServiceType,
 } from './service-types.controller';
 
@@ -13,7 +14,6 @@ describe('Service Types Controller', () => {
   const testServiceType = {
     name: 'Test Service Type',
     description: 'A service type for testing',
-    code: 'TEST-SVC-01',
     active: true,
   };
 
@@ -71,7 +71,7 @@ describe('Service Types Controller', () => {
     });
 
     test('should retrieve all service types', async () => {
-      const response = await listServiceTypes();
+      const response = await listServiceTypes({});
 
       expect(response).toBeDefined();
       expect(response.serviceTypes).toBeDefined();
@@ -83,6 +83,22 @@ describe('Service Types Controller', () => {
           (serviceType) => serviceType.id === createdServiceTypeId,
         ),
       ).toBe(true);
+    });
+
+    test('should retrieve service types with filters', async () => {
+      const response = await listServiceTypes({
+        filters: { active: true },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
+
+      expect(response).toBeDefined();
+      expect(response.serviceTypes).toBeDefined();
+      expect(Array.isArray(response.serviceTypes)).toBe(true);
+
+      // All returned service types should be active
+      response.serviceTypes.forEach((serviceType) => {
+        expect(serviceType.active).toBe(true);
+      });
     });
 
     test('should retrieve paginated service types', async () => {
@@ -124,6 +140,72 @@ describe('Service Types Controller', () => {
 
       expect(result.data.length).toBeLessThanOrEqual(1);
       expect(result.pagination.pageSize).toBe(1);
+    });
+
+    test('should use search when searchTerm is provided in pagination', async () => {
+      const result = await listServiceTypesPaginated({
+        searchTerm: 'Test Service',
+        page: 1,
+        pageSize: 10,
+      });
+
+      // Check the structure of the response
+      expect(result).toBeDefined();
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.pagination).toBeDefined();
+
+      // Should find our test service type when searching
+      expect(
+        result.data.some(
+          (serviceType) => serviceType.id === createdServiceTypeId,
+        ),
+      ).toBe(true);
+    });
+
+    test('should return different results with and without search term', async () => {
+      // Get all results without search
+      const allResults = await listServiceTypesPaginated({
+        page: 1,
+        pageSize: 100,
+      });
+
+      // Get results with search term
+      const searchResults = await listServiceTypesPaginated({
+        searchTerm: 'Test Service',
+        page: 1,
+        pageSize: 100,
+      });
+
+      // Search results should be a subset of all results (or equal if all match)
+      expect(searchResults.data.length).toBeLessThanOrEqual(
+        allResults.data.length,
+      );
+    });
+
+    test('should search service types by name', async () => {
+      const response = await searchServiceTypes({ term: 'Test Service' });
+
+      expect(response).toBeDefined();
+      expect(response.serviceTypes).toBeDefined();
+      expect(Array.isArray(response.serviceTypes)).toBe(true);
+
+      // Should find our test service type
+      expect(
+        response.serviceTypes.some(
+          (serviceType) => serviceType.id === createdServiceTypeId,
+        ),
+      ).toBe(true);
+    });
+
+    test('should return empty results for non-matching search', async () => {
+      const response = await searchServiceTypes({
+        term: 'NonExistentTerm12345',
+      });
+
+      expect(response).toBeDefined();
+      expect(response.serviceTypes).toBeDefined();
+      expect(Array.isArray(response.serviceTypes)).toBe(true);
+      expect(response.serviceTypes.length).toBe(0);
     });
 
     test('should update a service type', async () => {

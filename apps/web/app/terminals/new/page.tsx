@@ -9,7 +9,6 @@ import useTerminalMutations from '@/terminals/hooks/use-terminal-mutations';
 export default function NewTerminalPage() {
   const { createTerminal } = useTerminalMutations();
   const t = useTranslations('terminals');
-  const tCommon = useTranslations('common');
 
   return (
     <div className="space-y-6">
@@ -19,10 +18,7 @@ export default function NewTerminalPage() {
         backHref={routes.terminals.index}
       />
 
-      <TerminalForm
-        onSubmit={createTerminal.mutateWithToast}
-        submitButtonText={tCommon('actions.create')}
-      />
+      <TerminalForm onSubmit={createTerminal.mutateWithToast} />
     </div>
   );
 }

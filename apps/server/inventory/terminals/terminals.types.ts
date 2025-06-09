@@ -1,20 +1,7 @@
 import { MatchesRegexp, Max, Min, MinLen } from 'encore.dev/validate';
 import { PaginatedResult, PaginationParams } from '../../shared/types';
 import { City } from '../cities/cities.types';
-
-/**
- * Represents a facility available at a terminal
- */
-export interface Facility {
-  /** Name of the facility */
-  name: string;
-
-  /** Description of the facility */
-  description?: string;
-
-  /** Icon or image representing the facility */
-  icon?: string;
-}
+import { Facility } from '../facilities/facilities.types';
 
 /**
  * Represents a time slot for operating hours
@@ -32,25 +19,25 @@ export interface TimeSlot {
  */
 export interface OperatingHours {
   /** Monday opening hours */
-  monday?: TimeSlot[];
+  monday?: TimeSlot;
 
   /** Tuesday opening hours */
-  tuesday?: TimeSlot[];
+  tuesday?: TimeSlot;
 
   /** Wednesday opening hours */
-  wednesday?: TimeSlot[];
+  wednesday?: TimeSlot;
 
   /** Thursday opening hours */
-  thursday?: TimeSlot[];
+  thursday?: TimeSlot;
 
   /** Friday opening hours */
-  friday?: TimeSlot[];
+  friday?: TimeSlot;
 
   /** Saturday opening hours */
-  saturday?: TimeSlot[];
+  saturday?: TimeSlot;
 
   /** Sunday opening hours */
-  sunday?: TimeSlot[];
+  sunday?: TimeSlot;
 }
 
 /**
@@ -79,10 +66,10 @@ export interface Terminal {
   contactphone?: string | null;
 
   /** Operating hours of the terminal */
-  operatingHours?: OperatingHours | unknown;
+  operatingHours?: OperatingHours;
 
   /** List of facilities available at the terminal */
-  facilities?: Facility[] | unknown;
+  facilities?: Facility[];
 
   /** Terminal code (unique identifier) */
   code: string;
@@ -147,7 +134,7 @@ export interface CreateTerminalPayload {
   /**
    * List of facilities available at the terminal
    */
-  facilities?: Facility[];
+  facilityCodes?: string[];
 
   /**
    * Terminal code (unique identifier)
@@ -209,7 +196,7 @@ export interface UpdateTerminalPayload {
   /**
    * List of facilities available at the terminal
    */
-  facilities?: Facility[];
+  facilityCodes?: string[];
 
   /**
    * Terminal code (unique identifier)

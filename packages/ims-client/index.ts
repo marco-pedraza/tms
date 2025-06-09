@@ -152,6 +152,7 @@ export namespace inventory {
             this.getCountry = this.getCountry.bind(this)
             this.getDriver = this.getDriver.bind(this)
             this.getDriverPossibleStatuses = this.getDriverPossibleStatuses.bind(this)
+            this.getFacility = this.getFacility.bind(this)
             this.getGate = this.getGate.bind(this)
             this.getPathway = this.getPathway.bind(this)
             this.getPathwayService = this.getPathwayService.bind(this)
@@ -185,6 +186,7 @@ export namespace inventory {
             this.listDriversByStatus = this.listDriversByStatus.bind(this)
             this.listDriversByTransporter = this.listDriversByTransporter.bind(this)
             this.listDriversPaginated = this.listDriversPaginated.bind(this)
+            this.listFacilities = this.listFacilities.bind(this)
             this.listGates = this.listGates.bind(this)
             this.listGatesPaginated = this.listGatesPaginated.bind(this)
             this.listPathwayServices = this.listPathwayServices.bind(this)
@@ -1014,6 +1016,19 @@ export namespace inventory {
         }
 
         /**
+         * Retrieves a facility by its code.
+         * @param params - Object containing the facility code
+         * @param params.code - The code of the facility to retrieve
+         * @returns {Facility} The found facility
+         * @throws {NotFoundError} If the facility is not found
+         */
+        public async getFacility(code: string): Promise<facilities.Facility> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/facilities/${encodeURIComponent(code)}`)
+            return await resp.json() as facilities.Facility
+        }
+
+        /**
          * Retrieves a gate by its ID.
          * @param params - Object containing the gate ID
          * @param params.id - The ID of the gate to retrieve
@@ -1411,6 +1426,16 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/get-drivers/paginated`, JSON.stringify(params))
             return await resp.json() as drivers.PaginatedDrivers
+        }
+
+        /**
+         * Retrieves all facilities.
+         * @returns {Facilities} An object containing an array of facilities
+         */
+        public async listFacilities(): Promise<facilities.Facilities> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/facilities`)
+            return await resp.json() as facilities.Facilities
         }
 
         /**
@@ -2267,8 +2292,8 @@ export namespace inventory {
         latitude?: number
         longitude?: number
         contactphone?: string | null
-        operatingHours?: terminals.OperatingHours | any
-        facilities?: terminals.Facility[] | any
+        operatingHours?: terminals.OperatingHours
+        facilities?: facilities.Facility[]
         code?: string
         slug?: string
         active?: boolean
@@ -3484,7 +3509,7 @@ export namespace inventory {
     /**
      * List of facilities available at the terminal
      */
-    facilities?: terminals.Facility[]
+    facilityCodes?: string[]
 
     /**
      * Terminal code (unique identifier)
@@ -7679,6 +7704,27 @@ export namespace drivers {
     }
 }
 
+export namespace facilities {
+    export interface Facilities {
+        /**
+         * List of facilities
+         */
+        facilities: Facility[]
+    }
+
+    export interface Facility {
+        /**
+         * Unique code identifier for the facility
+         */
+        code: string
+
+        /**
+         * Name of the facility in Spanish
+         */
+        name: string
+    }
+}
+
 export namespace gates {
     export interface CreateGatePayload {
         /**
@@ -9425,7 +9471,7 @@ export namespace terminals {
         /**
          * List of facilities available at the terminal
          */
-        facilities?: Facility[]
+        facilityCodes?: string[]
 
         /**
          * Terminal code (unique identifier)
@@ -9440,58 +9486,41 @@ export namespace terminals {
         active?: boolean
     }
 
-    export interface Facility {
-        /**
-         * Name of the facility
-         */
-        name: string
-
-        /**
-         * Description of the facility
-         */
-        description?: string
-
-        /**
-         * Icon or image representing the facility
-         */
-        icon?: string
-    }
-
     export interface OperatingHours {
         /**
          * Monday opening hours
          */
-        monday?: TimeSlot[]
+        monday?: TimeSlot
 
         /**
          * Tuesday opening hours
          */
-        tuesday?: TimeSlot[]
+        tuesday?: TimeSlot
 
         /**
          * Wednesday opening hours
          */
-        wednesday?: TimeSlot[]
+        wednesday?: TimeSlot
 
         /**
          * Thursday opening hours
          */
-        thursday?: TimeSlot[]
+        thursday?: TimeSlot
 
         /**
          * Friday opening hours
          */
-        friday?: TimeSlot[]
+        friday?: TimeSlot
 
         /**
          * Saturday opening hours
          */
-        saturday?: TimeSlot[]
+        saturday?: TimeSlot
 
         /**
          * Sunday opening hours
          */
-        sunday?: TimeSlot[]
+        sunday?: TimeSlot
     }
 
     export interface PaginatedTerminals {
@@ -9519,8 +9548,8 @@ export namespace terminals {
             latitude?: number
             longitude?: number
             contactphone?: string | null
-            operatingHours?: OperatingHours | any
-            facilities?: Facility[] | any
+            operatingHours?: OperatingHours
+            facilities?: facilities.Facility[]
             code?: string
             slug?: string
             active?: boolean
@@ -9568,12 +9597,12 @@ export namespace terminals {
         /**
          * Operating hours of the terminal
          */
-        operatingHours?: OperatingHours | any
+        operatingHours?: OperatingHours
 
         /**
          * List of facilities available at the terminal
          */
-        facilities?: Facility[] | any
+        facilities?: facilities.Facility[]
 
         /**
          * Terminal code (unique identifier)
@@ -9641,12 +9670,12 @@ export namespace terminals {
         /**
          * Operating hours of the terminal
          */
-        operatingHours?: OperatingHours | any
+        operatingHours?: OperatingHours
 
         /**
          * List of facilities available at the terminal
          */
-        facilities?: Facility[] | any
+        facilities?: facilities.Facility[]
 
         /**
          * Terminal code (unique identifier)
@@ -9694,8 +9723,8 @@ export namespace terminals {
             latitude?: number
             longitude?: number
             contactphone?: string | null
-            operatingHours?: OperatingHours | any
-            facilities?: Facility[] | any
+            operatingHours?: OperatingHours
+            facilities?: facilities.Facility[]
             code?: string
             slug?: string
             active?: boolean

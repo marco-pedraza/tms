@@ -24,20 +24,10 @@ import TerminalSkeleton from '@/terminals/components/terminal-skeleton';
 import useQueryTerminal from '@/terminals/hooks/use-query-terminal';
 import useTerminalDetailsParams from '@/terminals/hooks/use-terminal-details-params';
 import useTerminalMutations from '@/terminals/hooks/use-terminal-mutations';
+import { DaysOfWeek } from '@/types/time';
 import createGoogleMapsLink from '@/utils/create-google-maps-link';
 
 type OperatingHours = terminals.OperatingHours;
-
-// Array with the correct order of weekdays
-const DAYS_OF_WEEK = [
-  'monday',
-  'tuesday',
-  'wednesday',
-  'thursday',
-  'friday',
-  'saturday',
-  'sunday',
-] as const;
 
 export default function TerminalDetailsPage() {
   const tTerminals = useTranslations('terminals');
@@ -68,14 +58,16 @@ export default function TerminalDetailsPage() {
     unorderedHours: Partial<OperatingHours>,
   ): OperatingHours => {
     const ordered: OperatingHours = {};
-
     // Iterate over the defined order of days
-    DAYS_OF_WEEK.forEach((day) => {
+    Object.values(DaysOfWeek).forEach((day) => {
       if (unorderedHours[day]) {
         ordered[day] = unorderedHours[day];
       } else {
         // Add empty days to maintain complete order
-        ordered[day] = [];
+        ordered[day] = {
+          open: '',
+          close: '',
+        };
       }
     });
 
@@ -136,7 +128,7 @@ export default function TerminalDetailsPage() {
               <dd>{terminal.address}</dd>
 
               <dt className="font-medium">
-                {tTerminals('fields.contactphone')}:
+                {tTerminals('fields.contactPhone')}:
               </dt>
               <dd>{terminal.contactphone || '-'}</dd>
 
@@ -207,24 +199,22 @@ export default function TerminalDetailsPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(operatingHours).map(([day, slots]) => {
-                // Check if there are any slots for this day
-                const hasSlots = Array.isArray(slots) && slots.length > 0;
-
+              {Object.entries(operatingHours).map(([day, slot]) => {
+                const isClosed =
+                  slot.open === '00:00' && slot.close === '00:00';
+                const is24Hours =
+                  slot.open === '00:00' && slot.close === '23:59';
                 return (
                   <div key={day} className="flex justify-between">
                     <span className="font-medium capitalize">
                       {tCommon(`days.${day}`)}:
                     </span>
                     <span>
-                      {hasSlots
-                        ? slots.map((slot, index) => (
-                            <div key={index}>
-                              {slot.open} - {slot.close}
-                              {index < slots.length - 1 && ', '}
-                            </div>
-                          ))
-                        : tTerminals('operatingHours.closed')}
+                      {isClosed
+                        ? tTerminals('operatingHours.closed')
+                        : is24Hours
+                          ? tTerminals('operatingHours.open24hours')
+                          : `${slot.open} - ${slot.close}`}
                     </span>
                   </div>
                 );

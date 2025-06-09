@@ -2,6 +2,8 @@ import { eq, inArray } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { createSlug } from '../../shared/utils';
 import { db } from '../db-service';
+import { facilityRepository } from '../facilities/facilities.repository';
+import { Facility } from '../facilities/facilities.types';
 import { terminals } from './terminals.schema';
 import type {
   CreateTerminalPayload,
@@ -15,6 +17,24 @@ import type {
 import { validateOperatingHours } from './terminals.utils';
 
 const SLUG_PREFIX = 't';
+
+type CreateTerminalPayloadWithFacilities = CreateTerminalPayload & {
+  slug: string;
+  facilities?: Facility[];
+};
+
+/**
+ * Helper function to handle facility codes validation and conversion
+ * @param facilityCodes - Array of facility codes to validate and convert
+ * @returns Array of facility objects or undefined if no codes provided
+ */
+function processFacilityCodes(facilityCodes?: string[]) {
+  if (!facilityCodes) {
+    return undefined;
+  }
+  return facilityRepository.findByCodes(facilityCodes);
+}
+
 /**
  * Creates a repository for managing terminal entities
  * @returns {Object} An object containing terminal-specific operations and base CRUD operations
@@ -35,10 +55,10 @@ export function createTerminalRepository() {
    * @returns The terminal with its associated city
    */
   async function findOneWithCity(id: number): Promise<TerminalWithCity> {
-    const terminal = await db.query.terminals.findFirst({
+    const terminal = (await db.query.terminals.findFirst({
       where: eq(terminals.id, id),
       with: { city: true },
-    });
+    })) as TerminalWithCity;
 
     if (!terminal) {
       throw new NotFoundError('Terminal not found');
@@ -58,8 +78,19 @@ export function createTerminalRepository() {
     }
 
     const slug = createSlug(data.name, SLUG_PREFIX);
+    const facilities = processFacilityCodes(data.facilityCodes);
 
-    return await baseRepository.create({ ...data, slug });
+    // Remove facilityCodes from data and add facilities
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { facilityCodes, ...createData } = data;
+
+    const createPayload: CreateTerminalPayloadWithFacilities = {
+      ...createData,
+      slug,
+      facilities,
+    };
+
+    return await baseRepository.create(createPayload);
   }
 
   /**
@@ -76,13 +107,25 @@ export function createTerminalRepository() {
       validateOperatingHours(data.operatingHours);
     }
 
-    const updateData: UpdateTerminalPayload & { slug?: string } = { ...data };
+    const updateData: UpdateTerminalPayload & {
+      slug?: string;
+      facilities?: Facility[];
+    } = { ...data };
 
     if (data.name) {
       updateData.slug = createSlug(data.name, SLUG_PREFIX);
     }
 
-    return await baseRepository.update(id, updateData);
+    // Handle facilities using helper function
+    if (data.facilityCodes) {
+      updateData.facilities = processFacilityCodes(data.facilityCodes);
+    }
+
+    // Remove facilityCodes from updateData
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { facilityCodes, ...finalUpdateData } = updateData;
+
+    return await baseRepository.update(id, finalUpdateData);
   }
 
   /**
@@ -96,11 +139,11 @@ export function createTerminalRepository() {
     const { baseWhere, baseOrderBy } =
       baseRepository.buildQueryExpressions(params);
 
-    return await db.query.terminals.findMany({
+    return (await db.query.terminals.findMany({
       with: { city: true },
       where: baseWhere,
       orderBy: baseOrderBy,
-    });
+    })) as TerminalWithCity[];
   }
 
   /**
@@ -120,11 +163,11 @@ export function createTerminalRepository() {
     const { baseOrderBy } = baseRepository.buildQueryExpressions(params);
     const ids = data.map((terminal) => terminal.id);
 
-    const terminalsWithCity = await db.query.terminals.findMany({
+    const terminalsWithCity = (await db.query.terminals.findMany({
       where: inArray(terminals.id, ids),
       orderBy: baseOrderBy,
       with: { city: true },
-    });
+    })) as TerminalWithCity[];
 
     return { data: terminalsWithCity, pagination };
   }

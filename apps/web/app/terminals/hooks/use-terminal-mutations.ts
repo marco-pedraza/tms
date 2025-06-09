@@ -5,7 +5,7 @@ import type { terminals } from '@repo/ims-client';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
 import imsClient from '@/services/ims-client';
 import routes from '@/services/routes';
-import type { TerminalFormValues } from '@/terminals/components/terminal-form';
+import type { TerminalFormValues } from '@/terminals/components/terminal-form/terminal-form-schemas';
 
 interface MutationMessages {
   loading: string;
@@ -62,13 +62,10 @@ export default function useTerminalMutations() {
    */
   const createTerminalMutation = useMutation({
     mutationFn: (values: TerminalFormValues) => {
-      // Convert form values to the correct API format
-      const parsedValues = {
+      return imsClient.inventory.createTerminal({
         ...values,
-        latitude: parseFloat(values.latitude.toString()),
-        longitude: parseFloat(values.longitude.toString()),
-      };
-      return imsClient.inventory.createTerminal(parsedValues);
+        facilityCodes: values.facilities.map((facility) => facility.code),
+      });
     },
   });
 
@@ -100,13 +97,10 @@ export default function useTerminalMutations() {
       if (!id) {
         throw new Error('Terminal ID is required for updating');
       }
-      // Convert form values to the correct API format
-      const parsedValues = {
+      return imsClient.inventory.updateTerminal(id, {
         ...values,
-        latitude: parseFloat(values.latitude.toString()),
-        longitude: parseFloat(values.longitude.toString()),
-      };
-      return imsClient.inventory.updateTerminal(id, parsedValues);
+        facilityCodes: values.facilities.map((facility) => facility.code),
+      });
     },
   });
 

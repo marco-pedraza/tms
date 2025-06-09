@@ -287,7 +287,7 @@
     },
     "fields": {
       "address": "Dirección",
-      "contactphone": "Teléfono de Contacto",
+      "contactPhone": "Teléfono de Contacto",
       "city": "Ciudad",
       "operatingHours": "Horarios de Operación",
       "facilities": "Instalaciones",
@@ -299,7 +299,7 @@
         "name": "Ej: Terminal Central de Autobuses",
         "code": "Ej: TERM-GDL",
         "address": "Ej: Av. Central #123, Col. Centro",
-        "contactphone": "Ej: (33) 1234-5678",
+        "contactPhone": "Ej: (33) 1234-5678",
         "city": "Selecciona una ciudad"
       },
       "helpText": {

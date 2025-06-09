@@ -5,13 +5,9 @@ import {
   createCountry,
   deleteCountry,
 } from '../countries/countries.controller';
+import { Facility } from '../facilities/facilities.types';
 import { createState, deleteState } from '../states/states.controller';
-import {
-  Facility,
-  OperatingHours,
-  Terminal,
-  TerminalWithCity,
-} from './terminals.types';
+import { OperatingHours, Terminal, TerminalWithCity } from './terminals.types';
 import {
   createTerminal,
   deleteTerminal,
@@ -37,18 +33,15 @@ describe('Terminals Controller', () => {
     longitude: -99.1332,
     contactphone: '555-1234',
     operatingHours: {
-      monday: [{ open: '08:00', close: '20:00' }],
-      tuesday: [{ open: '08:00', close: '20:00' }],
-      wednesday: [{ open: '08:00', close: '20:00' }],
-      thursday: [{ open: '08:00', close: '20:00' }],
-      friday: [{ open: '08:00', close: '20:00' }],
-      saturday: [{ open: '09:00', close: '18:00' }],
-      sunday: [{ open: '10:00', close: '16:00' }],
+      monday: { open: '08:00', close: '20:00' },
+      tuesday: { open: '08:00', close: '20:00' },
+      wednesday: { open: '08:00', close: '20:00' },
+      thursday: { open: '08:00', close: '20:00' },
+      friday: { open: '08:00', close: '20:00' },
+      saturday: { open: '09:00', close: '18:00' },
+      sunday: { open: '10:00', close: '16:00' },
     },
-    facilities: [
-      { name: 'Waiting Area', description: 'Comfortable seating area' },
-      { name: 'Restrooms', description: 'Clean public restrooms' },
-    ],
+    facilityCodes: ['waiting_room', 'bathroom'],
     code: 'TEST-TERM-01',
     active: true,
   };
@@ -150,7 +143,6 @@ describe('Terminals Controller', () => {
       expect(response.longitude).toBe(testTerminal.longitude);
       expect(response.contactphone).toBe(testTerminal.contactphone);
       expect(response.operatingHours).toEqual(testTerminal.operatingHours);
-      expect(response.facilities).toEqual(testTerminal.facilities);
       expect(response.code).toBe(testTerminal.code);
       expect(response.active).toBe(testTerminal.active);
       expect(response.createdAt).toBeDefined();
@@ -173,18 +165,7 @@ describe('Terminals Controller', () => {
         longitude: -99.1332,
         code: 'TERM-FAC',
         active: true,
-        facilities: [
-          {
-            name: 'WiFi',
-            description: 'Free WiFi for passengers',
-            icon: 'wifi',
-          },
-          {
-            name: 'Food Court',
-            description: 'Various food options',
-            icon: 'food',
-          },
-        ],
+        facilityCodes: ['wifi', 'restaurant'],
       });
 
       // Keep track for cleanup
@@ -194,17 +175,20 @@ describe('Terminals Controller', () => {
       expect(terminalWithFacilities.facilities).toBeDefined();
       const facilities = terminalWithFacilities.facilities as Facility[];
       expect(facilities).toHaveLength(2);
-      expect(facilities[0].name).toBe('WiFi');
-      expect(facilities[1].name).toBe('Food Court');
+
+      // Check that the facilities contain the expected codes
+      const facilityCodes = facilities.map((f) => f.code);
+      expect(facilityCodes).toContain('wifi');
+      expect(facilityCodes).toContain('restaurant');
 
       // Verify slug has t prefix
       expect(terminalWithFacilities.slug).toMatch(/^t-/);
     });
 
     test('should create a terminal with multiple operating hours in a day', async () => {
-      // Create a terminal with multiple operating hours per day
-      const terminalWithMultipleHours = await createTerminal({
-        name: 'Terminal with Multiple Hours',
+      // Create a terminal with operating hours (single time slot per day in new format)
+      const terminalWithOperatingHours = await createTerminal({
+        name: 'Terminal with Operating Hours',
         address: '789 Hours Street',
         cityId: cityId,
         latitude: 19.4326,
@@ -212,41 +196,37 @@ describe('Terminals Controller', () => {
         code: 'TERM-HOURS',
         active: true,
         operatingHours: {
-          monday: [
-            { open: '08:00', close: '12:00' },
-            { open: '13:00', close: '20:00' },
-          ],
-          tuesday: [{ open: '08:00', close: '20:00' }],
-          wednesday: [{ open: '08:00', close: '20:00' }],
-          thursday: [{ open: '08:00', close: '20:00' }],
-          friday: [{ open: '08:00', close: '20:00' }],
-          saturday: [{ open: '09:00', close: '18:00' }],
-          sunday: [{ open: '10:00', close: '16:00' }],
+          monday: { open: '08:00', close: '20:00' },
+          tuesday: { open: '08:00', close: '20:00' },
+          wednesday: { open: '08:00', close: '20:00' },
+          thursday: { open: '08:00', close: '20:00' },
+          friday: { open: '08:00', close: '20:00' },
+          saturday: { open: '09:00', close: '18:00' },
+          sunday: { open: '10:00', close: '16:00' },
         },
       });
 
       // Keep track for cleanup
-      additionalTerminalIds.push(terminalWithMultipleHours.id);
+      additionalTerminalIds.push(terminalWithOperatingHours.id);
 
-      // Assertions for multiple operating hours
-      expect(terminalWithMultipleHours.operatingHours).toBeDefined();
-      const hours = terminalWithMultipleHours.operatingHours as OperatingHours;
+      // Assertions for operating hours
+      expect(terminalWithOperatingHours.operatingHours).toBeDefined();
+      const hours = terminalWithOperatingHours.operatingHours as OperatingHours;
       expect(hours.monday).toBeDefined();
-      expect(hours.monday).toHaveLength(2);
-      expect(hours.monday?.[0].open).toBe('08:00');
-      expect(hours.monday?.[0].close).toBe('12:00');
-      expect(hours.monday?.[1].open).toBe('13:00');
-      expect(hours.monday?.[1].close).toBe('20:00');
+      expect(hours.monday?.open).toBe('08:00');
+      expect(hours.monday?.close).toBe('20:00');
+      expect(hours.saturday?.open).toBe('09:00');
+      expect(hours.saturday?.close).toBe('18:00');
 
       // Verify slug has t prefix
-      expect(terminalWithMultipleHours.slug).toMatch(/^t-/);
+      expect(terminalWithOperatingHours.slug).toMatch(/^t-/);
 
       // Clean up
-      await deleteTerminal({ id: terminalWithMultipleHours.id });
+      await deleteTerminal({ id: terminalWithOperatingHours.id });
 
       // Remove from cleanup list since we just deleted it
       additionalTerminalIds = additionalTerminalIds.filter(
-        (id) => id !== terminalWithMultipleHours.id,
+        (id) => id !== terminalWithOperatingHours.id,
       );
     });
 
@@ -416,7 +396,7 @@ describe('Terminals Controller', () => {
           code: 'TERM-INVALID',
           active: true,
           operatingHours: {
-            monday: [{ open: 'invalid', close: '20:00' }],
+            monday: { open: 'invalid', close: '20:00' },
           },
         });
 
@@ -473,6 +453,25 @@ describe('Terminals Controller', () => {
       try {
         // Very large ID that likely doesn't exist
         await deleteTerminal({ id: 9999999 });
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeDefined();
+      }
+    });
+
+    test('should fail to create terminal with invalid facility codes', async () => {
+      try {
+        await createTerminal({
+          name: 'Terminal With Invalid Facilities',
+          address: '123 Invalid Facilities Street',
+          cityId: cityId,
+          latitude: 19.4326,
+          longitude: -99.1332,
+          code: 'TERM-INVALID-FAC',
+          active: true,
+          facilityCodes: ['invalid_facility', 'another_invalid'],
+        });
+
         expect(true).toBe(false); // Should not reach here
       } catch (error) {
         expect(error).toBeDefined();

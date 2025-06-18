@@ -2,6 +2,7 @@ import { ValidationError } from '../../shared/errors';
 import { FloorSeats, SeatType, SpaceType } from '../../shared/types';
 import { arraysEqual } from '../../shared/utils';
 import type { BusDiagramModel } from '../bus-diagram-models/bus-diagram-models.types';
+import type { BusSeat } from '../bus-seats/bus-seats.types';
 import type {
   BusSeatModel,
   CreateBusSeatModelPayload,
@@ -369,7 +370,7 @@ export function createSeatUpdateData(
  * @param position - Position coordinates {x, y}
  * @returns Position key string
  */
-export function createPositionKey(
+export function getPositionKey(
   floorNumber: number,
   position: { x: number; y: number },
 ): string {
@@ -560,4 +561,38 @@ export function validateSeatConfigurationPayload(
   if (diagramModel) {
     validateSeatPositionLimits(seatConfigurations, diagramModel);
   }
+}
+
+/**
+ * Checks if a bus seat needs to be updated based on the seat model
+ * @param seat - The existing bus seat
+ * @param model - The seat model to compare against
+ * @returns True if the seat needs to be updated
+ */
+export function seatNeedsUpdateFromModel(
+  seat: BusSeat,
+  model: BusSeatModel,
+): boolean {
+  // Check common properties
+  if (
+    !arraysEqual(seat.amenities, model.amenities) ||
+    JSON.stringify(seat.meta) !== JSON.stringify(model.meta) ||
+    seat.active !== model.active
+  ) {
+    return true;
+  }
+
+  // Check seat-specific properties if both are seats
+  if (seat.spaceType === 'seat' && model.spaceType === 'seat') {
+    const actualSeat = seat;
+    const modelAsSeat = model;
+
+    return (
+      actualSeat.seatNumber !== modelAsSeat.seatNumber ||
+      actualSeat.seatType !== modelAsSeat.seatType ||
+      actualSeat.reclinementAngle !== modelAsSeat.reclinementAngle
+    );
+  }
+
+  return false;
 }

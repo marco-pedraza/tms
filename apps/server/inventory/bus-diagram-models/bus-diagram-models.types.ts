@@ -149,3 +149,28 @@ export interface BusDiagramModels {
  * Paginated result of bus diagram models
  */
 export type PaginatedBusDiagramModels = PaginatedResult<BusDiagramModel>;
+
+/**
+ * Response for seat diagram synchronization summary
+ */
+export interface SeatDiagramSyncSummary {
+  /** ID of the seat diagram that was synced */
+  seatDiagramId: number;
+
+  /** Number of seats created during sync */
+  created: number;
+
+  /** Number of seats updated during sync */
+  updated: number;
+
+  /** Number of seats deleted during sync */
+  deleted: number;
+}
+
+/**
+ * Response for the regenerate seats operation
+ */
+export interface RegenerateSeatsResponse {
+  /** Array of sync summaries, one for each diagram that was synced */
+  summaries: SeatDiagramSyncSummary[];
+}

@@ -11,9 +11,9 @@ import {
 import { busSeatRepository } from './bus-seats.repository';
 import {
   createNewSeatPayload,
-  createPositionKey,
   createSeatUpdateData,
   generateAllSeats,
+  getPositionKey,
   needsSeatUpdate,
   validateSeatConfigurationPayload,
 } from './bus-seats.domain';
@@ -35,7 +35,6 @@ export function createBusSeatUseCases() {
     tx: TransactionalDB,
   ): Promise<number> {
     // Create transaction-scoped repositories
-    const txSeatRepo = busSeatRepository.withTransaction(tx);
     const txDiagramRepo = seatDiagramRepository.withTransaction(tx);
 
     // Get the seat diagram using transaction-scoped repository
@@ -44,10 +43,8 @@ export function createBusSeatUseCases() {
     // Generate all seat payloads using the extracted function
     const allSeats = generateAllSeats(seatDiagram, seatDiagramId);
 
-    // Create all seats using the transaction-scoped repository
-    const createdSeats = await Promise.all(
-      allSeats.map(async (seatData) => await txSeatRepo.create(seatData)),
-    );
+    // Create all seats using batch insert for better performance
+    const createdSeats = await tx.insert(busSeats).values(allSeats).returning();
 
     return createdSeats.length;
   }
@@ -117,7 +114,7 @@ export function createBusSeatUseCases() {
     let seatsDeactivated = 0;
 
     for (const existingSeat of existingSeats) {
-      const existingKey = createPositionKey(
+      const existingKey = getPositionKey(
         existingSeat.floorNumber,
         existingSeat.position,
       );
@@ -160,14 +157,14 @@ export function createBusSeatUseCases() {
       // Create lookup maps for processing
       const existingSeatMap = new Map<string, BusSeat>();
       existingSeats.forEach((seat) => {
-        const key = createPositionKey(seat.floorNumber, seat.position);
+        const key = getPositionKey(seat.floorNumber, seat.position);
         existingSeatMap.set(key, seat);
       });
 
       // Build incoming seat map for processing
       const incomingSeatKeys = new Set<string>();
       const incomingSeats = seatConfigurations.map((config) => {
-        const key = createPositionKey(config.floorNumber, config.position);
+        const key = getPositionKey(config.floorNumber, config.position);
         incomingSeatKeys.add(key);
 
         return { ...config, seatKey: key };

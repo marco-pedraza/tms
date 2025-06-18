@@ -9,10 +9,7 @@ import { busSeatRepository } from '../bus-seats/bus-seats.repository';
 import { busSeats } from '../bus-seats/bus-seats.schema';
 import type { SeatBusSeat } from '../bus-seats/bus-seats.types';
 import { busSeatUseCases } from '../bus-seats/bus-seats.use-cases';
-import type {
-  SeatDiagram,
-  UpdateSeatDiagramPayload,
-} from './seat-diagrams.types';
+import type { SeatDiagram } from './seat-diagrams.types';
 import { seatDiagramRepository } from './seat-diagrams.repository';
 import {
   deleteSeatDiagram,
@@ -65,20 +62,19 @@ describe('Seat Diagrams Controller', () => {
   ): Promise<SeatDiagram> => {
     const diagram = await seatDiagramRepository.create({
       name,
-      description: 'Test diagram for validation',
-      maxCapacity: numRows * 4,
+      description: `Test diagram with ${numRows} rows`,
+      maxCapacity: numRows * 4, // 4 seats per row (2 left + 2 right)
       numFloors: 1,
       seatsPerFloor: [
         {
           floorNumber: 1,
-          numRows,
+          numRows: numRows,
           seatsLeft: 2,
           seatsRight: 2,
         },
       ],
       totalSeats: numRows * 4,
       busDiagramModelId: baseBusDiagramModelId,
-      isModified: false,
     });
 
     // Create corresponding seats using repository transaction
@@ -560,15 +556,14 @@ describe('Seat Diagrams Controller', () => {
     });
 
     test('should mark isModified as true when updating diagram properties or seat configuration', async () => {
-      // Create a test diagram that is initially not modified
-      const initialDiagram = await createTestDiagram('IsModified Test Diagram');
+      // Test 1: Update diagram basic properties - should mark as modified
+      const diagram1 = await createTestDiagram('IsModified Test Diagram 1');
 
       // Verify initial state: isModified should be false
-      expect(initialDiagram.isModified).toBe(false);
+      expect(diagram1.isModified).toBe(false);
 
-      // Test 1: Update diagram basic properties - should mark as modified
       const updatedDiagram = await updateSeatDiagram({
-        id: initialDiagram.id,
+        id: diagram1.id,
         name: 'Modified Diagram Name',
         description: 'This diagram has been modified',
       });
@@ -577,18 +572,14 @@ describe('Seat Diagrams Controller', () => {
       expect(updatedDiagram.name).toBe('Modified Diagram Name');
       expect(updatedDiagram.description).toBe('This diagram has been modified');
 
-      // Reset to test seat configuration update
-      await seatDiagramRepository.update(initialDiagram.id, {
-        isModified: false,
-      } as UpdateSeatDiagramPayload & { isModified: boolean });
-
-      // Verify reset worked
-      const resetDiagram = await getSeatDiagram({ id: initialDiagram.id });
-      expect(resetDiagram.isModified).toBe(false);
-
       // Test 2: Update seat configuration - should mark as modified
+      const diagram2 = await createTestDiagram('IsModified Test Diagram 2');
+
+      // Verify initial state: isModified should be false
+      expect(diagram2.isModified).toBe(false);
+
       const seatConfigResult = await updateSeatDiagramConfiguration({
-        id: initialDiagram.id,
+        id: diagram2.id,
         seats: [
           {
             seatNumber: 'MODIFIED_SEAT_1',
@@ -612,14 +603,14 @@ describe('Seat Diagrams Controller', () => {
 
       // Verify diagram was marked as modified
       const diagramAfterSeatUpdate = await getSeatDiagram({
-        id: initialDiagram.id,
+        id: diagram2.id,
       });
       expect(diagramAfterSeatUpdate.isModified).toBe(true);
       expect(diagramAfterSeatUpdate.totalSeats).toBe(2); // Only 2 active seats now
 
       // Test 3: Verify both operations together preserve the modified state
       const finalUpdate = await updateSeatDiagram({
-        id: initialDiagram.id,
+        id: diagram2.id,
         maxCapacity: 100, // Change another property
       });
 
@@ -627,7 +618,8 @@ describe('Seat Diagrams Controller', () => {
       expect(finalUpdate.maxCapacity).toBe(100);
 
       // Clean up
-      await deleteSeatDiagram({ id: initialDiagram.id });
+      await deleteSeatDiagram({ id: diagram1.id });
+      await deleteSeatDiagram({ id: diagram2.id });
     });
   });
 
@@ -782,10 +774,9 @@ describe('Seat Diagrams Controller', () => {
       ).length;
 
       // Mock the seat use case to fail using vi.spyOn
-      vi.spyOn(
-        busSeatUseCases,
-        'batchUpdateSeatConfiguration',
-      ).mockRejectedValue(new Error('Seat configuration update failed'));
+      const mockSpy = vi
+        .spyOn(busSeatUseCases, 'batchUpdateSeatConfiguration')
+        .mockRejectedValue(new Error('Seat configuration update failed'));
 
       try {
         // Attempt to update seat configuration with new totalSeats - this should fail
@@ -839,6 +830,9 @@ describe('Seat Diagrams Controller', () => {
           (seat as SeatBusSeat).seatNumber === 'TEST_SEAT',
       );
       expect(testSeat).toBeUndefined(); // Should not exist due to rollback
+
+      // Restore the mock
+      mockSpy.mockRestore();
 
       // Clean up
       await deleteSeatDiagram({ id: testDiagram.id });

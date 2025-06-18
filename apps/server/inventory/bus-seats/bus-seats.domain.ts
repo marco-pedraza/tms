@@ -369,7 +369,7 @@ export function createSeatUpdateData(
  * @param position - Position coordinates
  * @returns String key for position
  */
-export function createPositionKey(
+export function getPositionKey(
   floorNumber: number,
   position: { x: number; y: number },
 ): string {

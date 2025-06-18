@@ -4,7 +4,7 @@
  */
 
 import { NotFoundError, DuplicateError } from './errors';
-import { eq, and, count, not, or, SQL } from 'drizzle-orm';
+import { eq, and, count, not, or, SQL, inArray } from 'drizzle-orm';
 import type {
   PaginationMeta,
   TableWithId,
@@ -246,6 +246,43 @@ export const createBaseRepository = <
       return result.length;
     } catch (error) {
       throw handlePostgresError(error, entityName, 'deleteAll');
+    }
+  };
+
+  /**
+   * Deletes multiple entities by their IDs in a single database operation
+   * @param {number[]} ids - Array of entity IDs to delete
+   * @returns {Promise<T[]>} Array of deleted entities
+   * @throws {ValidationError} If any of the IDs are invalid or not found
+   */
+  const deleteMany = async (ids: number[]): Promise<T[]> => {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    try {
+      const result = await db
+        .delete(table)
+        .where(inArray(table.id, ids))
+        .returning();
+
+      // Check if all entities were deleted
+      if (result.length !== ids.length) {
+        const deletedIds = (result as unknown as { id: number }[]).map(
+          (entity) => entity.id,
+        );
+        const notFoundIds = ids.filter((id) => !deletedIds.includes(id));
+        throw new NotFoundError(
+          `${entityName}(s) with id(s) ${notFoundIds.join(', ')} not found`,
+        );
+      }
+
+      return result as unknown as T[];
+    } catch (error) {
+      if (error instanceof Error && isApplicationError(error)) {
+        throw error; // Rethrow application errors
+      }
+      throw handlePostgresError(error, entityName, 'deleteMany');
     }
   };
 
@@ -687,6 +724,7 @@ export const createBaseRepository = <
     update,
     delete: deleteOne,
     deleteAll,
+    deleteMany,
     findBy,
     findByPaginated,
     existsBy,

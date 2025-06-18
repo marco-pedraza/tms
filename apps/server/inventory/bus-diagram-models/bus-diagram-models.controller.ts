@@ -11,6 +11,7 @@ import {
   BusDiagramModels,
   CreateBusDiagramModelPayload,
   PaginatedBusDiagramModels,
+  RegenerateSeatsResponse,
   UpdateBusDiagramModelPayload,
 } from './bus-diagram-models.types';
 import { busDiagramModelRepository } from './bus-diagram-models.repository';
@@ -147,5 +148,25 @@ export const getBusDiagramModelSeats = api(
   { expose: true, method: 'GET', path: '/bus-diagram-models/:id/seats' },
   async ({ id }: { id: number }): Promise<BusSeatModels> => {
     return await busDiagramModelUseCases.getBusDiagramModelSeats(id);
+  },
+);
+
+/**
+ * Synchronizes seats from bus diagram model to all non-modified operational diagrams.
+ * Finds all seat diagrams that reference this model and haven't been manually modified,
+ * then updates their seats to match the current model configuration.
+ * @param params - Object containing the bus diagram model ID
+ * @param params.id - The ID of the bus diagram model to sync seats from
+ * @returns {Promise<RegenerateSeatsResponse>} Summary of changes for each diagram that was synced
+ * @throws {APIError} If the sync fails or the bus diagram model doesn't exist
+ */
+export const regenerateSeats = api(
+  {
+    expose: true,
+    method: 'POST',
+    path: '/bus-diagram-models/:id/regenerate-seats',
+  },
+  async ({ id }: { id: number }): Promise<RegenerateSeatsResponse> => {
+    return await busDiagramModelUseCases.regenerateSeats(id);
   },
 );

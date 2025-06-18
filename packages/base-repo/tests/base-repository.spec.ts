@@ -120,6 +120,137 @@ describe('BaseRepository', () => {
     });
   });
 
+  describe('deleteMany', () => {
+    it('should delete multiple users successfully', async () => {
+      // Create test users
+      const user1 = await createTestUser({ email: 'user1@example.com' });
+      const user2 = await createTestUser({ email: 'user2@example.com' });
+      const user3 = await createTestUser({ email: 'user3@example.com' });
+      const user4 = await createTestUser({ email: 'user4@example.com' });
+
+      // Delete users 1, 2, and 3
+      const idsToDelete = [user1.id, user2.id, user3.id];
+      const deletedUsers = await userRepository.deleteMany(idsToDelete);
+
+      // Should return the deleted users
+      expect(deletedUsers).toHaveLength(3);
+      expect(deletedUsers.map((u) => u.id).sort()).toEqual(idsToDelete.sort());
+
+      // Verify deleted users no longer exist
+      await expect(userRepository.findOne(user1.id)).rejects.toThrow(
+        NotFoundError,
+      );
+      await expect(userRepository.findOne(user2.id)).rejects.toThrow(
+        NotFoundError,
+      );
+      await expect(userRepository.findOne(user3.id)).rejects.toThrow(
+        NotFoundError,
+      );
+
+      // Verify user4 still exists
+      const stillExists = await userRepository.findOne(user4.id);
+      expect(stillExists).toEqual(user4);
+    });
+
+    it('should return empty array when deleting empty array of IDs', async () => {
+      const result = await userRepository.deleteMany([]);
+      expect(result).toEqual([]);
+    });
+
+    it('should throw NotFoundError when any ID does not exist', async () => {
+      // Create some users
+      const user1 = await createTestUser({ email: 'exists1@example.com' });
+      const user2 = await createTestUser({ email: 'exists2@example.com' });
+
+      // Try to delete existing and non-existing users
+      const idsToDelete = [user1.id, user2.id, 999, 1000]; // 999 and 1000 don't exist
+
+      await expect(userRepository.deleteMany(idsToDelete)).rejects.toThrow(
+        NotFoundError,
+      );
+
+      // Verify that no users were deleted (all-or-nothing behavior)
+      const stillExists1 = await userRepository.findOne(user1.id);
+      const stillExists2 = await userRepository.findOne(user2.id);
+      expect(stillExists1).toEqual(user1);
+      expect(stillExists2).toEqual(user2);
+    });
+
+    it('should handle single ID deletion', async () => {
+      const user = await createTestUser({ email: 'single@example.com' });
+
+      const deletedUsers = await userRepository.deleteMany([user.id]);
+
+      expect(deletedUsers).toHaveLength(1);
+      expect(deletedUsers[0]).toEqual(user);
+
+      await expect(userRepository.findOne(user.id)).rejects.toThrow(
+        NotFoundError,
+      );
+    });
+
+    it('should work within transactions', async () => {
+      // Create test users
+      const user1 = await createTestUser({ email: 'tx1@example.com' });
+      const user2 = await createTestUser({ email: 'tx2@example.com' });
+      const user3 = await createTestUser({ email: 'tx3@example.com' });
+
+      await userRepository.transaction(async (txRepo) => {
+        // Create another user within transaction
+        const txUser = await txRepo.create({
+          name: 'Transaction User',
+          email: 'txuser@example.com',
+        });
+
+        // Delete multiple users including the one created in transaction
+        const idsToDelete = [user1.id, user2.id, txUser.id];
+        const deletedUsers = await txRepo.deleteMany(idsToDelete);
+
+        expect(deletedUsers).toHaveLength(3);
+      });
+
+      // Verify users were actually deleted after transaction commit
+      await expect(userRepository.findOne(user1.id)).rejects.toThrow(
+        NotFoundError,
+      );
+      await expect(userRepository.findOne(user2.id)).rejects.toThrow(
+        NotFoundError,
+      );
+
+      // User3 should still exist
+      const stillExists = await userRepository.findOne(user3.id);
+      expect(stillExists.email).toBe('tx3@example.com');
+    });
+
+    it('should rollback deleteMany when transaction fails', async () => {
+      // Create test users
+      const user1 = await createTestUser({ email: 'rollback1@example.com' });
+      const user2 = await createTestUser({ email: 'rollback2@example.com' });
+
+      try {
+        await userRepository.transaction(async (txRepo) => {
+          // Delete users within transaction
+          const deletedUsers = await txRepo.deleteMany([user1.id, user2.id]);
+          expect(deletedUsers).toHaveLength(2);
+
+          // Throw error to rollback transaction
+          throw new Error('Test rollback');
+        });
+
+        // Should not reach here
+        expect('Transaction should have failed').toBe(false);
+      } catch (error) {
+        expect((error as Error).message).toBe('Test rollback');
+      }
+
+      // Verify users still exist after rollback
+      const stillExists1 = await userRepository.findOne(user1.id);
+      const stillExists2 = await userRepository.findOne(user2.id);
+      expect(stillExists1.email).toBe('rollback1@example.com');
+      expect(stillExists2.email).toBe('rollback2@example.com');
+    });
+  });
+
   describe('findAll', () => {
     it('should return all users', async () => {
       // Create multiple users

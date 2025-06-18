@@ -172,6 +172,7 @@ export interface BaseRepository<
   update(id: number, data: UpdateT): Promise<T>;
   delete(id: number): Promise<T>;
   deleteAll(): Promise<number>;
+  deleteMany(ids: number[]): Promise<T[]>;
   findBy<K extends keyof T>(field: PgColumn, value: T[K]): Promise<T | null>;
   findByPaginated<K extends keyof T>(
     field: PgColumn,

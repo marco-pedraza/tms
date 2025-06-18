@@ -14,9 +14,9 @@ import {
 import { busSeatModelRepository } from './bus-seat-models.repository';
 import {
   createNewSeatPayload,
-  createPositionKey,
   createSeatUpdateData,
   generateAllSeatModels,
+  getPositionKey,
   needsSeatUpdate,
   validateSeatConfigurationPayload,
 } from './bus-seat-models.domain';
@@ -184,7 +184,7 @@ export function createBusSeatModelUseCases() {
     let seatsDeactivated = 0;
 
     for (const existingSeat of existingSeats) {
-      const key = createPositionKey(
+      const key = getPositionKey(
         existingSeat.floorNumber,
         existingSeat.position,
       );
@@ -227,14 +227,14 @@ export function createBusSeatModelUseCases() {
       // Create lookup maps for processing
       const existingSeatMap = new Map<string, BusSeatModel>();
       existingSeats.forEach((seat) => {
-        const key = createPositionKey(seat.floorNumber, seat.position);
+        const key = getPositionKey(seat.floorNumber, seat.position);
         existingSeatMap.set(key, seat);
       });
 
       // Build incoming seat map for processing
       const incomingSeatKeys = new Set<string>();
       const incomingSeats = seatConfigurations.map((config) => {
-        const key = createPositionKey(config.floorNumber, config.position);
+        const key = getPositionKey(config.floorNumber, config.position);
         incomingSeatKeys.add(key);
 
         return { ...config, seatKey: key };

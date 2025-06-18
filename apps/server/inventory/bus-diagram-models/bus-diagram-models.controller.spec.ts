@@ -1,6 +1,9 @@
 import { afterAll, describe, expect, test } from 'vitest';
 import { vi } from 'vitest';
 import { FloorSeats, SeatType, SpaceType } from '../../shared/types';
+import { createBusDiagramModelZone } from '../bus-diagram-model-zones/bus-diagram-model-zones.controller';
+import { busDiagramModelZoneRepository } from '../bus-diagram-model-zones/bus-diagram-model-zones.repository';
+import type { BusDiagramModelZone } from '../bus-diagram-model-zones/bus-diagram-model-zones.types';
 import { busSeatModelRepository } from '../bus-seat-models/bus-seat-models.repository';
 import { busSeatModels } from '../bus-seat-models/bus-seat-models.schema';
 import type {
@@ -8,6 +11,16 @@ import type {
   SeatBusSeatModel,
 } from '../bus-seat-models/bus-seat-models.types';
 import { busSeatModelUseCases } from '../bus-seat-models/bus-seat-models.use-cases';
+import { busSeatRepository } from '../bus-seats/bus-seats.repository';
+import type { BusSeat } from '../bus-seats/bus-seats.types';
+import { busSeatUseCases } from '../bus-seats/bus-seats.use-cases';
+import { seatDiagramZoneRepository } from '../seat-diagram-zones/seat-diagram-zones.repository';
+import type { SeatDiagramZone } from '../seat-diagram-zones/seat-diagram-zones.types';
+import { updateSeatDiagram } from '../seat-diagrams/seat-diagrams.controller';
+import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
+import type { CreateSeatDiagramPayload } from '../seat-diagrams/seat-diagrams.types';
+import type { SeatDiagram } from '../seat-diagrams/seat-diagrams.types';
+import type { BusDiagramModel } from './bus-diagram-models.types';
 import {
   createBusDiagramModel,
   deleteBusDiagramModel,
@@ -15,6 +28,7 @@ import {
   getBusDiagramModelSeats,
   listBusDiagramModels,
   listBusDiagramModelsPaginated,
+  regenerateSeats,
   updateBusDiagramModel,
   updateSeatConfiguration,
 } from './bus-diagram-models.controller';
@@ -70,6 +84,39 @@ describe('Bus Diagram Models Controller', () => {
       ],
       totalSeats: numRows * 4,
     });
+  };
+
+  /**
+   * Helper function to create a seat diagram from a bus diagram model
+   */
+  const createSeatDiagramFromModel = async (
+    busDiagramModelId: number,
+    name: string,
+  ) => {
+    // Get the parent model to copy its configuration
+    const parentModel = await getBusDiagramModel({ id: busDiagramModelId });
+
+    // Create the seat diagram payload
+    const seatDiagramPayload: CreateSeatDiagramPayload = {
+      busDiagramModelId: parentModel.id,
+      name: name,
+      description: `Operational diagram based on ${parentModel.name}`,
+      maxCapacity: parentModel.maxCapacity,
+      numFloors: parentModel.numFloors,
+      seatsPerFloor: parentModel.seatsPerFloor,
+      totalSeats: parentModel.totalSeats,
+      isFactoryDefault: parentModel.isFactoryDefault,
+    };
+
+    // Create the seat diagram
+    const seatDiagram = await seatDiagramRepository.create(seatDiagramPayload);
+
+    // Create corresponding seats using repository transaction
+    await busSeatRepository.transaction(async (txRepo, tx) => {
+      return await busSeatUseCases.createSeatsFromDiagram(seatDiagram.id, tx);
+    });
+
+    return seatDiagram;
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -716,6 +763,422 @@ describe('Bus Diagram Models Controller', () => {
       // Clean up both models
       await deleteBusDiagramModel({ id: emptyConfigModel.id });
       await deleteBusDiagramModel({ id: aisleConfigModel.id });
+    });
+  });
+
+  describe('regenerateSeats functionality', () => {
+    // Shared test data that will be created once for all tests
+    let parentModel1: BusDiagramModel;
+    let parentModel2: BusDiagramModel;
+    let childDiagram1A: SeatDiagram,
+      childDiagram1B: SeatDiagram,
+      childDiagram1C: SeatDiagram;
+    let childDiagram2A: SeatDiagram, childDiagram2B: SeatDiagram;
+    let parentModel1Seats: BusSeatModel[];
+    let parentModel2Seats: BusSeatModel[];
+    let parentModel1Zones: BusDiagramModelZone[];
+    let parentModel2Zones: BusDiagramModelZone[];
+
+    // Helper function to compare seat structures (excluding IDs and diagram references)
+    const compareSeats = (parentSeat: BusSeatModel, childSeat: BusSeat) => {
+      expect(childSeat.spaceType).toBe(parentSeat.spaceType);
+      expect(childSeat.floorNumber).toBe(parentSeat.floorNumber);
+      expect(childSeat.position).toEqual(parentSeat.position);
+      expect(childSeat.active).toBe(parentSeat.active);
+      expect(childSeat.amenities).toEqual(parentSeat.amenities);
+
+      // Only check seat-specific properties if both are seats
+      if (
+        parentSeat.spaceType === SpaceType.SEAT &&
+        childSeat.spaceType === SpaceType.SEAT
+      ) {
+        const parentSeatTyped = parentSeat;
+        const childSeatTyped = childSeat;
+        expect(childSeatTyped.seatNumber).toBe(parentSeatTyped.seatNumber);
+        expect(childSeatTyped.seatType).toBe(parentSeatTyped.seatType);
+        expect(childSeatTyped.reclinementAngle).toBe(
+          parentSeatTyped.reclinementAngle,
+        );
+      }
+    };
+
+    // Helper function to compare zone structures (excluding IDs and diagram references)
+    const compareZones = (
+      parentZone: BusDiagramModelZone,
+      childZone: SeatDiagramZone,
+    ) => {
+      expect(childZone.name).toBe(parentZone.name);
+      expect(childZone.priceMultiplier).toBe(parentZone.priceMultiplier);
+      expect(childZone.rowNumbers).toEqual(parentZone.rowNumbers);
+    };
+
+    test('should setup parent models and child diagrams correctly', async () => {
+      // Create two parent diagram models with different configurations
+      parentModel1 = await createBusDiagramModel({
+        name: 'Test Parent Model 1',
+        description: 'First parent model for regenerate test',
+        maxCapacity: 32,
+        numFloors: 1,
+        seatsPerFloor: [
+          {
+            floorNumber: 1,
+            numRows: 8,
+            seatsLeft: 2,
+            seatsRight: 2,
+          },
+        ],
+        totalSeats: 32,
+        isFactoryDefault: true,
+      });
+
+      parentModel2 = await createBusDiagramModel({
+        name: 'Test Parent Model 2',
+        description: 'Second parent model for regenerate test',
+        maxCapacity: 24,
+        numFloors: 1,
+        seatsPerFloor: [
+          {
+            floorNumber: 1,
+            numRows: 6,
+            seatsLeft: 2,
+            seatsRight: 2,
+          },
+        ],
+        totalSeats: 24,
+        isFactoryDefault: true,
+      });
+
+      // Create operational seat diagrams (child instances)
+      childDiagram1A = await createSeatDiagramFromModel(
+        parentModel1.id,
+        'Bus 001 - Operational Diagram',
+      );
+
+      childDiagram1B = await createSeatDiagramFromModel(
+        parentModel1.id,
+        'Bus 002 - Custom Layout',
+      );
+
+      childDiagram1C = await createSeatDiagramFromModel(
+        parentModel1.id,
+        'Bus 003 - Standard Layout',
+      );
+
+      childDiagram2A = await createSeatDiagramFromModel(
+        parentModel2.id,
+        'Van 101 - Standard Layout',
+      );
+
+      childDiagram2B = await createSeatDiagramFromModel(
+        parentModel2.id,
+        'Van 102 - Custom Layout',
+      );
+
+      // Simulate modification of certain diagrams
+      // childDiagram1B and childDiagram2B should be marked as modified
+      await updateSeatDiagram({
+        id: childDiagram1B.id,
+        description: 'This diagram has been customized',
+      });
+
+      await updateSeatDiagram({
+        id: childDiagram2B.id,
+        description: 'This van diagram has been customized',
+      });
+
+      // Create zones for parent models using the controller
+      await createBusDiagramModelZone({
+        busDiagramModelId: parentModel1.id,
+        name: 'Premium Zone',
+        rowNumbers: [1, 2, 3],
+        priceMultiplier: 1.5,
+      });
+
+      await createBusDiagramModelZone({
+        busDiagramModelId: parentModel1.id,
+        name: 'Business Zone',
+        rowNumbers: [4, 5],
+        priceMultiplier: 1.2,
+      });
+
+      await createBusDiagramModelZone({
+        busDiagramModelId: parentModel2.id,
+        name: 'VIP Zone',
+        rowNumbers: [1, 2],
+        priceMultiplier: 2.0,
+      });
+
+      // Get parent seats for future comparisons
+      parentModel1Seats = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        parentModel1.id,
+        { orderBy: [{ field: 'seatNumber', direction: 'asc' }] },
+      );
+
+      parentModel2Seats = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        parentModel2.id,
+        { orderBy: [{ field: 'seatNumber', direction: 'asc' }] },
+      );
+
+      // Get parent zones for future comparisons
+      parentModel1Zones = await busDiagramModelZoneRepository.findAll({
+        filters: { busDiagramModelId: parentModel1.id },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
+
+      parentModel2Zones = await busDiagramModelZoneRepository.findAll({
+        filters: { busDiagramModelId: parentModel2.id },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
+
+      // Verify parent models have correct number of seats and zones
+      expect(parentModel1Seats).toHaveLength(32);
+      expect(parentModel2Seats).toHaveLength(24);
+      expect(parentModel1Zones).toHaveLength(2); // Premium and Business
+      expect(parentModel2Zones).toHaveLength(1); // VIP
+
+      // Verify all child diagrams were created successfully
+      expect(childDiagram1A.id).toBeDefined();
+      expect(childDiagram1B.id).toBeDefined();
+      expect(childDiagram1C.id).toBeDefined();
+      expect(childDiagram2A.id).toBeDefined();
+      expect(childDiagram2B.id).toBeDefined();
+    });
+
+    test('should ensure child diagrams initially match their parent models exactly', async () => {
+      // Verify child diagrams for parentModel1 match parent seats
+      for (const childDiagram of [
+        childDiagram1A,
+        childDiagram1B,
+        childDiagram1C,
+      ]) {
+        const childSeats = await busSeatRepository.findAll({
+          filters: { seatDiagramId: childDiagram.id },
+          orderBy: [{ field: 'seatNumber', direction: 'asc' }],
+        });
+
+        expect(childSeats).toHaveLength(32); // Same as parent1
+
+        // Compare each seat with corresponding parent seat
+        for (let i = 0; i < parentModel1Seats.length; i++) {
+          compareSeats(parentModel1Seats[i], childSeats[i]);
+        }
+      }
+
+      // Verify child diagrams for parentModel2 match parent seats
+      for (const childDiagram of [childDiagram2A, childDiagram2B]) {
+        const childSeats = await busSeatRepository.findAll({
+          filters: { seatDiagramId: childDiagram.id },
+          orderBy: [{ field: 'seatNumber', direction: 'asc' }],
+        });
+
+        expect(childSeats).toHaveLength(24); // Same as parent2
+
+        // Compare each seat with corresponding parent seat
+        for (let i = 0; i < parentModel2Seats.length; i++) {
+          compareSeats(parentModel2Seats[i], childSeats[i]);
+        }
+      }
+    });
+
+    test('should regenerate seats only for non-modified diagrams of parent model 1', async () => {
+      // First, modify the parent model 1 by updating some existing seats properties
+      // We'll change amenities and seat types of existing seats (keeping same positions)
+      const existingSeats = parentModel1Seats.slice(0, 20); // Use first 20 existing seats
+
+      await updateSeatConfiguration({
+        id: parentModel1.id,
+        seats: existingSeats.map((seat, i) => ({
+          seatNumber: isSeatModel(seat)
+            ? seat.seatNumber || `S${i + 1}`
+            : `S${i + 1}`,
+          floorNumber: seat.floorNumber,
+          seatType: i < 5 ? SeatType.VIP : SeatType.REGULAR, // First 5 become VIP
+          position: seat.position,
+          amenities: i < 5 ? ['WiFi', 'USB', 'Premium'] : ['USB'], // VIP get extra amenities
+          active: true,
+        })),
+      });
+
+      // Now regenerate seats - this should sync the changes to non-modified diagrams
+      const regenerateResponse = await regenerateSeats({
+        id: parentModel1.id,
+      });
+
+      expect(regenerateResponse).toBeDefined();
+      expect(regenerateResponse.summaries).toBeDefined();
+      expect(Array.isArray(regenerateResponse.summaries)).toBe(true);
+
+      // Should have exactly 2 summaries (for the 2 non-modified diagrams)
+      expect(regenerateResponse.summaries).toHaveLength(2);
+
+      // Verify each summary has the correct structure and IDs
+      const regeneratedIds = regenerateResponse.summaries.map(
+        (s) => s.seatDiagramId,
+      );
+      expect(regeneratedIds).toContain(childDiagram1A.id);
+      expect(regeneratedIds).toContain(childDiagram1C.id);
+      expect(regeneratedIds).not.toContain(childDiagram1B.id); // Modified diagram should be excluded
+
+      // Each summary should show the structure
+      regenerateResponse.summaries.forEach((summary) => {
+        expect(summary.seatDiagramId).toBeDefined();
+        expect(typeof summary.seatDiagramId).toBe('number');
+        expect(typeof summary.created).toBe('number');
+        expect(typeof summary.updated).toBe('number');
+        expect(typeof summary.deleted).toBe('number');
+
+        // Since we're changing parent configuration, expect some changes
+        expect(summary.created).toBeGreaterThanOrEqual(0);
+        expect(summary.updated).toBeGreaterThanOrEqual(0);
+        expect(summary.deleted).toBeGreaterThanOrEqual(0);
+      });
+
+      // Verify zones were synchronized to non-modified diagrams
+      for (const diagramId of [childDiagram1A.id, childDiagram1C.id]) {
+        const syncedZones = await seatDiagramZoneRepository.findAll({
+          filters: { seatDiagramId: diagramId },
+          orderBy: [{ field: 'name', direction: 'asc' }],
+        });
+
+        expect(syncedZones).toHaveLength(2); // Should match parent model zones
+
+        // Compare each zone with corresponding parent zone
+        for (let i = 0; i < parentModel1Zones.length; i++) {
+          compareZones(parentModel1Zones[i], syncedZones[i]);
+        }
+      }
+    });
+
+    test('should regenerate seats only for non-modified diagrams of parent model 2', async () => {
+      // First, modify the parent model 2 by updating existing seats properties
+      const existingSeats = parentModel2Seats.slice(0, 15); // Use first 15 existing seats
+
+      await updateSeatConfiguration({
+        id: parentModel2.id,
+        seats: existingSeats.map((seat, i) => ({
+          seatNumber: isSeatModel(seat)
+            ? seat.seatNumber || `V${i + 1}`
+            : `V${i + 1}`,
+          floorNumber: seat.floorNumber,
+          seatType: i < 3 ? SeatType.PREMIUM : SeatType.REGULAR, // First 3 become premium
+          position: seat.position,
+          amenities: i < 3 ? ['WiFi', 'USB', 'Comfort'] : ['USB'],
+          active: true,
+        })),
+      });
+
+      const regenerateResponse = await regenerateSeats({
+        id: parentModel2.id,
+      });
+
+      expect(regenerateResponse.summaries).toHaveLength(1);
+      expect(regenerateResponse.summaries[0].seatDiagramId).toBe(
+        childDiagram2A.id,
+      );
+
+      // Verify summary structure
+      const summary = regenerateResponse.summaries[0];
+      expect(typeof summary.created).toBe('number');
+      expect(typeof summary.updated).toBe('number');
+      expect(typeof summary.deleted).toBe('number');
+
+      // Basic validation of the response structure
+      expect(summary.created).toBeGreaterThanOrEqual(0);
+      expect(summary.updated).toBeGreaterThanOrEqual(0);
+      expect(summary.deleted).toBeGreaterThanOrEqual(0);
+
+      // Verify zones were synchronized to the non-modified diagram
+      const syncedZones = await seatDiagramZoneRepository.findAll({
+        filters: { seatDiagramId: childDiagram2A.id },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
+
+      expect(syncedZones).toHaveLength(1); // Should match parent model 2 zones
+
+      // Compare zones with corresponding parent zones
+      for (let i = 0; i < parentModel2Zones.length; i++) {
+        compareZones(parentModel2Zones[i], syncedZones[i]);
+      }
+    });
+
+    test('should not affect modified diagrams during regeneration', async () => {
+      // Verify that modified diagram from parent model 1 was NOT changed
+      // It should still have the original 32 seats from before parent modification
+      const unchangedSeats1B = await busSeatRepository.findAll({
+        filters: { seatDiagramId: childDiagram1B.id },
+        orderBy: [{ field: 'seatNumber', direction: 'asc' }],
+      });
+
+      expect(unchangedSeats1B).toHaveLength(32); // Should still have original seat count
+
+      // Modified diagram should still match the ORIGINAL parent seats (before modification)
+      // This proves that regenerateSeats did NOT affect the modified diagram
+      for (let i = 0; i < parentModel1Seats.length; i++) {
+        compareSeats(parentModel1Seats[i], unchangedSeats1B[i]);
+      }
+
+      // Verify that modified diagram from parent model 2 was NOT changed
+      // It should still have the original 24 seats from before parent modification
+      const unchangedSeats2B = await busSeatRepository.findAll({
+        filters: { seatDiagramId: childDiagram2B.id },
+        orderBy: [{ field: 'seatNumber', direction: 'asc' }],
+      });
+
+      expect(unchangedSeats2B).toHaveLength(24); // Should still have original seat count
+
+      // Should still match the ORIGINAL parent seats (before modification)
+      for (let i = 0; i < parentModel2Seats.length; i++) {
+        compareSeats(parentModel2Seats[i], unchangedSeats2B[i]);
+      }
+
+      // Verify zones in modified diagrams were NOT affected by regenerateSeats
+      // They should still have the original zones from when they were created
+      const unchangedZones1B = await seatDiagramZoneRepository.findAll({
+        filters: { seatDiagramId: childDiagram1B.id },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
+
+      const unchangedZones2B = await seatDiagramZoneRepository.findAll({
+        filters: { seatDiagramId: childDiagram2B.id },
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
+
+      // Modified diagrams should not have received zones from regenerateSeats
+      // They should still have 0 zones since they were marked as modified before sync
+      expect(unchangedZones1B).toHaveLength(0); // Should not have received zones
+      expect(unchangedZones2B).toHaveLength(0); // Should not have received zones
+    });
+
+    test('should return empty summaries for models with no child diagrams', async () => {
+      // Test regenerateSeats on a model with no seat diagrams (original createdBusDiagramModelId)
+      const regenerateResponseEmpty = await regenerateSeats({
+        id: createdBusDiagramModelId,
+      });
+
+      expect(regenerateResponseEmpty.summaries).toHaveLength(0);
+    });
+
+    test('should clean up all test data properly', async () => {
+      // Delete child seat diagrams first (to avoid foreign key constraints)
+      await seatDiagramRepository.delete(childDiagram1A.id);
+      await seatDiagramRepository.delete(childDiagram1B.id);
+      await seatDiagramRepository.delete(childDiagram1C.id);
+      await seatDiagramRepository.delete(childDiagram2A.id);
+      await seatDiagramRepository.delete(childDiagram2B.id);
+
+      // Then delete parent diagram models
+      await deleteBusDiagramModel({ id: parentModel1.id });
+      await deleteBusDiagramModel({ id: parentModel2.id });
+
+      // Verify cleanup was successful by trying to get deleted models
+      await expect(
+        getBusDiagramModel({ id: parentModel1.id }),
+      ).rejects.toThrow();
+      await expect(
+        getBusDiagramModel({ id: parentModel2.id }),
+      ).rejects.toThrow();
     });
   });
 

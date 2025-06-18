@@ -4,7 +4,6 @@ import { seatDiagrams } from './seat-diagrams.schema';
 import {
   CreateSeatDiagramPayload,
   SeatDiagram,
-  SeatDiagrams,
   UpdateSeatDiagramPayload,
 } from './seat-diagrams.types';
 
@@ -22,18 +21,8 @@ export function createSeatDiagramRepository() {
     searchableFields: [seatDiagrams.name],
   });
 
-  async function findAll(): Promise<SeatDiagrams> {
-    const seatDiagramsList = await baseRepository.findAll({
-      orderBy: [{ field: 'name', direction: 'asc' }],
-    });
-    return {
-      seatDiagrams: seatDiagramsList,
-    };
-  }
-
   return {
     ...baseRepository,
-    findAll,
   };
 }
 

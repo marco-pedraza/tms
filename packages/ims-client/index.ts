@@ -203,6 +203,7 @@ export namespace inventory {
             this.listZonesByDiagramModel = this.listZonesByDiagramModel.bind(this)
             this.listZonesByDiagramModelPaginated = this.listZonesByDiagramModelPaginated.bind(this)
             this.listZonesByDiagramPaginated = this.listZonesByDiagramPaginated.bind(this)
+            this.regenerateSeats = this.regenerateSeats.bind(this)
             this.removeDriverFromBus = this.removeDriverFromBus.bind(this)
             this.removeDriverFromBusLine = this.removeDriverFromBusLine.bind(this)
             this.removeDriverFromTransporter = this.removeDriverFromTransporter.bind(this)
@@ -1675,6 +1676,21 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/seat-diagrams/${encodeURIComponent(seatDiagramId)}/get-zones/paginated`, JSON.stringify(params))
             return await resp.json() as seat_diagram_zones.PaginatedSeatDiagramZones
+        }
+
+        /**
+         * Synchronizes seats from bus diagram model to all non-modified operational diagrams.
+         * Finds all seat diagrams that reference this model and haven't been manually modified,
+         * then updates their seats to match the current model configuration.
+         * @param params - Object containing the bus diagram model ID
+         * @param params.id - The ID of the bus diagram model to sync seats from
+         * @returns {Promise<RegenerateSeatsResponse>} Summary of changes for each diagram that was synced
+         * @throws {APIError} If the sync fails or the bus diagram model doesn't exist
+         */
+        public async regenerateSeats(id: number): Promise<bus_diagram_models.RegenerateSeatsResponse> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/bus-diagram-models/${encodeURIComponent(id)}/regenerate-seats`)
+            return await resp.json() as bus_diagram_models.RegenerateSeatsResponse
         }
 
         /**
@@ -5411,6 +5427,35 @@ export namespace bus_diagram_models {
     export interface PaginatedBusDiagramModels {
         data: BusDiagramModel[]
         pagination: shared.PaginationMeta
+    }
+
+    export interface RegenerateSeatsResponse {
+        /**
+         * Array of sync summaries, one for each diagram that was synced
+         */
+        summaries: SeatDiagramSyncSummary[]
+    }
+
+    export interface SeatDiagramSyncSummary {
+        /**
+         * ID of the seat diagram that was synced
+         */
+        seatDiagramId: number
+
+        /**
+         * Number of seats created during sync
+         */
+        created: number
+
+        /**
+         * Number of seats updated during sync
+         */
+        updated: number
+
+        /**
+         * Number of seats deleted during sync
+         */
+        deleted: number
     }
 }
 

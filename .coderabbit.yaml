@@ -3,7 +3,7 @@ language: en-US
 tone_instructions: 'You are an expert code reviewer in TypeScript, JavaScript, and NodeJS. You work in an enterprise software developer team, providing concise and clear code review advice. You only elaborate or provide detailed explanations when requested.'
 early_access: true
 enable_free_tier: true
-auto_resolve_threads: true
+
 reviews:
   profile: chill
   request_changes_workflow: true
@@ -11,7 +11,7 @@ reviews:
   high_level_summary_placeholder: '@coderabbitai summary'
   high_level_summary_in_walkthrough: false
   auto_title_placeholder: '@coderabbitai'
-  auto_title_instructions: ''
+  auto_title_instructions: 'Generate concise titles that describe the main change'
   review_status: true
   commit_status: true
   fail_commit_status: false
@@ -27,93 +27,62 @@ reviews:
   auto_assign_reviewers: true
   poem: true
   labeling_instructions: []
-  path_filters: []
+  path_filters:
+    - "!apps/web/services/ims-client.ts"
   path_instructions:
-    # General code standards
     - path: "**/*.{ts,tsx}"
       instructions: |
-        Prefer code and comments in English to maximize team readability and consistency.
-        Focus on architectural patterns and overall code organization.
-        Evaluate domain modeling and separation of concerns.
-        Identify maintainability issues.
+        Follow .cursor/rules/typescript-patterns.mdc for general TypeScript conventions.
+        Prefer code and comments in English for team readability and focus on architectural patterns.
 
-    # Frontend (Next.js)
     - path: "apps/web/**/*.{ts,tsx}"
       instructions: |
-        This is a frontend application built with Next.js, confirm that the code adheres to the following:
-        - Component composition follows proper reusability patterns
-        - Data flow and state management approaches are appropriate
-        - Error boundaries are properly implemented
-        - Performance optimizations are applied where necessary
-        - UI components follow accessibility best practices
+        Frontend Next.js application - verify component composition, state management,
+        error boundaries, performance optimizations, and accessibility best practices.
 
-    # Backend (Encore)
     - path: "apps/server/**/*.ts"
       instructions: |
-        This is a backend application built with Encore, confirm that the code adheres to the following:
-        - API contract design is consistent and follows standards
-        - Error handling strategies are properly implemented
-        - Implementation is free of security vulnerabilities
+        Encore backend application. Follow cursor rules:
+        .cursor/rules/controller-patterns.mdc
+        .cursor/rules/error-handling.mdc
+        .cursor/rules/feature-pattern.mdc
+        .cursor/rules/secrets-patterns.mdc
 
     - path: "apps/server/**/*controller.ts"
       instructions: |
-        Verify controllers follow single responsibility principle.
-        Check that business logic is not in controllers.
-        Ensure consistent error handling through parseApiError.
-        Evaluate API endpoint design and naming conventions.
-        Assess input validation approaches.
+        Follow .cursor/rules/controller-patterns.mdc
 
     - path: "apps/server/**/*repository.ts"
       instructions: |
-        Verify repositories properly extend base patterns.
-        Check for proper transaction handling in complex operations.
-        Evaluate query performance considerations.
-        Look for proper error handling for database operations.
-        Verify domain model integrity is maintained.
+        Follow .cursor/rules/database-patterns.mdc
 
     - path: "apps/server/**/*.types.ts"
       instructions: |
-        Check for domain model consistency across related types.
-        Verify proper validation decorators are used.
-        Assess type hierarchy and inheritance patterns.
-        Look for reuse of common type patterns.
+        Follow .cursor/rules/types-patterns.mdc
 
     - path: "apps/server/**/*schema.ts"
       instructions: |
-        Verify proper relationship modeling between entities.
-        Assess naming consistency with domain model.
-        Look for proper constraints for data integrity.
+        Follow .cursor/rules/database-patterns.mdc
+        Verify that appropriate database indexes are defined for:
+        - Foreign keys
+        - Queried columns
+        Ensure indexes improve query performance without over-indexing.
 
-    - path: "apps/server/db/**/*.ts"
+    - path: "apps/server/**/*use-cases.ts"
       instructions: |
-        Evaluate database access patterns and connection management.
-        Check migration strategies and backward compatibility.
-        Assess error handling for database operations.
-        Look for query optimization opportunities.
+        Follow .cursor/rules/use-cases-patterns.mdc
 
     - path: "apps/server/**/*.test.ts"
       instructions: |
-        Evaluate test organization and test case naming clarity.
-        Review test assertions for meaningful validation.
-        Check mocking strategies for external dependencies.
-        Assess test maintainability and readability.
-        Look for test setup duplication that could be refactored.
+        Follow .cursor/rules/testing-patterns.mdc
 
-    # Shared packages
     - path: "packages/**/*.ts"
       instructions: |
-        Evaluate API design and interface contracts.
-        Check for proper abstraction and encapsulation.
-        Assess dependency management and coupling.
-        Look for code duplication across packages.
-        Verify proper error handling strategies.
+        Follow .cursor/rules/typescript-patterns.mdc
 
-    # Documentation
     - path: "apps/docs/**"
       instructions: |
-        Ensure documentation accurately reflects behavior and is updated alongside code changes.
-        Verify examples are clear and functional.
-        Look for missing sections or outdated information.
+        Ensure documentation reflects current behavior and patterns from .cursor/rules/
 
   abort_on_close: true
   auto_review:
@@ -130,100 +99,61 @@ reviews:
       - "refactor/*"
       - "release/*"
       - "web/*"
+
   finishing_touches:
     docstrings:
-      enabled: true
+      enabled: false
+    unit_tests:
+      enabled: false
+
   tools:
-    ast-grep:
-      rule_dirs: []
-      util_dirs: []
-      essential_rules: true
-      packages: []
-    shellcheck:
-      enabled: false
-    ruff:
-      enabled: false
-    markdownlint:
-      enabled: true
-    github-checks:
-      enabled: true
-      timeout_ms: 90000
-    languagetool:
-      enabled: true
-      enabled_rules: []
-      disabled_rules: []
-      enabled_categories: []
-      disabled_categories: []
-      enabled_only: false
-      level: default
-    biome:
-      enabled: true
-    hadolint:
-      enabled: true
-    swiftlint:
-      enabled: false
-    phpstan:
-      enabled: false
-    golangci-lint:
-      enabled: false
-    yamllint:
-      enabled: true
-    gitleaks:
-      enabled: true
-    checkov:
-      enabled: true
-    detekt:
-      enabled: false
-    eslint:
-      enabled: true
-    rubocop:
-      enabled: false
-    buf:
-      enabled: false
-    regal:
-      enabled: false
-    actionlint:
-      enabled: true
-    pmd:
-      enabled: false
-    cppcheck:
-      enabled: false
-    semgrep:
-      enabled: true
-    circleci:
-      enabled: false
-    sqlfluff:
-      enabled: false
-    prismaLint:
-      enabled: true
-    oxc:
-      enabled: true
-    shopifyThemeCheck:
-      enabled: false
+    ast-grep:       { essential_rules: true, rule_dirs: [], util_dirs: [], packages: [] }
+    shellcheck:     { enabled: false }
+    ruff:           { enabled: false }
+    markdownlint:   { enabled: true }
+    github-checks:  { enabled: true, timeout_ms: 90000 }
+    languagetool:   { enabled: true, enabled_only: false, level: default }
+    biome:          { enabled: true }
+    hadolint:       { enabled: false }
+    swiftlint:      { enabled: false }
+    phpstan:        { enabled: false }
+    golangci-lint:  { enabled: false }
+    yamllint:       { enabled: true }
+    gitleaks:       { enabled: true }
+    checkov:        { enabled: false }
+    detekt:         { enabled: false }
+    eslint:         { enabled: true }
+    rubocop:        { enabled: false }
+    buf:            { enabled: false }
+    regal:          { enabled: false }
+    actionlint:     { enabled: true }
+    pmd:            { enabled: false }
+    cppcheck:       { enabled: false }
+    semgrep:        { enabled: true }
+    circleci:       { enabled: false }
+    sqlfluff:       { enabled: false }
+    prismaLint:     { enabled: false }
+    oxc:            { enabled: true }
+    shopifyThemeCheck: { enabled: false }
+
 chat:
   auto_reply: true
   integrations:
-    jira:
-      usage: disabled
-    linear:
-      usage: disabled
+    jira:   { usage: disabled }
+    linear: { usage: disabled }
+
 knowledge_base:
   opt_out: false
-  web_search:
-    enabled: true
-  learnings:
-    scope: auto
-  issues:
-    scope: auto
-  jira:
-    usage: disabled
-    project_keys: []
-  linear:
-    usage: disabled
-    team_keys: []
-  pull_requests:
-    scope: auto
+  web_search:       { enabled: true }
+  learnings:        { scope: local }
+  issues:           { scope: local }
+  jira:             { usage: disabled, project_keys: [] }
+  linear:           { usage: disabled, team_keys: [] }
+  pull_requests:    { scope: local }
+
 code_generation:
   docstrings:
     language: en-US
+    path_instructions: []
+  unit_tests:
     path_instructions: []

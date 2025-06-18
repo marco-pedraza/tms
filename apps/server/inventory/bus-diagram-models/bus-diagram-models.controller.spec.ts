@@ -256,6 +256,94 @@ describe('Bus Diagram Models Controller', () => {
       }
     });
 
+    test('should update bus diagram model and regenerate seat models in single transaction', async () => {
+      // Create initial model using helper function
+      const initialModel = await createSimpleTestModel(
+        'Regenerate Test Model',
+        3,
+      );
+
+      // Get initial seat count and verify setup
+      const initialSeats = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        initialModel.id,
+      );
+      expect(initialSeats).toHaveLength(12); // 3 rows × 4 seats = 12 seats
+
+      // New configuration with more rows
+      const newConfiguration = {
+        name: 'Updated Regenerate Model',
+        description: 'Updated model with new seat configuration',
+        maxCapacity: 20, // 5 rows × 4 seats
+        numFloors: 1,
+        seatsPerFloor: [
+          {
+            floorNumber: 1,
+            numRows: 5, // Increased from 3 to 5 rows
+            seatsLeft: 2,
+            seatsRight: 2,
+          },
+        ],
+        totalSeats: 20,
+      };
+
+      // Update the model with regenerateSeats=true
+      const updateResponse = await updateBusDiagramModel({
+        id: initialModel.id,
+        regenerateSeats: true,
+        ...newConfiguration,
+      });
+
+      // Verify the bus diagram model was updated using helper
+      expectBasicModelProperties(updateResponse, newConfiguration);
+      expect(updateResponse.id).toBe(initialModel.id);
+      expect(updateResponse.seatsPerFloor).toEqual(
+        newConfiguration.seatsPerFloor,
+      );
+      expect(updateResponse.totalSeats).toBe(newConfiguration.totalSeats);
+
+      // Verify that seat models were regenerated with new configuration
+      const regeneratedSeats = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        initialModel.id,
+        {
+          orderBy: [{ field: 'seatNumber', direction: 'asc' }],
+        },
+      );
+
+      // Should have 20 seats now (5 rows × 4 seats per row)
+      expect(regeneratedSeats).toHaveLength(20);
+
+      // Verify all seats are active and belong to the correct model
+      const allSeatsActive = regeneratedSeats.every(
+        (seat) => seat.active === true,
+      );
+      expect(allSeatsActive).toBe(true);
+
+      const allSeatsForCorrectModel = regeneratedSeats.every(
+        (seat) => seat.busDiagramModelId === initialModel.id,
+      );
+      expect(allSeatsForCorrectModel).toBe(true);
+
+      // Verify seat numbers are sequential from 1 to 20
+      const seatNumbers = regeneratedSeats
+        .filter(isSeatModel)
+        .map((seat) => parseInt(seat.seatNumber || '0'))
+        .sort((a, b) => a - b);
+
+      expect(seatNumbers[0]).toBe(1);
+      expect(seatNumbers[seatNumbers.length - 1]).toBe(20);
+
+      // Verify that seats for new row exist
+      const seatsWithRow5 = regeneratedSeats.filter(
+        (seat) => seat.position.y === 5, // Row 5 (new row)
+      );
+      expect(seatsWithRow5).toHaveLength(4); // 4 seats in row 5
+
+      // Clean up the test model
+      await deleteBusDiagramModel({ id: initialModel.id });
+    });
+
     test('should delete a bus diagram model', async () => {
       // Create a model specifically for deletion test
       const modelToDelete = await createBusDiagramModel({

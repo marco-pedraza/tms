@@ -1,5 +1,5 @@
 {
-  "id": "38bbd893-c974-4a34-94fb-9efea7f6d60f",
+  "id": "7616cb09-febe-47b3-83b7-17e3b3e9e56f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -850,11 +850,18 @@
           "primaryKey": false,
           "notNull": true
         },
+        "space_type": {
+          "name": "space_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'seat'"
+        },
         "seat_number": {
           "name": "seat_number",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "floor_number": {
           "name": "floor_number",
@@ -867,7 +874,7 @@
           "name": "seat_type",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "amenities": {
           "name": "amenities",
@@ -929,6 +936,43 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bus_seats_space_type_index": {
+          "name": "bus_seats_space_type_index",
+          "columns": [
+            {
+              "expression": "space_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bus_seats_seat_diagram_id_seat_number_index": {
+          "name": "bus_seats_seat_diagram_id_seat_number_index",
+          "columns": [
+            {
+              "expression": "seat_diagram_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "seat_number",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"bus_seats\".\"space_type\" = $1",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -3306,17 +3350,17 @@
           "primaryKey": false,
           "notNull": true
         },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "max_capacity": {
           "name": "max_capacity",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
-        },
-        "observations": {
-          "name": "observations",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
         },
         "num_floors": {
           "name": "num_floors",
@@ -3379,6 +3423,21 @@
           "columns": [
             {
               "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "seat_diagrams_bus_diagram_model_id_index": {
+          "name": "seat_diagrams_bus_diagram_model_id_index",
+          "columns": [
+            {
+              "expression": "bus_diagram_model_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

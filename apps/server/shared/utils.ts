@@ -1,5 +1,5 @@
 /**
- * Utilities for creating and managing URL-friendly slugs
+ * Shared utility functions
  */
 
 /**
@@ -37,3 +37,20 @@ export const createSlug = (source: string, prefix?: string): string => {
 
   return slug;
 };
+
+/**
+ * Helper function to compare two string arrays for equality regardless of order
+ * @param arr1 - First array to compare
+ * @param arr2 - Second array to compare
+ * @returns True if arrays contain the same elements regardless of order
+ */
+export function arraysEqual(arr1: string[], arr2: string[]): boolean {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+
+  const sorted1 = [...arr1].sort();
+  const sorted2 = [...arr2].sort();
+
+  return sorted1.every((value, index) => value === sorted2[index]);
+}

@@ -25,8 +25,8 @@ export const seatDiagrams = pgTable(
       .notNull()
       .references(() => busDiagramModels.id),
     name: text('name').notNull(),
+    description: text('description'),
     maxCapacity: integer('max_capacity').notNull(),
-    observations: text('observations'),
     numFloors: integer('num_floors').notNull().default(1),
     seatsPerFloor: jsonb('seats_per_floor').notNull(), // Configuration of seats per floor
     totalSeats: integer('total_seats').notNull(),
@@ -36,7 +36,7 @@ export const seatDiagrams = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => [index().on(table.name)],
+  (table) => [index().on(table.name), index().on(table.busDiagramModelId)],
 );
 
 /**

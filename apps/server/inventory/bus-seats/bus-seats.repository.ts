@@ -3,7 +3,6 @@ import { db } from '../db-service';
 import { busSeats } from './bus-seats.schema';
 import type {
   BusSeat,
-  BusSeats,
   CreateBusSeatPayload,
   UpdateBusSeatPayload,
 } from './bus-seats.types';
@@ -21,39 +20,25 @@ export function createBusSeatRepository() {
   >(db, busSeats, 'Bus Seat');
 
   /**
-   * Finds seats by seat diagram ID
-   * @param seatDiagramId - The seat diagram ID to filter by
-   * @returns {Promise<BusSeats>} Object containing array of seats for the specified seat diagram
+   * Finds all active bus seats for a specific seat diagram
+   * @param seatDiagramId - The ID of the seat diagram
+   * @returns {Promise<BusSeat[]>} Array of active bus seats ordered by seat number
    */
-  function findAllBySeatDiagram(seatDiagramId: number): Promise<BusSeats> {
-    return baseRepository
-      .findAllBy(busSeats.seatDiagramId, seatDiagramId, {
-        orderBy: [{ field: 'seatNumber', direction: 'asc' }],
-      })
-      .then((results) => ({ busSeats: results }));
-  }
-
-  /**
-   * Creates multiple bus seats in a single batch insert operation
-   * @param data - Array of bus seat data to create
-   * @returns {Promise<BusSeats>} Object containing array of created bus seats
-   */
-  function createBatch(data: CreateBusSeatPayload[]): Promise<BusSeats> {
-    return baseRepository.transaction(async (txRepo, tx) => {
-      // Cast to the expected schema type for batch insert
-      const createdSeats = await tx
-        .insert(busSeats)
-        .values(data as (typeof busSeats.$inferInsert)[])
-        .returning();
-
-      return { busSeats: createdSeats as BusSeat[] };
+  async function findActiveBySeatDiagramId(
+    seatDiagramId: number,
+  ): Promise<BusSeat[]> {
+    return await baseRepository.findAll({
+      filters: {
+        seatDiagramId,
+        active: true,
+      },
+      orderBy: [{ field: 'seatNumber', direction: 'asc' }],
     });
   }
 
   return {
     ...baseRepository,
-    findAllBySeatDiagram,
-    createBatch,
+    findActiveBySeatDiagramId,
   };
 }
 

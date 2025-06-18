@@ -1,7 +1,10 @@
 import type { TransactionalDB } from '@repo/base-repo';
 import { SpaceType } from '../../shared/types';
 import { busDiagramModelRepository } from '../bus-diagram-models/bus-diagram-models.repository';
-import type { BusDiagramModel } from '../bus-diagram-models/bus-diagram-models.types';
+import type {
+  BusDiagramModel,
+  UpdateBusDiagramModelPayload,
+} from '../bus-diagram-models/bus-diagram-models.types';
 import { busSeatModels } from './bus-seat-models.schema';
 import {
   BusSeatModel,
@@ -63,15 +66,28 @@ export function createBusSeatModelUseCases() {
    * Regenerates seat models for a bus diagram model
    * This will delete existing seat models and create new ones based on current configuration
    * @param busDiagramModelId - The ID of the bus diagram model
-   * @returns {Promise<number>} The number of seat models created
+   * @param updateData - Optional update data for the bus diagram model
+   * @returns {Promise<{ busDiagramModel: BusDiagramModel; seatsGenerated: number }>} The updated bus diagram model and number of seat models created
    */
   async function regenerateSeatModels(
     busDiagramModelId: number,
-  ): Promise<number> {
+    updateData?: UpdateBusDiagramModelPayload,
+  ): Promise<{ busDiagramModel: BusDiagramModel; seatsGenerated: number }> {
     return await busSeatModelRepository.transaction(async (txRepo, tx) => {
       // Use transaction-scoped repositories for all operations
       const txBusDiagramModelRepo =
         busDiagramModelRepository.withTransaction(tx);
+
+      // Update the bus diagram model first if updateData is provided
+      let diagramModel: BusDiagramModel;
+      if (updateData) {
+        diagramModel = await txBusDiagramModelRepo.update(
+          busDiagramModelId,
+          updateData,
+        );
+      } else {
+        diagramModel = await txBusDiagramModelRepo.findOne(busDiagramModelId);
+      }
 
       // Get existing seat models using transaction-scoped repository
       const existingSeatModels = await txRepo.findAllBy(
@@ -84,11 +100,7 @@ export function createBusSeatModelUseCases() {
         await txRepo.delete(seatModel.id);
       }
 
-      // Get the bus diagram model using transaction-scoped repository
-      const diagramModel =
-        await txBusDiagramModelRepo.findOne(busDiagramModelId);
-
-      // Generate all seat models using the domain function
+      // Generate all seat models using the domain function (with updated diagram model)
       const allSeatModels = generateAllSeatModels(
         diagramModel,
         busDiagramModelId,
@@ -100,7 +112,10 @@ export function createBusSeatModelUseCases() {
         .values(allSeatModels)
         .returning();
 
-      return createdSeatModels.length;
+      return {
+        busDiagramModel: diagramModel,
+        seatsGenerated: createdSeatModels.length,
+      };
     });
   }
 
@@ -200,14 +215,14 @@ export function createBusSeatModelUseCases() {
       // Validate bus diagram model exists
       const diagramModel = await txDiagramRepo.findOne(busDiagramModelId);
 
+      // Validate payload including position limits
+      validateSeatConfigurationPayload(seatConfigurations, diagramModel);
+
       // Get existing seat models
       const existingSeats = await txRepo.findAllBy(
         busSeatModels.busDiagramModelId,
         busDiagramModelId,
       );
-
-      // Validate payload including position limits
-      validateSeatConfigurationPayload(seatConfigurations, diagramModel);
 
       // Create lookup maps for processing
       const existingSeatMap = new Map<string, BusSeatModel>();

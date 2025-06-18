@@ -93,3 +93,14 @@ export enum SpaceType {
   EMPTY = 'empty',
   STAIRS = 'stairs',
 }
+
+/**
+ * Seat position coordinates
+ * This is a shared Value Object used across multiple bounded contexts:
+ * - bus-seat-models (seat templates)
+ * - bus-seats (actual seat instances)
+ */
+export interface SeatPosition {
+  x: number;
+  y: number;
+}

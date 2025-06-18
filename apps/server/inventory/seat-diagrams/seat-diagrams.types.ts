@@ -2,82 +2,26 @@ import { MatchesRegexp, MinLen } from 'encore.dev/validate';
 import { FloorSeats, PaginatedResult } from '../../shared/types';
 
 /**
- * Space type in seat diagram layout
- */
-export enum SpaceType {
-  SEAT = 'seat',
-  HALLWAY = 'hallway',
-  BATHROOM = 'bathroom',
-  EMPTY = 'empty',
-  STAIRS = 'stairs',
-}
-
-/**
- * Seat configuration type for seat layout
- */
-export interface SeatConfiguration {
-  /** Floors in the configuration */
-  floors: Floor[];
-
-  /** Total number of seats */
-  totalSeats: number;
-}
-
-/**
- * Floor in a seat configuration
- */
-export interface Floor {
-  /** Floor number */
-  floorNumber: number;
-
-  /** Rows of spaces */
-  rows: Space[][];
-}
-
-/**
- * Space in a seat configuration
- */
-export interface Space {
-  /** Type of space */
-  type: SpaceType;
-
-  /** Seat number if this is a seat */
-  seatNumber?: string;
-
-  /** Type of seat if this is a seat */
-  seatType?: string;
-
-  /** Amenities for this space */
-  amenities?: string[];
-
-  /** Additional metadata */
-  meta?: Record<string, unknown>;
-
-  /** Reclinement angle for seats */
-  reclinementAngle?: number;
-}
-
-/**
- * Base interface representing a seat diagram entity
+ * Represents a seat diagram in the database
  */
 export interface SeatDiagram {
   /** Unique identifier for the seat diagram */
   id: number;
 
-  /** Bus Diagram Model ID (reference to bus_diagram_models) */
+  /** Bus diagram model ID (reference to bus_diagram_models) */
   busDiagramModelId: number;
 
-  /** Name of the diagram */
+  /** Name of the seat diagram */
   name: string;
+
+  /** Description of the seat diagram */
+  description: string | null;
 
   /** Maximum capacity */
   maxCapacity: number;
 
-  /** Number of floors in the bus */
+  /** Number of floors in the seat diagram */
   numFloors: number;
-
-  /** Observations about the diagram */
-  observations?: string;
 
   /** Configuration of seats per floor */
   seatsPerFloor: FloorSeats[];
@@ -88,7 +32,7 @@ export interface SeatDiagram {
   /** Indicates if this is a factory default diagram */
   isFactoryDefault: boolean;
 
-  /** Indicates if the diagram has been modified from the base model */
+  /** Indicates if the diagram has been modified from its template */
   isModified: boolean;
 
   /** Whether the seat diagram is active */
@@ -106,16 +50,21 @@ export interface SeatDiagram {
  */
 export interface CreateSeatDiagramPayload {
   /**
-   * Bus Diagram Model ID (reference to bus_diagram_models)
-   * Required reference to a bus diagram model template
+   * Bus diagram model ID (reference to bus_diagram_models)
+   * Must be a valid bus diagram model ID
    */
   busDiagramModelId: number;
 
   /**
-   * Name of the diagram
+   * Name of the seat diagram
    * Must have at least 1 character
    */
   name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Description of the seat diagram
+   */
+  description?: string;
 
   /**
    * Maximum capacity
@@ -124,15 +73,10 @@ export interface CreateSeatDiagramPayload {
   maxCapacity: number;
 
   /**
-   * Observations about the diagram
+   * Number of floors in the seat diagram
+   * Must be a positive number
    */
-  observations?: string;
-
-  /**
-   * Number of floors in the bus
-   * @default 1
-   */
-  numFloors?: number;
+  numFloors: number;
 
   /**
    * Configuration of seats per floor
@@ -146,9 +90,15 @@ export interface CreateSeatDiagramPayload {
 
   /**
    * Indicates if this is a factory default diagram
-   * @default true
+   * @default false
    */
   isFactoryDefault?: boolean;
+
+  /**
+   * Indicates if the diagram has been modified from its template
+   * @default false
+   */
+  isModified?: boolean;
 
   /**
    * Whether the seat diagram is active
@@ -162,10 +112,15 @@ export interface CreateSeatDiagramPayload {
  */
 export interface UpdateSeatDiagramPayload {
   /**
-   * Name of the diagram
+   * Name of the seat diagram
    * Must have at least 1 character
    */
   name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Description of the seat diagram
+   */
+  description?: string;
 
   /**
    * Maximum capacity
@@ -174,12 +129,8 @@ export interface UpdateSeatDiagramPayload {
   maxCapacity?: number;
 
   /**
-   * Observations about the diagram
-   */
-  observations?: string;
-
-  /**
-   * Number of floors in the bus
+   * Number of floors in the seat diagram
+   * Must be a positive number
    */
   numFloors?: number;
 

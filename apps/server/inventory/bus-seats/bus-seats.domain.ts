@@ -1,13 +1,13 @@
 import { ValidationError } from '../../shared/errors';
 import { FloorSeats, SeatType, SpaceType } from '../../shared/types';
 import { arraysEqual } from '../../shared/utils';
-import type { BusDiagramModel } from '../bus-diagram-models/bus-diagram-models.types';
+import type { SeatDiagram } from '../seat-diagrams/seat-diagrams.types';
 import type {
-  BusSeatModel,
-  CreateBusSeatModelPayload,
-  SeatBusSeatModel,
+  BusSeat,
+  CreateBusSeatPayload,
+  SeatBusSeat,
   SeatConfigurationInput,
-} from './bus-seat-models.types';
+} from './bus-seats.types';
 
 // Constants for default values
 export const DEFAULT_SEAT_TYPE = SeatType.REGULAR;
@@ -17,7 +17,7 @@ export const DEFAULT_IS_ACTIVE = true;
 export const INITIAL_SEAT_NUMBER_COUNTER = 1;
 
 // Domain-specific error messages for validations
-const BUS_SEAT_MODEL_VALIDATION_ERRORS = {
+const BUS_SEAT_VALIDATION_ERRORS = {
   INVALID_FLOOR_CONFIG: 'Invalid seatsPerFloor configuration',
   DUPLICATE_SEAT_NUMBERS: 'Duplicate seat numbers found in payload',
   DUPLICATE_POSITIONS: 'Duplicate positions found in payload',
@@ -32,6 +32,12 @@ const BUS_SEAT_MODEL_VALIDATION_ERRORS = {
   SEAT_NUMBER_REQUIRED: 'Seat number is required for SEAT space types',
   FLOOR_CONFIG_NOT_FOUND: (floorNumber: number) =>
     `Floor configuration not found for floor ${floorNumber}`,
+} as const;
+
+// Domain-specific error messages for bus seats
+export const BUS_SEAT_ERRORS = {
+  INVALID_FLOOR_CONFIG: (floorNum: number) =>
+    `Floor configuration not found for floor ${floorNum}`,
 } as const;
 
 /**
@@ -80,30 +86,30 @@ export function calculateSeatMetaProperties(
 }
 
 /**
- * Creates space model payload for storing in the database
- * @param busDiagramModelId - Bus diagram model ID
+ * Creates seat payload for storing in the database
+ * @param seatDiagramId - Seat diagram ID
  * @param seatNumber - Seat number (only for SEAT space types)
  * @param floorNumber - Floor number
  * @param rowIndex - Row index (0-based)
  * @param colIndex - Column index (0-based)
  * @param floorConfig - Floor configuration for calculating seat properties
  * @param spaceType - Type of space (defaults to SEAT)
- * @returns CreateBusSeatModelPayload object
+ * @returns CreateBusSeatPayload object
  */
-export function createSeatModelPayload(
-  busDiagramModelId: number,
+export function createSeatPayload(
+  seatDiagramId: number,
   seatNumber: string,
   floorNumber: number,
   rowIndex: number,
   colIndex: number,
   floorConfig: FloorSeats,
   spaceType: SpaceType = SpaceType.SEAT,
-): CreateBusSeatModelPayload {
+): CreateBusSeatPayload {
   const rowNumber = rowIndex + 1; // Convert to 1-based row number
   const position = { x: colIndex, y: rowNumber };
 
   return {
-    busDiagramModelId,
+    seatDiagramId,
     spaceType,
     seatNumber: getSeatSpecificValue(spaceType, seatNumber, undefined),
     floorNumber,
@@ -128,18 +134,18 @@ export function createSeatModelPayload(
 }
 
 /**
- * Generates seat model payloads for a single floor
- * @param busDiagramModelId - Bus diagram model ID
+ * Generates seat payloads for a single floor
+ * @param seatDiagramId - Seat diagram ID
  * @param floorConfig - Floor configuration
  * @param seatNumberCounter - Current seat number counter (will be modified)
- * @returns [Array of seat model payloads, updated seat counter]
+ * @returns [Array of seat payloads, updated seat counter]
  */
-export function generateFloorSeatModels(
-  busDiagramModelId: number,
+export function generateFloorSeats(
+  seatDiagramId: number,
   floorConfig: FloorSeats,
   seatNumberCounter: number,
-): [CreateBusSeatModelPayload[], number] {
-  const seatModels: CreateBusSeatModelPayload[] = [];
+): [CreateBusSeatPayload[], number] {
+  const seats: CreateBusSeatPayload[] = [];
   let currentSeatCounter = seatNumberCounter;
 
   // Generate seats for each row
@@ -149,9 +155,9 @@ export function generateFloorSeatModels(
       const seatNumber = String(currentSeatCounter++);
       const colIndex = leftSeat;
 
-      seatModels.push(
-        createSeatModelPayload(
-          busDiagramModelId,
+      seats.push(
+        createSeatPayload(
+          seatDiagramId,
           seatNumber,
           floorConfig.floorNumber,
           rowIndex,
@@ -167,9 +173,9 @@ export function generateFloorSeatModels(
       const seatNumber = String(currentSeatCounter++);
       const colIndex = floorConfig.seatsLeft + 1 + rightSeat; // +1 for aisle
 
-      seatModels.push(
-        createSeatModelPayload(
-          busDiagramModelId,
+      seats.push(
+        createSeatPayload(
+          seatDiagramId,
           seatNumber,
           floorConfig.floorNumber,
           rowIndex,
@@ -180,73 +186,67 @@ export function generateFloorSeatModels(
     }
   }
 
-  return [seatModels, currentSeatCounter];
+  return [seats, currentSeatCounter];
 }
 
 /**
- * Generates all seat model payloads for a bus diagram model
- * @param diagramModel - The bus diagram model
- * @param busDiagramModelId - The ID of the bus diagram model
- * @returns Array of seat model payloads ready for database creation
+ * Generates all seat payloads for a seat diagram
+ * @param seatDiagram - The seat diagram
+ * @param seatDiagramId - The ID of the seat diagram
+ * @returns Array of seat payloads ready for database creation
  * @throws {ValidationError} If the floor configuration is invalid
  */
-export function generateAllSeatModels(
-  diagramModel: BusDiagramModel,
-  busDiagramModelId: number,
-): CreateBusSeatModelPayload[] {
-  const seatsPerFloor = diagramModel.seatsPerFloor;
-  const allSeatModels: CreateBusSeatModelPayload[] = [];
+export function generateAllSeats(
+  seatDiagram: SeatDiagram,
+  seatDiagramId: number,
+): CreateBusSeatPayload[] {
+  const seatsPerFloor = seatDiagram.seatsPerFloor;
+  const allSeats: CreateBusSeatPayload[] = [];
   let seatNumberCounter = INITIAL_SEAT_NUMBER_COUNTER;
 
-  // Generate seat models for each floor
-  for (let floorNum = 1; floorNum <= diagramModel.numFloors; floorNum++) {
+  // Generate seats for each floor
+  for (let floorNum = 1; floorNum <= seatDiagram.numFloors; floorNum++) {
     const floorConfig = seatsPerFloor.find(
       (config) => config.floorNumber === floorNum,
     );
 
     if (!floorConfig) {
-      throw new ValidationError(
-        `Floor configuration not found for floor ${floorNum}`,
-      );
+      throw new ValidationError(BUS_SEAT_ERRORS.INVALID_FLOOR_CONFIG(floorNum));
     }
 
-    const [floorSeatModels, updatedCounter] = generateFloorSeatModels(
-      busDiagramModelId,
+    const [floorSeats, updatedCounter] = generateFloorSeats(
+      seatDiagramId,
       floorConfig,
       seatNumberCounter,
     );
 
-    allSeatModels.push(...floorSeatModels);
+    allSeats.push(...floorSeats);
     seatNumberCounter = updatedCounter;
   }
 
-  if (allSeatModels.length === 0) {
-    throw new ValidationError('Invalid seatsPerFloor configuration');
-  }
-
-  return allSeatModels;
+  return allSeats;
 }
 
 /**
- * Type guard to check if a space model is a seat type
- * @param model - The space model to check
- * @returns True if the model is a seat type
+ * Type guard to check if a seat is a SEAT space type
+ * @param seat - The seat to check
+ * @returns True if the seat is a SEAT space type
  */
-export function isSeatModel(model: BusSeatModel): model is SeatBusSeatModel {
-  return model.spaceType === SpaceType.SEAT;
+export function isSeatType(seat: BusSeat): seat is SeatBusSeat {
+  return seat.spaceType === SpaceType.SEAT;
 }
 
 /**
- * Checks if a seat model update is needed based on incoming configuration
+ * Determines if a seat needs updating based on incoming configuration
  * @param incomingSpaceType - The incoming space type
  * @param incomingSeat - The incoming seat configuration
- * @param existingSeat - The existing seat model
- * @returns True if update is needed
+ * @param existingSeat - The existing seat in database
+ * @returns True if the seat needs updating
  */
 export function needsSeatUpdate(
   incomingSpaceType: SpaceType,
   incomingSeat: SeatConfigurationInput & { seatKey: string },
-  existingSeat: BusSeatModel,
+  existingSeat: BusSeat,
 ): boolean {
   // Check space type change
   if (incomingSpaceType !== existingSeat.spaceType) {
@@ -254,7 +254,7 @@ export function needsSeatUpdate(
   }
 
   // Check seat-specific fields only if both are SEAT types
-  if (isSpaceTypeSeat(incomingSpaceType) && isSeatModel(existingSeat)) {
+  if (isSpaceTypeSeat(incomingSpaceType) && isSeatType(existingSeat)) {
     if (incomingSeat.seatNumber !== existingSeat.seatNumber) {
       return true;
     }
@@ -290,18 +290,18 @@ export function needsSeatUpdate(
 }
 
 /**
- * Creates update data for a seat model based on incoming configuration
+ * Creates update data for an existing seat
  * @param incomingSpaceType - The incoming space type
  * @param incomingSeat - The incoming seat configuration
- * @param existingSeat - The existing seat model
- * @param diagramModel - The bus diagram model for meta calculations
+ * @param existingSeat - The existing seat in database
+ * @param seatDiagram - The seat diagram for meta calculations
  * @returns Update data object
  */
 export function createSeatUpdateData(
   incomingSpaceType: SpaceType,
   incomingSeat: SeatConfigurationInput & { seatKey: string },
-  existingSeat: BusSeatModel,
-  diagramModel: BusDiagramModel,
+  existingSeat: BusSeat,
+  seatDiagram: SeatDiagram,
 ): Record<string, unknown> {
   const updateData: Record<string, unknown> = {};
   updateData.spaceType = incomingSpaceType;
@@ -313,13 +313,13 @@ export function createSeatUpdateData(
     // Update meta field based on space type change
     if (isSpaceTypeSeat(incomingSpaceType)) {
       // Add seat-specific properties for SEAT space types
-      const floorConfig = diagramModel.seatsPerFloor.find(
+      const floorConfig = seatDiagram.seatsPerFloor.find(
         (config) => config.floorNumber === incomingSeat.floorNumber,
       );
 
       if (!floorConfig) {
         throw new ValidationError(
-          `Floor configuration not found for floor ${incomingSeat.floorNumber}`,
+          BUS_SEAT_ERRORS.INVALID_FLOOR_CONFIG(incomingSeat.floorNumber),
         );
       }
       const seatMetaProps = calculateSeatMetaProperties(
@@ -364,10 +364,10 @@ export function createSeatUpdateData(
 }
 
 /**
- * Creates a position key for seat lookup operations
+ * Creates a position key for identifying seats by floor and position
  * @param floorNumber - Floor number
- * @param position - Position coordinates {x, y}
- * @returns Position key string
+ * @param position - Position coordinates
+ * @returns String key for position
  */
 export function createPositionKey(
   floorNumber: number,
@@ -377,21 +377,21 @@ export function createPositionKey(
 }
 
 /**
- * Creates a new seat payload for seat creation
- * @param incomingSeat - Incoming seat configuration
- * @param busDiagramModelId - Bus diagram model ID
- * @param diagramModel - Bus diagram model for meta calculations
- * @returns CreateBusSeatModelPayload object
+ * Creates a new seat payload from incoming configuration
+ * @param incomingSeat - The incoming seat configuration
+ * @param seatDiagramId - Seat diagram ID
+ * @param seatDiagram - The seat diagram for meta calculations
+ * @returns CreateBusSeatPayload object
  */
 export function createNewSeatPayload(
   incomingSeat: SeatConfigurationInput & { seatKey: string },
-  busDiagramModelId: number,
-  diagramModel: BusDiagramModel,
-): CreateBusSeatModelPayload {
+  seatDiagramId: number,
+  seatDiagram: SeatDiagram,
+): CreateBusSeatPayload {
   const spaceType = incomingSeat.spaceType ?? SpaceType.SEAT;
 
   return {
-    busDiagramModelId,
+    seatDiagramId,
     spaceType,
     seatNumber: getSeatSpecificValue(
       spaceType,
@@ -423,13 +423,13 @@ export function createNewSeatPayload(
       ...(isSpaceTypeSeat(spaceType) &&
         (() => {
           // Get floor configuration for accurate calculations
-          const floorConfig = diagramModel.seatsPerFloor.find(
+          const floorConfig = seatDiagram.seatsPerFloor.find(
             (config) => config.floorNumber === incomingSeat.floorNumber,
           );
 
           if (!floorConfig) {
             throw new ValidationError(
-              `Floor configuration not found for floor ${incomingSeat.floorNumber}`,
+              BUS_SEAT_ERRORS.INVALID_FLOOR_CONFIG(incomingSeat.floorNumber),
             );
           }
 
@@ -444,26 +444,26 @@ export function createNewSeatPayload(
 }
 
 /**
- * Validates space positions against bus diagram model limits
+ * Validates space positions against seat diagram limits
  * @param seatConfigurations - Array of space configurations to validate
- * @param diagramModel - The bus diagram model with layout constraints
+ * @param seatDiagram - The seat diagram with layout constraints
  * @throws {ValidationError} If any space is outside the valid bounds
  */
 export function validateSeatPositionLimits(
   seatConfigurations: SeatConfigurationInput[],
-  diagramModel: BusDiagramModel,
+  seatDiagram: SeatDiagram,
 ): void {
-  const seatsPerFloor = diagramModel.seatsPerFloor;
+  const seatsPerFloor = seatDiagram.seatsPerFloor;
 
   for (const config of seatConfigurations) {
     const { floorNumber, position } = config;
 
     // Validate floor number
-    if (floorNumber < 1 || floorNumber > diagramModel.numFloors) {
+    if (floorNumber < 1 || floorNumber > seatDiagram.numFloors) {
       throw new ValidationError(
-        BUS_SEAT_MODEL_VALIDATION_ERRORS.INVALID_FLOOR_NUMBER(
+        BUS_SEAT_VALIDATION_ERRORS.INVALID_FLOOR_NUMBER(
           floorNumber,
-          diagramModel.numFloors,
+          seatDiagram.numFloors,
         ),
       );
     }
@@ -475,14 +475,14 @@ export function validateSeatPositionLimits(
 
     if (!floorConfig) {
       throw new ValidationError(
-        BUS_SEAT_MODEL_VALIDATION_ERRORS.FLOOR_CONFIG_NOT_FOUND(floorNumber),
+        BUS_SEAT_VALIDATION_ERRORS.FLOOR_CONFIG_NOT_FOUND(floorNumber),
       );
     }
 
     // Validate row number (position.y)
     if (position.y < 1 || position.y > floorConfig.numRows) {
       throw new ValidationError(
-        BUS_SEAT_MODEL_VALIDATION_ERRORS.INVALID_ROW_NUMBER(
+        BUS_SEAT_VALIDATION_ERRORS.INVALID_ROW_NUMBER(
           position.y,
           floorConfig.numRows,
           floorNumber,
@@ -497,7 +497,7 @@ export function validateSeatPositionLimits(
 
     if (!isValidColumn) {
       throw new ValidationError(
-        BUS_SEAT_MODEL_VALIDATION_ERRORS.INVALID_COLUMN_NUMBER(
+        BUS_SEAT_VALIDATION_ERRORS.INVALID_COLUMN_NUMBER(
           position.x,
           maxValidColumn + 1,
           floorNumber,
@@ -510,12 +510,12 @@ export function validateSeatPositionLimits(
 /**
  * Validates space configuration payload for business rules
  * @param seatConfigurations - Array of space configurations to validate
- * @param diagramModel - The bus diagram model with layout constraints (optional for position validation)
+ * @param seatDiagram - The seat diagram with layout constraints (optional for position validation)
  * @throws {ValidationError} If validation fails
  */
 export function validateSeatConfigurationPayload(
   seatConfigurations: SeatConfigurationInput[],
-  diagramModel?: BusDiagramModel,
+  seatDiagram?: SeatDiagram,
 ): void {
   const positionKeys = new Set<string>();
   const seatNumbers = new Set<string>();
@@ -523,7 +523,7 @@ export function validateSeatConfigurationPayload(
   for (const config of seatConfigurations) {
     if (!config.floorNumber || !config.position) {
       throw new ValidationError(
-        BUS_SEAT_MODEL_VALIDATION_ERRORS.MISSING_REQUIRED_FIELDS,
+        BUS_SEAT_VALIDATION_ERRORS.MISSING_REQUIRED_FIELDS,
       );
     }
 
@@ -532,16 +532,14 @@ export function validateSeatConfigurationPayload(
     // For SEAT space types, seat number is required
     if (spaceType === SpaceType.SEAT && !config.seatNumber) {
       throw new ValidationError(
-        BUS_SEAT_MODEL_VALIDATION_ERRORS.SEAT_NUMBER_REQUIRED,
+        BUS_SEAT_VALIDATION_ERRORS.SEAT_NUMBER_REQUIRED,
       );
     }
 
     // Check for duplicate positions
     const positionKey = `${config.floorNumber}:${config.position.x}:${config.position.y}`;
     if (positionKeys.has(positionKey)) {
-      throw new ValidationError(
-        BUS_SEAT_MODEL_VALIDATION_ERRORS.DUPLICATE_POSITIONS,
-      );
+      throw new ValidationError(BUS_SEAT_VALIDATION_ERRORS.DUPLICATE_POSITIONS);
     }
     positionKeys.add(positionKey);
 
@@ -549,15 +547,15 @@ export function validateSeatConfigurationPayload(
     if (spaceType === SpaceType.SEAT && config.seatNumber) {
       if (seatNumbers.has(config.seatNumber)) {
         throw new ValidationError(
-          BUS_SEAT_MODEL_VALIDATION_ERRORS.DUPLICATE_SEAT_NUMBERS,
+          BUS_SEAT_VALIDATION_ERRORS.DUPLICATE_SEAT_NUMBERS,
         );
       }
       seatNumbers.add(config.seatNumber);
     }
   }
 
-  // Validate position limits if diagram model is provided
-  if (diagramModel) {
-    validateSeatPositionLimits(seatConfigurations, diagramModel);
+  // Validate position limits if seat diagram is provided
+  if (seatDiagram) {
+    validateSeatPositionLimits(seatConfigurations, seatDiagram);
   }
 }

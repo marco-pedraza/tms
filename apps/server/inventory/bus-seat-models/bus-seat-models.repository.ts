@@ -19,8 +19,26 @@ export const createBusSeatModelRepository = () => {
     typeof busSeatModels
   >(db, busSeatModels, 'Bus Seat Model');
 
+  /**
+   * Finds all active bus seat models for a specific bus diagram model
+   * @param busDiagramModelId - The ID of the bus diagram model
+   * @returns {Promise<BusSeatModel[]>} Array of active bus seat models ordered by seat number
+   */
+  async function findActiveByBusDiagramModelId(
+    busDiagramModelId: number,
+  ): Promise<BusSeatModel[]> {
+    return await baseRepository.findAll({
+      filters: {
+        busDiagramModelId,
+        active: true,
+      },
+      orderBy: [{ field: 'seatNumber', direction: 'asc' }],
+    });
+  }
+
   return {
     ...baseRepository,
+    findActiveByBusDiagramModelId,
   };
 };
 

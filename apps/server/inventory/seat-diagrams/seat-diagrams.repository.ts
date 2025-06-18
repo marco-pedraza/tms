@@ -4,23 +4,38 @@ import { seatDiagrams } from './seat-diagrams.schema';
 import {
   CreateSeatDiagramPayload,
   SeatDiagram,
+  SeatDiagrams,
   UpdateSeatDiagramPayload,
 } from './seat-diagrams.types';
 
 /**
  * Creates a repository for managing seat diagram entities
- * @returns {Object} The base repository for seat diagram CRUD operations
+ * @returns {Object} An object containing seat diagram-specific operations and base CRUD operations
  */
-export const createSeatDiagramRepository = () => {
+export function createSeatDiagramRepository() {
   const baseRepository = createBaseRepository<
     SeatDiagram,
     CreateSeatDiagramPayload,
     UpdateSeatDiagramPayload,
     typeof seatDiagrams
-  >(db, seatDiagrams, 'Seat Diagram');
+  >(db, seatDiagrams, 'Seat Diagram', {
+    searchableFields: [seatDiagrams.name],
+  });
 
-  return baseRepository;
-};
+  async function findAll(): Promise<SeatDiagrams> {
+    const seatDiagramsList = await baseRepository.findAll({
+      orderBy: [{ field: 'name', direction: 'asc' }],
+    });
+    return {
+      seatDiagrams: seatDiagramsList,
+    };
+  }
+
+  return {
+    ...baseRepository,
+    findAll,
+  };
+}
 
 // Export the seat diagram repository instance
 export const seatDiagramRepository = createSeatDiagramRepository();

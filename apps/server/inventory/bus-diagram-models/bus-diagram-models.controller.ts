@@ -73,10 +73,10 @@ export const listBusDiagramModelsPaginated = api(
 );
 
 /**
- * Updates an existing bus diagram model.
+ * Updates an existing bus diagram model and optionally regenerates seat models.
  * @param params - Object containing the bus diagram model ID and update data
  * @param params.id - The ID of the bus diagram model to update
- * @param params.data - The bus diagram model data to update
+ * @param params.regenerateSeats - Whether to regenerate seat models after update (default: false)
  * @returns {Promise<BusDiagramModel>} The updated bus diagram model
  * @throws {APIError} If update fails, validation fails, or the bus diagram model doesn't exist
  */
@@ -84,11 +84,21 @@ export const updateBusDiagramModel = api(
   { expose: true, method: 'PATCH', path: '/bus-diagram-models/:id' },
   async ({
     id,
+    regenerateSeats = false,
     ...data
   }: UpdateBusDiagramModelPayload & {
     id: number;
+    regenerateSeats?: boolean;
   }): Promise<BusDiagramModel> => {
-    return await busDiagramModelRepository.update(id, data);
+    // Update the bus diagram model and optionally regenerate seats
+    if (regenerateSeats) {
+      // Regenerate seat models with the updated diagram model data in a single transaction
+      const result = await busSeatModelUseCases.regenerateSeatModels(id, data);
+      return result.busDiagramModel;
+    } else {
+      // Just update the bus diagram model without regenerating seats
+      return await busDiagramModelRepository.update(id, data);
+    }
   },
 );
 

@@ -7,8 +7,9 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { eq, relations } from 'drizzle-orm';
 import { seatDiagrams } from '../seat-diagrams/seat-diagrams.schema';
 
 /**
@@ -21,9 +22,10 @@ export const busSeats = pgTable(
     seatDiagramId: integer('seat_diagram_id')
       .notNull()
       .references(() => seatDiagrams.id, { onDelete: 'cascade' }),
-    seatNumber: text('seat_number').notNull(),
+    spaceType: text('space_type').notNull().default('seat'), // seat/stairs/hallway/bathroom/empty
+    seatNumber: text('seat_number'), // Only required for SEAT space types
     floorNumber: integer('floor_number').notNull().default(1),
-    seatType: text('seat_type').notNull(), // Regular/Premium/VIP/etc.
+    seatType: text('seat_type'), // Only applicable for SEAT space types - Regular/Premium/VIP/etc.
     amenities: jsonb('amenities').default([]).notNull(),
     reclinementAngle: integer('reclinement_angle'),
     position: jsonb('position').notNull(), // X, Y coordinates in layout
@@ -32,7 +34,14 @@ export const busSeats = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (table) => [index().on(table.seatDiagramId)],
+  (table) => [
+    index().on(table.seatDiagramId),
+    index().on(table.spaceType),
+    // Only enforce unique seat number for SEAT space types
+    uniqueIndex()
+      .on(table.seatDiagramId, table.seatNumber)
+      .where(eq(table.spaceType, 'seat')),
+  ],
 );
 
 /**

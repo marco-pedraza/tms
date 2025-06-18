@@ -2,8 +2,8 @@ CREATE TABLE IF NOT EXISTS "seat_diagrams" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"bus_diagram_model_id" integer NOT NULL,
 	"name" text NOT NULL,
+	"description" text,
 	"max_capacity" integer NOT NULL,
-	"observations" text,
 	"num_floors" integer DEFAULT 1 NOT NULL,
 	"seats_per_floor" jsonb NOT NULL,
 	"total_seats" integer NOT NULL,
@@ -21,3 +21,6 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "seat_diagrams_name_index" ON "seat_diagrams" USING btree ("name");
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "seat_diagrams_bus_diagram_model_id_index" ON "seat_diagrams" USING btree ("bus_diagram_model_id");
+

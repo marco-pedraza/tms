@@ -17,9 +17,10 @@ CREATE TABLE IF NOT EXISTS "bus_models" (
 CREATE TABLE IF NOT EXISTS "bus_seats" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"seat_diagram_id" integer NOT NULL,
-	"seat_number" text NOT NULL,
+	"space_type" text DEFAULT 'seat' NOT NULL,
+	"seat_number" text,
 	"floor_number" integer DEFAULT 1 NOT NULL,
-	"seat_type" text NOT NULL,
+	"seat_type" text,
 	"amenities" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"reclinement_angle" integer,
 	"position" jsonb NOT NULL,
@@ -44,4 +45,6 @@ END $$;
 CREATE INDEX IF NOT EXISTS "bus_models_default_bus_diagram_model_id_index" ON "bus_models" USING btree ("default_bus_diagram_model_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "bus_models_manufacturer_index" ON "bus_models" USING btree ("manufacturer");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "bus_models_model_index" ON "bus_models" USING btree ("model");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "bus_seats_seat_diagram_id_index" ON "bus_seats" USING btree ("seat_diagram_id");
+CREATE INDEX IF NOT EXISTS "bus_seats_seat_diagram_id_index" ON "bus_seats" USING btree ("seat_diagram_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "bus_seats_space_type_index" ON "bus_seats" USING btree ("space_type");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "bus_seats_seat_diagram_id_seat_number_unique" ON "bus_seats" USING btree ("seat_diagram_id","seat_number") WHERE "bus_seats"."space_type" = 'seat';

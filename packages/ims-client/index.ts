@@ -103,8 +103,6 @@ export namespace inventory {
             this.createBusDiagramModelZone = this.createBusDiagramModelZone.bind(this)
             this.createBusLine = this.createBusLine.bind(this)
             this.createBusModel = this.createBusModel.bind(this)
-            this.createBusSeat = this.createBusSeat.bind(this)
-            this.createBusSeatsBatch = this.createBusSeatsBatch.bind(this)
             this.createCity = this.createCity.bind(this)
             this.createCompoundRoute = this.createCompoundRoute.bind(this)
             this.createCountry = this.createCountry.bind(this)
@@ -123,7 +121,6 @@ export namespace inventory {
             this.deleteBusDiagramModelZone = this.deleteBusDiagramModelZone.bind(this)
             this.deleteBusLine = this.deleteBusLine.bind(this)
             this.deleteBusModel = this.deleteBusModel.bind(this)
-            this.deleteBusSeat = this.deleteBusSeat.bind(this)
             this.deleteCity = this.deleteCity.bind(this)
             this.deleteCountry = this.deleteCountry.bind(this)
             this.deleteDriver = this.deleteDriver.bind(this)
@@ -145,7 +142,6 @@ export namespace inventory {
             this.getBusDiagramModelZone = this.getBusDiagramModelZone.bind(this)
             this.getBusLine = this.getBusLine.bind(this)
             this.getBusModel = this.getBusModel.bind(this)
-            this.getBusSeat = this.getBusSeat.bind(this)
             this.getBusesByModel = this.getBusesByModel.bind(this)
             this.getBusesByStatus = this.getBusesByStatus.bind(this)
             this.getCity = this.getCity.bind(this)
@@ -160,7 +156,7 @@ export namespace inventory {
             this.getRoute = this.getRoute.bind(this)
             this.getRouteWithFullDetails = this.getRouteWithFullDetails.bind(this)
             this.getSeatDiagram = this.getSeatDiagram.bind(this)
-            this.getSeatDiagramConfiguration = this.getSeatDiagramConfiguration.bind(this)
+            this.getSeatDiagramSeats = this.getSeatDiagramSeats.bind(this)
             this.getSeatDiagramZone = this.getSeatDiagramZone.bind(this)
             this.getServiceType = this.getServiceType.bind(this)
             this.getState = this.getState.bind(this)
@@ -173,7 +169,6 @@ export namespace inventory {
             this.listBusLinesPaginated = this.listBusLinesPaginated.bind(this)
             this.listBusModels = this.listBusModels.bind(this)
             this.listBusModelsPaginated = this.listBusModelsPaginated.bind(this)
-            this.listBusSeatsBySeatDiagram = this.listBusSeatsBySeatDiagram.bind(this)
             this.listBuses = this.listBuses.bind(this)
             this.listBusesPaginated = this.listBusesPaginated.bind(this)
             this.listCities = this.listCities.bind(this)
@@ -195,8 +190,6 @@ export namespace inventory {
             this.listPathwaysPaginated = this.listPathwaysPaginated.bind(this)
             this.listRoutes = this.listRoutes.bind(this)
             this.listRoutesPaginated = this.listRoutesPaginated.bind(this)
-            this.listSeatDiagrams = this.listSeatDiagrams.bind(this)
-            this.listSeatDiagramsPaginated = this.listSeatDiagramsPaginated.bind(this)
             this.listServiceTypes = this.listServiceTypes.bind(this)
             this.listServiceTypesPaginated = this.listServiceTypesPaginated.bind(this)
             this.listStates = this.listStates.bind(this)
@@ -238,7 +231,6 @@ export namespace inventory {
             this.updateBusDiagramModelZone = this.updateBusDiagramModelZone.bind(this)
             this.updateBusLine = this.updateBusLine.bind(this)
             this.updateBusModel = this.updateBusModel.bind(this)
-            this.updateBusSeat = this.updateBusSeat.bind(this)
             this.updateBusStatus = this.updateBusStatus.bind(this)
             this.updateCity = this.updateCity.bind(this)
             this.updateCompoundRouteSegments = this.updateCompoundRouteSegments.bind(this)
@@ -251,6 +243,7 @@ export namespace inventory {
             this.updatePathwayServiceAssignment = this.updatePathwayServiceAssignment.bind(this)
             this.updateSeatConfiguration = this.updateSeatConfiguration.bind(this)
             this.updateSeatDiagram = this.updateSeatDiagram.bind(this)
+            this.updateSeatDiagramConfiguration = this.updateSeatDiagramConfiguration.bind(this)
             this.updateSeatDiagramZone = this.updateSeatDiagramZone.bind(this)
             this.updateServiceType = this.updateServiceType.bind(this)
             this.updateState = this.updateState.bind(this)
@@ -393,30 +386,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/bus-models`, JSON.stringify(params))
             return await resp.json() as bus_models.BusModel
-        }
-
-        /**
-         * Creates a new bus seat.
-         * @param params - The bus seat data to create
-         * @returns {Promise<BusSeat>} The created bus seat
-         * @throws {APIError} If the bus seat creation fails
-         */
-        public async createBusSeat(params: bus_seats.CreateBusSeatPayload): Promise<bus_seats.BusSeat> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/bus-seats`, JSON.stringify(params))
-            return await resp.json() as bus_seats.BusSeat
-        }
-
-        /**
-         * Creates multiple bus seats in a batch.
-         * @param params - Object containing array of bus seats to create
-         * @returns {Promise<BusSeats>} The created bus seats
-         * @throws {APIError} If any seat creation fails
-         */
-        public async createBusSeatsBatch(params: bus_seats.CreateBusSeatBatchPayload): Promise<bus_seats.BusSeats> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/bus-seats/batch`, JSON.stringify(params))
-            return await resp.json() as bus_seats.BusSeats
         }
 
         /**
@@ -656,19 +625,6 @@ export namespace inventory {
         }
 
         /**
-         * Deletes a bus seat by its ID.
-         * @param params - Object containing the bus seat ID
-         * @param params.id - The ID of the bus seat to delete
-         * @returns {Promise<BusSeat>} The deleted bus seat
-         * @throws {APIError} If the bus seat is not found or deletion fails
-         */
-        public async deleteBusSeat(id: number): Promise<bus_seats.BusSeat> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/bus-seats/${encodeURIComponent(id)}`)
-            return await resp.json() as bus_seats.BusSeat
-        }
-
-        /**
          * Deletes a city by its ID.
          */
         public async deleteCity(id: number): Promise<cities.City> {
@@ -756,8 +712,9 @@ export namespace inventory {
         }
 
         /**
-         * Deletes an existing seat diagram.
-         * @param id - The ID of the seat diagram to delete
+         * Deletes a seat diagram by its ID.
+         * @param params - Object containing the seat diagram ID
+         * @param params.id - The ID of the seat diagram to delete
          * @returns {Promise<SeatDiagram>} The deleted seat diagram
          * @throws {APIError} If deletion fails or the seat diagram doesn't exist
          */
@@ -929,19 +886,6 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves a bus seat by its ID.
-         * @param params - Object containing the bus seat ID
-         * @param params.id - The ID of the bus seat to retrieve
-         * @returns {Promise<BusSeat>} The found bus seat
-         * @throws {APIError} If the bus seat is not found or retrieval fails
-         */
-        public async getBusSeat(id: number): Promise<bus_seats.BusSeat> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/bus-seats/${encodeURIComponent(id)}`)
-            return await resp.json() as bus_seats.BusSeat
-        }
-
-        /**
          * Retrieves buses by model ID.
          * @param params - Object containing the model ID
          * @param params.modelId - The ID of the bus model
@@ -1108,7 +1052,8 @@ export namespace inventory {
 
         /**
          * Retrieves a seat diagram by its ID.
-         * @param id - The ID of the seat diagram to retrieve
+         * @param params - Object containing the seat diagram ID
+         * @param params.id - The ID of the seat diagram to retrieve
          * @returns {Promise<SeatDiagram>} The requested seat diagram
          * @throws {APIError} If retrieval fails or the seat diagram doesn't exist
          */
@@ -1119,16 +1064,16 @@ export namespace inventory {
         }
 
         /**
-         * Gets the seat configuration for a seat diagram.
+         * Retrieves all seats for a specific seat diagram.
          * @param params - Object containing the seat diagram ID
-         * @param params.id - The ID of the seat diagram to get configuration for
-         * @returns {Promise<SeatConfiguration>} The seat configuration
-         * @throws {APIError} If the seat diagram is not found or retrieval fails
+         * @param params.id - The ID of the seat diagram to get seats for
+         * @returns {Promise<BusSeats>} Object containing array of bus seats
+         * @throws {APIError} If retrieval fails or the seat diagram doesn't exist
          */
-        public async getSeatDiagramConfiguration(id: number): Promise<seat_diagrams.SeatConfiguration> {
+        public async getSeatDiagramSeats(id: number): Promise<bus_seats.BusSeats> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/seat-diagrams/${encodeURIComponent(id)}/seat-configuration`)
-            return await resp.json() as seat_diagrams.SeatConfiguration
+            const resp = await this.baseClient.callTypedAPI("GET", `/seat-diagrams/${encodeURIComponent(id)}/seats`)
+            return await resp.json() as bus_seats.BusSeats
         }
 
         /**
@@ -1273,19 +1218,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/bus-models/paginated`, undefined, {query})
             return await resp.json() as bus_models.PaginatedBusModels
-        }
-
-        /**
-         * Retrieves bus seats by seat diagram ID.
-         * @param params - Object containing the seat diagram ID
-         * @param params.seatDiagramId - The ID of the seat diagram to retrieve seats for
-         * @returns {Promise<BusSeats>} Object containing array of bus seats
-         * @throws {APIError} If retrieval fails
-         */
-        public async listBusSeatsBySeatDiagram(seatDiagramId: number): Promise<bus_seats.BusSeats> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/bus-seats/by-seat-diagram/${encodeURIComponent(seatDiagramId)}`)
-            return await resp.json() as bus_seats.BusSeats
         }
 
         /**
@@ -1540,35 +1472,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/get-routes/paginated`, JSON.stringify(params))
             return await resp.json() as routes.PaginatedRoutes
-        }
-
-        /**
-         * Retrieves all seat diagrams.
-         * @returns {Promise<SeatDiagrams>} List of all seat diagrams
-         * @throws {APIError} If retrieval fails
-         */
-        public async listSeatDiagrams(): Promise<seat_diagrams.SeatDiagrams> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/seat-diagrams`)
-            return await resp.json() as seat_diagrams.SeatDiagrams
-        }
-
-        /**
-         * Retrieves seat diagrams with pagination (useful for tables).
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedSeatDiagrams>} Paginated list of seat diagrams
-         * @throws {APIError} If retrieval fails
-         */
-        public async listSeatDiagramsPaginated(params: shared.PaginationParams): Promise<seat_diagrams.PaginatedSeatDiagrams> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:     params.page === undefined ? undefined : String(params.page),
-                pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/seat-diagrams/paginated`, undefined, {query})
-            return await resp.json() as seat_diagrams.PaginatedSeatDiagrams
         }
 
         /**
@@ -2558,10 +2461,10 @@ export namespace inventory {
         }
 
         /**
-         * Updates an existing bus diagram model.
+         * Updates an existing bus diagram model and optionally regenerates seat models.
          * @param params - Object containing the bus diagram model ID and update data
          * @param params.id - The ID of the bus diagram model to update
-         * @param params.data - The bus diagram model data to update
+         * @param params.regenerateSeats - Whether to regenerate seat models after update (default: false)
          * @returns {Promise<BusDiagramModel>} The updated bus diagram model
          * @throws {APIError} If update fails, validation fails, or the bus diagram model doesn't exist
          */
@@ -2608,6 +2511,8 @@ export namespace inventory {
      * Whether the bus diagram model is active
      */
     active?: boolean
+
+    regenerateSeats?: boolean
 }): Promise<bus_diagram_models.BusDiagramModel> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PATCH", `/bus-diagram-models/${encodeURIComponent(id)}`, JSON.stringify(params))
@@ -2774,67 +2679,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/bus-models/${encodeURIComponent(id)}`, JSON.stringify(params))
             return await resp.json() as bus_models.BusModel
-        }
-
-        /**
-         * Updates an existing bus seat.
-         * @param params - Object containing the bus seat ID and update data
-         * @param params.id - The ID of the bus seat to update
-         * @param params.data - The bus seat data to update
-         * @returns {Promise<BusSeat>} The updated bus seat
-         * @throws {APIError} If the bus seat is not found or update fails
-         */
-        public async updateBusSeat(id: number, params: {
-    /**
-     * ID of the seat diagram this seat belongs to
-     * Must be a positive number
-     */
-    seatDiagramId?: number
-
-    /**
-     * Seat number (e.g., "1A", "2B")
-     * Must have at least 1 character
-     */
-    seatNumber?: string
-
-    /**
-     * Floor number
-     */
-    floorNumber?: number
-
-    /**
-     * Type of seat
-     */
-    seatType?: shared.SeatType
-
-    /**
-     * Seat amenities
-     */
-    amenities?: string[]
-
-    /**
-     * Angle of reclinement in degrees (if applicable)
-     */
-    reclinementAngle?: number
-
-    /**
-     * Position coordinates in the bus layout
-     */
-    position?: bus_seats.SeatPosition
-
-    /**
-     * Additional metadata for the seat (flexible JSON structure)
-     */
-    meta?: { [key: string]: any }
-
-    /**
-     * Whether the seat is active
-     */
-    active?: boolean
-}): Promise<bus_seats.BusSeat> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/bus-seats/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as bus_seats.BusSeat
         }
 
         /**
@@ -3322,17 +3166,23 @@ export namespace inventory {
 
         /**
          * Updates an existing seat diagram.
-         * @param id - The ID of the seat diagram to update
-         * @param payload - Data to update the seat diagram with
+         * @param params - Object containing the seat diagram ID and update data
+         * @param params.id - The ID of the seat diagram to update
+         * @param params.data - The seat diagram data to update
          * @returns {Promise<SeatDiagram>} The updated seat diagram
          * @throws {APIError} If update fails, validation fails, or the seat diagram doesn't exist
          */
         public async updateSeatDiagram(id: number, params: {
     /**
-     * Name of the diagram
+     * Name of the seat diagram
      * Must have at least 1 character
      */
     name?: string
+
+    /**
+     * Description of the seat diagram
+     */
+    description?: string
 
     /**
      * Maximum capacity
@@ -3341,12 +3191,8 @@ export namespace inventory {
     maxCapacity?: number
 
     /**
-     * Observations about the diagram
-     */
-    observations?: string
-
-    /**
-     * Number of floors in the bus
+     * Number of floors in the seat diagram
+     * Must be a positive number
      */
     numFloors?: number
 
@@ -3373,6 +3219,25 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PATCH", `/seat-diagrams/${encodeURIComponent(id)}`, JSON.stringify(params))
             return await resp.json() as seat_diagrams.SeatDiagram
+        }
+
+        /**
+         * Updates the seat configuration of an operational seat layout in a single batch operation.
+         * @param params - Object containing the seat diagram ID and seat configurations
+         * @param params.id - The ID of the seat diagram to update
+         * @param params.seats - Array of seat configurations to update/create/deactivate
+         * @returns {Promise<UpdatedSeatConfiguration>} Statistics about the update operation and updated bus seats
+         * @throws {APIError} If the update fails, validation fails, or the seat diagram doesn't exist
+         */
+        public async updateSeatDiagramConfiguration(id: number, params: {
+    /**
+     * Array of space configurations to update/create/deactivate
+     */
+    seats: bus_seats.SeatConfigurationInput[]
+}): Promise<bus_seats.UpdatedSeatConfiguration> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/seat-diagrams/${encodeURIComponent(id)}/update-seats`, JSON.stringify(params))
+            return await resp.json() as bus_seats.UpdatedSeatConfiguration
         }
 
         /**
@@ -5894,7 +5759,7 @@ export namespace bus_seat_models {
         /**
          * Position coordinates in the bus layout
          */
-        position: SeatPosition
+        position: shared.SeatPosition
 
         /**
          * Additional metadata for the space (flexible JSON structure)
@@ -5955,7 +5820,7 @@ export namespace bus_seat_models {
         /**
          * Position coordinates in the bus layout
          */
-        position: SeatPosition
+        position: shared.SeatPosition
 
         /**
          * Additional metadata for the space (flexible JSON structure)
@@ -6007,7 +5872,7 @@ export namespace bus_seat_models {
         /**
          * Position coordinates in the bus layout
          */
-        position: SeatPosition
+        position: shared.SeatPosition
 
         /**
          * Additional metadata for the space (flexible JSON structure)
@@ -6074,7 +5939,7 @@ export namespace bus_seat_models {
         /**
          * Position coordinates in the bus layout
          */
-        position: SeatPosition
+        position: shared.SeatPosition
 
         /**
          * Additional metadata for the space (flexible JSON structure)
@@ -6135,18 +6000,13 @@ export namespace bus_seat_models {
         /**
          * Position coordinates in the bus layout (required for space identification)
          */
-        position: SeatPosition
+        position: shared.SeatPosition
 
         /**
          * Whether the space is active
          * @default true
          */
         active?: boolean
-    }
-
-    export interface SeatPosition {
-        x: number
-        y: number
     }
 
     export interface StairsBusSeatModel {
@@ -6178,7 +6038,7 @@ export namespace bus_seat_models {
         /**
          * Position coordinates in the bus layout
          */
-        position: SeatPosition
+        position: shared.SeatPosition
 
         /**
          * Additional metadata for the space (flexible JSON structure)
@@ -6225,21 +6085,21 @@ export namespace bus_seat_models {
 }
 
 export namespace bus_seats {
-    export interface BusSeat {
+    export interface BathroomBusSeat {
+        /**
+         * Type of space
+         */
+        spaceType: "bathroom"
+
         /**
          * Unique identifier for the bus seat
          */
         id: number
 
         /**
-         * ID of the seat diagram this seat belongs to
+         * Seat diagram ID (reference to seat_diagrams)
          */
         seatDiagramId: number
-
-        /**
-         * Seat number (e.g., "1A", "2B")
-         */
-        seatNumber: string
 
         /**
          * Floor number
@@ -6247,45 +6107,37 @@ export namespace bus_seats {
         floorNumber: number
 
         /**
-         * Type of seat
-         */
-        seatType: shared.SeatType
-
-        /**
-         * Seat amenities
+         * Seat amenities (primarily for SEAT space types)
          */
         amenities: string[]
 
         /**
-         * Angle of reclinement in degrees (if applicable)
-         */
-        reclinementAngle?: number
-
-        /**
          * Position coordinates in the bus layout
          */
-        position: SeatPosition
+        position: shared.SeatPosition
 
         /**
-         * Additional metadata for the seat (flexible JSON structure)
+         * Additional metadata for the space (flexible JSON structure)
          */
         meta: { [key: string]: any }
 
         /**
-         * Whether the seat is active
+         * Whether the space is active
          */
         active: boolean
 
         /**
-         * Timestamp when the seat was created
+         * Timestamp when the space was created
          */
         createdAt: string
 
         /**
-         * Timestamp when the seat was last updated
+         * Timestamp when the space was last updated
          */
         updatedAt: string
     }
+
+    export type BusSeat = SeatBusSeat | HallwayBusSeat | BathroomBusSeat | EmptyBusSeat | StairsBusSeat
 
     export interface BusSeats {
         /**
@@ -6294,124 +6146,296 @@ export namespace bus_seats {
         busSeats: BusSeat[]
     }
 
-    export interface CreateBusSeatBatchPayload {
+    export interface EmptyBusSeat {
         /**
-         * Array of bus seats to create
+         * Type of space
          */
-        seats: CreateBusSeatPayload[]
-    }
+        spaceType: "empty"
 
-    export interface CreateBusSeatPayload {
         /**
-         * ID of the seat diagram this seat belongs to
-         * Must be a positive number
+         * Unique identifier for the bus seat
+         */
+        id: number
+
+        /**
+         * Seat diagram ID (reference to seat_diagrams)
          */
         seatDiagramId: number
 
         /**
-         * Seat number (e.g., "1A", "2B")
-         * Must have at least 1 character
+         * Floor number
+         */
+        floorNumber: number
+
+        /**
+         * Seat amenities (primarily for SEAT space types)
+         */
+        amenities: string[]
+
+        /**
+         * Position coordinates in the bus layout
+         */
+        position: shared.SeatPosition
+
+        /**
+         * Additional metadata for the space (flexible JSON structure)
+         */
+        meta: { [key: string]: any }
+
+        /**
+         * Whether the space is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the space was created
+         */
+        createdAt: string
+
+        /**
+         * Timestamp when the space was last updated
+         */
+        updatedAt: string
+    }
+
+    export interface HallwayBusSeat {
+        /**
+         * Type of space
+         */
+        spaceType: "hallway"
+
+        /**
+         * Unique identifier for the bus seat
+         */
+        id: number
+
+        /**
+         * Seat diagram ID (reference to seat_diagrams)
+         */
+        seatDiagramId: number
+
+        /**
+         * Floor number
+         */
+        floorNumber: number
+
+        /**
+         * Seat amenities (primarily for SEAT space types)
+         */
+        amenities: string[]
+
+        /**
+         * Position coordinates in the bus layout
+         */
+        position: shared.SeatPosition
+
+        /**
+         * Additional metadata for the space (flexible JSON structure)
+         */
+        meta: { [key: string]: any }
+
+        /**
+         * Whether the space is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the space was created
+         */
+        createdAt: string
+
+        /**
+         * Timestamp when the space was last updated
+         */
+        updatedAt: string
+    }
+
+    export interface SeatBusSeat {
+        /**
+         * Type of space
+         */
+        spaceType: "seat"
+
+        /**
+         * Seat number (required for SEAT space types)
          */
         seatNumber: string
 
         /**
-         * Floor number
-         * @default 1
+         * Type of seat (required for SEAT space types)
          */
-        floorNumber?: number
+        seatType: shared.SeatType
 
         /**
-         * Type of seat
+         * Angle of reclinement in degrees (only for SEAT space types)
+         */
+        reclinementAngle?: number
+
+        /**
+         * Unique identifier for the bus seat
+         */
+        id: number
+
+        /**
+         * Seat diagram ID (reference to seat_diagrams)
+         */
+        seatDiagramId: number
+
+        /**
+         * Floor number
+         */
+        floorNumber: number
+
+        /**
+         * Seat amenities (primarily for SEAT space types)
+         */
+        amenities: string[]
+
+        /**
+         * Position coordinates in the bus layout
+         */
+        position: shared.SeatPosition
+
+        /**
+         * Additional metadata for the space (flexible JSON structure)
+         */
+        meta: { [key: string]: any }
+
+        /**
+         * Whether the space is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the space was created
+         */
+        createdAt: string
+
+        /**
+         * Timestamp when the space was last updated
+         */
+        updatedAt: string
+    }
+
+    export interface SeatConfigurationInput {
+        /**
+         * Type of space (seat, stairs, hallway, etc.)
+         * @default SpaceType.SEAT
+         */
+        spaceType?: shared.SpaceType
+
+        /**
+         * Seat number (e.g., "1A", "2B") - required only for SEAT space types
+         */
+        seatNumber?: string
+
+        /**
+         * Floor number (required for space identification)
+         * @default 1
+         */
+        floorNumber: number
+
+        /**
+         * Type of seat (only applicable for SEAT space types)
          * @default SeatType.REGULAR
          */
         seatType?: shared.SeatType
 
         /**
-         * Seat amenities
+         * Space amenities
          * @default []
          */
         amenities?: string[]
 
         /**
-         * Angle of reclinement in degrees (if applicable)
+         * Angle of reclinement in degrees (only for SEAT space types)
          */
         reclinementAngle?: number
 
         /**
-         * Position coordinates in the bus layout
+         * Position coordinates in the bus layout (required for space identification)
          */
-        position: SeatPosition
+        position: shared.SeatPosition
 
         /**
-         * Additional metadata for the seat (flexible JSON structure)
-         * @default {}
-         */
-        meta?: { [key: string]: any }
-
-        /**
-         * Whether the seat is active
+         * Whether the space is active
          * @default true
          */
         active?: boolean
     }
 
-    export interface CreateBusSeatPayload {
+    export interface StairsBusSeat {
         /**
-         * ID of the seat diagram this seat belongs to
-         * Must be a positive number
+         * Type of space
+         */
+        spaceType: "stairs"
+
+        /**
+         * Unique identifier for the bus seat
+         */
+        id: number
+
+        /**
+         * Seat diagram ID (reference to seat_diagrams)
          */
         seatDiagramId: number
 
         /**
-         * Seat number (e.g., "1A", "2B")
-         * Must have at least 1 character
-         */
-        seatNumber: string
-
-        /**
          * Floor number
-         * @default 1
          */
-        floorNumber?: number
+        floorNumber: number
 
         /**
-         * Type of seat
-         * @default SeatType.REGULAR
+         * Seat amenities (primarily for SEAT space types)
          */
-        seatType?: shared.SeatType
-
-        /**
-         * Seat amenities
-         * @default []
-         */
-        amenities?: string[]
-
-        /**
-         * Angle of reclinement in degrees (if applicable)
-         */
-        reclinementAngle?: number
+        amenities: string[]
 
         /**
          * Position coordinates in the bus layout
          */
-        position: SeatPosition
+        position: shared.SeatPosition
 
         /**
-         * Additional metadata for the seat (flexible JSON structure)
-         * @default {}
+         * Additional metadata for the space (flexible JSON structure)
          */
-        meta?: { [key: string]: any }
+        meta: { [key: string]: any }
 
         /**
-         * Whether the seat is active
-         * @default true
+         * Whether the space is active
          */
-        active?: boolean
+        active: boolean
+
+        /**
+         * Timestamp when the space was created
+         */
+        createdAt: string
+
+        /**
+         * Timestamp when the space was last updated
+         */
+        updatedAt: string
     }
 
-    export interface SeatPosition {
-        x: number
-        y: number
+    export interface UpdatedSeatConfiguration {
+        /**
+         * Number of spaces created
+         */
+        seatsCreated: number
+
+        /**
+         * Number of spaces updated
+         */
+        seatsUpdated: number
+
+        /**
+         * Number of spaces deactivated
+         */
+        seatsDeactivated: number
+
+        /**
+         * Total number of active seats (SEAT space types only)
+         */
+        totalActiveSeats: number
     }
 }
 
@@ -8921,35 +8945,6 @@ export namespace seat_diagram_zones {
 }
 
 export namespace seat_diagrams {
-    export interface Floor {
-        /**
-         * Floor number
-         */
-        floorNumber: number
-
-        /**
-         * Rows of spaces
-         */
-        rows: Space[][]
-    }
-
-    export interface PaginatedSeatDiagrams {
-        data: SeatDiagram[]
-        pagination: shared.PaginationMeta
-    }
-
-    export interface SeatConfiguration {
-        /**
-         * Floors in the configuration
-         */
-        floors: Floor[]
-
-        /**
-         * Total number of seats
-         */
-        totalSeats: number
-    }
-
     export interface SeatDiagram {
         /**
          * Unique identifier for the seat diagram
@@ -8957,14 +8952,19 @@ export namespace seat_diagrams {
         id: number
 
         /**
-         * Bus Diagram Model ID (reference to bus_diagram_models)
+         * Bus diagram model ID (reference to bus_diagram_models)
          */
         busDiagramModelId: number
 
         /**
-         * Name of the diagram
+         * Name of the seat diagram
          */
         name: string
+
+        /**
+         * Description of the seat diagram
+         */
+        description: string | null
 
         /**
          * Maximum capacity
@@ -8972,14 +8972,9 @@ export namespace seat_diagrams {
         maxCapacity: number
 
         /**
-         * Number of floors in the bus
+         * Number of floors in the seat diagram
          */
         numFloors: number
-
-        /**
-         * Observations about the diagram
-         */
-        observations?: string
 
         /**
          * Configuration of seats per floor
@@ -8997,7 +8992,7 @@ export namespace seat_diagrams {
         isFactoryDefault: boolean
 
         /**
-         * Indicates if the diagram has been modified from the base model
+         * Indicates if the diagram has been modified from its template
          */
         isModified: boolean
 
@@ -9016,47 +9011,6 @@ export namespace seat_diagrams {
          */
         updatedAt: string
     }
-
-    export interface SeatDiagrams {
-        /**
-         * List of seat diagrams
-         */
-        seatDiagrams: SeatDiagram[]
-    }
-
-    export interface Space {
-        /**
-         * Type of space
-         */
-        type: SpaceType
-
-        /**
-         * Seat number if this is a seat
-         */
-        seatNumber?: string
-
-        /**
-         * Type of seat if this is a seat
-         */
-        seatType?: string
-
-        /**
-         * Amenities for this space
-         */
-        amenities?: string[]
-
-        /**
-         * Additional metadata
-         */
-        meta?: { [key: string]: any }
-
-        /**
-         * Reclinement angle for seats
-         */
-        reclinementAngle?: number
-    }
-
-    export type SpaceType = "seat" | "hallway" | "bathroom" | "empty" | "stairs"
 }
 
 export namespace service_types {
@@ -9230,9 +9184,9 @@ export namespace shared {
         pageSize?: number
     }
 
-    export interface PaginationParams {
-        page?: number
-        pageSize?: number
+    export interface SeatPosition {
+        x: number
+        y: number
     }
 
     export type SeatType = "regular" | "premium" | "vip" | "business" | "executive"

@@ -1,13 +1,10 @@
 import { MatchesRegexp, MinLen } from 'encore.dev/validate';
-import { PaginatedResult, SeatType, SpaceType } from '../../shared/types';
-
-/**
- * Interface for seat position coordinates in layout
- */
-export interface SeatPosition {
-  x: number;
-  y: number;
-}
+import {
+  PaginatedResult,
+  SeatPosition,
+  SeatType,
+  SpaceType,
+} from '../../shared/types';
 
 /**
  * Base interface for common properties shared across all space types

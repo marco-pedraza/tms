@@ -59,14 +59,11 @@ export function createBusDiagramModelUseCases() {
     // Verify the diagram model exists first
     await busDiagramModelRepository.findOne(diagramModelId);
 
-    // Get all seat models for this diagram model with business rules applied
-    const seatModels = await busSeatModelRepository.findAll({
-      filters: {
-        busDiagramModelId: diagramModelId,
-        active: true, // Only active seats
-      },
-      orderBy: [{ field: 'seatNumber', direction: 'asc' }], // Ordered by seat number
-    });
+    // Get all active seat models for this diagram model
+    const seatModels =
+      await busSeatModelRepository.findActiveByBusDiagramModelId(
+        diagramModelId,
+      );
 
     return {
       busSeatModels: seatModels,

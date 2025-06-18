@@ -22,14 +22,14 @@ export const createBusDiagramModelRepository = () => {
     searchableFields: [busDiagramModels.name],
   });
 
-  const findAll = async (): Promise<BusDiagramModels> => {
+  async function findAll(): Promise<BusDiagramModels> {
     const busDiagramModelsList = await baseRepository.findAll({
       orderBy: [{ field: 'name', direction: 'asc' }],
     });
     return {
       busDiagramModels: busDiagramModelsList,
     };
-  };
+  }
 
   return {
     ...baseRepository,

@@ -11,28 +11,19 @@ import { createBusWithSeatDiagram } from '../buses/buses.use-cases';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
 import { serviceTypeRepository } from '../service-types/service-types.repository';
 import { transporterRepository } from '../transporters/transporters.repository';
-import { Driver, DriverStatus } from './drivers.types';
 import {
-  assignDriverToBus,
-  assignDriverToBusLine,
-  assignDriverToTransporter,
+  Driver,
+  DriverPosition,
+  DriverStatus,
+  DriverType,
+} from './drivers.types';
+import {
   createDriver,
   deleteDriver,
   getDriver,
-  getDriverPossibleStatuses,
   listDrivers,
-  listDriversByBus,
-  listDriversByBusLine,
-  listDriversByStatus,
-  listDriversByTransporter,
   listDriversPaginated,
-  removeDriverFromBus,
-  removeDriverFromBusLine,
-  removeDriverFromTransporter,
-  searchDrivers,
-  searchDriversPaginated,
   updateDriver,
-  updateDriverStatus,
 } from './drivers.controller';
 
 describe('Drivers Controller', () => {
@@ -52,8 +43,8 @@ describe('Drivers Controller', () => {
     postalCode: '12345',
     phoneNumber: '5551234567',
     email: 'john.doe@example.com',
-    driverType: 'STANDARD',
-    position: 'DRIVER',
+    driverType: DriverType.STANDARD,
+    position: DriverPosition.DRIVER,
     officeCode: 'HQ001',
     officeLocation: 'Mexico City HQ',
     hireDate: new Date('2020-01-15'),
@@ -315,7 +306,7 @@ describe('Drivers Controller', () => {
       const response = await updateDriver({
         id: createdDriverId,
         fullName: updatedName,
-        status: updatedStatus as DriverStatus,
+        status: updatedStatus,
         statusDate: updatedStatusDate,
       });
 
@@ -342,7 +333,7 @@ describe('Drivers Controller', () => {
         imss: '99999999999',
         email: 'delete.test@example.com',
         phoneNumber: '5559876543',
-        driverType: 'STANDARD',
+        driverType: DriverType.STANDARD,
         status: DriverStatus.ACTIVE,
         statusDate: new Date(),
       });
@@ -373,7 +364,7 @@ describe('Drivers Controller', () => {
           imss: '98765432101',
           email: 'another.driver@example.com',
           phoneNumber: '5551112233',
-          driverType: 'STANDARD',
+          driverType: DriverType.STANDARD,
           status: DriverStatus.ACTIVE,
           statusDate: new Date(),
         }),
@@ -417,7 +408,7 @@ describe('Drivers Controller', () => {
         imss: '11111111111',
         email: 'aaa.driver@example.com',
         phoneNumber: '5551111111',
-        driverType: 'STANDARD',
+        driverType: DriverType.STANDARD,
         status: DriverStatus.ACTIVE,
         statusDate: new Date(),
       });
@@ -430,7 +421,7 @@ describe('Drivers Controller', () => {
         imss: '99999999999',
         email: 'zzz.driver@example.com',
         phoneNumber: '5559999999',
-        driverType: 'STANDARD',
+        driverType: DriverType.STANDARD,
         status: DriverStatus.ACTIVE,
         statusDate: new Date(),
       });
@@ -460,8 +451,8 @@ describe('Drivers Controller', () => {
     test('should return non-paginated list for dropdowns', async () => {
       const response = await listDrivers({});
 
-      expect(response.drivers).toBeDefined();
-      expect(Array.isArray(response.drivers)).toBe(true);
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
       // No pagination info should be present
       // @ts-expect-error - response is of type Drivers
       expect(response.pagination).toBeUndefined();
@@ -479,18 +470,18 @@ describe('Drivers Controller', () => {
         imss: '55555555555',
         email: 'searchable.driver@example.com',
         phoneNumber: '5555555555',
-        driverType: 'STANDARD',
+        driverType: DriverType.STANDARD,
         status: DriverStatus.ACTIVE,
         statusDate: new Date(),
       });
 
       try {
         // Search for the driver by term
-        const response = await searchDrivers({ term: 'Searchable' });
+        const response = await listDrivers({ searchTerm: 'Searchable' });
 
-        expect(response.drivers).toBeDefined();
-        expect(Array.isArray(response.drivers)).toBe(true);
-        expect(response.drivers.some((d) => d.id === searchableDriver.id)).toBe(
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(response.data.some((d) => d.id === searchableDriver.id)).toBe(
           true,
         );
       } finally {
@@ -500,8 +491,8 @@ describe('Drivers Controller', () => {
     });
 
     test('should search drivers with pagination', async () => {
-      const response = await searchDriversPaginated({
-        term: 'Driver',
+      const response = await listDriversPaginated({
+        searchTerm: 'Driver',
         page: 1,
         pageSize: 5,
       });
@@ -529,7 +520,7 @@ describe('Drivers Controller', () => {
         imss: '12345678902',
         email: 'active.driver@example.com',
         phoneNumber: '5551234568',
-        driverType: 'STANDARD',
+        driverType: DriverType.STANDARD,
         status: DriverStatus.ACTIVE,
         statusDate: new Date(),
       });
@@ -542,7 +533,7 @@ describe('Drivers Controller', () => {
         imss: '12345678903',
         email: 'training.driver@example.com',
         phoneNumber: '5551234569',
-        driverType: 'STANDARD',
+        driverType: DriverType.STANDARD,
         status: DriverStatus.IN_TRAINING,
         statusDate: new Date(),
       });
@@ -569,352 +560,6 @@ describe('Drivers Controller', () => {
         }
       }
     });
-
-    describe('Valid status transitions', () => {
-      test('should transition from ACTIVE to SUSPENDED', async () => {
-        // Store the original status date string for comparison
-        const originalStatusDateStr = String(activeDriver.statusDate);
-
-        const updatedDriver = await updateDriverStatus({
-          id: activeDriver.id,
-          status: DriverStatus.SUSPENDED,
-        });
-
-        expect(updatedDriver.status).toBe(DriverStatus.SUSPENDED);
-        expect(updatedDriver.statusDate).toBeDefined();
-
-        // The date should have changed but we can't predict exactly how
-        // Just verify it's not identical in string representation
-        const updatedStatusDateStr = String(updatedDriver.statusDate);
-        // If the test is run very quickly, we might get the same timestamp
-        // In that case, we'll skip this assertion
-        if (originalStatusDateStr !== updatedStatusDateStr) {
-          expect(updatedStatusDateStr).not.toBe(originalStatusDateStr);
-        }
-
-        // Update our reference for later tests
-        activeDriver = updatedDriver;
-      });
-
-      test('should transition from SUSPENDED back to ACTIVE', async () => {
-        const updatedDriver = await updateDriverStatus({
-          id: activeDriver.id,
-          status: DriverStatus.ACTIVE,
-        });
-
-        expect(updatedDriver.status).toBe(DriverStatus.ACTIVE);
-
-        // Update our reference for later tests
-        activeDriver = updatedDriver;
-      });
-
-      test('should transition from IN_TRAINING to PROBATION', async () => {
-        const updatedDriver = await updateDriverStatus({
-          id: inTrainingDriver.id,
-          status: DriverStatus.PROBATION,
-        });
-
-        expect(updatedDriver.status).toBe(DriverStatus.PROBATION);
-
-        // Update our reference for later tests
-        inTrainingDriver = updatedDriver;
-      });
-    });
-
-    describe('Invalid status transitions', () => {
-      test('should reject transition from ACTIVE to IN_TRAINING', async () => {
-        await expect(
-          updateDriverStatus({
-            id: activeDriver.id,
-            status: DriverStatus.IN_TRAINING,
-          }),
-        ).rejects.toThrow();
-      });
-
-      test('should reject transition from PROBATION to IN_TRAINING', async () => {
-        await expect(
-          updateDriverStatus({
-            id: inTrainingDriver.id,
-            status: DriverStatus.IN_TRAINING,
-          }),
-        ).rejects.toThrow();
-      });
-
-      // Test transition to TERMINATED (make sure we don't terminate our test drivers)
-      test('attempts to terminate a driver should work (using a temporary driver)', async () => {
-        // Create a driver just for termination testing
-        const tempDriver = await createDriver({
-          driverKey: 'TERM_TEST',
-          fullName: 'Termination Test Driver',
-          rfc: 'TERM801201TST',
-          curp: 'TERM801201HDFTST01',
-          imss: '12345678904',
-          email: 'termination.driver@example.com',
-          phoneNumber: '5551234570',
-          driverType: 'STANDARD',
-          status: DriverStatus.ACTIVE,
-          statusDate: new Date(),
-        });
-
-        // Terminate the driver
-        const terminatedDriver = await updateDriverStatus({
-          id: tempDriver.id,
-          status: DriverStatus.TERMINATED,
-        });
-
-        expect(terminatedDriver.status).toBe(DriverStatus.TERMINATED);
-
-        // Try to reactivate a terminated driver - should fail
-        await expect(
-          updateDriverStatus({
-            id: tempDriver.id,
-            status: DriverStatus.ACTIVE,
-          }),
-        ).rejects.toThrow();
-
-        // Clean up
-        await deleteDriver({ id: tempDriver.id });
-      });
-    });
-
-    describe('Getting possible next statuses', () => {
-      test('should get possible next statuses for ACTIVE driver', async () => {
-        const response = await getDriverPossibleStatuses({
-          id: activeDriver.id,
-        });
-
-        expect(response).toBeDefined();
-        expect(Array.isArray(response.statuses)).toBe(true);
-        expect(response.statuses).toContain(DriverStatus.SUSPENDED);
-        expect(response.statuses).toContain(DriverStatus.INACTIVE);
-        expect(response.statuses).toContain(DriverStatus.ON_LEAVE);
-        expect(response.statuses).toContain(DriverStatus.TERMINATED);
-        // Should not contain states that aren't valid transitions
-        expect(response.statuses).not.toContain(DriverStatus.IN_TRAINING);
-        expect(response.statuses).not.toContain(DriverStatus.PROBATION);
-      });
-
-      test('should get possible next statuses for PROBATION driver', async () => {
-        const response = await getDriverPossibleStatuses({
-          id: inTrainingDriver.id,
-        });
-
-        expect(response).toBeDefined();
-        expect(Array.isArray(response.statuses)).toBe(true);
-        expect(response.statuses).toContain(DriverStatus.ACTIVE);
-        expect(response.statuses).toContain(DriverStatus.TERMINATED);
-        // Should not contain states that aren't valid transitions
-        expect(response.statuses).not.toContain(DriverStatus.SUSPENDED);
-        expect(response.statuses).not.toContain(DriverStatus.IN_TRAINING);
-      });
-    });
-
-    describe('Listing drivers by status', () => {
-      test('should find drivers by ACTIVE status', async () => {
-        const result = await listDriversByStatus({
-          status: DriverStatus.ACTIVE,
-        });
-
-        expect(result).toBeDefined();
-        expect(Array.isArray(result.drivers)).toBe(true);
-
-        // Our test active driver should be in the results
-        const foundDriver = result.drivers.find(
-          (d) => d.id === activeDriver.id,
-        );
-        expect(foundDriver).toBeDefined();
-
-        // All drivers in result should have ACTIVE status
-        expect(
-          result.drivers.every((d) => d.status === DriverStatus.ACTIVE),
-        ).toBe(true);
-      });
-
-      test('should find drivers by PROBATION status', async () => {
-        const result = await listDriversByStatus({
-          status: DriverStatus.PROBATION,
-        });
-
-        expect(result).toBeDefined();
-        expect(Array.isArray(result.drivers)).toBe(true);
-
-        // Our test probation driver should be in the results
-        const foundDriver = result.drivers.find(
-          (d) => d.id === inTrainingDriver.id,
-        );
-        expect(foundDriver).toBeDefined();
-
-        // All drivers in result should have PROBATION status
-        expect(
-          result.drivers.every((d) => d.status === DriverStatus.PROBATION),
-        ).toBe(true);
-      });
-    });
-  });
-
-  describe('transporter and bus line relations', () => {
-    test('should assign a driver to a transporter', async () => {
-      // Assign the driver to the test transporter
-      const response = await assignDriverToTransporter({
-        id: createdDriverId,
-        transporterId: createdTransporterId,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.id).toBe(createdDriverId);
-      expect(response.transporterId).toBe(createdTransporterId);
-    });
-
-    test('should assign a driver to a bus line', async () => {
-      // Assign the driver to the test bus line
-      const response = await assignDriverToBusLine({
-        id: createdDriverId,
-        busLineId: createdBusLineId,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.id).toBe(createdDriverId);
-      expect(response.busLineId).toBe(createdBusLineId);
-
-      // Check that driver still has transporter relationship
-      const updatedDriver = await getDriver({ id: createdDriverId });
-      expect(updatedDriver.transporterId).toBe(createdTransporterId);
-      expect(updatedDriver.busLineId).toBe(createdBusLineId);
-    });
-
-    test('should list drivers by transporter', async () => {
-      const response = await listDriversByTransporter({
-        transporterId: createdTransporterId,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.drivers).toBeDefined();
-      expect(Array.isArray(response.drivers)).toBe(true);
-      expect(response.drivers.length).toBeGreaterThan(0);
-
-      // At least one driver should match our test driver
-      const foundDriver = response.drivers.find(
-        (driver) => driver.id === createdDriverId,
-      );
-      expect(foundDriver).toBeDefined();
-      expect(foundDriver?.fullName).toBe('Jane Doe');
-    });
-
-    test('should list drivers by bus line', async () => {
-      // Make sure driver is assigned to bus line
-      const driver = await getDriver({ id: createdDriverId });
-      if (!driver.busLineId) {
-        await assignDriverToBusLine({
-          id: createdDriverId,
-          busLineId: createdBusLineId,
-        });
-      }
-
-      const response = await listDriversByBusLine({
-        busLineId: createdBusLineId,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.drivers).toBeDefined();
-      expect(Array.isArray(response.drivers)).toBe(true);
-      expect(response.drivers.length).toBeGreaterThan(0);
-
-      // At least one driver should match our test driver
-      const foundDriver = response.drivers.find(
-        (driver) => driver.id === createdDriverId,
-      );
-      expect(foundDriver).toBeDefined();
-      expect(foundDriver?.fullName).toBe('Jane Doe');
-    });
-
-    test('should remove a driver from a bus line', async () => {
-      const response = await removeDriverFromBusLine({
-        id: createdDriverId,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.id).toBe(createdDriverId);
-      expect(response.busLineId).toBeNull();
-
-      // Transporter should still be assigned
-      expect(response.transporterId).toBe(createdTransporterId);
-    });
-
-    test('should remove a driver from a transporter', async () => {
-      const response = await removeDriverFromTransporter({
-        id: createdDriverId,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.id).toBe(createdDriverId);
-      expect(response.transporterId).toBeNull();
-      expect(response.busLineId).toBeNull();
-    });
-  });
-
-  describe('bus relations', () => {
-    test('should assign a driver to a bus', async () => {
-      // First, assign driver to transporter (required setup)
-      await assignDriverToTransporter({
-        id: createdDriverId,
-        transporterId: createdTransporterId,
-      });
-
-      // Then, assign driver to bus
-      const response = await assignDriverToBus({
-        id: createdDriverId,
-        busId: createdBusId,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.id).toBe(createdDriverId);
-      expect(response.busId).toBe(createdBusId);
-
-      // Check that driver still has transporter relationship
-      const updatedDriver = await getDriver({ id: createdDriverId });
-      expect(updatedDriver.transporterId).toBe(createdTransporterId);
-      expect(updatedDriver.busId).toBe(createdBusId);
-    });
-
-    test('should list drivers by bus', async () => {
-      // Make sure driver is assigned to bus
-      const driver = await getDriver({ id: createdDriverId });
-      if (!driver.busId) {
-        await assignDriverToBus({
-          id: createdDriverId,
-          busId: createdBusId,
-        });
-      }
-
-      const response = await listDriversByBus({
-        busId: createdBusId,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.drivers).toBeDefined();
-      expect(Array.isArray(response.drivers)).toBe(true);
-      expect(response.drivers.length).toBeGreaterThan(0);
-
-      // At least one driver should match our test driver
-      const foundDriver = response.drivers.find(
-        (driver) => driver.id === createdDriverId,
-      );
-      expect(foundDriver).toBeDefined();
-      expect(foundDriver?.fullName).toBe('Jane Doe');
-    });
-
-    test('should remove a driver from a bus', async () => {
-      const response = await removeDriverFromBus({
-        id: createdDriverId,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.id).toBe(createdDriverId);
-      expect(response.busId).toBeNull();
-
-      // Transporter should still be assigned
-      expect(response.transporterId).toBe(createdTransporterId);
-    });
   });
 
   describe('ordering and filtering', () => {
@@ -931,8 +576,8 @@ describe('Drivers Controller', () => {
           curp: 'ALPH801201HDFXXX01',
           email: 'alpha.driver@example.com',
           phoneNumber: '5551234001',
-          driverType: 'STANDARD',
-          status: 'ACTIVE' as DriverStatus,
+          driverType: DriverType.STANDARD,
+          status: DriverStatus.ACTIVE,
           statusDate: new Date(),
           active: true,
         },
@@ -943,8 +588,8 @@ describe('Drivers Controller', () => {
           curp: 'BETA801201HDFXXX01',
           email: 'beta.driver@example.com',
           phoneNumber: '5551234002',
-          driverType: 'STANDARD',
-          status: 'ACTIVE' as DriverStatus, // Using ACTIVE since INACTIVE is not allowed as initial state
+          driverType: DriverType.STANDARD,
+          status: DriverStatus.ACTIVE, // Using ACTIVE since INACTIVE is not allowed as initial state
           statusDate: new Date(),
           active: false,
         },
@@ -955,8 +600,8 @@ describe('Drivers Controller', () => {
           curp: 'GAMM801201HDFXXX01',
           email: 'gamma.driver@example.com',
           phoneNumber: '5551234003',
-          driverType: 'STANDARD',
-          status: 'ACTIVE' as DriverStatus,
+          driverType: DriverType.STANDARD,
+          status: DriverStatus.ACTIVE,
           statusDate: new Date(),
           active: true,
         },
@@ -984,7 +629,7 @@ describe('Drivers Controller', () => {
         orderBy: [{ field: 'fullName', direction: 'desc' }],
       });
 
-      const names = response.drivers.map((d) => d.fullName);
+      const names = response.data.map((d) => d.fullName);
       // Check if names are in descending order
       for (let i = 0; i < names.length - 1; i++) {
         expect(names[i] >= names[i + 1]).toBe(true);
@@ -997,14 +642,14 @@ describe('Drivers Controller', () => {
       });
 
       // All returned drivers should be active
-      expect(response.drivers.every((d) => d.active === true)).toBe(true);
+      expect(response.data.every((d) => d.active === true)).toBe(true);
       // Should include our active test drivers
       const activeTestDriverIds = testDrivers
         .filter((d) => d.active)
         .map((d) => d.id);
 
       for (const id of activeTestDriverIds) {
-        expect(response.drivers.some((d) => d.id === id)).toBe(true);
+        expect(response.data.some((d) => d.id === id)).toBe(true);
       }
     });
 
@@ -1041,8 +686,8 @@ describe('Drivers Controller', () => {
           curp: 'SSTA801201HDFXXX01',
           email: 'status.a@example.com',
           phoneNumber: '5559991001',
-          driverType: 'STANDARD',
-          status: 'ACTIVE' as DriverStatus,
+          driverType: DriverType.STANDARD,
+          status: DriverStatus.ACTIVE,
           statusDate: new Date(),
           active: true,
         },
@@ -1053,8 +698,8 @@ describe('Drivers Controller', () => {
           curp: 'SSTB801201HDFXXX01',
           email: 'status.b@example.com',
           phoneNumber: '5559991002',
-          driverType: 'STANDARD',
-          status: 'ACTIVE' as DriverStatus,
+          driverType: DriverType.STANDARD,
+          status: DriverStatus.ACTIVE,
           statusDate: new Date(),
           active: true,
         },
@@ -1077,7 +722,7 @@ describe('Drivers Controller', () => {
         });
 
         // Get all active drivers and verify they're ordered by name
-        const activeDrivers = response.drivers.filter((d) => d.active === true);
+        const activeDrivers = response.data.filter((d) => d.active === true);
         const activeNames = activeDrivers.map((d) => d.fullName);
 
         for (let i = 0; i < activeNames.length - 1; i++) {

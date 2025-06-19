@@ -8,6 +8,7 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import { busLines } from '../bus-lines/bus-lines.schema';
 import { buses } from '../buses/buses.schema';
 import { transporters } from '../transporters/transporters.schema';
@@ -61,3 +62,17 @@ export const drivers = pgTable(
     index().on(table.status),
   ],
 );
+
+/**
+ * Relations for the drivers table
+ */
+export const driversRelations = relations(drivers, ({ one }) => ({
+  transporter: one(transporters, {
+    fields: [drivers.transporterId],
+    references: [transporters.id],
+  }),
+  busLine: one(busLines, {
+    fields: [drivers.busLineId],
+    references: [busLines.id],
+  }),
+}));

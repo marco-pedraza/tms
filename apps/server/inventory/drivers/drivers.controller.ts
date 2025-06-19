@@ -2,21 +2,17 @@ import { api } from 'encore.dev/api';
 import {
   CreateDriverPayload,
   Driver,
-  DriverStatus,
-  Drivers,
-  DriversQueryOptions,
-  PaginatedDrivers,
-  PaginationParamsDrivers,
-  PossibleDriverStatuses,
+  ListDriversQueryParams,
+  ListDriversResult,
+  ListStatusesResult,
+  PaginatedListDriversQueryParams,
+  PaginatedListDriversResult,
   UpdateDriverPayload,
 } from './drivers.types';
 import { driverRepository } from './drivers.repository';
-import { driverUseCases } from './drivers.use-cases';
 
 /**
  * Creates a new driver.
- * @param params - The driver data to create
- * @returns {Promise<Driver>} The created driver
  * @throws {APIError} If the driver creation fails
  */
 export const createDriver = api(
@@ -28,9 +24,6 @@ export const createDriver = api(
 
 /**
  * Retrieves a driver by its ID.
- * @param params - Object containing the driver ID
- * @param params.id - The ID of the driver to retrieve
- * @returns {Promise<Driver>} The found driver
  * @throws {APIError} If the driver is not found or retrieval fails
  */
 export const getDriver = api(
@@ -42,38 +35,42 @@ export const getDriver = api(
 
 /**
  * Retrieves all drivers without pagination (useful for dropdowns).
- * @returns {Promise<Drivers>} An object containing an array of drivers
  * @throws {APIError} If retrieval fails
  */
 export const listDrivers = api(
-  { expose: true, method: 'POST', path: '/get-drivers' },
-  async (params: DriversQueryOptions): Promise<Drivers> => {
-    const drivers = await driverRepository.findAll(params);
+  { expose: true, method: 'POST', path: '/drivers/list' },
+  async (params: ListDriversQueryParams): Promise<ListDriversResult> => {
+    const drivers = params.searchTerm
+      ? await driverRepository.search(params.searchTerm)
+      : await driverRepository.findAll(params);
     return {
-      drivers,
+      data: drivers,
     };
   },
 );
 
 /**
  * Retrieves drivers with pagination (useful for tables).
- * @param params - Pagination parameters
- * @returns {Promise<PaginatedDrivers>} Paginated list of drivers
  * @throws {APIError} If retrieval fails
  */
 export const listDriversPaginated = api(
-  { expose: true, method: 'POST', path: '/get-drivers/paginated' },
-  async (params: PaginationParamsDrivers): Promise<PaginatedDrivers> => {
-    return await driverRepository.findAllPaginated(params);
+  { expose: true, method: 'POST', path: '/drivers/list/paginated' },
+  async (
+    params: PaginatedListDriversQueryParams,
+  ): Promise<PaginatedListDriversResult> => {
+    const drivers = params.searchTerm
+      ? await driverRepository.searchPaginated(params.searchTerm, params)
+      : await driverRepository.findAllPaginated(params);
+    return await driverRepository.appendRelations(
+      drivers.data,
+      drivers.pagination,
+      params,
+    );
   },
 );
 
 /**
  * Updates an existing driver.
- * @param params - Object containing the driver ID and update data
- * @param params.id - The ID of the driver to update
- * @param params.data - The driver data to update
- * @returns {Promise<Driver>} The updated driver
  * @throws {APIError} If the driver is not found or update fails
  */
 export const updateDriver = api(
@@ -101,230 +98,28 @@ export const deleteDriver = api(
 );
 
 /**
- * Updates a driver's status using state machine validation
- * @param params - Object containing the driver ID and new status
- * @param params.id - The ID of the driver to update
- * @param params.status - The new status to set
- * @returns {Promise<Driver>} The updated driver
- * @throws {APIError} If the status transition is invalid or update fails
- */
-export const updateDriverStatus = api(
-  { expose: true, method: 'PUT', path: '/drivers/:id/status' },
-  async ({ id, status }: { id: number; status: string }): Promise<Driver> => {
-    return await driverRepository.updateStatus(id, status as DriverStatus);
-  },
-);
-
-/**
- * Gets all possible next statuses for a driver
- * @param params - Object containing the driver ID
- * @param params.id - The ID of the driver
- * @returns {Promise<PossibleDriverStatuses>} Object containing array of possible next statuses
+ * Gets all valid next statuses for a driver
  * @throws {APIError} If the driver is not found
  */
-export const getDriverPossibleStatuses = api(
-  { expose: true, method: 'GET', path: '/drivers/:id/possible-statuses' },
-  async ({ id }: { id: number }): Promise<PossibleDriverStatuses> => {
-    const statuses = await driverRepository.getPossibleNextStatuses(id);
-    return { statuses };
+export const listDriverValidNextStatuses = api(
+  { expose: true, method: 'GET', path: '/drivers/:id/valid-next-statuses' },
+  async ({ id }: { id: number }): Promise<ListStatusesResult> => {
+    const statuses = await driverRepository.getDriverValidNextStatuses(id);
+    return { data: statuses };
   },
 );
 
 /**
- * List drivers by status
- * @param params - Object containing the status to filter by
- * @param params.status - The status to filter by
- * @returns {Promise<Drivers>} Drivers with the specified status
- * @throws {APIError} If retrieval fails
+ * Gets all valid initial statuses for a driver
  */
-export const listDriversByStatus = api(
-  { expose: true, method: 'GET', path: '/drivers/by-status/:status' },
-  async ({ status }: { status: string }): Promise<Drivers> => {
-    return await driverRepository.findAllByStatus(status as DriverStatus);
-  },
-);
-
-/**
- * List drivers by transporter
- * @param params - Object containing the transporter ID to filter by
- * @param params.transporterId - The transporter ID to filter by
- * @returns {Promise<Drivers>} Drivers associated with the specified transporter
- * @throws {APIError} If retrieval fails
- */
-export const listDriversByTransporter = api(
+export const listValidInitialStatuses = api(
   {
     expose: true,
     method: 'GET',
-    path: '/drivers/by-transporter/:transporterId',
+    path: '/drivers/valid-initial-statuses/list',
   },
-  async ({ transporterId }: { transporterId: number }): Promise<Drivers> => {
-    return await driverRepository.findAllByTransporter(transporterId);
-  },
-);
-
-/**
- * List drivers by bus line
- * @param params - Object containing the bus line ID to filter by
- * @param params.busLineId - The bus line ID to filter by
- * @returns {Promise<Drivers>} Drivers associated with the specified bus line
- * @throws {APIError} If retrieval fails
- */
-export const listDriversByBusLine = api(
-  { expose: true, method: 'GET', path: '/drivers/by-bus-line/:busLineId' },
-  async ({ busLineId }: { busLineId: number }): Promise<Drivers> => {
-    return await driverRepository.findAllByBusLine(busLineId);
-  },
-);
-
-/**
- * Assigns a driver to a transporter
- * @param params - Object containing the driver ID and transporter ID
- * @param params.id - The ID of the driver
- * @param params.transporterId - The ID of the transporter
- * @returns {Promise<Driver>} The updated driver
- * @throws {APIError} If the assignment fails
- */
-export const assignDriverToTransporter = api(
-  { expose: true, method: 'POST', path: '/drivers/:id/transporter' },
-  async ({
-    id,
-    transporterId,
-  }: {
-    id: number;
-    transporterId: number;
-  }): Promise<Driver> => {
-    return await driverUseCases.assignToTransporter(id, transporterId);
-  },
-);
-
-/**
- * Assigns a driver to a bus line
- * @param params - Object containing the driver ID and bus line ID
- * @param params.id - The ID of the driver
- * @param params.busLineId - The ID of the bus line
- * @returns {Promise<Driver>} The updated driver
- * @throws {APIError} If the assignment fails
- */
-export const assignDriverToBusLine = api(
-  { expose: true, method: 'POST', path: '/drivers/:id/bus-line' },
-  async ({
-    id,
-    busLineId,
-  }: {
-    id: number;
-    busLineId: number;
-  }): Promise<Driver> => {
-    return await driverUseCases.assignToBusLine(id, busLineId);
-  },
-);
-
-/**
- * Removes a driver from a transporter
- * @param params - Object containing the driver ID
- * @param params.id - The ID of the driver
- * @returns {Promise<Driver>} The updated driver
- * @throws {APIError} If the removal fails
- */
-export const removeDriverFromTransporter = api(
-  { expose: true, method: 'DELETE', path: '/drivers/:id/transporter' },
-  async ({ id }: { id: number }): Promise<Driver> => {
-    return await driverUseCases.removeFromTransporter(id);
-  },
-);
-
-/**
- * Removes a driver from a bus line
- * @param params - Object containing the driver ID
- * @param params.id - The ID of the driver
- * @returns {Promise<Driver>} The updated driver
- * @throws {APIError} If the removal fails
- */
-export const removeDriverFromBusLine = api(
-  { expose: true, method: 'DELETE', path: '/drivers/:id/bus-line' },
-  async ({ id }: { id: number }): Promise<Driver> => {
-    return await driverUseCases.removeFromBusLine(id);
-  },
-);
-
-/**
- * List drivers by bus
- * @param params - Object containing the bus ID to filter by
- * @param params.busId - The bus ID to filter by
- * @returns {Promise<Drivers>} Drivers associated with the specified bus
- * @throws {APIError} If retrieval fails
- */
-export const listDriversByBus = api(
-  { expose: true, method: 'GET', path: '/drivers/by-bus/:busId' },
-  async ({ busId }: { busId: number }): Promise<Drivers> => {
-    return await driverRepository.findAllByBus(busId);
-  },
-);
-
-/**
- * Assigns a driver to a bus
- * @param params - Object containing the driver ID and bus ID
- * @param params.id - The ID of the driver
- * @param params.busId - The ID of the bus
- * @returns {Promise<Driver>} The updated driver
- * @throws {APIError} If the assignment fails
- */
-export const assignDriverToBus = api(
-  { expose: true, method: 'POST', path: '/drivers/:id/bus' },
-  async ({ id, busId }: { id: number; busId: number }): Promise<Driver> => {
-    return await driverUseCases.assignToBus(id, busId);
-  },
-);
-
-/**
- * Removes a driver from a bus
- * @param params - Object containing the driver ID
- * @param params.id - The ID of the driver
- * @returns {Promise<Driver>} The updated driver
- * @throws {APIError} If the removal fails
- */
-export const removeDriverFromBus = api(
-  { expose: true, method: 'DELETE', path: '/drivers/:id/bus' },
-  async ({ id }: { id: number }): Promise<Driver> => {
-    return await driverUseCases.removeFromBus(id);
-  },
-);
-
-/**
- * Searches for drivers by matching a search term against name, driver key, rfc, curp, etc.
- * @param params - Search parameters
- * @param params.term - The search term to match
- * @returns {Promise<Drivers>} List of matching drivers
- * @throws {APIError} If search fails or no searchable fields are configured
- */
-export const searchDrivers = api(
-  { expose: true, method: 'GET', path: '/drivers/search' },
-  async ({ term }: { term: string }): Promise<Drivers> => {
-    const drivers = await driverRepository.search(term);
-    return {
-      drivers,
-    };
-  },
-);
-
-/**
- * Searches for drivers with pagination by matching a search term.
- * @param params - Search and pagination parameters
- * @param params.term - The search term to match
- * @param params.page - Page number for pagination (optional, default: 1)
- * @param params.pageSize - Number of items per page (optional, default: 10)
- * @param params.orderBy - Sorting criteria (optional)
- * @param params.filters - Additional filters to apply (optional)
- * @returns {Promise<PaginatedDrivers>} Paginated list of matching drivers
- * @throws {APIError} If search fails or no searchable fields are configured
- */
-export const searchDriversPaginated = api(
-  { expose: true, method: 'POST', path: '/drivers/search/paginated' },
-  async ({
-    term,
-    ...params
-  }: PaginationParamsDrivers & {
-    term: string;
-  }): Promise<PaginatedDrivers> => {
-    return await driverRepository.searchPaginated(term, params);
+  (): ListStatusesResult => {
+    const statuses = driverRepository.getValidInitialStatuses();
+    return { data: statuses };
   },
 );

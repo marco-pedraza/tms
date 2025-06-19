@@ -1,18 +1,39 @@
-// API types
 import { MatchesRegexp, MinLen } from 'encore.dev/validate';
-import { PaginatedResult, PaginationParams } from '../../shared/types';
+import {
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '../../shared/types';
+import { BusLine } from '../bus-lines/bus-lines.types';
+import { Transporter } from '../transporters/transporters.types';
 
 /**
  * Enum for driver status states
  */
 export enum DriverStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  SUSPENDED = 'SUSPENDED',
-  ON_LEAVE = 'ON_LEAVE',
-  TERMINATED = 'TERMINATED',
-  IN_TRAINING = 'IN_TRAINING',
-  PROBATION = 'PROBATION',
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  SUSPENDED = 'suspended',
+  ON_LEAVE = 'on_leave',
+  TERMINATED = 'terminated',
+  IN_TRAINING = 'in_training',
+  PROBATION = 'probation',
+}
+
+export enum DriverType {
+  STANDARD = 'standard',
+  SUBSTITUTE = 'substitute',
+  TEMPORARY = 'temporary',
+  TOURIST = 'tourist',
+}
+
+export enum DriverPosition {
+  DRIVER = 'driver',
+  SENIOR_DRIVER = 'senior_driver',
+  AUXILIARY_DRIVER = 'auxiliary_driver',
+  TOURIST_DRIVER = 'tourist_driver',
+  PREMIUM_DRIVER = 'premium_driver',
 }
 
 /**
@@ -65,10 +86,10 @@ export interface Driver {
   email: string;
 
   /** Type of operator (Tipo Operador) */
-  driverType: string;
+  driverType: DriverType;
 
   /** Position (Clave Puesto) */
-  position: string | null;
+  position: DriverPosition | null;
 
   /** Office code (Clave Oficina) */
   officeCode: string | null;
@@ -119,10 +140,10 @@ export interface Driver {
   active: boolean;
 
   /** Timestamp when the driver record was created */
-  createdAt: Date | null;
+  createdAt: Date;
 
   /** Timestamp when the driver record was last updated */
-  updatedAt: Date | null;
+  updatedAt: Date;
 }
 
 /**
@@ -209,7 +230,7 @@ export interface CreateDriverPayload {
    * Type of operator (Tipo Operador)
    * Must have at least 1 non-whitespace character
    */
-  driverType: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  driverType: DriverType;
 
   /**
    * Department (Departamento)
@@ -219,7 +240,7 @@ export interface CreateDriverPayload {
   /**
    * Position (Clave Puesto)
    */
-  position?: string;
+  position?: DriverPosition;
 
   /**
    * Office code (Clave Oficina)
@@ -387,7 +408,7 @@ export interface UpdateDriverPayload {
    * Type of operator (Tipo Operador)
    * Must have at least 1 non-whitespace character
    */
-  driverType?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  driverType?: DriverType;
 
   /**
    * Department (Departamento)
@@ -397,7 +418,7 @@ export interface UpdateDriverPayload {
   /**
    * Position (Clave Puesto)
    */
-  position?: string;
+  position?: DriverPosition;
 
   /**
    * Office code (Clave Oficina)
@@ -480,38 +501,20 @@ export interface UpdateDriverPayload {
   busId?: number | null;
 }
 
-/**
- * Response containing a list of drivers
- */
-export interface Drivers {
-  /** List of drivers */
-  drivers: Driver[];
+export interface DriverWithRelations extends Driver {
+  transporter: Transporter;
+  busLine: BusLine;
 }
 
-/**
- * Query options for filtering and ordering drivers
- */
-export interface DriversQueryOptions {
-  orderBy?: { field: keyof Driver; direction: 'asc' | 'desc' }[];
-  filters?: Partial<Driver>;
-}
+// Encore's support for usage of generics is nullish,
+// so we need to declare empty extended interfaces
+/* eslint-disable @typescript-eslint/no-empty-object-type */
+export interface ListDriversQueryParams extends ListQueryParams<Driver> {}
+export interface ListDriversResult extends ListQueryResult<Driver> {}
 
-/**
- * Paginated list of drivers
- */
-export type PaginatedDrivers = PaginatedResult<Driver>;
+export interface PaginatedListDriversQueryParams
+  extends PaginatedListQueryParams<Driver> {}
+export interface PaginatedListDriversResult
+  extends PaginatedListQueryResult<DriverWithRelations> {}
 
-/**
- * Pagination parameters with drivers query options
- */
-export interface PaginationParamsDrivers
-  extends PaginationParams,
-    DriversQueryOptions {}
-
-/**
- * Response containing list of possible driver statuses
- */
-export interface PossibleDriverStatuses {
-  /** List of possible next statuses */
-  statuses: DriverStatus[];
-}
+export interface ListStatusesResult extends ListQueryResult<DriverStatus> {}

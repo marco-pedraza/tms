@@ -41,7 +41,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "bcrypt": "^5.1.1",
     "drizzle-orm": "^0.36.0",
-    "encore.dev": "^1.48.4",
+    "encore.dev": "^1.48.5",
     "glob": "^10.4.5",
     "jsonwebtoken": "^9.0.2",
     "object-assign": "^4.1.1",

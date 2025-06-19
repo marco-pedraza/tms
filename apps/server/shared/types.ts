@@ -13,14 +13,6 @@
  */
 
 /**
- * Generic type for paginated results
- */
-export interface PaginatedResult<T> {
-  data: T[];
-  pagination: PaginationMeta;
-}
-
-/**
  * Pagination metadata
  */
 export interface PaginationMeta {
@@ -38,10 +30,40 @@ export interface PaginationMeta {
   hasPreviousPage: boolean;
 }
 
+export interface ListQueryResult<T> {
+  data: T[];
+}
+
+/**
+ * Generic type for paginated results
+ */
+export interface PaginatedListQueryResult<T> extends ListQueryResult<T> {
+  pagination: PaginationMeta;
+}
+
+/**
+ * @deprecated Use PaginatedListQueryResult instead
+ * @todo Remove this type once all clients have been updated
+ */
+export interface PaginatedResult<T> extends ListQueryResult<T> {
+  pagination: PaginationMeta;
+}
+
 /**
  * Query options combining pagination and ordering
  */
 export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ListQueryParams<T> {
+  orderBy?: { field: keyof T; direction: 'asc' | 'desc' }[];
+  filters?: Partial<T>;
+  searchTerm?: string;
+}
+
+export interface PaginatedListQueryParams<T> extends ListQueryParams<T> {
   page?: number;
   pageSize?: number;
 }

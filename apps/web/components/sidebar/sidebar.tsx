@@ -7,15 +7,10 @@ import {
   Building,
   Building2,
   Bus,
-  // FileText,
   Globe,
   Map,
-  // Navigation,
   Package,
-  // PlaneLanding,
-  // Route,
-  // Settings,
-  // Users,
+  Users,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import routes from '@/services/routes';
@@ -74,6 +69,11 @@ export default function Sidebar() {
           icon={Bus}
           label={tSidebar('inventory.busLines')}
         />
+        <SidebarLink
+          href={routes.drivers.index}
+          icon={Users}
+          label={tSidebar('inventory.drivers')}
+        />
         {/* <SidebarLink
           href={routes.routes.index}
           icon={Route}
@@ -93,11 +93,6 @@ export default function Sidebar() {
           href={routes.services.index}
           icon={Bus}
           label={tSidebar('inventory.services')}
-        />
-        <SidebarLink
-          href={routes.drivers.index}
-          icon={Users}
-          label={tSidebar('inventory.drivers')}
         />
         <SidebarLink
           href={routes.busModels.index}

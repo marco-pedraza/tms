@@ -2,7 +2,36 @@
  * This is a centralized place to define all the routes in the application.
  * It is used to avoid hardcoding routes in the application and to make it easier to change routes.
  */
-const routes = {
+
+export interface CrudRoute {
+  index: string;
+  new: string;
+  getDetailsRoute: (id: string) => string;
+  getEditRoute: (id: string) => string;
+}
+
+export type SingleRoute = string;
+
+export interface Routes {
+  index: SingleRoute;
+  countries: CrudRoute;
+  states: CrudRoute;
+  cities: CrudRoute;
+  terminals: CrudRoute;
+  transporters: CrudRoute;
+  serviceTypes: CrudRoute;
+  busLines: CrudRoute;
+  routes: CrudRoute;
+  pathways: CrudRoute;
+  pathwayServices: CrudRoute;
+  services: CrudRoute;
+  drivers: CrudRoute;
+  busModels: CrudRoute;
+  buses: CrudRoute;
+  busPlans: CrudRoute;
+}
+
+const routes: Routes = {
   index: '/',
   countries: {
     index: '/countries',

@@ -528,5 +528,55 @@
         "error": "No pudimos eliminar la línea de autobus"
       }
     }
+  },
+  "drivers": {
+    "title": "Conductores",
+    "description": "Administra información de conductores para el Sistema de Inventario de Autobuses",
+    "actions": {
+      "create": "Crear Conductor",
+      "update": "Actualizar Conductor",
+      "backToList": "Volver a conductores"
+    },
+    "fields": {
+      "driverKey": "Clave del Conductor",
+      "fullName": "Nombre Completo",
+      "driverType": "Tipo de Conductor",
+      "driverStatus": "Estado del Conductor",
+      "assignedBus": "Autobús Asignado",
+      "transporter": "Transportista",
+      "busLine": "Línea de Autobus"
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando conductor...",
+        "success": "Conductor creado correctamente",
+        "error": "No pudimos crear el conductor"
+      },
+      "update": {
+        "loading": "Actualizando conductor...",
+        "success": "Conductor actualizado correctamente",
+        "error": "No pudimos actualizar el conductor"
+      },
+      "delete": {
+        "loading": "Eliminando conductor...",
+        "success": "Conductor eliminado correctamente",
+        "error": "No pudimos eliminar el conductor"
+      }
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "suspended": "Suspendido",
+      "on_leave": "En Licencia",
+      "terminated": "Terminado",
+      "in_training": "En Formación",
+      "probation": "Probación"
+    },
+    "driverType": {
+      "standard": "Estándar",
+      "substitute": "Sustituto",
+      "temporary": "Temporal",
+      "tourist": "Turista"
+    }
   }
 }

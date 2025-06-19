@@ -30,7 +30,7 @@ export {
 } from '../users/user-permissions/user-permissions.schema';
 export { refreshTokens } from '../users/auth/auth.schema';
 export { audits, auditRelations } from '../users/audits/audits.schema';
-export { drivers } from '../inventory/drivers/drivers.schema';
+export { drivers, driversRelations } from '../inventory/drivers/drivers.schema';
 export {
   busDiagramModels,
   busDiagramModelsRelations,

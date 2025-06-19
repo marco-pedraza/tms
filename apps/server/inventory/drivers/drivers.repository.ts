@@ -1,12 +1,16 @@
+import { inArray } from 'drizzle-orm';
 import { createBaseRepository } from '@repo/base-repo';
 import { StateTransition, createBaseStateMachine } from '@repo/state-machine';
+import { PaginationMeta } from '../../shared/types';
 import { db } from '../db-service';
 import { drivers } from './drivers.schema';
 import {
   CreateDriverPayload,
   Driver,
   DriverStatus,
-  Drivers,
+  DriverWithRelations,
+  PaginatedListDriversQueryParams,
+  PaginatedListDriversResult,
   UpdateDriverPayload,
 } from './drivers.types';
 
@@ -83,26 +87,6 @@ export const createDriverRepository = () => {
   );
 
   /**
-   * Updates driver status using state machine validation
-   * @param {number} id - The ID of the driver
-   * @param {DriverStatus} newStatus - The new status to set
-   * @returns {Promise<Driver>} The updated driver
-   */
-  const updateStatus = async (
-    id: number,
-    newStatus: DriverStatus,
-  ): Promise<Driver> => {
-    const driver = await baseRepository.findOne(id);
-
-    stateMachine.validateTransition(driver.status, newStatus);
-
-    return await baseRepository.update(id, {
-      status: newStatus,
-      statusDate: new Date(),
-    });
-  };
-
-  /**
    * Creates a new driver
    * @param {CreateDriverPayload} data - The driver data to create
    * @returns {Promise<Driver>} The created driver
@@ -110,7 +94,6 @@ export const createDriverRepository = () => {
   const create = async (data: CreateDriverPayload): Promise<Driver> => {
     // For new drivers, validate that the initial status is valid
     stateMachine.validateInitialState(data.status, ALLOWED_INITIAL_STATES);
-
     return await baseRepository.create(data);
   };
 
@@ -128,81 +111,31 @@ export const createDriverRepository = () => {
     if (data.status) {
       const driver = await baseRepository.findOne(id);
       stateMachine.validateTransition(driver.status, data.status);
-
       // When status changes, always update the status date
       if (data.status !== driver.status && !data.statusDate) {
         data.statusDate = new Date();
       }
     }
-
     return await baseRepository.update(id, data);
   };
 
-  /**
-   * Finds drivers by status
-   * @param {DriverStatus} status - The status to filter by
-   * @returns {Promise<Drivers>} Object containing array of drivers with the specified status
-   */
-  const findAllByStatus = async (status: DriverStatus): Promise<Drivers> => {
-    const driversList = await baseRepository.findAllBy(drivers.status, status);
+  const appendRelations = async (
+    driversResult: Driver[],
+    pagination: PaginationMeta,
+    params: PaginatedListDriversQueryParams,
+  ): Promise<PaginatedListDriversResult> => {
+    const { baseOrderBy } = baseRepository.buildQueryExpressions(params);
+    const ids = driversResult.map((driver) => driver.id);
 
-    return {
-      drivers: driversList,
-    };
-  };
-
-  /**
-   * Finds drivers by transporter
-   * @param {number} transporterId - The transporter ID to filter by
-   * @returns {Promise<Drivers>} Object containing array of drivers assigned to the specified transporter
-   */
-  const findAllByTransporter = async (
-    transporterId: number,
-  ): Promise<Drivers> => {
-    const driversList = await baseRepository.findAllBy(
-      drivers.transporterId,
-      transporterId,
-      {
-        orderBy: [{ field: 'fullName', direction: 'asc' }],
-      },
-    );
-
-    return {
-      drivers: driversList,
-    };
-  };
-
-  /**
-   * Finds drivers by bus line
-   * @param {number} busLineId - The bus line ID to filter by
-   * @returns {Promise<Drivers>} Object containing array of drivers assigned to the specified bus line
-   */
-  const findAllByBusLine = async (busLineId: number): Promise<Drivers> => {
-    const driversList = await baseRepository.findAllBy(
-      drivers.busLineId,
-      busLineId,
-      {
-        orderBy: [{ field: 'fullName', direction: 'asc' }],
-      },
-    );
-
-    return {
-      drivers: driversList,
-    };
-  };
-
-  /**
-   * Finds drivers by bus
-   * @param {number} busId - The bus ID to filter by
-   * @returns {Promise<Drivers>} Object containing array of drivers assigned to the specified bus
-   */
-  const findAllByBus = async (busId: number): Promise<Drivers> => {
-    const driversList = await baseRepository.findAllBy(drivers.busId, busId, {
-      orderBy: [{ field: 'fullName', direction: 'asc' }],
+    const driversWithRelations = await db.query.drivers.findMany({
+      where: inArray(drivers.id, ids),
+      orderBy: baseOrderBy,
+      with: { transporter: true, busLine: true },
     });
 
     return {
-      drivers: driversList,
+      data: driversWithRelations as unknown as DriverWithRelations[],
+      pagination,
     };
   };
 
@@ -211,92 +144,24 @@ export const createDriverRepository = () => {
    * @param {number} id - The ID of the driver
    * @returns {Promise<DriverStatus[]>} Array of possible next statuses
    */
-  const getPossibleNextStatuses = async (
+  const getDriverValidNextStatuses = async (
     id: number,
   ): Promise<DriverStatus[]> => {
     const driver = await baseRepository.findOne(id);
     return stateMachine.getPossibleNextStates(driver.status);
   };
 
-  /**
-   * Assigns a driver to a transporter
-   * @param {number} id - The ID of the driver
-   * @param {number} transporterId - The ID of the transporter
-   * @returns {Promise<Driver>} The updated driver
-   */
-  const assignToTransporter = async (
-    id: number,
-    transporterId: number,
-  ): Promise<Driver> => {
-    return await baseRepository.update(id, { transporterId });
-  };
-
-  /**
-   * Assigns a driver to a bus line
-   * @param {number} id - The ID of the driver
-   * @param {number} busLineId - The ID of the bus line
-   * @returns {Promise<Driver>} The updated driver
-   */
-  const assignToBusLine = async (
-    id: number,
-    busLineId: number,
-  ): Promise<Driver> => {
-    return await baseRepository.update(id, { busLineId });
-  };
-
-  /**
-   * Assigns a driver to a bus
-   * @param {number} id - The ID of the driver
-   * @param {number} busId - The ID of the bus
-   * @returns {Promise<Driver>} The updated driver
-   */
-  const assignToBus = async (id: number, busId: number): Promise<Driver> => {
-    return await baseRepository.update(id, { busId });
-  };
-
-  /**
-   * Removes a driver from a transporter
-   * @param {number} id - The ID of the driver
-   * @returns {Promise<Driver>} The updated driver
-   */
-  const removeFromTransporter = async (id: number): Promise<Driver> => {
-    return await baseRepository.update(id, { transporterId: null });
-  };
-
-  /**
-   * Removes a driver from a bus line
-   * @param {number} id - The ID of the driver
-   * @returns {Promise<Driver>} The updated driver
-   */
-  const removeFromBusLine = async (id: number): Promise<Driver> => {
-    return await baseRepository.update(id, { busLineId: null });
-  };
-
-  /**
-   * Removes a driver from a bus
-   * @param {number} id - The ID of the driver
-   * @returns {Promise<Driver>} The updated driver
-   */
-  const removeFromBus = async (id: number): Promise<Driver> => {
-    return await baseRepository.update(id, { busId: null });
+  const getValidInitialStatuses = (): DriverStatus[] => {
+    return ALLOWED_INITIAL_STATES;
   };
 
   return {
     ...baseRepository,
     create,
     update,
-    findAllByStatus,
-    findAllByTransporter,
-    findAllByBusLine,
-    findAllByBus,
-    updateStatus,
-    getPossibleNextStatuses,
-    assignToTransporter,
-    assignToBusLine,
-    assignToBus,
-    removeFromTransporter,
-    removeFromBusLine,
-    removeFromBus,
+    getDriverValidNextStatuses,
+    getValidInitialStatuses,
+    appendRelations,
   };
 };
 

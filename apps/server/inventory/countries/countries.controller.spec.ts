@@ -7,8 +7,6 @@ import {
   getCountry,
   listCountries,
   listCountriesPaginated,
-  searchCountries,
-  searchCountriesPaginated,
   updateCountry,
 } from './countries.controller';
 
@@ -331,16 +329,16 @@ describe('Countries Controller', () => {
     test('should return non-paginated list for dropdowns', async () => {
       const response = await listCountries({});
 
-      expect(response.countries).toBeDefined();
-      expect(Array.isArray(response.countries)).toBe(true);
-      expect(response.countries.length).toBeGreaterThan(0);
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.data.length).toBeGreaterThan(0);
       // No pagination info should be present
       expect(response).not.toHaveProperty('pagination');
     });
   });
 
   describe('search functionality', () => {
-    test('should search countries', async () => {
+    test('should search countries using searchTerm in list endpoint', async () => {
       // Create a unique country for search testing
       const searchableCountry = await createCountry({
         name: 'Searchable Test Country',
@@ -349,23 +347,23 @@ describe('Countries Controller', () => {
       });
 
       try {
-        // Search for the country by term
-        const response = await searchCountries({ term: 'Searchable' });
+        // Search for the country using searchTerm in listCountries
+        const response = await listCountries({ searchTerm: 'Searchable' });
 
-        expect(response.countries).toBeDefined();
-        expect(Array.isArray(response.countries)).toBe(true);
-        expect(
-          response.countries.some((c) => c.id === searchableCountry.id),
-        ).toBe(true);
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(response.data.some((c) => c.id === searchableCountry.id)).toBe(
+          true,
+        );
       } finally {
         // Clean up
         await deleteCountry({ id: searchableCountry.id });
       }
     });
 
-    test('should search countries with pagination', async () => {
-      const response = await searchCountriesPaginated({
-        term: 'Test',
+    test('should search countries with pagination using searchTerm', async () => {
+      const response = await listCountriesPaginated({
+        searchTerm: 'Test',
         page: 1,
         pageSize: 5,
       });
@@ -412,7 +410,7 @@ describe('Countries Controller', () => {
         orderBy: [{ field: 'name', direction: 'desc' }],
       });
 
-      const names = response.countries.map((c) => c.name);
+      const names = response.data.map((c) => c.name);
       // Check if names are in descending order
       for (let i = 0; i < names.length - 1; i++) {
         expect(names[i] >= names[i + 1]).toBe(true);
@@ -425,14 +423,14 @@ describe('Countries Controller', () => {
       });
 
       // All returned countries should be active
-      expect(response.countries.every((c) => c.active === true)).toBe(true);
+      expect(response.data.every((c) => c.active === true)).toBe(true);
       // Should include our active test countries
       const activeTestCountryIds = testCountries
         .filter((c) => c.active)
         .map((c) => c.id);
 
       for (const id of activeTestCountryIds) {
-        expect(response.countries.some((c) => c.id === id)).toBe(true);
+        expect(response.data.some((c) => c.id === id)).toBe(true);
       }
     });
 
@@ -483,9 +481,7 @@ describe('Countries Controller', () => {
         });
 
         // Get all active countries and verify they're ordered by name
-        const activeCountries = response.countries.filter(
-          (c) => c.active === true,
-        );
+        const activeCountries = response.data.filter((c) => c.active === true);
         const activeNames = activeCountries.map((c) => c.name);
 
         for (let i = 0; i < activeNames.length - 1; i++) {

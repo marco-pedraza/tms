@@ -11,8 +11,6 @@ import {
   getCity,
   listCities,
   listCitiesPaginated,
-  searchCities,
-  searchCitiesPaginated,
   updateCity,
 } from './cities.controller';
 
@@ -128,7 +126,7 @@ describe('Cities Controller', () => {
       expect(response.createdAt).toBeDefined();
     });
 
-    test('should retrieve a city by ID', async () => {
+    test('should retrieve a city by ID with state and country relations', async () => {
       const response = await getCity({ id: createdCityId });
 
       expect(response).toBeDefined();
@@ -137,6 +135,18 @@ describe('Cities Controller', () => {
       expect(response.stateId).toBe(testCity.stateId);
       expect(response.latitude).toBe(testCity.latitude);
       expect(response.longitude).toBe(testCity.longitude);
+
+      // Verify state relation is included
+      expect(response.state).toBeDefined();
+      expect(response.state.id).toBe(stateId);
+      expect(response.state.name).toBe('Test State for Cities');
+      expect(response.state.countryId).toBe(countryId);
+
+      // Verify country relation is included through state
+      expect(response.state.country).toBeDefined();
+      expect(response.state.country.id).toBe(countryId);
+      expect(response.state.country.name).toBe('Test Country for Cities');
+      expect(response.state.country.code).toBe('TCC');
     });
 
     test('should update a city name and regenerate the slug', async () => {
@@ -331,9 +341,9 @@ describe('Cities Controller', () => {
     test('should return non-paginated list for dropdowns', async () => {
       const response = await listCities({});
 
-      expect(response.cities).toBeDefined();
-      expect(Array.isArray(response.cities)).toBe(true);
-      expect(response.cities.length).toBeGreaterThan(0);
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.data.length).toBeGreaterThan(0);
       expect(response).not.toHaveProperty('pagination');
     });
   });
@@ -343,21 +353,19 @@ describe('Cities Controller', () => {
       const searchableCityId = await createTestCity('Searchable Test City');
 
       try {
-        const response = await searchCities({ term: 'Searchable' });
+        const response = await listCities({ searchTerm: 'Searchable' });
 
-        expect(response.cities).toBeDefined();
-        expect(Array.isArray(response.cities)).toBe(true);
-        expect(response.cities.some((c) => c.id === searchableCityId)).toBe(
-          true,
-        );
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(response.data.some((c) => c.id === searchableCityId)).toBe(true);
       } finally {
         await cleanupCity(searchableCityId);
       }
     });
 
     test('should search cities with pagination', async () => {
-      const response = await searchCitiesPaginated({
-        term: 'Test',
+      const response = await listCitiesPaginated({
+        searchTerm: 'Test',
         page: 1,
         pageSize: 5,
       });
@@ -419,7 +427,7 @@ describe('Cities Controller', () => {
         orderBy: [{ field: 'name', direction: 'desc' }],
       });
 
-      const names = response.cities.map((c) => c.name);
+      const names = response.data.map((c) => c.name);
       for (let i = 0; i < names.length - 1; i++) {
         expect(names[i] >= names[i + 1]).toBe(true);
       }
@@ -430,7 +438,7 @@ describe('Cities Controller', () => {
         filters: { active: true },
       });
 
-      expect(response.cities.every((c) => c.active === true)).toBe(true);
+      expect(response.data.every((c) => c.active === true)).toBe(true);
 
       const activeTestCityIds: number[] = [];
       for (const id of testCities) {
@@ -441,7 +449,7 @@ describe('Cities Controller', () => {
       }
 
       for (const id of activeTestCityIds) {
-        expect(response.cities.some((c) => c.id === id)).toBe(true);
+        expect(response.data.some((c) => c.id === id)).toBe(true);
       }
     });
 
@@ -501,7 +509,7 @@ describe('Cities Controller', () => {
           ],
         });
 
-        const activeCities = response.cities.filter((c) => c.active === true);
+        const activeCities = response.data.filter((c) => c.active === true);
         const activeNames = activeCities.map((c) => c.name);
 
         for (let i = 0; i < activeNames.length - 1; i++) {

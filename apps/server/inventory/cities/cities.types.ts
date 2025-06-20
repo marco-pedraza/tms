@@ -1,5 +1,12 @@
 import { MatchesRegexp, Max, Min, MinLen } from 'encore.dev/validate';
-import { PaginatedResult, PaginationParams } from '../../shared/types';
+import {
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '../../shared/types';
+import type { Country } from '../countries/countries.types';
+import type { State } from '../states/states.types';
 
 /**
  * Base interface representing a city entity
@@ -27,10 +34,10 @@ export interface City {
   active: boolean;
 
   /** Timestamp when the city record was created */
-  createdAt: Date;
+  createdAt: Date | null;
 
   /** Timestamp when the city record was last updated */
-  updatedAt: Date;
+  updatedAt: Date | null;
 
   /** URL-friendly identifier for the city */
   slug: string;
@@ -121,24 +128,15 @@ export interface UpdateCityPayload {
   active?: boolean;
 }
 
-/**
- * Response type for the list cities endpoint
- */
-export interface Cities {
-  /** List of cities */
-  cities: City[];
+export interface CityWithRelations extends City {
+  state: State & {
+    country: Country;
+  };
 }
 
-export interface CitiesQueryOptions {
-  orderBy?: { field: keyof City; direction: 'asc' | 'desc' }[];
-  filters?: Partial<City>;
-}
+export type ListCitiesQueryParams = ListQueryParams<City>;
+export type ListCitiesResult = ListQueryResult<City>;
 
-/**
- * Paginated response type for the list cities endpoint
- */
-export type PaginatedCities = PaginatedResult<City>;
-
-export interface PaginationParamsCities
-  extends PaginationParams,
-    CitiesQueryOptions {}
+export type PaginatedListCitiesQueryParams = PaginatedListQueryParams<City>;
+export type PaginatedListCitiesResult =
+  PaginatedListQueryResult<CityWithRelations>;

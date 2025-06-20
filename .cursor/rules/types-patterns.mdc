@@ -1,6 +1,6 @@
 ---
-description: Patterns for type definitions in Encore applications
-globs: ['apps/server/*/*/*.types.ts']
+description: 
+globs: *.types.ts
 alwaysApply: false
 ---
 # Types Patterns
@@ -39,30 +39,28 @@ Each feature should have these core type definitions:
    }
    ```
 
-4. **Query Options** - Filtering and ordering parameters
+## Unified API Response Patterns
+
+Use standardized response patterns from shared types for consistency:
+
+4. **List Query Parameters** - Non-paginated list queries
    ```typescript
-   export interface CountriesQueryOptions {
-     orderBy?: { field: keyof Country; direction: 'asc' | 'desc' }[];
-     filters?: Partial<Country>;
-   }
+   import {
+     ListQueryParams,
+     ListQueryResult,
+     PaginatedListQueryParams,
+     PaginatedListQueryResult,
+   } from '../../shared/types';
+
+  export type ListCountriesQueryParams = ListQueryParams<Country>;
+  export type ListCountriesResult = ListQueryResult<Country>;
    ```
 
-5. **List Response** - Response for listing entities
+5. **Paginated Query Parameters** - Paginated queries
    ```typescript
-   export interface Countries {
-     countries: Country[];
-   }
-   ```
-
-6. **Pagination Parameters** - Extends PaginationParams with query options
-   ```typescript
-   export interface PaginationParamsCountries
-     extends PaginationParams, CountriesQueryOptions {}
-   ```
-
-7. **Paginated Response** - Generic paginated result type
-   ```typescript
-   export type PaginatedCountries = PaginatedResult<Country>;
+  export type PaginatedListCountriesQueryParams =
+    PaginatedListQueryParams<Country>;
+  export type PaginatedListCountriesResult = PaginatedListQueryResult<Country>;
    ```
 
 ## Additional Type Patterns
@@ -155,10 +153,11 @@ export interface Terminal {
      - Entity interface: `Feature` (ex: `Country`, `Terminal`)
      - Create DTO: `CreateFeaturePayload` (ex: `CreateCountryPayload`)
      - Update DTO: `UpdateFeaturePayload` (ex: `UpdateTerminalPayload`)
-     - List response: `Features` (ex: `Countries`, `Terminals`)
+     - List params: `ListFeaturesQueryParams` (ex: `ListCountriesQueryParams`)
+     - List result: `ListFeaturesResult` (ex: `ListCountriesResult`)
+     - Paginated params: `PaginatedListFeaturesQueryParams`
+     - Paginated result: `PaginatedListFeaturesResult`
      - With relations: `FeatureWithRelation` (ex: `TerminalWithCity`)
-     - Query options: `FeaturesQueryOptions` (ex: `TerminalsQueryOptions`)
-     - Pagination params: `PaginationParamsFeatures` (ex: `PaginationParamsTerminals`)
 
 4. **Type Composition**
    - Use `extends` for specializing interfaces
@@ -168,9 +167,10 @@ export interface Terminal {
    - Use union types for fields with multiple possible values
 
 5. **Shared Types**
-   - Import shared pagination types from `../../shared/types.ts`
+   - Always import shared types from `../../shared/types.ts`
    - Import related entity types (ex: `import { City } from '../cities/cities.types';`)
-   - Use `PaginatedResult<T>` for all paginated responses
+   - Use unified response patterns with `data` property
+   - Use `ListQueryResult<T>` and `PaginatedListQueryResult<T>` consistently
 
 ## Type Creation Checklist
 
@@ -178,8 +178,10 @@ export interface Terminal {
 - [ ] Add detailed JSDoc comments to all entity properties
 - [ ] Create CreateXPayload with appropriate validations
 - [ ] Create UpdateXPayload with all fields optional
-- [ ] Define query options interface with orderBy and filters
-- [ ] Create list response interface (ex: `Features`) that returns array of entities
-- [ ] Define pagination parameters that extend from shared types
+- [ ] Create unified list query parameters type alias using ListQueryParams<T>
+- [ ] Create unified list result type alias using ListQueryResult<T>
+- [ ] Create unified paginated parameters type alias using PaginatedListQueryParams<T>
+- [ ] Create unified paginated result type alias using PaginatedListQueryResult<T>
 - [ ] Create extended interfaces for entities with relationships
+- [ ] Import all shared types from ../../shared/types.ts
 

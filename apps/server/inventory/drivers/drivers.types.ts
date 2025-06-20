@@ -506,15 +506,11 @@ export interface DriverWithRelations extends Driver {
   busLine: BusLine;
 }
 
-// Encore's support for usage of generics is nullish,
-// so we need to declare empty extended interfaces
-/* eslint-disable @typescript-eslint/no-empty-object-type */
-export interface ListDriversQueryParams extends ListQueryParams<Driver> {}
-export interface ListDriversResult extends ListQueryResult<Driver> {}
+export type ListDriversQueryParams = ListQueryParams<Driver>;
+export type ListDriversResult = ListQueryResult<Driver>;
 
-export interface PaginatedListDriversQueryParams
-  extends PaginatedListQueryParams<Driver> {}
-export interface PaginatedListDriversResult
-  extends PaginatedListQueryResult<DriverWithRelations> {}
+export type PaginatedListDriversQueryParams = PaginatedListQueryParams<Driver>;
+export type PaginatedListDriversResult =
+  PaginatedListQueryResult<DriverWithRelations>;
 
-export interface ListStatusesResult extends ListQueryResult<DriverStatus> {}
+export type ListStatusesResult = ListQueryResult<DriverStatus>;

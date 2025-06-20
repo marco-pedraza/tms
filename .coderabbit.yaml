@@ -28,7 +28,7 @@ reviews:
   poem: true
   labeling_instructions: []
   path_filters:
-    - "!apps/web/services/ims-client.ts"
+    - "!packages/ims-client/index.ts"
   path_instructions:
     - path: "**/*.{ts,tsx}"
       instructions: |

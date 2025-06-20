@@ -1,6 +1,11 @@
 // API types
 import { MatchesRegexp, MinLen } from 'encore.dev/validate';
-import { PaginatedResult, PaginationParams } from '../../shared/types';
+import {
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '../../shared/types';
 
 /**
  * Base interface representing a country entity
@@ -70,24 +75,9 @@ export interface UpdateCountryPayload {
   active?: boolean;
 }
 
-/**
- * Response type for the list countries endpoint
- */
-export interface Countries {
-  /** List of countries */
-  countries: Country[];
-}
+export type ListCountriesQueryParams = ListQueryParams<Country>;
+export type ListCountriesResult = ListQueryResult<Country>;
 
-export interface CountriesQueryOptions {
-  orderBy?: { field: keyof Country; direction: 'asc' | 'desc' }[];
-  filters?: Partial<Country>;
-}
-
-/**
- * Paginated response type for the list countries endpoint
- */
-export type PaginatedCountries = PaginatedResult<Country>;
-
-export interface PaginationParamsCountries
-  extends PaginationParams,
-    CountriesQueryOptions {}
+export type PaginatedListCountriesQueryParams =
+  PaginatedListQueryParams<Country>;
+export type PaginatedListCountriesResult = PaginatedListQueryResult<Country>;

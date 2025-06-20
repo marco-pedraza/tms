@@ -202,10 +202,6 @@ export namespace inventory {
             this.searchBusLinesPaginated = this.searchBusLinesPaginated.bind(this)
             this.searchBuses = this.searchBuses.bind(this)
             this.searchBusesPaginated = this.searchBusesPaginated.bind(this)
-            this.searchCities = this.searchCities.bind(this)
-            this.searchCitiesPaginated = this.searchCitiesPaginated.bind(this)
-            this.searchCountries = this.searchCountries.bind(this)
-            this.searchCountriesPaginated = this.searchCountriesPaginated.bind(this)
             this.searchRoutes = this.searchRoutes.bind(this)
             this.searchRoutesPaginated = this.searchRoutesPaginated.bind(this)
             this.searchServiceTypes = this.searchServiceTypes.bind(this)
@@ -331,10 +327,13 @@ export namespace inventory {
 
         /**
          * Creates a new city.
+         * @param params - The city data to create
+         * @returns {Promise<City>} The created city
+         * @throws {APIError} If the city creation fails
          */
         public async createCity(params: cities.CreateCityPayload): Promise<cities.City> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/cities`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("POST", `/cities/create`, JSON.stringify(params))
             return await resp.json() as cities.City
         }
 
@@ -365,7 +364,7 @@ export namespace inventory {
          */
         public async createCountry(params: countries.CreateCountryPayload): Promise<countries.Country> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/countries`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("POST", `/countries/create`, JSON.stringify(params))
             return await resp.json() as countries.Country
         }
 
@@ -565,10 +564,14 @@ export namespace inventory {
 
         /**
          * Deletes a city by its ID.
+         * @param params - Object containing the city ID
+         * @param params.id - The ID of the city to delete
+         * @returns {Promise<City>} The deleted city
+         * @throws {APIError} If the city is not found or deletion fails
          */
         public async deleteCity(id: number): Promise<cities.City> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/cities/${encodeURIComponent(id)}`)
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/cities/${encodeURIComponent(id)}/delete`)
             return await resp.json() as cities.City
         }
 
@@ -581,7 +584,7 @@ export namespace inventory {
          */
         public async deleteCountry(id: number): Promise<countries.Country> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/countries/${encodeURIComponent(id)}`)
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/countries/${encodeURIComponent(id)}/delete`)
             return await resp.json() as countries.Country
         }
 
@@ -852,6 +855,10 @@ export namespace inventory {
 
         /**
          * Retrieves a city by its ID.
+         * @param params - Object containing the city ID
+         * @param params.id - The ID of the city to retrieve
+         * @returns {Promise<City>} The found city
+         * @throws {APIError} If the city is not found or retrieval fails
          */
         public async getCity(id: number): Promise<cities.City> {
             // Now make the actual call to the API
@@ -1169,43 +1176,50 @@ export namespace inventory {
 
         /**
          * Retrieves all cities without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListCitiesResult>} Unified response with data property containing array of cities
+         * @throws {APIError} If retrieval fails
          */
-        public async listCities(params: cities.CitiesQueryOptions): Promise<cities.Cities> {
+        public async listCities(params: cities.ListCitiesQueryParams): Promise<cities.ListCitiesResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-cities`, JSON.stringify(params))
-            return await resp.json() as cities.Cities
+            const resp = await this.baseClient.callTypedAPI("POST", `/cities/list/all`, JSON.stringify(params))
+            return await resp.json() as cities.ListCitiesResult
         }
 
         /**
-         * Retrieves cities with pagination (useful for tables).
+         * Retrieves cities with pagination and includes state and country information.
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListCitiesResult>} Unified paginated response with data and pagination properties including related state and country information
+         * @throws {APIError} If retrieval fails
          */
-        public async listCitiesPaginated(params: cities.PaginationParamsCities): Promise<cities.PaginatedCities> {
+        public async listCitiesPaginated(params: cities.PaginatedListCitiesQueryParams): Promise<cities.PaginatedListCitiesResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-cities/paginated`, JSON.stringify(params))
-            return await resp.json() as cities.PaginatedCities
+            const resp = await this.baseClient.callTypedAPI("POST", `/cities/list`, JSON.stringify(params))
+            return await resp.json() as cities.PaginatedListCitiesResult
         }
 
         /**
          * Retrieves all countries without pagination (useful for dropdowns).
-         * @returns {Promise<Countries>} An object containing an array of countries
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListCountriesResult>} Unified response with data property containing array of countries
          * @throws {APIError} If retrieval fails
          */
-        public async listCountries(params: countries.CountriesQueryOptions): Promise<countries.Countries> {
+        public async listCountries(params: countries.ListCountriesQueryParams): Promise<countries.ListCountriesResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-countries`, JSON.stringify(params))
-            return await resp.json() as countries.Countries
+            const resp = await this.baseClient.callTypedAPI("POST", `/countries/list/all`, JSON.stringify(params))
+            return await resp.json() as countries.ListCountriesResult
         }
 
         /**
          * Retrieves countries with pagination (useful for tables).
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedCountries>} Paginated list of countries
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListCountriesResult>} Unified paginated response with data and pagination properties
          * @throws {APIError} If retrieval fails
          */
-        public async listCountriesPaginated(params: countries.PaginationParamsCountries): Promise<countries.PaginatedCountries> {
+        public async listCountriesPaginated(params: countries.PaginatedListCountriesQueryParams): Promise<countries.PaginatedListCountriesResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-countries/paginated`, JSON.stringify(params))
-            return await resp.json() as countries.PaginatedCountries
+            const resp = await this.baseClient.callTypedAPI("POST", `/countries/list`, JSON.stringify(params))
+            return await resp.json() as countries.PaginatedListCountriesResult
         }
 
         /**
@@ -1719,104 +1733,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/buses/search/paginated`, JSON.stringify(params))
             return await resp.json() as buses.PaginatedBuses
-        }
-
-        /**
-         * Searches for cities by matching a search term against name and slug.
-         */
-        public async searchCities(params: {
-    term: string
-}): Promise<cities.Cities> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                term: params.term,
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/cities/search`, undefined, {query})
-            return await resp.json() as cities.Cities
-        }
-
-        /**
-         * Searches for cities with pagination by matching a search term against name and slug.
-         */
-        public async searchCitiesPaginated(params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "name" | "stateId" | "latitude" | "longitude" | "timezone" | "active" | "createdAt" | "updatedAt" | "slug"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        name?: string
-        stateId?: number
-        latitude?: number
-        longitude?: number
-        timezone?: string
-        active?: boolean
-        createdAt?: string
-        updatedAt?: string
-        slug?: string
-    }
-    term: string
-}): Promise<cities.PaginatedCities> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/cities/search/paginated`, JSON.stringify(params))
-            return await resp.json() as cities.PaginatedCities
-        }
-
-        /**
-         * Searches for countries by matching a search term against name and code.
-         * @param params - Search parameters
-         * @param params.term - The search term to match against country name and code
-         * @returns {Promise<Countries>} List of matching countries
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchCountries(params: {
-    term: string
-}): Promise<countries.Countries> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                term: params.term,
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/countries/search`, undefined, {query})
-            return await resp.json() as countries.Countries
-        }
-
-        /**
-         * Searches for countries with pagination by matching a search term against name and code.
-         * @param params - Search and pagination parameters
-         * @param params.term - The search term to match against country name and code
-         * @param params.page - Page number for pagination (optional, default: 1)
-         * @param params.pageSize - Number of items per page (optional, default: 10)
-         * @param params.orderBy - Sorting criteria (optional)
-         * @param params.filters - Additional filters to apply (optional)
-         * @returns {Promise<PaginatedCountries>} Paginated list of matching countries
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchCountriesPaginated(params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "name" | "active" | "code" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        name?: string
-        active?: boolean
-        code?: string
-        createdAt?: string | null
-        updatedAt?: string | null
-    }
-    term: string
-}): Promise<countries.PaginatedCountries> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/countries/search/paginated`, JSON.stringify(params))
-            return await resp.json() as countries.PaginatedCountries
         }
 
         /**
@@ -2480,6 +2396,10 @@ export namespace inventory {
 
         /**
          * Updates an existing city.
+         * @param params - Object containing the city ID and update data
+         * @param params.id - The ID of the city to update
+         * @returns {Promise<City>} The updated city
+         * @throws {APIError} If the city is not found or update fails
          */
         public async updateCity(id: number, params: {
     /**
@@ -2518,7 +2438,7 @@ export namespace inventory {
     active?: boolean
 }): Promise<cities.City> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/cities/${encodeURIComponent(id)}`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("PUT", `/cities/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as cities.City
         }
 
@@ -2542,7 +2462,6 @@ export namespace inventory {
          * Updates an existing country.
          * @param params - Object containing the country ID and update data
          * @param params.id - The ID of the country to update
-         * @param params.data - The country data to update
          * @returns {Promise<Country>} The updated country
          * @throws {APIError} If the country is not found or update fails
          */
@@ -2565,7 +2484,7 @@ export namespace inventory {
     active?: boolean
 }): Promise<countries.Country> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/countries/${encodeURIComponent(id)}`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("PUT", `/countries/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as countries.Country
         }
 
@@ -6695,32 +6614,6 @@ export namespace buses {
 }
 
 export namespace cities {
-    export interface Cities {
-        /**
-         * List of cities
-         */
-        cities: City[]
-    }
-
-    export interface CitiesQueryOptions {
-        orderBy?: {
-            field: "id" | "name" | "stateId" | "latitude" | "longitude" | "timezone" | "active" | "createdAt" | "updatedAt" | "slug"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            name?: string
-            stateId?: number
-            latitude?: number
-            longitude?: number
-            timezone?: string
-            active?: boolean
-            createdAt?: string
-            updatedAt?: string
-            slug?: string
-        }
-    }
-
     export interface City {
         /**
          * Unique identifier for the city
@@ -6760,12 +6653,102 @@ export namespace cities {
         /**
          * Timestamp when the city record was created
          */
-        createdAt: string
+        createdAt: string | null
 
         /**
          * Timestamp when the city record was last updated
          */
-        updatedAt: string
+        updatedAt: string | null
+
+        /**
+         * URL-friendly identifier for the city
+         */
+        slug: string
+    }
+
+    export interface CityWithRelations {
+        state: {
+            /**
+             * Unique identifier for the state
+             */
+            id: number
+
+            /**
+             * Name of the state
+             */
+            name: string
+
+            /**
+             * State code (e.g., "TX", "CA", "NY")
+             */
+            code: string
+
+            /**
+             * ID of the country this state belongs to
+             */
+            countryId: number
+
+            /**
+             * Whether the state is currently active in the system
+             */
+            active: boolean
+
+            /**
+             * Timestamp when the state record was created
+             */
+            createdAt: string | null
+
+            /**
+             * Timestamp when the state record was last updated
+             */
+            updatedAt: string | null
+
+            country: countries.Country
+        }
+        /**
+         * Unique identifier for the city
+         */
+        id: number
+
+        /**
+         * Name of the city
+         */
+        name: string
+
+        /**
+         * ID of the state this city belongs to
+         */
+        stateId: number
+
+        /**
+         * Latitude of the city
+         */
+        latitude: number
+
+        /**
+         * Longitude of the city
+         */
+        longitude: number
+
+        /**
+         * Timezone of the city (e.g., "America/Mexico_City")
+         */
+        timezone: string
+
+        /**
+         * Whether the city is currently active in the system
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the city record was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the city record was last updated
+         */
+        updatedAt: string | null
 
         /**
          * URL-friendly identifier for the city
@@ -6811,12 +6794,31 @@ export namespace cities {
         active?: boolean
     }
 
-    export interface PaginatedCities {
-        pagination: shared.PaginationMeta
+    export interface ListCitiesQueryParams {
+        orderBy?: {
+            field: "id" | "name" | "stateId" | "latitude" | "longitude" | "timezone" | "active" | "createdAt" | "updatedAt" | "slug"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            stateId?: number
+            latitude?: number
+            longitude?: number
+            timezone?: string
+            active?: boolean
+            createdAt?: string | null
+            updatedAt?: string | null
+            slug?: string
+        }
+        searchTerm?: string
+    }
+
+    export interface ListCitiesResult {
         data: City[]
     }
 
-    export interface PaginationParamsCities {
+    export interface PaginatedListCitiesQueryParams {
         page?: number
         pageSize?: number
         orderBy?: {
@@ -6831,36 +6833,20 @@ export namespace cities {
             longitude?: number
             timezone?: string
             active?: boolean
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | null
+            updatedAt?: string | null
             slug?: string
         }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListCitiesResult {
+        pagination: shared.PaginationMeta
+        data: CityWithRelations[]
     }
 }
 
 export namespace countries {
-    export interface Countries {
-        /**
-         * List of countries
-         */
-        countries: Country[]
-    }
-
-    export interface CountriesQueryOptions {
-        orderBy?: {
-            field: "id" | "name" | "active" | "code" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            name?: string
-            active?: boolean
-            code?: string
-            createdAt?: string | null
-            updatedAt?: string | null
-        }
-    }
-
     export interface Country {
         /**
          * Unique identifier for the country
@@ -6913,12 +6899,27 @@ export namespace countries {
         active?: boolean
     }
 
-    export interface PaginatedCountries {
-        pagination: shared.PaginationMeta
+    export interface ListCountriesQueryParams {
+        orderBy?: {
+            field: "id" | "name" | "active" | "code" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            active?: boolean
+            code?: string
+            createdAt?: string | null
+            updatedAt?: string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListCountriesResult {
         data: Country[]
     }
 
-    export interface PaginationParamsCountries {
+    export interface PaginatedListCountriesQueryParams {
         page?: number
         pageSize?: number
         orderBy?: {
@@ -6933,6 +6934,12 @@ export namespace countries {
             createdAt?: string | null
             updatedAt?: string | null
         }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListCountriesResult {
+        pagination: shared.PaginationMeta
+        data: Country[]
     }
 }
 

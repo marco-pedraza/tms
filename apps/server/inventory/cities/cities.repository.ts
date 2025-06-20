@@ -1,12 +1,15 @@
-import { createBaseRepository } from '@repo/base-repo';
-import { PaginationParams } from '../../shared/types';
+import { inArray } from 'drizzle-orm';
+import { NotFoundError, createBaseRepository } from '@repo/base-repo';
+import { PaginationMeta } from '../../shared/types';
 import { createSlug } from '../../shared/utils';
 import { db } from '../db-service';
 import { cities } from './cities.schema';
 import type {
   City,
+  CityWithRelations,
   CreateCityPayload,
-  PaginatedCities,
+  PaginatedListCitiesQueryParams,
+  PaginatedListCitiesResult,
   UpdateCityPayload,
 } from './cities.types';
 
@@ -49,21 +52,83 @@ export const createCityRepository = () => {
   };
 
   /**
-   * Lists cities with pagination
-   * @param params - Pagination parameters
-   * @returns Paginated list of cities
+   * Finds a single city with its relations (state and country)
+   * @param id - The ID of the city to find
+   * @returns The city with state and country information
+   * @throws {NotFoundError} If the city is not found
    */
-  const listPaginated = async (
-    params: PaginationParams = {},
-  ): Promise<PaginatedCities> => {
-    return await baseRepository.findAllPaginated(params);
+  const findOneWithRelations = async (
+    id: number,
+  ): Promise<CityWithRelations> => {
+    const city = await db.query.cities.findFirst({
+      where: (cities, { eq }) => eq(cities.id, id),
+      with: {
+        state: {
+          with: {
+            country: true,
+          },
+        },
+      },
+    });
+
+    if (!city) {
+      throw new NotFoundError(`City with id ${id} not found`);
+    }
+
+    return city;
+  };
+
+  /**
+   * Appends relations (state and country) to cities
+   *
+   * This function takes a list of cities and enriches them with related state and country information.
+   * It's designed to be used after getting paginated results from the base repository.
+   *
+   * @param citiesResult - Array of cities to append relations to
+   * @param pagination - Pagination metadata
+   * @param params - Query parameters for ordering
+   * @returns Cities with relations and pagination metadata
+   */
+  const appendRelations = async (
+    citiesResult: City[],
+    pagination: PaginationMeta,
+    params: PaginatedListCitiesQueryParams,
+  ): Promise<PaginatedListCitiesResult> => {
+    // Return early if no cities to process
+    if (citiesResult.length === 0) {
+      return {
+        data: [],
+        pagination,
+      };
+    }
+
+    const { baseOrderBy } = baseRepository.buildQueryExpressions(params);
+    const ids = citiesResult.map((city) => city.id);
+
+    const citiesWithRelations = await db.query.cities.findMany({
+      where: inArray(cities.id, ids),
+      orderBy: baseOrderBy,
+      with: {
+        state: {
+          with: {
+            country: true,
+          },
+        },
+      },
+    });
+
+    return {
+      data: citiesWithRelations,
+      pagination,
+    };
   };
 
   return {
     ...baseRepository,
     create,
     update,
-    findAllPaginated: listPaginated,
+    findOneWithRelations,
+    appendRelations,
   };
 };
 

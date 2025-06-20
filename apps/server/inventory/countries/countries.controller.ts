@@ -1,11 +1,11 @@
 import { api } from 'encore.dev/api';
 import type {
-  Countries,
-  CountriesQueryOptions,
   Country,
   CreateCountryPayload,
-  PaginatedCountries,
-  PaginationParamsCountries,
+  ListCountriesQueryParams,
+  ListCountriesResult,
+  PaginatedListCountriesQueryParams,
+  PaginatedListCountriesResult,
   UpdateCountryPayload,
 } from './countries.types';
 import { countryRepository } from './countries.repository';
@@ -18,7 +18,7 @@ import { validateCountry } from './countries.domain';
  * @throws {APIError} If the country creation fails
  */
 export const createCountry = api(
-  { expose: true, method: 'POST', path: '/countries' },
+  { expose: true, method: 'POST', path: '/countries/create' },
   async (params: CreateCountryPayload): Promise<Country> => {
     await validateCountry(params);
     return await countryRepository.create(params);
@@ -41,29 +41,37 @@ export const getCountry = api(
 
 /**
  * Retrieves all countries without pagination (useful for dropdowns).
- * @returns {Promise<Countries>} An object containing an array of countries
+ * @param params - Query parameters including orderBy, filters, and searchTerm
+ * @returns {Promise<ListCountriesResult>} Unified response with data property containing array of countries
  * @throws {APIError} If retrieval fails
  */
 export const listCountries = api(
-  { expose: true, method: 'POST', path: '/get-countries' },
-  async (params: CountriesQueryOptions): Promise<Countries> => {
-    const countries = await countryRepository.findAll(params);
+  { expose: true, method: 'POST', path: '/countries/list/all' },
+  async (params: ListCountriesQueryParams): Promise<ListCountriesResult> => {
+    const countries = params.searchTerm
+      ? await countryRepository.search(params.searchTerm)
+      : await countryRepository.findAll(params);
     return {
-      countries,
+      data: countries,
     };
   },
 );
 
 /**
  * Retrieves countries with pagination (useful for tables).
- * @param params - Pagination parameters
- * @returns {Promise<PaginatedCountries>} Paginated list of countries
+ * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+ * @returns {Promise<PaginatedListCountriesResult>} Unified paginated response with data and pagination properties
  * @throws {APIError} If retrieval fails
  */
 export const listCountriesPaginated = api(
-  { expose: true, method: 'POST', path: '/get-countries/paginated' },
-  async (params: PaginationParamsCountries): Promise<PaginatedCountries> => {
-    return await countryRepository.findAllPaginated(params);
+  { expose: true, method: 'POST', path: '/countries/list' },
+  async (
+    params: PaginatedListCountriesQueryParams,
+  ): Promise<PaginatedListCountriesResult> => {
+    const countries = params.searchTerm
+      ? await countryRepository.searchPaginated(params.searchTerm, params)
+      : await countryRepository.findAllPaginated(params);
+    return countries;
   },
 );
 
@@ -71,12 +79,11 @@ export const listCountriesPaginated = api(
  * Updates an existing country.
  * @param params - Object containing the country ID and update data
  * @param params.id - The ID of the country to update
- * @param params.data - The country data to update
  * @returns {Promise<Country>} The updated country
  * @throws {APIError} If the country is not found or update fails
  */
 export const updateCountry = api(
-  { expose: true, method: 'PUT', path: '/countries/:id' },
+  { expose: true, method: 'PUT', path: '/countries/:id/update' },
   async ({
     id,
     ...data
@@ -94,48 +101,8 @@ export const updateCountry = api(
  * @throws {APIError} If the country is not found or deletion fails
  */
 export const deleteCountry = api(
-  { expose: true, method: 'DELETE', path: '/countries/:id' },
+  { expose: true, method: 'DELETE', path: '/countries/:id/delete' },
   async ({ id }: { id: number }): Promise<Country> => {
     return await countryRepository.delete(id);
-  },
-);
-
-/**
- * Searches for countries by matching a search term against name and code.
- * @param params - Search parameters
- * @param params.term - The search term to match against country name and code
- * @returns {Promise<Countries>} List of matching countries
- * @throws {APIError} If search fails or no searchable fields are configured
- */
-export const searchCountries = api(
-  { expose: true, method: 'GET', path: '/countries/search' },
-  async ({ term }: { term: string }): Promise<Countries> => {
-    const countries = await countryRepository.search(term);
-    return {
-      countries,
-    };
-  },
-);
-
-/**
- * Searches for countries with pagination by matching a search term against name and code.
- * @param params - Search and pagination parameters
- * @param params.term - The search term to match against country name and code
- * @param params.page - Page number for pagination (optional, default: 1)
- * @param params.pageSize - Number of items per page (optional, default: 10)
- * @param params.orderBy - Sorting criteria (optional)
- * @param params.filters - Additional filters to apply (optional)
- * @returns {Promise<PaginatedCountries>} Paginated list of matching countries
- * @throws {APIError} If search fails or no searchable fields are configured
- */
-export const searchCountriesPaginated = api(
-  { expose: true, method: 'POST', path: '/countries/search/paginated' },
-  async ({
-    term,
-    ...params
-  }: PaginationParamsCountries & {
-    term: string;
-  }): Promise<PaginatedCountries> => {
-    return await countryRepository.searchPaginated(term, params);
   },
 );

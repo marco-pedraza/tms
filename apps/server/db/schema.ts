@@ -1,6 +1,6 @@
 export { countries } from '../inventory/countries/countries.schema';
-export { states } from '../inventory/states/states.schema';
-export { cities } from '../inventory/cities/cities.schema';
+export { states, statesRelations } from '../inventory/states/states.schema';
+export { cities, citiesRelations } from '../inventory/cities/cities.schema';
 export {
   terminals,
   terminalsRelations,

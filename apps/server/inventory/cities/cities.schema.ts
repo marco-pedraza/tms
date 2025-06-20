@@ -8,6 +8,7 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import { states } from '../states/states.schema';
 
 export const cities = pgTable(
@@ -28,3 +29,10 @@ export const cities = pgTable(
   },
   (table) => [index().on(table.name), index().on(table.stateId)],
 );
+
+export const citiesRelations = relations(cities, ({ one }) => ({
+  state: one(states, {
+    fields: [cities.stateId],
+    references: [states.id],
+  }),
+}));

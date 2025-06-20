@@ -127,6 +127,13 @@
       "when": 1748374314321,
       "tag": "20250527193154_create_bus_seat_models_table",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1750374463967,
+      "tag": "20250619230743_create_populations_tables",
+      "breakpoints": true
     }
   ]
 }

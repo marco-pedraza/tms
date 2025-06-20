@@ -77,3 +77,9 @@ export {
   routeSegments,
   routeSegmentsRelations,
 } from '../inventory/route-segment/route-segment.schema';
+export {
+  populations,
+  populationsRelations,
+  populationCities,
+  populationCitiesRelations,
+} from '../inventory/populations/populations.schema';

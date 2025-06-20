@@ -140,7 +140,7 @@ chat:
   auto_reply: true
   integrations:
     jira:   { usage: disabled }
-    linear: { usage: disabled }
+    linear: { usage: enabled}
 
 knowledge_base:
   opt_out: false
@@ -148,7 +148,7 @@ knowledge_base:
   learnings:        { scope: local }
   issues:           { scope: local }
   jira:             { usage: disabled, project_keys: [] }
-  linear:           { usage: disabled, team_keys: [] }
+  linear:           { usage: enabled, team_keys: ['IMS'] }
   pull_requests:    { scope: local }
 
 code_generation:

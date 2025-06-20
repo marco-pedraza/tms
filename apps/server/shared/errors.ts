@@ -1,6 +1,7 @@
 import { APIError } from 'encore.dev/api';
 import {
   DuplicateError,
+  FieldValidationError,
   ForeignKeyError,
   NotFoundError,
   ValidationError,
@@ -107,6 +108,7 @@ export class UnauthorizedError extends Error {
  *
  * @param error - The error to parse
  * @returns {APIError} An APIError with the appropriate error code and message
+ * - FieldValidationError -> invalidArgument
  * - NotFoundError -> notFound
  * - ValidationError -> invalidArgument
  * - DuplicateError -> alreadyExists
@@ -118,6 +120,41 @@ export class UnauthorizedError extends Error {
  * - Other errors -> internal
  */
 export const parseApiError = (error: unknown): APIError => {
+  // Handle business validation errors with array response structure
+  if (error instanceof FieldValidationError) {
+    // Array response: each field maps to an array of error objects
+    const details: Record<
+      string,
+      { code: string; message: string; value?: unknown }[]
+    > = error.fieldErrors.reduce(
+      (acc, err) => {
+        const fieldError: { code: string; message: string; value?: unknown } = {
+          code: err.code,
+          message: err.message,
+        };
+
+        if (err.value !== undefined) {
+          fieldError.value = err.value;
+        }
+
+        // Initialize array for field if it doesn't exist
+        if (!acc[err.field]) {
+          acc[err.field] = [];
+        }
+
+        // Push error into the array for this field
+        acc[err.field].push(fieldError);
+        return acc;
+      },
+      {} as Record<
+        string,
+        { code: string; message: string; value?: unknown }[]
+      >,
+    );
+
+    return errors.invalidArgument('Validation failed', details);
+  }
+
   if (error instanceof NotFoundError) {
     return errors.notFound(error.message);
   }
@@ -146,4 +183,38 @@ export const parseApiError = (error: unknown): APIError => {
 };
 
 // Re-export errors from @repo/base-repo to maintain backward compatibility
-export { NotFoundError, ValidationError, DuplicateError, ForeignKeyError };
+export {
+  NotFoundError,
+  ValidationError,
+  DuplicateError,
+  ForeignKeyError,
+  FieldValidationError,
+};
+
+/**
+ * Standardized business validation error codes
+ * These codes are reusable across different entities and fields
+ */
+export const STANDARD_ERROR_CODES = {
+  // General uniqueness violation error (for any field)
+  DUPLICATE: 'DUPLICATE',
+} as const;
+
+/**
+ * Utility functions for creating standardized field validation errors
+ */
+export const standardFieldErrors = {
+  /**
+   * Creates a duplicate field error for any field
+   * @param entityName - Name of the entity (e.g., 'Country', 'State')
+   * @param fieldName - Name of the field (e.g., 'name', 'code', 'email')
+   * @param value - The duplicate value
+   * @returns FieldError object with DUPLICATE code
+   */
+  duplicate: (entityName: string, fieldName: string, value: string) => ({
+    field: fieldName,
+    code: STANDARD_ERROR_CODES.DUPLICATE,
+    message: `A ${entityName.toLowerCase()} with the ${fieldName} "${value}" already exists`,
+    value,
+  }),
+};

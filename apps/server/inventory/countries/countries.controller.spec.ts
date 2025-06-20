@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { FieldValidationError } from '@repo/base-repo';
 import type { Country } from './countries.types';
 import {
   createCountry,
@@ -87,8 +88,6 @@ describe('Countries Controller', () => {
   });
 
   describe('error scenarios', () => {
-    // NOTE: We are not testing the validation errors because it's handled by Encore rust runtime and they are not thrown in the controller
-
     test('should handle not found errors', async () => {
       await expect(getCountry({ id: 9999 })).rejects.toThrow();
     });
@@ -101,6 +100,172 @@ describe('Countries Controller', () => {
           code: testCountry.code,
         }),
       ).rejects.toThrow();
+    });
+
+    describe('field validation errors', () => {
+      test('should throw detailed field validation error for duplicate name', async () => {
+        // Ensure the test country exists and get fresh data
+        const existingCountry = await getCountry({ id: createdCountryId });
+
+        const duplicateNamePayload = {
+          name: existingCountry.name, // Same name as existing country
+          code: 'UNQ', // Different code
+          active: true,
+        };
+
+        // Verify that the function rejects
+        await expect(createCountry(duplicateNamePayload)).rejects.toThrow();
+
+        // Capture the error to make specific assertions
+        let validationError: FieldValidationError | undefined;
+        try {
+          await createCountry(duplicateNamePayload);
+        } catch (error) {
+          validationError = error as FieldValidationError;
+        }
+
+        // Verify that validation error is thrown (middleware transformation happens at HTTP level)
+        expect(validationError).toBeDefined();
+        const typedValidationError = validationError as FieldValidationError;
+        expect(typedValidationError.name).toBe('FieldValidationError');
+        expect(typedValidationError.message).toContain('Validation failed');
+
+        // The error should have fieldErrors array
+        expect(typedValidationError.fieldErrors).toBeDefined();
+        expect(Array.isArray(typedValidationError.fieldErrors)).toBe(true);
+        expect(typedValidationError.fieldErrors).toHaveLength(1);
+        expect(typedValidationError.fieldErrors[0].field).toBe('name');
+        expect(typedValidationError.fieldErrors[0].code).toBe('DUPLICATE');
+        expect(typedValidationError.fieldErrors[0].message).toContain(
+          'already exists',
+        );
+        expect(typedValidationError.fieldErrors[0].value).toBe(
+          existingCountry.name,
+        );
+      });
+
+      test('should throw detailed field validation error for duplicate code', async () => {
+        // Ensure the test country exists and get fresh data
+        const existingCountry = await getCountry({ id: createdCountryId });
+
+        const duplicateCodePayload = {
+          name: 'Different Country Name',
+          code: existingCountry.code, // Same code as existing country
+          active: true,
+        };
+
+        // Verify that the function rejects
+        await expect(createCountry(duplicateCodePayload)).rejects.toThrow();
+
+        // Capture the error to make specific assertions
+        let validationError: FieldValidationError | undefined;
+        try {
+          await createCountry(duplicateCodePayload);
+        } catch (error) {
+          validationError = error as FieldValidationError;
+        }
+
+        expect(validationError).toBeDefined();
+        const typedValidationError = validationError as FieldValidationError;
+        expect(typedValidationError.name).toBe('FieldValidationError');
+        expect(typedValidationError.message).toContain('Validation failed');
+
+        expect(typedValidationError.fieldErrors).toBeDefined();
+        expect(Array.isArray(typedValidationError.fieldErrors)).toBe(true);
+        expect(typedValidationError.fieldErrors).toHaveLength(1);
+        expect(typedValidationError.fieldErrors[0].field).toBe('code');
+        expect(typedValidationError.fieldErrors[0].code).toBe('DUPLICATE');
+        expect(typedValidationError.fieldErrors[0].message).toContain(
+          'already exists',
+        );
+        expect(typedValidationError.fieldErrors[0].value).toBe(
+          existingCountry.code,
+        );
+      });
+
+      test('should throw field validation error with multiple fields', async () => {
+        // Ensure the test country exists and get fresh data
+        const existingCountry = await getCountry({ id: createdCountryId });
+
+        const duplicateBothPayload = {
+          name: existingCountry.name, // Same name
+          code: existingCountry.code, // Same code
+          active: true,
+        };
+
+        // Verify that the function rejects
+        await expect(createCountry(duplicateBothPayload)).rejects.toThrow();
+
+        // Capture the error to make specific assertions
+        let validationError: FieldValidationError | undefined;
+        try {
+          await createCountry(duplicateBothPayload);
+        } catch (error) {
+          validationError = error as FieldValidationError;
+        }
+
+        expect(validationError).toBeDefined();
+        const typedValidationError = validationError as FieldValidationError;
+        expect(typedValidationError.name).toBe('FieldValidationError');
+        expect(typedValidationError.message).toContain('Validation failed');
+
+        expect(typedValidationError.fieldErrors).toBeDefined();
+        expect(Array.isArray(typedValidationError.fieldErrors)).toBe(true);
+        expect(typedValidationError.fieldErrors).toHaveLength(2);
+
+        // Both fields should have DUPLICATE errors
+        const nameError = typedValidationError.fieldErrors.find(
+          (e: { field: string }) => e.field === 'name',
+        );
+        const codeError = typedValidationError.fieldErrors.find(
+          (e: { field: string }) => e.field === 'code',
+        );
+
+        expect(nameError).toBeDefined();
+        expect(codeError).toBeDefined();
+        expect(nameError?.code).toBe('DUPLICATE');
+      });
+
+      test('should handle update validation errors correctly', async () => {
+        // Create another country to test duplicate on update
+        const anotherCountry = await createCountry({
+          name: 'Another Test Country',
+          code: 'ATC',
+          active: true,
+        });
+
+        // Ensure the test country exists and get fresh data
+        const existingCountry = await getCountry({ id: createdCountryId });
+
+        const updatePayload = {
+          id: anotherCountry.id,
+          name: existingCountry.name, // This should trigger duplicate validation
+        };
+
+        try {
+          // Verify that the function rejects
+          await expect(updateCountry(updatePayload)).rejects.toThrow();
+
+          // Capture the error to make specific assertions
+          let validationError: FieldValidationError | undefined;
+          try {
+            await updateCountry(updatePayload);
+          } catch (error) {
+            validationError = error as FieldValidationError;
+          }
+
+          expect(validationError).toBeDefined();
+          const typedValidationError = validationError as FieldValidationError;
+          expect(typedValidationError.name).toBe('FieldValidationError');
+          expect(typedValidationError.message).toContain('Validation failed');
+          expect(typedValidationError.fieldErrors).toBeDefined();
+          expect(typedValidationError.fieldErrors[0].field).toBe('name');
+          expect(typedValidationError.fieldErrors[0].code).toBe('DUPLICATE');
+        } finally {
+          // Clean up the additional country
+          await deleteCountry({ id: anotherCountry.id });
+        }
+      });
     });
   });
 

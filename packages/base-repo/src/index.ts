@@ -1,9 +1,12 @@
-// Exportar el repositorio base
+// Export the base repository
 export * from './base-repository';
 
-// Exportar errores y tipos
+// Export errors and types
 export * from './errors';
 export * from './types';
 
-// Exportar utilidades de manejo de errores de PostgreSQL
+// Export field validations
+export * from './field-validation';
+
+// Export PostgreSQL error handling utilities
 export { handlePostgresError, isPgError } from './postgres-error-handler';

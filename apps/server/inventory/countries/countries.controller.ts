@@ -9,6 +9,7 @@ import type {
   UpdateCountryPayload,
 } from './countries.types';
 import { countryRepository } from './countries.repository';
+import { validateCountry } from './countries.domain';
 
 /**
  * Creates a new country.
@@ -19,6 +20,7 @@ import { countryRepository } from './countries.repository';
 export const createCountry = api(
   { expose: true, method: 'POST', path: '/countries' },
   async (params: CreateCountryPayload): Promise<Country> => {
+    await validateCountry(params);
     return await countryRepository.create(params);
   },
 );
@@ -79,6 +81,7 @@ export const updateCountry = api(
     id,
     ...data
   }: UpdateCountryPayload & { id: number }): Promise<Country> => {
+    await validateCountry(data, id);
     return await countryRepository.update(id, data);
   },
 );

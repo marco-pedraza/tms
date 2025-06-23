@@ -1,4 +1,11 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { FieldValidationError } from '@repo/base-repo';
+import {
+  createCleanupHelper,
+  createTestSuiteId,
+  createUniqueCode,
+  createUniqueName,
+} from '../../tests/shared/test-utils';
 import {
   createCountry,
   deleteCountry,
@@ -10,56 +17,49 @@ import {
   getState,
   listStates,
   listStatesPaginated,
-  searchStates,
-  searchStatesPaginated,
   updateState,
 } from './states.controller';
 
 describe('States Controller', () => {
-  // Test data and setup
-  let countryId: number; // We need a valid country ID for state tests
-  const testState = {
-    name: 'Test State',
-    code: 'TS',
-    countryId: 0, // This will be populated in beforeAll
-    active: true,
-  };
+  // Create unique test suite identifier
+  const testSuiteId = createTestSuiteId('states-controller');
 
-  // Variable to store created IDs for cleanup
+  // Setup cleanup helpers
+  const countryCleanup = createCleanupHelper(deleteCountry, 'country');
+  const stateCleanup = createCleanupHelper(deleteState, 'state');
+
+  // Test data storage
+  let testCountryId: number;
   let createdStateId: number;
 
   beforeAll(async () => {
-    // Create a temporary country to use for the state tests
-    const country = await createCountry({
-      name: 'Test Country for States',
-      code: 'TCS',
+    // Create a test country with unique name
+    const testCountry = await createCountry({
+      name: createUniqueName('Test Country for States', testSuiteId),
+      code: createUniqueCode('TCS', 3),
       active: true,
     });
-    countryId = country.id;
-    testState.countryId = countryId;
+    testCountryId = countryCleanup.track(testCountry.id);
   });
 
   afterAll(async () => {
-    if (createdStateId) {
-      try {
-        await deleteState({ id: createdStateId });
-      } catch (error) {
-        console.log('Error cleaning up test state:', error);
-      }
-    }
-    if (countryId) {
-      try {
-        await deleteCountry({ id: countryId });
-      } catch (error) {
-        console.log('Error cleaning up test country:', error);
-      }
-    }
+    // Clean up all tracked entities (states first, then countries)
+    await stateCleanup.cleanupAll();
+    await countryCleanup.cleanupAll();
   });
 
   describe('success scenarios', () => {
     test('should create a new state', async () => {
+      const testState = {
+        name: createUniqueName('Test State', testSuiteId),
+        code: createUniqueCode('TS', 3),
+        countryId: testCountryId,
+        active: true,
+      };
+
       const response = await createState(testState);
-      createdStateId = response.id;
+      createdStateId = stateCleanup.track(response.id);
+
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
       expect(response.name).toBe(testState.name);
@@ -73,12 +73,11 @@ describe('States Controller', () => {
       const response = await getState({ id: createdStateId });
       expect(response).toBeDefined();
       expect(response.id).toBe(createdStateId);
-      expect(response.name).toBe(testState.name);
-      expect(response.countryId).toBe(testState.countryId);
+      expect(response.countryId).toBe(testCountryId);
     });
 
     test('should update a state', async () => {
-      const updatedName = 'Updated Test State';
+      const updatedName = createUniqueName('Updated State', testSuiteId);
       const response = await updateState({
         id: createdStateId,
         name: updatedName,
@@ -86,16 +85,16 @@ describe('States Controller', () => {
       expect(response).toBeDefined();
       expect(response.id).toBe(createdStateId);
       expect(response.name).toBe(updatedName);
-      expect(response.code).toBe(testState.code);
-      expect(response.countryId).toBe(testState.countryId);
+      expect(response.countryId).toBe(testCountryId);
     });
 
     test('should delete a state', async () => {
       const stateToDelete = await createState({
-        name: 'State To Delete',
-        code: 'STD',
-        countryId: countryId,
+        name: createUniqueName('State To Delete', testSuiteId),
+        code: createUniqueCode('STD', 3),
+        countryId: testCountryId,
       });
+
       await expect(
         deleteState({ id: stateToDelete.id }),
       ).resolves.not.toThrow();
@@ -109,11 +108,13 @@ describe('States Controller', () => {
     });
 
     test('should handle duplicate errors', async () => {
+      const existingState = await getState({ id: createdStateId });
+
       await expect(
         createState({
-          name: testState.name,
-          code: testState.code,
-          countryId: testState.countryId,
+          name: existingState.name,
+          code: existingState.code,
+          countryId: existingState.countryId,
         }),
       ).rejects.toThrow();
     });
@@ -121,11 +122,162 @@ describe('States Controller', () => {
     test('should handle invalid country ID', async () => {
       await expect(
         createState({
-          name: 'Invalid Country State',
-          code: 'ICS',
+          name: createUniqueName('Invalid Country State', testSuiteId),
+          code: createUniqueCode('ICS', 3),
           countryId: 9999,
         }),
       ).rejects.toThrow();
+    });
+
+    describe('field validation errors', () => {
+      test('should throw detailed field validation error for duplicate name', async () => {
+        const existingState = await getState({ id: createdStateId });
+
+        const duplicateNamePayload = {
+          name: existingState.name,
+          code: createUniqueCode('UNQ', 3),
+          countryId: testCountryId,
+          active: true,
+        };
+
+        await expect(createState(duplicateNamePayload)).rejects.toThrow();
+
+        let validationError: FieldValidationError | undefined;
+        try {
+          await createState(duplicateNamePayload);
+        } catch (error) {
+          validationError = error as FieldValidationError;
+        }
+
+        expect(validationError).toBeDefined();
+        const typedValidationError = validationError as FieldValidationError;
+        expect(typedValidationError.name).toBe('FieldValidationError');
+        expect(typedValidationError.message).toContain('Validation failed');
+
+        expect(typedValidationError.fieldErrors).toBeDefined();
+        expect(Array.isArray(typedValidationError.fieldErrors)).toBe(true);
+        expect(typedValidationError.fieldErrors).toHaveLength(1);
+        expect(typedValidationError.fieldErrors[0].field).toBe('name');
+        expect(typedValidationError.fieldErrors[0].code).toBe('DUPLICATE');
+        expect(typedValidationError.fieldErrors[0].message).toContain(
+          'already exists',
+        );
+        expect(typedValidationError.fieldErrors[0].value).toBe(
+          existingState.name,
+        );
+      });
+
+      test('should throw detailed field validation error for duplicate code', async () => {
+        const existingState = await getState({ id: createdStateId });
+
+        const duplicateCodePayload = {
+          name: createUniqueName('Different State Name', testSuiteId),
+          code: existingState.code,
+          countryId: testCountryId,
+          active: true,
+        };
+
+        await expect(createState(duplicateCodePayload)).rejects.toThrow();
+
+        let validationError: FieldValidationError | undefined;
+        try {
+          await createState(duplicateCodePayload);
+        } catch (error) {
+          validationError = error as FieldValidationError;
+        }
+
+        expect(validationError).toBeDefined();
+        const typedValidationError = validationError as FieldValidationError;
+        expect(typedValidationError.name).toBe('FieldValidationError');
+        expect(typedValidationError.message).toContain('Validation failed');
+
+        expect(typedValidationError.fieldErrors).toBeDefined();
+        expect(Array.isArray(typedValidationError.fieldErrors)).toBe(true);
+        expect(typedValidationError.fieldErrors).toHaveLength(1);
+        expect(typedValidationError.fieldErrors[0].field).toBe('code');
+        expect(typedValidationError.fieldErrors[0].code).toBe('DUPLICATE');
+        expect(typedValidationError.fieldErrors[0].message).toContain(
+          'already exists',
+        );
+        expect(typedValidationError.fieldErrors[0].value).toBe(
+          existingState.code,
+        );
+      });
+
+      test('should throw field validation error with multiple fields', async () => {
+        const existingState = await getState({ id: createdStateId });
+
+        const duplicateBothPayload = {
+          name: existingState.name,
+          code: existingState.code,
+          countryId: testCountryId,
+          active: true,
+        };
+
+        await expect(createState(duplicateBothPayload)).rejects.toThrow();
+
+        let validationError: FieldValidationError | undefined;
+        try {
+          await createState(duplicateBothPayload);
+        } catch (error) {
+          validationError = error as FieldValidationError;
+        }
+
+        expect(validationError).toBeDefined();
+        const typedValidationError = validationError as FieldValidationError;
+        expect(typedValidationError.name).toBe('FieldValidationError');
+        expect(typedValidationError.message).toContain('Validation failed');
+
+        expect(typedValidationError.fieldErrors).toBeDefined();
+        expect(Array.isArray(typedValidationError.fieldErrors)).toBe(true);
+        expect(typedValidationError.fieldErrors).toHaveLength(2);
+
+        const nameError = typedValidationError.fieldErrors.find(
+          (e: { field: string }) => e.field === 'name',
+        );
+        const codeError = typedValidationError.fieldErrors.find(
+          (e: { field: string }) => e.field === 'code',
+        );
+
+        expect(nameError).toBeDefined();
+        expect(codeError).toBeDefined();
+        expect(nameError?.code).toBe('DUPLICATE');
+        expect(codeError?.code).toBe('DUPLICATE');
+      });
+
+      test('should handle update validation errors correctly', async () => {
+        const anotherState = await createState({
+          name: createUniqueName('Another Test State', testSuiteId),
+          code: createUniqueCode('ATS', 3),
+          countryId: testCountryId,
+          active: true,
+        });
+
+        const anotherStateId = stateCleanup.track(anotherState.id);
+        const existingState = await getState({ id: createdStateId });
+
+        const updatePayload = {
+          id: anotherStateId,
+          name: existingState.name,
+        };
+
+        await expect(updateState(updatePayload)).rejects.toThrow();
+
+        let validationError: FieldValidationError | undefined;
+        try {
+          await updateState(updatePayload);
+        } catch (error) {
+          validationError = error as FieldValidationError;
+        }
+
+        expect(validationError).toBeDefined();
+        const typedValidationError = validationError as FieldValidationError;
+        expect(typedValidationError.name).toBe('FieldValidationError');
+        expect(typedValidationError.message).toContain('Validation failed');
+        expect(typedValidationError.fieldErrors).toBeDefined();
+        expect(typedValidationError.fieldErrors[0].field).toBe('name');
+        expect(typedValidationError.fieldErrors[0].code).toBe('DUPLICATE');
+      });
     });
   });
 
@@ -155,62 +307,58 @@ describe('States Controller', () => {
 
     test('should default sort by name in ascending order', async () => {
       const stateA = await createState({
-        name: 'AAA Test State',
-        code: 'AAA',
-        countryId: countryId,
+        name: createUniqueName('AAA Test State', testSuiteId),
+        code: createUniqueCode('AAA', 3),
+        countryId: testCountryId,
       });
       const stateZ = await createState({
-        name: 'ZZZ Test State',
-        code: 'ZZZ',
-        countryId: countryId,
+        name: createUniqueName('ZZZ Test State', testSuiteId),
+        code: createUniqueCode('ZZZ', 3),
+        countryId: testCountryId,
       });
-      try {
-        const response = await listStatesPaginated({
-          pageSize: 50,
-        });
-        const indexA = response.data.findIndex((s) => s.id === stateA.id);
-        const indexZ = response.data.findIndex((s) => s.id === stateZ.id);
-        if (indexA !== -1 && indexZ !== -1) {
-          expect(indexA).toBeLessThan(indexZ);
-        }
-      } finally {
-        await deleteState({ id: stateA.id });
-        await deleteState({ id: stateZ.id });
+
+      stateCleanup.track(stateA.id);
+      stateCleanup.track(stateZ.id);
+
+      const response = await listStatesPaginated({
+        pageSize: 50,
+      });
+      const indexA = response.data.findIndex((s) => s.id === stateA.id);
+      const indexZ = response.data.findIndex((s) => s.id === stateZ.id);
+      if (indexA !== -1 && indexZ !== -1) {
+        expect(indexA).toBeLessThan(indexZ);
       }
     });
 
     test('should return non-paginated list for dropdowns', async () => {
       const response = await listStates({});
-      expect(response.states).toBeDefined();
-      expect(Array.isArray(response.states)).toBe(true);
-      expect(response.states.length).toBeGreaterThan(0);
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.data.length).toBeGreaterThan(0);
       expect(response).not.toHaveProperty('pagination');
     });
   });
 
   describe('search functionality', () => {
-    test('should search states', async () => {
+    test('should search states using searchTerm in list endpoint', async () => {
       const searchableState = await createState({
-        name: 'Searchable Test State',
-        code: 'STS',
-        countryId: countryId,
+        name: createUniqueName('Searchable Test State', testSuiteId),
+        code: createUniqueCode('STS', 3),
+        countryId: testCountryId,
         active: true,
       });
-      try {
-        const response = await searchStates({ term: 'Searchable' });
-        expect(response.states).toBeDefined();
-        expect(Array.isArray(response.states)).toBe(true);
-        expect(response.states.some((s) => s.id === searchableState.id)).toBe(
-          true,
-        );
-      } finally {
-        await deleteState({ id: searchableState.id });
-      }
+
+      stateCleanup.track(searchableState.id);
+
+      const response = await listStates({ searchTerm: 'Searchable' });
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.data.some((s) => s.id === searchableState.id)).toBe(true);
     });
 
-    test('should search states with pagination', async () => {
-      const response = await searchStatesPaginated({
-        term: 'Test',
+    test('should search states with pagination using searchTerm', async () => {
+      const response = await listStatesPaginated({
+        searchTerm: 'Test',
         page: 1,
         pageSize: 5,
       });
@@ -226,24 +374,31 @@ describe('States Controller', () => {
     const testStates: State[] = [];
 
     beforeAll(async () => {
-      const states = [
-        { name: 'Alpha State', code: 'AS', countryId, active: true },
-        { name: 'Beta State', code: 'BS', countryId, active: false },
-        { name: 'Gamma State', code: 'GS', countryId, active: true },
+      const stateTemplates = [
+        {
+          name: createUniqueName('Alpha State', testSuiteId),
+          code: createUniqueCode('AS', 3),
+          countryId: testCountryId,
+          active: true,
+        },
+        {
+          name: createUniqueName('Beta State', testSuiteId),
+          code: createUniqueCode('BS', 3),
+          countryId: testCountryId,
+          active: false,
+        },
+        {
+          name: createUniqueName('Gamma State', testSuiteId),
+          code: createUniqueCode('GS', 3),
+          countryId: testCountryId,
+          active: true,
+        },
       ];
-      for (const state of states) {
-        const created = await createState(state);
-        testStates.push(created);
-      }
-    });
 
-    afterAll(async () => {
-      for (const state of testStates) {
-        try {
-          await deleteState({ id: state.id });
-        } catch (error) {
-          console.log(`Error cleaning up test state ${state.id}:`, error);
-        }
+      for (const template of stateTemplates) {
+        const created = await createState(template);
+        testStates.push(created);
+        stateCleanup.track(created.id);
       }
     });
 
@@ -251,7 +406,7 @@ describe('States Controller', () => {
       const response = await listStates({
         orderBy: [{ field: 'name', direction: 'desc' }],
       });
-      const names = response.states.map((s) => s.name);
+      const names = response.data.map((s) => s.name);
       for (let i = 0; i < names.length - 1; i++) {
         expect(names[i] >= names[i + 1]).toBe(true);
       }
@@ -261,12 +416,12 @@ describe('States Controller', () => {
       const response = await listStates({
         filters: { active: true },
       });
-      expect(response.states.every((s) => s.active === true)).toBe(true);
+      expect(response.data.every((s) => s.active === true)).toBe(true);
       const activeTestStateIds = testStates
         .filter((s) => s.active)
         .map((s) => s.id);
       for (const id of activeTestStateIds) {
-        expect(response.states.some((s) => s.id === id)).toBe(true);
+        expect(response.data.some((s) => s.id === id)).toBe(true);
       }
     });
 
@@ -288,33 +443,43 @@ describe('States Controller', () => {
     });
 
     test('should allow multi-field ordering', async () => {
-      const sameActiveStatusStates = [
-        { name: 'Same Status A', code: 'SSA', countryId, active: true },
-        { name: 'Same Status B', code: 'SSB', countryId, active: true },
+      const sameStatusStates = [
+        {
+          name: createUniqueName('Same Status A', testSuiteId),
+          code: createUniqueCode('SSA', 3),
+          countryId: testCountryId,
+          active: true,
+        },
+        {
+          name: createUniqueName('Same Status B', testSuiteId),
+          code: createUniqueCode('SSB', 3),
+          countryId: testCountryId,
+          active: true,
+        },
       ];
+
       const createdStates: State[] = [];
-      try {
-        for (const state of sameActiveStatusStates) {
-          const created = await createState(state);
-          createdStates.push(created);
-        }
-        const response = await listStates({
-          orderBy: [
-            { field: 'active', direction: 'desc' },
-            { field: 'name', direction: 'asc' },
-          ],
-        });
-        const activeStates = response.states.filter((s) => s.active === true);
-        const activeNames = activeStates.map((s) => s.name);
-        for (let i = 0; i < activeNames.length - 1; i++) {
-          if (activeStates[i].active === activeStates[i + 1].active) {
-            expect(activeNames[i] <= activeNames[i + 1]).toBe(true);
-          }
-        }
-      } finally {
-        for (const state of createdStates) {
-          await deleteState({ id: state.id });
-        }
+      for (const template of sameStatusStates) {
+        const created = await createState(template);
+        createdStates.push(created);
+        stateCleanup.track(created.id);
+      }
+
+      const response = await listStates({
+        orderBy: [
+          { field: 'active', direction: 'desc' },
+          { field: 'name', direction: 'asc' },
+        ],
+      });
+
+      // Find our test states in the response
+      const stateA = response.data.find((s) => s.id === createdStates[0].id);
+      const stateB = response.data.find((s) => s.id === createdStates[1].id);
+
+      if (stateA && stateB) {
+        const indexA = response.data.indexOf(stateA);
+        const indexB = response.data.indexOf(stateB);
+        expect(indexA).toBeLessThan(indexB);
       }
     });
   });

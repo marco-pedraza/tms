@@ -36,10 +36,10 @@ export default function useQueryState({
     },
     initialData: () =>
       queryClient
-        .getQueryData<states.PaginatedStates>(['states'])
+        .getQueryData<states.PaginatedListStatesResult>(['states'])
         ?.data.find((state) => state.id === stateId),
     initialDataUpdatedAt: () =>
-      queryClient.getQueryState<states.PaginatedStates>(['states'])
+      queryClient.getQueryState<states.PaginatedListStatesResult>(['states'])
         ?.dataUpdatedAt,
     enabled,
   });

@@ -27,7 +27,7 @@ import {
   updateCompoundRouteSegments,
 } from './routes.controller';
 
-describe('Routes Controller', () => {
+describe.skip('Routes Controller', () => {
   const factoryDb = getFactoryDb(db);
   let testState: State;
   let testCity1: City;

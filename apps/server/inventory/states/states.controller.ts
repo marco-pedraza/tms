@@ -1,21 +1,23 @@
 import { api } from 'encore.dev/api';
 import type {
   CreateStatePayload,
-  PaginatedStates,
-  PaginationParamsStates,
+  ListStatesQueryParams,
+  ListStatesResult,
+  PaginatedListStatesQueryParams,
+  PaginatedListStatesResult,
   State,
-  States,
-  StatesQueryOptions,
   UpdateStatePayload,
 } from './states.types';
 import { stateRepository } from './states.repository';
+import { validateState } from './states.domain';
 
 /**
  * Creates a new state.
  */
 export const createState = api(
-  { expose: true, method: 'POST', path: '/states' },
+  { expose: true, method: 'POST', path: '/states/create' },
   async (params: CreateStatePayload): Promise<State> => {
+    await validateState(params);
     return await stateRepository.create(params);
   },
 );
@@ -34,11 +36,13 @@ export const getState = api(
  * Retrieves all states without pagination (useful for dropdowns).
  */
 export const listStates = api(
-  { expose: true, method: 'POST', path: '/get-states' },
-  async (params: StatesQueryOptions): Promise<States> => {
-    const states = await stateRepository.findAll(params);
+  { expose: true, method: 'POST', path: '/states/list/all' },
+  async (params: ListStatesQueryParams): Promise<ListStatesResult> => {
+    const states = params.searchTerm
+      ? await stateRepository.search(params.searchTerm)
+      : await stateRepository.findAll(params);
     return {
-      states,
+      data: states,
     };
   },
 );
@@ -47,9 +51,14 @@ export const listStates = api(
  * Retrieves states with pagination (useful for tables).
  */
 export const listStatesPaginated = api(
-  { expose: true, method: 'POST', path: '/get-states/paginated' },
-  async (params: PaginationParamsStates): Promise<PaginatedStates> => {
-    return await stateRepository.findAllPaginated(params);
+  { expose: true, method: 'POST', path: '/states/list' },
+  async (
+    params: PaginatedListStatesQueryParams,
+  ): Promise<PaginatedListStatesResult> => {
+    const states = params.searchTerm
+      ? await stateRepository.searchPaginated(params.searchTerm, params)
+      : await stateRepository.findAllPaginated(params);
+    return states;
   },
 );
 
@@ -57,11 +66,12 @@ export const listStatesPaginated = api(
  * Updates an existing state.
  */
 export const updateState = api(
-  { expose: true, method: 'PUT', path: '/states/:id' },
+  { expose: true, method: 'PUT', path: '/states/:id/update' },
   async ({
     id,
     ...data
   }: UpdateStatePayload & { id: number }): Promise<State> => {
+    await validateState(data, id);
     return await stateRepository.update(id, data);
   },
 );
@@ -70,34 +80,8 @@ export const updateState = api(
  * Deletes a state by its ID.
  */
 export const deleteState = api(
-  { expose: true, method: 'DELETE', path: '/states/:id' },
+  { expose: true, method: 'DELETE', path: '/states/:id/delete' },
   async ({ id }: { id: number }): Promise<State> => {
     return await stateRepository.delete(id);
-  },
-);
-
-/**
- * Searches for states by matching a search term against name and code.
- */
-export const searchStates = api(
-  { expose: true, method: 'GET', path: '/states/search' },
-  async ({ term }: { term: string }): Promise<States> => {
-    const states = await stateRepository.search(term);
-    return {
-      states,
-    };
-  },
-);
-
-/**
- * Searches for states with pagination by matching a search term against name and code.
- */
-export const searchStatesPaginated = api(
-  { expose: true, method: 'POST', path: '/states/search/paginated' },
-  async ({
-    term,
-    ...params
-  }: PaginationParamsStates & { term: string }): Promise<PaginatedStates> => {
-    return await stateRepository.searchPaginated(term, params);
   },
 );

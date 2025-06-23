@@ -1,10 +1,22 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createSlug } from '../../shared/utils';
 import {
-  createCountry,
-  deleteCountry,
-} from '../countries/countries.controller';
-import { createState, deleteState } from '../states/states.controller';
+  cityFactory,
+  countryFactory,
+  stateFactory,
+} from '../../tests/factories';
+import { getFactoryDb } from '../../tests/factories/factory-utils';
+import {
+  createCleanupHelper,
+  createTestSuiteId,
+  createUniqueName,
+} from '../../tests/shared/test-utils';
+import { countryRepository } from '../countries/countries.repository';
+import type { Country } from '../countries/countries.types';
+import { db } from '../db-service';
+import { stateRepository } from '../states/states.repository';
+import type { State } from '../states/states.types';
+import type { City } from './cities.types';
 import {
   createCity,
   deleteCity,
@@ -15,92 +27,69 @@ import {
 } from './cities.controller';
 
 describe('Cities Controller', () => {
-  let countryId: number;
-  let stateId: number;
+  const testSuiteId = createTestSuiteId('cities-controller');
+  const factoryDb = getFactoryDb(db);
 
-  const testCity = {
-    name: 'Test City',
-    stateId: 0,
-    timezone: 'America/Mexico_City',
-    active: true,
-    latitude: 19.4326,
-    longitude: -99.1332,
-  };
+  let testCountry: Country;
+  let testState: State;
+  let testCity: City;
 
-  let createdCityId: number;
-  const createdCityIds: number[] = [];
+  // Cleanup helpers using test-utils
+  const cityCleanup = createCleanupHelper(deleteCity, 'city');
 
-  const trackCity = (id: number) => {
-    if (!createdCityIds.includes(id)) {
-      createdCityIds.push(id);
-    }
-    return id;
-  };
-
-  const cleanupCity = async (id: number) => {
-    try {
-      await deleteCity({ id });
-    } catch (error) {
-      if (!(error instanceof Error && error.message.includes('not found'))) {
-        console.log(`Error cleaning up city (ID: ${id}):`, error);
-      }
-    }
-    const index = createdCityIds.indexOf(id);
-    if (index > -1) {
-      createdCityIds.splice(index, 1);
-    }
-  };
-
-  const createTestCity = async (name: string, options = {}) => {
+  const createTestCity = async (baseName: string, options = {}) => {
+    const uniqueName = createUniqueName(baseName, testSuiteId);
     const city = await createCity({
-      name,
-      stateId: testCity.stateId,
+      name: uniqueName,
+      stateId: testState.id,
       timezone: 'America/Mexico_City',
       latitude: 19.4326,
       longitude: -99.1332,
       ...options,
     });
-    return trackCity(city.id);
+    return cityCleanup.track(city.id);
   };
 
   beforeAll(async () => {
-    const country = await createCountry({
-      name: 'Test Country for Cities',
-      code: 'TCC',
-      active: true,
-    });
-    countryId = country.id;
+    // Create test dependencies using factories
+    testCountry = (await countryFactory(factoryDb).create({
+      name: createUniqueName('Test Country for Cities', testSuiteId),
+      code: `TCC${testSuiteId.substring(0, 4)}`,
+    })) as Country;
 
-    const state = await createState({
-      name: 'Test State for Cities',
-      code: 'TSC',
-      countryId,
-      active: true,
-    });
-    stateId = state.id;
-    testCity.stateId = stateId;
+    testState = (await stateFactory(factoryDb).create({
+      name: createUniqueName('Test State for Cities', testSuiteId),
+      code: `TSC${testSuiteId.substring(0, 4)}`,
+      countryId: testCountry.id,
+    })) as State;
+
+    // Create a test city for reuse in multiple tests
+    testCity = (await cityFactory(factoryDb).create({
+      name: createUniqueName('Test City', testSuiteId),
+      stateId: testState.id,
+      timezone: 'America/Mexico_City',
+      latitude: 19.4326,
+      longitude: -99.1332,
+    })) as City;
+    cityCleanup.track(testCity.id);
   });
 
   afterAll(async () => {
-    for (const id of [...createdCityIds]) {
-      await cleanupCity(id);
-    }
+    // Cleanup all tracked cities first (due to foreign key constraints)
+    await cityCleanup.cleanupAll();
 
-    if (createdCityId && !createdCityIds.includes(createdCityId)) {
-      await cleanupCity(createdCityId);
-    }
-
-    if (stateId) {
+    // Cleanup factory-created entities in reverse order of dependencies
+    if (testState?.id) {
       try {
-        await deleteState({ id: stateId });
+        await stateRepository.delete(testState.id);
       } catch (error) {
         console.log('Error cleaning up test state:', error);
       }
     }
 
-    if (countryId) {
+    if (testCountry?.id) {
       try {
-        await deleteCountry({ id: countryId });
+        await countryRepository.delete(testCountry.id);
       } catch (error) {
         console.log('Error cleaning up test country:', error);
       }
@@ -109,99 +98,110 @@ describe('Cities Controller', () => {
 
   describe('success scenarios', () => {
     test('should create a new city with auto-generated slug', async () => {
-      const response = await createCity(testCity);
-      createdCityId = response.id;
-      trackCity(createdCityId);
+      const uniqueName = createUniqueName('New Test City', testSuiteId);
+      const cityData = {
+        name: uniqueName,
+        stateId: testState.id,
+        timezone: 'America/Mexico_City',
+        active: true,
+        latitude: 19.4326,
+        longitude: -99.1332,
+      };
 
-      const expectedSlug = createSlug(testCity.name);
+      const response = await createCity(cityData);
+      cityCleanup.track(response.id);
+
+      const expectedSlug = createSlug(uniqueName);
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
-      expect(response.name).toBe(testCity.name);
+      expect(response.name).toBe(uniqueName);
       expect(response.slug).toBe(expectedSlug);
-      expect(response.stateId).toBe(testCity.stateId);
-      expect(response.timezone).toBe(testCity.timezone);
-      expect(response.active).toBe(testCity.active);
-      expect(response.latitude).toBe(testCity.latitude);
-      expect(response.longitude).toBe(testCity.longitude);
+      expect(response.stateId).toBe(testState.id);
+      expect(response.timezone).toBe(cityData.timezone);
+      expect(response.active).toBe(cityData.active);
+      expect(response.latitude).toBe(cityData.latitude);
+      expect(response.longitude).toBe(cityData.longitude);
       expect(response.createdAt).toBeDefined();
     });
 
     test('should retrieve a city by ID with state and country relations', async () => {
-      const response = await getCity({ id: createdCityId });
+      const response = await getCity({ id: testCity.id });
 
       expect(response).toBeDefined();
-      expect(response.id).toBe(createdCityId);
+      expect(response.id).toBe(testCity.id);
       expect(response.name).toBe(testCity.name);
-      expect(response.stateId).toBe(testCity.stateId);
+      expect(response.stateId).toBe(testState.id);
       expect(response.latitude).toBe(testCity.latitude);
       expect(response.longitude).toBe(testCity.longitude);
 
       // Verify state relation is included
       expect(response.state).toBeDefined();
-      expect(response.state.id).toBe(stateId);
-      expect(response.state.name).toBe('Test State for Cities');
-      expect(response.state.countryId).toBe(countryId);
+      expect(response.state.id).toBe(testState.id);
+      expect(response.state.name).toBe(testState.name);
+      expect(response.state.countryId).toBe(testCountry.id);
 
       // Verify country relation is included through state
       expect(response.state.country).toBeDefined();
-      expect(response.state.country.id).toBe(countryId);
-      expect(response.state.country.name).toBe('Test Country for Cities');
-      expect(response.state.country.code).toBe('TCC');
+      expect(response.state.country.id).toBe(testCountry.id);
+      expect(response.state.country.name).toBe(testCountry.name);
     });
 
     test('should update a city name and regenerate the slug', async () => {
-      const updatedName = 'Updated Test City';
+      const testCityForUpdate = await createTestCity('City to Update');
+      const updatedName = createUniqueName('Updated Test City', testSuiteId);
+
       const response = await updateCity({
-        id: createdCityId,
+        id: testCityForUpdate,
         name: updatedName,
       });
 
       const expectedSlug = createSlug(updatedName);
       expect(response).toBeDefined();
-      expect(response.id).toBe(createdCityId);
+      expect(response.id).toBe(testCityForUpdate);
       expect(response.name).toBe(updatedName);
       expect(response.slug).toBe(expectedSlug);
-      expect(response.stateId).toBe(testCity.stateId);
-      expect(response.latitude).toBe(testCity.latitude);
-      expect(response.longitude).toBe(testCity.longitude);
+      expect(response.stateId).toBe(testState.id);
     });
 
     test('should update city latitude', async () => {
+      const testCityForUpdate = await createTestCity(
+        'City for Latitude Update',
+      );
       const newLatitude = 20.967;
+
       const response = await updateCity({
-        id: createdCityId,
+        id: testCityForUpdate,
         latitude: newLatitude,
       });
 
       expect(response).toBeDefined();
-      expect(response.id).toBe(createdCityId);
+      expect(response.id).toBe(testCityForUpdate);
       expect(response.latitude).toBe(newLatitude);
-      expect(response.longitude).toBe(testCity.longitude);
     });
 
     test('should update city longitude', async () => {
+      const testCityForUpdate = await createTestCity(
+        'City for Longitude Update',
+      );
       const newLongitude = -89.5926;
+
       const response = await updateCity({
-        id: createdCityId,
+        id: testCityForUpdate,
         longitude: newLongitude,
       });
 
       expect(response).toBeDefined();
-      expect(response.id).toBe(createdCityId);
+      expect(response.id).toBe(testCityForUpdate);
       expect(response.longitude).toBe(newLongitude);
     });
 
     test('should delete a city', async () => {
-      const cityId = await createTestCity('City To Delete');
+      const cityToDelete = await createTestCity('City To Delete');
 
-      await expect(deleteCity({ id: cityId })).resolves.not.toThrow();
+      await expect(deleteCity({ id: cityToDelete })).resolves.not.toThrow();
 
-      const index = createdCityIds.indexOf(cityId);
-      if (index > -1) {
-        createdCityIds.splice(index, 1);
-      }
-
-      await expect(getCity({ id: cityId })).rejects.toThrow();
+      // No need to manually remove from tracking - cleanupHelper handles this
+      await expect(getCity({ id: cityToDelete })).rejects.toThrow();
     });
   });
 
@@ -211,65 +211,75 @@ describe('Cities Controller', () => {
     });
 
     test('should handle duplicate city names', async () => {
-      const uniqueName = 'Unique Test City';
-      const cityId = await createTestCity(uniqueName);
+      const duplicateTestName = 'Cities Controller Duplicate Test City Name';
+      const firstCity = await createCity({
+        name: duplicateTestName,
+        stateId: testState.id,
+        timezone: 'America/Mexico_City',
+        latitude: 19.4326,
+        longitude: -99.1332,
+      });
+      cityCleanup.track(firstCity.id);
 
-      try {
-        await expect(
-          createCity({
-            name: uniqueName,
-            stateId: testCity.stateId,
-            timezone: 'America/Mexico_City',
-            latitude: 20.123,
-            longitude: -98.456,
-          }),
-        ).rejects.toThrow();
-      } finally {
-        await cleanupCity(cityId);
-      }
+      await expect(
+        createCity({
+          name: duplicateTestName, // Use the same name to test duplicates
+          stateId: testState.id,
+          timezone: 'America/Mexico_City',
+          latitude: 20.123,
+          longitude: -98.456,
+        }),
+      ).rejects.toThrow();
     });
 
     test('should handle duplicate city names with different casing', async () => {
-      const caseName = 'Case Sensitive City';
-      const cityId = await createTestCity(caseName);
+      const caseTestName = 'Cities Controller Case Sensitive Test City';
+      const firstCity = await createCity({
+        name: caseTestName,
+        stateId: testState.id,
+        timezone: 'America/Mexico_City',
+        latitude: 19.4326,
+        longitude: -99.1332,
+      });
+      cityCleanup.track(firstCity.id);
 
-      try {
-        await expect(
-          createCity({
-            name: caseName.toUpperCase(),
-            stateId: testCity.stateId,
-            timezone: 'America/Mexico_City',
-            latitude: 20.123,
-            longitude: -98.456,
-          }),
-        ).rejects.toThrow();
-      } finally {
-        await cleanupCity(cityId);
-      }
+      await expect(
+        createCity({
+          name: caseTestName.toUpperCase(), // Use uppercase version of the same name
+          stateId: testState.id,
+          timezone: 'America/Mexico_City',
+          latitude: 20.123,
+          longitude: -98.456,
+        }),
+      ).rejects.toThrow();
     });
 
     test('should handle duplicate city names with accents', async () => {
-      const cityId = await createTestCity('Méxicó City');
+      const accentTestName = 'Cities Controller Méxicó Test City';
+      const firstCity = await createCity({
+        name: accentTestName,
+        stateId: testState.id,
+        timezone: 'America/Mexico_City',
+        latitude: 19.4326,
+        longitude: -99.1332,
+      });
+      cityCleanup.track(firstCity.id);
 
-      try {
-        await expect(
-          createCity({
-            name: 'Mexico City',
-            stateId: testCity.stateId,
-            timezone: 'America/Mexico_City',
-            latitude: 20.123,
-            longitude: -98.456,
-          }),
-        ).rejects.toThrow();
-      } finally {
-        await cleanupCity(cityId);
-      }
+      await expect(
+        createCity({
+          name: 'Cities Controller Mexico Test City', // Without accents but same slug
+          stateId: testState.id,
+          timezone: 'America/Mexico_City',
+          latitude: 20.123,
+          longitude: -98.456,
+        }),
+      ).rejects.toThrow();
     });
 
     test('should handle invalid state ID', async () => {
       await expect(
         createCity({
-          name: 'Invalid State City',
+          name: createUniqueName('Invalid State City', testSuiteId),
           stateId: 9999,
           timezone: 'America/Mexico_City',
           latitude: 19.4326,
@@ -280,8 +290,8 @@ describe('Cities Controller', () => {
 
     test('should handle missing latitude', async () => {
       const invalidPayload = {
-        name: 'Missing Latitude City',
-        stateId: stateId,
+        name: createUniqueName('Missing Latitude City', testSuiteId),
+        stateId: testState.id,
         timezone: 'America/Mexico_City',
         longitude: -99.1332,
       };
@@ -318,23 +328,18 @@ describe('Cities Controller', () => {
     });
 
     test('should default sort by name in ascending order', async () => {
-      const cityAId = await createTestCity('AAA Test City');
-      const cityZId = await createTestCity('ZZZ Test City');
+      const cityA = await createTestCity('AAA Test City');
+      const cityZ = await createTestCity('ZZZ Test City');
 
-      try {
-        const response = await listCitiesPaginated({
-          pageSize: 50,
-        });
+      const response = await listCitiesPaginated({
+        pageSize: 50,
+      });
 
-        const indexA = response.data.findIndex((c) => c.id === cityAId);
-        const indexZ = response.data.findIndex((c) => c.id === cityZId);
+      const indexA = response.data.findIndex((c) => c.id === cityA);
+      const indexZ = response.data.findIndex((c) => c.id === cityZ);
 
-        if (indexA !== -1 && indexZ !== -1) {
-          expect(indexA).toBeLessThan(indexZ);
-        }
-      } finally {
-        await cleanupCity(cityAId);
-        await cleanupCity(cityZId);
+      if (indexA !== -1 && indexZ !== -1) {
+        expect(indexA).toBeLessThan(indexZ);
       }
     });
 
@@ -349,18 +354,28 @@ describe('Cities Controller', () => {
   });
 
   describe('search functionality', () => {
+    // Add cleanup helper for search tests
+    const searchCleanup = createCleanupHelper(deleteCity, 'search-city');
+
+    afterAll(async () => {
+      await searchCleanup.cleanupAll();
+    });
+
     test('should search cities', async () => {
-      const searchableCityId = await createTestCity('Searchable Test City');
+      const searchableCity = await createCity({
+        name: createUniqueName('Searchable Test City', testSuiteId),
+        stateId: testState.id,
+        timezone: 'America/Mexico_City',
+        latitude: 19.4326,
+        longitude: -99.1332,
+      });
+      searchCleanup.track(searchableCity.id);
 
-      try {
-        const response = await listCities({ searchTerm: 'Searchable' });
+      const response = await listCities({ searchTerm: 'Searchable' });
 
-        expect(response.data).toBeDefined();
-        expect(Array.isArray(response.data)).toBe(true);
-        expect(response.data.some((c) => c.id === searchableCityId)).toBe(true);
-      } finally {
-        await cleanupCity(searchableCityId);
-      }
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.data.some((c) => c.id === searchableCity.id)).toBe(true);
     });
 
     test('should search cities with pagination', async () => {
@@ -379,47 +394,45 @@ describe('Cities Controller', () => {
   });
 
   describe('ordering and filtering', () => {
-    const testCities: number[] = [];
+    const orderingCityCleanup = createCleanupHelper(
+      deleteCity,
+      'ordering-city',
+    );
 
     beforeAll(async () => {
-      const cities = [
+      const citiesData = [
         {
-          name: 'Alpha City',
-          stateId,
+          name: createUniqueName('Alpha City', testSuiteId),
           latitude: 10,
           longitude: 10,
-          timezone: 'America/Mexico_City',
           active: true,
         },
         {
-          name: 'Beta City',
-          stateId,
+          name: createUniqueName('Beta City', testSuiteId),
           latitude: 20,
           longitude: 20,
-          timezone: 'America/Mexico_City',
           active: false,
         },
         {
-          name: 'Gamma City',
-          stateId,
+          name: createUniqueName('Gamma City', testSuiteId),
           latitude: 30,
           longitude: 30,
-          timezone: 'America/Mexico_City',
           active: true,
         },
       ];
 
-      for (const city of cities) {
-        const created = await createCity(city);
-        testCities.push(created.id);
-        trackCity(created.id);
+      for (const cityData of citiesData) {
+        const city = await createCity({
+          ...cityData,
+          stateId: testState.id,
+          timezone: 'America/Mexico_City',
+        });
+        orderingCityCleanup.track(city.id);
       }
     });
 
     afterAll(async () => {
-      for (const id of testCities) {
-        await cleanupCity(id);
-      }
+      await orderingCityCleanup.cleanupAll();
     });
 
     test('should order cities by name descending', async () => {
@@ -440,14 +453,11 @@ describe('Cities Controller', () => {
 
       expect(response.data.every((c) => c.active === true)).toBe(true);
 
-      const activeTestCityIds: number[] = [];
-      for (const id of testCities) {
-        const city = await getCity({ id });
-        if (city.active) {
-          activeTestCityIds.push(id);
-        }
-      }
-
+      // Verify our active test cities are included
+      const trackedIds = orderingCityCleanup.getTrackedIds();
+      const activeTestCityIds = trackedIds
+        .slice(0, 1)
+        .concat(trackedIds.slice(2, 3)); // Alpha and Gamma are active
       for (const id of activeTestCityIds) {
         expect(response.data.some((c) => c.id === id)).toBe(true);
       }
@@ -474,54 +484,53 @@ describe('Cities Controller', () => {
     });
 
     test('should allow multi-field ordering', async () => {
-      const sameActiveStatusCities = [
+      const multiFieldCleanup = createCleanupHelper(
+        deleteCity,
+        'multi-field-city',
+      );
+
+      const sameStatusCities = [
         {
-          name: 'Same Status A',
-          stateId,
+          name: createUniqueName('Same Status A', testSuiteId),
           latitude: 1,
           longitude: 1,
-          timezone: 'America/Mexico_City',
           active: true,
         },
         {
-          name: 'Same Status B',
-          stateId,
+          name: createUniqueName('Same Status B', testSuiteId),
           latitude: 2,
           longitude: 2,
-          timezone: 'America/Mexico_City',
           active: true,
         },
       ];
 
-      const createdCities: number[] = [];
-
-      try {
-        for (const city of sameActiveStatusCities) {
-          const created = await createCity(city);
-          createdCities.push(created.id);
-          trackCity(created.id);
-        }
-
-        const response = await listCities({
-          orderBy: [
-            { field: 'active', direction: 'desc' },
-            { field: 'name', direction: 'asc' },
-          ],
+      for (const cityData of sameStatusCities) {
+        const city = await createCity({
+          ...cityData,
+          stateId: testState.id,
+          timezone: 'America/Mexico_City',
         });
+        multiFieldCleanup.track(city.id);
+      }
 
-        const activeCities = response.data.filter((c) => c.active === true);
-        const activeNames = activeCities.map((c) => c.name);
+      const response = await listCities({
+        orderBy: [
+          { field: 'active', direction: 'desc' },
+          { field: 'name', direction: 'asc' },
+        ],
+      });
 
-        for (let i = 0; i < activeNames.length - 1; i++) {
-          if (activeCities[i].active === activeCities[i + 1].active) {
-            expect(activeNames[i] <= activeNames[i + 1]).toBe(true);
-          }
-        }
-      } finally {
-        for (const id of createdCities) {
-          await cleanupCity(id);
+      const activeCities = response.data.filter((c) => c.active === true);
+      const activeNames = activeCities.map((c) => c.name);
+
+      for (let i = 0; i < activeNames.length - 1; i++) {
+        if (activeCities[i].active === activeCities[i + 1].active) {
+          expect(activeNames[i] <= activeNames[i + 1]).toBe(true);
         }
       }
+
+      // Cleanup the cities created in this test
+      await multiFieldCleanup.cleanupAll();
     });
   });
 });

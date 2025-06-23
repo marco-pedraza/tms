@@ -10,6 +10,7 @@ import type {
   UpdateCityPayload,
 } from './cities.types';
 import { cityRepository } from './cities.repository';
+import { validateCity } from './cities.domain';
 
 /**
  * Creates a new city.
@@ -20,6 +21,7 @@ import { cityRepository } from './cities.repository';
 export const createCity = api(
   { expose: true, method: 'POST', path: '/cities/create' },
   async (params: CreateCityPayload): Promise<City> => {
+    await validateCity(params);
     return await cityRepository.create(params);
   },
 );
@@ -92,6 +94,7 @@ export const updateCity = api(
     id,
     ...data
   }: UpdateCityPayload & { id: number }): Promise<City> => {
+    await validateCity(data, id);
     return await cityRepository.update(id, data);
   },
 );

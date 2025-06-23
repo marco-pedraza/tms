@@ -1,6 +1,11 @@
 // API types
 import { MatchesRegexp, Min, MinLen } from 'encore.dev/validate';
-import { PaginatedResult, PaginationParams } from '../../shared/types';
+import {
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '../../shared/types';
 
 /**
  * Base interface representing a state entity
@@ -85,24 +90,8 @@ export interface UpdateStatePayload {
   active?: boolean;
 }
 
-/**
- * Response type for the list states endpoint
- */
-export interface States {
-  /** List of states */
-  states: State[];
-}
+export type ListStatesQueryParams = ListQueryParams<State>;
+export type ListStatesResult = ListQueryResult<State>;
 
-export interface StatesQueryOptions {
-  orderBy?: { field: keyof State; direction: 'asc' | 'desc' }[];
-  filters?: Partial<State>;
-}
-
-/**
- * Paginated response type for the list states endpoint
- */
-export type PaginatedStates = PaginatedResult<State>;
-
-export interface PaginationParamsStates
-  extends PaginationParams,
-    StatesQueryOptions {}
+export type PaginatedListStatesQueryParams = PaginatedListQueryParams<State>;
+export type PaginatedListStatesResult = PaginatedListQueryResult<State>;

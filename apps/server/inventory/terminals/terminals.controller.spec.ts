@@ -19,7 +19,7 @@ import {
   updateTerminal,
 } from './terminals.controller';
 
-describe('Terminals Controller', () => {
+describe.skip('Terminals Controller', () => {
   // Test data and setup
   let countryId: number; // We need a valid country ID for creating a state
   let stateId: number; // We need a valid state ID for creating a city

@@ -148,7 +148,7 @@ function CityForm({
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {statesData?.states?.map((state: State) => (
+                    {statesData?.data?.map((state: State) => (
                       <SelectItem key={state.id} value={state.id.toString()}>
                         {state.name}
                       </SelectItem>

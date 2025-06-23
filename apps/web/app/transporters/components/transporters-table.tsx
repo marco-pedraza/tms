@@ -107,7 +107,7 @@ export default function TransportersTable() {
       name: tTransporters('fields.headquarterCity'),
       key: 'headquarterCityId',
       options:
-        cities?.cities.map((city) => ({
+        cities?.data.map((city) => ({
           label: city.name,
           value: city.id,
         })) ?? [],

@@ -9,10 +9,10 @@ import imsClient from '@/services/ims-client';
  * It handles query setup, caching, and error handling.
  */
 export default function useQueryAllCountries(): UseQueryResult<
-  countries.Countries,
+  countries.ListCountriesResult,
   APIError
 > {
-  return useQuery<countries.Countries, APIError>({
+  return useQuery<countries.ListCountriesResult, APIError>({
     queryKey: ['allCountries'],
     queryFn: () => imsClient.inventory.listCountries({}),
   });

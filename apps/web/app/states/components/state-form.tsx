@@ -126,7 +126,7 @@ export default function StateForm({
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {countriesData?.countries.map((country: Country) => (
+                    {countriesData?.data.map((country: Country) => (
                       <SelectItem
                         key={country.id}
                         value={country.id.toString()}

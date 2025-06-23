@@ -33,11 +33,12 @@ export default function useQueryCountry({
     queryFn: () => imsClient.inventory.getCountry(countryId),
     initialData: () =>
       queryClient
-        .getQueryData<countries.PaginatedCountries>(['countries'])
+        .getQueryData<countries.PaginatedListCountriesResult>(['countries'])
         ?.data.find((country) => country.id === countryId),
     initialDataUpdatedAt: () =>
-      queryClient.getQueryState<countries.PaginatedCountries>(['countries'])
-        ?.dataUpdatedAt,
+      queryClient.getQueryState<countries.PaginatedListCountriesResult>([
+        'countries',
+      ])?.dataUpdatedAt,
   });
 
   return query;

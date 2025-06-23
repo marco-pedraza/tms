@@ -193,7 +193,7 @@ export default function TransporterForm({
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {cities?.cities.map((city) => (
+                  {cities?.data.map((city) => (
                     <SelectItem key={city.id} value={city.id}>
                       {city.name}
                     </SelectItem>

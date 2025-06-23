@@ -10,7 +10,7 @@ import imsClient from '@/services/ims-client';
  */
 export default createCollectionQuery<
   cities.City,
-  cities.PaginatedCities,
+  cities.PaginatedListCitiesResult,
   APIError
 >({
   queryKey: ['cities'],

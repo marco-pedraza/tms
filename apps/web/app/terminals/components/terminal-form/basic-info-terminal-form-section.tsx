@@ -71,7 +71,7 @@ export default withForm({
               label={tTerminals('fields.city')}
               placeholder={tTerminals('form.placeholders.city')}
               items={
-                citiesData?.cities?.map((city: cities.City) => ({
+                citiesData?.data.map((city: cities.City) => ({
                   id: city.id.toString(),
                   name: city.name,
                 })) ?? []

@@ -564,40 +564,121 @@ describe('BaseRepository', () => {
     });
   });
 
-  describe('validateUniqueness', () => {
-    it('should not throw when field is unique', async () => {
+  describe('checkUniqueness', () => {
+    it('should return empty array when field is unique', async () => {
       await createTestUser({ email: 'existing@example.com' });
 
-      // Validate a different email - should not throw
-      await expect(
-        userRepository.validateUniqueness([
-          { field: users.email, value: 'new@example.com' },
-        ]),
-      ).resolves.not.toThrow();
+      // Check a different email - should return empty array
+      const conflicts = await userRepository.checkUniqueness([
+        { field: users.email, value: 'new@example.com' },
+      ]);
+
+      expect(conflicts).toEqual([]);
     });
 
-    it('should throw DuplicateError when field is not unique', async () => {
+    it('should return conflicts when field is not unique', async () => {
       const email = 'duplicate@example.com';
       await createTestUser({ email });
 
-      // Try to validate the same email
-      await expect(
-        userRepository.validateUniqueness([
-          { field: users.email, value: email },
-        ]),
-      ).rejects.toThrow(DuplicateError);
+      // Check the same email - should return conflict
+      const conflicts = await userRepository.checkUniqueness([
+        { field: users.email, value: email },
+      ]);
+
+      expect(conflicts).toEqual([{ field: 'email', value: email }]);
     });
 
-    it('should not throw when checking same record (with excludeId)', async () => {
+    it('should return empty array when checking same record (with excludeId)', async () => {
       const user = await createTestUser({ email: 'myemail@example.com' });
 
-      // Validate the same email but exclude the user's ID
-      await expect(
-        userRepository.validateUniqueness(
-          [{ field: users.email, value: 'myemail@example.com' }],
-          user.id,
-        ),
-      ).resolves.not.toThrow();
+      // Check the same email but exclude the user's ID
+      const conflicts = await userRepository.checkUniqueness(
+        [{ field: users.email, value: 'myemail@example.com' }],
+        user.id,
+      );
+
+      expect(conflicts).toEqual([]);
+    });
+
+    it('should check multiple fields and return all conflicts', async () => {
+      const name = 'John Doe';
+      const email = 'john@example.com';
+      await createTestUser({ name, email });
+
+      // Check both name and email that already exist
+      const conflicts = await userRepository.checkUniqueness([
+        { field: users.name, value: name },
+        { field: users.email, value: email },
+      ]);
+
+      expect(conflicts).toHaveLength(2);
+      expect(conflicts).toContainEqual({ field: 'name', value: name });
+      expect(conflicts).toContainEqual({ field: 'email', value: email });
+    });
+
+    it('should return partial conflicts when only some fields conflict', async () => {
+      const existingEmail = 'existing@example.com';
+      await createTestUser({ name: 'Existing User', email: existingEmail });
+
+      // Check one existing field and one new field
+      const conflicts = await userRepository.checkUniqueness([
+        { field: users.name, value: 'New Name' }, // This should not conflict
+        { field: users.email, value: existingEmail }, // This should conflict
+      ]);
+
+      expect(conflicts).toHaveLength(1);
+      expect(conflicts).toContainEqual({
+        field: 'email',
+        value: existingEmail,
+      });
+    });
+
+    it('should handle scoped uniqueness validation', async () => {
+      // This test assumes we have a table with scoped uniqueness
+      // For the users table, we'll simulate this by using a combination of fields
+      const name = 'John';
+      const email = 'john@example.com';
+      await createTestUser({ name, email, active: true });
+
+      // Check uniqueness with scope - same name but different active status
+      const conflicts = await userRepository.checkUniqueness([
+        {
+          field: users.name,
+          value: name,
+          scope: { field: users.active, value: false }, // Different scope
+        },
+      ]);
+
+      expect(conflicts).toEqual([]); // Should not conflict due to different scope
+
+      // Check uniqueness with same scope
+      const conflictsWithSameScope = await userRepository.checkUniqueness([
+        {
+          field: users.name,
+          value: name,
+          scope: { field: users.active, value: true }, // Same scope
+        },
+      ]);
+
+      expect(conflictsWithSameScope).toEqual([{ field: 'name', value: name }]);
+    });
+
+    it('should work with excludeId and multiple fields', async () => {
+      const user = await createTestUser({
+        name: 'Test User',
+        email: 'test@example.com',
+      });
+
+      // Check the same values but exclude the current user's ID
+      const conflicts = await userRepository.checkUniqueness(
+        [
+          { field: users.name, value: 'Test User' },
+          { field: users.email, value: 'test@example.com' },
+        ],
+        user.id,
+      );
+
+      expect(conflicts).toEqual([]);
     });
   });
 

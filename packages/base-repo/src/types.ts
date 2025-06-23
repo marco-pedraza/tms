@@ -188,11 +188,10 @@ export interface BaseRepository<
     excludeId?: number,
   ): Promise<boolean>;
   countAll(options?: QueryOptions<T, TTable>): Promise<number>;
-  validateUniqueness(
+  checkUniqueness(
     fields: UniqueFieldConfig<TTable>[],
     excludeId?: number,
-    errorMessage?: string,
-  ): Promise<void>;
+  ): Promise<{ field: string; value: unknown }[]>;
   validateRelationExists(
     relatedTable: TableWithId,
     relationId: number,

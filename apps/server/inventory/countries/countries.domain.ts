@@ -21,37 +21,42 @@ export async function validateCountryUniqueness(
 ): Promise<FieldErrorCollector> {
   const collector = validator || new FieldErrorCollector();
 
-  // Check each field individually for specific error messages
+  // Prepare fields to check for uniqueness
+  const fieldsToCheck = [];
+
   if (payload.code) {
-    const codeExists = await countryRepository.existsBy(
-      countries.code,
-      payload.code,
-      currentId,
-    );
-    if (codeExists) {
-      const error = standardFieldErrors.duplicate(
-        'Country',
-        'code',
-        payload.code,
-      );
-      collector.addError(error.field, error.code, error.message, error.value);
-    }
+    fieldsToCheck.push({
+      field: countries.code,
+      value: payload.code,
+    });
   }
 
   if (payload.name) {
-    const nameExists = await countryRepository.existsBy(
-      countries.name,
-      payload.name,
-      currentId,
+    fieldsToCheck.push({
+      field: countries.name,
+      value: payload.name,
+    });
+  }
+
+  // If no fields to check, return early
+  if (fieldsToCheck.length === 0) {
+    return collector;
+  }
+
+  // Check all fields for uniqueness in a single database query
+  const conflicts = await countryRepository.checkUniqueness(
+    fieldsToCheck,
+    currentId,
+  );
+
+  // Add errors for each conflict found
+  for (const conflict of conflicts) {
+    const error = standardFieldErrors.duplicate(
+      'Country',
+      conflict.field,
+      conflict.value as string,
     );
-    if (nameExists) {
-      const error = standardFieldErrors.duplicate(
-        'Country',
-        'name',
-        payload.name,
-      );
-      collector.addError(error.field, error.code, error.message, error.value);
-    }
+    collector.addError(error.field, error.code, error.message, error.value);
   }
 
   return collector;

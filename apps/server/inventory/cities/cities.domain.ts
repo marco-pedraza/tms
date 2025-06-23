@@ -20,20 +20,35 @@ export async function validateCityUniqueness(
 ): Promise<FieldErrorCollector> {
   const collector = validator || new FieldErrorCollector();
 
+  // Prepare fields to check for uniqueness
+  const fieldsToCheck = [];
+
   if (payload.name) {
-    const nameExists = await cityRepository.existsBy(
-      cities.name,
-      payload.name,
-      currentId,
+    fieldsToCheck.push({
+      field: cities.name,
+      value: payload.name,
+    });
+  }
+
+  // If no fields to check, return early
+  if (fieldsToCheck.length === 0) {
+    return collector;
+  }
+
+  // Check all fields for uniqueness in a single database query
+  const conflicts = await cityRepository.checkUniqueness(
+    fieldsToCheck,
+    currentId,
+  );
+
+  // Add errors for each conflict found
+  for (const conflict of conflicts) {
+    const error = standardFieldErrors.duplicate(
+      ENTITY_NAME,
+      conflict.field,
+      conflict.value as string,
     );
-    if (nameExists) {
-      const error = standardFieldErrors.duplicate(
-        ENTITY_NAME,
-        'name',
-        payload.name,
-      );
-      collector.addError(error.field, error.code, error.message, error.value);
-    }
+    collector.addError(error.field, error.code, error.message, error.value);
   }
 
   return collector;

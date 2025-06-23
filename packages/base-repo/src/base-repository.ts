@@ -3,7 +3,7 @@
  * @description A module providing generic CRUD operations and utility functions for database entities
  */
 
-import { NotFoundError, DuplicateError } from './errors';
+import { NotFoundError } from './errors';
 import { eq, and, count, not, or, SQL, inArray } from 'drizzle-orm';
 import type {
   PaginationMeta,
@@ -253,7 +253,7 @@ export const createBaseRepository = <
    * Deletes multiple entities by their IDs in a single database operation
    * @param {number[]} ids - Array of entity IDs to delete
    * @returns {Promise<T[]>} Array of deleted entities
-   * @throws {ValidationError} If any of the IDs are invalid or not found
+   * @throws {NotFoundError} If any of the IDs are invalid or not found
    */
   const deleteMany = async (ids: number[]): Promise<T[]> => {
     if (ids.length === 0) {
@@ -261,21 +261,27 @@ export const createBaseRepository = <
     }
 
     try {
-      const result = await db
-        .delete(table)
-        .where(inArray(table.id, ids))
-        .returning();
+      // First, verify all entities exist before attempting to delete any
+      const existingEntities = await db
+        .select()
+        .from(table)
+        .where(inArray(table.id, ids));
 
-      // Check if all entities were deleted
-      if (result.length !== ids.length) {
-        const deletedIds = (result as unknown as { id: number }[]).map(
-          (entity) => entity.id,
-        );
-        const notFoundIds = ids.filter((id) => !deletedIds.includes(id));
+      if (existingEntities.length !== ids.length) {
+        const existingIds = (
+          existingEntities as unknown as { id: number }[]
+        ).map((entity) => entity.id);
+        const notFoundIds = ids.filter((id) => !existingIds.includes(id));
         throw new NotFoundError(
           `${entityName}(s) with id(s) ${notFoundIds.join(', ')} not found`,
         );
       }
+
+      // All entities exist, now delete them
+      const result = await db
+        .delete(table)
+        .where(inArray(table.id, ids))
+        .returning();
 
       return result as unknown as T[];
     } catch (error) {
@@ -423,18 +429,15 @@ export const createBaseRepository = <
   };
 
   /**
-   * Validates that a set of fields have unique values in the table
-   * @param {UniqueFieldConfig<TTable>[]} fields - Array of field configurations to validate
-   * @param {number} [excludeId] - Optional ID to exclude from the validation
-   * @param {string} [errorMessage] - Custom error message if validation fails
-   * @throws {DuplicateError} If any of the fields are not unique
-   * @returns {Promise<void>}
+   * Checks for uniqueness conflicts in a set of fields
+   * @param {UniqueFieldConfig<TTable>[]} fields - Array of field configurations to check
+   * @param {number} [excludeId] - Optional ID to exclude from the check
+   * @returns {Promise<{ field: string; value: unknown }[]>} Array of conflicts found
    */
-  const validateUniqueness = async (
+  const checkUniqueness = async (
     fields: UniqueFieldConfig<TTable>[],
     excludeId?: number,
-    errorMessage?: string,
-  ): Promise<void> => {
+  ): Promise<{ field: string; value: unknown }[]> => {
     try {
       const conditions = fields.map(({ field, value, scope }) => {
         const fieldCondition = eq(field, value);
@@ -449,16 +452,20 @@ export const createBaseRepository = <
 
       const [existing] = await db.select().from(table).where(query).limit(1);
 
-      if (existing) {
-        throw new DuplicateError(
-          errorMessage || `${entityName} with these values already exists`,
-        );
+      if (!existing) {
+        return [];
       }
+
+      const conflicts = [];
+      for (const f of fields) {
+        if (existing[f.field.name] === f.value) {
+          conflicts.push({ field: f.field.name, value: f.value });
+        }
+      }
+
+      return conflicts;
     } catch (error) {
-      if (error instanceof DuplicateError) {
-        throw error;
-      }
-      throw handlePostgresError(error, entityName, 'validateUniqueness');
+      throw handlePostgresError(error, entityName, 'checkUniqueness');
     }
   };
 
@@ -729,7 +736,7 @@ export const createBaseRepository = <
     findByPaginated,
     existsBy,
     countAll,
-    validateUniqueness,
+    checkUniqueness,
     validateRelationExists,
     transaction,
     search,

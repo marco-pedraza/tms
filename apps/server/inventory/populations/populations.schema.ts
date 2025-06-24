@@ -9,20 +9,26 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { isNull } from 'drizzle-orm';
 import { cities } from '../cities/cities.schema';
 
 export const populations = pgTable(
   'populations',
   {
     id: serial('id').primaryKey(),
-    code: text('code').notNull().unique(),
+    code: text('code').notNull(),
     name: text('name').notNull(),
     description: text('description'),
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
+    deletedAt: timestamp('deleted_at'),
   },
-  (table) => [index().on(table.name)],
+  (table) => [
+    index().on(table.name),
+    index().on(table.deletedAt),
+    uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
+  ],
 );
 
 export const populationCities = pgTable(

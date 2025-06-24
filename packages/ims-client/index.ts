@@ -107,6 +107,7 @@ export namespace inventory {
             this.createGate = this.createGate.bind(this)
             this.createPathway = this.createPathway.bind(this)
             this.createPathwayService = this.createPathwayService.bind(this)
+            this.createPopulation = this.createPopulation.bind(this)
             this.createRoute = this.createRoute.bind(this)
             this.createSeatDiagramZone = this.createSeatDiagramZone.bind(this)
             this.createServiceType = this.createServiceType.bind(this)
@@ -124,6 +125,7 @@ export namespace inventory {
             this.deleteGate = this.deleteGate.bind(this)
             this.deletePathway = this.deletePathway.bind(this)
             this.deletePathwayService = this.deletePathwayService.bind(this)
+            this.deletePopulation = this.deletePopulation.bind(this)
             this.deleteRoute = this.deleteRoute.bind(this)
             this.deleteSeatDiagram = this.deleteSeatDiagram.bind(this)
             this.deleteSeatDiagramZone = this.deleteSeatDiagramZone.bind(this)
@@ -149,6 +151,7 @@ export namespace inventory {
             this.getPathway = this.getPathway.bind(this)
             this.getPathwayService = this.getPathwayService.bind(this)
             this.getPathwayWithServiceAssignments = this.getPathwayWithServiceAssignments.bind(this)
+            this.getPopulation = this.getPopulation.bind(this)
             this.getRoute = this.getRoute.bind(this)
             this.getRouteWithFullDetails = this.getRouteWithFullDetails.bind(this)
             this.getSeatDiagram = this.getSeatDiagram.bind(this)
@@ -181,6 +184,8 @@ export namespace inventory {
             this.listPathwayServicesPaginated = this.listPathwayServicesPaginated.bind(this)
             this.listPathways = this.listPathways.bind(this)
             this.listPathwaysPaginated = this.listPathwaysPaginated.bind(this)
+            this.listPopulations = this.listPopulations.bind(this)
+            this.listPopulationsPaginated = this.listPopulationsPaginated.bind(this)
             this.listRoutes = this.listRoutes.bind(this)
             this.listRoutesPaginated = this.listRoutesPaginated.bind(this)
             this.listServiceTypes = this.listServiceTypes.bind(this)
@@ -224,6 +229,7 @@ export namespace inventory {
             this.updatePathway = this.updatePathway.bind(this)
             this.updatePathwayService = this.updatePathwayService.bind(this)
             this.updatePathwayServiceAssignment = this.updatePathwayServiceAssignment.bind(this)
+            this.updatePopulation = this.updatePopulation.bind(this)
             this.updateSeatConfiguration = this.updateSeatConfiguration.bind(this)
             this.updateSeatDiagram = this.updateSeatDiagram.bind(this)
             this.updateSeatDiagramConfiguration = this.updateSeatDiagramConfiguration.bind(this)
@@ -410,6 +416,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/pathway-services`, JSON.stringify(params))
             return await resp.json() as pathway_services.PathwayService
+        }
+
+        /**
+         * Creates a new population.
+         * @param params - The population data to create
+         * @returns {Promise<Population>} The created population
+         * @throws {APIError} If the population creation fails
+         */
+        public async createPopulation(params: populations.CreatePopulationPayload): Promise<populations.Population> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/populations/create`, JSON.stringify(params))
+            return await resp.json() as populations.Population
         }
 
         /**
@@ -636,6 +654,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/pathway-services/${encodeURIComponent(id)}`)
             return await resp.json() as pathway_services.PathwayService
+        }
+
+        /**
+         * Deletes a population by its ID.
+         * @param params - Object containing the population ID
+         * @param params.id - The ID of the population to delete
+         * @returns {Promise<Population>} The deleted population
+         * @throws {APIError} If the population is not found or deletion fails
+         */
+        public async deletePopulation(id: number): Promise<populations.Population> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/populations/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as populations.Population
         }
 
         /**
@@ -950,6 +981,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/pathways/${encodeURIComponent(id)}/services`)
             return await resp.json() as pathways.PathwayWithServiceAssignments
+        }
+
+        /**
+         * Retrieves a population by its ID.
+         * @param params - Object containing the population ID
+         * @param params.id - The ID of the population to retrieve
+         * @returns {Promise<Population>} The found population
+         * @throws {APIError} If the population is not found or retrieval fails
+         */
+        public async getPopulation(id: number): Promise<populations.Population> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/populations/${encodeURIComponent(id)}`)
+            return await resp.json() as populations.Population
         }
 
         /**
@@ -1339,6 +1383,30 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/pathways/paginated`, undefined, {query})
             return await resp.json() as pathways.PaginatedPathways
+        }
+
+        /**
+         * Retrieves all populations without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListPopulationsResult>} Unified response with data property containing array of populations
+         * @throws {APIError} If retrieval fails
+         */
+        public async listPopulations(params: populations.ListPopulationsQueryParams): Promise<populations.ListPopulationsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/populations/list/all`, JSON.stringify(params))
+            return await resp.json() as populations.ListPopulationsResult
+        }
+
+        /**
+         * Retrieves populations with pagination (useful for tables).
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListPopulationsResult>} Unified paginated response with data and pagination properties
+         * @throws {APIError} If retrieval fails
+         */
+        public async listPopulationsPaginated(params: populations.PaginatedListPopulationsQueryParams): Promise<populations.PaginatedListPopulationsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/populations/list`, JSON.stringify(params))
+            return await resp.json() as populations.PaginatedListPopulationsResult
         }
 
         /**
@@ -2779,6 +2847,41 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PATCH", `/pathway-service-assignments/${encodeURIComponent(id)}`, JSON.stringify(params))
             return await resp.json() as pathway_service_assignments.PathwayServiceAssignment
+        }
+
+        /**
+         * Updates an existing population.
+         * @param params - Object containing the population ID and update data
+         * @param params.id - The ID of the population to update
+         * @returns {Promise<Population>} The updated population
+         * @throws {APIError} If the population is not found or update fails
+         */
+        public async updatePopulation(id: number, params: {
+    /**
+     * Unique code for the population
+     * Must have at least 1 non-whitespace character
+     */
+    code?: string
+
+    /**
+     * Name of the population
+     * Must have at least 1 non-whitespace character
+     */
+    name?: string
+
+    /**
+     * Description of the population
+     */
+    description?: string
+
+    /**
+     * Whether the population is active
+     */
+    active?: boolean
+}): Promise<populations.Population> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/populations/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as populations.Population
         }
 
         /**
@@ -8365,6 +8468,115 @@ export namespace permissions {
             createdAt?: string | null
             updatedAt?: string | null
         }
+    }
+}
+
+export namespace populations {
+    export interface CreatePopulationPayload {
+        /**
+         * Unique code for the population
+         * Must have at least 1 non-whitespace character
+         */
+        code: string
+
+        /**
+         * Name of the population
+         * Must have at least 1 non-whitespace character
+         */
+        name: string
+
+        /**
+         * Description of the population
+         */
+        description?: string
+
+        /**
+         * Whether the population is active
+         * @default true
+         */
+        active?: boolean
+    }
+
+    export interface ListPopulationsQueryParams {
+        orderBy?: {
+            field: "id" | "code" | "name" | "description" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            code?: string
+            name?: string
+            description?: string | null
+            active?: boolean
+            createdAt?: string | null
+            updatedAt?: string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListPopulationsResult {
+        data: Population[]
+    }
+
+    export interface PaginatedListPopulationsQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "code" | "name" | "description" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            code?: string
+            name?: string
+            description?: string | null
+            active?: boolean
+            createdAt?: string | null
+            updatedAt?: string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListPopulationsResult {
+        pagination: shared.PaginationMeta
+        data: Population[]
+    }
+
+    export interface Population {
+        /**
+         * Unique identifier for the population
+         */
+        id: number
+
+        /**
+         * Unique code for the population
+         */
+        code: string
+
+        /**
+         * Name of the population
+         */
+        name: string
+
+        /**
+         * Description of the population
+         */
+        description: string | null
+
+        /**
+         * Whether the population is currently active in the system
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the population record was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the population record was last updated
+         */
+        updatedAt: string | null
     }
 }
 

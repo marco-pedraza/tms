@@ -1,0 +1,96 @@
+import { MatchesRegexp, MinLen } from 'encore.dev/validate';
+import {
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '../../shared/types';
+
+/**
+ * Base interface representing a population entity
+ */
+export interface Population {
+  /** Unique identifier for the population */
+  id: number;
+
+  /** Unique code for the population */
+  code: string;
+
+  /** Name of the population */
+  name: string;
+
+  /** Description of the population */
+  description: string | null;
+
+  /** Whether the population is currently active in the system */
+  active: boolean;
+
+  /** Timestamp when the population record was created */
+  createdAt: Date | null;
+
+  /** Timestamp when the population record was last updated */
+  updatedAt: Date | null;
+}
+
+/**
+ * Input for creating a new population
+ */
+export interface CreatePopulationPayload {
+  /**
+   * Unique code for the population
+   * Must have at least 1 non-whitespace character
+   */
+  code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Name of the population
+   * Must have at least 1 non-whitespace character
+   */
+  name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Description of the population
+   */
+  description?: string;
+
+  /**
+   * Whether the population is active
+   * @default true
+   */
+  active?: boolean;
+}
+
+/**
+ * Input for updating a population
+ */
+export interface UpdatePopulationPayload {
+  /**
+   * Unique code for the population
+   * Must have at least 1 non-whitespace character
+   */
+  code?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Name of the population
+   * Must have at least 1 non-whitespace character
+   */
+  name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Description of the population
+   */
+  description?: string;
+
+  /**
+   * Whether the population is active
+   */
+  active?: boolean;
+}
+
+export type ListPopulationsQueryParams = ListQueryParams<Population>;
+export type ListPopulationsResult = ListQueryResult<Population>;
+
+export type PaginatedListPopulationsQueryParams =
+  PaginatedListQueryParams<Population>;
+export type PaginatedListPopulationsResult =
+  PaginatedListQueryResult<Population>;

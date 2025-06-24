@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS "populations" (
 	"active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now(),
-	CONSTRAINT "populations_code_unique" UNIQUE("code")
+	"deleted_at" timestamp
 );
 --> statement-breakpoint
 DO $$ BEGIN
@@ -29,4 +29,6 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "population_cities_city_id_population_id_index" ON "population_cities" USING btree ("city_id","population_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "populations_name_index" ON "populations" USING btree ("name");
+CREATE UNIQUE INDEX IF NOT EXISTS "populations_code_active_unique" ON "populations" USING btree ("code") WHERE "populations"."deleted_at" is null;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "populations_name_index" ON "populations" USING btree ("name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "populations_deleted_at_index" ON "populations" USING btree ("deleted_at");

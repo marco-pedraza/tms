@@ -7,7 +7,7 @@ import PageHeader from '@/components/page-header';
 import routes from '@/services/routes';
 
 export default function NewCityPage() {
-  const { createCity } = useCityMutations();
+  const { create: createCity } = useCityMutations();
   const t = useTranslations('cities');
   const tCommon = useTranslations('common');
 

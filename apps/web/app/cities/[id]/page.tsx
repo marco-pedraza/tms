@@ -23,7 +23,7 @@ export default function CityDetailsPage() {
     cityId,
     enabled: isValidId,
   });
-  const { deleteCity } = useCityMutations();
+  const { delete: deleteCity } = useCityMutations();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleDelete = () => {

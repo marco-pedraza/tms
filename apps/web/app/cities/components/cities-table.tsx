@@ -67,7 +67,7 @@ export default function CitiesTable() {
   const tCities = useTranslations('cities');
   const tCommon = useTranslations('common');
   const [deleteId, setDeleteId] = useState<number>();
-  const { deleteCity } = useCityMutations();
+  const { delete: deleteCity } = useCityMutations();
   const {
     paginationUrlState,
     sortingUrlState,

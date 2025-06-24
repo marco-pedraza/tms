@@ -17,7 +17,7 @@ export default function EditCityPage() {
     cityId,
     enabled: isValidId,
   });
-  const { updateCity } = useCityMutations();
+  const { update: updateCity } = useCityMutations();
 
   const handleSubmit = (values: CityFormValues) => {
     return updateCity.mutateWithToast({ id: cityId, values });

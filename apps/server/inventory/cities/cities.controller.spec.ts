@@ -533,4 +533,77 @@ describe('Cities Controller', () => {
       await multiFieldCleanup.cleanupAll();
     });
   });
+
+  describe('combined search and filtering', () => {
+    test('should combine searchTerm with filters in non-paginated results', async () => {
+      // Create test cities with specific patterns
+      const searchableActiveCity = await createTestCity(
+        'SearchFilter Active City',
+        { active: true },
+      );
+      const searchableInactiveCity = await createTestCity(
+        'SearchFilter Inactive City',
+        { active: false },
+      );
+
+      // Search for "SearchFilter" but only active cities
+      const response = await listCities({
+        searchTerm: 'SearchFilter',
+        filters: { active: true },
+      });
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+
+      // Should include the active city
+      expect(response.data.some((c) => c.id === searchableActiveCity)).toBe(
+        true,
+      );
+
+      // Should NOT include the inactive city
+      expect(response.data.some((c) => c.id === searchableInactiveCity)).toBe(
+        false,
+      );
+
+      // All results should be active
+      expect(response.data.every((c) => c.active === true)).toBe(true);
+    });
+
+    test('should combine searchTerm with filters in paginated results', async () => {
+      // Create test cities with specific patterns
+      const searchableActiveCity = await createTestCity(
+        'PaginatedSearch Active City',
+        { active: true },
+      );
+      const searchableInactiveCity = await createTestCity(
+        'PaginatedSearch Inactive City',
+        { active: false },
+      );
+
+      // Search for "PaginatedSearch" but only active cities with pagination
+      const response = await listCitiesPaginated({
+        searchTerm: 'PaginatedSearch',
+        filters: { active: true },
+        page: 1,
+        pageSize: 10,
+      });
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+
+      // Should include the active city
+      expect(response.data.some((c) => c.id === searchableActiveCity)).toBe(
+        true,
+      );
+
+      // Should NOT include the inactive city
+      expect(response.data.some((c) => c.id === searchableInactiveCity)).toBe(
+        false,
+      );
+
+      // All results should be active
+      expect(response.data.every((c) => c.active === true)).toBe(true);
+    });
+  });
 });

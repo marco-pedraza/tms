@@ -60,6 +60,8 @@ export type Filters<T> = {
 export interface QueryOptions<T, TTable> {
   orderBy?: OrderBy<TTable>;
   filters?: Filters<T>;
+  /** Search term to match against searchable fields */
+  searchTerm?: string;
 }
 
 /**
@@ -109,6 +111,8 @@ export interface PaginationParams<T, TTable> {
   pageSize?: number;
   orderBy?: OrderBy<TTable>;
   filters?: Filters<T>;
+  /** Search term to match against searchable fields */
+  searchTerm?: string;
 }
 
 export type TableWithId = PgTable & {
@@ -203,7 +207,9 @@ export interface BaseRepository<
       tx: TransactionalDB,
     ) => Promise<R>,
   ): Promise<R>;
+  /** @deprecated Use findAll with searchTerm parameter instead: findAll({ searchTerm: term }) */
   search(term: string): Promise<T[]>;
+  /** @deprecated Use findAllPaginated with searchTerm parameter instead: findAllPaginated({ searchTerm: term, ...query }) */
   searchPaginated(
     term: string,
     query?: PaginationParams<T, TTable>,

@@ -483,4 +483,101 @@ describe('States Controller', () => {
       }
     });
   });
+
+  describe('combined search and filtering', () => {
+    // Add cleanup helper for combined search and filtering tests
+    const combinedSearchCleanup = createCleanupHelper(
+      deleteState,
+      'combined-search-state',
+    );
+
+    afterAll(async () => {
+      await combinedSearchCleanup.cleanupAll();
+    });
+
+    test('should combine searchTerm with filters in non-paginated results', async () => {
+      // Create test states with specific patterns
+      const searchableActiveState = await createState({
+        name: createUniqueName('SearchFilter Active State', testSuiteId),
+        code: createUniqueCode('SFA', 3),
+        countryId: testCountryId,
+        active: true,
+      });
+      const searchableInactiveState = await createState({
+        name: createUniqueName('SearchFilter Inactive State', testSuiteId),
+        code: createUniqueCode('SFI', 3),
+        countryId: testCountryId,
+        active: false,
+      });
+
+      combinedSearchCleanup.track(searchableActiveState.id);
+      combinedSearchCleanup.track(searchableInactiveState.id);
+
+      // Search for "SearchFilter" but only active states
+      const response = await listStates({
+        searchTerm: 'SearchFilter',
+        filters: { active: true },
+      });
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+
+      // Should include the active state
+      expect(response.data.some((s) => s.id === searchableActiveState.id)).toBe(
+        true,
+      );
+
+      // Should NOT include the inactive state
+      expect(
+        response.data.some((s) => s.id === searchableInactiveState.id),
+      ).toBe(false);
+
+      // All results should be active
+      expect(response.data.every((s) => s.active === true)).toBe(true);
+    });
+
+    test('should combine searchTerm with filters in paginated results', async () => {
+      // Create test states with specific patterns
+      const searchableActiveState = await createState({
+        name: createUniqueName('PaginatedSearch Active State', testSuiteId),
+        code: createUniqueCode('PSA', 3),
+        countryId: testCountryId,
+        active: true,
+      });
+      const searchableInactiveState = await createState({
+        name: createUniqueName('PaginatedSearch Inactive State', testSuiteId),
+        code: createUniqueCode('PSI', 3),
+        countryId: testCountryId,
+        active: false,
+      });
+
+      combinedSearchCleanup.track(searchableActiveState.id);
+      combinedSearchCleanup.track(searchableInactiveState.id);
+
+      // Search for "PaginatedSearch" but only active states with pagination
+      const response = await listStatesPaginated({
+        searchTerm: 'PaginatedSearch',
+        filters: { active: true },
+        page: 1,
+        pageSize: 10,
+      });
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+
+      // Should include the active state
+      expect(response.data.some((s) => s.id === searchableActiveState.id)).toBe(
+        true,
+      );
+
+      // Should NOT include the inactive state
+      expect(
+        response.data.some((s) => s.id === searchableInactiveState.id),
+      ).toBe(false);
+
+      // All results should be active
+      expect(response.data.every((s) => s.active === true)).toBe(true);
+    });
+  });
 });

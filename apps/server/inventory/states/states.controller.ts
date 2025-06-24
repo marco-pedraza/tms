@@ -38,9 +38,7 @@ export const getState = api(
 export const listStates = api(
   { expose: true, method: 'POST', path: '/states/list/all' },
   async (params: ListStatesQueryParams): Promise<ListStatesResult> => {
-    const states = params.searchTerm
-      ? await stateRepository.search(params.searchTerm)
-      : await stateRepository.findAll(params);
+    const states = await stateRepository.findAll(params);
     return {
       data: states,
     };
@@ -55,10 +53,7 @@ export const listStatesPaginated = api(
   async (
     params: PaginatedListStatesQueryParams,
   ): Promise<PaginatedListStatesResult> => {
-    const states = params.searchTerm
-      ? await stateRepository.searchPaginated(params.searchTerm, params)
-      : await stateRepository.findAllPaginated(params);
-    return states;
+    return await stateRepository.findAllPaginated(params);
   },
 );
 

@@ -27,6 +27,7 @@ import {
   updateCompoundRouteSegments,
 } from './routes.controller';
 
+// Routes current status does not match with feature definitions, we will skip these tests until the feature match
 describe.skip('Routes Controller', () => {
   const factoryDb = getFactoryDb(db);
   let testState: State;

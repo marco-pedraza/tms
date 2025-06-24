@@ -49,9 +49,7 @@ export const getCity = api(
 export const listCities = api(
   { expose: true, method: 'POST', path: '/cities/list/all' },
   async (params: ListCitiesQueryParams): Promise<ListCitiesResult> => {
-    const cities = params.searchTerm
-      ? await cityRepository.search(params.searchTerm)
-      : await cityRepository.findAll(params);
+    const cities = await cityRepository.findAll(params);
     return {
       data: cities,
     };
@@ -69,9 +67,7 @@ export const listCitiesPaginated = api(
   async (
     params: PaginatedListCitiesQueryParams,
   ): Promise<PaginatedListCitiesResult> => {
-    const citiesResult = params.searchTerm
-      ? await cityRepository.searchPaginated(params.searchTerm, params)
-      : await cityRepository.findAllPaginated(params);
+    const citiesResult = await cityRepository.findAllPaginated(params);
 
     return await cityRepository.appendRelations(
       citiesResult.data,

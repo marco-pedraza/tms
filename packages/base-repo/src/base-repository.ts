@@ -15,6 +15,7 @@ import type {
   QueryOptions,
   PaginationParams,
   RepositoryConfig,
+  Filters,
 } from './types';
 import { PgColumn } from 'drizzle-orm/pg-core';
 import {
@@ -57,6 +58,30 @@ export const createBaseRepository = <
   type TableInsert = TTable extends { $inferInsert: infer U } ? U : never;
 
   /**
+   * Helper function to apply search or filter conditions to a query
+   * @param query - The query to apply conditions to
+   * @param searchTerm - Optional search term
+   * @param filters - Optional filters
+   * @returns The query with search or filter conditions applied
+   */
+  const applySearchOrFilters = <Q extends object>(
+    query: Q,
+    searchTerm?: string,
+    filters?: Filters<T>,
+  ): Q => {
+    // Apply search conditions if searchTerm is provided and not empty
+    if (searchTerm?.trim()) {
+      if (!config?.searchableFields?.length) {
+        throw new Error(`Searchable fields not defined for ${entityName}`);
+      }
+      return applySearchConditions(query, searchTerm, config, table, filters);
+    } else {
+      // Apply simple filters if no search term
+      return applySimpleFilters(query, table, filters);
+    }
+  };
+
+  /**
    * Finds an entity by its ID
    * @param {number} id - The ID of the entity to find
    * @throws {NotFoundError} If the entity is not found
@@ -82,17 +107,20 @@ export const createBaseRepository = <
   };
 
   /**
-   * Retrieves all entities from the table with optional filters and ordering
+   * Retrieves all entities from the table with optional filters, ordering, and search
    * @param {QueryOptions<T>} options - Additional options for the query
    * @param {Record<string, unknown>} [options.filters] - Simple equality filters to apply
    * @param {Array<{field: PgColumn; direction: 'asc' | 'desc'}>} [options.orderBy] - Fields to order by
+   * @param {string} [options.searchTerm] - Search term to match against searchable fields
    * @returns {Promise<T[]>} Array of all entities
    */
   const findAll = async (options?: QueryOptions<T, TTable>): Promise<T[]> => {
     try {
+      const { filters, orderBy, searchTerm } = options ?? {};
       let query = db.select().from(table);
-      query = applySimpleFilters(query, table, options?.filters);
-      query = applyOrdering(query, options?.orderBy, table);
+
+      query = applySearchOrFilters(query, searchTerm, filters);
+      query = applyOrdering(query, orderBy, table);
 
       const entities = await query;
       return entities as T[];
@@ -130,8 +158,8 @@ export const createBaseRepository = <
   };
 
   /**
-   * Retrieves entities with pagination, optional filters, and ordering
-   * @param {PaginationParams & { filters?: Record<string, unknown> }} query - Pagination, filters, and ordering parameters
+   * Retrieves entities with pagination, optional filters, ordering, and search
+   * @param {PaginationParams & { filters?: Record<string, unknown> }} query - Pagination, filters, ordering, and search parameters
    * @returns {Promise<Object>} Paginated results with data and pagination metadata
    */
   const findAllPaginated = async (
@@ -141,16 +169,26 @@ export const createBaseRepository = <
     pagination: PaginationMeta;
   }> => {
     try {
-      const { page = 1, pageSize = 10, orderBy, filters } = query ?? {};
+      const {
+        page = 1,
+        pageSize = 10,
+        orderBy,
+        filters,
+        searchTerm,
+      } = query ?? {};
       const offset = (page - 1) * pageSize;
 
-      const countQuery = db.select({ count: count() }).from(table);
-      const finalCountQuery = applySimpleFilters(countQuery, table, filters);
-      const [countResult] = await finalCountQuery;
+      // Count query
+      let countQuery = db.select({ count: count() }).from(table);
+      countQuery = applySearchOrFilters(countQuery, searchTerm, filters);
+
+      const [countResult] = await countQuery;
       const totalCount = countResult?.count ?? 0;
 
+      // Data query
       let dataQuery = db.select().from(table);
-      dataQuery = applySimpleFilters(dataQuery, table, filters);
+      dataQuery = applySearchOrFilters(dataQuery, searchTerm, filters);
+
       dataQuery = applyOrdering(dataQuery, orderBy, table);
       const finalDataQuery = dataQuery.limit(pageSize).offset(offset);
       const data = await finalDataQuery;
@@ -410,17 +448,21 @@ export const createBaseRepository = <
   };
 
   /**
-   * Counts entities in the table with optional filters
+   * Counts entities in the table with optional filters and search
    * @param {QueryOptions<T>} options - Additional options for the query
    * @param {Record<string, unknown>} [options.filters] - Simple equality filters to apply
-   * @returns {Promise<number>} The count of entities matching the filters
+   * @param {string} [options.searchTerm] - Search term to match against searchable fields
+   * @returns {Promise<number>} The count of entities matching the filters and search
    */
   const countAll = async (
     options?: QueryOptions<T, TTable>,
   ): Promise<number> => {
     try {
+      const { filters, searchTerm } = options ?? {};
       let countQuery = db.select({ count: count() }).from(table);
-      countQuery = applySimpleFilters(countQuery, table, options?.filters);
+
+      countQuery = applySearchOrFilters(countQuery, searchTerm, filters);
+
       const [countResult] = await countQuery;
       return Number(countResult?.count ?? 0);
     } catch (error) {
@@ -551,6 +593,8 @@ export const createBaseRepository = <
    * @param {string} term - The search term to match against searchable fields
    * @throws {Error} If no searchable fields are configured for the repository
    * @returns {Promise<T[]>} Array of entities matching the search term
+   *
+   * @deprecated Use findAll with searchTerm parameter instead: findAll({ searchTerm: term })
    */
   const search = async (term: string): Promise<T[]> => {
     if (!config?.searchableFields) {
@@ -573,6 +617,8 @@ export const createBaseRepository = <
    * @param {PaginationParams} query - Pagination, filters, and ordering parameters
    * @throws {Error} If no searchable fields are configured for the repository
    * @returns {Promise<PaginatedResult<T>>} Paginated search results with data and pagination metadata
+   *
+   * @deprecated Use findAllPaginated with searchTerm parameter instead: findAllPaginated({ searchTerm: term, ...query })
    */
   const searchPaginated = async (
     term: string,
@@ -662,14 +708,14 @@ export const createBaseRepository = <
 
       // Validate that searchable fields are configured when searchTerm is provided
       if (
-        searchTerm &&
+        searchTerm?.trim() &&
         (!config?.searchableFields || config.searchableFields.length === 0)
       ) {
         throw new Error(`Searchable fields not defined for ${entityName}`);
       }
 
       // Generate SQL conditions from utility functions
-      if (searchTerm && config?.searchableFields?.length) {
+      if (searchTerm?.trim() && config?.searchableFields?.length) {
         // If we have a search term, use the search conditions (which can include filters)
         baseWhere = createSearchConditions(searchTerm, config, table, filters);
       } else if (filters && Object.keys(filters).length > 0) {

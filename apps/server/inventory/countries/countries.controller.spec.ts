@@ -374,6 +374,48 @@ describe('Countries Controller', () => {
       expect(response.pagination.currentPage).toBe(1);
       expect(response.pagination.pageSize).toBe(5);
     });
+
+    test('should combine search term with filters', async () => {
+      // Create test countries with different active states
+      const activeSearchableCountry = await createCountry({
+        name: 'Active Searchable Country',
+        code: 'ASC',
+        active: true,
+      });
+      const inactiveSearchableCountry = await createCountry({
+        name: 'Inactive Searchable Country',
+        code: 'ISC',
+        active: false,
+      });
+
+      try {
+        // Search for "Searchable" but only active countries
+        const response = await listCountries({
+          searchTerm: 'Searchable',
+          filters: { active: true },
+        });
+
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+
+        // Should include the active searchable country
+        expect(
+          response.data.some((c) => c.id === activeSearchableCountry.id),
+        ).toBe(true);
+
+        // Should NOT include the inactive searchable country
+        expect(
+          response.data.some((c) => c.id === inactiveSearchableCountry.id),
+        ).toBe(false);
+
+        // All results should be active
+        expect(response.data.every((c) => c.active === true)).toBe(true);
+      } finally {
+        // Clean up
+        await deleteCountry({ id: activeSearchableCountry.id });
+        await deleteCountry({ id: inactiveSearchableCountry.id });
+      }
+    });
   });
 
   describe('ordering and filtering', () => {

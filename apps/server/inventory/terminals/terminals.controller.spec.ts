@@ -1,5 +1,11 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createSlug } from '../../shared/utils';
+import {
+  createCleanupHelper,
+  createTestSuiteId,
+  createUniqueCode,
+  createUniqueName,
+} from '../../tests/shared/test-utils';
 import { createCity, deleteCity } from '../cities/cities.controller';
 import {
   createCountry,
@@ -19,14 +25,35 @@ import {
   updateTerminal,
 } from './terminals.controller';
 
-describe.skip('Terminals Controller', () => {
-  // Test data and setup
-  let countryId: number; // We need a valid country ID for creating a state
-  let stateId: number; // We need a valid state ID for creating a city
-  let cityId: number; // We need a valid city ID for terminal tests
+describe('Terminals Controller', () => {
+  // Create unique test suite identifier
+  const testSuiteId = createTestSuiteId('terminals-controller');
+
+  // Setup cleanup helpers
+  const countryCleanup = createCleanupHelper(
+    async ({ id }) => await deleteCountry({ id }),
+    'country',
+  );
+  const stateCleanup = createCleanupHelper(
+    async ({ id }) => await deleteState({ id }),
+    'state',
+  );
+  const cityCleanup = createCleanupHelper(
+    async ({ id }) => await deleteCity({ id }),
+    'city',
+  );
+  const terminalCleanup = createCleanupHelper(
+    async ({ id }) => await deleteTerminal({ id }),
+    'terminal',
+  );
+
+  // Test data storage
+  let testCountryId: number;
+  let testStateId: number;
+  let testCityId: number;
 
   const testTerminal = {
-    name: 'Test Terminal',
+    name: createUniqueName('Test Terminal', testSuiteId),
     address: '123 Test Street',
     cityId: 0, // This will be populated in beforeAll
     latitude: 19.4326,
@@ -42,87 +69,52 @@ describe.skip('Terminals Controller', () => {
       sunday: { open: '10:00', close: '16:00' },
     },
     facilityCodes: ['waiting_room', 'bathroom'],
-    code: 'TEST-TERM-01',
+    code: createUniqueCode('TEST-TERM', 8),
     active: true,
   };
 
   // Variable to store created IDs for cleanup
   let createdTerminalId: number;
-  // Array to track additional terminals created in tests
-  let additionalTerminalIds: number[] = [];
 
   // Setup test dependencies - create country, state, and city
   beforeAll(async () => {
-    // Create a temporary country
+    // Create a temporary country with unique name
     const country = await createCountry({
-      name: 'Test Country for Terminals',
-      code: 'TCTER',
+      name: createUniqueName('Test Country for Terminals', testSuiteId),
+      code: createUniqueCode('TCTER', 5),
       active: true,
     });
-    countryId = country.id;
+    testCountryId = countryCleanup.track(country.id);
 
     // Create a temporary state using the country
     const state = await createState({
-      name: 'Test State for Terminals',
-      code: 'TSTER',
-      countryId: countryId,
+      name: createUniqueName('Test State for Terminals', testSuiteId),
+      code: createUniqueCode('TSTER', 5),
+      countryId: testCountryId,
       active: true,
     });
-    stateId = state.id;
+    testStateId = stateCleanup.track(state.id);
 
     // Create a temporary city using the state
     const city = await createCity({
-      name: 'Test City for Terminals',
-      stateId: stateId,
+      name: createUniqueName('Test City for Terminals', testSuiteId),
+      stateId: testStateId,
       latitude: 19.4326,
       longitude: -99.1332,
       timezone: 'America/Mexico_City',
       active: true,
     });
-    cityId = city.id;
-    testTerminal.cityId = cityId; // Update the test terminal with the real city ID
+    testCityId = cityCleanup.track(city.id);
+    testTerminal.cityId = testCityId; // Update the test terminal with the real city ID
   });
 
   // Cleanup after all tests
   afterAll(async () => {
-    // Clean up any additional terminals created during tests
-    for (const id of additionalTerminalIds) {
-      try {
-        await deleteTerminal({ id });
-        // eslint-disable-next-line
-      } catch (error: any) {
-        // Opción 2: Ignorar error si ya no existe
-        if (
-          error?.name === 'NotFoundError' ||
-          (typeof error?.message === 'string' &&
-            error.message.toLowerCase().includes('not found'))
-        ) {
-          continue;
-        }
-        console.error(`Error deleting additional terminal ${id}:`, error);
-      }
-    }
-
-    // Clean up the main test terminal if it was created
-    if (createdTerminalId) {
-      try {
-        await deleteTerminal({ id: createdTerminalId });
-      } catch (error) {
-        console.error(
-          `Error deleting main test terminal ${createdTerminalId}:`,
-          error,
-        );
-      }
-    }
-
-    // Clean up city, state, country
-    try {
-      await deleteCity({ id: cityId });
-      await deleteState({ id: stateId });
-      await deleteCountry({ id: countryId });
-    } catch (error) {
-      console.error('Error in cleanup:', error);
-    }
+    // Clean up all tracked entities in reverse order of dependencies
+    await terminalCleanup.cleanupAll();
+    await cityCleanup.cleanupAll();
+    await stateCleanup.cleanupAll();
+    await countryCleanup.cleanupAll();
   });
 
   describe('success scenarios', () => {
@@ -131,7 +123,7 @@ describe.skip('Terminals Controller', () => {
       const response = await createTerminal(testTerminal);
 
       // Store the ID for later cleanup
-      createdTerminalId = response.id;
+      createdTerminalId = terminalCleanup.track(response.id);
 
       // Assertions
       expect(response).toBeDefined();
@@ -160,7 +152,7 @@ describe.skip('Terminals Controller', () => {
       const terminalWithFacilities = await createTerminal({
         name: 'Terminal with Facilities',
         address: '456 Facility Street',
-        cityId: cityId,
+        cityId: testCityId,
         latitude: 19.4326,
         longitude: -99.1332,
         code: 'TERM-FAC',
@@ -169,7 +161,7 @@ describe.skip('Terminals Controller', () => {
       });
 
       // Keep track for cleanup
-      additionalTerminalIds.push(terminalWithFacilities.id);
+      terminalCleanup.track(terminalWithFacilities.id);
 
       // Assertions for facilities
       expect(terminalWithFacilities.facilities).toBeDefined();
@@ -190,7 +182,7 @@ describe.skip('Terminals Controller', () => {
       const terminalWithOperatingHours = await createTerminal({
         name: 'Terminal with Operating Hours',
         address: '789 Hours Street',
-        cityId: cityId,
+        cityId: testCityId,
         latitude: 19.4326,
         longitude: -99.1332,
         code: 'TERM-HOURS',
@@ -207,7 +199,7 @@ describe.skip('Terminals Controller', () => {
       });
 
       // Keep track for cleanup
-      additionalTerminalIds.push(terminalWithOperatingHours.id);
+      terminalCleanup.track(terminalWithOperatingHours.id);
 
       // Assertions for operating hours
       expect(terminalWithOperatingHours.operatingHours).toBeDefined();
@@ -224,10 +216,7 @@ describe.skip('Terminals Controller', () => {
       // Clean up
       await deleteTerminal({ id: terminalWithOperatingHours.id });
 
-      // Remove from cleanup list since we just deleted it
-      additionalTerminalIds = additionalTerminalIds.filter(
-        (id) => id !== terminalWithOperatingHours.id,
-      );
+      // The cleanup helper will handle this automatically
     });
 
     test('should retrieve a terminal by ID', async () => {
@@ -252,7 +241,7 @@ describe.skip('Terminals Controller', () => {
         {
           name: 'Terminal East',
           address: '789 East Street',
-          cityId: cityId,
+          cityId: testCityId,
           latitude: 19.4226,
           longitude: -99.1432,
           code: 'TERM-EAST',
@@ -261,7 +250,7 @@ describe.skip('Terminals Controller', () => {
         {
           name: 'Terminal West',
           address: '101 West Avenue',
-          cityId: cityId,
+          cityId: testCityId,
           latitude: 19.4426,
           longitude: -99.1232,
           code: 'TERM-WEST',
@@ -272,7 +261,7 @@ describe.skip('Terminals Controller', () => {
       // Create the extra terminals
       for (const terminal of extraTerminals) {
         const created = await createTerminal(terminal);
-        additionalTerminalIds.push(created.id);
+        terminalCleanup.track(created.id);
 
         // Verify each created terminal has t-prefixed slug
         expect(created.slug).toMatch(/^t-/);
@@ -333,7 +322,7 @@ describe.skip('Terminals Controller', () => {
       const terminalToDelete = await createTerminal({
         name: 'Terminal To Delete',
         address: '321 Delete Street',
-        cityId: cityId,
+        cityId: testCityId,
         latitude: 19.4326,
         longitude: -99.1332,
         code: 'TERM-DELETE',
@@ -370,7 +359,7 @@ describe.skip('Terminals Controller', () => {
         const incompleteData = {
           name: 'Incomplete Terminal',
           // Missing address
-          cityId,
+          cityId: testCityId,
           // Missing coordinates
           code: 'INCOMPLETE',
           active: true,
@@ -390,7 +379,7 @@ describe.skip('Terminals Controller', () => {
         await createTerminal({
           name: 'Terminal With Invalid Hours',
           address: '123 Invalid Hours Street',
-          cityId: cityId,
+          cityId: testCityId,
           latitude: 19.4326,
           longitude: -99.1332,
           code: 'TERM-INVALID',
@@ -412,7 +401,7 @@ describe.skip('Terminals Controller', () => {
         await createTerminal({
           name: 'Duplicate Code Terminal',
           address: '123 Duplicate Code Street',
-          cityId: cityId,
+          cityId: testCityId,
           latitude: 19.4326,
           longitude: -99.1332,
           code: testTerminal.code, // Same code as existing terminal
@@ -464,7 +453,7 @@ describe.skip('Terminals Controller', () => {
         await createTerminal({
           name: 'Terminal With Invalid Facilities',
           address: '123 Invalid Facilities Street',
-          cityId: cityId,
+          cityId: testCityId,
           latitude: 19.4326,
           longitude: -99.1332,
           code: 'TERM-INVALID-FAC',
@@ -487,7 +476,7 @@ describe.skip('Terminals Controller', () => {
         {
           name: 'Alpha Terminal',
           address: 'Alpha St',
-          cityId: cityId,
+          cityId: testCityId,
           latitude: 10,
           longitude: 10,
           code: 'ALPHA-T',
@@ -496,7 +485,7 @@ describe.skip('Terminals Controller', () => {
         {
           name: 'Beta Terminal',
           address: 'Beta St',
-          cityId: cityId,
+          cityId: testCityId,
           latitude: 20,
           longitude: 20,
           code: 'BETA-T',
@@ -505,7 +494,7 @@ describe.skip('Terminals Controller', () => {
         {
           name: 'Gamma Terminal',
           address: 'Gamma St',
-          cityId: cityId,
+          cityId: testCityId,
           latitude: 30,
           longitude: 30,
           code: 'GAMMA-T',
@@ -516,7 +505,7 @@ describe.skip('Terminals Controller', () => {
       for (const terminal of terminals) {
         const created = await createTerminal(terminal);
         testTerminals.push(created.id);
-        additionalTerminalIds.push(created.id);
+        terminalCleanup.track(created.id);
       }
     });
 
@@ -569,11 +558,11 @@ describe.skip('Terminals Controller', () => {
 
     test('should filter terminals by cityId', async () => {
       const response = await listTerminals({
-        filters: { cityId },
+        filters: { cityId: testCityId },
       });
 
       expect(
-        response.terminals.every((t: Terminal) => t.cityId === cityId),
+        response.terminals.every((t: Terminal) => t.cityId === testCityId),
       ).toBe(true);
     });
 
@@ -605,7 +594,7 @@ describe.skip('Terminals Controller', () => {
         {
           name: 'Same Status A',
           address: 'SSA St',
-          cityId: cityId,
+          cityId: testCityId,
           latitude: 1,
           longitude: 1,
           code: 'SSA-T',
@@ -614,7 +603,7 @@ describe.skip('Terminals Controller', () => {
         {
           name: 'Same Status B',
           address: 'SSB St',
-          cityId: cityId,
+          cityId: testCityId,
           latitude: 2,
           longitude: 2,
           code: 'SSB-T',
@@ -628,7 +617,7 @@ describe.skip('Terminals Controller', () => {
         for (const terminal of sameActiveStatusTerminals) {
           const created = await createTerminal(terminal);
           createdTerminals.push(created.id);
-          additionalTerminalIds.push(created.id);
+          terminalCleanup.track(created.id);
         }
 
         const response = await listTerminals({
@@ -662,14 +651,14 @@ describe.skip('Terminals Controller', () => {
       const searchableTerminal = await createTerminal({
         name: 'Searchable Test Terminal',
         address: 'Search St',
-        cityId: cityId,
+        cityId: testCityId,
         latitude: 50,
         longitude: 50,
         code: 'SEARCH-T',
         active: true,
       });
 
-      additionalTerminalIds.push(searchableTerminal.id);
+      terminalCleanup.track(searchableTerminal.id);
 
       try {
         const response = await searchTerminals({ term: 'Searchable' });
@@ -683,10 +672,7 @@ describe.skip('Terminals Controller', () => {
         ).toBe(true);
       } finally {
         await deleteTerminal({ id: searchableTerminal.id });
-        // Opción 1: Remover del array tras eliminar
-        additionalTerminalIds = additionalTerminalIds.filter(
-          (id) => id !== searchableTerminal.id,
-        );
+        // The cleanup helper will handle this automatically
       }
     });
 
@@ -716,9 +702,9 @@ describe.skip('Terminals Controller', () => {
 
       // Verify the city data is loaded
       expect(terminalWithCity.city).toBeDefined();
-      expect(terminalWithCity.city.id).toBe(cityId);
-      expect(terminalWithCity.city.name).toBe('Test City for Terminals');
-      expect(terminalWithCity.city.stateId).toBe(stateId);
+      expect(terminalWithCity.city.id).toBe(testCityId);
+      expect(terminalWithCity.city.name).toContain('Test City for Terminals');
+      expect(terminalWithCity.city.stateId).toBe(testStateId);
     });
 
     test('should retrieve terminals with cities using listTerminals', async () => {
@@ -741,8 +727,8 @@ describe.skip('Terminals Controller', () => {
         // Type assertion since we know this is a TerminalWithCity
         const terminalWithCity = foundTerminal as TerminalWithCity;
         expect(terminalWithCity.city).toBeDefined();
-        expect(terminalWithCity.city.id).toBe(cityId);
-        expect(terminalWithCity.city.name).toBe('Test City for Terminals');
+        expect(terminalWithCity.city.id).toBe(testCityId);
+        expect(terminalWithCity.city.name).toContain('Test City for Terminals');
       }
     });
 
@@ -768,8 +754,8 @@ describe.skip('Terminals Controller', () => {
       if (foundTerminal) {
         // Verify city data is loaded for the terminal
         expect(foundTerminal.city).toBeDefined();
-        expect(foundTerminal.city.id).toBe(cityId);
-        expect(foundTerminal.city.name).toBe('Test City for Terminals');
+        expect(foundTerminal.city.id).toBe(testCityId);
+        expect(foundTerminal.city.name).toContain('Test City for Terminals');
       }
     });
   });

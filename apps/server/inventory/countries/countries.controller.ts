@@ -48,9 +48,7 @@ export const getCountry = api(
 export const listCountries = api(
   { expose: true, method: 'POST', path: '/countries/list/all' },
   async (params: ListCountriesQueryParams): Promise<ListCountriesResult> => {
-    const countries = params.searchTerm
-      ? await countryRepository.search(params.searchTerm)
-      : await countryRepository.findAll(params);
+    const countries = await countryRepository.findAll(params);
     return {
       data: countries,
     };
@@ -68,10 +66,7 @@ export const listCountriesPaginated = api(
   async (
     params: PaginatedListCountriesQueryParams,
   ): Promise<PaginatedListCountriesResult> => {
-    const countries = params.searchTerm
-      ? await countryRepository.searchPaginated(params.searchTerm, params)
-      : await countryRepository.findAllPaginated(params);
-    return countries;
+    return await countryRepository.findAllPaginated(params);
   },
 );
 

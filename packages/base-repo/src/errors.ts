@@ -93,3 +93,15 @@ export class ForeignKeyError extends Error {
     this.referenceTable = referenceTable;
   }
 }
+
+/**
+ * Error thrown when trying to use soft delete operations on repositories not configured for soft delete
+ */
+export class SoftDeleteNotConfiguredError extends Error {
+  constructor(operation: string) {
+    super(
+      `${operation} operation requires softDeleteEnabled: true in repository config`,
+    );
+    this.name = 'SoftDeleteNotConfiguredError';
+  }
+}

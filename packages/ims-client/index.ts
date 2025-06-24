@@ -6833,6 +6833,11 @@ export namespace countries {
          * Timestamp when the country record was last updated
          */
         updatedAt: string | null
+
+        /**
+         * Timestamp when the country record was soft deleted (null if not deleted)
+         */
+        deletedAt: string | null
     }
 
     export interface CreateCountryPayload {
@@ -6857,7 +6862,7 @@ export namespace countries {
 
     export interface ListCountriesQueryParams {
         orderBy?: {
-            field: "id" | "name" | "active" | "code" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "active" | "code" | "createdAt" | "updatedAt" | "deletedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -6867,6 +6872,7 @@ export namespace countries {
             code?: string
             createdAt?: string | null
             updatedAt?: string | null
+            deletedAt?: string | null
         }
         searchTerm?: string
     }
@@ -6879,7 +6885,7 @@ export namespace countries {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "active" | "code" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "active" | "code" | "createdAt" | "updatedAt" | "deletedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -6889,6 +6895,7 @@ export namespace countries {
             code?: string
             createdAt?: string | null
             updatedAt?: string | null
+            deletedAt?: string | null
         }
         searchTerm?: string
     }

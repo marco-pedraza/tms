@@ -3,8 +3,8 @@
  * @description A module providing generic CRUD operations and utility functions for database entities
  */
 
-import { NotFoundError } from './errors';
-import { eq, and, count, not, or, SQL, inArray } from 'drizzle-orm';
+import { NotFoundError, SoftDeleteNotConfiguredError } from './errors';
+import { eq, and, count, not, or, SQL, inArray, sql } from 'drizzle-orm';
 import type {
   PaginationMeta,
   TableWithId,
@@ -27,9 +27,8 @@ import {
   applyOrdering,
   applySimpleFilters,
   applySearchConditions,
-  createSearchConditions,
-  createFilterConditions,
   createOrderByExpressions,
+  applySoftDeleteFilter,
 } from './query-utils';
 
 /**
@@ -57,6 +56,17 @@ export const createBaseRepository = <
 ): BaseRepository<T, CreateT, UpdateT, TTable> => {
   type TableInsert = TTable extends { $inferInsert: infer U } ? U : never;
 
+  const isSoftDeleteEnabled = config?.softDeleteEnabled ?? false;
+
+  /**
+   * Helper para validar que soft delete esté habilitado
+   */
+  const requiresSoftDelete = (operation: string) => {
+    if (!isSoftDeleteEnabled) {
+      throw new SoftDeleteNotConfiguredError(operation);
+    }
+  };
+
   /**
    * Helper function to apply search or filter conditions to a query
    * @param query - The query to apply conditions to
@@ -69,16 +79,50 @@ export const createBaseRepository = <
     searchTerm?: string,
     filters?: Filters<T>,
   ): Q => {
+    // Early return if no search term and no filters
+    const trimmedSearchTerm = searchTerm?.trim();
+    const hasFilters = filters && Object.keys(filters).length > 0;
+
+    if (!trimmedSearchTerm && !hasFilters) {
+      return query;
+    }
+
     // Apply search conditions if searchTerm is provided and not empty
-    if (searchTerm?.trim()) {
+    if (trimmedSearchTerm) {
       if (!config?.searchableFields?.length) {
         throw new Error(`Searchable fields not defined for ${entityName}`);
       }
-      return applySearchConditions(query, searchTerm, config, table, filters);
+      return applySearchConditions(
+        query,
+        trimmedSearchTerm,
+        config,
+        table,
+        filters,
+      );
     } else {
       // Apply simple filters if no search term
       return applySimpleFilters(query, table, filters);
     }
+  };
+
+  /**
+   * Applies both search/filters and soft delete filter efficiently
+   * Only applies soft delete filter if enabled
+   */
+  const applyAllFilters = <Q extends object>(
+    query: Q,
+    searchTerm?: string,
+    filters?: Filters<T>,
+  ): Q => {
+    // Apply search or filters first
+    let filteredQuery = applySearchOrFilters(query, searchTerm, filters);
+
+    // Only apply soft delete filter if enabled
+    if (isSoftDeleteEnabled) {
+      filteredQuery = applySoftDeleteFilter(filteredQuery, table, true);
+    }
+
+    return filteredQuery;
   };
 
   /**
@@ -90,7 +134,12 @@ export const createBaseRepository = <
   const findOne = async (id: number): Promise<T> => {
     try {
       const query = db.select().from(table);
-      const finalQuery = query.where(eq(table.id, id)).limit(1);
+      const findOneQuery = query.where(eq(table.id, id)).limit(1);
+      const finalQuery = applySoftDeleteFilter(
+        findOneQuery,
+        table,
+        isSoftDeleteEnabled,
+      );
       const [entity] = await finalQuery;
 
       if (!entity) {
@@ -119,7 +168,9 @@ export const createBaseRepository = <
       const { filters, orderBy, searchTerm } = options ?? {};
       let query = db.select().from(table);
 
-      query = applySearchOrFilters(query, searchTerm, filters);
+      // Apply all filters efficiently
+      query = applyAllFilters(query, searchTerm, filters);
+
       query = applyOrdering(query, orderBy, table);
 
       const entities = await query;
@@ -145,6 +196,7 @@ export const createBaseRepository = <
   ): Promise<T[]> => {
     try {
       let query = db.select().from(table);
+      query = applySoftDeleteFilter(query, table, isSoftDeleteEnabled);
       // @ts-expect-error - Drizzle query builder method typing
       query = query.where(eq(field, value));
       query = applySimpleFilters(query, table, options?.filters);
@@ -180,14 +232,14 @@ export const createBaseRepository = <
 
       // Count query
       let countQuery = db.select({ count: count() }).from(table);
-      countQuery = applySearchOrFilters(countQuery, searchTerm, filters);
+      countQuery = applyAllFilters(countQuery, searchTerm, filters);
 
       const [countResult] = await countQuery;
       const totalCount = countResult?.count ?? 0;
 
       // Data query
       let dataQuery = db.select().from(table);
-      dataQuery = applySearchOrFilters(dataQuery, searchTerm, filters);
+      dataQuery = applyAllFilters(dataQuery, searchTerm, filters);
 
       dataQuery = applyOrdering(dataQuery, orderBy, table);
       const finalDataQuery = dataQuery.limit(pageSize).offset(offset);
@@ -251,7 +303,7 @@ export const createBaseRepository = <
   };
 
   /**
-   * Deletes an entity by ID
+   * Deletes an entity by ID (soft delete if enabled, hard delete otherwise)
    * @param {number} id - The ID of the entity to delete
    * @throws {NotFoundError} If the entity is not found
    * @returns {Promise<T>} The deleted entity
@@ -260,12 +312,22 @@ export const createBaseRepository = <
     try {
       await findOne(id);
 
-      const [entity] = await db
-        .delete(table)
-        .where(eq(table.id, id))
-        .returning();
-
-      return entity as T;
+      if (isSoftDeleteEnabled) {
+        // Soft delete: set deletedAt to current timestamp
+        const [entity] = await db
+          .update(table)
+          .set({ deletedAt: sql`now()` } as TableInsert)
+          .where(eq(table.id, id))
+          .returning();
+        return entity as T;
+      } else {
+        // Hard delete: remove from database
+        const [entity] = await db
+          .delete(table)
+          .where(eq(table.id, id))
+          .returning();
+        return entity as T;
+      }
     } catch (error) {
       if (error instanceof Error && isApplicationError(error)) {
         throw error; // Rethrow application errors
@@ -288,7 +350,7 @@ export const createBaseRepository = <
   };
 
   /**
-   * Deletes multiple entities by their IDs in a single database operation
+   * Deletes multiple entities by their IDs (soft delete if enabled, hard delete otherwise)
    * @param {number[]} ids - Array of entity IDs to delete
    * @returns {Promise<T[]>} Array of deleted entities
    * @throws {NotFoundError} If any of the IDs are invalid or not found
@@ -300,10 +362,14 @@ export const createBaseRepository = <
 
     try {
       // First, verify all entities exist before attempting to delete any
-      const existingEntities = await db
-        .select()
-        .from(table)
-        .where(inArray(table.id, ids));
+      let existingQuery = db.select().from(table).where(inArray(table.id, ids));
+
+      if (isSoftDeleteEnabled) {
+        // For soft delete, only check entities that are not already soft deleted
+        existingQuery = applySoftDeleteFilter(existingQuery, table, true);
+      }
+
+      const existingEntities = await existingQuery;
 
       if (existingEntities.length !== ids.length) {
         const existingIds = (
@@ -315,13 +381,22 @@ export const createBaseRepository = <
         );
       }
 
-      // All entities exist, now delete them
-      const result = await db
-        .delete(table)
-        .where(inArray(table.id, ids))
-        .returning();
-
-      return result as unknown as T[];
+      if (isSoftDeleteEnabled) {
+        // Soft delete: set deletedAt to current timestamp
+        const result = await db
+          .update(table)
+          .set({ deletedAt: sql`now()` } as TableInsert)
+          .where(inArray(table.id, ids))
+          .returning();
+        return result as unknown as T[];
+      } else {
+        // Hard delete: remove from database
+        const result = await db
+          .delete(table)
+          .where(inArray(table.id, ids))
+          .returning();
+        return result as unknown as T[];
+      }
     } catch (error) {
       if (error instanceof Error && isApplicationError(error)) {
         throw error; // Rethrow application errors
@@ -341,7 +416,13 @@ export const createBaseRepository = <
   const findBy = async (field: PgColumn, value: unknown): Promise<T | null> => {
     try {
       const query = db.select().from(table);
-      const [entity] = await query.where(eq(field, value)).limit(1);
+      const findByQuery = query.where(eq(field, value)).limit(1);
+      const finalQuery = applySoftDeleteFilter(
+        findByQuery,
+        table,
+        isSoftDeleteEnabled,
+      );
+      const [entity] = await finalQuery;
       return entity ? (entity as T) : null;
     } catch (error) {
       throw handlePostgresError(error, entityName, 'findBy');
@@ -367,42 +448,26 @@ export const createBaseRepository = <
       const { page = 1, pageSize = 10, orderBy, filters } = query ?? {};
       const offset = (page - 1) * pageSize;
 
-      // Prepare base conditions including the main field condition
-      const baseConditions = [eq(field, value)];
-
-      // Add filter conditions if there are any
-      if (filters && Object.keys(filters).length > 0) {
-        const filterConditions = Object.entries(filters).map(
-          ([filterField, filterValue]) => {
-            const column = (table as unknown as Record<string, PgColumn>)[
-              filterField
-            ];
-            if (!column) {
-              throw new Error(
-                `Invalid filter field: ${filterField}. Field does not exist in the table.`,
-              );
-            }
-            return eq(column, filterValue);
-          },
-        );
-
-        baseConditions.push(...filterConditions);
-      }
-
-      // For count query, apply all conditions at once
-      const countQuery = db
-        .select({ count: count() })
-        .from(table)
-        .where(and(...baseConditions));
+      // Count query - apply WHERE first, then soft delete filter
+      let countQuery = db.select({ count: count() }).from(table);
+      // @ts-expect-error - Drizzle query builder method typing
+      countQuery = countQuery.where(eq(field, value));
+      countQuery = applySimpleFilters(countQuery, table, filters);
+      countQuery = applySoftDeleteFilter(
+        countQuery,
+        table,
+        isSoftDeleteEnabled,
+      );
 
       const [countResult] = await countQuery;
       const totalCount = countResult?.count ?? 0;
 
-      // For data query, apply all conditions at once
-      let dataQuery = db
-        .select()
-        .from(table)
-        .where(and(...baseConditions));
+      // Data query - apply WHERE first, then soft delete filter
+      let dataQuery = db.select().from(table);
+      // @ts-expect-error - Drizzle query builder method typing
+      dataQuery = dataQuery.where(eq(field, value));
+      dataQuery = applySimpleFilters(dataQuery, table, filters);
+      dataQuery = applySoftDeleteFilter(dataQuery, table, isSoftDeleteEnabled);
 
       dataQuery = applyOrdering(dataQuery, orderBy, table);
       const finalDataQuery = dataQuery.limit(pageSize).offset(offset);
@@ -436,10 +501,14 @@ export const createBaseRepository = <
         ? and(eq(field, value), not(eq(table.id, excludeId)))
         : eq(field, value);
 
-      const result = await db
-        .select({ count: count() })
-        .from(table)
-        .where(query);
+      const baseQuery = db.select({ count: count() }).from(table).where(query);
+
+      const finalQuery = applySoftDeleteFilter(
+        baseQuery,
+        table,
+        isSoftDeleteEnabled,
+      );
+      const result = await finalQuery;
 
       return Number(result[0]?.count ?? 0) > 0;
     } catch (error) {
@@ -461,7 +530,7 @@ export const createBaseRepository = <
       const { filters, searchTerm } = options ?? {};
       let countQuery = db.select({ count: count() }).from(table);
 
-      countQuery = applySearchOrFilters(countQuery, searchTerm, filters);
+      countQuery = applyAllFilters(countQuery, searchTerm, filters);
 
       const [countResult] = await countQuery;
       return Number(countResult?.count ?? 0);
@@ -492,7 +561,12 @@ export const createBaseRepository = <
         ? and(or(...conditions), not(eq(table.id, excludeId)))
         : or(...conditions);
 
-      const [existing] = await db.select().from(table).where(query).limit(1);
+      let baseQuery = db.select().from(table).where(query);
+
+      // Apply soft delete filter to exclude soft-deleted records from uniqueness checks
+      baseQuery = applySoftDeleteFilter(baseQuery, table, isSoftDeleteEnabled);
+
+      const [existing] = await baseQuery.limit(1);
 
       if (!existing) {
         return [];
@@ -516,6 +590,7 @@ export const createBaseRepository = <
    * @param {TableWithId} relatedTable - The related table to check
    * @param {number} relationId - The ID of the related entity
    * @param {string} relationName - The name of the related entity
+   * @param {boolean} relatedTableHasSoftDelete - Whether the related table has soft delete enabled
    * @throws {NotFoundError} If the related entity is not found
    * @returns {Promise<void>}
    */
@@ -523,13 +598,20 @@ export const createBaseRepository = <
     relatedTable: TableWithId,
     relationId: number,
     relationName: string = 'Related entity',
+    relatedTableHasSoftDelete = false,
   ): Promise<void> => {
     try {
-      const [entity] = await db
+      let query = db
         .select()
         .from(relatedTable)
-        .where(eq(relatedTable.id, relationId))
-        .limit(1);
+        .where(eq(relatedTable.id, relationId));
+
+      // Apply soft delete filter if the related table has soft delete enabled
+      if (relatedTableHasSoftDelete) {
+        query = applySoftDeleteFilter(query, relatedTable, true);
+      }
+
+      const [entity] = await query.limit(1);
 
       if (!entity) {
         throw new NotFoundError(
@@ -704,7 +786,6 @@ export const createBaseRepository = <
   } => {
     try {
       const { filters, orderBy, searchTerm } = params ?? {};
-      let baseWhere: SQL | undefined;
 
       // Validate that searchable fields are configured when searchTerm is provided
       if (
@@ -714,14 +795,14 @@ export const createBaseRepository = <
         throw new Error(`Searchable fields not defined for ${entityName}`);
       }
 
-      // Generate SQL conditions from utility functions
-      if (searchTerm?.trim() && config?.searchableFields?.length) {
-        // If we have a search term, use the search conditions (which can include filters)
-        baseWhere = createSearchConditions(searchTerm, config, table, filters);
-      } else if (filters && Object.keys(filters).length > 0) {
-        // If we only have filters, use the filter conditions
-        baseWhere = createFilterConditions(table, filters);
-      }
+      // Use a dummy query to build conditions and extract the WHERE clause
+      let dummyQuery = db.select().from(table);
+      dummyQuery = applyAllFilters(dummyQuery, searchTerm, filters);
+
+      // Extract the WHERE condition from the built query
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const queryConfig = (dummyQuery as any).config;
+      const baseWhere = queryConfig?.where;
 
       // Generate order by expressions if needed
       const baseOrderBy = orderBy?.length
@@ -768,6 +849,72 @@ export const createBaseRepository = <
       config,
     );
 
+  /**
+   * Permanently deletes an entity by ID (hard delete)
+   * @param {number} id - The ID of the entity to permanently delete
+   * @throws {SoftDeleteNotConfiguredError} If soft delete is not enabled
+   * @throws {NotFoundError} If the entity is not found
+   * @returns {Promise<T>} The permanently deleted entity
+   */
+  const forceDelete = async (id: number): Promise<T> => {
+    requiresSoftDelete('forceDelete');
+
+    try {
+      // Find entity without soft delete filter (can be already soft deleted)
+      const [entity] = await db
+        .select()
+        .from(table)
+        .where(eq(table.id, id))
+        .limit(1);
+
+      if (!entity) {
+        throw new NotFoundError(`${entityName} with id ${id} not found`);
+      }
+
+      const [deletedEntity] = await db
+        .delete(table)
+        .where(eq(table.id, id))
+        .returning();
+
+      return deletedEntity as T;
+    } catch (error) {
+      if (error instanceof Error && isApplicationError(error)) {
+        throw error;
+      }
+      throw handlePostgresError(error, entityName, 'forceDelete');
+    }
+  };
+
+  /**
+   * Restores a soft deleted entity by ID
+   * @param {number} id - The ID of the entity to restore
+   * @throws {SoftDeleteNotConfiguredError} If soft delete is not enabled
+   * @throws {NotFoundError} If the entity is not found in deleted records
+   * @returns {Promise<T>} The restored entity
+   */
+  const restore = async (id: number): Promise<T> => {
+    requiresSoftDelete('restore');
+
+    try {
+      const [restoredEntity] = await db
+        .update(table)
+        .set({ deletedAt: null } as TableInsert)
+        .where(eq(table.id, id))
+        .returning();
+
+      if (!restoredEntity) {
+        throw new NotFoundError(`${entityName} with id ${id} not found`);
+      }
+
+      return restoredEntity as T;
+    } catch (error) {
+      if (error instanceof Error && isApplicationError(error)) {
+        throw error;
+      }
+      throw handlePostgresError(error, entityName, 'restore');
+    }
+  };
+
   const repository: BaseRepository<T, CreateT, UpdateT, TTable> = {
     findOne,
     findAll,
@@ -778,6 +925,8 @@ export const createBaseRepository = <
     delete: deleteOne,
     deleteAll,
     deleteMany,
+    forceDelete,
+    restore,
     findBy,
     findByPaginated,
     existsBy,

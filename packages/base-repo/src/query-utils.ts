@@ -1,5 +1,5 @@
 import { asc, desc } from 'drizzle-orm';
-import { eq, and, or, ilike, SQL } from 'drizzle-orm';
+import { eq, and, or, ilike, SQL, isNull } from 'drizzle-orm';
 import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { OrderBy, PaginationMeta, Filters, RepositoryConfig } from './types';
 
@@ -229,6 +229,53 @@ export const applySearchConditions = <Q extends object, T = unknown>(
   const combinedConditions = existingWhere
     ? and(existingWhere, searchCondition)
     : searchCondition;
+
+  return (query as Record<string, (...args: unknown[]) => Q>).where(
+    combinedConditions,
+  );
+};
+
+/**
+ * Applies soft delete filter to a query if soft delete is enabled
+ * @param query - The query to apply soft delete filter to
+ * @param table - The table to apply soft delete filter to
+ * @param softDeleteEnabled - Whether soft delete is enabled
+ * @returns The query with soft delete filter applied
+ *
+ * @example
+ * const query = db.select().from(users);
+ * const filteredQuery = applySoftDeleteFilter(query, users, true);
+ */
+export const applySoftDeleteFilter = <Q extends object>(
+  query: Q,
+  table: PgTable,
+  softDeleteEnabled: boolean,
+): Q => {
+  // Early return for performance - avoid any processing if soft delete is disabled
+  if (!softDeleteEnabled) {
+    return query;
+  }
+
+  if (!('where' in query)) {
+    return query;
+  }
+
+  const deletedAtColumn = (table as unknown as Record<string, PgColumn>)
+    .deletedAt;
+  if (!deletedAtColumn) {
+    throw new Error(
+      'deletedAt column not found in table. Ensure the table has a deletedAt column for soft delete functionality.',
+    );
+  }
+
+  const softDeleteCondition = isNull(deletedAtColumn);
+
+  // Check if the query already has a WHERE condition
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const existingWhere = (query as any).config?.where;
+  const combinedConditions = existingWhere
+    ? and(existingWhere, softDeleteCondition)
+    : softDeleteCondition;
 
   return (query as Record<string, (...args: unknown[]) => Q>).where(
     combinedConditions,

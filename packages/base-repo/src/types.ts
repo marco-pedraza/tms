@@ -75,6 +75,8 @@ export type SearchableFields = PgColumn[];
 export interface RepositoryConfig {
   /** Fields that can be searched with search and searchPaginated methods */
   searchableFields?: SearchableFields;
+  /** Enable soft delete functionality using 'deletedAt' column */
+  softDeleteEnabled?: boolean;
 }
 
 /**
@@ -177,6 +179,8 @@ export interface BaseRepository<
   delete(id: number): Promise<T>;
   deleteAll(): Promise<number>;
   deleteMany(ids: number[]): Promise<T[]>;
+  forceDelete(id: number): Promise<T>;
+  restore(id: number): Promise<T>;
   findBy<K extends keyof T>(field: PgColumn, value: T[K]): Promise<T | null>;
   findByPaginated<K extends keyof T>(
     field: PgColumn,
@@ -200,6 +204,7 @@ export interface BaseRepository<
     relatedTable: TableWithId,
     relationId: number,
     relationName?: string,
+    relatedTableHasSoftDelete?: boolean,
   ): Promise<void>;
   transaction<R>(
     callback: (

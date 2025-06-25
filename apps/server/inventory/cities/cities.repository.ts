@@ -1,4 +1,3 @@
-import { inArray } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { PaginationMeta } from '../../shared/types';
 import { createSlug } from '../../shared/utils';
@@ -25,6 +24,7 @@ export const createCityRepository = () => {
     typeof cities
   >(db, cities, 'City', {
     searchableFields: [cities.name, cities.slug],
+    softDeleteEnabled: true,
   });
 
   /**
@@ -61,7 +61,8 @@ export const createCityRepository = () => {
     id: number,
   ): Promise<CityWithRelations> => {
     const city = await db.query.cities.findFirst({
-      where: (cities, { eq }) => eq(cities.id, id),
+      where: (cities, { eq, and, isNull }) =>
+        and(eq(cities.id, id), isNull(cities.deletedAt)),
       with: {
         state: {
           with: {
@@ -106,7 +107,8 @@ export const createCityRepository = () => {
     const ids = citiesResult.map((city) => city.id);
 
     const citiesWithRelations = await db.query.cities.findMany({
-      where: inArray(cities.id, ids),
+      where: (cities, { inArray, and, isNull }) =>
+        and(inArray(cities.id, ids), isNull(cities.deletedAt)),
       orderBy: baseOrderBy,
       with: {
         state: {

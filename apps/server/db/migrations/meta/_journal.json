@@ -148,6 +148,13 @@
       "when": 1750799801582,
       "tag": "20250624211641_creates_nodes_and_installations_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1750877743116,
+      "tag": "20250625185543_add_softdelete_support_for_geographycal_tables",
+      "breakpoints": true
     }
   ]
 }

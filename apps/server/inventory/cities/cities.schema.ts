@@ -7,8 +7,10 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { isNull } from 'drizzle-orm';
 import { states } from '../states/states.schema';
 
 export const cities = pgTable(
@@ -25,9 +27,14 @@ export const cities = pgTable(
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
-    slug: text('slug').notNull().unique(),
+    slug: text('slug').notNull(),
+    deletedAt: timestamp('deleted_at'),
   },
-  (table) => [index().on(table.name), index().on(table.stateId)],
+  (table) => [
+    index().on(table.stateId),
+    index().on(table.deletedAt),
+    uniqueIndex().on(table.slug).where(isNull(table.deletedAt)),
+  ],
 );
 
 export const citiesRelations = relations(cities, ({ one }) => ({

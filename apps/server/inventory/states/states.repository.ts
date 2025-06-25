@@ -19,6 +19,7 @@ export const createStateRepository = () => {
     typeof states
   >(db, states, 'State', {
     searchableFields: [states.name, states.code],
+    softDeleteEnabled: true,
   });
 
   return baseRepository;

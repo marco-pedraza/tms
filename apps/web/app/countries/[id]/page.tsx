@@ -21,7 +21,7 @@ export default function CountryDetailsPage() {
     countryId,
     enabled: isValidId,
   });
-  const { deleteCountry } = useCountryMutations();
+  const { delete: deleteCountry } = useCountryMutations();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleDelete = () => {

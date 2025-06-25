@@ -18,7 +18,7 @@ export default function EditCountryPage() {
     countryId,
     enabled: isValidId,
   });
-  const { updateCountry } = useCountryMutations();
+  const { update: updateCountry } = useCountryMutations();
 
   const handleSubmit = (values: CountryFormValues) =>
     updateCountry.mutateWithToast({ id: countryId, values });

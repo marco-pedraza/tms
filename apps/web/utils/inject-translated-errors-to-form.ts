@@ -6,11 +6,19 @@ import {
 } from '@/services/error-handler';
 import { UseTranslationsResult } from '@/types/translations';
 
-export default function injectTranslatedErrorsToForm(
-  form: ReturnType<typeof useForm>,
-  error: unknown,
-  tCommon: UseTranslationsResult,
-) {
+interface InjectTranslatedErrorsToFormProps {
+  form: ReturnType<typeof useForm>;
+  error: unknown;
+  tCommon: UseTranslationsResult;
+  entity: string;
+}
+
+export default function injectTranslatedErrorsToForm({
+  form,
+  error,
+  tCommon,
+  entity,
+}: InjectTranslatedErrorsToFormProps) {
   if (!isAPIError(error)) return;
   if (!error.details || Object.keys(error.details).length === 0) return;
   Object.keys(error.details).forEach((key) => {
@@ -22,7 +30,12 @@ export default function injectTranslatedErrorsToForm(
           // Keep this in mind when reusing this function in the future.
           onServer: error.details[key].map((error: ValidationErrorMetadata) => {
             return {
-              message: getTranslatedValidationError(tCommon, error),
+              message: getTranslatedValidationError({
+                tCommon,
+                error,
+                entity,
+                property: key,
+              }),
               path: [key],
             };
           }),

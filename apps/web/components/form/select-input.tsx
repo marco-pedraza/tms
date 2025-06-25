@@ -50,6 +50,15 @@ export default function SelectInput({
           ))}
         </SelectContent>
       </Select>
+      {hasFieldErrors(field) && (
+        <>
+          {field.state.meta.errors.map((error) => (
+            <p key={error.message} className="text-sm text-red-500">
+              {error.message}
+            </p>
+          ))}
+        </>
+      )}
     </div>
   );
 }

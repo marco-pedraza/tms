@@ -26,7 +26,7 @@ export default function StateDetailsPage() {
     countryId: state?.countryId ?? -1,
     enabled: !!state?.countryId,
   });
-  const { deleteState } = useStateMutations();
+  const { delete: deleteState } = useStateMutations();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleDelete = () => {

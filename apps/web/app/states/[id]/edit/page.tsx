@@ -11,13 +11,12 @@ import useStateMutations from '@/states/hooks/use-state-mutations';
 
 export default function EditStatePage() {
   const tStates = useTranslations('states');
-  const tCommon = useTranslations('common');
   const { stateId, isValidId } = useStateDetailsParams();
   const { data, isLoading } = useQueryState({
     stateId,
     enabled: isValidId,
   });
-  const { updateState } = useStateMutations();
+  const { update: updateState } = useStateMutations();
 
   const handleSubmit = (values: StateFormValues) => {
     return updateState.mutateWithToast({ id: stateId, values });
@@ -38,11 +37,7 @@ export default function EditStatePage() {
         description={`${data?.name} (${data?.code})`}
         backHref={routes.states.getDetailsRoute(stateId.toString())}
       />
-      <StateForm
-        defaultValues={data}
-        onSubmit={handleSubmit}
-        submitButtonText={tCommon('actions.update')}
-      />
+      <StateForm defaultValues={data} onSubmit={handleSubmit} />
     </div>
   );
 }

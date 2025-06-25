@@ -4,7 +4,7 @@
   "scripts": {
     "build": "turbo run build",
     "build:base-repo": "cd packages/base-repo && npm run build",
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --filter=ims-server --filter=web",
     "lint": "turbo run lint",
     "format:check": "turbo run format:check",
     "check-types": "turbo run check-types",

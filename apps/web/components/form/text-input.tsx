@@ -8,9 +8,14 @@ type OmittedInputProps = 'id' | 'name' | 'value' | 'onChange' | 'aria-invalid';
 interface TextInputProps
   extends Omit<React.ComponentProps<'input'>, OmittedInputProps> {
   label: string;
+  description?: string;
 }
 
-export default function TextInput({ label, ...inputProps }: TextInputProps) {
+export default function TextInput({
+  label,
+  description,
+  ...inputProps
+}: TextInputProps) {
   const field = useFieldContext<string>();
   return (
     <div className="space-y-2">
@@ -23,6 +28,9 @@ export default function TextInput({ label, ...inputProps }: TextInputProps) {
         aria-invalid={hasFieldErrors(field)}
         {...inputProps}
       />
+      {description && (
+        <p className="text-sm text-muted-foreground">{description}</p>
+      )}
       {hasFieldErrors(field) && (
         <>
           {field.state.meta.errors.map((error) => (

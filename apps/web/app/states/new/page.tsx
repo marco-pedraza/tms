@@ -8,8 +8,7 @@ import useStateMutations from '@/states/hooks/use-state-mutations';
 
 export default function NewStatePage() {
   const t = useTranslations('states');
-  const tCommon = useTranslations('common');
-  const { createState } = useStateMutations();
+  const { create: createState } = useStateMutations();
 
   return (
     <div>
@@ -18,10 +17,7 @@ export default function NewStatePage() {
         backHref={routes.states.index}
         backLabel={t('actions.backToList')}
       />
-      <StateForm
-        onSubmit={createState.mutateWithToast}
-        submitButtonText={tCommon('actions.create')}
-      />
+      <StateForm onSubmit={createState.mutateWithToast} />
     </div>
   );
 }

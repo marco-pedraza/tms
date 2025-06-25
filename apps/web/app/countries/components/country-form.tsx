@@ -48,8 +48,13 @@ export default function CountryForm({
       try {
         await onSubmit(values.value);
       } catch (error: unknown) {
-        // @ts-expect-error - form param is not typed correctly.
-        injectTranslatedErrorsToForm(form, error, tCommon);
+        injectTranslatedErrorsToForm({
+          // @ts-expect-error - form param is not typed correctly.
+          form,
+          entity: 'country',
+          error,
+          tCommon,
+        });
       }
     },
   });

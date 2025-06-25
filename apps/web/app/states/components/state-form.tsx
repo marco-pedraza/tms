@@ -1,66 +1,82 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
-import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import type { countries } from '@repo/ims-client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import FormFooter from '@/components/form/form-footer';
+import FormLayout from '@/components/form/form-layout';
 import useQueryAllCountries from '@/countries/hooks/use-query-all-countries';
-import { codeSchema, nameSchema } from '@/schemas/common';
-import hasFieldErrors from '@/utils/has-field-errors';
+import useForm from '@/hooks/use-form';
+import { UseTranslationsResult } from '@/types/translations';
+import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
 type Country = countries.Country;
 
-const editStateSchema = z.object({
-  name: nameSchema,
-  code: codeSchema(2, 3),
-  countryId: z.number().min(1),
-  active: z.boolean(),
-});
+const createStateFormSchema = (tCommon: UseTranslationsResult) =>
+  z.object({
+    name: z.string().min(1, { message: tCommon('validations.required') }),
+    code: z
+      .string()
+      .min(2, {
+        message: tCommon('validations.code.length-range', { min: 2, max: 3 }),
+      })
+      .max(3)
+      .regex(/^[A-Z]+$/, { message: tCommon('validations.code.uppercase') }),
+    countryId: z
+      .string()
+      .min(1, tCommon('validations.required'))
+      .transform((val) => parseInt(val)),
+    active: z.boolean(),
+  });
 
-export type StateFormValues = z.infer<typeof editStateSchema>;
+export type StateFormValues = z.output<
+  ReturnType<typeof createStateFormSchema>
+>;
+type StateFormRawValues = z.input<ReturnType<typeof createStateFormSchema>>;
 
 interface StateFormProps {
   defaultValues?: StateFormValues;
   onSubmit: (values: StateFormValues) => Promise<unknown>;
-  submitButtonText?: string;
 }
 
-export default function StateForm({
-  defaultValues,
-  onSubmit,
-  submitButtonText,
-}: StateFormProps) {
+export default function StateForm({ defaultValues, onSubmit }: StateFormProps) {
   const tStates = useTranslations('states');
   const tCommon = useTranslations('common');
-  const { data: countriesData } = useQueryAllCountries();
-
+  const stateFormSchema = createStateFormSchema(tCommon);
+  const rawDefaultValues: StateFormRawValues | undefined = defaultValues
+    ? {
+        ...defaultValues,
+        countryId: defaultValues.countryId?.toString() || '',
+      }
+    : undefined;
   const form = useForm({
-    defaultValues: defaultValues ?? {
+    defaultValues: rawDefaultValues ?? {
       name: '',
       code: '',
-      countryId: 0,
-      active: false,
+      active: true,
+      countryId: '',
     },
     validators: {
-      onChange: editStateSchema,
+      onChange: stateFormSchema,
     },
-    onSubmit: (values) => {
-      onSubmit(values.value);
+    onSubmit: async ({ value }) => {
+      try {
+        const parsed = stateFormSchema.safeParse(value);
+        if (parsed.success) {
+          await onSubmit(parsed.data);
+        }
+      } catch (error: unknown) {
+        injectTranslatedErrorsToForm({
+          // @ts-expect-error - form param is not typed correctly.
+          form,
+          entity: 'state',
+          error,
+          tCommon,
+        });
+      }
     },
   });
+  const { data: countriesData } = useQueryAllCountries();
 
   return (
     <form
@@ -70,105 +86,56 @@ export default function StateForm({
         form.handleSubmit();
       }}
     >
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>{tStates('form.title')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <form.Field name="name">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="name">{tCommon('fields.name')}</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value ?? ''}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={tStates('form.placeholders.name')}
-                />
-              </div>
-            )}
-          </form.Field>
+      <FormLayout title={tStates('form.title')}>
+        <form.AppField name="name">
+          {(field) => (
+            <field.TextInput
+              label={tCommon('fields.name')}
+              placeholder={tStates('form.placeholders.name')}
+            />
+          )}
+        </form.AppField>
 
-          <form.Field name="code">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="code">{tCommon('fields.code')}</Label>
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  value={field.state.value ?? ''}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  placeholder={tStates('form.placeholders.code')}
-                  maxLength={3}
-                  aria-invalid={hasFieldErrors(field)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  {tStates('form.codeHelp')}
-                </p>
-              </div>
-            )}
-          </form.Field>
+        <form.AppField name="code">
+          {(field) => (
+            <field.TextInput
+              label={tCommon('fields.code')}
+              placeholder={tStates('form.placeholders.code')}
+              description={tStates('form.codeHelp')}
+              maxLength={3}
+            />
+          )}
+        </form.AppField>
 
-          <form.Field name="countryId">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="countryId">{tStates('form.country')}</Label>
-                <Select
-                  value={field.state.value?.toString() ?? ''}
-                  onValueChange={(value: string) =>
-                    field.handleChange(parseInt(value, 10))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={tStates('form.placeholders.country')}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countriesData?.data.map((country: Country) => (
-                      <SelectItem
-                        key={country.id}
-                        value={country.id.toString()}
-                      >
-                        {country.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </form.Field>
+        <form.AppField name="countryId">
+          {(field) => (
+            <field.SelectInput
+              label={tStates('form.country')}
+              placeholder={tStates('form.placeholders.country')}
+              items={
+                countriesData?.data.map((country: Country) => ({
+                  id: country.id.toString(),
+                  name: country.name,
+                })) ?? []
+              }
+            />
+          )}
+        </form.AppField>
 
-          <form.Field name="active">
-            {(field) => (
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id={field.name}
-                  checked={field.state.value ?? false}
-                  onCheckedChange={(checked: boolean) =>
-                    field.handleChange(checked)
-                  }
-                />
-                <Label htmlFor={field.name}>{tCommon('fields.active')}</Label>
-              </div>
-            )}
-          </form.Field>
+        <form.AppField name="active">
+          {(field) => <field.SwitchInput label={tCommon('fields.active')} />}
+        </form.AppField>
 
-          <form.Subscribe
-            selector={(state) => [state.canSubmit, state.isSubmitting]}
-          >
-            {([canSubmit, isSubmitting]: [boolean, boolean]) => (
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="submit" disabled={!canSubmit || isSubmitting}>
-                  {isSubmitting && <Loader2 className="animate-spin" />}
-                  {submitButtonText ?? tCommon('actions.create')}
-                </Button>
-              </div>
-            )}
-          </form.Subscribe>
-        </CardContent>
-      </Card>
+        <FormFooter>
+          <form.AppForm>
+            <form.SubmitButton>
+              {defaultValues
+                ? tStates('actions.update')
+                : tStates('actions.create')}
+            </form.SubmitButton>
+          </form.AppForm>
+        </FormFooter>
+      </FormLayout>
     </form>
   );
 }

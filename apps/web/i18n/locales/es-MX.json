@@ -98,14 +98,16 @@
       "required": "Este campo es obligatorio",
       "code": {
         "length": "El código debe contener {length} carácteres",
+        "length-range": "El código debe contener entre {min} y {max} carácteres",
         "uppercase": "El código debe contener solo letras mayúsculas"
       },
       "server": {
-        "duplicate": "Ya existe un {entity} con {property} \"{value}\""
+        "duplicate": "Ya existe un {entity} con {property}: \"{value}\""
       }
     },
     "entities": {
-      "country": "País"
+      "country": "País",
+      "state": "Estado"
     }
   },
   "sidebar": {

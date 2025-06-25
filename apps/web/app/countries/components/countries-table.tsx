@@ -58,7 +58,7 @@ const countriesColumnsFactory = ({
 export default function CountriesTable() {
   const tCommon = useTranslations('common');
   const [deleteId, setDeleteId] = useState<number>();
-  const { deleteCountry } = useCountryMutations();
+  const { delete: deleteCountry } = useCountryMutations();
   const {
     paginationUrlState,
     sortingUrlState,

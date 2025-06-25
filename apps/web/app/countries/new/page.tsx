@@ -8,7 +8,7 @@ import routes from '@/services/routes';
 
 export default function NewCountryPage() {
   const t = useTranslations('countries');
-  const { createCountry } = useCountryMutations();
+  const { create: createCountry } = useCountryMutations();
 
   return (
     <div>

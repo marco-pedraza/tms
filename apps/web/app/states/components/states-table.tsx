@@ -58,7 +58,7 @@ const statesColumnsFactory = ({
 export default function StatesTable() {
   const tCommon = useTranslations('common');
   const [deleteId, setDeleteId] = useState<number>();
-  const { deleteState } = useStateMutations();
+  const { delete: deleteState } = useStateMutations();
   const {
     paginationUrlState,
     sortingUrlState,

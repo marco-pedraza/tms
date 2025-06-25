@@ -21,12 +21,14 @@ interface SelectInputProps
   label: string;
   placeholder: string;
   items: SelectItem[];
+  description?: string;
 }
 
 export default function SelectInput({
   label,
   placeholder,
   items,
+  description,
   ...inputProps
 }: SelectInputProps) {
   const field = useFieldContext<string>();
@@ -50,6 +52,9 @@ export default function SelectInput({
           ))}
         </SelectContent>
       </Select>
+      {description && (
+        <p className="text-sm text-muted-foreground">{description}</p>
+      )}
       {hasFieldErrors(field) && (
         <>
           {field.state.meta.errors.map((error) => (

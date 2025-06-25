@@ -101,13 +101,20 @@
         "length-range": "El código debe contener entre {min} y {max} carácteres",
         "uppercase": "El código debe contener solo letras mayúsculas"
       },
+      "latitude": {
+        "range": "La latitud debe ser un número entre -90 y 90"
+      },
+      "longitude": {
+        "range": "La longitud debe ser un número entre -180 y 180"
+      },
       "server": {
         "duplicate": "Ya existe un {entity} con {property}: \"{value}\""
       }
     },
     "entities": {
       "country": "País",
-      "state": "Estado"
+      "state": "Estado",
+      "city": "Ciudad"
     }
   },
   "sidebar": {

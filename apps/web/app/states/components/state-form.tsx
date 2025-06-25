@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import type { countries } from '@repo/ims-client';
+import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useQueryAllCountries from '@/countries/hooks/use-query-all-countries';
@@ -79,13 +80,7 @@ export default function StateForm({ defaultValues, onSubmit }: StateFormProps) {
   const { data: countriesData } = useQueryAllCountries();
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        form.handleSubmit();
-      }}
-    >
+    <Form onSubmit={form.handleSubmit}>
       <FormLayout title={tStates('form.title')}>
         <form.AppField name="name">
           {(field) => (
@@ -136,6 +131,6 @@ export default function StateForm({ defaultValues, onSubmit }: StateFormProps) {
           </form.AppForm>
         </FormFooter>
       </FormLayout>
-    </form>
+    </Form>
   );
 }

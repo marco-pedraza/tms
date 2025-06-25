@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
+import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
@@ -60,13 +61,7 @@ export default function CountryForm({
   });
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        form.handleSubmit();
-      }}
-    >
+    <Form onSubmit={form.handleSubmit}>
       <FormLayout title={tCountries('form.title')}>
         <form.AppField name="name">
           {(field) => (
@@ -101,6 +96,6 @@ export default function CountryForm({
           </form.AppForm>
         </FormFooter>
       </FormLayout>
-    </form>
+    </Form>
   );
 }

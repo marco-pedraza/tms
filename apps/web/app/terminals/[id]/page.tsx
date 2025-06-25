@@ -199,26 +199,28 @@ export default function TerminalDetailsPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(operatingHours).map(([day, slot]) => {
-                const isClosed =
-                  slot.open === '00:00' && slot.close === '00:00';
-                const is24Hours =
-                  slot.open === '00:00' && slot.close === '23:59';
-                return (
-                  <div key={day} className="flex justify-between">
-                    <span className="font-medium capitalize">
-                      {tCommon(`days.${day}`)}:
-                    </span>
-                    <span>
-                      {isClosed
-                        ? tTerminals('operatingHours.closed')
-                        : is24Hours
-                          ? tTerminals('operatingHours.open24hours')
-                          : `${slot.open} - ${slot.close}`}
-                    </span>
-                  </div>
-                );
-              })}
+              {Object.entries(operatingHours).map(
+                ([day, slot]: [string, terminals.TimeSlot]) => {
+                  const isClosed =
+                    slot.open === '00:00' && slot.close === '00:00';
+                  const is24Hours =
+                    slot.open === '00:00' && slot.close === '23:59';
+                  return (
+                    <div key={day} className="flex justify-between">
+                      <span className="font-medium capitalize">
+                        {tCommon(`days.${day as DaysOfWeek}`)}:
+                      </span>
+                      <span>
+                        {isClosed
+                          ? tTerminals('operatingHours.closed')
+                          : is24Hours
+                            ? tTerminals('operatingHours.open24hours')
+                            : `${slot.open} - ${slot.close}`}
+                      </span>
+                    </div>
+                  );
+                },
+              )}
             </div>
           </CardContent>
         </Card>

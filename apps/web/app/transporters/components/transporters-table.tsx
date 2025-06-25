@@ -13,7 +13,7 @@ import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
 import useQueryTransporters from '@/transporters/hooks/use-query-transporters';
 import useTransporterMutations from '@/transporters/hooks/use-transporter-mutations';
-import type { UseTranslationsResult } from '@/types/use-translation-result';
+import type { UseTranslationsResult } from '@/types/translations';
 
 interface TransportersColumnsFactoryProps {
   tCommon: UseTranslationsResult;

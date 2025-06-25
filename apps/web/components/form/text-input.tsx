@@ -12,7 +12,6 @@ interface TextInputProps
 
 export default function TextInput({ label, ...inputProps }: TextInputProps) {
   const field = useFieldContext<string>();
-
   return (
     <div className="space-y-2">
       <Label htmlFor={field.name}>{label}</Label>
@@ -24,6 +23,15 @@ export default function TextInput({ label, ...inputProps }: TextInputProps) {
         aria-invalid={hasFieldErrors(field)}
         {...inputProps}
       />
+      {hasFieldErrors(field) && (
+        <>
+          {field.state.meta.errors.map((error) => (
+            <p key={error.message} className="text-sm text-red-500">
+              {error.message}
+            </p>
+          ))}
+        </>
+      )}
     </div>
   );
 }

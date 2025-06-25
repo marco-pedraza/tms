@@ -42,23 +42,18 @@ export function useToastMutation<TData, TVariables>({
    * @throws Will throw and display an error toast if the mutation fails
    */
   const mutateWithToast = async (variables: TVariables) => {
-    try {
-      const promise = toast.promise(mutation.mutateAsync(variables), {
-        loading: messages.loading,
-        success: messages.success,
-        error: messages.error,
-      });
+    const promise = toast.promise(mutation.mutateAsync(variables), {
+      loading: messages.loading,
+      success: messages.success,
+      error: messages.error,
+    });
 
-      // Unwrap the result to get the actual data
-      const response = await promise.unwrap();
+    // Unwrap the result to get the actual data
+    const response = await promise.unwrap();
 
-      // Handle business logic
-      onSuccess(response);
-      return response;
-    } catch (error) {
-      console.error('Mutation error:', error);
-      throw error;
-    }
+    // Handle business logic
+    onSuccess(response);
+    return response;
   };
 
   return {

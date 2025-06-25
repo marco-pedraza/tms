@@ -33,6 +33,7 @@ export default function createCollectionMutations<
   routes,
 }: CreateCollectionMutations<CollectionModel, CreateCollectionPayload>) {
   function useCollectionMutations() {
+    // @ts-expect-error - Need to improve typing for translationKey
     const t = useTranslations(translationKey);
     const router = useRouter();
     const queryClient = useQueryClient();

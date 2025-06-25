@@ -11,7 +11,7 @@ import driverTypeTranslationKeys from '@/drivers/translations/driver-type-transl
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
-import { UseTranslationsResult } from '@/types/use-translation-result';
+import { UseTranslationsResult } from '@/types/translations';
 import driverStatusTranslationKeys from '../translations/driver-status-translation-keys';
 
 interface DriversColumnsFactoryProps {
@@ -36,6 +36,7 @@ const driversColumnsFactory = ({
       header: tDrivers('fields.driverType'),
       sortable: true,
       cell: ({ row }) =>
+        // @ts-expect-error - Need to improve typing for driverTypeTranslationKeys
         tDrivers(driverTypeTranslationKeys[row.original.driverType]),
     },
     {
@@ -101,6 +102,7 @@ export default function DriversTable() {
       name: tDrivers('fields.driverType'),
       key: 'driverType',
       options: Object.keys(driverTypeTranslationKeys).map((type) => ({
+        // @ts-expect-error - Need to improve typing for driverTypeTranslationKeys
         label: tDrivers(driverTypeTranslationKeys[type as drivers.DriverType]),
         value: type,
       })),
@@ -110,6 +112,7 @@ export default function DriversTable() {
       key: 'status',
       options: Object.keys(driverStatusTranslationKeys).map((status) => ({
         label: tDrivers(
+          // @ts-expect-error - Need to improve typing for driverTypeTranslationKeys
           driverStatusTranslationKeys[status as drivers.DriverStatus],
         ),
         value: status,

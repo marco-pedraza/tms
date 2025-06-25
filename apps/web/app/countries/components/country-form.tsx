@@ -5,22 +5,33 @@ import { z } from 'zod';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
-import { codeSchema, nameSchema } from '@/schemas/common';
+import { UseTranslationsResult } from '@/types/translations';
+import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
-const countryFormSchema = z.object({
-  name: nameSchema,
-  code: codeSchema(2, 2),
-  active: z.boolean(),
-});
+const createCountryFormSchema = (tCommon: UseTranslationsResult) =>
+  z.object({
+    name: z.string().min(1, { message: tCommon('validations.required') }),
+    code: z
+      .string()
+      .min(2, { message: tCommon('validations.code.length', { length: 2 }) })
+      .max(2)
+      .regex(/^[A-Z]+$/, { message: tCommon('validations.code.uppercase') }),
+    active: z.boolean(),
+  });
 
-export type CountryFormValues = z.infer<typeof countryFormSchema>;
+export type CountryFormValues = z.infer<
+  ReturnType<typeof createCountryFormSchema>
+>;
 
 interface CountryFormProps {
   defaultValues?: CountryFormValues;
-  onSubmit: (values: CountryFormValues) => void;
+  onSubmit: (values: CountryFormValues) => Promise<unknown>;
 }
 
-function CountryForm({ defaultValues, onSubmit }: CountryFormProps) {
+export default function CountryForm({
+  defaultValues,
+  onSubmit,
+}: CountryFormProps) {
   const tCountries = useTranslations('countries');
   const tCommon = useTranslations('common');
 
@@ -31,10 +42,15 @@ function CountryForm({ defaultValues, onSubmit }: CountryFormProps) {
       active: false,
     },
     validators: {
-      onChange: countryFormSchema,
+      onChange: createCountryFormSchema(tCommon),
     },
-    onSubmit: (values) => {
-      onSubmit(values.value);
+    onSubmit: async (values) => {
+      try {
+        await onSubmit(values.value);
+      } catch (error: unknown) {
+        // @ts-expect-error - form param is not typed correctly.
+        injectTranslatedErrorsToForm(form, error, tCommon);
+      }
     },
   });
 
@@ -83,5 +99,3 @@ function CountryForm({ defaultValues, onSubmit }: CountryFormProps) {
     </form>
   );
 }
-
-export default CountryForm;

@@ -11,7 +11,7 @@ import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
 import useQueryTerminals from '@/terminals/hooks/use-query-terminals';
 import useTerminalMutations from '@/terminals/hooks/use-terminal-mutations';
-import { UseTranslationsResult } from '@/types/use-translation-result';
+import { UseTranslationsResult } from '@/types/translations';
 
 interface TerminalsColumnsFactoryProps {
   tCommon: UseTranslationsResult;

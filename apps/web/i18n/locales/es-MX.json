@@ -93,6 +93,19 @@
         "all": "Todos",
         "clear": "Limpiar filtros"
       }
+    },
+    "validations": {
+      "required": "Este campo es obligatorio",
+      "code": {
+        "length": "El código debe contener {length} carácteres",
+        "uppercase": "El código debe contener solo letras mayúsculas"
+      },
+      "server": {
+        "duplicate": "Ya existe un {entity} con {property} \"{value}\""
+      }
+    },
+    "entities": {
+      "country": "País"
     }
   },
   "sidebar": {

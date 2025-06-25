@@ -42,6 +42,7 @@ export default function DriverStatusBadge({
   const tDrivers = useTranslations('drivers');
   return (
     <Badge variant="outline" className={cn(driverStatuses[status].color)}>
+      {/* @ts-expect-error - Need to improve typing for driverStatusTranslationKeys */}
       {tDrivers(driverStatusTranslationKeys[status])}
     </Badge>
   );

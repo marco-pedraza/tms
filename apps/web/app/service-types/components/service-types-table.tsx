@@ -11,7 +11,7 @@ import useTableUrlState from '@/hooks/use-table-url-state';
 import useQueryServiceTypes from '@/service-types/hooks/use-query-service-types';
 import useServiceTypeMutations from '@/service-types/hooks/use-service-type-mutations';
 import routes from '@/services/routes';
-import { UseTranslationsResult } from '@/types/use-translation-result';
+import { UseTranslationsResult } from '@/types/translations';
 
 interface ServiceTypesColumnsFactoryProps {
   tCommon: UseTranslationsResult;

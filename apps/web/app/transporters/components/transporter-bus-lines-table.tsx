@@ -8,7 +8,7 @@ import IsActiveBadge from '@/components/is-active-badge';
 import routes from '@/services/routes';
 import useQueryTransporterBusLines from '@/transporters/hooks/use-query-transporter-bus-lines';
 import useTransporterDetailsParams from '@/transporters/hooks/use-transporter-details-params';
-import { UseTranslationsResult } from '@/types/use-translation-result';
+import { UseTranslationsResult } from '@/types/translations';
 
 interface TransporterBusLinesColumnsFactoryProps {
   tCommon: UseTranslationsResult;

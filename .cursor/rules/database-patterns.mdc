@@ -44,37 +44,74 @@ apps/server/
 
 The base repository provides a complete set of CRUD operations and common functionality. **You should not re-implement these methods** in feature repositories unless you need to add specific validation or transformation logic.
 
+The base repository provides a comprehensive set of methods for database operations. **All methods are fully implemented** - you should not re-implement them unless you need specific validation or transformation logic.
+
+**Complete Method Reference**: For the full interface definition and JSDoc documentation of all methods, see `packages/base-repo/src/base-repository.ts`.
+
+#### Core CRUD Operations
 ```typescript
-// Available methods in the base repository:
-interface BaseRepository<TEntity, TCreatePayload, TUpdatePayload> {
-  // Core CRUD operations
-  findOne(id: number): Promise<TEntity>;
-  create(data: TCreatePayload): Promise<TEntity>;
-  update(id: number, data: TUpdatePayload): Promise<TEntity>;
-  delete(id: number): Promise<TEntity>;
+findOne(id: number): Promise<TEntity>                    // Find entity by ID
+create(data: TCreatePayload): Promise<TEntity>           // Create new entity  
+update(id: number, data: TUpdatePayload): Promise<TEntity> // Update existing entity
+delete(id: number): Promise<TEntity>                     // Delete entity (soft/hard based on config)
+```
 
-  // Collection operations
-  findAll(params?: QueryOptions): Promise<TEntity[]>;
-  findAllPaginated(params?: PaginationParams): Promise<PaginatedResult<TEntity>>;
+#### Bulk Operations  
+```typescript
+findAll(params?: QueryOptions): Promise<TEntity[]>      // Get all entities with filters/search/ordering
+findAllPaginated(params?: PaginationParams): Promise<PaginatedResult> // Paginated results
+deleteAll(): Promise<number>                            // Delete all records (returns count)
+deleteMany(ids: number[]): Promise<TEntity[]>           // Delete multiple entities by IDs
+```
 
-  // Search operations
-  search(term: string): Promise<TEntity[]>;
-  searchPaginated(term: string, params?: PaginationParams): Promise<PaginatedResult<TEntity>>;
+#### Field-Based Queries
+```typescript
+findBy(field: PgColumn, value: unknown): Promise<TEntity | null>     // Find single entity by field
+findAllBy(field: PgColumn, value: unknown, options?: QueryOptions): Promise<TEntity[]> // Find all by field
+findByPaginated(field: PgColumn, value: unknown, params?: PaginationParams): Promise<PaginatedResult> // Paginated field search
+```
 
-  // Transaction support
-  transaction<T>(callback: (txRepo: any, tx: PgTransaction) => Promise<T>): Promise<T>;
-  withTransaction(tx: PgTransaction): BaseRepository<TEntity, TCreatePayload, TUpdatePayload>;
+#### Validation & Existence Checks
+```typescript
+existsBy(field: PgColumn, value: unknown, excludeId?: number): Promise<boolean> // Check if entity exists by field
+countAll(options?: QueryOptions): Promise<number>       // Count entities with filters/search
+checkUniqueness(fields: UniqueFieldConfig[], excludeId?: number): Promise<ConflictInfo[]> // Validate uniqueness
+validateRelationExists(relatedTable, relationId, relationName?, hasSoftDelete?): Promise<void> // Validate FK
+```
 
-  // Query helpers
-  buildQueryExpressions(params?: QueryOptions): { baseWhere: SQL, baseOrderBy: SQL };
-}
+#### Soft Delete Operations (requires `softDeleteEnabled: true`)
+```typescript
+forceDelete(id: number): Promise<TEntity>               // Permanently delete (hard delete)
+restore(id: number): Promise<TEntity>                   // Restore soft-deleted entity
+```
 
+#### Search Operations (DEPRECATED - requires `searchableFields` configuration)
+```typescript
+search(term: string): Promise<TEntity[]>                // ⚠️ DEPRECATED: Use findAll({ searchTerm })
+searchPaginated(term: string, params?: PaginationParams): Promise<PaginatedResult> // ⚠️ DEPRECATED: Use findAllPaginated({ searchTerm })
+```
+
+**⚠️ Important**: These methods are deprecated and should be removed when possible. Use `findAll({ searchTerm })` and `findAllPaginated({ searchTerm })` instead.
+
+#### Transaction Support
+```typescript
+transaction<T>(callback: (txRepo, tx) => Promise<T>): Promise<T> // Execute in transaction
+withTransaction(tx: TransactionalDB): BaseRepository     // Create transaction-scoped repository
+```
+
+#### Advanced Query Building
+```typescript
+buildQueryExpressions(params?: QueryOptions): { baseWhere?: SQL, baseOrderBy?: SQL[] } // Build reusable query conditions
+```
+
+#### Configuration Options
+```typescript
 export interface BaseRepositoryOptions<TSchema> {
-  searchableFields?: TSchema[];
-  orderByField?: TSchema;
-  orderDirection?: 'asc' | 'desc';
+  searchableFields?: TSchema[];        // Fields to search against (required for search methods)
+  softDeleteEnabled?: boolean;         // Enable soft delete functionality
+  orderByField?: TSchema;             // Default ordering field
+  orderDirection?: 'asc' | 'desc';    // Default ordering direction
 }
-
 ```
 
 ### 2. Creating Feature Repositories
@@ -158,6 +195,7 @@ export function createCountryRepository() {
     typeof countries
   >(db, countries, 'Country', {
     searchableFields: [countries.name, countries.code],
+    softDeleteEnabled: true,
   });
 }
 
@@ -270,6 +308,108 @@ async function createCompoundEntity(data) {
 }
 ```
 
+## Common Method Usage Examples
+
+### Validation and Existence Checks
+
+```typescript
+// Check if a country code already exists (for validation)
+const codeExists = await countryRepository.existsBy(countries.code, 'US');
+
+// Check uniqueness excluding current record (for updates)
+const conflicts = await countryRepository.checkUniqueness([
+  { field: countries.code, value: 'US' },
+  { field: countries.name, value: 'United States' }
+], excludeId);
+
+// Count active countries
+const activeCount = await countryRepository.countAll({ 
+  filters: { active: true } 
+});
+
+// Validate that a related city exists before creating a terminal
+await terminalRepository.validateRelationExists(
+  cities, 
+  terminalData.cityId, 
+  'City',
+  true // City table has soft delete enabled
+);
+```
+
+### Field-Based Queries
+
+```typescript
+// Find all terminals in a specific city
+const cityTerminals = await terminalRepository.findAllBy(
+  terminals.cityId, 
+  cityId,
+  { orderBy: [{ field: terminals.name, direction: 'asc' }] }
+);
+
+// Find a country by code
+const country = await countryRepository.findBy(countries.code, 'MX');
+
+// Paginated search by field
+const result = await terminalRepository.findByPaginated(
+  terminals.cityId,
+  cityId,
+  { page: 1, pageSize: 10 }
+);
+```
+
+### Bulk Operations
+
+```typescript
+// Delete multiple countries by IDs
+const deletedCountries = await countryRepository.deleteMany([1, 2, 3]);
+
+// Count total records
+const totalCount = await countryRepository.countAll();
+
+// Get all active entities with search (preferred method)
+const activeEntities = await entityRepository.findAll({
+  filters: { active: true },
+  searchTerm: 'search term',
+  orderBy: [{ field: schema.name, direction: 'asc' }]
+});
+
+// Paginated search (preferred method)
+const searchResults = await entityRepository.findAllPaginated({
+  searchTerm: 'search term',
+  filters: { active: true },
+  page: 1,
+  pageSize: 10
+});
+```
+
+### Soft Delete Operations
+
+```typescript
+// Permanently delete a soft-deleted record
+await countryRepository.forceDelete(countryId);
+
+// Restore a soft-deleted record
+const restoredCountry = await countryRepository.restore(countryId);
+```
+
+### Advanced Query Building
+
+```typescript
+// Build reusable query conditions for complex queries with relations
+const { baseWhere, baseOrderBy } = terminalRepository.buildQueryExpressions({
+  filters: { active: true },
+  searchTerm: 'central',
+  orderBy: [{ field: terminals.name, direction: 'asc' }]
+});
+
+// Use in a complex query with relations
+const terminalsWithCities = await db.query.terminals.findMany({
+  where: baseWhere,
+  orderBy: baseOrderBy,
+  with: { city: true }
+});
+```
+
 ## Repository Best Practices
 
 1. **Use Function Declarations**: Prefer `function createRepository()` over arrow functions
@@ -279,6 +419,8 @@ async function createCompoundEntity(data) {
 5. **Clear Purpose**: Each custom method should solve a specific use case
 6. **Transaction Support**: Use `withTransaction` to coordinate complex operations
 7. **Handle Relations**: Use Drizzle's `with` functionality to load relationships
+8. **Leverage Built-in Methods**: Use `existsBy`, `countAll`, `deleteMany` instead of custom implementations
+9. **Avoid Deprecated Methods**: Use `findAll({ searchTerm })` and `findAllPaginated({ searchTerm })` instead of `search()` and `searchPaginated()`
 
 ## Common Repository Patterns
 
@@ -294,19 +436,51 @@ async function createCompoundEntity(data) {
 
 ```typescript
 // inventory/countries/countries.schema.ts
-import { pgTable, serial, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, boolean, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { isNull } from 'drizzle-orm';
 
 export const countries = pgTable('countries', {
   id: serial('id').primaryKey(),
-  name: text('name').notNull().unique(),
-  code: text('code').notNull().unique(),
+  name: text('name').notNull(), // Don't use .unique() with soft delete
+  code: text('code').notNull(), // Don't use .unique() with soft delete
   active: boolean('active').notNull().default(true),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
-});
+  deletedAt: timestamp('deleted_at'), // Optional: for soft delete
+}, (table) => [
+  // If using soft delete, use conditional unique indexes instead of .unique()
+  uniqueIndex().on(table.name).where(isNull(table.deletedAt)),
+  uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
+  index().on(table.deletedAt) // Index for soft delete performance
+]);
 ```
 
-### 2. Schema with Relations
+### 2. Schema with Soft Delete
+
+```typescript
+// inventory/features/features.schema.ts
+import { pgTable, serial, text, timestamp, boolean, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { isNull } from 'drizzle-orm';
+
+export const features = pgTable('features', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(), // Remove .unique() for soft delete compatibility
+  code: text('code').notNull(), // Remove .unique() for soft delete compatibility
+  active: boolean('active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+  deletedAt: timestamp('deleted_at'), // Required for soft delete
+}, (table) => [
+  // Conditional unique indexes - only apply to non-soft-deleted records
+  uniqueIndex().on(table.name).where(isNull(table.deletedAt)),
+  uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
+  index().on(table.deletedAt) // Index for performance
+]);
+```
+
+**Critical**: When using soft delete, replace `.unique()` constraints with conditional `uniqueIndex` to avoid conflicts with soft-deleted records.
+
+### 3. Schema with Relations
 
 ```typescript
 // inventory/routes/routes.schema.ts
@@ -344,7 +518,7 @@ export const routesRelations = relations(routes, ({ one, many }) => ({
 }));
 ```
 
-### 3. Aggregating Schemas for Migrations
+### 4. Aggregating Schemas for Migrations
 
 All schemas are exported in `db/schema.ts` for Drizzle to generate migrations:
 

@@ -28,9 +28,6 @@ export interface Country {
 
   /** Timestamp when the country record was last updated */
   updatedAt: Date | null;
-
-  /** Timestamp when the country record was soft deleted (null if not deleted) */
-  deletedAt: Date | null;
 }
 
 /**

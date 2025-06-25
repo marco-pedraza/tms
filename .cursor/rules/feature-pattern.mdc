@@ -27,12 +27,14 @@ apps/
     │   ├── countries/        # Feature: countries management
     │   │   ├── countries.repository.ts       # Data access layer (Repository)
     │   │   ├── countries.controller.ts       # API endpoints (Controller)
+    │   │   ├── countries.domain.ts           # Domain validation and business rules
     │   │   ├── countries.types.ts            # Type definitions
     │   │   ├── countries.schema.ts           # Database schema definition
     │   │   └── countries.controller.spec.ts  # Unit tests
     │   └── states/           # Feature: states management
     │       ├── states.repository.ts
     │       ├── states.controller.ts
+    │       ├── states.domain.ts
     │       ├── states.types.ts
     │       ├── states.schema.ts
     │       └── states.controller.spec.ts
@@ -51,16 +53,91 @@ Each feature follows this structure:
 feature-name/                        # Example: countries/
 ├── feature-name.repository.ts       # Data access layer (Repository)
 ├── feature-name.controller.ts       # Encore API endpoints
+├── feature-name.domain.ts           # Domain validation and business rules
 ├── feature-name.types.ts            # Type definitions
 ├── feature-name.schema.ts           # Database schema definition
 ├── feature-name.use-cases.ts        # Complex business logic (optional)
 └── feature-name.controller.spec.ts  # Unit tests for controller
 ```
 
-Not all files are required for every feature:
+### Required Files
 
-- **Simple features** (like Countries): Only need repository, controller, types, schema
-- **Complex features** (like Routes or Buses): Need additional use-cases.ts for business logic
+All features must include:
+- **Repository**: Data access layer extending base repository
+- **Controller**: API endpoints following REST conventions
+- **Domain**: Validation logic and business rules
+- **Types**: TypeScript interfaces and type definitions
+- **Schema**: Database table definition
+- **Tests**: Unit tests for controller endpoints
+
+### Optional Files
+
+- **Use Cases**: Only for complex business logic that goes beyond CRUD + validation
+
+## Domain Layer Pattern
+
+The domain layer handles validation and business rules:
+
+### Domain Structure
+
+```typescript
+// feature-name.domain.ts
+import { FieldErrorCollector } from '@repo/base-repo';
+import { standardFieldErrors } from '../../shared/errors';
+import { featureRepository } from './feature-name.repository';
+
+/**
+ * Validate uniqueness constraints for feature data
+ */
+export async function validateFeatureUniqueness(
+  payload: CreateFeaturePayload | UpdateFeaturePayload,
+  currentId?: number,
+  validator?: FieldErrorCollector,
+): Promise<FieldErrorCollector> {
+  const collector = validator || new FieldErrorCollector();
+  
+  // Prepare fields to check and use checkUniqueness
+  const fieldsToCheck = [/* field configurations */];
+  const conflicts = await featureRepository.checkUniqueness(fieldsToCheck, currentId);
+  
+  // Add standardized errors for conflicts
+  for (const conflict of conflicts) {
+    const error = standardFieldErrors.duplicate('EntityName', conflict.field, conflict.value);
+    collector.addError(error.field, error.code, error.message, error.value);
+  }
+  
+  return collector;
+}
+
+/**
+ * Main validation function that combines all business rules
+ */
+export async function validateFeature(
+  payload: CreateFeaturePayload | UpdateFeaturePayload,
+  currentId?: number,
+): Promise<void> {
+  const validator = await validateFeatureUniqueness(payload, currentId);
+  // Add other validation rules here as needed
+  validator.throwIfErrors();
+}
+```
+
+### Domain Integration
+
+Controllers call domain validation before repository operations:
+
+```typescript
+// feature-name.controller.ts
+import { validateFeature } from './feature-name.domain';
+
+export const createFeature = api(
+  { method: 'POST', path: '/features/create', expose: true },
+  async (params: CreateFeaturePayload): Promise<Feature> => {
+    await validateFeature(params);
+    return await featureRepository.create(params);
+  }
+);
+```
 
 ## Repository Pattern
 

@@ -96,9 +96,7 @@ export const getCountry = api(
 export const listCountries = api(
   { expose: true, method: 'POST', path: '/countries/list/all' },
   async (params: ListCountriesQueryParams): Promise<ListCountriesResult> => {
-    const countries = params.searchTerm
-      ? await countryRepository.search(params.searchTerm)
-      : await countryRepository.findAll(params);
+    const countries = await countryRepository.findAll(params);
     return {
       data: countries,
     };
@@ -116,10 +114,7 @@ export const listCountriesPaginated = api(
   async (
     params: PaginatedListCountriesQueryParams,
   ): Promise<PaginatedListCountriesResult> => {
-    const countries = params.searchTerm
-      ? await countryRepository.searchPaginated(params.searchTerm, params)
-      : await countryRepository.findAllPaginated(params);
-    return countries;
+    return await countryRepository.findAllPaginated(params);
   },
 );
 
@@ -310,9 +305,7 @@ All resources should implement these standard endpoints following REST conventio
    export const listResources = api(
      { expose: true, method: 'POST', path: '/resources/list/all' },
      async (params: ListResourcesQueryParams): Promise<ListResourcesResult> => {
-       const resources = params.searchTerm
-         ? await resourceRepository.search(params.searchTerm)
-         : await resourceRepository.findAll(params);
+       const resources = await resourceRepository.findAll(params);
        return {
          data: resources,
        };
@@ -325,10 +318,7 @@ All resources should implement these standard endpoints following REST conventio
    export const listResourcesPaginated = api(
      { expose: true, method: 'POST', path: '/resources/list' },
      async (params: PaginatedListResourcesQueryParams): Promise<PaginatedListResourcesResult> => {
-       const resources = params.searchTerm
-         ? await resourceRepository.searchPaginated(params.searchTerm, params)
-         : await resourceRepository.findAllPaginated(params);
-       return resources;
+       return await resourceRepository.findAllPaginated(params);
      },
    );
    ```

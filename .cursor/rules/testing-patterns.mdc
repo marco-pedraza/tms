@@ -1,6 +1,6 @@
 ---
 description: Patterns for testing in Encore applications
-globs: apps/server/*/*/*.spec.ts, apps/server/*/*/*.test.ts
+globs: apps/server/*/*/*.spec.ts
 alwaysApply: false
 ---
 # Testing Patterns

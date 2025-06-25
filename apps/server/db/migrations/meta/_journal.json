@@ -141,6 +141,13 @@
       "when": 1750559963884,
       "tag": "20250622023923_add_soft_delete_to_countries",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1750799801582,
+      "tag": "20250624211641_creates_nodes_and_installations_tables",
+      "breakpoints": true
     }
   ]
 }

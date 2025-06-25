@@ -83,3 +83,5 @@ export {
   populationCities,
   populationCitiesRelations,
 } from '../inventory/populations/populations.schema';
+export { installations } from '../inventory/installations/installations.schema';
+export { nodes, nodesRelations } from '../inventory/nodes/nodes.schema';

@@ -7,6 +7,8 @@ import { Country } from '../../inventory/countries/countries.types';
 import { db } from '../../inventory/db-service';
 import { PathwayService } from '../../inventory/pathway-services/pathway-services.types';
 import { pathwayUseCases } from '../../inventory/pathways/pathways.use-cases';
+import { populationCities } from '../../inventory/populations/populations.schema';
+import { Population } from '../../inventory/populations/populations.types';
 import {
   CreateSimpleRoutePayload,
   Route,
@@ -28,6 +30,7 @@ import { busModelFactory } from '../../tests/factories/bus-models.factory';
 import { busFactory } from '../../tests/factories/buses.factory';
 import { getFactoryDb } from '../../tests/factories/factory-utils';
 import { pathwayServicesFactory } from '../../tests/factories/pathway-services.factory';
+import { populationFactory } from '../../tests/factories/populations.factory';
 import { seatDiagramZoneFactory } from '../../tests/factories/seat-diagram-zones.factory';
 import { seatDiagramFactory } from '../../tests/factories/seat-diagrams.factory';
 import { transporterFactory } from '../../tests/factories/transporters.factory';
@@ -395,6 +398,90 @@ async function seedDiagramZones(buses: Bus[]) {
   return diagramZones;
 }
 
+async function seedPopulations(cities: City[], states: State[]) {
+  const POPULATION_COUNT = 20;
+
+  // Group cities by state for geographic coherence
+  const citiesByState = cities.reduce<Record<number, City[]>>((acc, city) => {
+    if (!acc[city.stateId]) {
+      acc[city.stateId] = [];
+    }
+    acc[city.stateId].push(city);
+    return acc;
+  }, {});
+
+  const stateIds = Object.keys(citiesByState).map(Number);
+
+  // Create populations with geographic coherence
+  const populations = [];
+  const populationTypes = ['Metropolitan', 'Suburban', 'Tourist'];
+
+  for (let i = 0; i < POPULATION_COUNT; i++) {
+    const shouldHaveCities = Math.random() < 0.7; // 70% will have cities
+
+    if (shouldHaveCities && stateIds.length > 0) {
+      // Select a random state
+      const selectedStateId =
+        stateIds[Math.floor(Math.random() * stateIds.length)];
+      const stateCities = citiesByState[selectedStateId];
+      const selectedState = states.find((s) => s.id === selectedStateId);
+
+      if (stateCities.length > 0 && selectedState) {
+        // Generate population with geographically coherent name
+        const populationType = faker.helpers.arrayElement(populationTypes);
+        const populationData = {
+          name: `${populationType} ${selectedState.name}`,
+          description: faker.helpers.maybe(
+            () =>
+              `Population for ${populationType.toLowerCase()} areas in ${selectedState.name} region`,
+            { probability: 0.7 },
+          ),
+        };
+
+        // Create the population (factory handles all other fields)
+        const population = (await populationFactory(factoryDb).create(
+          populationData,
+        )) as Population;
+        populations.push(population);
+
+        // Select 1-3 cities from the same state
+        const numCities = Math.min(
+          Math.floor(Math.random() * 3) + 1, // 1 to 3 cities
+          stateCities.length, // But not more than available cities in the state
+        );
+        const selectedCities = stateCities
+          .sort(() => 0.5 - Math.random())
+          .slice(0, numCities);
+
+        // Create population-city associations
+        for (const city of selectedCities) {
+          await db.insert(populationCities).values({
+            populationId: population.id,
+            cityId: city.id,
+          });
+        }
+      } else {
+        // Fallback: create population without cities using factory defaults
+        const population = (await populationFactory(factoryDb).create(
+          {},
+        )) as Population;
+        populations.push(population);
+      }
+    } else {
+      // Create population without cities using factory defaults
+      const population = (await populationFactory(factoryDb).create(
+        {},
+      )) as Population;
+      populations.push(population);
+    }
+  }
+
+  console.log(
+    `Seeded ${populations.length} populations with geographic coherence`,
+  );
+  return populations;
+}
+
 async function seedDrivers(
   transporters: Transporter[],
   busLines: BusLine[],
@@ -444,6 +531,7 @@ export async function seedInventory(): Promise<void> {
     const states = await seedStates(mexicoCountry);
     const cities = await seedCities(states);
     const terminals = await seedTerminals(cities);
+    await seedPopulations(cities, states);
     const transporters = await seedTransporters(cities);
     const busLines = await seedBusLines(transporters);
     const pathwayServices = (await seedPathwayServices()) as PathwayService[];

@@ -255,10 +255,10 @@ export namespace inventory {
      * Must not contain duplicates
      */
     cityIds: number[]
-}): Promise<populations.Population> {
+}): Promise<populations.PopulationWithRelations> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/populations/${encodeURIComponent(id)}/cities/assign`, JSON.stringify(params))
-            return await resp.json() as populations.Population
+            return await resp.json() as populations.PopulationWithRelations
         }
 
         /**
@@ -1005,16 +1005,16 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves a population by its ID.
+         * Retrieves a population by its ID with related cities information.
          * @param params - Object containing the population ID
          * @param params.id - The ID of the population to retrieve
-         * @returns {Promise<Population>} The found population
+         * @returns {Promise<PopulationWithRelations>} The found population with related cities
          * @throws {APIError} If the population is not found or retrieval fails
          */
-        public async getPopulation(id: number): Promise<populations.Population> {
+        public async getPopulation(id: number): Promise<populations.PopulationWithRelations> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/populations/${encodeURIComponent(id)}`)
-            return await resp.json() as populations.Population
+            return await resp.json() as populations.PopulationWithRelations
         }
 
         /**
@@ -8553,10 +8553,52 @@ export namespace populations {
 
     export interface PaginatedListPopulationsResult {
         pagination: shared.PaginationMeta
-        data: Population[]
+        data: PopulationWithRelations[]
     }
 
     export interface Population {
+        /**
+         * Unique identifier for the population
+         */
+        id: number
+
+        /**
+         * Unique code for the population
+         */
+        code: string
+
+        /**
+         * Name of the population
+         */
+        name: string
+
+        /**
+         * Description of the population
+         */
+        description: string | null
+
+        /**
+         * Whether the population is currently active in the system
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the population record was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the population record was last updated
+         */
+        updatedAt: string | null
+    }
+
+    export interface PopulationWithRelations {
+        /**
+         * Array of cities assigned to this population
+         */
+        cities: cities.City[]
+
         /**
          * Unique identifier for the population
          */

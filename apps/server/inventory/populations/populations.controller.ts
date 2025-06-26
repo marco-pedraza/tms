@@ -7,6 +7,7 @@ import type {
   PaginatedListPopulationsQueryParams,
   PaginatedListPopulationsResult,
   Population,
+  PopulationWithRelations,
   UpdatePopulationPayload,
 } from './populations.types';
 import { populationRepository } from './populations.repository';
@@ -31,16 +32,16 @@ export const createPopulation = api(
 );
 
 /**
- * Retrieves a population by its ID.
+ * Retrieves a population by its ID with related cities information.
  * @param params - Object containing the population ID
  * @param params.id - The ID of the population to retrieve
- * @returns {Promise<Population>} The found population
+ * @returns {Promise<PopulationWithRelations>} The found population with related cities
  * @throws {APIError} If the population is not found or retrieval fails
  */
 export const getPopulation = api(
   { expose: true, method: 'GET', path: '/populations/:id' },
-  async ({ id }: { id: number }): Promise<Population> => {
-    return await populationRepository.findOne(id);
+  async ({ id }: { id: number }): Promise<PopulationWithRelations> => {
+    return await populationRepository.findOneWithRelations(id);
   },
 );
 
@@ -73,7 +74,12 @@ export const listPopulationsPaginated = api(
   async (
     params: PaginatedListPopulationsQueryParams,
   ): Promise<PaginatedListPopulationsResult> => {
-    return await populationRepository.findAllPaginated(params);
+    const result = await populationRepository.findAllPaginated(params);
+    return await populationRepository.appendRelations(
+      result.data,
+      result.pagination,
+      params,
+    );
   },
 );
 
@@ -108,7 +114,9 @@ export const assignCitiesToPopulation = api(
   async ({
     id,
     ...data
-  }: AssignCitiesPayload & { id: number }): Promise<Population> => {
+  }: AssignCitiesPayload & {
+    id: number;
+  }): Promise<PopulationWithRelations> => {
     await validateCityAssignment(id, data);
     return await populationUseCases.assignCities(id, data);
   },

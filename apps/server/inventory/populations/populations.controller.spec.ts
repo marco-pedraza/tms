@@ -53,7 +53,7 @@ describe('Populations Controller', () => {
 
   // Helper function to verify field validation errors
   const expectFieldValidationError = async (
-    asyncFn: () => Promise<void>,
+    asyncFn: () => Promise<unknown>,
     expectedField: string,
     expectedCode: string,
     expectedMessageFragment: string,
@@ -128,6 +128,9 @@ describe('Populations Controller', () => {
       expect(response.id).toBe(testPopulation.id);
       expect(response.name).toBe(testPopulation.name);
       expect(response.code).toBe(testPopulation.code);
+      // Verify that cities property exists (should be empty array initially)
+      expect(response.cities).toBeDefined();
+      expect(Array.isArray(response.cities)).toBe(true);
     });
 
     test('should update a population', async () => {
@@ -265,6 +268,12 @@ describe('Populations Controller', () => {
       expect(response.pagination.totalPages).toBeDefined();
       expect(typeof response.pagination.hasNextPage).toBe('boolean');
       expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
+
+      // Verify that each population has the cities property (including relations)
+      response.data.forEach((population) => {
+        expect(population.cities).toBeDefined();
+        expect(Array.isArray(population.cities)).toBe(true);
+      });
     });
 
     test('should honor page and pageSize parameters', async () => {
@@ -733,6 +742,113 @@ describe('Populations Controller', () => {
           cityIds,
         }),
       ).resolves.not.toThrow();
+    });
+
+    test('should retrieve population with related cities using the correct format', async () => {
+      // First assign cities to the population
+      const cityIds = [testCities[0].id, testCities[1].id];
+      await assignCitiesToPopulation({
+        id: testPopulationForCityAssignment.id,
+        cityIds,
+      });
+
+      // Retrieve the population with relations
+      const response = await getPopulation({
+        id: testPopulationForCityAssignment.id,
+      });
+
+      // Verify the population data
+      expect(response).toBeDefined();
+      expect(response.id).toBe(testPopulationForCityAssignment.id);
+      expect(response.name).toBe(testPopulationForCityAssignment.name);
+      expect(response.code).toBe(testPopulationForCityAssignment.code);
+
+      // Verify the cities are returned in the correct format
+      expect(response.cities).toBeDefined();
+      expect(Array.isArray(response.cities)).toBe(true);
+      expect(response.cities).toHaveLength(2);
+
+      // Verify that each city has the correct structure (direct City object, not intermediate table data)
+      const assignedCityIds = response.cities.map((city) => city.id);
+      expect(assignedCityIds).toContain(testCities[0].id);
+      expect(assignedCityIds).toContain(testCities[1].id);
+
+      // Verify city structure contains expected properties
+      const firstCity = response.cities[0];
+      expect(firstCity.id).toBeDefined();
+      expect(firstCity.name).toBeDefined();
+      expect(firstCity.stateId).toBeDefined();
+      expect(firstCity.latitude).toBeDefined();
+      expect(firstCity.longitude).toBeDefined();
+      expect(firstCity.timezone).toBeDefined();
+      expect(firstCity.active).toBeDefined();
+      expect(firstCity.createdAt).toBeDefined();
+      expect(firstCity.updatedAt).toBeDefined();
+    });
+
+    test('should return empty cities array when no cities are assigned', async () => {
+      // Create a new population without any city assignments
+      const newPopulation = await createPopulation({
+        name: createUniqueName('Population Without Cities', testSuiteId),
+        code: createUniqueCode('PWC'),
+        description: 'Population without any cities assigned',
+        active: true,
+      });
+      cityAssignmentCleanup.track(newPopulation.id);
+
+      // Retrieve the population with relations
+      const response = await getPopulation({ id: newPopulation.id });
+
+      // Verify the population data
+      expect(response).toBeDefined();
+      expect(response.id).toBe(newPopulation.id);
+      expect(response.name).toBe(newPopulation.name);
+
+      // Verify that cities array is empty but defined
+      expect(response.cities).toBeDefined();
+      expect(Array.isArray(response.cities)).toBe(true);
+      expect(response.cities).toHaveLength(0);
+    });
+
+    test('should return populations with cities in paginated results', async () => {
+      // Assign cities to our test population
+      await assignCitiesToPopulation({
+        id: testPopulationForCityAssignment.id,
+        cityIds: [testCities[0].id, testCities[1].id],
+      });
+
+      // Get paginated results
+      const response = await listPopulationsPaginated({
+        pageSize: 50,
+      });
+
+      // Find our test population in the results
+      const populationWithCities = response.data.find(
+        (p) => p.id === testPopulationForCityAssignment.id,
+      );
+
+      expect(populationWithCities).toBeDefined();
+      expect(populationWithCities?.cities).toBeDefined();
+      expect(Array.isArray(populationWithCities?.cities)).toBe(true);
+      expect(populationWithCities?.cities.length).toBe(2);
+
+      // Verify the cities have the correct structure
+      const cityIds = populationWithCities?.cities.map((city) => city.id);
+      expect(cityIds).toContain(testCities[0].id);
+      expect(cityIds).toContain(testCities[1].id);
+
+      // Verify each city has the expected properties
+      populationWithCities?.cities.forEach((city) => {
+        expect(city.id).toBeDefined();
+        expect(city.name).toBeDefined();
+        expect(city.stateId).toBeDefined();
+        expect(city.latitude).toBeDefined();
+        expect(city.longitude).toBeDefined();
+        expect(city.timezone).toBeDefined();
+        expect(city.active).toBeDefined();
+        expect(city.createdAt).toBeDefined();
+        expect(city.updatedAt).toBeDefined();
+      });
     });
 
     test('should replace existing city assignments', async () => {

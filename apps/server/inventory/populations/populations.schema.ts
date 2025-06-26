@@ -42,6 +42,7 @@ export const populationCities = pgTable(
       .notNull()
       .references(() => populations.id),
     createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
   },
   (table) => [uniqueIndex().on(table.cityId, table.populationId)],
 );

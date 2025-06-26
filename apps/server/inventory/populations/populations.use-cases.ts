@@ -1,6 +1,9 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import { populationCities } from './populations.schema';
-import type { AssignCitiesPayload, Population } from './populations.types';
+import type {
+  AssignCitiesPayload,
+  PopulationWithRelations,
+} from './populations.types';
 import { populationRepository } from './populations.repository';
 
 /**
@@ -16,13 +19,13 @@ export function createPopulationUseCases() {
    * This operation involves multiple repositories and requires transactional integrity
    * @param populationId - The ID of the population
    * @param data - The assignment data containing city IDs
-   * @returns Promise<Population> The updated population
+   * @returns Promise<PopulationWithRelations> The updated population
    * @note Validation should be performed in the controller before calling this method
    */
   async function assignCities(
     populationId: number,
     data: AssignCitiesPayload,
-  ): Promise<Population> {
+  ): Promise<PopulationWithRelations> {
     // Perform the assignment within a transaction
     return await populationRepo
       .transaction(async (txPopRepo, tx) => {
@@ -82,7 +85,7 @@ export function createPopulationUseCases() {
       })
       .then((id) => {
         // After transaction completes, fetch and return the updated population
-        return populationRepo.findOne(id);
+        return populationRepo.findOneWithRelations(id);
       });
   }
 

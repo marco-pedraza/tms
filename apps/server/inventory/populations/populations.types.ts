@@ -5,6 +5,7 @@ import {
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '../../shared/types';
+import type { City } from '../cities/cities.types';
 
 /**
  * Base interface representing a population entity
@@ -30,6 +31,14 @@ export interface Population {
 
   /** Timestamp when the population record was last updated */
   updatedAt: Date | null;
+}
+
+/**
+ * Population entity with its related cities
+ */
+export interface PopulationWithRelations extends Population {
+  /** Array of cities assigned to this population */
+  cities: City[];
 }
 
 /**
@@ -104,4 +113,4 @@ export type ListPopulationsResult = ListQueryResult<Population>;
 export type PaginatedListPopulationsQueryParams =
   PaginatedListQueryParams<Population>;
 export type PaginatedListPopulationsResult =
-  PaginatedListQueryResult<Population>;
+  PaginatedListQueryResult<PopulationWithRelations>;

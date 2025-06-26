@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS "population_cities" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"city_id" integer NOT NULL,
 	"population_id" integer NOT NULL,
-	"created_at" timestamp DEFAULT now()
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "populations" (

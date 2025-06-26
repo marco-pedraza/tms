@@ -134,7 +134,8 @@
       "services": "Servicios",
       "drivers": "Conductores",
       "busModels": "Modelos de Autobus",
-      "buses": "Autobuses"
+      "buses": "Autobuses",
+      "populations": "Poblaciones"
     },
     "planning": {
       "title": "Planeación",
@@ -599,6 +600,32 @@
       "substitute": "Sustituto",
       "temporary": "Temporal",
       "tourist": "Turista"
+    }
+  },
+  "populations": {
+    "title": "Poblaciones",
+    "description": "Administra información de poblaciones para el Sistema de Inventario de Autobuses",
+    "actions": {
+      "create": "Crear Población",
+      "update": "Actualizar Población",
+      "backToList": "Volver a poblaciones"
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando población...",
+        "success": "Población creada correctamente",
+        "error": "No pudimos crear la población"
+      },
+      "update": {
+        "loading": "Actualizando población...",
+        "success": "Población actualizada correctamente",
+        "error": "No pudimos actualizar la población"
+      },
+      "delete": {
+        "loading": "Eliminando población...",
+        "success": "Población eliminada correctamente",
+        "error": "No pudimos eliminar la población"
+      }
     }
   }
 }

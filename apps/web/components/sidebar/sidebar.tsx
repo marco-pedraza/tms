@@ -74,6 +74,11 @@ export default function Sidebar() {
           icon={Users}
           label={tSidebar('inventory.drivers')}
         />
+        <SidebarLink
+          href={routes.populations.index}
+          icon={Users}
+          label={tSidebar('inventory.populations')}
+        />
         {/* <SidebarLink
           href={routes.routes.index}
           icon={Route}

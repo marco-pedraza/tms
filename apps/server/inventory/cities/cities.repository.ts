@@ -1,3 +1,4 @@
+import { inArray } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { PaginationMeta } from '../../shared/types';
 import { createSlug } from '../../shared/utils';
@@ -125,12 +126,36 @@ export const createCityRepository = () => {
     };
   };
 
+  /**
+   * Validates that all provided city IDs exist
+   * @param cityIds - Array of city IDs to validate
+   * @returns Array of non-existent city IDs (empty if all exist)
+   */
+  const validateCitiesExist = async (cityIds: number[]): Promise<number[]> => {
+    if (cityIds.length === 0) {
+      return [];
+    }
+
+    const existingCities = await db
+      .select({ id: cities.id })
+      .from(cities)
+      .where(inArray(cities.id, cityIds));
+
+    const existingCityIds = existingCities.map((city) => city.id);
+    const nonExistentCityIds = cityIds.filter(
+      (id: number) => !existingCityIds.includes(id),
+    );
+
+    return nonExistentCityIds;
+  };
+
   return {
     ...baseRepository,
     create,
     update,
     findOneWithRelations,
     appendRelations,
+    validateCitiesExist,
   };
 };
 

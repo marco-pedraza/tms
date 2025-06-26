@@ -1,14 +1,28 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { FieldValidationError } from '@repo/base-repo';
 import {
+  cityFactory,
+  countryFactory,
+  stateFactory,
+} from '../../tests/factories';
+import { getFactoryDb } from '../../tests/factories/factory-utils';
+import {
   createCleanupHelper,
   createTestSuiteId,
   createUniqueCode,
   createUniqueName,
 } from '../../tests/shared/test-utils';
+import { cityRepository } from '../cities/cities.repository';
+import type { City } from '../cities/cities.types';
+import { countryRepository } from '../countries/countries.repository';
+import type { Country } from '../countries/countries.types';
+import { db } from '../db-service';
+import { stateRepository } from '../states/states.repository';
+import type { State } from '../states/states.types';
 import type { Population } from './populations.types';
 import { populationRepository } from './populations.repository';
 import {
+  assignCitiesToPopulation,
   createPopulation,
   deletePopulation,
   getPopulation,
@@ -35,6 +49,32 @@ describe('Populations Controller', () => {
       ...options,
     });
     return populationCleanup.track(population.id);
+  };
+
+  // Helper function to verify field validation errors
+  const expectFieldValidationError = async (
+    asyncFn: () => Promise<void>,
+    expectedField: string,
+    expectedCode: string,
+    expectedMessageFragment: string,
+  ) => {
+    let validationError: FieldValidationError;
+    try {
+      await asyncFn();
+      throw new Error('Expected function to throw, but it did not');
+    } catch (error) {
+      validationError = error as FieldValidationError;
+    }
+
+    expect(validationError).toBeDefined();
+    expect(validationError.name).toBe('FieldValidationError');
+    expect(validationError.message).toContain('Validation failed');
+    expect(validationError.fieldErrors).toBeDefined();
+    expect(validationError.fieldErrors[0].field).toBe(expectedField);
+    expect(validationError.fieldErrors[0].code).toBe(expectedCode);
+    expect(validationError.fieldErrors[0].message).toContain(
+      expectedMessageFragment,
+    );
   };
 
   // Main test population for reuse across tests
@@ -590,6 +630,199 @@ describe('Populations Controller', () => {
       await expect(
         populationRepository.findOne(testPopulationForForceDelete),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('city assignment', () => {
+    const factoryDb = getFactoryDb(db);
+    const cityAssignmentCleanup = createCleanupHelper(
+      deletePopulation,
+      'city-assignment-population',
+    );
+
+    // Test data
+    let testCountry: Country;
+    let testState: State;
+    const testCities: City[] = [];
+    let testPopulationForCityAssignment: Population;
+
+    beforeAll(async () => {
+      const ID_OFFSET = 500;
+      // Create test dependencies using factories
+      testCountry = (await countryFactory(factoryDb).create({
+        id: ID_OFFSET,
+        name: createUniqueName('Test Country for City Assignment', testSuiteId),
+        code: `TCA${testSuiteId.substring(0, 4)}`,
+      })) as Country;
+
+      testState = (await stateFactory(factoryDb).create({
+        id: ID_OFFSET,
+        name: createUniqueName('Test State for City Assignment', testSuiteId),
+        code: `TSA${testSuiteId.substring(0, 4)}`,
+        countryId: testCountry.id,
+      })) as State;
+
+      // Create test cities using factory
+      for (let i = 0; i < 4; i++) {
+        const city = (await cityFactory(factoryDb).create({
+          id: ID_OFFSET + i,
+          name: createUniqueName(`Test City ${i + 1}`, testSuiteId),
+          stateId: testState.id,
+          timezone: 'America/Mexico_City',
+          latitude: 19.4326 + i,
+          longitude: -99.1332 + i,
+        })) as City;
+        testCities.push(city);
+      }
+
+      // Create test population for city assignment tests
+      testPopulationForCityAssignment = await createPopulation({
+        name: createUniqueName(
+          'Test Population for City Assignment',
+          testSuiteId,
+        ),
+        code: createUniqueCode('TPCA'),
+        description: 'Test population for city assignment tests',
+        active: true,
+      });
+      cityAssignmentCleanup.track(testPopulationForCityAssignment.id);
+    });
+
+    afterAll(async () => {
+      // Clean up test population
+      await cityAssignmentCleanup.cleanupAll();
+
+      // Clean up factory-created entities in reverse order of dependencies
+      // First clean up cities (they have foreign keys to states)
+      for (const city of testCities) {
+        if (city?.id) {
+          try {
+            await cityRepository.delete(city.id);
+          } catch (error) {
+            console.log('Error cleaning up test city:', error);
+          }
+        }
+      }
+
+      // Then clean up state (it has foreign key to country)
+      if (testState?.id) {
+        try {
+          await stateRepository.delete(testState.id);
+        } catch (error) {
+          console.log('Error cleaning up test state:', error);
+        }
+      }
+
+      // Finally clean up country
+      if (testCountry?.id) {
+        try {
+          await countryRepository.delete(testCountry.id);
+        } catch (error) {
+          console.log('Error cleaning up test country:', error);
+        }
+      }
+    });
+
+    test('should assign cities to a population', async () => {
+      const cityIds = [testCities[0].id, testCities[1].id];
+
+      // Should not throw an error
+      await expect(
+        assignCitiesToPopulation({
+          id: testPopulationForCityAssignment.id,
+          cityIds,
+        }),
+      ).resolves.not.toThrow();
+    });
+
+    test('should replace existing city assignments', async () => {
+      // First assign two cities
+      const initialCityIds = [testCities[0].id, testCities[1].id];
+      await assignCitiesToPopulation({
+        id: testPopulationForCityAssignment.id,
+        cityIds: initialCityIds,
+      });
+
+      // Then assign different cities (should replace previous assignment)
+      const newCityIds = [testCities[2].id, testCities[3].id];
+      await expect(
+        assignCitiesToPopulation({
+          id: testPopulationForCityAssignment.id,
+          cityIds: newCityIds,
+        }),
+      ).resolves.not.toThrow();
+    });
+
+    test('should handle empty city array (remove all assignments)', async () => {
+      // First assign some cities
+      await assignCitiesToPopulation({
+        id: testPopulationForCityAssignment.id,
+        cityIds: [testCities[0].id],
+      });
+
+      // Then remove all assignments
+      await expect(
+        assignCitiesToPopulation({
+          id: testPopulationForCityAssignment.id,
+          cityIds: [],
+        }),
+      ).resolves.not.toThrow();
+    });
+
+    test('should reject duplicate city IDs', async () => {
+      const duplicateCityIds = [testCities[0].id, testCities[0].id];
+
+      await expectFieldValidationError(
+        () =>
+          assignCitiesToPopulation({
+            id: testPopulationForCityAssignment.id,
+            cityIds: duplicateCityIds,
+          }),
+        'cityIds',
+        'DUPLICATE',
+        'Duplicate city IDs are not allowed in the assignment',
+      );
+    });
+
+    test('should reject non-existent population ID', async () => {
+      const cityIds = [testCities[0].id];
+
+      await expectFieldValidationError(
+        () => assignCitiesToPopulation({ id: 99999, cityIds }),
+        'populationId',
+        'NOT_FOUND',
+        'Population with id 99999 not found',
+      );
+    });
+
+    test('should reject non-existent city IDs', async () => {
+      const nonExistentCityIds = [99999, 99998];
+
+      await expectFieldValidationError(
+        () =>
+          assignCitiesToPopulation({
+            id: testPopulationForCityAssignment.id,
+            cityIds: nonExistentCityIds,
+          }),
+        'cityIds',
+        'NOT_FOUND',
+        'Cities with IDs [99999, 99998] not found',
+      );
+    });
+
+    test('should handle partial non-existent city IDs', async () => {
+      const mixedCityIds = [testCities[0].id, 99999];
+
+      await expectFieldValidationError(
+        () =>
+          assignCitiesToPopulation({
+            id: testPopulationForCityAssignment.id,
+            cityIds: mixedCityIds,
+          }),
+        'cityIds',
+        'NOT_FOUND',
+        'Cities with IDs [99999] not found',
+      );
     });
   });
 });

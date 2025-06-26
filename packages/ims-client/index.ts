@@ -94,6 +94,7 @@ export namespace inventory {
 
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
+            this.assignCitiesToPopulation = this.assignCitiesToPopulation.bind(this)
             this.assignServicesToPathway = this.assignServicesToPathway.bind(this)
             this.createBus = this.createBus.bind(this)
             this.createBusDiagramModel = this.createBusDiagramModel.bind(this)
@@ -238,6 +239,26 @@ export namespace inventory {
             this.updateState = this.updateState.bind(this)
             this.updateTerminal = this.updateTerminal.bind(this)
             this.updateTransporter = this.updateTransporter.bind(this)
+        }
+
+        /**
+         * Assigns cities to a population, replacing all existing assignments.
+         * @param params - Object containing the population ID and city assignment data
+         * @param params.id - The ID of the population to assign cities to
+         * @param params.cityIds - Array of city IDs to assign
+         * @returns {Promise<Population>} The updated population
+         * @throws {APIError} If the population or any city is not found, or if there are duplicate city IDs
+         */
+        public async assignCitiesToPopulation(id: number, params: {
+    /**
+     * Array of city IDs to assign to the population
+     * Must not contain duplicates
+     */
+    cityIds: number[]
+}): Promise<populations.Population> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/populations/${encodeURIComponent(id)}/cities/assign`, JSON.stringify(params))
+            return await resp.json() as populations.Population
         }
 
         /**

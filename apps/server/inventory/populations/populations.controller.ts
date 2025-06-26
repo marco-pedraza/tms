@@ -1,5 +1,6 @@
 import { api } from 'encore.dev/api';
 import type {
+  AssignCitiesPayload,
   CreatePopulationPayload,
   ListPopulationsQueryParams,
   ListPopulationsResult,
@@ -9,7 +10,11 @@ import type {
   UpdatePopulationPayload,
 } from './populations.types';
 import { populationRepository } from './populations.repository';
-import { validatePopulation } from './populations.domain';
+import {
+  validateCityAssignment,
+  validatePopulation,
+} from './populations.domain';
+import { populationUseCases } from './populations.use-cases';
 
 /**
  * Creates a new population.
@@ -87,6 +92,25 @@ export const updatePopulation = api(
   }: UpdatePopulationPayload & { id: number }): Promise<Population> => {
     await validatePopulation(data, id);
     return await populationRepository.update(id, data);
+  },
+);
+
+/**
+ * Assigns cities to a population, replacing all existing assignments.
+ * @param params - Object containing the population ID and city assignment data
+ * @param params.id - The ID of the population to assign cities to
+ * @param params.cityIds - Array of city IDs to assign
+ * @returns {Promise<Population>} The updated population
+ * @throws {APIError} If the population or any city is not found, or if there are duplicate city IDs
+ */
+export const assignCitiesToPopulation = api(
+  { expose: true, method: 'PUT', path: '/populations/:id/cities/assign' },
+  async ({
+    id,
+    ...data
+  }: AssignCitiesPayload & { id: number }): Promise<Population> => {
+    await validateCityAssignment(id, data);
+    return await populationUseCases.assignCities(id, data);
   },
 );
 

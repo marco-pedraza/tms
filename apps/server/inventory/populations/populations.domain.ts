@@ -1,7 +1,9 @@
 import { FieldErrorCollector } from '@repo/base-repo';
 import { standardFieldErrors } from '../../shared/errors';
+import { cityRepository } from '../cities/cities.repository';
 import { populations } from './populations.schema';
 import type {
+  AssignCitiesPayload,
   CreatePopulationPayload,
   UpdatePopulationPayload,
 } from './populations.types';
@@ -67,4 +69,61 @@ export async function validatePopulation(
 ): Promise<void> {
   const validator = await validatePopulationUniqueness(payload, currentId);
   validator.throwIfErrors();
+}
+
+/**
+ * Validates city assignment data for a population
+ * @param populationId - The ID of the population to validate
+ * @param data - The assignment data containing city IDs
+ * @throws {FieldValidationError} If there are validation violations
+ */
+export async function validateCityAssignment(
+  populationId: number,
+  data: AssignCitiesPayload,
+): Promise<void> {
+  const collector = new FieldErrorCollector();
+
+  // Validate that cityIds array has no duplicates
+  const uniqueCityIds = new Set(data.cityIds);
+  collector.addIf(
+    uniqueCityIds.size !== data.cityIds.length,
+    'cityIds',
+    'DUPLICATE',
+    'Duplicate city IDs are not allowed in the assignment',
+    data.cityIds,
+  );
+  collector.throwIfErrors(); // Stop immediately if duplicates found
+
+  // Validate population exists
+  const populationExists = await populationRepository.existsBy(
+    populations.id,
+    populationId,
+  );
+  collector.addIf(
+    !populationExists,
+    'populationId',
+    'NOT_FOUND',
+    `Population with id ${populationId} not found`,
+    populationId,
+  );
+  collector.throwIfErrors(); // Stop immediately if population not found
+
+  // If cityIds is empty, no need to validate cities
+  if (data.cityIds.length === 0) {
+    return;
+  }
+
+  // Validate all cities exist using the city repository
+  const nonExistentCityIds = await cityRepository.validateCitiesExist(
+    data.cityIds,
+  );
+
+  collector.addIf(
+    nonExistentCityIds.length > 0,
+    'cityIds',
+    'NOT_FOUND',
+    `Cities with IDs [${nonExistentCityIds.join(', ')}] not found`,
+    nonExistentCityIds,
+  );
+  collector.throwIfErrors(); // Stop immediately if cities not found
 }

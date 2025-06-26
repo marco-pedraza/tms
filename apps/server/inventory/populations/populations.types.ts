@@ -87,6 +87,17 @@ export interface UpdatePopulationPayload {
   active?: boolean;
 }
 
+/**
+ * Input for assigning cities to a population
+ */
+export interface AssignCitiesPayload {
+  /**
+   * Array of city IDs to assign to the population
+   * Must not contain duplicates
+   */
+  cityIds: number[];
+}
+
 export type ListPopulationsQueryParams = ListQueryParams<Population>;
 export type ListPopulationsResult = ListQueryResult<Population>;
 

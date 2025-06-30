@@ -32,7 +32,6 @@ reviews:
   path_instructions:
     - path: "**/*.{ts,tsx}"
       instructions: |
-        Follow .cursor/rules/typescript-patterns.mdc for general TypeScript conventions.
         Prefer code and comments in English for team readability and focus on architectural patterns.
 
     - path: "apps/web/**/*.{ts,tsx}"
@@ -40,49 +39,12 @@ reviews:
         Frontend Next.js application - verify component composition, state management,
         error boundaries, performance optimizations, and accessibility best practices.
 
-    - path: "apps/server/**/*.ts"
-      instructions: |
-        Encore backend application. Follow cursor rules:
-        .cursor/rules/controller-patterns.mdc
-        .cursor/rules/error-handling.mdc
-        .cursor/rules/feature-pattern.mdc
-        .cursor/rules/secrets-patterns.mdc
-
-    - path: "apps/server/**/*controller.ts"
-      instructions: |
-        Follow .cursor/rules/controller-patterns.mdc
-
-    - path: "apps/server/**/*repository.ts"
-      instructions: |
-        Follow .cursor/rules/database-patterns.mdc
-
-    - path: "apps/server/**/*.types.ts"
-      instructions: |
-        Follow .cursor/rules/types-patterns.mdc
-
     - path: "apps/server/**/*schema.ts"
       instructions: |
-        Follow .cursor/rules/database-patterns.mdc
         Verify that appropriate database indexes are defined for:
         - Foreign keys
         - Queried columns
         Ensure indexes improve query performance without over-indexing.
-
-    - path: "apps/server/**/*use-cases.ts"
-      instructions: |
-        Follow .cursor/rules/use-cases-patterns.mdc
-
-    - path: "apps/server/**/*.test.ts"
-      instructions: |
-        Follow .cursor/rules/testing-patterns.mdc
-
-    - path: "packages/**/*.ts"
-      instructions: |
-        Follow .cursor/rules/typescript-patterns.mdc
-
-    - path: "apps/docs/**"
-      instructions: |
-        Ensure documentation reflects current behavior and patterns from .cursor/rules/
 
   abort_on_close: true
   auto_review:

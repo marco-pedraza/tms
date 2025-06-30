@@ -124,6 +124,7 @@ export namespace inventory {
             this.deleteCountry = this.deleteCountry.bind(this)
             this.deleteDriver = this.deleteDriver.bind(this)
             this.deleteGate = this.deleteGate.bind(this)
+            this.deleteInstallation = this.deleteInstallation.bind(this)
             this.deletePathway = this.deletePathway.bind(this)
             this.deletePathwayService = this.deletePathwayService.bind(this)
             this.deletePopulation = this.deletePopulation.bind(this)
@@ -149,6 +150,7 @@ export namespace inventory {
             this.getDriver = this.getDriver.bind(this)
             this.getFacility = this.getFacility.bind(this)
             this.getGate = this.getGate.bind(this)
+            this.getInstallation = this.getInstallation.bind(this)
             this.getPathway = this.getPathway.bind(this)
             this.getPathwayService = this.getPathwayService.bind(this)
             this.getPathwayWithServiceAssignments = this.getPathwayWithServiceAssignments.bind(this)
@@ -181,6 +183,8 @@ export namespace inventory {
             this.listFacilities = this.listFacilities.bind(this)
             this.listGates = this.listGates.bind(this)
             this.listGatesPaginated = this.listGatesPaginated.bind(this)
+            this.listInstallations = this.listInstallations.bind(this)
+            this.listInstallationsPaginated = this.listInstallationsPaginated.bind(this)
             this.listPathwayServices = this.listPathwayServices.bind(this)
             this.listPathwayServicesPaginated = this.listPathwayServicesPaginated.bind(this)
             this.listPathways = this.listPathways.bind(this)
@@ -227,6 +231,7 @@ export namespace inventory {
             this.updateCountry = this.updateCountry.bind(this)
             this.updateDriver = this.updateDriver.bind(this)
             this.updateGate = this.updateGate.bind(this)
+            this.updateInstallation = this.updateInstallation.bind(this)
             this.updatePathway = this.updatePathway.bind(this)
             this.updatePathwayService = this.updatePathwayService.bind(this)
             this.updatePathwayServiceAssignment = this.updatePathwayServiceAssignment.bind(this)
@@ -652,6 +657,19 @@ export namespace inventory {
         }
 
         /**
+         * Deletes an installation by its ID.
+         * @param params - Object containing the installation ID
+         * @param params.id - The ID of the installation to delete
+         * @returns {Promise<Installation>} The deleted installation
+         * @throws {APIError} If the installation is not found or deletion fails
+         */
+        public async deleteInstallation(id: number): Promise<installations.Installation> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/installations/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as installations.Installation
+        }
+
+        /**
          * Deletes a pathway by its ID.
          * @param params - Object containing the pathway ID
          * @param params.id - The ID of the pathway to delete
@@ -963,6 +981,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/gates/${encodeURIComponent(id)}`)
             return await resp.json() as gates.Gate
+        }
+
+        /**
+         * Retrieves an installation by its ID.
+         * @param params - Object containing the installation ID
+         * @param params.id - The ID of the installation to retrieve
+         * @returns {Promise<Installation>} The found installation
+         * @throws {APIError} If the installation is not found or retrieval fails
+         */
+        public async getInstallation(id: number): Promise<installations.Installation> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/installations/${encodeURIComponent(id)}`)
+            return await resp.json() as installations.Installation
         }
 
         /**
@@ -1346,6 +1377,30 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/get-gates/paginated`, JSON.stringify(params))
             return await resp.json() as gates.PaginatedGates
+        }
+
+        /**
+         * Retrieves all installations without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListInstallationsResult>} Unified response with data property containing array of installations
+         * @throws {APIError} If retrieval fails
+         */
+        public async listInstallations(params: installations.ListInstallationsQueryParams): Promise<installations.ListInstallationsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/installations/list/all`, JSON.stringify(params))
+            return await resp.json() as installations.ListInstallationsResult
+        }
+
+        /**
+         * Retrieves installations with pagination (useful for tables).
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListInstallationsResult>} Unified paginated response with data and pagination properties
+         * @throws {APIError} If retrieval fails
+         */
+        public async listInstallationsPaginated(params: installations.PaginatedListInstallationsQueryParams): Promise<installations.PaginatedListInstallationsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/installations/list`, JSON.stringify(params))
+            return await resp.json() as installations.PaginatedListInstallationsResult
         }
 
         /**
@@ -2737,6 +2792,36 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/gates/${encodeURIComponent(id)}`, JSON.stringify(params))
             return await resp.json() as gates.Gate
+        }
+
+        /**
+         * Updates an existing installation.
+         * @param params - Object containing the installation ID and update data
+         * @param params.id - The ID of the installation to update
+         * @returns {Promise<Installation>} The updated installation
+         * @throws {APIError} If the installation is not found or update fails
+         */
+        public async updateInstallation(id: number, params: {
+    /**
+     * Name of the installation
+     * Must have at least 1 non-whitespace character
+     */
+    name?: string
+
+    /**
+     * Physical address of the installation
+     * Must have at least 1 non-whitespace character
+     */
+    address?: string
+
+    /**
+     * Optional description of the installation
+     */
+    description?: string | null
+}): Promise<installations.Installation> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/installations/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as installations.Installation
         }
 
         /**
@@ -7887,6 +7972,83 @@ export namespace gates {
             createdAt?: string | null
             updatedAt?: string | null
         }
+    }
+}
+
+export namespace installations {
+    export interface Installation {
+        /**
+         * Unique identifier for the installation
+         */
+        id: number
+
+        /**
+         * Name of the installation
+         */
+        name: string
+
+        /**
+         * Physical address of the installation
+         */
+        address: string
+
+        /**
+         * Optional description of the installation
+         */
+        description: string | null
+
+        /**
+         * Timestamp when the installation record was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the installation record was last updated
+         */
+        updatedAt: string | null
+    }
+
+    export interface ListInstallationsQueryParams {
+        orderBy?: {
+            field: "id" | "name" | "address" | "description" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            address?: string
+            description?: string | null
+            createdAt?: string | null
+            updatedAt?: string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListInstallationsResult {
+        data: Installation[]
+    }
+
+    export interface PaginatedListInstallationsQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "address" | "description" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            address?: string
+            description?: string | null
+            createdAt?: string | null
+            updatedAt?: string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListInstallationsResult {
+        pagination: shared.PaginationMeta
+        data: Installation[]
     }
 }
 

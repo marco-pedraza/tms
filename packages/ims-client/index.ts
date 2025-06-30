@@ -106,6 +106,7 @@ export namespace inventory {
             this.createCountry = this.createCountry.bind(this)
             this.createDriver = this.createDriver.bind(this)
             this.createGate = this.createGate.bind(this)
+            this.createNode = this.createNode.bind(this)
             this.createPathway = this.createPathway.bind(this)
             this.createPathwayService = this.createPathwayService.bind(this)
             this.createPopulation = this.createPopulation.bind(this)
@@ -125,6 +126,7 @@ export namespace inventory {
             this.deleteDriver = this.deleteDriver.bind(this)
             this.deleteGate = this.deleteGate.bind(this)
             this.deleteInstallation = this.deleteInstallation.bind(this)
+            this.deleteNode = this.deleteNode.bind(this)
             this.deletePathway = this.deletePathway.bind(this)
             this.deletePathwayService = this.deletePathwayService.bind(this)
             this.deletePopulation = this.deletePopulation.bind(this)
@@ -151,6 +153,7 @@ export namespace inventory {
             this.getFacility = this.getFacility.bind(this)
             this.getGate = this.getGate.bind(this)
             this.getInstallation = this.getInstallation.bind(this)
+            this.getNode = this.getNode.bind(this)
             this.getPathway = this.getPathway.bind(this)
             this.getPathwayService = this.getPathwayService.bind(this)
             this.getPathwayWithServiceAssignments = this.getPathwayWithServiceAssignments.bind(this)
@@ -185,6 +188,8 @@ export namespace inventory {
             this.listGatesPaginated = this.listGatesPaginated.bind(this)
             this.listInstallations = this.listInstallations.bind(this)
             this.listInstallationsPaginated = this.listInstallationsPaginated.bind(this)
+            this.listNodes = this.listNodes.bind(this)
+            this.listNodesPaginated = this.listNodesPaginated.bind(this)
             this.listPathwayServices = this.listPathwayServices.bind(this)
             this.listPathwayServicesPaginated = this.listPathwayServicesPaginated.bind(this)
             this.listPathways = this.listPathways.bind(this)
@@ -232,6 +237,7 @@ export namespace inventory {
             this.updateDriver = this.updateDriver.bind(this)
             this.updateGate = this.updateGate.bind(this)
             this.updateInstallation = this.updateInstallation.bind(this)
+            this.updateNode = this.updateNode.bind(this)
             this.updatePathway = this.updatePathway.bind(this)
             this.updatePathwayService = this.updatePathwayService.bind(this)
             this.updatePathwayServiceAssignment = this.updatePathwayServiceAssignment.bind(this)
@@ -418,6 +424,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/gates`, JSON.stringify(params))
             return await resp.json() as gates.Gate
+        }
+
+        /**
+         * Creates a new node.
+         * @param params - The node data to create
+         * @returns {Promise<Node>} The created node
+         * @throws {APIError} If the node creation fails
+         */
+        public async createNode(params: nodes.CreateNodePayload): Promise<nodes.Node> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/nodes/create`, JSON.stringify(params))
+            return await resp.json() as nodes.Node
         }
 
         /**
@@ -667,6 +685,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/installations/${encodeURIComponent(id)}/delete`)
             return await resp.json() as installations.Installation
+        }
+
+        /**
+         * Deletes a node by its ID.
+         * @param params - Object containing the node ID
+         * @param params.id - The ID of the node to delete
+         * @returns {Promise<Node>} The deleted node
+         * @throws {APIError} If the node is not found or deletion fails
+         */
+        public async deleteNode(id: number): Promise<nodes.Node> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/nodes/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as nodes.Node
         }
 
         /**
@@ -994,6 +1025,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/installations/${encodeURIComponent(id)}`)
             return await resp.json() as installations.Installation
+        }
+
+        /**
+         * Retrieves a node by its ID with related information.
+         * @param params - Object containing the node ID
+         * @param params.id - The ID of the node to retrieve
+         * @returns {Promise<NodeWithRelations>} The found node with related information
+         * @throws {APIError} If the node is not found or retrieval fails
+         */
+        public async getNode(id: number): Promise<nodes.NodeWithRelations> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/nodes/${encodeURIComponent(id)}`)
+            return await resp.json() as nodes.NodeWithRelations
         }
 
         /**
@@ -1401,6 +1445,30 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/installations/list`, JSON.stringify(params))
             return await resp.json() as installations.PaginatedListInstallationsResult
+        }
+
+        /**
+         * Retrieves all nodes without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListNodesResult>} Unified response with data property containing array of nodes
+         * @throws {APIError} If retrieval fails
+         */
+        public async listNodes(params: nodes.ListNodesQueryParams): Promise<nodes.ListNodesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/nodes/list/all`, JSON.stringify(params))
+            return await resp.json() as nodes.ListNodesResult
+        }
+
+        /**
+         * Retrieves nodes with pagination and includes related information.
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListNodesResult>} Unified paginated response with data and pagination properties including related information
+         * @throws {APIError} If retrieval fails
+         */
+        public async listNodesPaginated(params: nodes.PaginatedListNodesQueryParams): Promise<nodes.PaginatedListNodesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/nodes/list`, JSON.stringify(params))
+            return await resp.json() as nodes.PaginatedListNodesResult
         }
 
         /**
@@ -2822,6 +2890,61 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/installations/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as installations.Installation
+        }
+
+        /**
+         * Updates an existing node.
+         * @param params - Object containing the node ID and update data
+         * @param params.id - The ID of the node to update
+         * @returns {Promise<Node>} The updated node
+         * @throws {APIError} If the node is not found or update fails
+         */
+        public async updateNode(id: number, params: {
+    /**
+     * Unique code identifier for the node
+     * Must have at least 1 non-whitespace character
+     */
+    code?: string
+
+    /**
+     * Name of the node
+     * Must have at least 1 non-whitespace character
+     */
+    name?: string
+
+    /**
+     * Latitude coordinate of the node
+     * Must be a number between -90 and 90
+     */
+    latitude?: number
+
+    /**
+     * Longitude coordinate of the node
+     * Must be a number between -180 and 180
+     */
+    longitude?: number
+
+    /**
+     * Radius of coverage for the node in meters
+     * Must be a positive number
+     */
+    radius?: number
+
+    /**
+     * ID of the city this node belongs to
+     * Must be a positive number
+     */
+    cityId?: number
+
+    /**
+     * ID of the population this node belongs to
+     * Must be a positive number
+     */
+    populationId?: number
+}): Promise<nodes.Node> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/nodes/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as nodes.Node
         }
 
         /**
@@ -8049,6 +8172,222 @@ export namespace installations {
     export interface PaginatedListInstallationsResult {
         pagination: shared.PaginationMeta
         data: Installation[]
+    }
+}
+
+export namespace nodes {
+    export interface CreateNodePayload {
+        /**
+         * Unique code identifier for the node
+         * Must have at least 1 non-whitespace character
+         */
+        code: string
+
+        /**
+         * Name of the node
+         * Must have at least 1 non-whitespace character
+         */
+        name: string
+
+        /**
+         * Latitude coordinate of the node
+         * Must be a number between -90 and 90
+         */
+        latitude: number
+
+        /**
+         * Longitude coordinate of the node
+         * Must be a number between -180 and 180
+         */
+        longitude: number
+
+        /**
+         * Radius of coverage for the node in meters
+         * Must be a positive number
+         */
+        radius: number
+
+        /**
+         * ID of the city this node belongs to
+         * Must be a positive number
+         */
+        cityId: number
+
+        /**
+         * ID of the population this node belongs to
+         * Must be a positive number
+         */
+        populationId: number
+    }
+
+    export interface ListNodesQueryParams {
+        orderBy?: {
+            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            code?: string
+            name?: string
+            latitude?: number
+            longitude?: number
+            radius?: number
+            cityId?: number
+            populationId?: number
+            installationId?: number | null
+            createdAt?: string | null
+            updatedAt?: string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListNodesResult {
+        data: Node[]
+    }
+
+    export interface Node {
+        /**
+         * Unique identifier for the node
+         */
+        id: number
+
+        /**
+         * Unique code identifier for the node
+         */
+        code: string
+
+        /**
+         * Name of the node
+         */
+        name: string
+
+        /**
+         * Latitude coordinate of the node
+         */
+        latitude: number
+
+        /**
+         * Longitude coordinate of the node
+         */
+        longitude: number
+
+        /**
+         * Radius of coverage for the node in meters
+         */
+        radius: number
+
+        /**
+         * ID of the city this node belongs to
+         */
+        cityId: number
+
+        /**
+         * ID of the population this node belongs to
+         */
+        populationId: number
+
+        /**
+         * Optional ID of the installation associated with this node
+         */
+        installationId: number | null
+
+        /**
+         * Timestamp when the node record was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the node record was last updated
+         */
+        updatedAt: string | null
+    }
+
+    export interface NodeWithRelations {
+        city: cities.City
+        population: populations.Population
+        installation: installations.Installation | null
+        /**
+         * Unique identifier for the node
+         */
+        id: number
+
+        /**
+         * Unique code identifier for the node
+         */
+        code: string
+
+        /**
+         * Name of the node
+         */
+        name: string
+
+        /**
+         * Latitude coordinate of the node
+         */
+        latitude: number
+
+        /**
+         * Longitude coordinate of the node
+         */
+        longitude: number
+
+        /**
+         * Radius of coverage for the node in meters
+         */
+        radius: number
+
+        /**
+         * ID of the city this node belongs to
+         */
+        cityId: number
+
+        /**
+         * ID of the population this node belongs to
+         */
+        populationId: number
+
+        /**
+         * Optional ID of the installation associated with this node
+         */
+        installationId: number | null
+
+        /**
+         * Timestamp when the node record was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the node record was last updated
+         */
+        updatedAt: string | null
+    }
+
+    export interface PaginatedListNodesQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            code?: string
+            name?: string
+            latitude?: number
+            longitude?: number
+            radius?: number
+            cityId?: number
+            populationId?: number
+            installationId?: number | null
+            createdAt?: string | null
+            updatedAt?: string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListNodesResult {
+        pagination: shared.PaginationMeta
+        data: NodeWithRelations[]
     }
 }
 

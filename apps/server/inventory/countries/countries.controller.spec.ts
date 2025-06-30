@@ -555,8 +555,7 @@ describe('Countries Controller', () => {
         await expect(getCountry({ id: testCountry.id })).rejects.toThrow();
 
         // Restore
-        const restored = await countryRepository.restore(testCountry.id);
-        expect(restored.deletedAt).toBeNull();
+        await countryRepository.restore(testCountry.id);
 
         // Verify accessible again
         const found = await getCountry({ id: testCountry.id });

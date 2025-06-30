@@ -1,15 +1,21 @@
+import { faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
-import { ID_OFFSET } from './constants';
-import { extractTablesFromSchema } from './factory-utils';
+import { extractTablesFromSchema, generateId } from './factory-utils';
 
 export const countryFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'countries',
-  resolver: ({ sequence }) => ({
-    id: sequence + ID_OFFSET,
-    name: `Country ${sequence + ID_OFFSET}`,
-    code: `CC${sequence + ID_OFFSET}`,
-    active: true,
-  }),
+  resolver: ({ sequence }) => {
+    const id = generateId(sequence);
+    return {
+      id,
+      name: `Country ${id}`,
+      code: `CC${id}`,
+      active: true,
+      deletedAt: faker.helpers.maybe(() => faker.date.recent({ days: 30 }), {
+        probability: 0.1,
+      }),
+    };
+  },
 });

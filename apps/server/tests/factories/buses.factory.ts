@@ -3,22 +3,22 @@ import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
 import { BusStatus } from '../../inventory/buses/buses.types';
 import { busModelFactory } from './bus-models.factory';
-import { ID_OFFSET } from './constants';
-import { extractTablesFromSchema } from './factory-utils';
+import { extractTablesFromSchema, generateId } from './factory-utils';
 import { seatDiagramFactory } from './seat-diagrams.factory';
 
 export const busFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'buses',
   resolver: ({ sequence, use }) => {
+    const id = generateId(sequence);
     const statuses = Object.values(BusStatus);
     const serviceTypes = ['regular', 'executive', 'premium', 'luxury'];
     const baseCodes = ['CDMX', 'GDL', 'MTY', 'CUN', 'OAX'];
     const licensePlateTypes = ['federal', 'state', 'tourist', 'standard'];
 
     return {
-      id: sequence + ID_OFFSET,
-      registrationNumber: `TEST${String(sequence).padStart(3, '0')}`,
+      id,
+      registrationNumber: `TEST${String(id).padStart(3, '0')}`,
       modelId: () =>
         use(busModelFactory)
           .create()

@@ -3,14 +3,14 @@ import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
 import { busLineFactory } from './bus-line.factory';
 import { busFactory } from './buses.factory';
-import { ID_OFFSET } from './constants';
-import { extractTablesFromSchema } from './factory-utils';
+import { extractTablesFromSchema, generateId } from './factory-utils';
 import { transporterFactory } from './transporters.factory';
 
 export const driverFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'drivers',
   resolver: ({ sequence, use }) => {
+    const id = generateId(sequence);
     const civilStatuses = ['single', 'married', 'divorced', 'widowed'];
     const driverTypes = ['standard', 'substitute', 'temporary', 'tourist'];
     const positions = [
@@ -31,8 +31,8 @@ export const driverFactory = defineFactory({
     const companies = ['Main Company', 'Secondary', 'Subsidiary', 'Contractor'];
 
     return {
-      id: sequence + ID_OFFSET,
-      driverKey: `DRV${String(sequence).padStart(3, '0')}`,
+      id,
+      driverKey: `DRV${String(id).padStart(3, '0')}`,
       fullName: faker.person.fullName(),
       rfc:
         faker.string.alpha(4).toUpperCase() +

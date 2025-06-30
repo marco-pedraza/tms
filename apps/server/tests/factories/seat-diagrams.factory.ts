@@ -2,13 +2,13 @@ import { fakerES_MX as faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
 import { busDiagramModelFactory } from './bus-diagram-models.factory';
-import { ID_OFFSET } from './constants';
-import { extractTablesFromSchema } from './factory-utils';
+import { extractTablesFromSchema, generateId } from './factory-utils';
 
 export const seatDiagramFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'seatDiagrams',
   resolver: ({ sequence, use }) => {
+    const id = generateId(sequence);
     const floorCount = faker.helpers.maybe(() => 2, { probability: 0.25 }) || 1;
     const layoutNames = [
       'Standard',
@@ -41,7 +41,7 @@ export const seatDiagramFactory = defineFactory({
     );
 
     return {
-      id: sequence + ID_OFFSET,
+      id,
       busDiagramModelId: () =>
         use(busDiagramModelFactory)
           .create()

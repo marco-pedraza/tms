@@ -2,13 +2,13 @@ import { fakerES_MX as faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
 import { busDiagramModelFactory } from './bus-diagram-models.factory';
-import { ID_OFFSET } from './constants';
-import { extractTablesFromSchema } from './factory-utils';
+import { extractTablesFromSchema, generateId } from './factory-utils';
 
 export const busModelFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'busModels',
   resolver: ({ sequence, use }) => {
+    const id = generateId(sequence);
     const manufacturers = [
       'Volvo',
       'Mercedes-Benz',
@@ -45,7 +45,7 @@ export const busModelFactory = defineFactory({
     ];
 
     return {
-      id: sequence + ID_OFFSET,
+      id,
       defaultBusDiagramModelId: () =>
         use(busDiagramModelFactory)
           .create()

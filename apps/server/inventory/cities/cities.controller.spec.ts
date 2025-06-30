@@ -55,12 +55,14 @@ describe('Cities Controller', () => {
     testCountry = (await countryFactory(factoryDb).create({
       name: createUniqueName('Test Country for Cities', testSuiteId),
       code: `TCC${testSuiteId.substring(0, 4)}`,
+      deletedAt: null,
     })) as Country;
 
     testState = (await stateFactory(factoryDb).create({
       name: createUniqueName('Test State for Cities', testSuiteId),
       code: `TSC${testSuiteId.substring(0, 4)}`,
       countryId: testCountry.id,
+      deletedAt: null,
     })) as State;
 
     // Create a test city for reuse in multiple tests
@@ -70,6 +72,7 @@ describe('Cities Controller', () => {
       timezone: 'America/Mexico_City',
       latitude: 19.4326,
       longitude: -99.1332,
+      deletedAt: null,
     })) as City;
     cityCleanup.track(testCity.id);
   });

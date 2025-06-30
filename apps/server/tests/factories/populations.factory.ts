@@ -1,20 +1,20 @@
 import { fakerES_MX as faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
-import { ID_OFFSET } from './constants';
-import { extractTablesFromSchema } from './factory-utils';
+import { extractTablesFromSchema, generateId } from './factory-utils';
 
 export const populationFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'populations',
   resolver: ({ sequence }) => {
+    const id = generateId(sequence);
     const populationTypes = ['Metropolitan', 'Suburban', 'Tourist'];
 
     const basePopulationType = faker.helpers.arrayElement(populationTypes);
     const regionName = faker.location.state();
 
     return {
-      id: sequence + ID_OFFSET,
+      id,
       code: `POP${String(sequence).padStart(3, '0')}`,
       name: `${basePopulationType} ${regionName}`,
       description: faker.helpers.maybe(

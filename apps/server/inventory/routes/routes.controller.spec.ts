@@ -38,19 +38,23 @@ describe.skip('Routes Controller', () => {
   let createdRouteId: number;
 
   beforeAll(async () => {
-    testState = (await stateFactory(factoryDb).create()) as State;
+    testState = (await stateFactory(factoryDb).create({
+      deletedAt: null,
+    })) as State;
 
     // Create two cities in the same state
     testCity1 = (await cityFactory(factoryDb).create({
       stateId: testState.id,
       name: 'Origin City',
       slug: 'origin-city',
+      deletedAt: null,
     })) as City;
 
     testCity2 = (await cityFactory(factoryDb).create({
       stateId: testState.id,
       name: 'Destination City',
       slug: 'destination-city',
+      deletedAt: null,
     })) as City;
 
     // Create terminals in each city

@@ -1,7 +1,6 @@
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
-import { ID_OFFSET } from './constants';
-import { extractTablesFromSchema } from './factory-utils';
+import { extractTablesFromSchema, generateId } from './factory-utils';
 import { seatDiagramFactory } from './seat-diagrams.factory';
 
 type ResolverParams = {
@@ -20,6 +19,7 @@ export const seatDiagramZoneFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'seatDiagramZones',
   resolver: ({ sequence, use, params }: ResolverParams) => {
+    const id = generateId(sequence);
     // More comprehensive list of zone names with realistic values
     const zoneNames = [
       'Business',
@@ -57,7 +57,7 @@ export const seatDiagramZoneFactory = defineFactory({
     }
 
     return {
-      id: sequence + ID_OFFSET,
+      id,
       seatDiagramId: () =>
         use(seatDiagramFactory)
           .create()

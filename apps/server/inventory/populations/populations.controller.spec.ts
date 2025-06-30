@@ -656,30 +656,29 @@ describe('Populations Controller', () => {
     let testPopulationForCityAssignment: Population;
 
     beforeAll(async () => {
-      const ID_OFFSET = 500;
       // Create test dependencies using factories
       testCountry = (await countryFactory(factoryDb).create({
-        id: ID_OFFSET,
         name: createUniqueName('Test Country for City Assignment', testSuiteId),
         code: `TCA${testSuiteId.substring(0, 4)}`,
+        deletedAt: null, // Ensure country is active for tests
       })) as Country;
 
       testState = (await stateFactory(factoryDb).create({
-        id: ID_OFFSET,
         name: createUniqueName('Test State for City Assignment', testSuiteId),
         code: `TSA${testSuiteId.substring(0, 4)}`,
         countryId: testCountry.id,
+        deletedAt: null, // Ensure state is active for tests
       })) as State;
 
       // Create test cities using factory
       for (let i = 0; i < 4; i++) {
         const city = (await cityFactory(factoryDb).create({
-          id: ID_OFFSET + i,
           name: createUniqueName(`Test City ${i + 1}`, testSuiteId),
           stateId: testState.id,
           timezone: 'America/Mexico_City',
           latitude: 19.4326 + i,
           longitude: -99.1332 + i,
+          deletedAt: null,
         })) as City;
         testCities.push(city);
       }

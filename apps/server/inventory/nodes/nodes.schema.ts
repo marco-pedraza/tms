@@ -40,8 +40,8 @@ export const nodes = pgTable(
     index().on(table.name),
     index().on(table.cityId),
     index().on(table.populationId),
-    index().on(table.installationId),
     index().on(table.deletedAt),
+    uniqueIndex().on(table.installationId).where(isNull(table.deletedAt)),
     uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
   ],
 );

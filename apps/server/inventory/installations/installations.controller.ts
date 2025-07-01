@@ -1,5 +1,6 @@
 import { api } from 'encore.dev/api';
 import type {
+  CreateNodeInstallationPayload,
   Installation,
   ListInstallationsQueryParams,
   ListInstallationsResult,
@@ -8,6 +9,8 @@ import type {
   UpdateInstallationPayload,
 } from './installations.types';
 import { installationRepository } from './installations.repository';
+import { validateNodeInstallation } from './installations.domain';
+import { installationUseCases } from './installations.use-cases';
 
 /**
  * Retrieves an installation by its ID.
@@ -70,6 +73,20 @@ export const listInstallationsPaginated = api(
     params: PaginatedListInstallationsQueryParams,
   ): Promise<PaginatedListInstallationsResult> => {
     return await installationRepository.findAllPaginated(params);
+  },
+);
+
+/**
+ * Creates a new installation associated with a node.
+ * @param params - The installation data including nodeId, name, and optional description
+ * @returns {Promise<Installation>} The created installation
+ * @throws {APIError} If the node is not found, already has an installation, or creation fails
+ */
+export const createInstallation = api(
+  { expose: true, method: 'POST', path: '/installations/create' },
+  async (params: CreateNodeInstallationPayload): Promise<Installation> => {
+    await validateNodeInstallation(params);
+    return await installationUseCases.createNodeInstallation(params);
   },
 );
 

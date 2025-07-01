@@ -1,5 +1,5 @@
 // API types
-import { MatchesRegexp, MinLen } from 'encore.dev/validate';
+import { MatchesRegexp, Min, MinLen } from 'encore.dev/validate';
 import {
   ListQueryParams,
   ListQueryResult,
@@ -36,6 +36,34 @@ export interface Installation {
  * There is no public endpoint for creating installations independently
  */
 export interface CreateInstallationPayload {
+  /**
+   * Name of the installation
+   * Must have at least 1 non-whitespace character
+   */
+  name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Physical address of the installation
+   * Must have at least 1 non-whitespace character
+   */
+  address: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Optional description of the installation
+   */
+  description?: string | null;
+}
+
+/**
+ * Input for creating a new installation associated with a node
+ */
+export interface CreateNodeInstallationPayload {
+  /**
+   * ID of the node to associate the installation with
+   * Must be a positive number
+   */
+  nodeId: number & Min<1>;
+
   /**
    * Name of the installation
    * Must have at least 1 non-whitespace character

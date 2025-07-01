@@ -106,6 +106,7 @@ export namespace inventory {
             this.createCountry = this.createCountry.bind(this)
             this.createDriver = this.createDriver.bind(this)
             this.createGate = this.createGate.bind(this)
+            this.createInstallation = this.createInstallation.bind(this)
             this.createNode = this.createNode.bind(this)
             this.createPathway = this.createPathway.bind(this)
             this.createPathwayService = this.createPathwayService.bind(this)
@@ -425,6 +426,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/gates`, JSON.stringify(params))
             return await resp.json() as gates.Gate
+        }
+
+        /**
+         * Creates a new installation associated with a node.
+         * @param params - The installation data including nodeId, name, and optional description
+         * @returns {Promise<Installation>} The created installation
+         * @throws {APIError} If the node is not found, already has an installation, or creation fails
+         */
+        public async createInstallation(params: installations.CreateNodeInstallationPayload): Promise<installations.Installation> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/installations/create`, JSON.stringify(params))
+            return await resp.json() as installations.Installation
         }
 
         /**
@@ -8122,6 +8135,31 @@ export namespace gates {
 }
 
 export namespace installations {
+    export interface CreateNodeInstallationPayload {
+        /**
+         * ID of the node to associate the installation with
+         * Must be a positive number
+         */
+        nodeId: number
+
+        /**
+         * Name of the installation
+         * Must have at least 1 non-whitespace character
+         */
+        name: string
+
+        /**
+         * Physical address of the installation
+         * Must have at least 1 non-whitespace character
+         */
+        address: string
+
+        /**
+         * Optional description of the installation
+         */
+        description?: string | null
+    }
+
     export interface Installation {
         /**
          * Unique identifier for the installation

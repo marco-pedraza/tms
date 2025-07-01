@@ -1,4 +1,4 @@
-import { inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { PaginationMeta } from '../../shared/types';
 import { db } from '../db-service';
@@ -94,10 +94,40 @@ export function createNodeRepository() {
     };
   }
 
+  /**
+   * Assigns an installation to a node
+   * This method is used internally by the system to link installations to nodes
+   * @param nodeId - The ID of the node to assign the installation to
+   * @param installationId - The ID of the installation to assign
+   * @param transaction - Optional database transaction
+   * @returns The updated node
+   * @throws {NotFoundError} If the node is not found
+   */
+  async function assignInstallation(
+    nodeId: number,
+    installationId: number,
+    transaction?: unknown,
+  ): Promise<Node> {
+    const dbInstance = (transaction as typeof db) || db;
+
+    const [updatedNode] = await dbInstance
+      .update(nodes)
+      .set({ installationId })
+      .where(eq(nodes.id, nodeId))
+      .returning();
+
+    if (!updatedNode) {
+      throw new NotFoundError(`Node with id ${nodeId} not found`);
+    }
+
+    return updatedNode;
+  }
+
   return {
     ...baseRepository,
     findOneWithRelations,
     appendRelations,
+    assignInstallation,
   };
 }
 

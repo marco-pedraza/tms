@@ -46,6 +46,6 @@ CREATE INDEX IF NOT EXISTS "installations_deleted_at_index" ON "installations" U
 CREATE INDEX IF NOT EXISTS "nodes_name_index" ON "nodes" USING btree ("name");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "nodes_city_id_index" ON "nodes" USING btree ("city_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "nodes_population_id_index" ON "nodes" USING btree ("population_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "nodes_installation_id_index" ON "nodes" USING btree ("installation_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "nodes_deleted_at_index" ON "nodes" USING btree ("deleted_at");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "nodes_installation_id_index" ON "nodes" USING btree ("installation_id") WHERE "nodes"."deleted_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "nodes_code_index" ON "nodes" USING btree ("code") WHERE "nodes"."deleted_at" is null;

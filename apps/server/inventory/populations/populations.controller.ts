@@ -2,6 +2,7 @@ import { api } from 'encore.dev/api';
 import type {
   AssignCitiesPayload,
   CreatePopulationPayload,
+  ListAvailableCitiesResult,
   ListPopulationsQueryParams,
   ListPopulationsResult,
   PaginatedListPopulationsQueryParams,
@@ -119,6 +120,24 @@ export const assignCitiesToPopulation = api(
   }): Promise<PopulationWithRelations> => {
     await validateCityAssignment(id, data);
     return await populationUseCases.assignCities(id, data);
+  },
+);
+
+/**
+ * Retrieves available cities for assignment to a population.
+ * Returns cities not assigned to any population, or if populationId is provided,
+ * includes cities assigned to that specific population.
+ * @param params - Object with optional populationId query parameter
+ * @param params.populationId - Optional population ID query parameter to include its assigned cities
+ * @returns {Promise<ListAvailableCitiesResult>} Unified response with data property containing array of cities with state and country information
+ * @throws {APIError} If retrieval fails
+ */
+export const listAvailableCities = api(
+  { expose: true, method: 'GET', path: '/populations/cities' },
+  async (params: {
+    populationId?: number;
+  }): Promise<ListAvailableCitiesResult> => {
+    return await populationUseCases.findAvailableCities(params);
   },
 );
 

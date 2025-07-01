@@ -168,6 +168,7 @@ export namespace inventory {
             this.getTerminal = this.getTerminal.bind(this)
             this.getTimezone = this.getTimezone.bind(this)
             this.getTransporter = this.getTransporter.bind(this)
+            this.listAvailableCities = this.listAvailableCities.bind(this)
             this.listBusDiagramModels = this.listBusDiagramModels.bind(this)
             this.listBusDiagramModelsPaginated = this.listBusDiagramModelsPaginated.bind(this)
             this.listBusLines = this.listBusLines.bind(this)
@@ -1211,6 +1212,28 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/transporters/${encodeURIComponent(id)}`)
             return await resp.json() as transporters.TransporterWithCity
+        }
+
+        /**
+         * Retrieves available cities for assignment to a population.
+         * Returns cities not assigned to any population, or if populationId is provided,
+         * includes cities assigned to that specific population.
+         * @param params - Object with optional populationId query parameter
+         * @param params.populationId - Optional population ID query parameter to include its assigned cities
+         * @returns {Promise<ListAvailableCitiesResult>} Unified response with data property containing array of cities with state and country information
+         * @throws {APIError} If retrieval fails
+         */
+        public async listAvailableCities(params: {
+    populationId?: number
+}): Promise<populations.ListAvailableCitiesResult> {
+            // Convert our params into the objects we need for the request
+            const query = makeRecord<string, string | string[]>({
+                populationId: params.populationId === undefined ? undefined : String(params.populationId),
+            })
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/populations/cities`, undefined, {query})
+            return await resp.json() as populations.ListAvailableCitiesResult
         }
 
         /**
@@ -9010,6 +9033,10 @@ export namespace populations {
          * @default true
          */
         active?: boolean
+    }
+
+    export interface ListAvailableCitiesResult {
+        data: cities.CityWithRelations[]
     }
 
     export interface ListPopulationsQueryParams {

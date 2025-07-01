@@ -14,6 +14,7 @@ import {
 } from '../../tests/shared/test-utils';
 import { cityRepository } from '../cities/cities.repository';
 import type { City } from '../cities/cities.types';
+import type { CityWithRelations } from '../cities/cities.types';
 import { countryRepository } from '../countries/countries.repository';
 import type { Country } from '../countries/countries.types';
 import { db } from '../db-service';
@@ -26,6 +27,7 @@ import {
   createPopulation,
   deletePopulation,
   getPopulation,
+  listAvailableCities,
   listPopulations,
   listPopulationsPaginated,
   updatePopulation,
@@ -783,6 +785,7 @@ describe('Populations Controller', () => {
       expect(firstCity.active).toBeDefined();
       expect(firstCity.createdAt).toBeDefined();
       expect(firstCity.updatedAt).toBeDefined();
+      expect(firstCity.slug).toBeDefined();
     });
 
     test('should return empty cities array when no cities are assigned', async () => {
@@ -938,6 +941,189 @@ describe('Populations Controller', () => {
         'NOT_FOUND',
         'Cities with IDs [99999] not found',
       );
+    });
+  });
+
+  describe('list available cities', () => {
+    // Create separate test data for available cities scenarios
+    let populationForAvailableCities: Population;
+    let testCitiesForAvailable: City[];
+    let testStateForAvailable: State;
+    let testCountryForAvailable: Country;
+
+    // Create cleanup helper for test populations in available cities tests
+    const testPopulationCleanup = createCleanupHelper(
+      deletePopulation,
+      'available-cities-test-population',
+    );
+
+    beforeAll(async () => {
+      const factoryDb = getFactoryDb(db);
+
+      // Create test country and state for these tests
+      testCountryForAvailable = (await countryFactory(factoryDb).create({
+        name: createUniqueName(
+          'Test Country for Available Cities',
+          testSuiteId,
+        ),
+        code: `TAC${testSuiteId.substring(0, 4)}`,
+        deletedAt: null,
+      })) as Country;
+
+      testStateForAvailable = (await stateFactory(factoryDb).create({
+        name: createUniqueName('Test State for Available Cities', testSuiteId),
+        code: `TAS${testSuiteId.substring(0, 4)}`,
+        countryId: testCountryForAvailable.id,
+        deletedAt: null,
+      })) as State;
+
+      // Create a population specifically for available cities tests
+      populationForAvailableCities = await createPopulation({
+        name: createUniqueName('Population for Available Cities', testSuiteId),
+        code: createUniqueCode('PAC'),
+        description: 'Population for testing available cities',
+        active: true,
+      });
+      testPopulationCleanup.track(populationForAvailableCities.id);
+
+      // Create additional test cities for these tests
+      testCitiesForAvailable = [];
+      for (let i = 0; i < 4; i++) {
+        const city = (await cityFactory(factoryDb).create({
+          name: createUniqueName(`Available City ${i + 1}`, testSuiteId),
+          stateId: testStateForAvailable.id,
+          timezone: 'America/Mexico_City',
+          latitude: 19.4326 + i,
+          longitude: -99.1332 + i,
+          deletedAt: null,
+        })) as City;
+        testCitiesForAvailable.push(city);
+      }
+    });
+
+    afterAll(async () => {
+      // Clean up in reverse order of dependencies
+      await testPopulationCleanup.cleanupAll();
+
+      // Clean up cities
+      for (const city of testCitiesForAvailable) {
+        if (city?.id) {
+          try {
+            await cityRepository.delete(city.id);
+          } catch (error) {
+            console.log('Error cleaning up test city:', error);
+          }
+        }
+      }
+
+      // Clean up state
+      if (testStateForAvailable?.id) {
+        try {
+          await stateRepository.delete(testStateForAvailable.id);
+        } catch (error) {
+          console.log('Error cleaning up test state:', error);
+        }
+      }
+
+      // Clean up country
+      if (testCountryForAvailable?.id) {
+        try {
+          await countryRepository.delete(testCountryForAvailable.id);
+        } catch (error) {
+          console.log('Error cleaning up test country:', error);
+        }
+      }
+    });
+
+    test('should return all unassigned cities when no populationId provided', async () => {
+      // Assign some cities to a population to make them unavailable
+      await assignCitiesToPopulation({
+        id: populationForAvailableCities.id,
+        cityIds: [testCitiesForAvailable[0].id, testCitiesForAvailable[1].id],
+      });
+
+      // Get available cities without specifying a population
+      const response = await listAvailableCities({});
+
+      expect(response).toBeDefined();
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+
+      // Should not include the assigned cities
+      const availableCityIds = response.data.map((city) => city.id);
+      expect(availableCityIds).not.toContain(testCitiesForAvailable[0].id);
+      expect(availableCityIds).not.toContain(testCitiesForAvailable[1].id);
+
+      // Should include unassigned cities
+      expect(availableCityIds).toContain(testCitiesForAvailable[2].id);
+      expect(availableCityIds).toContain(testCitiesForAvailable[3].id);
+    });
+
+    test('should return unassigned cities plus cities assigned to the specified population', async () => {
+      // Assign cities to our test population
+      await assignCitiesToPopulation({
+        id: populationForAvailableCities.id,
+        cityIds: [testCitiesForAvailable[0].id, testCitiesForAvailable[1].id],
+      });
+
+      // Get available cities for this specific population
+      const response = await listAvailableCities({
+        populationId: populationForAvailableCities.id,
+      });
+
+      expect(response).toBeDefined();
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+
+      const availableCityIds = response.data.map((city) => city.id);
+
+      // Should include cities assigned to this population
+      expect(availableCityIds).toContain(testCitiesForAvailable[0].id);
+      expect(availableCityIds).toContain(testCitiesForAvailable[1].id);
+
+      // Should also include unassigned cities
+      expect(availableCityIds).toContain(testCitiesForAvailable[2].id);
+      expect(availableCityIds).toContain(testCitiesForAvailable[3].id);
+    });
+
+    test('should return cities with state and country information', async () => {
+      const response = await listAvailableCities({});
+
+      expect(response.data.length).toBeGreaterThan(0);
+
+      const firstCity = response.data[0] as CityWithRelations;
+
+      // Verify city structure
+      expect(firstCity.id).toBeDefined();
+      expect(firstCity.name).toBeDefined();
+      expect(firstCity.stateId).toBeDefined();
+      expect(firstCity.latitude).toBeDefined();
+      expect(firstCity.longitude).toBeDefined();
+      expect(firstCity.timezone).toBeDefined();
+      expect(firstCity.active).toBeDefined();
+      expect(firstCity.slug).toBeDefined();
+
+      // Verify state information is included
+      expect(firstCity.state).toBeDefined();
+      expect(firstCity.state.id).toBeDefined();
+      expect(firstCity.state.name).toBeDefined();
+      expect(firstCity.state.code).toBeDefined();
+      expect(firstCity.state.countryId).toBeDefined();
+
+      // Verify country information is included
+      expect(firstCity.state.country).toBeDefined();
+      expect(firstCity.state.country.id).toBeDefined();
+      expect(firstCity.state.country.name).toBeDefined();
+      expect(firstCity.state.country.code).toBeDefined();
+
+      // Verify default ordering by name (consolidated here)
+      if (response.data.length > 1) {
+        for (let i = 1; i < response.data.length; i++) {
+          expect(
+            response.data[i - 1].name.localeCompare(response.data[i].name),
+          ).toBeLessThanOrEqual(0);
+        }
+      }
     });
   });
 });

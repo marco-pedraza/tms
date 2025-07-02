@@ -611,6 +611,9 @@
       "update": "Actualizar Población",
       "backToList": "Volver a poblaciones"
     },
+    "sections": {
+      "cities": "Ciudades"
+    },
     "form": {
       "title": "Información de la población",
       "placeholders": {

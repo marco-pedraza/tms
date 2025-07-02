@@ -63,6 +63,7 @@ interface DataTableProps<TData extends object> {
     getDetailsRoute: (id: string) => string;
     getEditRoute: (id: string) => string;
   };
+  displayActionsColumn?: boolean;
 }
 
 interface TableData {
@@ -88,6 +89,7 @@ export function DataTable<TData extends TableData>({
   onFiltersChange = () => {},
   onDelete,
   routes,
+  displayActionsColumn = true,
 }: DataTableProps<TData>) {
   const sortingState: SortingState =
     sorting?.map((sort) => ({
@@ -218,7 +220,7 @@ export function DataTable<TData extends TableData>({
                             );
                           },
                         )}
-                        <TableHead key="actions" />
+                        {displayActionsColumn && <TableHead key="actions" />}
                       </TableRow>
                     );
                   })}
@@ -246,17 +248,21 @@ export function DataTable<TData extends TableData>({
                         )}
                       </TableCell>
                     ))}
-                    <TableCell>
-                      <DataTableActionsCell
-                        detailsHref={routes.getDetailsRoute(
-                          row.original.id.toString(),
-                        )}
-                        editHref={routes.getEditRoute(
-                          row.original.id.toString(),
-                        )}
-                        onDelete={() => onDelete(row.original.id)}
-                      />
-                    </TableCell>
+                    {displayActionsColumn && (
+                      <TableCell>
+                        <DataTableActionsCell
+                          detailsHref={routes.getDetailsRoute(
+                            row.original.id.toString(),
+                          )}
+                          editHref={routes.getEditRoute(
+                            row.original.id.toString(),
+                          )}
+                          onDelete={() => {
+                            onDelete(row.original.id);
+                          }}
+                        />
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

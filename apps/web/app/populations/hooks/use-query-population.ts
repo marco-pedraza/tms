@@ -17,7 +17,10 @@ interface UseQueryPopulationParams {
 export default function useQueryPopulation({
   populationId,
   enabled = true,
-}: UseQueryPopulationParams): UseQueryResult<populations.Population, APIError> {
+}: UseQueryPopulationParams): UseQueryResult<
+  populations.PopulationWithRelations,
+  APIError
+> {
   const queryClient = useQueryClient();
 
   return useQuery({

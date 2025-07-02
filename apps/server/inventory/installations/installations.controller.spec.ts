@@ -13,10 +13,7 @@ import { db } from '../db-service';
 import { createNode } from '../nodes/nodes.controller';
 import { nodeRepository } from '../nodes/nodes.repository';
 import { populationRepository } from '../populations/populations.repository';
-import type {
-  CreateInstallationPayload,
-  CreateNodeInstallationPayload,
-} from './installations.types';
+import type { CreateNodeInstallationPayload } from './installations.types';
 import { installationRepository } from './installations.repository';
 import {
   createInstallation,
@@ -41,14 +38,7 @@ describe('Installations Controller', () => {
     'node',
   );
 
-  // Test data and setup
-  const testInstallation = {
-    name: createUniqueName('Test Installation', testSuiteId),
-    address: 'Test Address 123',
-    description: 'Test installation description',
-  };
-
-  // Variable to store created IDs for cleanup
+  // Variables to store created IDs for cleanup
   let createdInstallationId: number;
   let testCityId: number;
   let testPopulationId: number;
@@ -71,7 +61,7 @@ describe('Installations Controller', () => {
     });
     testPopulationId = testPopulation.id;
 
-    // Create a test node without installation for testing installation creation
+    // Create a test node for installation creation
     const nodeData = {
       code: createUniqueCode('TN', 3),
       name: createUniqueName('Test Node', testSuiteId),
@@ -86,24 +76,39 @@ describe('Installations Controller', () => {
   });
 
   /**
-   * Helper function to create a test installation using repository
-   * Since there's no public create endpoint, we use the repository directly
+   * Helper function to create a test installation using the controller
+   * Uses the public createInstallation endpoint with a node association
    */
   async function createTestInstallation(
     baseName = 'Test Installation',
-    options: Partial<CreateInstallationPayload> = {},
+    options: Partial<CreateNodeInstallationPayload> = {},
   ) {
+    // Create a dedicated node for this installation if not provided
+    let nodeId = options.nodeId;
+    if (!nodeId) {
+      const nodeData = {
+        code: createUniqueCode('TN', 3),
+        name: createUniqueName('Helper Node', testSuiteId),
+        latitude: 19.4326 + Math.random() * 0.1, // Slight variation to avoid conflicts
+        longitude: -99.1332 + Math.random() * 0.1,
+        radius: 1000,
+        cityId: testCityId,
+        populationId: testPopulationId,
+      };
+      const node = await createNode(nodeData);
+      nodeId = nodeCleanup.track(node.id);
+    }
+
     const uniqueName = createUniqueName(baseName, testSuiteId);
-    const data = {
+    const data: CreateNodeInstallationPayload = {
+      nodeId,
       name: uniqueName,
       address: 'Test Address 123',
       description: 'Test installation description',
       ...options,
     };
 
-    // Since we can't create installations through the controller,
-    // we'll use the repository directly for test setup
-    const installation = await installationRepository.create(data);
+    const installation = await createInstallation(data);
     return installationCleanup.track(installation.id);
   }
 
@@ -111,15 +116,6 @@ describe('Installations Controller', () => {
     // Clean up all tracked nodes and installations
     await nodeCleanup.cleanupAll();
     await installationCleanup.cleanupAll();
-
-    // Also clean up the main test installation if it exists
-    if (createdInstallationId) {
-      try {
-        await deleteInstallation({ id: createdInstallationId });
-      } catch (error) {
-        console.log('Error cleaning up main test installation:', error);
-      }
-    }
 
     // Clean up factory-created entities by specific IDs to avoid affecting other tests
     if (testPopulationId) {
@@ -139,20 +135,62 @@ describe('Installations Controller', () => {
   });
 
   describe('success scenarios', () => {
-    test('should create a test installation for testing purposes', async () => {
-      // Since there's no public create endpoint, we create using repository
-      const response = await installationRepository.create(testInstallation);
+    test('should create an installation associated with a node and retrieve it with location information', async () => {
+      const installationData: CreateNodeInstallationPayload = {
+        nodeId: testNodeId,
+        name: createUniqueName('Main Test Installation', testSuiteId),
+        address: 'Test Installation Address',
+        description: 'Installation created through node association',
+      };
 
-      // Store the ID for later cleanup
-      createdInstallationId = response.id;
+      const response = await createInstallation(installationData);
 
-      // Assertions
+      // Store the ID for later cleanup and use in other tests
+      createdInstallationId = installationCleanup.track(response.id);
+
+      // Verify creation
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
-      expect(response.name).toBe(testInstallation.name);
-      expect(response.address).toBe(testInstallation.address);
-      expect(response.description).toBe(testInstallation.description);
+      expect(response.name).toBe(installationData.name);
+      expect(response.description).toBe(installationData.description);
+      expect(response.address).toBe(installationData.address);
       expect(response.createdAt).toBeDefined();
+      expect(response.updatedAt).toBeDefined();
+
+      // Verify location information is included directly in creation response
+      expect(response.location).toBeDefined();
+      expect(response.location).not.toBeNull();
+      expect(response.location?.latitude).toBe(19.4326); // From test node data
+      expect(response.location?.longitude).toBe(-99.1332); // From test node data
+      expect(response.location?.radius).toBe(1000); // From test node data
+
+      // Verify the node was updated with the installation ID
+      const updatedNode = await nodeRepository.findOne(testNodeId);
+      expect(updatedNode?.installationId).toBe(response.id);
+
+      // Additional verification: retrieve it separately and verify consistency
+      const retrievedInstallation = await getInstallation({ id: response.id });
+
+      expect(retrievedInstallation).toBeDefined();
+      expect(retrievedInstallation.id).toBe(response.id);
+      expect(retrievedInstallation.name).toBe(installationData.name);
+      expect(retrievedInstallation.address).toBe(installationData.address);
+      expect(retrievedInstallation.description).toBe(
+        installationData.description,
+      );
+
+      // Verify location information consistency between create and get responses
+      expect(retrievedInstallation.location).toBeDefined();
+      expect(retrievedInstallation.location).not.toBeNull();
+      expect(retrievedInstallation.location?.latitude).toBe(
+        response.location?.latitude,
+      );
+      expect(retrievedInstallation.location?.longitude).toBe(
+        response.location?.longitude,
+      );
+      expect(retrievedInstallation.location?.radius).toBe(
+        response.location?.radius,
+      );
     });
 
     test('should retrieve an installation by ID', async () => {
@@ -160,7 +198,60 @@ describe('Installations Controller', () => {
 
       expect(response).toBeDefined();
       expect(response.id).toBe(createdInstallationId);
-      expect(response.name).toBe(testInstallation.name);
+      expect(response.name).toContain('Main Test Installation');
+
+      // Since this installation was created with a node association,
+      // the location should be present
+      expect(response.location).not.toBeNull();
+      expect(response.location?.latitude).toBe(19.4326);
+      expect(response.location?.longitude).toBe(-99.1332);
+      expect(response.location?.radius).toBe(1000);
+    });
+
+    test('should retrieve an installation with location information when associated with a node', async () => {
+      // Create a dedicated node for this test to avoid conflicts
+      const nodeForLocationTest = {
+        code: createUniqueCode('TNLOC', 3),
+        name: createUniqueName('Location Test Node', testSuiteId),
+        latitude: 20.5326,
+        longitude: -100.2332,
+        radius: 2000,
+        cityId: testCityId,
+        populationId: testPopulationId,
+      };
+      const locationTestNode = await createNode(nodeForLocationTest);
+      const locationTestNodeId = nodeCleanup.track(locationTestNode.id);
+
+      // Create an installation associated with this node
+      const installationData: CreateNodeInstallationPayload = {
+        nodeId: locationTestNodeId,
+        name: createUniqueName('Installation with Location', testSuiteId),
+        address: 'Test Installation with Location Address',
+        description: 'Installation with node location data',
+      };
+
+      const createdInstallation = await createInstallation(installationData);
+      const installationWithLocationId = installationCleanup.track(
+        createdInstallation.id,
+      );
+
+      // Now retrieve it and verify location information
+      const response = await getInstallation({
+        id: installationWithLocationId,
+      });
+
+      expect(response).toBeDefined();
+      expect(response.id).toBe(installationWithLocationId);
+      expect(response.name).toBe(installationData.name);
+      expect(response.address).toBe(installationData.address);
+      expect(response.description).toBe(installationData.description);
+
+      // Verify location information from the associated node
+      expect(response.location).toBeDefined();
+      expect(response.location).not.toBeNull();
+      expect(response.location?.latitude).toBe(20.5326); // From our test node data
+      expect(response.location?.longitude).toBe(-100.2332); // From our test node data
+      expect(response.location?.radius).toBe(2000); // From our test node data
     });
 
     test('should update an installation', async () => {
@@ -197,32 +288,6 @@ describe('Installations Controller', () => {
       await expect(
         getInstallation({ id: installationToDeleteId }),
       ).rejects.toThrow();
-    });
-
-    test('should create an installation associated with a node', async () => {
-      const installationData: CreateNodeInstallationPayload = {
-        nodeId: testNodeId,
-        name: createUniqueName('Node Installation', testSuiteId),
-        address: 'Test Node Installation Address',
-        description: 'Installation created through node association',
-      };
-
-      const response = await createInstallation(installationData);
-
-      expect(response).toBeDefined();
-      expect(response.id).toBeDefined();
-      expect(response.name).toBe(installationData.name);
-      expect(response.description).toBe(installationData.description);
-      expect(response.address).toBe(installationData.address);
-      expect(response.createdAt).toBeDefined();
-      expect(response.updatedAt).toBeDefined();
-
-      // Verify the node was updated with the installation ID
-      const updatedNode = await nodeRepository.findOne(testNodeId);
-      expect(updatedNode?.installationId).toBe(response.id);
-
-      // Track for cleanup
-      installationCleanup.track(response.id);
     });
   });
 

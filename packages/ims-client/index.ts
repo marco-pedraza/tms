@@ -431,13 +431,13 @@ export namespace inventory {
         /**
          * Creates a new installation associated with a node.
          * @param params - The installation data including nodeId, name, and optional description
-         * @returns {Promise<Installation>} The created installation
+         * @returns {Promise<InstallationWithLocation>} The created installation with location information from the associated node
          * @throws {APIError} If the node is not found, already has an installation, or creation fails
          */
-        public async createInstallation(params: installations.CreateNodeInstallationPayload): Promise<installations.Installation> {
+        public async createInstallation(params: installations.CreateNodeInstallationPayload): Promise<installations.InstallationWithLocation> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/installations/create`, JSON.stringify(params))
-            return await resp.json() as installations.Installation
+            return await resp.json() as installations.InstallationWithLocation
         }
 
         /**
@@ -1029,16 +1029,16 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves an installation by its ID.
+         * Retrieves an installation by its ID with location information.
          * @param params - Object containing the installation ID
          * @param params.id - The ID of the installation to retrieve
-         * @returns {Promise<Installation>} The found installation
+         * @returns {Promise<InstallationWithLocation>} The found installation with location data
          * @throws {APIError} If the installation is not found or retrieval fails
          */
-        public async getInstallation(id: number): Promise<installations.Installation> {
+        public async getInstallation(id: number): Promise<installations.InstallationWithLocation> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/installations/${encodeURIComponent(id)}`)
-            return await resp.json() as installations.Installation
+            return await resp.json() as installations.InstallationWithLocation
         }
 
         /**
@@ -1472,7 +1472,7 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves installations with pagination (useful for tables).
+         * Retrieves installations with pagination and includes location information.
          * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
          * @returns {Promise<PaginatedListInstallationsResult>} Unified paginated response with data and pagination properties
          * @throws {APIError} If retrieval fails
@@ -2902,7 +2902,7 @@ export namespace inventory {
          * Updates an existing installation.
          * @param params - Object containing the installation ID and update data
          * @param params.id - The ID of the installation to update
-         * @returns {Promise<Installation>} The updated installation
+         * @returns {Promise<InstallationWithLocation>} The updated installation with location information
          * @throws {APIError} If the installation is not found or update fails
          */
         public async updateInstallation(id: number, params: {
@@ -2922,10 +2922,10 @@ export namespace inventory {
      * Optional description of the installation
      */
     description?: string | null
-}): Promise<installations.Installation> {
+}): Promise<installations.InstallationWithLocation> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/installations/${encodeURIComponent(id)}/update`, JSON.stringify(params))
-            return await resp.json() as installations.Installation
+            return await resp.json() as installations.InstallationWithLocation
         }
 
         /**
@@ -8192,6 +8192,60 @@ export namespace installations {
         updatedAt: string | null
     }
 
+    export interface InstallationLocation {
+        /**
+         * Latitude coordinate of the installation
+         */
+        latitude: number
+
+        /**
+         * Longitude coordinate of the installation
+         */
+        longitude: number
+
+        /**
+         * Radius of coverage for the installation in meters
+         */
+        radius: number
+    }
+
+    export interface InstallationWithLocation {
+        /**
+         * Location information from the associated node
+         */
+        location: InstallationLocation | null
+
+        /**
+         * Unique identifier for the installation
+         */
+        id: number
+
+        /**
+         * Name of the installation
+         */
+        name: string
+
+        /**
+         * Physical address of the installation
+         */
+        address: string
+
+        /**
+         * Optional description of the installation
+         */
+        description: string | null
+
+        /**
+         * Timestamp when the installation record was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the installation record was last updated
+         */
+        updatedAt: string | null
+    }
+
     export interface ListInstallationsQueryParams {
         orderBy?: {
             field: "id" | "name" | "address" | "description" | "createdAt" | "updatedAt"
@@ -8232,7 +8286,7 @@ export namespace installations {
 
     export interface PaginatedListInstallationsResult {
         pagination: shared.PaginationMeta
-        data: Installation[]
+        data: InstallationWithLocation[]
     }
 }
 

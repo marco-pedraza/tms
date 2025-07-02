@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
 import { extractTablesFromSchema, generateId } from './factory-utils';
@@ -12,6 +13,9 @@ export const installationFactory = defineFactory({
       name: `Installation ${sequence}`,
       address: `${sequence} Test Street`,
       description: `Test installation ${sequence}`,
+      deletedAt: faker.helpers.maybe(() => faker.date.recent({ days: 30 }), {
+        probability: 0.1,
+      }),
     };
   },
 });

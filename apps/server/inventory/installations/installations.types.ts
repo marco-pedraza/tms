@@ -31,6 +31,28 @@ export interface Installation {
 }
 
 /**
+ * Location information for an installation
+ */
+export interface InstallationLocation {
+  /** Latitude coordinate of the installation */
+  latitude: number;
+
+  /** Longitude coordinate of the installation */
+  longitude: number;
+
+  /** Radius of coverage for the installation in meters */
+  radius: number;
+}
+
+/**
+ * Installation with location information from the associated node
+ */
+export interface InstallationWithLocation extends Installation {
+  /** Location information from the associated node */
+  location: InstallationLocation | null;
+}
+
+/**
  * Input for creating a new installation
  * Note: This is used internally by the system (e.g., when creating installations through nodes)
  * There is no public endpoint for creating installations independently
@@ -110,4 +132,4 @@ export type ListInstallationsResult = ListQueryResult<Installation>;
 export type PaginatedListInstallationsQueryParams =
   PaginatedListQueryParams<Installation>;
 export type PaginatedListInstallationsResult =
-  PaginatedListQueryResult<Installation>;
+  PaginatedListQueryResult<InstallationWithLocation>;

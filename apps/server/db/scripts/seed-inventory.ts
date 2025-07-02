@@ -5,6 +5,8 @@ import { Bus } from '../../inventory/buses/buses.types';
 import { City } from '../../inventory/cities/cities.types';
 import { Country } from '../../inventory/countries/countries.types';
 import { db } from '../../inventory/db-service';
+import { Installation } from '../../inventory/installations/installations.types';
+import { Node } from '../../inventory/nodes/nodes.types';
 import { PathwayService } from '../../inventory/pathway-services/pathway-services.types';
 import { pathwayUseCases } from '../../inventory/pathways/pathways.use-cases';
 import { populationCities } from '../../inventory/populations/populations.schema';
@@ -22,6 +24,8 @@ import {
   cityFactory,
   countryFactory,
   driverFactory,
+  installationFactory,
+  nodeFactory,
   stateFactory,
   terminalFactory,
 } from '../../tests/factories';
@@ -482,6 +486,72 @@ async function seedPopulations(cities: City[], states: State[]) {
   return populations;
 }
 
+async function seedInstallations(): Promise<Installation[]> {
+  const INSTALLATION_COUNT = 8;
+  const installationPayloads = Array.from(
+    { length: INSTALLATION_COUNT },
+    () => ({ deletedAt: null }),
+  );
+
+  const installations = (await installationFactory(factoryDb).create(
+    installationPayloads,
+  )) as Installation[];
+
+  console.log(`Seeded ${installations.length} installations`);
+  return installations;
+}
+
+async function seedNodes(
+  cities: City[],
+  populations: Population[],
+  installations: Installation[],
+): Promise<Node[]> {
+  const NODE_COUNT = 10;
+  const nodePayloads = [];
+
+  // Create nodes for each installation (1:1 relationship)
+  installations.forEach((installation) => {
+    const randomCity = cities[Math.floor(Math.random() * cities.length)];
+    const randomPopulation =
+      populations[Math.floor(Math.random() * populations.length)];
+
+    nodePayloads.push({
+      cityId: randomCity.id,
+      populationId: randomPopulation.id,
+      installationId: installation.id, // Each installation gets exactly one node
+      latitude: faker.location.latitude(),
+      longitude: faker.location.longitude(),
+      radius: faker.number.float({ min: 0.5, max: 10.0, fractionDigits: 2 }),
+      deletedAt: null,
+    });
+  });
+
+  // Create remaining nodes without installations
+  const remainingNodeCount = NODE_COUNT - installations.length;
+  for (let i = 0; i < remainingNodeCount; i++) {
+    const randomCity = cities[Math.floor(Math.random() * cities.length)];
+    const randomPopulation =
+      populations[Math.floor(Math.random() * populations.length)];
+
+    nodePayloads.push({
+      cityId: randomCity.id,
+      populationId: randomPopulation.id,
+      installationId: null, // No installation for these nodes
+      latitude: faker.location.latitude(),
+      longitude: faker.location.longitude(),
+      radius: faker.number.float({ min: 0.5, max: 10.0, fractionDigits: 2 }),
+      deletedAt: null,
+    });
+  }
+
+  const nodes = (await nodeFactory(factoryDb).create(nodePayloads)) as Node[];
+
+  console.log(
+    `Seeded ${nodes.length} nodes (${installations.length} with installations, ${remainingNodeCount} without)`,
+  );
+  return nodes;
+}
+
 async function seedDrivers(
   transporters: Transporter[],
   busLines: BusLine[],
@@ -531,7 +601,9 @@ export async function seedInventory(): Promise<void> {
     const states = await seedStates(mexicoCountry);
     const cities = await seedCities(states);
     const terminals = await seedTerminals(cities);
-    await seedPopulations(cities, states);
+    const populations = await seedPopulations(cities, states);
+    const installations = await seedInstallations();
+    await seedNodes(cities, populations, installations);
     const transporters = await seedTransporters(cities);
     const busLines = await seedBusLines(transporters);
     const pathwayServices = (await seedPathwayServices()) as PathwayService[];

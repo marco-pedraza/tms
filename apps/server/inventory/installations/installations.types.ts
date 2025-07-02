@@ -23,6 +23,9 @@ export interface Installation {
   /** Optional description of the installation */
   description: string | null;
 
+  /** ID of the installation type this installation belongs to */
+  installationTypeId: number | null;
+
   /** Timestamp when the installation record was created */
   createdAt: Date | null;
 
@@ -74,6 +77,12 @@ export interface CreateInstallationPayload {
    * Optional description of the installation
    */
   description?: string | null;
+
+  /**
+   * ID of the installation type this installation belongs to
+   * Must be a positive number
+   */
+  installationTypeId: (number & Min<1>) | null;
 }
 
 /**
@@ -124,6 +133,12 @@ export interface UpdateInstallationPayload {
    * Optional description of the installation
    */
   description?: string | null;
+
+  /**
+   * ID of the installation type this installation belongs to
+   * Must be a positive number
+   */
+  installationTypeId?: (number & Min<1>) | null;
 }
 
 export type ListInstallationsQueryParams = ListQueryParams<Installation>;

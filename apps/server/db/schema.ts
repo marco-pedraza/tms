@@ -85,3 +85,7 @@ export {
 } from '../inventory/populations/populations.schema';
 export { installations } from '../inventory/installations/installations.schema';
 export { nodes, nodesRelations } from '../inventory/nodes/nodes.schema';
+export {
+  installationTypes,
+  installationTypesRelations,
+} from '../inventory/installation-types/installation-types.schema';

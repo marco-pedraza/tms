@@ -107,6 +107,7 @@ export namespace inventory {
             this.createDriver = this.createDriver.bind(this)
             this.createGate = this.createGate.bind(this)
             this.createInstallation = this.createInstallation.bind(this)
+            this.createInstallationType = this.createInstallationType.bind(this)
             this.createNode = this.createNode.bind(this)
             this.createPathway = this.createPathway.bind(this)
             this.createPathwayService = this.createPathwayService.bind(this)
@@ -127,6 +128,7 @@ export namespace inventory {
             this.deleteDriver = this.deleteDriver.bind(this)
             this.deleteGate = this.deleteGate.bind(this)
             this.deleteInstallation = this.deleteInstallation.bind(this)
+            this.deleteInstallationType = this.deleteInstallationType.bind(this)
             this.deleteNode = this.deleteNode.bind(this)
             this.deletePathway = this.deletePathway.bind(this)
             this.deletePathwayService = this.deletePathwayService.bind(this)
@@ -154,6 +156,7 @@ export namespace inventory {
             this.getFacility = this.getFacility.bind(this)
             this.getGate = this.getGate.bind(this)
             this.getInstallation = this.getInstallation.bind(this)
+            this.getInstallationType = this.getInstallationType.bind(this)
             this.getNode = this.getNode.bind(this)
             this.getPathway = this.getPathway.bind(this)
             this.getPathwayService = this.getPathwayService.bind(this)
@@ -188,6 +191,8 @@ export namespace inventory {
             this.listFacilities = this.listFacilities.bind(this)
             this.listGates = this.listGates.bind(this)
             this.listGatesPaginated = this.listGatesPaginated.bind(this)
+            this.listInstallationTypes = this.listInstallationTypes.bind(this)
+            this.listInstallationTypesPaginated = this.listInstallationTypesPaginated.bind(this)
             this.listInstallations = this.listInstallations.bind(this)
             this.listInstallationsPaginated = this.listInstallationsPaginated.bind(this)
             this.listNodes = this.listNodes.bind(this)
@@ -239,6 +244,7 @@ export namespace inventory {
             this.updateDriver = this.updateDriver.bind(this)
             this.updateGate = this.updateGate.bind(this)
             this.updateInstallation = this.updateInstallation.bind(this)
+            this.updateInstallationType = this.updateInstallationType.bind(this)
             this.updateNode = this.updateNode.bind(this)
             this.updatePathway = this.updatePathway.bind(this)
             this.updatePathwayService = this.updatePathwayService.bind(this)
@@ -438,6 +444,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/installations/create`, JSON.stringify(params))
             return await resp.json() as installations.InstallationWithLocation
+        }
+
+        /**
+         * Creates a new installation type.
+         * @param params - The installation type data to create
+         * @returns {Promise<InstallationType>} The created installation type
+         * @throws {APIError} If the installation type creation fails
+         */
+        public async createInstallationType(params: installation_types.CreateInstallationTypePayload): Promise<installation_types.InstallationType> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/installation/types/create`, JSON.stringify(params))
+            return await resp.json() as installation_types.InstallationType
         }
 
         /**
@@ -699,6 +717,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/installations/${encodeURIComponent(id)}/delete`)
             return await resp.json() as installations.Installation
+        }
+
+        /**
+         * Deletes an installation type by its ID.
+         * @param params - Object containing the installation type ID
+         * @param params.id - The ID of the installation type to delete
+         * @returns {Promise<InstallationType>} The deleted installation type
+         * @throws {APIError} If the installation type is not found or deletion fails
+         */
+        public async deleteInstallationType(id: number): Promise<installation_types.InstallationType> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/installation/types/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as installation_types.InstallationType
         }
 
         /**
@@ -1039,6 +1070,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/installations/${encodeURIComponent(id)}`)
             return await resp.json() as installations.InstallationWithLocation
+        }
+
+        /**
+         * Retrieves an installation type by its ID.
+         * @param params - Object containing the installation type ID
+         * @param params.id - The ID of the installation type to retrieve
+         * @returns {Promise<InstallationType>} The found installation type
+         * @throws {APIError} If the installation type is not found or retrieval fails
+         */
+        public async getInstallationType(id: number): Promise<installation_types.InstallationType> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/installation/types/${encodeURIComponent(id)}`)
+            return await resp.json() as installation_types.InstallationType
         }
 
         /**
@@ -1457,6 +1501,30 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/get-gates/paginated`, JSON.stringify(params))
             return await resp.json() as gates.PaginatedGates
+        }
+
+        /**
+         * Retrieves all installation types without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListInstallationTypesResult>} Unified response with data property containing array of installation types
+         * @throws {APIError} If retrieval fails
+         */
+        public async listInstallationTypes(params: installation_types.ListInstallationTypesQueryParams): Promise<installation_types.ListInstallationTypesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/installation/types/list/all`, JSON.stringify(params))
+            return await resp.json() as installation_types.ListInstallationTypesResult
+        }
+
+        /**
+         * Retrieves installation types with pagination (useful for tables).
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListInstallationTypesResult>} Unified paginated response with data and pagination properties
+         * @throws {APIError} If retrieval fails
+         */
+        public async listInstallationTypesPaginated(params: installation_types.PaginatedListInstallationTypesQueryParams): Promise<installation_types.PaginatedListInstallationTypesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/installation/types/list`, JSON.stringify(params))
+            return await resp.json() as installation_types.PaginatedListInstallationTypesResult
         }
 
         /**
@@ -2922,10 +2990,40 @@ export namespace inventory {
      * Optional description of the installation
      */
     description?: string | null
+
+    /**
+     * ID of the installation type this installation belongs to
+     * Must be a positive number
+     */
+    installationTypeId?: number | null
 }): Promise<installations.InstallationWithLocation> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/installations/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as installations.InstallationWithLocation
+        }
+
+        /**
+         * Updates an existing installation type.
+         * @param params - Object containing the installation type ID and update data
+         * @param params.id - The ID of the installation type to update
+         * @returns {Promise<InstallationType>} The updated installation type
+         * @throws {APIError} If the installation type is not found or update fails
+         */
+        public async updateInstallationType(id: number, params: {
+    /**
+     * Name of the installation type
+     * Must have at least 1 non-whitespace character
+     */
+    name?: string
+
+    /**
+     * Optional description of the installation type
+     */
+    description?: string | null
+}): Promise<installation_types.InstallationType> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/installation/types/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as installation_types.InstallationType
         }
 
         /**
@@ -8134,6 +8232,89 @@ export namespace gates {
     }
 }
 
+export namespace installation_types {
+    export interface CreateInstallationTypePayload {
+        /**
+         * Name of the installation type
+         * Must have at least 1 non-whitespace character
+         */
+        name: string
+
+        /**
+         * Optional description of the installation type
+         */
+        description?: string | null
+    }
+
+    export interface InstallationType {
+        /**
+         * Unique identifier for the installation type
+         */
+        id: number
+
+        /**
+         * Name of the installation type
+         */
+        name: string
+
+        /**
+         * Optional description of the installation type
+         */
+        description: string | null
+
+        /**
+         * Timestamp when the installation type record was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the installation type record was last updated
+         */
+        updatedAt: string | null
+    }
+
+    export interface ListInstallationTypesQueryParams {
+        orderBy?: {
+            field: "id" | "name" | "description" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            description?: string | null
+            createdAt?: string | null
+            updatedAt?: string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListInstallationTypesResult {
+        data: InstallationType[]
+    }
+
+    export interface PaginatedListInstallationTypesQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "description" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            description?: string | null
+            createdAt?: string | null
+            updatedAt?: string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListInstallationTypesResult {
+        pagination: shared.PaginationMeta
+        data: InstallationType[]
+    }
+}
+
 export namespace installations {
     export interface CreateNodeInstallationPayload {
         /**
@@ -8180,6 +8361,11 @@ export namespace installations {
          * Optional description of the installation
          */
         description: string | null
+
+        /**
+         * ID of the installation type this installation belongs to
+         */
+        installationTypeId: number | null
 
         /**
          * Timestamp when the installation record was created
@@ -8236,6 +8422,11 @@ export namespace installations {
         description: string | null
 
         /**
+         * ID of the installation type this installation belongs to
+         */
+        installationTypeId: number | null
+
+        /**
          * Timestamp when the installation record was created
          */
         createdAt: string | null
@@ -8248,7 +8439,7 @@ export namespace installations {
 
     export interface ListInstallationsQueryParams {
         orderBy?: {
-            field: "id" | "name" | "address" | "description" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "address" | "description" | "installationTypeId" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -8256,6 +8447,7 @@ export namespace installations {
             name?: string
             address?: string
             description?: string | null
+            installationTypeId?: number | null
             createdAt?: string | null
             updatedAt?: string | null
         }
@@ -8270,7 +8462,7 @@ export namespace installations {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "address" | "description" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "address" | "description" | "installationTypeId" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -8278,6 +8470,7 @@ export namespace installations {
             name?: string
             address?: string
             description?: string | null
+            installationTypeId?: number | null
             createdAt?: string | null
             updatedAt?: string | null
         }

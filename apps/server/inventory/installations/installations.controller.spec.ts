@@ -10,6 +10,10 @@ import {
 } from '../../tests/shared/test-utils';
 import { cityRepository } from '../cities/cities.repository';
 import { db } from '../db-service';
+import {
+  createInstallationType,
+  deleteInstallationType,
+} from '../installation-types/installation-types.controller';
 import { createNode } from '../nodes/nodes.controller';
 import { nodeRepository } from '../nodes/nodes.repository';
 import { populationRepository } from '../populations/populations.repository';
@@ -43,8 +47,16 @@ describe('Installations Controller', () => {
   let testCityId: number;
   let testPopulationId: number;
   let testNodeId: number;
+  let testInstallationTypeId: number;
 
   beforeAll(async () => {
+    // Create test installation type first
+    const testInstallationType = await createInstallationType({
+      name: createUniqueName('Test Installation Type', testSuiteId),
+      description: 'Test installation type for installations tests',
+    });
+    testInstallationTypeId = testInstallationType.id;
+
     // Create test dependencies using factories for node installation tests
     const testCity = await cityFactory(factoryDb).create({
       name: createUniqueName('Test City', testSuiteId),
@@ -130,6 +142,15 @@ describe('Installations Controller', () => {
         await cityRepository.forceDelete(testCityId);
       } catch (error) {
         console.log('Error cleaning up test city:', error);
+      }
+    }
+
+    // Clean up the test installation type
+    if (testInstallationTypeId) {
+      try {
+        await deleteInstallationType({ id: testInstallationTypeId });
+      } catch (error) {
+        console.log('Error cleaning up test installation type:', error);
       }
     }
   });
@@ -262,11 +283,13 @@ describe('Installations Controller', () => {
       const response = await updateInstallation({
         id: createdInstallationId,
         name: updatedName,
+        installationTypeId: testInstallationTypeId,
       });
 
       expect(response).toBeDefined();
       expect(response.id).toBe(createdInstallationId);
       expect(response.name).toBe(updatedName);
+      expect(response.installationTypeId).toBe(testInstallationTypeId);
     });
 
     test('should delete an installation', async () => {

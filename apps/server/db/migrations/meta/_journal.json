@@ -155,6 +155,13 @@
       "when": 1750877743116,
       "tag": "20250625185543_add_softdelete_support_for_geographycal_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1751416297853,
+      "tag": "20250702003137_create_installation_types_table",
+      "breakpoints": true
     }
   ]
 }

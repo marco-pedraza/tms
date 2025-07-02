@@ -89,3 +89,11 @@ export {
   installationTypes,
   installationTypesRelations,
 } from '../inventory/installation-types/installation-types.schema';
+export {
+  installationSchemas,
+  installationSchemasRelations,
+} from '../inventory/installation-schemas/installation-schemas.schema';
+export {
+  installationProperties,
+  installationPropertiesRelations,
+} from '../inventory/installation-properties/installation-properties.schemas';

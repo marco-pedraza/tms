@@ -107,6 +107,7 @@ export namespace inventory {
             this.createDriver = this.createDriver.bind(this)
             this.createGate = this.createGate.bind(this)
             this.createInstallation = this.createInstallation.bind(this)
+            this.createInstallationSchema = this.createInstallationSchema.bind(this)
             this.createInstallationType = this.createInstallationType.bind(this)
             this.createNode = this.createNode.bind(this)
             this.createPathway = this.createPathway.bind(this)
@@ -128,6 +129,7 @@ export namespace inventory {
             this.deleteDriver = this.deleteDriver.bind(this)
             this.deleteGate = this.deleteGate.bind(this)
             this.deleteInstallation = this.deleteInstallation.bind(this)
+            this.deleteInstallationSchema = this.deleteInstallationSchema.bind(this)
             this.deleteInstallationType = this.deleteInstallationType.bind(this)
             this.deleteNode = this.deleteNode.bind(this)
             this.deletePathway = this.deletePathway.bind(this)
@@ -156,6 +158,7 @@ export namespace inventory {
             this.getFacility = this.getFacility.bind(this)
             this.getGate = this.getGate.bind(this)
             this.getInstallation = this.getInstallation.bind(this)
+            this.getInstallationSchema = this.getInstallationSchema.bind(this)
             this.getInstallationType = this.getInstallationType.bind(this)
             this.getNode = this.getNode.bind(this)
             this.getPathway = this.getPathway.bind(this)
@@ -191,6 +194,8 @@ export namespace inventory {
             this.listFacilities = this.listFacilities.bind(this)
             this.listGates = this.listGates.bind(this)
             this.listGatesPaginated = this.listGatesPaginated.bind(this)
+            this.listInstallationSchemas = this.listInstallationSchemas.bind(this)
+            this.listInstallationSchemasPaginated = this.listInstallationSchemasPaginated.bind(this)
             this.listInstallationTypes = this.listInstallationTypes.bind(this)
             this.listInstallationTypesPaginated = this.listInstallationTypesPaginated.bind(this)
             this.listInstallations = this.listInstallations.bind(this)
@@ -244,6 +249,7 @@ export namespace inventory {
             this.updateDriver = this.updateDriver.bind(this)
             this.updateGate = this.updateGate.bind(this)
             this.updateInstallation = this.updateInstallation.bind(this)
+            this.updateInstallationSchema = this.updateInstallationSchema.bind(this)
             this.updateInstallationType = this.updateInstallationType.bind(this)
             this.updateNode = this.updateNode.bind(this)
             this.updatePathway = this.updatePathway.bind(this)
@@ -444,6 +450,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/installations/create`, JSON.stringify(params))
             return await resp.json() as installations.InstallationWithLocation
+        }
+
+        /**
+         * Creates a new installation schema.
+         * @param params - The installation schema data to create
+         * @returns {Promise<InstallationSchema>} The created installation schema
+         * @throws {APIError} If the installation schema creation fails
+         */
+        public async createInstallationSchema(params: installation_schemas.CreateInstallationSchemaPayload): Promise<installation_schemas.InstallationSchema> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/installation/schemas/create`, JSON.stringify(params))
+            return await resp.json() as installation_schemas.InstallationSchema
         }
 
         /**
@@ -717,6 +735,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/installations/${encodeURIComponent(id)}/delete`)
             return await resp.json() as installations.Installation
+        }
+
+        /**
+         * Deletes an installation schema by its ID.
+         * @param params - Object containing the installation schema ID
+         * @param params.id - The ID of the installation schema to delete
+         * @returns {Promise<InstallationSchema>} The deleted installation schema
+         * @throws {APIError} If the installation schema is not found or deletion fails
+         */
+        public async deleteInstallationSchema(id: number): Promise<installation_schemas.InstallationSchema> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/installation/schemas/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as installation_schemas.InstallationSchema
         }
 
         /**
@@ -1070,6 +1101,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/installations/${encodeURIComponent(id)}`)
             return await resp.json() as installations.InstallationWithLocation
+        }
+
+        /**
+         * Retrieves an installation schema with its related installation type by its ID.
+         * @param params - Object containing the installation schema ID
+         * @param params.id - The ID of the installation schema to retrieve
+         * @returns {Promise<InstallationSchemaWithRelations>} The found installation schema with related data
+         * @throws {APIError} If the installation schema is not found or retrieval fails
+         */
+        public async getInstallationSchema(id: number): Promise<installation_schemas.InstallationSchemaWithRelations> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/installation/schemas/${encodeURIComponent(id)}`)
+            return await resp.json() as installation_schemas.InstallationSchemaWithRelations
         }
 
         /**
@@ -1501,6 +1545,30 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/get-gates/paginated`, JSON.stringify(params))
             return await resp.json() as gates.PaginatedGates
+        }
+
+        /**
+         * Retrieves all installation schemas without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListInstallationSchemasResult>} Unified response with data property containing array of installation schemas
+         * @throws {APIError} If retrieval fails
+         */
+        public async listInstallationSchemas(params: installation_schemas.ListInstallationSchemasQueryParams): Promise<installation_schemas.ListInstallationSchemasResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/installation/schemas/list/all`, JSON.stringify(params))
+            return await resp.json() as installation_schemas.ListInstallationSchemasResult
+        }
+
+        /**
+         * Retrieves installation schemas with pagination and includes related information.
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListInstallationSchemasResult>} Unified paginated response with data and pagination properties including related information
+         * @throws {APIError} If retrieval fails
+         */
+        public async listInstallationSchemasPaginated(params: installation_schemas.PaginatedListInstallationSchemasQueryParams): Promise<installation_schemas.PaginatedListInstallationSchemasResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/installation/schemas/list`, JSON.stringify(params))
+            return await resp.json() as installation_schemas.PaginatedListInstallationSchemasResult
         }
 
         /**
@@ -3000,6 +3068,56 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/installations/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as installations.InstallationWithLocation
+        }
+
+        /**
+         * Updates an existing installation schema.
+         * @param params - Object containing the installation schema ID and update data
+         * @param params.id - The ID of the installation schema to update
+         * @returns {Promise<InstallationSchema>} The updated installation schema
+         * @throws {APIError} If the installation schema is not found or update fails
+         */
+        public async updateInstallationSchema(id: number, params: {
+    /**
+     * Name of the schema field
+     * Must have at least 1 non-whitespace character
+     */
+    name?: string
+
+    /**
+     * Human-readable label for the field
+     * Must have at least 1 non-whitespace character
+     */
+    label?: string
+
+    /**
+     * Optional description of the schema field
+     */
+    description?: string
+
+    /**
+     * Type of the field
+     */
+    type?: installation_schemas.InstallationSchemaFieldType
+
+    /**
+     * Configuration options for the field (only required for enum type)
+     */
+    options?: installation_schemas.InstallationSchemaOptions
+
+    /**
+     * Whether the field is required
+     */
+    required?: boolean
+
+    /**
+     * ID of the installation type this schema belongs to
+     */
+    installationTypeId?: number
+}): Promise<installation_schemas.InstallationSchema> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/installation/schemas/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as installation_schemas.InstallationSchema
         }
 
         /**
@@ -8229,6 +8347,221 @@ export namespace gates {
             createdAt?: string | null
             updatedAt?: string | null
         }
+    }
+}
+
+export namespace installation_schemas {
+    export interface CreateInstallationSchemaPayload {
+        /**
+         * Name of the schema field
+         * Must have at least 1 non-whitespace character
+         */
+        name: string
+
+        /**
+         * Human-readable label for the field
+         * Must have at least 1 non-whitespace character
+         */
+        label: string
+
+        /**
+         * Optional description of the schema field
+         */
+        description?: string
+
+        /**
+         * Type of the field
+         */
+        type: InstallationSchemaFieldType
+
+        /**
+         * Configuration options for the field (only required for enum type)
+         */
+        options?: InstallationSchemaOptions
+
+        /**
+         * Whether the field is required
+         * @default false
+         */
+        required?: boolean
+
+        /**
+         * ID of the installation type this schema belongs to
+         */
+        installationTypeId: number
+    }
+
+    export interface InstallationSchema {
+        /**
+         * Unique identifier for the installation schema
+         */
+        id: number
+
+        /**
+         * Name of the schema field
+         */
+        name: string
+
+        /**
+         * Human-readable label for the field
+         */
+        label: string
+
+        /**
+         * Optional description of the schema field
+         */
+        description: string | null
+
+        /**
+         * Type of the field (string, number, boolean, date, enum)
+         */
+        type: InstallationSchemaFieldType
+
+        /**
+         * Configuration options for the field (only used for enum type)
+         */
+        options: InstallationSchemaOptions
+
+        /**
+         * Whether the field is required
+         */
+        required: boolean
+
+        /**
+         * ID of the installation type this schema belongs to
+         */
+        installationTypeId: number
+
+        /**
+         * Timestamp when the installation schema record was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the installation schema record was last updated
+         */
+        updatedAt: string | null
+    }
+
+    export type InstallationSchemaFieldType = "string" | "long_text" | "number" | "boolean" | "date" | "enum"
+
+    export interface InstallationSchemaOptions {
+        /**
+         * For enum type: array of possible values
+         */
+        enumValues?: string[]
+    }
+
+    export interface InstallationSchemaWithRelations {
+        /**
+         * Related installation type
+         */
+        installationType: {
+            id: number
+            name: string
+            description: string | null
+        }
+
+        /**
+         * Unique identifier for the installation schema
+         */
+        id: number
+
+        /**
+         * Name of the schema field
+         */
+        name: string
+
+        /**
+         * Human-readable label for the field
+         */
+        label: string
+
+        /**
+         * Optional description of the schema field
+         */
+        description: string | null
+
+        /**
+         * Type of the field (string, number, boolean, date, enum)
+         */
+        type: InstallationSchemaFieldType
+
+        /**
+         * Configuration options for the field (only used for enum type)
+         */
+        options: InstallationSchemaOptions
+
+        /**
+         * Whether the field is required
+         */
+        required: boolean
+
+        /**
+         * ID of the installation type this schema belongs to
+         */
+        installationTypeId: number
+
+        /**
+         * Timestamp when the installation schema record was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the installation schema record was last updated
+         */
+        updatedAt: string | null
+    }
+
+    export interface ListInstallationSchemasQueryParams {
+        orderBy?: {
+            field: "id" | "name" | "label" | "description" | "type" | "options" | "required" | "installationTypeId" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            label?: string
+            description?: string | null
+            type?: InstallationSchemaFieldType
+            options?: InstallationSchemaOptions
+            required?: boolean
+            installationTypeId?: number
+            createdAt?: string | null
+            updatedAt?: string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListInstallationSchemasResult {
+        data: InstallationSchema[]
+    }
+
+    export interface PaginatedListInstallationSchemasQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "label" | "description" | "type" | "options" | "required" | "installationTypeId" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            label?: string
+            description?: string | null
+            type?: InstallationSchemaFieldType
+            options?: InstallationSchemaOptions
+            required?: boolean
+            installationTypeId?: number
+            createdAt?: string | null
+            updatedAt?: string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListInstallationSchemasResult {
+        pagination: shared.PaginationMeta
+        data: InstallationSchemaWithRelations[]
     }
 }
 

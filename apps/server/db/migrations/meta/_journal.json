@@ -162,6 +162,13 @@
       "when": 1751416297853,
       "tag": "20250702003137_create_installation_types_table",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1751420442384,
+      "tag": "20250702014042_create_installation_schema_tables",
+      "breakpoints": true
     }
   ]
 }

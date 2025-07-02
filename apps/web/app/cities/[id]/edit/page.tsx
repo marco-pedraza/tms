@@ -11,7 +11,6 @@ import routes from '@/services/routes';
 
 export default function EditCityPage() {
   const tCities = useTranslations('cities');
-  const tCommon = useTranslations('common');
   const { cityId, isValidId } = useCityDetailsParams();
   const { data, isLoading } = useQueryCity({
     cityId,
@@ -35,14 +34,10 @@ export default function EditCityPage() {
     <div>
       <PageHeader
         title={tCities('edit.title')}
-        description={data?.name}
+        description={data.name}
         backHref={routes.cities.index}
       />
-      <CityForm
-        defaultValues={data}
-        onSubmit={handleSubmit}
-        submitButtonText={tCommon('actions.update')}
-      />
+      <CityForm defaultValues={data} onSubmit={handleSubmit} />
     </div>
   );
 }

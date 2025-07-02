@@ -114,7 +114,8 @@
     "entities": {
       "country": "País",
       "state": "Estado",
-      "city": "Ciudad"
+      "city": "Ciudad",
+      "population": "Población"
     }
   },
   "sidebar": {
@@ -609,6 +610,27 @@
       "create": "Crear Población",
       "update": "Actualizar Población",
       "backToList": "Volver a poblaciones"
+    },
+    "form": {
+      "title": "Información de la población",
+      "placeholders": {
+        "name": "Ej: Población Norte",
+        "code": "Ej: PN",
+        "description": "Ej: Población ubicada en la zona norte de la ciudad"
+      }
+    },
+    "edit": {
+      "title": "Editar Población",
+      "description": "Actualiza la información de la población"
+    },
+    "details": {
+      "description": "Detalles de la población"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Población no encontrada",
+        "description": "No pudimos encontrar la población que buscas. Es posible que haya sido eliminada o que no exista."
+      }
     },
     "messages": {
       "create": {

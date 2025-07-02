@@ -56,7 +56,6 @@ type CityFormRawValues = z.input<ReturnType<typeof createCitySchema>>;
 interface CityFormProps {
   defaultValues?: CityFormValues;
   onSubmit: (values: CityFormValues) => Promise<unknown>;
-  submitButtonText?: string;
 }
 
 /**

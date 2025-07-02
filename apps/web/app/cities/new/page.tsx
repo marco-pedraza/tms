@@ -9,7 +9,6 @@ import routes from '@/services/routes';
 export default function NewCityPage() {
   const { create: createCity } = useCityMutations();
   const t = useTranslations('cities');
-  const tCommon = useTranslations('common');
 
   return (
     <div>
@@ -20,10 +19,7 @@ export default function NewCityPage() {
         backLabel={t('actions.backToList')}
       />
 
-      <CityForm
-        onSubmit={createCity.mutateWithToast}
-        submitButtonText={tCommon('actions.create')}
-      />
+      <CityForm onSubmit={createCity.mutateWithToast} />
     </div>
   );
 }

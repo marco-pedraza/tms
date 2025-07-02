@@ -9,6 +9,7 @@ import {
   Bus,
   Globe,
   Map,
+  MapPin,
   Package,
   Users,
 } from 'lucide-react';
@@ -78,6 +79,11 @@ export default function Sidebar() {
           href={routes.populations.index}
           icon={Users}
           label={tSidebar('inventory.populations')}
+        />
+        <SidebarLink
+          href={routes.nodes.index}
+          icon={MapPin}
+          label={tSidebar('inventory.nodes')}
         />
         {/* <SidebarLink
           href={routes.routes.index}

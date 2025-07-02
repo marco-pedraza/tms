@@ -30,6 +30,7 @@ export interface Routes {
   buses: CrudRoute;
   busPlans: CrudRoute;
   populations: CrudRoute;
+  nodes: CrudRoute;
 }
 
 const routes: Routes = {
@@ -129,6 +130,12 @@ const routes: Routes = {
     new: '/populations/new',
     getDetailsRoute: (id: string) => `/populations/${id}`,
     getEditRoute: (id: string) => `/populations/${id}/edit`,
+  },
+  nodes: {
+    index: '/nodes',
+    new: '/nodes/new',
+    getDetailsRoute: (id: string) => `/nodes/${id}`,
+    getEditRoute: (id: string) => `/nodes/${id}/edit`,
   },
 };
 

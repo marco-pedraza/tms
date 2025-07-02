@@ -136,7 +136,8 @@
       "drivers": "Conductores",
       "busModels": "Modelos de Autobus",
       "buses": "Autobuses",
-      "populations": "Poblaciones"
+      "populations": "Poblaciones",
+      "nodes": "Nodos"
     },
     "planning": {
       "title": "Planeación",
@@ -650,6 +651,56 @@
         "loading": "Eliminando población...",
         "success": "Población eliminada correctamente",
         "error": "No pudimos eliminar la población"
+      }
+    }
+  },
+  "nodes": {
+    "title": "Nodos",
+    "description": "Administra información de nodos para el Sistema de Inventario de Autobuses",
+    "actions": {
+      "create": "Crear Nodo",
+      "update": "Actualizar Nodo",
+      "backToList": "Volver a nodos"
+    },
+    "fields": {
+      "city": "Ciudad"
+    },
+    "form": {
+      "title": "Información del nodo",
+      "placeholders": {
+        "name": "Ej: Nodo Central",
+        "code": "Ej: NC",
+        "description": "Ej: Nodo ubicado en el centro de la ciudad"
+      }
+    },
+    "edit": {
+      "title": "Editar Nodo",
+      "description": "Actualiza la información del nodo"
+    },
+    "details": {
+      "description": "Detalles del nodo"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Nodo no encontrado",
+        "description": "No pudimos encontrar el nodo que buscas. Es posible que haya sido eliminado o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando nodo...",
+        "success": "Nodo creado correctamente",
+        "error": "No pudimos crear el nodo"
+      },
+      "update": {
+        "loading": "Actualizando nodo...",
+        "success": "Nodo actualizado correctamente",
+        "error": "No pudimos actualizar el nodo"
+      },
+      "delete": {
+        "loading": "Eliminando nodo...",
+        "success": "Nodo eliminado correctamente",
+        "error": "No pudimos eliminar el nodo"
       }
     }
   }

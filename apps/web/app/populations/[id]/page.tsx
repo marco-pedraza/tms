@@ -170,7 +170,7 @@ export default function PopulationDetailsPage() {
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>{tPopulations('sections.cities')}</CardTitle>
+          <CardTitle>{tPopulations('sections.cities.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <DataTable

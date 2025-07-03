@@ -618,7 +618,13 @@
       "backToList": "Volver a poblaciones"
     },
     "sections": {
-      "cities": "Ciudades"
+      "cities": {
+        "title": "Ciudades",
+        "emptyText": "No hay ciudades asignadas",
+        "assignCity": "Asignar ciudad",
+        "searchPlaceholder": "Buscar ciudad",
+        "noResults": "No se encontraron resultados"
+      }
     },
     "form": {
       "title": "Información de la población",
@@ -656,6 +662,11 @@
         "loading": "Eliminando población...",
         "success": "Población eliminada correctamente",
         "error": "No pudimos eliminar la población"
+      },
+      "assignCities": {
+        "loading": "Asignando ciudades...",
+        "success": "Ciudades asignadas correctamente",
+        "error": "No pudimos asignar las ciudades, por favor intenta nuevamente"
       }
     }
   },

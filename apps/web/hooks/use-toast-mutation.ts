@@ -25,6 +25,7 @@ export function useToastMutation<TData, TVariables>({
   mutation,
   messages,
   onSuccess,
+  onError,
 }: {
   mutation: UseMutationResult<TData, Error, TVariables>;
   messages: {
@@ -33,27 +34,39 @@ export function useToastMutation<TData, TVariables>({
     error: string;
   };
   onSuccess: (data: TData) => void;
+  onError?: (error: unknown, variables: TVariables) => void;
 }) {
   /**
    * Executes the mutation with toast notifications for each state.
    *
    * @param variables - The variables to pass to the mutation function
    * @returns A promise that resolves with the mutation result
-   * @throws Will throw and display an error toast if the mutation fails
+   * @throws Will throw an error if the mutation fails
    */
   const mutateWithToast = async (variables: TVariables) => {
-    const promise = toast.promise(mutation.mutateAsync(variables), {
-      loading: messages.loading,
-      success: messages.success,
-      error: messages.error,
-    });
+    try {
+      const promise = toast.promise(mutation.mutateAsync(variables), {
+        loading: messages.loading,
+        success: messages.success,
+        error: messages.error,
+      });
 
-    // Unwrap the result to get the actual data
-    const response = await promise.unwrap();
+      // Unwrap the result to get the actual data
+      const response = await promise.unwrap();
 
-    // Handle business logic
-    onSuccess(response);
-    return response;
+      // Handle business logic
+      onSuccess(response);
+      return response;
+    } catch (error) {
+      onError?.(error, variables);
+      /**
+       * Re-throw should not be needed since this method is not meant to be used
+       * in a try-catch block.
+       *
+       * @todo Check usages of this method and remove this re-throw when possible
+       */
+      throw error;
+    }
   };
 
   return {

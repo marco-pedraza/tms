@@ -1,22 +1,74 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
-import PopulationForm from '@/populations/components/population-form';
-import usePopulationMutations from '@/populations/hooks/use-population-mutations';
+import { useToastMutation } from '@/hooks/use-toast-mutation';
+import PopulationForm, {
+  PopulationFormValues,
+} from '@/populations/components/population-form';
+import imsClient from '@/services/ims-client';
 import routes from '@/services/routes';
 
 export default function NewPopulationPage() {
-  const t = useTranslations('populations');
-  const { create: createPopulation } = usePopulationMutations();
+  const tPopulations = useTranslations('populations');
+  const assignCitiesToPopulationMutation = useMutation({
+    mutationFn: (params: { populationId: number; cityIds: number[] }) =>
+      imsClient.inventory.assignCitiesToPopulation(params.populationId, {
+        cityIds: params.cityIds,
+      }),
+  });
+  const router = useRouter();
+  const assignCitiesToPopulation = useToastMutation({
+    mutation: assignCitiesToPopulationMutation,
+    messages: {
+      loading: tPopulations('messages.assignCities.loading'),
+      success: tPopulations('messages.assignCities.success'),
+      error: tPopulations('messages.assignCities.error'),
+    },
+    onSuccess: (data) => {
+      router.push(routes.populations.getDetailsRoute(data.id.toString()));
+    },
+    onError: (_, params) => {
+      router.push(
+        routes.populations.getDetailsRoute(params.populationId.toString()),
+      );
+    },
+  });
+  const queryClient = useQueryClient();
+  const createPopulationMutation = useMutation({
+    mutationFn: async (values: PopulationFormValues) => {
+      const population = await imsClient.inventory.createPopulation(values);
+      return {
+        population,
+        cityIds: values.cities.map((stringId) => parseInt(stringId)),
+      };
+    },
+  });
+  const createPopulation = useToastMutation({
+    mutation: createPopulationMutation,
+    messages: {
+      loading: tPopulations('messages.create.loading'),
+      success: tPopulations('messages.create.success'),
+      error: tPopulations('messages.create.error'),
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['populations'] });
+      assignCitiesToPopulation.mutateWithToast({
+        populationId: data.population.id,
+        cityIds: data.cityIds,
+      });
+    },
+  });
 
   return (
     <div>
       <PageHeader
-        title={t('actions.create')}
-        description={t('description')}
+        title={tPopulations('actions.create')}
+        description={tPopulations('description')}
         backHref={routes.populations.index}
-        backLabel={t('actions.backToList')}
+        backLabel={tPopulations('actions.backToList')}
       />
       <PopulationForm onSubmit={createPopulation.mutateWithToast} />
     </div>

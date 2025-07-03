@@ -108,6 +108,9 @@
       "longitude": {
         "range": "La longitud debe ser un número entre -180 y 180"
       },
+      "radius": {
+        "positive": "El radio debe ser un número positivo"
+      },
       "server": {
         "duplicate": "Ya existe un {entity} con {property}: \"{value}\""
       }
@@ -116,7 +119,8 @@
       "country": "País",
       "state": "Estado",
       "city": "Ciudad",
-      "population": "Población"
+      "population": "Población",
+      "node": "Nodo"
     }
   },
   "sidebar": {
@@ -664,14 +668,20 @@
       "backToList": "Volver a nodos"
     },
     "fields": {
-      "city": "Ciudad"
+      "city": "Ciudad",
+      "population": "Población",
+      "radius": "Radio"
     },
     "form": {
       "title": "Información del nodo",
       "placeholders": {
         "name": "Ej: Nodo Central",
         "code": "Ej: NC",
-        "description": "Ej: Nodo ubicado en el centro de la ciudad"
+        "city": "Selecciona una ciudad",
+        "population": "Selecciona una población",
+        "radius": "Ej: 100",
+        "latitude": "Ej: 19.4326",
+        "longitude": "Ej: -99.1332"
       }
     },
     "edit": {

@@ -9,7 +9,7 @@ import { FilterConfig } from '@/components/data-table/data-table-header';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
-import useNodesMutations from '@/nodes/hooks/use-nodes-mutations';
+import useNodeMutations from '@/nodes/hooks/use-node-mutations';
 import useQueryNodes from '@/nodes/hooks/use-query-nodes';
 import routes from '@/services/routes';
 import type { UseTranslationsResult } from '@/types/translations';
@@ -70,7 +70,7 @@ export default function NodesTable() {
     setSortingUrlState,
   });
   const { data: cities } = useQueryAllCities();
-  const { delete: deleteNode } = useNodesMutations();
+  const { delete: deleteNode } = useNodeMutations();
   const { deleteId, setDeleteId, onConfirmDelete, onCancelDelete } =
     useDeleteDialog({
       onConfirm: deleteNode.mutateWithToast,

@@ -52,7 +52,8 @@
     "sections": {
       "basicInfo": "Información Básica",
       "systemInfo": "Información del Sistema",
-      "contactInfo": "Información de Contacto"
+      "contactInfo": "Información de Contacto",
+      "location": "Ubicación"
     },
     "crud": {
       "create": {

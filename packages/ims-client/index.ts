@@ -1029,10 +1029,10 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves a city by its ID with related state and country information.
+         * Retrieves a city by its ID with related state, country, and population information.
          * @param params - Object containing the city ID
          * @param params.id - The ID of the city to retrieve
-         * @returns {Promise<CityWithRelations>} The found city with state and country information
+         * @returns {Promise<CityWithRelations>} The found city with state, country, and population information
          * @throws {APIError} If the city is not found or retrieval fails
          */
         public async getCity(id: number): Promise<cities.CityWithRelations> {
@@ -7245,6 +7245,97 @@ export namespace cities {
 
             country: countries.Country
         }
+        populations: populations.Population[]
+        /**
+         * Unique identifier for the city
+         */
+        id: number
+
+        /**
+         * Name of the city
+         */
+        name: string
+
+        /**
+         * ID of the state this city belongs to
+         */
+        stateId: number
+
+        /**
+         * Latitude of the city
+         */
+        latitude: number
+
+        /**
+         * Longitude of the city
+         */
+        longitude: number
+
+        /**
+         * Timezone of the city (e.g., "America/Mexico_City")
+         */
+        timezone: string
+
+        /**
+         * Whether the city is currently active in the system
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the city record was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the city record was last updated
+         */
+        updatedAt: string | null
+
+        /**
+         * URL-friendly identifier for the city
+         */
+        slug: string
+    }
+
+    export interface CityWithStateAndCountry {
+        state: {
+            /**
+             * Unique identifier for the state
+             */
+            id: number
+
+            /**
+             * Name of the state
+             */
+            name: string
+
+            /**
+             * State code (e.g., "TX", "CA", "NY")
+             */
+            code: string
+
+            /**
+             * ID of the country this state belongs to
+             */
+            countryId: number
+
+            /**
+             * Whether the state is currently active in the system
+             */
+            active: boolean
+
+            /**
+             * Timestamp when the state record was created
+             */
+            createdAt: string | null
+
+            /**
+             * Timestamp when the state record was last updated
+             */
+            updatedAt: string | null
+
+            country: countries.Country
+        }
         /**
          * Unique identifier for the city
          */
@@ -7382,7 +7473,7 @@ export namespace cities {
 
     export interface PaginatedListCitiesResult {
         pagination: shared.PaginationMeta
-        data: CityWithRelations[]
+        data: CityWithStateAndCountry[]
     }
 }
 

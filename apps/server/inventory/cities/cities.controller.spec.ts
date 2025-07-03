@@ -3,17 +3,24 @@ import { createSlug } from '../../shared/utils';
 import {
   cityFactory,
   countryFactory,
+  populationFactory,
   stateFactory,
 } from '../../tests/factories';
 import { getFactoryDb } from '../../tests/factories/factory-utils';
 import {
   createCleanupHelper,
   createTestSuiteId,
+  createUniqueCode,
   createUniqueName,
 } from '../../tests/shared/test-utils';
 import { countryRepository } from '../countries/countries.repository';
 import type { Country } from '../countries/countries.types';
 import { db } from '../db-service';
+import {
+  assignCitiesToPopulation,
+  deletePopulation,
+} from '../populations/populations.controller';
+import type { Population } from '../populations/populations.types';
 import { stateRepository } from '../states/states.repository';
 import type { State } from '../states/states.types';
 import type { City } from './cities.types';
@@ -127,7 +134,7 @@ describe('Cities Controller', () => {
       expect(response.createdAt).toBeDefined();
     });
 
-    test('should retrieve a city by ID with state and country relations', async () => {
+    test('should retrieve a city by ID with state, country, and populations relations', async () => {
       const response = await getCity({ id: testCity.id });
 
       expect(response).toBeDefined();
@@ -147,6 +154,103 @@ describe('Cities Controller', () => {
       expect(response.state.country).toBeDefined();
       expect(response.state.country.id).toBe(testCountry.id);
       expect(response.state.country.name).toBe(testCountry.name);
+
+      // Verify populations relation is included (should be empty array initially)
+      expect(response.populations).toBeDefined();
+      expect(Array.isArray(response.populations)).toBe(true);
+      expect(response.populations).toHaveLength(0);
+    });
+
+    test('should retrieve a city with assigned populations', async () => {
+      // Create a test city for population assignment
+      const testCityForPopulations = await createTestCity(
+        'City with Populations',
+      );
+
+      // Create test populations using the factory
+      const factoryDb = getFactoryDb(db);
+      const testPopulation1 = (await populationFactory(factoryDb).create({
+        name: createUniqueName('Test Population 1', testSuiteId),
+        code: createUniqueCode('TP1'),
+        description: 'First test population',
+        active: true,
+        deletedAt: null,
+      })) as Population;
+
+      const testPopulation2 = (await populationFactory(factoryDb).create({
+        name: createUniqueName('Test Population 2', testSuiteId),
+        code: createUniqueCode('TP2'),
+        description: 'Second test population',
+        active: true,
+        deletedAt: null,
+      })) as Population;
+
+      // Create cleanup helper for test populations
+      const populationCleanup = createCleanupHelper(
+        deletePopulation,
+        'test-population',
+      );
+      populationCleanup.track(testPopulation1.id);
+      populationCleanup.track(testPopulation2.id);
+
+      try {
+        // Assign the city to both populations
+        await assignCitiesToPopulation({
+          id: testPopulation1.id,
+          cityIds: [testCityForPopulations],
+        });
+
+        await assignCitiesToPopulation({
+          id: testPopulation2.id,
+          cityIds: [testCityForPopulations],
+        });
+
+        // Retrieve the city with populations
+        const response = await getCity({ id: testCityForPopulations });
+
+        expect(response).toBeDefined();
+        expect(response.id).toBe(testCityForPopulations);
+
+        // Verify populations are included and correctly structured
+        expect(response.populations).toBeDefined();
+        expect(Array.isArray(response.populations)).toBe(true);
+        expect(response.populations).toHaveLength(2);
+
+        // Verify population structure and content
+        const populationIds = response.populations.map((p) => p.id);
+        expect(populationIds).toContain(testPopulation1.id);
+        expect(populationIds).toContain(testPopulation2.id);
+
+        // Verify each population has the expected properties
+        response.populations.forEach((population) => {
+          expect(population.id).toBeDefined();
+          expect(population.name).toBeDefined();
+          expect(population.code).toBeDefined();
+          expect(population.description).toBeDefined();
+          expect(typeof population.active).toBe('boolean');
+          expect(population.createdAt).toBeDefined();
+          expect(population.updatedAt).toBeDefined();
+        });
+
+        // Verify specific population data
+        const population1 = response.populations.find(
+          (p) => p.id === testPopulation1.id,
+        );
+        const population2 = response.populations.find(
+          (p) => p.id === testPopulation2.id,
+        );
+
+        expect(population1).toBeDefined();
+        expect(population1?.name).toBe(testPopulation1.name);
+        expect(population1?.code).toBe(testPopulation1.code);
+
+        expect(population2).toBeDefined();
+        expect(population2?.name).toBe(testPopulation2.name);
+        expect(population2?.code).toBe(testPopulation2.code);
+      } finally {
+        // Clean up test populations
+        await populationCleanup.cleanupAll();
+      }
     });
 
     test('should update a city name and regenerate the slug', async () => {

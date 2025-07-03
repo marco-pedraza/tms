@@ -11,6 +11,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { isNull } from 'drizzle-orm';
+import { populationCities } from '../populations/populations.schema';
 import { states } from '../states/states.schema';
 
 export const cities = pgTable(
@@ -37,9 +38,10 @@ export const cities = pgTable(
   ],
 );
 
-export const citiesRelations = relations(cities, ({ one }) => ({
+export const citiesRelations = relations(cities, ({ one, many }) => ({
   state: one(states, {
     fields: [cities.stateId],
     references: [states.id],
   }),
+  populationCities: many(populationCities),
 }));

@@ -53,9 +53,9 @@ export const createCityRepository = () => {
   };
 
   /**
-   * Finds a single city with its relations (state and country)
+   * Finds a single city with its relations (state, country, and populations)
    * @param id - The ID of the city to find
-   * @returns The city with state and country information
+   * @returns The city with state, country, and population information
    * @throws {NotFoundError} If the city is not found
    */
   const findOneWithRelations = async (
@@ -70,6 +70,11 @@ export const createCityRepository = () => {
             country: true,
           },
         },
+        populationCities: {
+          with: {
+            population: true,
+          },
+        },
       },
     });
 
@@ -77,7 +82,13 @@ export const createCityRepository = () => {
       throw new NotFoundError(`City with id ${id} not found`);
     }
 
-    return city;
+    // Transform the data to return populations directly
+    const { populationCities, ...cityData } = city;
+
+    return {
+      ...cityData,
+      populations: populationCities.map((pc) => pc.population),
+    };
   };
 
   /**

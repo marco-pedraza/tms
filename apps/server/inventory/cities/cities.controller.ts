@@ -27,10 +27,10 @@ export const createCity = api(
 );
 
 /**
- * Retrieves a city by its ID with related state and country information.
+ * Retrieves a city by its ID with related state, country, and population information.
  * @param params - Object containing the city ID
  * @param params.id - The ID of the city to retrieve
- * @returns {Promise<CityWithRelations>} The found city with state and country information
+ * @returns {Promise<CityWithRelations>} The found city with state, country, and population information
  * @throws {APIError} If the city is not found or retrieval fails
  */
 export const getCity = api(

@@ -6,6 +6,7 @@ import {
   PaginatedListQueryResult,
 } from '../../shared/types';
 import type { Country } from '../countries/countries.types';
+import type { Population } from '../populations/populations.types';
 import type { State } from '../states/states.types';
 
 /**
@@ -128,10 +129,17 @@ export interface UpdateCityPayload {
   active?: boolean;
 }
 
+export interface CityWithStateAndCountry extends City {
+  state: State & {
+    country: Country;
+  };
+}
+
 export interface CityWithRelations extends City {
   state: State & {
     country: Country;
   };
+  populations: Population[];
 }
 
 export type ListCitiesQueryParams = ListQueryParams<City>;
@@ -139,4 +147,4 @@ export type ListCitiesResult = ListQueryResult<City>;
 
 export type PaginatedListCitiesQueryParams = PaginatedListQueryParams<City>;
 export type PaginatedListCitiesResult =
-  PaginatedListQueryResult<CityWithRelations>;
+  PaginatedListQueryResult<CityWithStateAndCountry>;

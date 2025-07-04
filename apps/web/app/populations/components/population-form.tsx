@@ -35,7 +35,12 @@ const createPopulationSchema = (tCommon: UseTranslationsResult) =>
       .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
         message: tCommon('validations.name.letters'),
       }),
-    code: z.string().min(1, { message: tCommon('validations.required') }),
+    code: z
+      .string()
+      .min(1, { message: tCommon('validations.required') })
+      .regex(/^[A-Z0-9-]+$/, {
+        message: tCommon('validations.code.alphanumeric'),
+      }),
     description: z.string().optional(),
     active: z.boolean(),
     cities: z.array(z.string()),

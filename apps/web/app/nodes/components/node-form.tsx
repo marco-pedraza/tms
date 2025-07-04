@@ -19,7 +19,12 @@ const createNodeFormSchema = (tCommon: UseTranslationsResult) =>
       .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
         message: tCommon('validations.name.letters'),
       }),
-    code: z.string().min(1, { message: tCommon('validations.required') }),
+    code: z
+      .string()
+      .min(1, { message: tCommon('validations.required') })
+      .regex(/^[A-Z0-9-]+$/, {
+        message: tCommon('validations.code.alphanumeric'),
+      }),
     radius: z
       .string()
       .min(1, { message: tCommon('validations.required') })

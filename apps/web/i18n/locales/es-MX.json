@@ -103,7 +103,8 @@
       "code": {
         "length": "El código debe contener {length} carácteres",
         "length-range": "El código debe contener entre {min} y {max} carácteres",
-        "uppercase": "El código debe contener solo letras mayúsculas"
+        "uppercase": "El código debe contener solo letras mayúsculas",
+        "alphanumeric": "El código debe contener solo letras mayúsculas, números y guiones"
       },
       "latitude": {
         "range": "La latitud debe ser un número entre -90 y 90"

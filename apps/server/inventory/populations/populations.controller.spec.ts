@@ -887,7 +887,7 @@ describe('Populations Controller', () => {
       ).resolves.not.toThrow();
     });
 
-    test('should reject duplicate city IDs', async () => {
+    test('should reject duplicate city IDs in input array', async () => {
       const duplicateCityIds = [testCities[0].id, testCities[0].id];
 
       await expectFieldValidationError(
@@ -897,9 +897,72 @@ describe('Populations Controller', () => {
             cityIds: duplicateCityIds,
           }),
         'cityIds',
-        'DUPLICATE',
+        'DUPLICATE_INPUT',
         'Duplicate city IDs are not allowed in the assignment',
       );
+    });
+
+    test('should reject cities already assigned to other populations', async () => {
+      // Create another population
+      const anotherPopulation = await createPopulation({
+        name: createUniqueName('Another Population', testSuiteId),
+        code: createUniqueCode('AP'),
+        description: 'Another population for testing',
+        active: true,
+      });
+      cityAssignmentCleanup.track(anotherPopulation.id);
+
+      // Assign cities to the first population
+      await assignCitiesToPopulation({
+        id: anotherPopulation.id,
+        cityIds: [testCities[0].id, testCities[1].id],
+      });
+
+      // Try to assign the same cities to our test population (should fail)
+      await expectFieldValidationError(
+        () =>
+          assignCitiesToPopulation({
+            id: testPopulationForCityAssignment.id,
+            cityIds: [testCities[0].id, testCities[1].id],
+          }),
+        'cityIds',
+        'DUPLICATE',
+        'are already assigned to other populations',
+      );
+    });
+
+    test('should allow modifying city assignments within the same population', async () => {
+      const availableCityIds = [testCities[2].id, testCities[3].id];
+
+      // First assign two cities to the population
+      await assignCitiesToPopulation({
+        id: testPopulationForCityAssignment.id,
+        cityIds: availableCityIds,
+      });
+
+      // Verify the initial assignment
+      const population1 = await getPopulation({
+        id: testPopulationForCityAssignment.id,
+      });
+      expect(population1.cities).toHaveLength(2);
+
+      // Now modify the assignment by replacing with just one city (cities 2 and 3 -> city 3)
+      // This should succeed even though city 3 is already assigned to this population
+      await expect(
+        assignCitiesToPopulation({
+          id: testPopulationForCityAssignment.id,
+          cityIds: [testCities[3].id],
+        }),
+      ).resolves.not.toThrow();
+
+      // Verify the final assignment has only one city
+      const population2 = await getPopulation({
+        id: testPopulationForCityAssignment.id,
+      });
+      expect(population2.cities).toHaveLength(1);
+      const cityIds = population2.cities.map((c) => c.id);
+      expect(cityIds).toContain(testCities[3].id);
+      expect(cityIds).not.toContain(testCities[2].id); // City 2 should be removed
     });
 
     test('should reject non-existent population ID', async () => {

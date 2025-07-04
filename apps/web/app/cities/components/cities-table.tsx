@@ -21,7 +21,7 @@ interface CitiesColumnsFactoryProps {
 const citiesColumnsFactory = ({
   tCommon,
   tCities,
-}: CitiesColumnsFactoryProps): DataTableColumnDef<cities.City>[] => {
+}: CitiesColumnsFactoryProps): DataTableColumnDef<cities.CityWithStateAndCountry>[] => {
   return [
     {
       accessorKey: 'name',
@@ -30,6 +30,12 @@ const citiesColumnsFactory = ({
       cell: ({ row }) => (
         <div className="font-medium">{row.getValue('name')}</div>
       ),
+    },
+    {
+      accessorKey: 'state.name',
+      header: tCities('fields.state'),
+      sortable: false,
+      cell: ({ row }) => <div>{row.original.state.name}</div>,
     },
     {
       accessorKey: 'slug',

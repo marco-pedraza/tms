@@ -44,7 +44,7 @@ export const populationCities = pgTable(
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
-  (table) => [uniqueIndex().on(table.cityId, table.populationId)],
+  (table) => [uniqueIndex().on(table.cityId)],
 );
 
 export const populationsRelations = relations(populations, ({ many }) => ({

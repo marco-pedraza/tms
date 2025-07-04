@@ -32,7 +32,7 @@
       "name": "Nombre",
       "code": "Código",
       "active": "Activo",
-      "status": "Estado",
+      "status": "Estatus",
       "latitude": "Latitud",
       "longitude": "Longitud",
       "slug": "Slug",

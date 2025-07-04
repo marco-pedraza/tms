@@ -68,6 +68,41 @@ export function createPopulationRepository() {
   };
 
   /**
+   * Checks which cities from the provided list are already assigned to any population
+   * @param cityIds - Array of city IDs to check
+   * @param excludePopulationId - Optional population ID to exclude from the check
+   * @returns Array of city IDs that are already assigned to other populations
+   */
+  const getAlreadyAssignedCities = async (
+    cityIds: number[],
+    excludePopulationId?: number,
+  ): Promise<number[]> => {
+    if (cityIds.length === 0) {
+      return [];
+    }
+
+    const assignments = await db.query.populationCities.findMany({
+      where: (populationCities, { inArray, ne, and }) => {
+        const cityFilter = inArray(populationCities.cityId, cityIds);
+
+        if (excludePopulationId) {
+          return and(
+            cityFilter,
+            ne(populationCities.populationId, excludePopulationId),
+          );
+        }
+
+        return cityFilter;
+      },
+      columns: {
+        cityId: true,
+      },
+    });
+
+    return assignments.map((assignment) => assignment.cityId);
+  };
+
+  /**
    * Appends relations (cities) to populations
    *
    * This function takes a list of populations and enriches them with related cities information.
@@ -136,6 +171,7 @@ export function createPopulationRepository() {
     ...baseRepository,
     findOneWithRelations,
     appendRelations,
+    getAlreadyAssignedCities,
   };
 }
 

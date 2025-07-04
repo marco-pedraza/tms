@@ -161,10 +161,13 @@ describe('Cities Controller', () => {
       expect(response.populations).toHaveLength(0);
     });
 
-    test('should retrieve a city with assigned populations', async () => {
-      // Create a test city for population assignment
-      const testCityForPopulations = await createTestCity(
-        'City with Populations',
+    test('should retrieve a city with assigned population', async () => {
+      // Create two test cities for population assignment
+      const testCityForPopulation1 = await createTestCity(
+        'City with Population 1',
+      );
+      const testCityForPopulation2 = await createTestCity(
+        'City with Population 2',
       );
 
       // Create test populations using the factory
@@ -194,59 +197,58 @@ describe('Cities Controller', () => {
       populationCleanup.track(testPopulation2.id);
 
       try {
-        // Assign the city to both populations
+        // Assign each city to a different population (1 city per population)
         await assignCitiesToPopulation({
           id: testPopulation1.id,
-          cityIds: [testCityForPopulations],
+          cityIds: [testCityForPopulation1],
         });
 
         await assignCitiesToPopulation({
           id: testPopulation2.id,
-          cityIds: [testCityForPopulations],
+          cityIds: [testCityForPopulation2],
         });
 
-        // Retrieve the city with populations
-        const response = await getCity({ id: testCityForPopulations });
+        // Retrieve the first city with its population
+        const response1 = await getCity({ id: testCityForPopulation1 });
 
-        expect(response).toBeDefined();
-        expect(response.id).toBe(testCityForPopulations);
+        expect(response1).toBeDefined();
+        expect(response1.id).toBe(testCityForPopulation1);
 
-        // Verify populations are included and correctly structured
-        expect(response.populations).toBeDefined();
-        expect(Array.isArray(response.populations)).toBe(true);
-        expect(response.populations).toHaveLength(2);
+        // Verify population is included and correctly structured (should have 1 population)
+        expect(response1.populations).toBeDefined();
+        expect(Array.isArray(response1.populations)).toBe(true);
+        expect(response1.populations).toHaveLength(1);
 
-        // Verify population structure and content
-        const populationIds = response.populations.map((p) => p.id);
-        expect(populationIds).toContain(testPopulation1.id);
-        expect(populationIds).toContain(testPopulation2.id);
+        // Verify the population structure and content
+        const population1 = response1.populations[0];
+        expect(population1.id).toBe(testPopulation1.id);
+        expect(population1.name).toBe(testPopulation1.name);
+        expect(population1.code).toBe(testPopulation1.code);
+        expect(population1.description).toBe(testPopulation1.description);
+        expect(population1.active).toBe(testPopulation1.active);
+        expect(population1.createdAt).toBeDefined();
+        expect(population1.updatedAt).toBeDefined();
 
-        // Verify each population has the expected properties
-        response.populations.forEach((population) => {
-          expect(population.id).toBeDefined();
-          expect(population.name).toBeDefined();
-          expect(population.code).toBeDefined();
-          expect(population.description).toBeDefined();
-          expect(typeof population.active).toBe('boolean');
-          expect(population.createdAt).toBeDefined();
-          expect(population.updatedAt).toBeDefined();
-        });
+        // Retrieve the second city with its population
+        const response2 = await getCity({ id: testCityForPopulation2 });
 
-        // Verify specific population data
-        const population1 = response.populations.find(
-          (p) => p.id === testPopulation1.id,
-        );
-        const population2 = response.populations.find(
-          (p) => p.id === testPopulation2.id,
-        );
+        expect(response2).toBeDefined();
+        expect(response2.id).toBe(testCityForPopulation2);
 
-        expect(population1).toBeDefined();
-        expect(population1?.name).toBe(testPopulation1.name);
-        expect(population1?.code).toBe(testPopulation1.code);
+        // Verify population is included and correctly structured (should have 1 population)
+        expect(response2.populations).toBeDefined();
+        expect(Array.isArray(response2.populations)).toBe(true);
+        expect(response2.populations).toHaveLength(1);
 
-        expect(population2).toBeDefined();
-        expect(population2?.name).toBe(testPopulation2.name);
-        expect(population2?.code).toBe(testPopulation2.code);
+        // Verify the population structure and content
+        const population2 = response2.populations[0];
+        expect(population2.id).toBe(testPopulation2.id);
+        expect(population2.name).toBe(testPopulation2.name);
+        expect(population2.code).toBe(testPopulation2.code);
+        expect(population2.description).toBe(testPopulation2.description);
+        expect(population2.active).toBe(testPopulation2.active);
+        expect(population2.createdAt).toBeDefined();
+        expect(population2.updatedAt).toBeDefined();
       } finally {
         // Clean up test populations
         await populationCleanup.cleanupAll();

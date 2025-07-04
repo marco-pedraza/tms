@@ -88,7 +88,7 @@ export async function validateCityAssignment(
   collector.addIf(
     uniqueCityIds.size !== data.cityIds.length,
     'cityIds',
-    'DUPLICATE',
+    'DUPLICATE_INPUT',
     'Duplicate city IDs are not allowed in the assignment',
     data.cityIds,
   );
@@ -126,4 +126,20 @@ export async function validateCityAssignment(
     nonExistentCityIds,
   );
   collector.throwIfErrors(); // Stop immediately if cities not found
+
+  // Validate that cities are not already assigned to any other population
+  const alreadyAssignedCityIds =
+    await populationRepository.getAlreadyAssignedCities(
+      data.cityIds,
+      populationId, // Exclude current population to allow reassignment within same population
+    );
+
+  collector.addIf(
+    alreadyAssignedCityIds.length > 0,
+    'cityIds',
+    'DUPLICATE',
+    `Cities with IDs [${alreadyAssignedCityIds.join(', ')}] are already assigned to other populations`,
+    alreadyAssignedCityIds,
+  );
+  collector.throwIfErrors(); // Stop immediately if cities already assigned
 }

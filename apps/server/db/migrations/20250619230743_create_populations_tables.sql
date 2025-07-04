@@ -29,7 +29,7 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "population_cities_city_id_population_id_index" ON "population_cities" USING btree ("city_id","population_id");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "population_cities_city_id_index" ON "population_cities" USING btree ("city_id");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "populations_code_active_unique" ON "populations" USING btree ("code") WHERE "populations"."deleted_at" is null;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "populations_name_index" ON "populations" USING btree ("name");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "populations_deleted_at_index" ON "populations" USING btree ("deleted_at");

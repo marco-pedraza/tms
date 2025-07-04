@@ -691,7 +691,10 @@
       "radius": "Radio"
     },
     "form": {
-      "title": "Información del nodo",
+      "sections": {
+        "basicInfo": "Información Básica",
+        "location": "Información Geográfica"
+      },
       "placeholders": {
         "name": "Ej: Nodo Central",
         "code": "Ej: NC",

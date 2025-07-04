@@ -93,6 +93,7 @@ export default function StateForm({ defaultValues, onSubmit }: StateFormProps) {
             <field.TextInput
               label={tCommon('fields.name')}
               placeholder={tStates('form.placeholders.name')}
+              isRequired
             />
           )}
         </form.AppField>
@@ -102,6 +103,7 @@ export default function StateForm({ defaultValues, onSubmit }: StateFormProps) {
             <field.TextInput
               label={tCommon('fields.code')}
               placeholder={tStates('form.placeholders.code')}
+              isRequired
               description={tStates('form.codeHelp')}
               maxLength={3}
             />
@@ -113,6 +115,7 @@ export default function StateForm({ defaultValues, onSubmit }: StateFormProps) {
             <field.SelectInput
               label={tStates('form.country')}
               placeholder={tStates('form.placeholders.country')}
+              isRequired
               items={
                 countriesData?.data.map((country: Country) => ({
                   id: country.id.toString(),

@@ -119,6 +119,7 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
             <field.TextInput
               label={tCommon('fields.name')}
               placeholder={tCities('form.placeholders.name')}
+              isRequired
             />
           )}
         </form.AppField>
@@ -128,6 +129,7 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
             <field.SelectInput
               label={tCities('form.state')}
               placeholder={tCities('form.placeholders.state')}
+              isRequired
               items={
                 states?.data?.map((state) => ({
                   id: state.id.toString(),
@@ -143,6 +145,7 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
             <field.SelectInput
               label={tCities('form.timezone')}
               placeholder={tCities('form.placeholders.timezone')}
+              isRequired
               items={
                 timezones?.timezones?.map((timezone) => ({
                   id: timezone.id,
@@ -160,6 +163,7 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
               <field.TextInput
                 label={tCommon('fields.latitude')}
                 placeholder="e.g. 19.4326"
+                isRequired
                 inputMode="decimal"
               />
             )}
@@ -170,6 +174,7 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
               <field.TextInput
                 label={tCommon('fields.longitude')}
                 placeholder="e.g. -99.1332"
+                isRequired
                 inputMode="decimal"
               />
             )}

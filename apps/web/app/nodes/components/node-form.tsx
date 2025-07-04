@@ -142,12 +142,13 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="basic">
-          <FormLayout title={tNodes('form.title')}>
+          <FormLayout title={tNodes('form.sections.basicInfo')}>
             <form.AppField name="name">
               {(field) => (
                 <field.TextInput
                   label={tCommon('fields.name')}
                   placeholder={tNodes('form.placeholders.name')}
+                  isRequired
                 />
               )}
             </form.AppField>
@@ -156,46 +157,40 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
                 <field.TextInput
                   label={tCommon('fields.code')}
                   placeholder={tNodes('form.placeholders.code')}
-                />
-              )}
-            </form.AppField>
-            <form.AppField name="radius">
-              {(field) => (
-                <field.TextInput
-                  label={tNodes('fields.radius')}
-                  placeholder={tNodes('form.placeholders.radius')}
-                  inputMode="decimal"
+                  isRequired
                 />
               )}
             </form.AppField>
           </FormLayout>
         </TabsContent>
         <TabsContent value="location">
-          <FormLayout title={tNodes('form.title')}>
+          <FormLayout title={tNodes('form.sections.location')}>
             <div className="grid grid-cols-2 gap-4">
-              <form.AppField name="cityId">
-                {(field) => (
-                  <field.SelectInput
-                    label={tNodes('fields.city')}
-                    placeholder={tNodes('form.placeholders.city')}
-                    items={
-                      cities?.data.map((city) => ({
-                        id: city.id.toString(),
-                        name: city.name,
-                      })) ?? []
-                    }
-                  />
-                )}
-              </form.AppField>
               <form.AppField name="populationId">
                 {(field) => (
                   <field.SelectInput
                     label={tNodes('fields.population')}
                     placeholder={tNodes('form.placeholders.population')}
+                    isRequired
                     items={
                       populations?.data.map((population) => ({
                         id: population.id.toString(),
                         name: population.name,
+                      })) ?? []
+                    }
+                  />
+                )}
+              </form.AppField>
+              <form.AppField name="cityId">
+                {(field) => (
+                  <field.SelectInput
+                    label={tNodes('fields.city')}
+                    placeholder={tNodes('form.placeholders.city')}
+                    isRequired
+                    items={
+                      cities?.data.map((city) => ({
+                        id: city.id.toString(),
+                        name: city.name,
                       })) ?? []
                     }
                   />
@@ -208,6 +203,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
                   <field.TextInput
                     label={tCommon('fields.latitude')}
                     placeholder={tNodes('form.placeholders.latitude')}
+                    isRequired
                     inputMode="decimal"
                   />
                 )}
@@ -217,6 +213,17 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
                   <field.TextInput
                     label={tCommon('fields.longitude')}
                     placeholder={tNodes('form.placeholders.longitude')}
+                    isRequired
+                    inputMode="decimal"
+                  />
+                )}
+              </form.AppField>
+              <form.AppField name="radius">
+                {(field) => (
+                  <field.TextInput
+                    label={tNodes('fields.radius')}
+                    placeholder={tNodes('form.placeholders.radius')}
+                    isRequired
                     inputMode="decimal"
                   />
                 )}

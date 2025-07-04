@@ -107,6 +107,7 @@ export default function PopulationForm({
             <field.TextInput
               label={tCommon('fields.name')}
               placeholder={tPopulations('form.placeholders.name')}
+              isRequired
             />
           )}
         </form.AppField>
@@ -116,6 +117,7 @@ export default function PopulationForm({
             <field.TextInput
               label={tCommon('fields.code')}
               placeholder={tPopulations('form.placeholders.code')}
+              isRequired
             />
           )}
         </form.AppField>

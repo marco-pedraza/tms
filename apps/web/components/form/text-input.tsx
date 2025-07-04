@@ -9,17 +9,22 @@ interface TextInputProps
   extends Omit<React.ComponentProps<'input'>, OmittedInputProps> {
   label: string;
   description?: string;
+  isRequired?: boolean;
 }
 
 export default function TextInput({
   label,
   description,
+  isRequired = false,
   ...inputProps
 }: TextInputProps) {
   const field = useFieldContext<string>();
   return (
     <div className="space-y-2">
-      <Label htmlFor={field.name}>{label}</Label>
+      <Label htmlFor={field.name}>
+        {label}
+        {isRequired && <span className="text-red-500">*</span>}
+      </Label>
       <Input
         id={field.name}
         name={field.name}

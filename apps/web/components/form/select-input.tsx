@@ -22,6 +22,7 @@ interface SelectInputProps
   placeholder: string;
   items: SelectItem[];
   description?: string;
+  isRequired?: boolean;
 }
 
 export default function SelectInput({
@@ -29,13 +30,17 @@ export default function SelectInput({
   placeholder,
   items,
   description,
+  isRequired = false,
   ...inputProps
 }: SelectInputProps) {
   const field = useFieldContext<string>();
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={field.name}>{label}</Label>
+      <Label htmlFor={field.name}>
+        {label}
+        {isRequired && <span className="text-red-500">*</span>}
+      </Label>
       <Select
         value={field.state.value ?? ''}
         onValueChange={field.handleChange}

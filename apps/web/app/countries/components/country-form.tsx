@@ -46,7 +46,7 @@ export default function CountryForm({
     defaultValues: defaultValues ?? {
       name: '',
       code: '',
-      active: false,
+      active: true,
     },
     validators: {
       onChange: createCountryFormSchema(tCommon),
@@ -74,6 +74,7 @@ export default function CountryForm({
             <field.TextInput
               label={tCommon('fields.name')}
               placeholder={tCountries('form.placeholders.name')}
+              isRequired
             />
           )}
         </form.AppField>
@@ -83,6 +84,7 @@ export default function CountryForm({
             <field.TextInput
               label={tCommon('fields.code')}
               placeholder={tCountries('form.placeholders.code')}
+              isRequired
               maxLength={2}
             />
           )}

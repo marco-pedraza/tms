@@ -680,6 +680,132 @@ describe('BaseRepository', () => {
 
       expect(conflicts).toEqual([]);
     });
+
+    describe('case-insensitive uniqueness validation', () => {
+      it('should detect conflicts with different casing for string fields', async () => {
+        const email = 'test@example.com';
+        await createTestUser({ email });
+
+        // Check with different casing - should detect conflict
+        const conflicts = await userRepository.checkUniqueness([
+          { field: users.email, value: 'TEST@EXAMPLE.COM' },
+        ]);
+
+        expect(conflicts).toHaveLength(1);
+        expect(conflicts).toContainEqual({
+          field: 'email',
+          value: 'TEST@EXAMPLE.COM',
+        });
+      });
+
+      it('should detect conflicts with mixed casing for name fields', async () => {
+        const name = 'John Doe';
+        await createTestUser({ name });
+
+        // Check with different casing - should detect conflict
+        const conflicts = await userRepository.checkUniqueness([
+          { field: users.name, value: 'john doe' },
+        ]);
+
+        expect(conflicts).toHaveLength(1);
+        expect(conflicts).toContainEqual({
+          field: 'name',
+          value: 'john doe',
+        });
+      });
+
+      it('should handle mixed case in scope validation', async () => {
+        const name = 'TestUser';
+        await createTestUser({ name, active: true });
+
+        // Check uniqueness with mixed case name and scope
+        const conflicts = await userRepository.checkUniqueness([
+          {
+            field: users.name,
+            value: 'testuser',
+            scope: { field: users.active, value: true },
+          },
+        ]);
+
+        expect(conflicts).toHaveLength(1);
+        expect(conflicts).toContainEqual({
+          field: 'name',
+          value: 'testuser',
+        });
+      });
+
+      it('should not conflict when scope differs (case-insensitive)', async () => {
+        const name = 'ScopeTest';
+        await createTestUser({ name, active: true });
+
+        // Check with different scope - should not conflict
+        const conflicts = await userRepository.checkUniqueness([
+          {
+            field: users.name,
+            value: 'scopetest',
+            scope: { field: users.active, value: false },
+          },
+        ]);
+
+        expect(conflicts).toEqual([]);
+      });
+
+      it('should handle multiple fields with mixed casing', async () => {
+        const name = 'MultiTest';
+        const email = 'multi@test.com';
+        await createTestUser({ name, email });
+
+        // Check both fields with different casing
+        const conflicts = await userRepository.checkUniqueness([
+          { field: users.name, value: 'MULTITEST' },
+          { field: users.email, value: 'MULTI@TEST.COM' },
+        ]);
+
+        expect(conflicts).toHaveLength(2);
+        expect(conflicts).toContainEqual({
+          field: 'name',
+          value: 'MULTITEST',
+        });
+        expect(conflicts).toContainEqual({
+          field: 'email',
+          value: 'MULTI@TEST.COM',
+        });
+      });
+
+      it('should work with excludeId and case-insensitive comparison', async () => {
+        const user = await createTestUser({
+          name: 'ExcludeTest',
+          email: 'exclude@test.com',
+        });
+
+        // Check same values with different casing but exclude current user
+        const conflicts = await userRepository.checkUniqueness(
+          [
+            { field: users.name, value: 'EXCLUDETEST' },
+            { field: users.email, value: 'EXCLUDE@TEST.COM' },
+          ],
+          user.id,
+        );
+
+        expect(conflicts).toEqual([]);
+      });
+
+      it('should maintain normal behavior for non-string fields', async () => {
+        await createTestUser({ active: true });
+
+        // Check non-string field (boolean) - should work normally
+        const conflicts = await userRepository.checkUniqueness([
+          { field: users.active, value: true },
+        ]);
+
+        // Should detect conflict as there's already a user with active: true
+        expect(conflicts).toHaveLength(1);
+        expect(conflicts).toContainEqual({
+          field: 'active',
+          value: true,
+        });
+      });
+    });
   });
 
   describe('validateRelationExists', () => {

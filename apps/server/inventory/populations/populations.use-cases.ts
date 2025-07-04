@@ -1,6 +1,6 @@
-import { and, eq, inArray, not } from 'drizzle-orm';
+import { and, eq, inArray, not, sql } from 'drizzle-orm';
 import { db } from '../db-service';
-import { populationCities } from './populations.schema';
+import { populationCities, populations } from './populations.schema';
 import type {
   AssignCitiesPayload,
   ListAvailableCitiesResult,
@@ -15,6 +15,21 @@ import { populationRepository } from './populations.repository';
 export function createPopulationUseCases() {
   // Initialize repositories
   const populationRepo = populationRepository;
+
+  /**
+   * Updates the population's updatedAt field
+   * @param tx - Database transaction
+   * @param populationId - The ID of the population to update
+   */
+  async function updatePopulationTimestamp(
+    tx: unknown,
+    populationId: number,
+  ): Promise<void> {
+    await (tx as typeof db)
+      .update(populations)
+      .set({ updatedAt: sql`NOW()` })
+      .where(eq(populations.id, populationId));
+  }
 
   /**
    * Assigns cities to a population, replacing all existing assignments
@@ -36,6 +51,7 @@ export function createPopulationUseCases() {
           await tx
             .delete(populationCities)
             .where(eq(populationCities.populationId, populationId));
+          await updatePopulationTimestamp(tx, populationId);
           return populationId;
         }
 
@@ -81,6 +97,9 @@ export function createPopulationUseCases() {
             })),
           );
         }
+
+        // Update population's updated_at field
+        await updatePopulationTimestamp(tx, populationId);
 
         // Return population ID for post-transaction processing
         return populationId;

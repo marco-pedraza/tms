@@ -18,6 +18,7 @@ import {
 import { routeUseCases } from '../../inventory/routes/routes.use-cases';
 import { State } from '../../inventory/states/states.types';
 import { Terminal } from '../../inventory/terminals/terminals.types';
+import { AVAILABLE_TIMEZONES } from '../../inventory/timezones/timezones.constants';
 import { Transporter } from '../../inventory/transporters/transporters.types';
 import { createSlug } from '../../shared/utils';
 import {
@@ -117,7 +118,7 @@ async function seedCities(states: State[]) {
       stateId: randomState.id,
       latitude: faker.location.latitude(),
       longitude: faker.location.longitude(),
-      timezone: faker.location.timeZone(),
+      timezone: faker.helpers.arrayElement(AVAILABLE_TIMEZONES).id,
       slug,
     };
   });

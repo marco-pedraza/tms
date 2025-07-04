@@ -8,6 +8,17 @@ export default function useQueryAllStates(): UseQueryResult<
 > {
   return useQuery<states.ListStatesResult, APIError>({
     queryKey: ['allStates'],
-    queryFn: () => imsClient.inventory.listStates({}),
+    queryFn: () =>
+      imsClient.inventory.listStates({
+        orderBy: [
+          {
+            field: 'name',
+            direction: 'asc',
+          },
+        ],
+        filters: {
+          active: true,
+        },
+      }),
   });
 }

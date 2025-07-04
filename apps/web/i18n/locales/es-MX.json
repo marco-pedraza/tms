@@ -71,7 +71,7 @@
         "success": "Eliminado correctamente",
         "error": "No se pudo eliminar",
         "confirm": "¿Estás seguro?",
-        "description": "Esta acción no se puede deshacer. Se eliminará permanentemente el registro y todos los datos asociados."
+        "description": "Una vez eliminado, el registro ya no estará disponible en la plataforma."
       }
     },
     "states": {

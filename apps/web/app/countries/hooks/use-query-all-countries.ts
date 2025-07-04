@@ -8,6 +8,17 @@ export default function useQueryAllCountries(): UseQueryResult<
 > {
   return useQuery<countries.ListCountriesResult, APIError>({
     queryKey: ['allCountries'],
-    queryFn: () => imsClient.inventory.listCountries({}),
+    queryFn: () =>
+      imsClient.inventory.listCountries({
+        orderBy: [
+          {
+            field: 'name',
+            direction: 'asc',
+          },
+        ],
+        filters: {
+          active: true,
+        },
+      }),
   });
 }

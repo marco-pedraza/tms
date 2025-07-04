@@ -25,7 +25,10 @@ interface UseQueryCityProps {
 export default function useQueryCity({
   cityId,
   enabled = true,
-}: UseQueryCityProps): UseQueryResult<cities.City, QueryCityError> {
+}: UseQueryCityProps): UseQueryResult<
+  cities.CityWithRelations,
+  QueryCityError
+> {
   const queryClient = useQueryClient();
 
   return useQuery({

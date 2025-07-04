@@ -8,6 +8,17 @@ export default function useQueryAllCities(): UseQueryResult<
 > {
   return useQuery<cities.ListCitiesResult, APIError>({
     queryKey: ['allCities'],
-    queryFn: () => imsClient.inventory.listCities({}),
+    queryFn: () =>
+      imsClient.inventory.listCities({
+        orderBy: [
+          {
+            field: 'name',
+            direction: 'asc',
+          },
+        ],
+        filters: {
+          active: true,
+        },
+      }),
   });
 }

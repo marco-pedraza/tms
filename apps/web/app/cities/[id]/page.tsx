@@ -72,7 +72,7 @@ export default function CityDetailsPage() {
               <dd>{city.name}</dd>
 
               <dt className="font-medium">{tCities('fields.state')}:</dt>
-              <dd>{city.stateId}</dd>
+              <dd>{city.state.name}</dd>
 
               <dt className="font-medium">{tCities('fields.timezone')}:</dt>
               <dd>{city.timezone}</dd>

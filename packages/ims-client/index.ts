@@ -9745,7 +9745,7 @@ export namespace populations {
     }
 
     export interface ListAvailableCitiesResult {
-        data: cities.CityWithRelations[]
+        data: cities.CityWithStateAndCountry[]
     }
 
     export interface ListPopulationsQueryParams {

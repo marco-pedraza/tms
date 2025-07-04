@@ -287,9 +287,15 @@ export const createBaseRepository = <
       // Verificar existencia
       await findOne(id);
 
+      // Always update the updatedAt timestamp
+      const updateData = {
+        ...(data as TableInsert),
+        updatedAt: sql`NOW()`,
+      } as TableInsert;
+
       const [entity] = (await db
         .update(table)
-        .set(data as TableInsert)
+        .set(updateData)
         .where(eq(table.id, id))
         .returning()) as Array<Record<string, unknown>>;
 
@@ -316,7 +322,7 @@ export const createBaseRepository = <
         // Soft delete: set deletedAt to current timestamp
         const [entity] = await db
           .update(table)
-          .set({ deletedAt: sql`now()` } as TableInsert)
+          .set({ deletedAt: sql`NOW()` } as TableInsert)
           .where(eq(table.id, id))
           .returning();
         return entity as T;
@@ -385,7 +391,7 @@ export const createBaseRepository = <
         // Soft delete: set deletedAt to current timestamp
         const result = await db
           .update(table)
-          .set({ deletedAt: sql`now()` } as TableInsert)
+          .set({ deletedAt: sql`NOW()` } as TableInsert)
           .where(inArray(table.id, ids))
           .returning();
         return result as unknown as T[];
@@ -551,10 +557,19 @@ export const createBaseRepository = <
   ): Promise<{ field: string; value: unknown }[]> => {
     try {
       const conditions = fields.map(({ field, value, scope }) => {
-        const fieldCondition = eq(field, value);
-        return scope
-          ? and(fieldCondition, eq(scope.field, scope.value))
-          : fieldCondition;
+        // Use case-insensitive comparison for string values
+        const fieldCondition =
+          typeof value === 'string'
+            ? sql`LOWER(${field}) = LOWER(${value})`
+            : eq(field, value);
+
+        const scopeCondition = scope
+          ? typeof scope.value === 'string'
+            ? sql`LOWER(${scope.field}) = LOWER(${scope.value})`
+            : eq(scope.field, scope.value)
+          : undefined;
+
+        return scope ? and(fieldCondition, scopeCondition) : fieldCondition;
       });
 
       const query = excludeId
@@ -574,7 +589,14 @@ export const createBaseRepository = <
 
       const conflicts = [];
       for (const f of fields) {
-        if (existing[f.field.name] === f.value) {
+        // Compare values case-insensitively for strings
+        const existingValue = existing[f.field.name];
+        const isConflict =
+          typeof f.value === 'string' && typeof existingValue === 'string'
+            ? f.value.toLowerCase() === existingValue.toLowerCase()
+            : f.value === existingValue;
+
+        if (isConflict) {
           conflicts.push({ field: f.field.name, value: f.value });
         }
       }

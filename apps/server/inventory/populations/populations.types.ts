@@ -5,8 +5,7 @@ import {
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '../../shared/types';
-import type { City } from '../cities/cities.types';
-import type { CityWithRelations } from '../cities/cities.types';
+import type { City, CityWithStateAndCountry } from '../cities/cities.types';
 
 /**
  * Base interface representing a population entity
@@ -119,4 +118,5 @@ export type PaginatedListPopulationsResult =
 /**
  * Response for listing available cities for a population
  */
-export type ListAvailableCitiesResult = ListQueryResult<CityWithRelations>;
+export type ListAvailableCitiesResult =
+  ListQueryResult<CityWithStateAndCountry>;

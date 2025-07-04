@@ -8,6 +8,17 @@ export default function useQueryAllPopulations(): UseQueryResult<
 > {
   return useQuery<populations.ListPopulationsResult, APIError>({
     queryKey: ['allPopulations'],
-    queryFn: () => imsClient.inventory.listPopulations({}),
+    queryFn: () =>
+      imsClient.inventory.listPopulations({
+        orderBy: [
+          {
+            field: 'name',
+            direction: 'asc',
+          },
+        ],
+        filters: {
+          active: true,
+        },
+      }),
   });
 }

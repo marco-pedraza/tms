@@ -15,7 +15,13 @@ type Country = countries.Country;
 
 const createStateFormSchema = (tCommon: UseTranslationsResult) =>
   z.object({
-    name: z.string().min(1, { message: tCommon('validations.required') }),
+    name: z
+      .string()
+      .trim()
+      .min(1, { message: tCommon('validations.required') })
+      .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
+        message: tCommon('validations.name.letters'),
+      }),
     code: z
       .string()
       .min(2, {

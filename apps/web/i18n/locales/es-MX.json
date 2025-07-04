@@ -97,6 +97,9 @@
     },
     "validations": {
       "required": "Este campo es obligatorio",
+      "name": {
+        "letters": "El nombre debe contener solo letras y espacios"
+      },
       "code": {
         "length": "El código debe contener {length} carácteres",
         "length-range": "El código debe contener entre {min} y {max} carácteres",

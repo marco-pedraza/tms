@@ -13,7 +13,13 @@ import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-fo
 
 const createCitySchema = (tCommon: UseTranslationsResult) =>
   z.object({
-    name: z.string().min(1, { message: tCommon('validations.required') }),
+    name: z
+      .string()
+      .trim()
+      .min(1, { message: tCommon('validations.required') })
+      .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
+        message: tCommon('validations.name.letters'),
+      }),
     stateId: z
       .string()
       .min(1, tCommon('validations.required'))

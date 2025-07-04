@@ -64,12 +64,14 @@ export default function StatesTable() {
     sortingUrlState,
     setPaginationUrlState,
     setSortingUrlState,
+    searchUrlState,
+    setSearchUrlState,
   } = useTableUrlState<states.State>();
   const { data, isLoading, error, refetch } = useQueryStates({
     page: paginationUrlState.page,
     pageSize: paginationUrlState.pageSize,
     orderBy: sortingUrlState,
-    searchTerm: '',
+    searchTerm: searchUrlState,
     filters: {},
   });
   const { onSortingChange, onPaginationChange } = useServerTableEvents({
@@ -106,6 +108,8 @@ export default function StatesTable() {
         onPaginationChange={onPaginationChange}
         sorting={sortingUrlState}
         onSortingChange={onSortingChange}
+        initialSearchValue={searchUrlState}
+        onSearchChange={setSearchUrlState}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

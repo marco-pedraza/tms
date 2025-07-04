@@ -64,12 +64,14 @@ export default function CountriesTable() {
     sortingUrlState,
     setPaginationUrlState,
     setSortingUrlState,
+    searchUrlState,
+    setSearchUrlState,
   } = useTableUrlState<countries.Country>();
   const { data, isLoading, error, refetch } = useQueryCountries({
     page: paginationUrlState.page,
     pageSize: paginationUrlState.pageSize,
     orderBy: sortingUrlState,
-    searchTerm: '',
+    searchTerm: searchUrlState,
     filters: {},
   });
   const { onSortingChange, onPaginationChange } = useServerTableEvents({
@@ -106,6 +108,8 @@ export default function CountriesTable() {
         onPaginationChange={onPaginationChange}
         sorting={sortingUrlState}
         onSortingChange={onSortingChange}
+        initialSearchValue={searchUrlState}
+        onSearchChange={setSearchUrlState}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

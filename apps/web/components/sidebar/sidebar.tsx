@@ -3,15 +3,14 @@
 import type React from 'react';
 import Link from 'next/link';
 import {
-  Briefcase,
+  // Briefcase,
   Building,
   Building2,
-  Bus,
+  //Bus,
   Globe,
   Map,
   MapPin,
   Package,
-  Users,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import routes from '@/services/routes';
@@ -35,56 +34,64 @@ export default function Sidebar() {
         icon={<Package className="h-4 w-4" />}
         defaultOpen={true}
       >
-        <SidebarLink
-          href={routes.countries.index}
-          icon={Globe}
-          label={tSidebar('inventory.countries')}
-        />
-        <SidebarLink
-          href={routes.states.index}
-          icon={Map}
-          label={tSidebar('inventory.states')}
-        />
-        <SidebarLink
-          href={routes.cities.index}
-          icon={Building}
-          label={tSidebar('inventory.cities')}
-        />
-        <SidebarLink
+        <SidebarSection
+          title={tSidebar('inventory.localities.title')}
+          icon={<MapPin className="h-4 w-4" />}
+          defaultOpen={true}
+        >
+          <SidebarLink
+            href={routes.countries.index}
+            icon={Globe}
+            label={tSidebar('inventory.localities.countries')}
+          />
+          <SidebarLink
+            href={routes.states.index}
+            icon={Map}
+            label={tSidebar('inventory.localities.states')}
+          />
+          <SidebarLink
+            href={routes.cities.index}
+            icon={Building}
+            label={tSidebar('inventory.localities.cities')}
+          />
+          <SidebarLink
+            href={routes.populations.index}
+            icon={Building}
+            label={tSidebar('inventory.localities.populations')}
+          />
+          <SidebarLink
+            href={routes.nodes.index}
+            icon={Building2}
+            label={tSidebar('inventory.localities.nodes')}
+          />
+        </SidebarSection>
+
+        {/* <SidebarLink
           href={routes.terminals.index}
           icon={Building2}
           label={tSidebar('inventory.terminals')}
-        />
-        <SidebarLink
+        /> */}
+        {/* <SidebarLink
           href={routes.transporters.index}
           icon={Briefcase}
           label={tSidebar('inventory.transporters')}
-        />
-        <SidebarLink
+        /> */}
+        {/* <SidebarLink
           href={routes.serviceTypes.index}
           icon={Briefcase}
           label={tSidebar('inventory.serviceTypes')}
-        />
-        <SidebarLink
+        /> */}
+        {/* <SidebarLink
           href={routes.busLines.index}
           icon={Bus}
           label={tSidebar('inventory.busLines')}
-        />
-        <SidebarLink
+        /> */}
+        {/* <SidebarLink
           href={routes.drivers.index}
           icon={Users}
           label={tSidebar('inventory.drivers')}
-        />
-        <SidebarLink
-          href={routes.populations.index}
-          icon={Users}
-          label={tSidebar('inventory.populations')}
-        />
-        <SidebarLink
-          href={routes.nodes.index}
-          icon={MapPin}
-          label={tSidebar('inventory.nodes')}
-        />
+        /> */}
+
         {/* <SidebarLink
           href={routes.routes.index}
           icon={Route}

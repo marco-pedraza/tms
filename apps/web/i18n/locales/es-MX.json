@@ -131,9 +131,14 @@
     "title": "IMS.ai",
     "inventory": {
       "title": "Inventario",
-      "countries": "Países",
-      "states": "Estados",
-      "cities": "Ciudades",
+      "localities": {
+        "title": "Localidades",
+        "countries": "Países",
+        "states": "Estados",
+        "cities": "Ciudades",
+        "populations": "Poblaciones",
+        "nodes": "Nodos"
+      },
       "terminals": "Terminales",
       "transporters": "Transportistas",
       "serviceTypes": "Tipos de Servicio",
@@ -144,9 +149,7 @@
       "services": "Servicios",
       "drivers": "Conductores",
       "busModels": "Modelos de Autobus",
-      "buses": "Autobuses",
-      "populations": "Poblaciones",
-      "nodes": "Nodos"
+      "buses": "Autobuses"
     },
     "planning": {
       "title": "Planeación",

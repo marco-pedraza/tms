@@ -73,12 +73,14 @@ export default function CitiesTable() {
     sortingUrlState,
     setPaginationUrlState,
     setSortingUrlState,
+    searchUrlState,
+    setSearchUrlState,
   } = useTableUrlState<cities.City>();
   const { data, isLoading, error, refetch } = useQueryCities({
     page: paginationUrlState.page,
     pageSize: paginationUrlState.pageSize,
     orderBy: sortingUrlState,
-    searchTerm: '',
+    searchTerm: searchUrlState,
     filters: {},
   });
   const { onSortingChange, onPaginationChange } = useServerTableEvents({
@@ -115,6 +117,8 @@ export default function CitiesTable() {
         onSortingChange={onSortingChange}
         onDelete={setDeleteId}
         routes={routes.cities}
+        initialSearchValue={searchUrlState}
+        onSearchChange={setSearchUrlState}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

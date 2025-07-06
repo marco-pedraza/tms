@@ -105,3 +105,20 @@ export class SoftDeleteNotConfiguredError extends Error {
     this.name = 'SoftDeleteNotConfiguredError';
   }
 }
+
+/**
+ * Error thrown when trying to delete an entity that has active dependencies
+ */
+export class DependencyExistsError extends FieldValidationError {
+  constructor(entityName: string, dependentTables: string[]) {
+    const fieldErrors: FieldError[] = dependentTables.map((table) => ({
+      field: 'id',
+      code: 'DEPENDENCY_EXISTS',
+      message: `Cannot delete ${entityName} because it has active records in ${table}`,
+      value: table,
+    }));
+
+    super(fieldErrors);
+    this.name = 'DependencyExistsError';
+  }
+}

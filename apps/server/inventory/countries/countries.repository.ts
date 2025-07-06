@@ -20,6 +20,7 @@ export const createCountryRepository = () => {
   >(db, countries, 'Country', {
     searchableFields: [countries.name, countries.code],
     softDeleteEnabled: true,
+    checkDependenciesOnSoftDelete: true,
   });
 
   return baseRepository;

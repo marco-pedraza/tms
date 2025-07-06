@@ -77,6 +77,8 @@ export interface RepositoryConfig {
   searchableFields?: SearchableFields;
   /** Enable soft delete functionality using 'deletedAt' column */
   softDeleteEnabled?: boolean;
+  /** Enable dependency validation before soft delete (default: false for backward compatibility) */
+  checkDependenciesOnSoftDelete?: boolean;
 }
 
 /**

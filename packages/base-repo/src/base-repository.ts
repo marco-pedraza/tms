@@ -3,8 +3,22 @@
  * @description A module providing generic CRUD operations and utility functions for database entities
  */
 
-import { NotFoundError, SoftDeleteNotConfiguredError } from './errors';
-import { eq, and, count, not, or, SQL, inArray, sql } from 'drizzle-orm';
+import {
+  NotFoundError,
+  SoftDeleteNotConfiguredError,
+  DependencyExistsError,
+} from './errors';
+import {
+  eq,
+  and,
+  count,
+  not,
+  or,
+  SQL,
+  inArray,
+  sql,
+  getTableName,
+} from 'drizzle-orm';
 import type {
   PaginationMeta,
   TableWithId,
@@ -18,6 +32,23 @@ import type {
   Filters,
 } from './types';
 import { PgColumn } from 'drizzle-orm/pg-core';
+
+/**
+ * PostgreSQL query result structure
+ */
+interface PostgresQueryResult {
+  rows: Record<string, unknown>[];
+  rowCount?: number;
+}
+
+/**
+ * Foreign key information from information_schema
+ */
+interface ForeignKeyInfo {
+  dep_table: string;
+  dep_column: string;
+}
+
 import {
   handlePostgresError,
   isApplicationError,
@@ -64,6 +95,119 @@ export const createBaseRepository = <
   const requiresSoftDelete = (operation: string) => {
     if (!isSoftDeleteEnabled) {
       throw new SoftDeleteNotConfiguredError(operation);
+    }
+  };
+
+  // Cache for table schema information to avoid repeated queries
+  const tableSchemaCache = new Map<string, { hasDeletedAt: boolean }>();
+
+  /**
+   * Helper to check if a table has a deleted_at column
+   */
+  const hasDeletedAtColumn = async (
+    tx: TransactionalDB,
+    tableName: string,
+  ): Promise<boolean> => {
+    const cachedResult = tableSchemaCache.get(tableName);
+    if (cachedResult) {
+      return cachedResult.hasDeletedAt;
+    }
+
+    const result = await tx.execute(sql`
+      SELECT COUNT(*) as count
+      FROM information_schema.columns
+      WHERE table_name = ${tableName}
+        AND column_name = 'deleted_at'
+        AND table_schema = current_schema()
+    `);
+
+    const hasDeletedAt =
+      Number((result as PostgresQueryResult)?.rows?.[0]?.count) > 0;
+    tableSchemaCache.set(tableName, { hasDeletedAt });
+    return hasDeletedAt;
+  };
+
+  /**
+   * Helper to check for active dependencies before soft delete
+   */
+  const checkActiveDependencies = async (
+    tx: TransactionalDB,
+    entityId: number,
+  ): Promise<void> => {
+    // Only check dependencies if explicitly enabled
+    if (!config?.checkDependenciesOnSoftDelete) {
+      return;
+    }
+    // Get the table name from the table object using Drizzle's getTableName function
+    const parentTableName = getTableName(table);
+
+    if (!parentTableName) {
+      throw new Error(`Could not determine table name for ${entityName}`);
+    }
+
+    // Discover foreign keys pointing to the current table
+    const foreignKeysResult = await tx.execute(sql`
+      SELECT
+        tc.table_name AS dep_table,
+        kcu.column_name AS dep_column
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu
+        ON tc.constraint_name = kcu.constraint_name
+      JOIN information_schema.constraint_column_usage ccu
+        ON ccu.constraint_name = tc.constraint_name
+      WHERE tc.constraint_type = 'FOREIGN KEY'
+        AND ccu.table_name = ${parentTableName}
+        AND ccu.column_name = 'id'
+        AND tc.table_schema = current_schema()
+    `);
+
+    // Handle the result array properly - extract rows from PostgreSQL Result object
+    const foreignKeys = (foreignKeysResult as PostgresQueryResult)?.rows || [];
+
+    const violatingTables: string[] = [];
+
+    // Check each dependent table for active records
+    for (const fk of foreignKeys) {
+      const fkInfo = fk as unknown as ForeignKeyInfo;
+      const depTable = fkInfo.dep_table;
+      const depColumn = fkInfo.dep_column;
+
+      // Check if the dependent table has deleted_at column
+      const hasDeletedAt = await hasDeletedAtColumn(tx, depTable);
+
+      // Build the query to check for active dependencies
+      let checkQuery: SQL;
+      if (hasDeletedAt) {
+        // Table has soft delete - check for non-deleted records
+        checkQuery = sql`
+          SELECT 1
+          FROM ${sql.identifier(depTable)}
+          WHERE ${sql.identifier(depColumn)} = ${entityId}
+            AND deleted_at IS NULL
+          LIMIT 1
+        `;
+      } else {
+        // Table doesn't have soft delete - check for any records
+        checkQuery = sql`
+          SELECT 1
+          FROM ${sql.identifier(depTable)}
+          WHERE ${sql.identifier(depColumn)} = ${entityId}
+          LIMIT 1
+        `;
+      }
+
+      const result = await tx.execute(checkQuery);
+      if (
+        result &&
+        (result as unknown as PostgresQueryResult)?.rows?.length > 0
+      ) {
+        violatingTables.push(depTable);
+      }
+    }
+
+    // If there are violations, throw an error
+    if (violatingTables.length > 0) {
+      throw new DependencyExistsError(entityName, violatingTables);
     }
   };
 
@@ -255,6 +399,29 @@ export const createBaseRepository = <
   };
 
   /**
+   * Helper to check if we're already in a transaction context
+   * When db is a transaction instance, it doesn't have a .transaction() method
+   */
+  const isInTransaction = (db: TransactionalDB): boolean => {
+    return typeof (db as DrizzleDB).transaction !== 'function';
+  };
+
+  /**
+   * Helper to execute operations either in a new transaction or within existing transaction
+   */
+  const executeWithDependencyCheck = <R>(
+    operation: (tx: TransactionalDB) => Promise<R>,
+  ): Promise<R> => {
+    if (isInTransaction(db)) {
+      // Already in transaction, execute directly
+      return operation(db);
+    } else {
+      // Not in transaction, create one
+      return (db as DrizzleDB).transaction(operation);
+    }
+  };
+
+  /**
    * Creates a new entity
    * @param {CreateT} data - The data to create the entity with
    * @throws {ValidationError} If the creation fails
@@ -312,6 +479,7 @@ export const createBaseRepository = <
    * Deletes an entity by ID (soft delete if enabled, hard delete otherwise)
    * @param {number} id - The ID of the entity to delete
    * @throws {NotFoundError} If the entity is not found
+   * @throws {DependencyExistsError} If the entity has active dependencies (soft delete only)
    * @returns {Promise<T>} The deleted entity
    */
   const deleteOne = async (id: number): Promise<T> => {
@@ -319,13 +487,20 @@ export const createBaseRepository = <
       await findOne(id);
 
       if (isSoftDeleteEnabled) {
-        // Soft delete: set deletedAt to current timestamp
-        const [entity] = await db
-          .update(table)
-          .set({ deletedAt: sql`NOW()` } as TableInsert)
-          .where(eq(table.id, id))
-          .returning();
-        return entity as T;
+        // Use transaction to check dependencies and perform soft delete atomically
+        const result = await executeWithDependencyCheck(async (tx) => {
+          // Check for active dependencies before soft delete
+          await checkActiveDependencies(tx, id);
+
+          // Soft delete: set deletedAt to current timestamp
+          const entities = await tx
+            .update(table)
+            .set({ deletedAt: sql`NOW()` } as TableInsert)
+            .where(eq(table.id, id))
+            .returning();
+          return (entities as unknown[])[0] as T;
+        });
+        return result;
       } else {
         // Hard delete: remove from database
         const [entity] = await db
@@ -360,6 +535,7 @@ export const createBaseRepository = <
    * @param {number[]} ids - Array of entity IDs to delete
    * @returns {Promise<T[]>} Array of deleted entities
    * @throws {NotFoundError} If any of the IDs are invalid or not found
+   * @throws {DependencyExistsError} If any entity has active dependencies (soft delete only)
    */
   const deleteMany = async (ids: number[]): Promise<T[]> => {
     if (ids.length === 0) {
@@ -388,13 +564,22 @@ export const createBaseRepository = <
       }
 
       if (isSoftDeleteEnabled) {
-        // Soft delete: set deletedAt to current timestamp
-        const result = await db
-          .update(table)
-          .set({ deletedAt: sql`NOW()` } as TableInsert)
-          .where(inArray(table.id, ids))
-          .returning();
-        return result as unknown as T[];
+        // Use transaction to check dependencies and perform soft delete atomically
+        const result = await executeWithDependencyCheck(async (tx) => {
+          // Check for active dependencies for each entity before soft delete
+          for (const id of ids) {
+            await checkActiveDependencies(tx, id);
+          }
+
+          // Soft delete: set deletedAt to current timestamp
+          const entities = await tx
+            .update(table)
+            .set({ deletedAt: sql`NOW()` } as TableInsert)
+            .where(inArray(table.id, ids))
+            .returning();
+          return entities as unknown as T[];
+        });
+        return result;
       } else {
         // Hard delete: remove from database
         const result = await db

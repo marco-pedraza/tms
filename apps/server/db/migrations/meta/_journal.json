@@ -169,6 +169,13 @@
       "when": 1751420442384,
       "tag": "20250702014042_create_installation_schema_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1751490301641,
+      "tag": "20250702210501_add_contact_and_active_to_node_and_installations",
+      "breakpoints": true
     }
   ]
 }

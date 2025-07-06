@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   pgTable,
@@ -23,6 +24,7 @@ export const nodes = pgTable(
     latitude: real('latitude').notNull(),
     longitude: real('longitude').notNull(),
     radius: real('radius').notNull(),
+    active: boolean('active').notNull().default(true),
     cityId: integer('city_id')
       .notNull()
       .references(() => cities.id),

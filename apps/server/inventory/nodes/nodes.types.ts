@@ -31,6 +31,9 @@ export interface Node {
   /** Radius of coverage for the node in meters */
   radius: number;
 
+  /** Whether the node is active or not */
+  active: boolean;
+
   /** ID of the city this node belongs to */
   cityId: number;
 
@@ -82,6 +85,12 @@ export interface CreateNodePayload {
   radius: number & Min<1>;
 
   /**
+   * Whether the node is active or not
+   * @default true
+   */
+  active?: boolean;
+
+  /**
    * ID of the city this node belongs to
    * Must be a positive number
    */
@@ -127,6 +136,11 @@ export interface UpdateNodePayload {
    * Must be a positive number
    */
   radius?: number & Min<1>;
+
+  /**
+   * Whether the node is active or not
+   */
+  active?: boolean;
 
   /**
    * ID of the city this node belongs to

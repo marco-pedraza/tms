@@ -3060,6 +3060,24 @@ export namespace inventory {
     description?: string | null
 
     /**
+     * Optional contact phone number for the installation
+     * Must match phone number format if provided
+     */
+    contactPhone?: string | null
+
+    /**
+     * Optional contact email address for the installation
+     * Must be a valid email format if provided
+     */
+    contactEmail?: string | null
+
+    /**
+     * Optional website URL for the installation
+     * Must be a valid URL starting with http:// or https:// if provided
+     */
+    website?: string | null
+
+    /**
      * ID of the installation type this installation belongs to
      * Must be a positive number
      */
@@ -3181,6 +3199,11 @@ export namespace inventory {
      * Must be a positive number
      */
     radius?: number
+
+    /**
+     * Whether the node is active or not
+     */
+    active?: boolean
 
     /**
      * ID of the city this node belongs to
@@ -8763,6 +8786,30 @@ export namespace installations {
          * Optional description of the installation
          */
         description?: string | null
+
+        /**
+         * Optional contact phone number for the installation
+         * Must match phone number format if provided
+         */
+        contactPhone?: string | null
+
+        /**
+         * Optional contact email address for the installation
+         * Must be a valid email format if provided
+         */
+        contactEmail?: string | null
+
+        /**
+         * Optional website URL for the installation
+         * Must be a valid URL starting with http:// or https:// if provided
+         */
+        website?: string | null
+
+        /**
+         * Optional ID of the installation type this installation belongs to
+         * Must be a positive number if provided
+         */
+        installationTypeId?: number | null
     }
 
     export interface Installation {
@@ -8785,6 +8832,21 @@ export namespace installations {
          * Optional description of the installation
          */
         description: string | null
+
+        /**
+         * Contact phone number for the installation
+         */
+        contactPhone: string | null
+
+        /**
+         * Contact email address for the installation
+         */
+        contactEmail: string | null
+
+        /**
+         * Website URL for the installation
+         */
+        website: string | null
 
         /**
          * ID of the installation type this installation belongs to
@@ -8846,6 +8908,21 @@ export namespace installations {
         description: string | null
 
         /**
+         * Contact phone number for the installation
+         */
+        contactPhone: string | null
+
+        /**
+         * Contact email address for the installation
+         */
+        contactEmail: string | null
+
+        /**
+         * Website URL for the installation
+         */
+        website: string | null
+
+        /**
          * ID of the installation type this installation belongs to
          */
         installationTypeId: number | null
@@ -8863,7 +8940,7 @@ export namespace installations {
 
     export interface ListInstallationsQueryParams {
         orderBy?: {
-            field: "id" | "name" | "address" | "description" | "installationTypeId" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "address" | "description" | "contactPhone" | "contactEmail" | "website" | "installationTypeId" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -8871,6 +8948,9 @@ export namespace installations {
             name?: string
             address?: string
             description?: string | null
+            contactPhone?: string | null
+            contactEmail?: string | null
+            website?: string | null
             installationTypeId?: number | null
             createdAt?: string | null
             updatedAt?: string | null
@@ -8886,7 +8966,7 @@ export namespace installations {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "address" | "description" | "installationTypeId" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "address" | "description" | "contactPhone" | "contactEmail" | "website" | "installationTypeId" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -8894,6 +8974,9 @@ export namespace installations {
             name?: string
             address?: string
             description?: string | null
+            contactPhone?: string | null
+            contactEmail?: string | null
+            website?: string | null
             installationTypeId?: number | null
             createdAt?: string | null
             updatedAt?: string | null
@@ -8940,6 +9023,12 @@ export namespace nodes {
         radius: number
 
         /**
+         * Whether the node is active or not
+         * @default true
+         */
+        active?: boolean
+
+        /**
          * ID of the city this node belongs to
          * Must be a positive number
          */
@@ -8954,7 +9043,7 @@ export namespace nodes {
 
     export interface ListNodesQueryParams {
         orderBy?: {
-            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
+            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "active" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -8964,6 +9053,7 @@ export namespace nodes {
             latitude?: number
             longitude?: number
             radius?: number
+            active?: boolean
             cityId?: number
             populationId?: number
             installationId?: number | null
@@ -9007,6 +9097,11 @@ export namespace nodes {
          * Radius of coverage for the node in meters
          */
         radius: number
+
+        /**
+         * Whether the node is active or not
+         */
+        active: boolean
 
         /**
          * ID of the city this node belongs to
@@ -9069,6 +9164,11 @@ export namespace nodes {
         radius: number
 
         /**
+         * Whether the node is active or not
+         */
+        active: boolean
+
+        /**
          * ID of the city this node belongs to
          */
         cityId: number
@@ -9098,7 +9198,7 @@ export namespace nodes {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
+            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "active" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -9108,6 +9208,7 @@ export namespace nodes {
             latitude?: number
             longitude?: number
             radius?: number
+            active?: boolean
             cityId?: number
             populationId?: number
             installationId?: number | null

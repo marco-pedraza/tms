@@ -16,6 +16,9 @@ export const installations = pgTable(
     name: text('name').notNull(),
     address: text('address').notNull(),
     description: text('description'),
+    contactPhone: text('contact_phone'),
+    contactEmail: text('contact_email'),
+    website: text('website'),
     // TODO: Add notNull validation, for now we need to keep it optional
     installationTypeId: integer('installation_type_id').references(
       () => installationTypes.id,

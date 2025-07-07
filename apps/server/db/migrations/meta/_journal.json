@@ -173,6 +173,13 @@
     {
       "idx": 24,
       "version": "7",
+      "when": 1751664235797,
+      "tag": "20250704212355_add_state_scope_to_cities_unique_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
       "when": 1751490301641,
       "tag": "20250702210501_add_contact_and_active_to_node_and_installations",
       "breakpoints": true

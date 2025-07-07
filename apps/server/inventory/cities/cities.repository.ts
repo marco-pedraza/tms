@@ -3,6 +3,7 @@ import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { PaginationMeta } from '../../shared/types';
 import { createSlug } from '../../shared/utils';
 import { db } from '../db-service';
+import { stateRepository } from '../states/states.repository';
 import { cities } from './cities.schema';
 import type {
   City,
@@ -29,12 +30,13 @@ export const createCityRepository = () => {
   });
 
   /**
-   * Creates a new city with auto-generated slug
+   * Creates a new city with auto-generated slug using state code as prefix
    * @param data - The city data to create
    * @returns The created city
    */
   const create = async (data: CreateCityPayload): Promise<City> => {
-    const slug = createSlug(data.name);
+    const stateCode = await stateRepository.getStateCode(data.stateId);
+    const slug = createSlug(data.name, stateCode);
     return await baseRepository.create({ ...data, slug });
   };
 
@@ -46,9 +48,18 @@ export const createCityRepository = () => {
    */
   const update = async (id: number, data: UpdateCityPayload): Promise<City> => {
     const updateData: UpdateCityPayload & { slug?: string } = { ...data };
-    if (data.name) {
-      updateData.slug = createSlug(data.name);
+
+    // If name or stateId is being updated, regenerate slug
+    if (data.name || data.stateId !== undefined) {
+      // Get current city to determine state
+      const currentCity = await baseRepository.findOne(id);
+      const stateId = data.stateId ?? currentCity.stateId;
+      const name = data.name ?? currentCity.name;
+
+      const stateCode = await stateRepository.getStateCode(stateId);
+      updateData.slug = createSlug(name, stateCode);
     }
+
     return await baseRepository.update(id, updateData);
   };
 

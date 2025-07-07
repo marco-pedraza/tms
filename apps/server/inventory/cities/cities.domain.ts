@@ -20,28 +20,25 @@ export async function validateCityUniqueness(
 ): Promise<FieldErrorCollector> {
   const collector = validator || new FieldErrorCollector();
 
-  // Prepare fields to check for uniqueness
-  const fieldsToCheck = [];
-
-  if (payload.name) {
-    fieldsToCheck.push({
-      field: cities.name,
-      value: payload.name,
-    });
-  }
-
-  // If no fields to check, return early
-  if (fieldsToCheck.length === 0) {
+  // Early return if no validation needed
+  const shouldValidate =
+    payload.name || (payload.stateId !== undefined && currentId);
+  if (!shouldValidate) {
     return collector;
   }
 
-  // Check all fields for uniqueness in a single database query
+  // Get validation data
+  const validationData = await getValidationData(payload, currentId);
+  if (!validationData) {
+    return collector;
+  }
+
+  // Check uniqueness and add errors
   const conflicts = await cityRepository.checkUniqueness(
-    fieldsToCheck,
+    [validationData],
     currentId,
   );
 
-  // Add errors for each conflict found
   for (const conflict of conflicts) {
     const error = standardFieldErrors.duplicate(
       ENTITY_NAME,
@@ -52,6 +49,41 @@ export async function validateCityUniqueness(
   }
 
   return collector;
+}
+
+/**
+ * Helper function to get validation data for uniqueness check
+ * @param payload - City data to validate
+ * @param currentId - ID of the current entity (for updates)
+ * @returns Validation data object or null if validation not needed
+ */
+async function getValidationData(
+  payload: CreateCityPayload | UpdateCityPayload,
+  currentId?: number,
+) {
+  let nameToCheck = payload.name;
+  let stateId = payload.stateId;
+
+  // Get current city data if needed for updates
+  if (currentId) {
+    const currentCity = await cityRepository.findOne(currentId);
+    nameToCheck = nameToCheck || currentCity.name;
+    stateId = stateId !== undefined ? stateId : currentCity.stateId;
+  }
+
+  // Return null if we don't have the required data
+  if (!nameToCheck || stateId === undefined || stateId === null) {
+    return null;
+  }
+
+  return {
+    field: cities.name,
+    value: nameToCheck,
+    scope: {
+      field: cities.stateId,
+      value: stateId,
+    },
+  };
 }
 
 /**

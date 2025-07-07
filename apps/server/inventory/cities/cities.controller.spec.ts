@@ -39,6 +39,7 @@ describe('Cities Controller', () => {
 
   let testCountry: Country;
   let testState: State;
+  let testState2: State; // Second state for testing cross-state scenarios
   let testCity: City;
 
   // Cleanup helpers using test-utils
@@ -72,6 +73,14 @@ describe('Cities Controller', () => {
       deletedAt: null,
     })) as State;
 
+    // Create second state for cross-state testing
+    testState2 = (await stateFactory(factoryDb).create({
+      name: createUniqueName('Test State 2 for Cities', testSuiteId),
+      code: `TS2${testSuiteId.substring(0, 4)}`,
+      countryId: testCountry.id,
+      deletedAt: null,
+    })) as State;
+
     // Create a test city for reuse in multiple tests
     testCity = (await cityFactory(factoryDb).create({
       name: createUniqueName('Test City', testSuiteId),
@@ -97,6 +106,14 @@ describe('Cities Controller', () => {
       }
     }
 
+    if (testState2?.id) {
+      try {
+        await stateRepository.delete(testState2.id);
+      } catch (error) {
+        console.log('Error cleaning up test state 2:', error);
+      }
+    }
+
     if (testCountry?.id) {
       try {
         await countryRepository.delete(testCountry.id);
@@ -107,7 +124,7 @@ describe('Cities Controller', () => {
   });
 
   describe('success scenarios', () => {
-    test('should create a new city with auto-generated slug', async () => {
+    test('should create a new city with auto-generated slug using state code prefix', async () => {
       const uniqueName = createUniqueName('New Test City', testSuiteId);
       const cityData = {
         name: uniqueName,
@@ -121,7 +138,8 @@ describe('Cities Controller', () => {
       const response = await createCity(cityData);
       cityCleanup.track(response.id);
 
-      const expectedSlug = createSlug(uniqueName);
+      // Slug should now include state code as prefix
+      const expectedSlug = createSlug(uniqueName, testState.code);
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
       expect(response.name).toBe(uniqueName);
@@ -255,7 +273,7 @@ describe('Cities Controller', () => {
       }
     });
 
-    test('should update a city name and regenerate the slug', async () => {
+    test('should update a city name and regenerate the slug with state code prefix', async () => {
       const testCityForUpdate = await createTestCity('City to Update');
       const updatedName = createUniqueName('Updated Test City', testSuiteId);
 
@@ -264,7 +282,8 @@ describe('Cities Controller', () => {
         name: updatedName,
       });
 
-      const expectedSlug = createSlug(updatedName);
+      // Slug should now include state code as prefix
+      const expectedSlug = createSlug(updatedName, testState.code);
       expect(response).toBeDefined();
       expect(response.id).toBe(testCityForUpdate);
       expect(response.name).toBe(updatedName);
@@ -286,6 +305,30 @@ describe('Cities Controller', () => {
       expect(response).toBeDefined();
       expect(response.id).toBe(testCityForUpdate);
       expect(response.latitude).toBe(newLatitude);
+    });
+
+    test('should update city state and regenerate slug with new state code', async () => {
+      const testCityForUpdate = await createTestCity('City for State Update');
+
+      // Get original city to verify initial state
+      const originalCity = await getCity({ id: testCityForUpdate });
+      const originalSlug = createSlug(originalCity.name, testState.code);
+      expect(originalCity.slug).toBe(originalSlug);
+      expect(originalCity.stateId).toBe(testState.id);
+
+      // Update to different state
+      const response = await updateCity({
+        id: testCityForUpdate,
+        stateId: testState2.id,
+      });
+
+      // Slug should be regenerated with new state code
+      const expectedSlug = createSlug(originalCity.name, testState2.code);
+      expect(response).toBeDefined();
+      expect(response.id).toBe(testCityForUpdate);
+      expect(response.stateId).toBe(testState2.id);
+      expect(response.slug).toBe(expectedSlug);
+      expect(response.slug).not.toBe(originalSlug);
     });
 
     test('should update city longitude', async () => {
@@ -319,7 +362,7 @@ describe('Cities Controller', () => {
       await expect(getCity({ id: 9999 })).rejects.toThrow();
     });
 
-    test('should handle duplicate city names', async () => {
+    test('should handle duplicate city names within the same state', async () => {
       const duplicateTestName = 'Cities Controller Duplicate Test City Name';
       const firstCity = await createCity({
         name: duplicateTestName,
@@ -330,15 +373,51 @@ describe('Cities Controller', () => {
       });
       cityCleanup.track(firstCity.id);
 
+      // Should reject duplicate name within the same state
       await expect(
         createCity({
           name: duplicateTestName, // Use the same name to test duplicates
-          stateId: testState.id,
+          stateId: testState.id, // Same state - should fail
           timezone: 'America/Mexico_City',
           latitude: 20.123,
           longitude: -98.456,
         }),
       ).rejects.toThrow();
+    });
+
+    test('should allow duplicate city names across different states', async () => {
+      const sameCityName = 'Guadalupe'; // Common name in Mexico
+
+      // Create city in first state
+      const firstCity = await createCity({
+        name: sameCityName,
+        stateId: testState.id,
+        timezone: 'America/Mexico_City',
+        latitude: 19.4326,
+        longitude: -99.1332,
+      });
+      cityCleanup.track(firstCity.id);
+
+      // Should allow same name in different state
+      const secondCity = await createCity({
+        name: sameCityName, // Same name
+        stateId: testState2.id, // Different state - should succeed
+        timezone: 'America/Mexico_City',
+        latitude: 20.123,
+        longitude: -98.456,
+      });
+      cityCleanup.track(secondCity.id);
+
+      // Verify both cities were created successfully
+      expect(firstCity.name).toBe(sameCityName);
+      expect(secondCity.name).toBe(sameCityName);
+      expect(firstCity.stateId).toBe(testState.id);
+      expect(secondCity.stateId).toBe(testState2.id);
+
+      // Verify they have different slugs due to different state codes
+      expect(firstCity.slug).toBe(createSlug(sameCityName, testState.code));
+      expect(secondCity.slug).toBe(createSlug(sameCityName, testState2.code));
+      expect(firstCity.slug).not.toBe(secondCity.slug);
     });
 
     test('should handle duplicate city names with different casing', async () => {

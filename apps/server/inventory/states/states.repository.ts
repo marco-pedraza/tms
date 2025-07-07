@@ -1,4 +1,4 @@
-import { createBaseRepository } from '@repo/base-repo';
+import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
 import { states } from './states.schema';
 import type {
@@ -22,7 +22,30 @@ export const createStateRepository = () => {
     softDeleteEnabled: true,
   });
 
-  return baseRepository;
+  /**
+   * Gets state code for slug generation
+   * @param stateId - The ID of the state
+   * @returns The state code
+   * @throws {NotFoundError} If the state is not found
+   */
+  const getStateCode = async (stateId: number): Promise<string> => {
+    const state = await db.query.states.findFirst({
+      where: (states, { eq, and, isNull }) =>
+        and(eq(states.id, stateId), isNull(states.deletedAt)),
+      columns: { code: true },
+    });
+
+    if (!state) {
+      throw new NotFoundError(`State with id ${stateId} not found`);
+    }
+
+    return state.code;
+  };
+
+  return {
+    ...baseRepository,
+    getStateCode,
+  };
 };
 
 // Export the state repository instance

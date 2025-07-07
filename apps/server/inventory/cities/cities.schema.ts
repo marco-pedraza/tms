@@ -35,6 +35,7 @@ export const cities = pgTable(
     index().on(table.stateId),
     index().on(table.deletedAt),
     uniqueIndex().on(table.slug).where(isNull(table.deletedAt)),
+    uniqueIndex().on(table.name, table.stateId).where(isNull(table.deletedAt)),
   ],
 );
 

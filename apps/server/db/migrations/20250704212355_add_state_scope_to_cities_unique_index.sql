@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS "cities_name_state_id_index" ON "cities" USING btree ("name","state_id") WHERE "cities"."deleted_at" is null;

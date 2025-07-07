@@ -38,7 +38,7 @@ function nodesColumnsFactory({
       id: 'city',
       accessorKey: 'city.name',
       header: tNodes('fields.city'),
-      sortable: true,
+      sortable: false,
     },
   ];
 }

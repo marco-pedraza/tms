@@ -83,6 +83,9 @@ export default function NodeDetailsPage() {
               <dt className="font-medium">{tNodes('fields.city')}:</dt>
               <dd>{node.city.name}</dd>
 
+              <dt className="font-medium">{tNodes('fields.population')}:</dt>
+              <dd>{node.population.name}</dd>
+
               <dt className="font-medium">{tCommon('fields.coordinates')}:</dt>
               <dd>
                 <a
@@ -95,6 +98,9 @@ export default function NodeDetailsPage() {
                   <ExternalLink className="ml-1 h-4 w-4" />
                 </a>
               </dd>
+
+              <dt className="font-medium">{tNodes('fields.radius')}:</dt>
+              <dd>{node.radius}</dd>
             </dl>
           </CardContent>
         </Card>

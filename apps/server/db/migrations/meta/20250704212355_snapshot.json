@@ -2676,6 +2676,24 @@
           "primaryKey": false,
           "notNull": false
         },
+        "contact_phone": {
+          "name": "contact_phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "contact_email": {
+          "name": "contact_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "website": {
+          "name": "website",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "installation_type_id": {
           "name": "installation_type_id",
           "type": "integer",
@@ -2795,6 +2813,13 @@
           "type": "real",
           "primaryKey": false,
           "notNull": true
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
         },
         "city_id": {
           "name": "city_id",

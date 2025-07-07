@@ -269,6 +269,8 @@ describe('Installation Schemas Controller', () => {
         secondInstallationType,
       );
 
+      let createdSchemaId: number | undefined;
+
       try {
         // Create a schema with the same name but different installation type
         const duplicateNameSchema = {
@@ -287,11 +289,26 @@ describe('Installation Schemas Controller', () => {
           secondInstallationTypeResponse.id,
         );
 
-        // Track for cleanup
-        schemaCleanup.track(response.id);
+        // Store the ID for manual cleanup
+        createdSchemaId = response.id;
       } finally {
-        // Clean up the second installation type
-        await deleteInstallationType({ id: secondInstallationTypeResponse.id });
+        // Clean up in correct order: schema first, then installation type
+        if (createdSchemaId) {
+          try {
+            await installationSchemaRepository.delete(createdSchemaId);
+          } catch (error) {
+            console.log('Error cleaning up schema:', error);
+          }
+        }
+
+        // Now clean up the second installation type
+        try {
+          await deleteInstallationType({
+            id: secondInstallationTypeResponse.id,
+          });
+        } catch (error) {
+          console.log('Error cleaning up installation type:', error);
+        }
       }
     });
 

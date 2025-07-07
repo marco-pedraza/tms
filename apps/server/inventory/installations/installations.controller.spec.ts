@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { FieldValidationError } from '@repo/base-repo';
 import { cityFactory, populationFactory } from '../../tests/factories';
@@ -16,6 +17,7 @@ import {
 } from '../installation-types/installation-types.controller';
 import { createNode } from '../nodes/nodes.controller';
 import { nodeRepository } from '../nodes/nodes.repository';
+import { nodes } from '../nodes/nodes.schema';
 import { populationRepository } from '../populations/populations.repository';
 import type { CreateNodeInstallationPayload } from './installations.types';
 import { installationRepository } from './installations.repository';
@@ -302,7 +304,17 @@ describe('Installations Controller', () => {
         },
       );
 
-      // Delete should not throw an error
+      // Find the node associated with this installation
+      const associatedNode = await db.query.nodes.findFirst({
+        where: eq(nodes.installationId, installationToDeleteId),
+      });
+
+      // Delete the node first to remove the foreign key reference
+      if (associatedNode) {
+        await nodeRepository.delete(associatedNode.id);
+      }
+
+      // Now delete the installation should not throw an error
       await expect(
         deleteInstallation({ id: installationToDeleteId }),
       ).resolves.not.toThrow();

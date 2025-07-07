@@ -134,8 +134,8 @@ export const createBaseRepository = <
     tx: TransactionalDB,
     entityId: number,
   ): Promise<void> => {
-    // Only check dependencies if explicitly enabled
-    if (!config?.checkDependenciesOnSoftDelete) {
+    // Check dependencies by default, can be disabled by setting to false
+    if (config?.checkDependenciesOnSoftDelete === false) {
       return;
     }
     // Get the table name from the table object using Drizzle's getTableName function

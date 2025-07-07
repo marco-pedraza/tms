@@ -12,7 +12,7 @@ import {
 import { DependencyExistsError } from '../src/errors';
 
 describe('Dependency Validation', () => {
-  // Repository with dependency validation enabled
+  // Repository with dependency validation enabled (default behavior)
   const softDeleteUserRepository = createBaseRepository<
     SoftDeleteUser,
     CreateSoftDeleteUser,
@@ -20,7 +20,7 @@ describe('Dependency Validation', () => {
     typeof softDeleteUsers
   >(db, softDeleteUsers, 'SoftDeleteUser', {
     softDeleteEnabled: true,
-    checkDependenciesOnSoftDelete: true, // Enable dependency validation
+    checkDependenciesOnSoftDelete: true, // Explicit for clarity, but this is now the default
   });
 
   // Repository for posts (without dependency validation)
@@ -182,8 +182,44 @@ describe('Dependency Validation', () => {
     });
   });
 
-  describe('When dependency validation is disabled (default behavior)', () => {
-    // Repository without dependency validation (default behavior)
+  describe('When using default behavior (dependency validation enabled by default)', () => {
+    // Repository using default configuration (dependency validation should be enabled)
+    const defaultUserRepository = createBaseRepository<
+      SoftDeleteUser,
+      CreateSoftDeleteUser,
+      Partial<CreateSoftDeleteUser>,
+      typeof softDeleteUsers
+    >(db, softDeleteUsers, 'SoftDeleteUser', {
+      softDeleteEnabled: true,
+      // checkDependenciesOnSoftDelete not specified - should default to true
+    });
+
+    it('should prevent soft delete when there are active dependencies (default behavior)', async () => {
+      // Create a user and a post that depends on it
+      const user = await defaultUserRepository.create({
+        name: 'User with Posts',
+        email: 'user.with.posts.default@example.com',
+      });
+
+      void (await softDeletePostRepository.create({
+        title: 'Dependent Post',
+        content: 'This post depends on the user',
+        userId: user.id,
+      }));
+
+      // Try to soft delete the user - should fail because of the active post (default behavior)
+      await expect(defaultUserRepository.delete(user.id)).rejects.toThrow(
+        DependencyExistsError,
+      );
+
+      // Verify the user is still active
+      const stillActiveUser = await defaultUserRepository.findOne(user.id);
+      expect(stillActiveUser.deletedAt).toBeNull();
+    });
+  });
+
+  describe('When dependency validation is explicitly disabled', () => {
+    // Repository with dependency validation explicitly disabled
     const regularUserRepository = createBaseRepository<
       SoftDeleteUser,
       CreateSoftDeleteUser,
@@ -191,7 +227,7 @@ describe('Dependency Validation', () => {
       typeof softDeleteUsers
     >(db, softDeleteUsers, 'SoftDeleteUser', {
       softDeleteEnabled: true,
-      // checkDependenciesOnSoftDelete: false (default)
+      checkDependenciesOnSoftDelete: false, // Explicitly disable dependency validation
     });
 
     it('should allow soft delete even when there are active dependencies', async () => {

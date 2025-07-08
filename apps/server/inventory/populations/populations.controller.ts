@@ -1,4 +1,5 @@
 import { api } from 'encore.dev/api';
+import type { ListCitiesResult } from '../cities/cities.types';
 import type {
   AssignCitiesPayload,
   CreatePopulationPayload,
@@ -138,6 +139,23 @@ export const listAvailableCities = api(
     populationId?: number;
   }): Promise<ListAvailableCitiesResult> => {
     return await populationUseCases.findAvailableCities(params);
+  },
+);
+
+/**
+ * Retrieves cities assigned to a specific population.
+ * @param params - Object containing the population ID
+ * @param params.id - The ID of the population to get cities for
+ * @returns {Promise<ListCitiesResult>} Unified response with data property containing array of cities assigned to the population
+ * @throws {APIError} If the population is not found or retrieval fails
+ */
+export const getPopulationCities = api(
+  { expose: true, method: 'GET', path: '/populations/:id/cities' },
+  async ({ id }: { id: number }): Promise<ListCitiesResult> => {
+    const cities = await populationUseCases.getPopulationCities(id);
+    return {
+      data: cities,
+    };
   },
 );
 

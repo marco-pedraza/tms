@@ -27,6 +27,7 @@ import {
   createPopulation,
   deletePopulation,
   getPopulation,
+  getPopulationCities,
   listAvailableCities,
   listPopulations,
   listPopulationsPaginated,
@@ -1187,6 +1188,69 @@ describe('Populations Controller', () => {
           ).toBeLessThanOrEqual(0);
         }
       }
+    });
+  });
+
+  describe('get population cities', () => {
+    test('should return empty array when population has no cities assigned', async () => {
+      // Use the main test population which has no cities assigned initially
+      const response = await getPopulationCities({
+        id: testPopulation.id,
+      });
+
+      expect(response).toBeDefined();
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.data).toHaveLength(0);
+    });
+
+    test('should return cities assigned to the population', async () => {
+      // Create a test population for this specific test
+      const testPopulationForCities = await createTestPopulation(
+        'Population for Get Cities Test',
+      );
+
+      // Use the existing cities from the city assignment tests
+      // Get available cities and assign some to our test population
+      const availableCities = await listAvailableCities({});
+
+      // Only proceed if we have available cities
+      if (availableCities.data.length >= 2) {
+        const citiesToAssign = availableCities.data
+          .slice(0, 2)
+          .map((city) => city.id);
+
+        // Assign cities to the population
+        await assignCitiesToPopulation({
+          id: testPopulationForCities,
+          cityIds: citiesToAssign,
+        });
+
+        const response = await getPopulationCities({
+          id: testPopulationForCities,
+        });
+
+        expect(response).toBeDefined();
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(response.data).toHaveLength(2);
+
+        // Verify the returned cities are the ones we assigned
+        const returnedCityIds = response.data.map((city) => city.id);
+        expect(returnedCityIds).toContain(citiesToAssign[0]);
+        expect(returnedCityIds).toContain(citiesToAssign[1]);
+
+        // Verify city structure
+        const firstCity = response.data[0];
+        expect(firstCity.id).toBeDefined();
+        expect(firstCity.name).toBeDefined();
+        expect(firstCity.stateId).toBeDefined();
+        expect(firstCity.active).toBeDefined();
+      }
+    });
+
+    test('should handle non-existent population ID', async () => {
+      await expect(getPopulationCities({ id: 99999 })).rejects.toThrow();
     });
   });
 });

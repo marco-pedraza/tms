@@ -165,6 +165,7 @@ export namespace inventory {
             this.getPathwayService = this.getPathwayService.bind(this)
             this.getPathwayWithServiceAssignments = this.getPathwayWithServiceAssignments.bind(this)
             this.getPopulation = this.getPopulation.bind(this)
+            this.getPopulationCities = this.getPopulationCities.bind(this)
             this.getRoute = this.getRoute.bind(this)
             this.getRouteWithFullDetails = this.getRouteWithFullDetails.bind(this)
             this.getSeatDiagram = this.getSeatDiagram.bind(this)
@@ -1192,6 +1193,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/populations/${encodeURIComponent(id)}`)
             return await resp.json() as populations.PopulationWithRelations
+        }
+
+        /**
+         * Retrieves cities assigned to a specific population.
+         * @param params - Object containing the population ID
+         * @param params.id - The ID of the population to get cities for
+         * @returns {Promise<ListCitiesResult>} Unified response with data property containing array of cities assigned to the population
+         * @throws {APIError} If the population is not found or retrieval fails
+         */
+        public async getPopulationCities(id: number): Promise<cities.ListCitiesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/populations/${encodeURIComponent(id)}/cities`)
+            return await resp.json() as cities.ListCitiesResult
         }
 
         /**

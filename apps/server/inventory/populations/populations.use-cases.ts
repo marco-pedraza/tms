@@ -1,4 +1,5 @@
 import { and, eq, inArray, not, sql } from 'drizzle-orm';
+import { City } from '../cities/cities.types';
 import { db } from '../db-service';
 import { populationCities, populations } from './populations.schema';
 import type {
@@ -172,9 +173,32 @@ export function createPopulationUseCases() {
     };
   }
 
+  /**
+   * Gets cities assigned to a specific population
+   * @param populationId - The ID of the population
+   * @returns Array of cities assigned to the population
+   * @throws {NotFoundError} If the population doesn't exist
+   */
+  async function getPopulationCities(populationId: number): Promise<City[]> {
+    // First, verify the population exists
+    await populationRepo.findOne(populationId);
+
+    // Query cities through the intermediate table population_cities
+    const result = await db.query.populationCities.findMany({
+      where: eq(populationCities.populationId, populationId),
+      with: {
+        city: true,
+      },
+    });
+
+    // Extract just the city data from the result
+    return result.map((item) => item.city);
+  }
+
   return {
     assignCities,
     findAvailableCities,
+    getPopulationCities,
   };
 }
 

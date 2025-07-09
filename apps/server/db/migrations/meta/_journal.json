@@ -166,8 +166,8 @@
     {
       "idx": 23,
       "version": "7",
-      "when": 1751420442384,
-      "tag": "20250702014042_create_installation_schema_tables",
+      "when": 1751501299826,
+      "tag": "20250703000819_create_installation_schema_tables",
       "breakpoints": true
     },
     {

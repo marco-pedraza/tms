@@ -1,11 +1,6 @@
 CREATE TABLE IF NOT EXISTS "installation_properties" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"name" text NOT NULL,
-	"label" text NOT NULL,
 	"value" text NOT NULL,
-	"type" text NOT NULL,
-	"required" boolean NOT NULL,
-	"options" jsonb DEFAULT '{}'::jsonb,
 	"installation_id" integer NOT NULL,
 	"installation_schema_id" integer NOT NULL,
 	"created_at" timestamp DEFAULT now(),

@@ -1,12 +1,16 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { ValidationError } from '@repo/base-repo';
 import { PaginationMeta } from '../../shared/types';
 import { db } from '../db-service';
+import type { PropertyInput } from '../installation-properties/installation-properties.types';
+import { installationPropertyUseCases } from '../installation-properties/installation-properties.use-cases';
 import { nodeRepository } from '../nodes/nodes.repository';
 import { nodes } from '../nodes/nodes.schema';
 import type {
   CreateNodeInstallationPayload,
   Installation,
-  InstallationWithLocation,
+  InstallationPropertyResponse,
+  InstallationWithDetails,
   PaginatedListInstallationsResult,
 } from './installations.types';
 import { installationRepository } from './installations.repository';
@@ -58,6 +62,46 @@ export function createInstallationUseCases() {
   }
 
   /**
+   * Updates installation properties by validating and upserting them
+   * This use case coordinates between installations and installation properties
+   * @param installationId - The ID of the installation to update properties for
+   * @param properties - Array of property name/value pairs to validate and upsert
+   * @returns The installation with updated properties
+   * @throws {NotFoundError} If installation or schemas are not found
+   * @throws {FieldValidationError} If property validation fails
+   */
+  async function updateInstallationProperties(
+    installationId: number,
+    properties: PropertyInput[],
+  ): Promise<InstallationWithDetails> {
+    // First get the installation to ensure it exists and get its type
+    const installation = await installationRepository.findOne(installationId);
+
+    // Check if installation has a type assigned
+    if (!installation.installationTypeId) {
+      throw new ValidationError(
+        'Installation must have an installation type to manage properties',
+      );
+    }
+
+    // Validate and transform properties using the installation properties use case
+    const validatedProperties =
+      await installationPropertyUseCases.validateAndTransformProperties(
+        properties,
+        installation.installationTypeId,
+      );
+
+    // Upsert the validated properties
+    await installationPropertyUseCases.upsertInstallationProperties({
+      installationId,
+      properties: validatedProperties,
+    });
+
+    // Return the installation with location information
+    return await findOneWithLocation(installationId);
+  }
+
+  /**
    * Finds a single installation with location information from associated nodes
    * This use case coordinates between installations and nodes repositories
    * @param id - The ID of the installation to find
@@ -66,7 +110,7 @@ export function createInstallationUseCases() {
    */
   async function findOneWithLocation(
     id: number,
-  ): Promise<InstallationWithLocation> {
+  ): Promise<InstallationWithDetails> {
     // First get the installation using the base repository
     const installation = await installationRepository.findOne(id);
 
@@ -80,8 +124,16 @@ export function createInstallationUseCases() {
       },
     });
 
-    // Build the result with location information
-    const result: InstallationWithLocation = {
+    // Get properties for this installation if it has a type
+    const properties = installation.installationTypeId
+      ? await installationPropertyUseCases.getInstallationPropertiesForResponse(
+          installation.installationTypeId,
+          installation.id,
+        )
+      : [];
+
+    // Build the result with location information and properties
+    const result: InstallationWithDetails = {
       ...installation,
       location: nodeWithLocation
         ? {
@@ -90,6 +142,7 @@ export function createInstallationUseCases() {
             radius: nodeWithLocation.radius,
           }
         : null,
+      properties,
     };
 
     return result;
@@ -139,11 +192,33 @@ export function createInstallationUseCases() {
       ]),
     );
 
-    // Enrich installations with location information
-    const installationsWithLocation: InstallationWithLocation[] =
+    // Get properties for all installations that have a type
+    const installationsWithTypes = installationsResult.filter(
+      (installation) => installation.installationTypeId !== null,
+    );
+
+    // Get properties for each installation with a type
+    const propertiesPromises = installationsWithTypes.map((installation) =>
+      installationPropertyUseCases.getInstallationPropertiesForResponse(
+        installation.installationTypeId,
+        installation.id,
+      ),
+    );
+
+    const propertiesResults = await Promise.all(propertiesPromises);
+
+    // Create a map for quick lookup of properties by installation ID
+    const propertiesMap = new Map<number, InstallationPropertyResponse[]>();
+    installationsWithTypes.forEach((installation, index) => {
+      propertiesMap.set(installation.id, propertiesResults[index]);
+    });
+
+    // Enrich installations with location information and properties
+    const installationsWithLocation: InstallationWithDetails[] =
       installationsResult.map((installation) => ({
         ...installation,
         location: locationMap.get(installation.id) || null,
+        properties: propertiesMap.get(installation.id) ?? [],
       }));
 
     return {
@@ -154,6 +229,7 @@ export function createInstallationUseCases() {
 
   return {
     createNodeInstallation,
+    updateInstallationProperties,
     findOneWithLocation,
     appendLocationInfo,
   };

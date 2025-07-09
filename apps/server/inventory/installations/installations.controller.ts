@@ -1,8 +1,9 @@
 import { api } from 'encore.dev/api';
+import type { PropertyInput } from '../installation-properties/installation-properties.types';
 import type {
   CreateNodeInstallationPayload,
   Installation,
-  InstallationWithLocation,
+  InstallationWithDetails,
   ListInstallationsQueryParams,
   ListInstallationsResult,
   PaginatedListInstallationsQueryParams,
@@ -16,14 +17,14 @@ import { installationUseCases } from './installations.use-cases';
 /**
  * Creates a new installation associated with a node.
  * @param params - The installation data including nodeId, name, and optional description
- * @returns {Promise<InstallationWithLocation>} The created installation with location information from the associated node
+ * @returns {Promise<InstallationWithDetails>} The created installation with location information from the associated node
  * @throws {APIError} If the node is not found, already has an installation, or creation fails
  */
 export const createInstallation = api(
   { expose: true, method: 'POST', path: '/installations/create' },
   async (
     params: CreateNodeInstallationPayload,
-  ): Promise<InstallationWithLocation> => {
+  ): Promise<InstallationWithDetails> => {
     await validateNodeInstallation(params);
     const installation =
       await installationUseCases.createNodeInstallation(params);
@@ -35,12 +36,12 @@ export const createInstallation = api(
  * Retrieves an installation by its ID with location information.
  * @param params - Object containing the installation ID
  * @param params.id - The ID of the installation to retrieve
- * @returns {Promise<InstallationWithLocation>} The found installation with location data
+ * @returns {Promise<InstallationWithDetails>} The found installation with location data
  * @throws {APIError} If the installation is not found or retrieval fails
  */
 export const getInstallation = api(
   { expose: true, method: 'GET', path: '/installations/:id' },
-  async ({ id }: { id: number }): Promise<InstallationWithLocation> => {
+  async ({ id }: { id: number }): Promise<InstallationWithDetails> => {
     return await installationUseCases.findOneWithLocation(id);
   },
 );
@@ -49,7 +50,7 @@ export const getInstallation = api(
  * Updates an existing installation.
  * @param params - Object containing the installation ID and update data
  * @param params.id - The ID of the installation to update
- * @returns {Promise<InstallationWithLocation>} The updated installation with location information
+ * @returns {Promise<InstallationWithDetails>} The updated installation with location information
  * @throws {APIError} If the installation is not found or update fails
  */
 export const updateInstallation = api(
@@ -59,7 +60,7 @@ export const updateInstallation = api(
     ...data
   }: UpdateInstallationPayload & {
     id: number;
-  }): Promise<InstallationWithLocation> => {
+  }): Promise<InstallationWithDetails> => {
     await installationRepository.update(id, data);
     return await installationUseCases.findOneWithLocation(id);
   },
@@ -115,5 +116,31 @@ export const deleteInstallation = api(
   { expose: true, method: 'DELETE', path: '/installations/:id/delete' },
   async ({ id }: { id: number }): Promise<Installation> => {
     return await installationRepository.delete(id);
+  },
+);
+
+/**
+ * Updates installation properties by validating and upserting them
+ * @param id - The ID of the installation to update properties for
+ * @param properties - Array of property name/value pairs to validate and upsert
+ * @returns The installation with updated properties
+ */
+export const updateInstallationProperties = api(
+  {
+    expose: true,
+    method: 'POST',
+    path: '/installations/:id/properties/update',
+  },
+  async ({
+    id,
+    properties,
+  }: {
+    id: number;
+    properties: PropertyInput[];
+  }): Promise<InstallationWithDetails> => {
+    return await installationUseCases.updateInstallationProperties(
+      id,
+      properties,
+    );
   },
 );

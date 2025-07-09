@@ -6,6 +6,10 @@ import {
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '../../shared/types';
+import {
+  InstallationSchemaFieldType,
+  InstallationSchemaOptions,
+} from '../installation-schemas/installation-schemas.types';
 
 /**
  * Base interface representing an installation entity
@@ -57,11 +61,37 @@ export interface InstallationLocation {
 }
 
 /**
- * Installation with location information from the associated node
+ * Property response with schema definition and casted value for frontend
  */
-export interface InstallationWithLocation extends Installation {
+export interface InstallationPropertyResponse {
+  /** Unique identifier of the property instance (null if not yet created) */
+  id?: number | null;
+  /** Property name (identifier) */
+  name: string;
+  /** Human-readable label for display */
+  label: string;
+  /** Optional description/help text for the property */
+  description?: string | null;
+  /** Property data type */
+  type: InstallationSchemaFieldType;
+  /** Current value casted to appropriate type (null if not set) */
+  value: string | number | boolean | null;
+  /** Whether this property is required */
+  required: boolean;
+  /** Available options for enum types */
+  options?: InstallationSchemaOptions | null;
+  /** Schema ID for reference */
+  schemaId: number;
+}
+
+/**
+ * Installation with complete details including location and properties
+ */
+export interface InstallationWithDetails extends Installation {
   /** Location information from the associated node */
   location: InstallationLocation | null;
+  /** Complete property definitions with values for this installation */
+  properties: InstallationPropertyResponse[];
 }
 
 /**
@@ -228,4 +258,4 @@ export type ListInstallationsResult = ListQueryResult<Installation>;
 export type PaginatedListInstallationsQueryParams =
   PaginatedListQueryParams<Installation>;
 export type PaginatedListInstallationsResult =
-  PaginatedListQueryResult<InstallationWithLocation>;
+  PaginatedListQueryResult<InstallationWithDetails>;

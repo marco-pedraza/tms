@@ -98,10 +98,24 @@ export function createInstallationSchemaRepository() {
     };
   }
 
+  /**
+   * Finds installation schemas by installation type ID
+   * @param installationTypeId - The installation type ID to filter by
+   * @returns Array of installation schemas for the given type
+   */
+  async function findByInstallationTypeId(
+    installationTypeId: number,
+  ): Promise<InstallationSchema[]> {
+    return await baseRepository.findAll({
+      filters: { installationTypeId },
+    });
+  }
+
   return {
     ...baseRepository,
     findOneWithRelations,
     appendRelations,
+    findByInstallationTypeId,
   };
 }
 

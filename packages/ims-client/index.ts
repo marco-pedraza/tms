@@ -250,6 +250,7 @@ export namespace inventory {
             this.updateDriver = this.updateDriver.bind(this)
             this.updateGate = this.updateGate.bind(this)
             this.updateInstallation = this.updateInstallation.bind(this)
+            this.updateInstallationProperties = this.updateInstallationProperties.bind(this)
             this.updateInstallationSchema = this.updateInstallationSchema.bind(this)
             this.updateInstallationType = this.updateInstallationType.bind(this)
             this.updateNode = this.updateNode.bind(this)
@@ -444,13 +445,13 @@ export namespace inventory {
         /**
          * Creates a new installation associated with a node.
          * @param params - The installation data including nodeId, name, and optional description
-         * @returns {Promise<InstallationWithLocation>} The created installation with location information from the associated node
+         * @returns {Promise<InstallationWithDetails>} The created installation with location information from the associated node
          * @throws {APIError} If the node is not found, already has an installation, or creation fails
          */
-        public async createInstallation(params: installations.CreateNodeInstallationPayload): Promise<installations.InstallationWithLocation> {
+        public async createInstallation(params: installations.CreateNodeInstallationPayload): Promise<installations.InstallationWithDetails> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/installations/create`, JSON.stringify(params))
-            return await resp.json() as installations.InstallationWithLocation
+            return await resp.json() as installations.InstallationWithDetails
         }
 
         /**
@@ -1095,13 +1096,13 @@ export namespace inventory {
          * Retrieves an installation by its ID with location information.
          * @param params - Object containing the installation ID
          * @param params.id - The ID of the installation to retrieve
-         * @returns {Promise<InstallationWithLocation>} The found installation with location data
+         * @returns {Promise<InstallationWithDetails>} The found installation with location data
          * @throws {APIError} If the installation is not found or retrieval fails
          */
-        public async getInstallation(id: number): Promise<installations.InstallationWithLocation> {
+        public async getInstallation(id: number): Promise<installations.InstallationWithDetails> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/installations/${encodeURIComponent(id)}`)
-            return await resp.json() as installations.InstallationWithLocation
+            return await resp.json() as installations.InstallationWithDetails
         }
 
         /**
@@ -3052,7 +3053,7 @@ export namespace inventory {
          * Updates an existing installation.
          * @param params - Object containing the installation ID and update data
          * @param params.id - The ID of the installation to update
-         * @returns {Promise<InstallationWithLocation>} The updated installation with location information
+         * @returns {Promise<InstallationWithDetails>} The updated installation with location information
          * @throws {APIError} If the installation is not found or update fails
          */
         public async updateInstallation(id: number, params: {
@@ -3096,10 +3097,24 @@ export namespace inventory {
      * Must be a positive number
      */
     installationTypeId?: number | null
-}): Promise<installations.InstallationWithLocation> {
+}): Promise<installations.InstallationWithDetails> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/installations/${encodeURIComponent(id)}/update`, JSON.stringify(params))
-            return await resp.json() as installations.InstallationWithLocation
+            return await resp.json() as installations.InstallationWithDetails
+        }
+
+        /**
+         * Updates installation properties by validating and upserting them
+         * @param id - The ID of the installation to update properties for
+         * @param properties - Array of property name/value pairs to validate and upsert
+         * @returns The installation with updated properties
+         */
+        public async updateInstallationProperties(id: number, params: {
+    properties: installation_properties.PropertyInput[]
+}): Promise<installations.InstallationWithDetails> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/installations/${encodeURIComponent(id)}/properties/update`, JSON.stringify(params))
+            return await resp.json() as installations.InstallationWithDetails
         }
 
         /**
@@ -8478,6 +8493,20 @@ export namespace gates {
     }
 }
 
+export namespace installation_properties {
+    export interface PropertyInput {
+        /**
+         * Name of the property that should match a schema name
+         */
+        name: string
+
+        /**
+         * Raw value as string that needs to be cast to the appropriate type
+         */
+        value: string
+    }
+}
+
 export namespace installation_schemas {
     export interface CreateInstallationSchemaPayload {
         /**
@@ -8895,11 +8924,63 @@ export namespace installations {
         radius: number
     }
 
-    export interface InstallationWithLocation {
+    export interface InstallationPropertyResponse {
+        /**
+         * Unique identifier of the property instance (null if not yet created)
+         */
+        id?: number | null
+
+        /**
+         * Property name (identifier)
+         */
+        name: string
+
+        /**
+         * Human-readable label for display
+         */
+        label: string
+
+        /**
+         * Optional description/help text for the property
+         */
+        description?: string | null
+
+        /**
+         * Property data type
+         */
+        type: installation_schemas.InstallationSchemaFieldType
+
+        /**
+         * Current value casted to appropriate type (null if not set)
+         */
+        value: string | number | boolean | null
+
+        /**
+         * Whether this property is required
+         */
+        required: boolean
+
+        /**
+         * Available options for enum types
+         */
+        options?: installation_schemas.InstallationSchemaOptions | null
+
+        /**
+         * Schema ID for reference
+         */
+        schemaId: number
+    }
+
+    export interface InstallationWithDetails {
         /**
          * Location information from the associated node
          */
         location: InstallationLocation | null
+
+        /**
+         * Complete property definitions with values for this installation
+         */
+        properties: InstallationPropertyResponse[]
 
         /**
          * Unique identifier for the installation
@@ -9000,7 +9081,7 @@ export namespace installations {
 
     export interface PaginatedListInstallationsResult {
         pagination: shared.PaginationMeta
-        data: InstallationWithLocation[]
+        data: InstallationWithDetails[]
     }
 }
 

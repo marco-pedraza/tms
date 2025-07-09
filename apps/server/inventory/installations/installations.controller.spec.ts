@@ -11,6 +11,10 @@ import {
 } from '../../tests/shared/test-utils';
 import { cityRepository } from '../cities/cities.repository';
 import { db } from '../db-service';
+import { installationPropertyRepository } from '../installation-properties/installation-properties.repository';
+import { createInstallationSchema } from '../installation-schemas/installation-schemas.controller';
+import { installationSchemaRepository } from '../installation-schemas/installation-schemas.repository';
+import { InstallationSchemaFieldType } from '../installation-schemas/installation-schemas.types';
 import {
   createInstallationType,
   deleteInstallationType,
@@ -28,6 +32,7 @@ import {
   listInstallations,
   listInstallationsPaginated,
   updateInstallation,
+  updateInstallationProperties,
 } from './installations.controller';
 
 describe('Installations Controller', () => {
@@ -119,6 +124,7 @@ describe('Installations Controller', () => {
       name: uniqueName,
       address: 'Test Address 123',
       description: 'Test installation description',
+      installationTypeId: testInstallationTypeId,
       ...options,
     };
 
@@ -127,6 +133,13 @@ describe('Installations Controller', () => {
   }
 
   afterAll(async () => {
+    // Clean up installation properties first to avoid foreign key errors
+    try {
+      await installationPropertyRepository.deleteAll();
+    } catch (error) {
+      console.log('Error cleaning up installation properties:', error);
+    }
+
     // Clean up all tracked nodes and installations
     await nodeCleanup.cleanupAll();
     await installationCleanup.cleanupAll();
@@ -164,6 +177,7 @@ describe('Installations Controller', () => {
         name: createUniqueName('Main Test Installation', testSuiteId),
         address: 'Test Installation Address',
         description: 'Installation created through node association',
+        installationTypeId: testInstallationTypeId,
       };
 
       const response = await createInstallation(installationData);
@@ -186,6 +200,22 @@ describe('Installations Controller', () => {
       expect(response.location?.latitude).toBe(19.4326); // From test node data
       expect(response.location?.longitude).toBe(-99.1332); // From test node data
       expect(response.location?.radius).toBe(1000); // From test node data
+
+      // Verify properties are included in the creation response
+      expect(response.properties).toBeDefined();
+      expect(Array.isArray(response.properties)).toBe(true);
+      // Since this installation has an installation type, properties should be included
+      if (response.installationTypeId) {
+        response.properties.forEach((property) => {
+          expect(property.name).toBeDefined();
+          expect(property.label).toBeDefined();
+          expect(property.type).toBeDefined();
+          expect(typeof property.required).toBe('boolean');
+          expect(property.schemaId).toBeDefined();
+          // Value should be null for newly created installations with no properties set
+          expect(property.value).toBeNull();
+        });
+      }
 
       // Verify the node was updated with the installation ID
       const updatedNode = await nodeRepository.findOne(testNodeId);
@@ -229,6 +259,24 @@ describe('Installations Controller', () => {
       expect(response.location?.latitude).toBe(19.4326);
       expect(response.location?.longitude).toBe(-99.1332);
       expect(response.location?.radius).toBe(1000);
+
+      // Verify properties are included in the response
+      expect(response.properties).toBeDefined();
+      expect(Array.isArray(response.properties)).toBe(true);
+      // Properties should be empty since this installation has no properties set,
+      // but should still include schema definitions with null values
+      if (response.installationTypeId) {
+        // Only validate properties if installation has a type
+        response.properties.forEach((property) => {
+          expect(property.name).toBeDefined();
+          expect(property.label).toBeDefined();
+          expect(property.type).toBeDefined();
+          expect(typeof property.required).toBe('boolean');
+          expect(property.schemaId).toBeDefined();
+          // Value should be null for unset properties
+          expect(property.value).toBeNull();
+        });
+      }
     });
 
     test('should retrieve an installation with location information when associated with a node', async () => {
@@ -251,6 +299,7 @@ describe('Installations Controller', () => {
         name: createUniqueName('Installation with Location', testSuiteId),
         address: 'Test Installation with Location Address',
         description: 'Installation with node location data',
+        installationTypeId: testInstallationTypeId,
       };
 
       const createdInstallation = await createInstallation(installationData);
@@ -292,6 +341,21 @@ describe('Installations Controller', () => {
       expect(response.id).toBe(createdInstallationId);
       expect(response.name).toBe(updatedName);
       expect(response.installationTypeId).toBe(testInstallationTypeId);
+
+      // Verify properties are included in the response
+      expect(response.properties).toBeDefined();
+      expect(Array.isArray(response.properties)).toBe(true);
+      // Since this installation has an installation type, properties should be included
+      if (response.installationTypeId) {
+        response.properties.forEach((property) => {
+          expect(property.name).toBeDefined();
+          expect(property.label).toBeDefined();
+          expect(property.type).toBeDefined();
+          expect(typeof property.required).toBe('boolean');
+          expect(property.schemaId).toBeDefined();
+          expect(property.value !== undefined).toBe(true); // value should be defined (even if null)
+        });
+      }
     });
 
     test('should delete an installation', async () => {
@@ -350,6 +414,7 @@ describe('Installations Controller', () => {
         name: createUniqueName('Non-existent Node Installation', testSuiteId),
         address: 'Non-existent Node Address',
         description: 'Installation for non-existent node',
+        installationTypeId: testInstallationTypeId,
       };
 
       await expect(createInstallation(installationData)).rejects.toThrow();
@@ -375,6 +440,7 @@ describe('Installations Controller', () => {
         name: createUniqueName('First Installation', testSuiteId),
         address: 'First Installation Address',
         description: 'First installation for node',
+        installationTypeId: testInstallationTypeId,
       };
 
       const firstInstallation = await createInstallation(firstInstallationData);
@@ -386,6 +452,7 @@ describe('Installations Controller', () => {
         name: createUniqueName('Second Installation', testSuiteId),
         address: 'Second Installation Address',
         description: 'Second installation for same node',
+        installationTypeId: testInstallationTypeId,
       };
 
       // Capture the error to validate specific error code
@@ -616,6 +683,396 @@ describe('Installations Controller', () => {
       for (let i = 0; i < sameAddressNames.length - 1; i++) {
         expect(sameAddressNames[i] <= sameAddressNames[i + 1]).toBe(true);
       }
+    });
+  });
+
+  describe('installation properties', () => {
+    // Cleanup helper for schemas
+    const schemaCleanup = createCleanupHelper(
+      ({ id }) => installationSchemaRepository.delete(id),
+      'installation schema',
+    );
+
+    beforeAll(async () => {
+      // Create various types of schemas for testing
+      const schemas = [
+        {
+          name: 'price_per_booth',
+          label: 'Price per Booth',
+          description: 'Price charged per booth in pesos',
+          type: InstallationSchemaFieldType.NUMBER,
+          required: true,
+          installationTypeId: testInstallationTypeId,
+        },
+        {
+          name: 'is_affiliated',
+          label: 'Is Affiliated',
+          description: 'Whether the installation is affiliated',
+          type: InstallationSchemaFieldType.BOOLEAN,
+          required: false,
+          installationTypeId: testInstallationTypeId,
+        },
+        {
+          name: 'opening_date',
+          label: 'Opening Date',
+          description: 'Date when the installation opened',
+          type: InstallationSchemaFieldType.DATE,
+          required: false,
+          installationTypeId: testInstallationTypeId,
+        },
+        {
+          name: 'installation_size',
+          label: 'Installation Size',
+          description: 'Size category of the installation',
+          type: InstallationSchemaFieldType.ENUM,
+          options: {
+            enumValues: ['small', 'medium', 'large'],
+          },
+          required: true,
+          installationTypeId: testInstallationTypeId,
+        },
+        {
+          name: 'description_text',
+          label: 'Description',
+          description: 'Detailed description of the installation',
+          type: InstallationSchemaFieldType.STRING,
+          required: false,
+          installationTypeId: testInstallationTypeId,
+        },
+      ];
+
+      // Create all schemas
+      for (const schema of schemas) {
+        const createdSchema = await createInstallationSchema(schema);
+        schemaCleanup.track(createdSchema.id);
+      }
+    });
+
+    afterAll(async () => {
+      // Clean up all tracked schemas using the helper
+      await schemaCleanup.cleanupAll();
+    });
+
+    describe('success scenarios', () => {
+      test('should update installation properties with all field types and return installation with location', async () => {
+        // Create a test installation with installation type
+        const installationId = await createTestInstallation(
+          'Properties Test Installation',
+          {
+            address: 'Properties Test Address',
+            description: 'Installation for properties testing',
+            installationTypeId: testInstallationTypeId,
+          },
+        );
+
+        // Valid properties data covering all field types
+        const propertiesData = [
+          { name: 'price_per_booth', value: '45.50' }, // number
+          { name: 'is_affiliated', value: 'true' }, // boolean
+          { name: 'opening_date', value: '2024-01-15' }, // date
+          { name: 'installation_size', value: 'medium' }, // enum
+          { name: 'description_text', value: 'A well-maintained installation' }, // string
+        ];
+
+        const response = await updateInstallationProperties({
+          id: installationId,
+          properties: propertiesData,
+        });
+
+        // Verify response structure
+        expect(response).toBeDefined();
+        expect(response.id).toBe(installationId);
+        expect(response.name).toContain('Properties Test Installation');
+        expect(response.location).toBeDefined(); // Should include location info
+        expect(response.installationTypeId).toBe(testInstallationTypeId);
+
+        // Verify properties are included in the response
+        expect(response.properties).toBeDefined();
+        expect(Array.isArray(response.properties)).toBe(true);
+        expect(response.properties).toHaveLength(5); // All 5 schemas should be returned
+
+        // Verify specific property values and types
+        const priceProperty = response.properties.find(
+          (p) => p.name === 'price_per_booth',
+        );
+        expect(priceProperty).toBeDefined();
+        expect(priceProperty?.value).toBe(45.5); // Should be cast to number
+        expect(priceProperty?.type).toBe('number');
+        expect(priceProperty?.label).toBe('Price per Booth');
+
+        const affiliatedProperty = response.properties.find(
+          (p) => p.name === 'is_affiliated',
+        );
+        expect(affiliatedProperty).toBeDefined();
+        expect(affiliatedProperty?.value).toBe(true); // Should be cast to boolean
+        expect(affiliatedProperty?.type).toBe('boolean');
+
+        const dateProperty = response.properties.find(
+          (p) => p.name === 'opening_date',
+        );
+        expect(dateProperty).toBeDefined();
+        expect(dateProperty?.value).toBe('2024-01-15'); // Should remain as string
+        expect(dateProperty?.type).toBe('date');
+
+        const enumProperty = response.properties.find(
+          (p) => p.name === 'installation_size',
+        );
+        expect(enumProperty).toBeDefined();
+        expect(enumProperty?.value).toBe('medium');
+        expect(enumProperty?.type).toBe('enum');
+        expect(enumProperty?.options).toEqual({
+          enumValues: ['small', 'medium', 'large'],
+        });
+
+        const stringProperty = response.properties.find(
+          (p) => p.name === 'description_text',
+        );
+        expect(stringProperty).toBeDefined();
+        expect(stringProperty?.value).toBe('A well-maintained installation');
+        expect(stringProperty?.type).toBe('string');
+
+        // Verify properties without values have null values but complete schema info
+        // (Since we're setting all properties, let's verify structure consistency)
+        response.properties.forEach((property) => {
+          expect(property.name).toBeDefined();
+          expect(property.label).toBeDefined();
+          expect(property.type).toBeDefined();
+          expect(typeof property.required).toBe('boolean');
+          expect(property.schemaId).toBeDefined();
+          expect(property.value !== undefined).toBe(true); // value should be defined (even if null)
+        });
+      });
+
+      test('should handle partial updates and different boolean formats', async () => {
+        const installationId = await createTestInstallation(
+          'Partial Properties Test',
+          {
+            installationTypeId: testInstallationTypeId,
+          },
+        );
+
+        // Update only some properties, test boolean format conversion
+        const partialPropertiesData = [
+          { name: 'price_per_booth', value: '60.00' },
+          { name: 'is_affiliated', value: '1' }, // Should be converted to 'true'
+          { name: 'installation_size', value: 'large' }, // Required enum
+        ];
+
+        const response = await updateInstallationProperties({
+          id: installationId,
+          properties: partialPropertiesData,
+        });
+
+        // Verify the response structure and data
+        expect(response).toBeDefined();
+        expect(response.id).toBe(installationId);
+        expect(response.location).toBeDefined();
+        expect(response.installationTypeId).toBe(testInstallationTypeId);
+
+        // Verify the installation was returned with location info (not just properties)
+        expect(response.name).toContain('Partial Properties Test');
+        expect(response.address).toBeDefined();
+
+        // Verify properties are included in the response
+        expect(response.properties).toBeDefined();
+        expect(Array.isArray(response.properties)).toBe(true);
+        expect(response.properties).toHaveLength(5); // All 5 schemas should be returned
+
+        // Verify the properties we set
+        const priceProperty = response.properties.find(
+          (p) => p.name === 'price_per_booth',
+        );
+        expect(priceProperty).toBeDefined();
+        expect(priceProperty?.value).toBe(60); // Should be cast to number
+        expect(priceProperty?.type).toBe('number');
+
+        const affiliatedProperty = response.properties.find(
+          (p) => p.name === 'is_affiliated',
+        );
+        expect(affiliatedProperty).toBeDefined();
+        expect(affiliatedProperty?.value).toBe(true); // '1' should be converted to true
+        expect(affiliatedProperty?.type).toBe('boolean');
+
+        const sizeProperty = response.properties.find(
+          (p) => p.name === 'installation_size',
+        );
+        expect(sizeProperty).toBeDefined();
+        expect(sizeProperty?.value).toBe('large');
+        expect(sizeProperty?.type).toBe('enum');
+
+        // Verify properties we didn't set have null values but complete schema info
+        const dateProperty = response.properties.find(
+          (p) => p.name === 'opening_date',
+        );
+        expect(dateProperty).toBeDefined();
+        expect(dateProperty?.value).toBeNull(); // Not set
+        expect(dateProperty?.type).toBe('date');
+        expect(dateProperty?.label).toBe('Opening Date');
+
+        const descriptionProperty = response.properties.find(
+          (p) => p.name === 'description_text',
+        );
+        expect(descriptionProperty).toBeDefined();
+        expect(descriptionProperty?.value).toBeNull(); // Not set
+        expect(descriptionProperty?.type).toBe('string');
+      });
+    });
+
+    describe('error scenarios', () => {
+      test('should handle installation not found error', async () => {
+        const propertiesData = [{ name: 'price_per_booth', value: '45.50' }];
+
+        await expect(
+          updateInstallationProperties({
+            id: 9999, // Non-existent installation
+            properties: propertiesData,
+          }),
+        ).rejects.toThrow('Installation with id 9999 not found');
+      });
+
+      test('should handle installation without installation type', async () => {
+        // Create installation with null installation type
+        const installationData = {
+          name: createUniqueName('No Type Installation', testSuiteId),
+          address: 'No Type Address',
+          description: 'Installation without type',
+          installationTypeId: null,
+        };
+
+        const installation =
+          await installationRepository.create(installationData);
+        const installationId = installationCleanup.track(installation.id);
+
+        const propertiesData = [{ name: 'price_per_booth', value: '45.50' }];
+
+        await expect(
+          updateInstallationProperties({
+            id: installationId,
+            properties: propertiesData,
+          }),
+        ).rejects.toThrow(
+          'Installation must have an installation type to manage properties',
+        );
+      });
+
+      test('should handle property schema not found error', async () => {
+        const installationId = await createTestInstallation(
+          'Schema Not Found Test',
+          {
+            installationTypeId: testInstallationTypeId,
+          },
+        );
+
+        const invalidPropertiesData = [
+          { name: 'non_existent_property', value: 'some_value' },
+        ];
+
+        await expect(
+          updateInstallationProperties({
+            id: installationId,
+            properties: invalidPropertiesData,
+          }),
+        ).rejects.toThrow('Schema with name non_existent_property not found');
+      });
+
+      test('should handle validation errors for invalid field values', async () => {
+        const installationId = await createTestInstallation(
+          'Validation Error Test',
+          {
+            installationTypeId: testInstallationTypeId,
+          },
+        );
+
+        // Test invalid number format
+        const invalidNumberData = [
+          { name: 'price_per_booth', value: 'not_a_number' }, // Invalid number
+          { name: 'installation_size', value: 'medium' }, // Required enum
+        ];
+
+        await expect(
+          updateInstallationProperties({
+            id: installationId,
+            properties: invalidNumberData,
+          }),
+        ).rejects.toThrow("Validation failed for field 'price_per_booth'");
+
+        // Test invalid boolean format
+        const invalidBooleanData = [
+          { name: 'is_affiliated', value: 'maybe' }, // Invalid boolean
+          { name: 'price_per_booth', value: '50.00' }, // Required field
+          { name: 'installation_size', value: 'medium' }, // Required enum
+        ];
+
+        await expect(
+          updateInstallationProperties({
+            id: installationId,
+            properties: invalidBooleanData,
+          }),
+        ).rejects.toThrow("Validation failed for field 'is_affiliated'");
+
+        // Test invalid enum value
+        const invalidEnumData = [
+          { name: 'installation_size', value: 'extra_large' }, // Invalid enum value
+          { name: 'price_per_booth', value: '50.00' }, // Required field
+        ];
+
+        await expect(
+          updateInstallationProperties({
+            id: installationId,
+            properties: invalidEnumData,
+          }),
+        ).rejects.toThrow("Validation failed for field 'installation_size'");
+      });
+    });
+
+    describe('upsert behavior', () => {
+      test('should create new properties and update existing ones', async () => {
+        const installationId = await createTestInstallation(
+          'Upsert Test Installation',
+          {
+            installationTypeId: testInstallationTypeId,
+          },
+        );
+
+        // First, create some properties
+        const initialProperties = [
+          { name: 'price_per_booth', value: '30.00' },
+          { name: 'installation_size', value: 'small' },
+        ];
+
+        const firstResponse = await updateInstallationProperties({
+          id: installationId,
+          properties: initialProperties,
+        });
+
+        // Verify first update worked
+        expect(firstResponse).toBeDefined();
+        expect(firstResponse.id).toBe(installationId);
+
+        // Now update existing and add new properties
+        const updatedProperties = [
+          { name: 'price_per_booth', value: '35.00' }, // Update existing
+          { name: 'installation_size', value: 'medium' }, // Update existing
+          { name: 'is_affiliated', value: 'true' }, // Create new
+          { name: 'description_text', value: 'Updated description' }, // Create new
+        ];
+
+        const secondResponse = await updateInstallationProperties({
+          id: installationId,
+          properties: updatedProperties,
+        });
+
+        // Verify upsert behavior - installation returned with complete data
+        expect(secondResponse).toBeDefined();
+        expect(secondResponse.id).toBe(installationId);
+        expect(secondResponse.installationTypeId).toBe(testInstallationTypeId);
+        expect(secondResponse.name).toContain('Upsert Test Installation');
+        expect(secondResponse.location).toBeDefined();
+
+        // Verify this is the same installation but with updated properties
+        expect(secondResponse.name).toBe(firstResponse.name);
+        expect(secondResponse.address).toBe(firstResponse.address);
+      });
     });
   });
 });

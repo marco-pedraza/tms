@@ -1,8 +1,6 @@
 import {
-  boolean,
   index,
   integer,
-  jsonb,
   pgTable,
   serial,
   text,
@@ -17,12 +15,7 @@ export const installationProperties = pgTable(
   'installation_properties',
   {
     id: serial('id').primaryKey(),
-    name: text('name').notNull(),
-    label: text('label').notNull(),
     value: text('value').notNull(),
-    type: text('type').notNull(),
-    required: boolean('required').notNull(),
-    options: jsonb('options').default({}),
     installationId: integer('installation_id')
       .notNull()
       .references(() => installations.id),

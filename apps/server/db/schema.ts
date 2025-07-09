@@ -86,3 +86,11 @@ export {
   installationProperties,
   installationPropertiesRelations,
 } from '../inventory/installation-properties/installation-properties.schemas';
+export {
+  eventTypes,
+  eventTypesRelations,
+  eventTypeInstallationTypes,
+  eventTypeInstallationTypesRelations,
+  nodeEvents,
+  nodeEventsRelations,
+} from '../inventory/event-types/event-types.schema';

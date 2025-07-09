@@ -183,6 +183,13 @@
       "when": 1751490301641,
       "tag": "20250702210501_add_contact_and_active_to_node_and_installations",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1751998663021,
+      "tag": "20250708181743_create_event_types_tables",
+      "breakpoints": true
     }
   ]
 }

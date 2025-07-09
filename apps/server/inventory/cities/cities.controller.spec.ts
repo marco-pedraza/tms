@@ -16,10 +16,8 @@ import {
 import { countryRepository } from '../countries/countries.repository';
 import type { Country } from '../countries/countries.types';
 import { db } from '../db-service';
-import {
-  assignCitiesToPopulation,
-  deletePopulation,
-} from '../populations/populations.controller';
+import { assignCitiesToPopulation } from '../populations/populations.controller';
+import { populationRepository } from '../populations/populations.repository';
 import type { Population } from '../populations/populations.types';
 import { stateRepository } from '../states/states.repository';
 import type { State } from '../states/states.types';
@@ -206,11 +204,13 @@ describe('Cities Controller', () => {
         deletedAt: null,
       })) as Population;
 
-      // Create cleanup helper for test populations
-      const populationCleanup = createCleanupHelper(
-        deletePopulation,
-        'test-population',
-      );
+      // Create cleanup helper for test populations that handles city assignments
+      const populationCleanup = createCleanupHelper(async ({ id }) => {
+        // First remove all city assignments
+        await assignCitiesToPopulation({ id, cityIds: [] });
+        // Then force delete the population
+        return await populationRepository.forceDelete(id);
+      }, 'test-population');
       populationCleanup.track(testPopulation1.id);
       populationCleanup.track(testPopulation2.id);
 

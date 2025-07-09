@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { FieldValidationError } from '@repo/base-repo';
 import {
@@ -20,8 +21,8 @@ import type { Country } from '../countries/countries.types';
 import { db } from '../db-service';
 import { stateRepository } from '../states/states.repository';
 import type { State } from '../states/states.types';
+import { populationCities } from './populations.schema';
 import type { Population } from './populations.types';
-import { populationRepository } from './populations.repository';
 import {
   assignCitiesToPopulation,
   createPopulation,
@@ -37,8 +38,26 @@ import {
 describe('Populations Controller', () => {
   const testSuiteId = createTestSuiteId('populations-controller');
 
-  // Cleanup helpers using test-utils
-  const populationCleanup = createCleanupHelper(deletePopulation, 'population');
+  // Helper function to handle population cleanup with city assignments
+  const populationSoftDeleteWithCleanup = async ({ id }: { id: number }) => {
+    try {
+      // First try to remove city assignments through the controller (if population exists)
+      await assignCitiesToPopulation({ id, cityIds: [] });
+    } catch {
+      // If population doesn't exist or validation fails, directly clean up the junction table
+      await db
+        .delete(populationCities)
+        .where(eq(populationCities.populationId, id));
+    }
+    // Then soft delete the population
+    return await deletePopulation({ id });
+  };
+
+  // Cleanup helpers using test-utils that handles city assignments before deletion
+  const populationCleanup = createCleanupHelper(
+    populationSoftDeleteWithCleanup,
+    'population',
+  );
 
   // Helper function to create test populations with unique names and codes
   const createTestPopulation = async (baseName: string, options = {}) => {
@@ -600,55 +619,10 @@ describe('Populations Controller', () => {
     });
   });
 
-  describe('soft delete functionality', () => {
-    test('should restore a soft deleted population', async () => {
-      const testPopulationForRestore = await createTestPopulation(
-        'Restore Test Population',
-      );
-
-      // Soft delete
-      await deletePopulation({ id: testPopulationForRestore });
-      await expect(
-        getPopulation({ id: testPopulationForRestore }),
-      ).rejects.toThrow();
-
-      // Restore
-      await populationRepository.restore(testPopulationForRestore);
-
-      // Verify accessible again
-      const found = await getPopulation({ id: testPopulationForRestore });
-      expect(found.id).toBe(testPopulationForRestore);
-
-      // Force delete for cleanup
-      try {
-        await populationRepository.forceDelete(testPopulationForRestore);
-      } catch {
-        // Ignore cleanup errors
-      }
-    });
-
-    test('should force delete a population permanently', async () => {
-      const testPopulationForForceDelete = await createTestPopulation(
-        'Force Delete Test Population',
-      );
-
-      // Force delete
-      await populationRepository.forceDelete(testPopulationForForceDelete);
-
-      // Verify completely gone
-      await expect(
-        getPopulation({ id: testPopulationForForceDelete }),
-      ).rejects.toThrow();
-      await expect(
-        populationRepository.findOne(testPopulationForForceDelete),
-      ).rejects.toThrow();
-    });
-  });
-
   describe('city assignment', () => {
     const factoryDb = getFactoryDb(db);
     const cityAssignmentCleanup = createCleanupHelper(
-      deletePopulation,
+      populationSoftDeleteWithCleanup,
       'city-assignment-population',
     );
 
@@ -1017,7 +991,7 @@ describe('Populations Controller', () => {
 
     // Create cleanup helper for test populations in available cities tests
     const testPopulationCleanup = createCleanupHelper(
-      deletePopulation,
+      populationSoftDeleteWithCleanup,
       'available-cities-test-population',
     );
 

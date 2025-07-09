@@ -1,19 +1,12 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { PaginationParams } from '../../shared/types';
-import {
-  createPathwayService,
-  deletePathwayService,
-} from '../pathway-services/pathway-services.controller';
 import { pathwayRepository } from './pathways.repository';
 import {
-  assignServicesToPathway,
   createPathway,
   deletePathway,
   getPathway,
-  getPathwayWithServiceAssignments,
   listPathways,
   listPathwaysPaginated,
-  unassignServiceFromPathway,
   updatePathway,
 } from './pathways.controller';
 
@@ -26,19 +19,6 @@ describe('Pathways Controller', () => {
     meta: { type: 'highway', terrain: 'flat' },
     tollRoad: false,
     active: true,
-  };
-
-  const testPathwayService = {
-    name: 'Test Service for Pathway',
-    serviceType: 'maintenance',
-    latitude: 25.123,
-    longitude: -99.456,
-    category: 'repair',
-    provider: 'Test Provider',
-    providerScheduleHours: {
-      monday: [{ open: '08:00', close: '18:00' }],
-    },
-    duration: 30,
   };
 
   // Variables to store created IDs for cleanup
@@ -270,203 +250,6 @@ describe('Pathways Controller', () => {
 
       // Attempt to get should throw a not found error
       await expect(getPathway({ id: pathwayId })).rejects.toThrow();
-    });
-  });
-
-  describe('pathway service assignments', () => {
-    test('should assign a service to a pathway', async () => {
-      const pathway = await createPathway(testPathway);
-      const service = await createPathwayService(testPathwayService);
-
-      const assignmentData = {
-        pathwayId: pathway.id,
-        pathwayServiceId: service.id,
-        distanceFromOrigin: 10.5,
-        associatedCost: 50.75,
-      };
-
-      const response = await assignServicesToPathway(assignmentData);
-
-      expect(response).toBeDefined();
-      expect(response.id).toBe(pathway.id);
-      expect(response.pathwayServiceAssignments).toBeDefined();
-      expect(response.pathwayServiceAssignments).toHaveLength(1);
-
-      const { pathwayService } = response.pathwayServiceAssignments[0];
-
-      expect(pathwayService.id).toBe(service.id);
-      expect(pathwayService.name).toBe('Test Service for Pathway');
-      expect(pathwayService.serviceType).toBe('maintenance');
-      expect(pathwayService.latitude).toBe(25.123);
-      expect(pathwayService.longitude).toBe(-99.456);
-      expect(response.pathwayServiceAssignments[0].sequence).toBe(1);
-      await deletePathway({ id: pathway.id });
-      await deletePathwayService({ id: service.id });
-    });
-
-    test('should assign multiple services to a pathway', async () => {
-      const pathway = await createPathway(testPathway);
-      const testService1 = {
-        ...testPathwayService,
-        name: 'Test Service 1',
-      };
-      const testService2 = {
-        ...testPathwayService,
-        name: 'Test Service 2',
-      };
-      const service1 = await createPathwayService(testService1);
-      const service2 = await createPathwayService(testService2);
-
-      const assignmentData1 = {
-        pathwayId: pathway.id,
-        pathwayServiceId: service1.id,
-        distanceFromOrigin: 10.5,
-        associatedCost: 50.75,
-      };
-
-      const assignmentData2 = {
-        pathwayId: pathway.id,
-        pathwayServiceId: service2.id,
-        distanceFromOrigin: 20.5,
-        associatedCost: 100.75,
-      };
-
-      await assignServicesToPathway(assignmentData1);
-      await assignServicesToPathway(assignmentData2);
-
-      const response = await getPathwayWithServiceAssignments({
-        id: pathway.id,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.pathwayServiceAssignments).toBeDefined();
-      expect(response.pathwayServiceAssignments).toHaveLength(2);
-
-      const [assignment1, assignment2] = response.pathwayServiceAssignments;
-
-      expect(assignment1.pathwayService.id).toBe(service1.id);
-      expect(assignment1.pathwayService.name).toBe('Test Service 1');
-      expect(assignment1.sequence).toBe(1);
-      expect(assignment2.pathwayService.id).toBe(service2.id);
-      expect(assignment2.pathwayService.name).toBe('Test Service 2');
-      expect(assignment2.sequence).toBe(2);
-
-      await deletePathway({ id: pathway.id });
-      await deletePathwayService({ id: service1.id });
-      await deletePathwayService({ id: service2.id });
-    });
-
-    test('should unassign a service from a pathway', async () => {
-      const pathway = await createPathway(testPathway);
-      const service = await createPathwayService(testPathwayService);
-
-      const assignmentData = {
-        pathwayId: pathway.id,
-        pathwayServiceId: service.id,
-        distanceFromOrigin: 10.5,
-        associatedCost: 50.75,
-      };
-
-      const assignmentResponse = await assignServicesToPathway(assignmentData);
-      const [assignment] = assignmentResponse.pathwayServiceAssignments;
-
-      const response = await unassignServiceFromPathway({
-        pathwayId: pathway.id,
-        assignmentId: assignment.id,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.id).toBe(pathway.id);
-      expect(response.pathwayServiceAssignments).toBeDefined();
-      expect(response.pathwayServiceAssignments).toHaveLength(0);
-
-      await deletePathway({ id: pathway.id });
-      await deletePathwayService({ id: service.id });
-    });
-
-    test('should unassign a service from a pathway and update sequences', async () => {
-      const pathway = await createPathway(testPathway);
-      const service1 = await createPathwayService({
-        ...testPathwayService,
-        name: 'Service 1',
-      });
-      const service2 = await createPathwayService({
-        ...testPathwayService,
-        name: 'Service 2',
-      });
-      const service3 = await createPathwayService({
-        ...testPathwayService,
-        name: 'Service 3',
-      });
-      const service4 = await createPathwayService({
-        ...testPathwayService,
-        name: 'Service 4',
-      });
-
-      const assignmentData = {
-        pathwayId: pathway.id,
-        distanceFromOrigin: 10.5,
-      };
-
-      await assignServicesToPathway({
-        ...assignmentData,
-        pathwayServiceId: service1.id,
-      });
-      await assignServicesToPathway({
-        ...assignmentData,
-        pathwayServiceId: service2.id,
-      });
-      await assignServicesToPathway({
-        ...assignmentData,
-        pathwayServiceId: service3.id,
-      });
-      await assignServicesToPathway({
-        ...assignmentData,
-        pathwayServiceId: service4.id,
-      });
-
-      const response = await getPathwayWithServiceAssignments({
-        id: pathway.id,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.pathwayServiceAssignments).toBeDefined();
-      expect(response.pathwayServiceAssignments).toHaveLength(4);
-
-      const { pathwayServiceAssignments } = response;
-      let assignment1 = pathwayServiceAssignments[0];
-      const assignment2 = pathwayServiceAssignments[1];
-      let assignment3 = pathwayServiceAssignments[2];
-      let assignment4 = pathwayServiceAssignments[3];
-
-      expect(assignment1.sequence).toBe(1);
-      expect(assignment2.sequence).toBe(2);
-      expect(assignment3.sequence).toBe(3);
-      expect(assignment4.sequence).toBe(4);
-
-      const unassignmentResponse = await unassignServiceFromPathway({
-        pathwayId: pathway.id,
-        assignmentId: assignment2.id,
-      });
-
-      expect(unassignmentResponse).toBeDefined();
-      expect(unassignmentResponse.id).toBe(pathway.id);
-      expect(unassignmentResponse.pathwayServiceAssignments).toBeDefined();
-      expect(unassignmentResponse.pathwayServiceAssignments).toHaveLength(3);
-
-      [assignment1, assignment3, assignment4] =
-        unassignmentResponse.pathwayServiceAssignments;
-
-      expect(assignment1.sequence).toBe(1);
-      expect(assignment3.sequence).toBe(2);
-      expect(assignment4.sequence).toBe(3);
-
-      // --- clean-up -------------------------------------------------------------
-      await deletePathway({ id: pathway.id });
-      await deletePathwayService({ id: service1.id });
-      await deletePathwayService({ id: service2.id });
-      await deletePathwayService({ id: service3.id });
-      await deletePathwayService({ id: service4.id });
     });
   });
 

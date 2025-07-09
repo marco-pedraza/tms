@@ -95,7 +95,6 @@ export namespace inventory {
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
             this.assignCitiesToPopulation = this.assignCitiesToPopulation.bind(this)
-            this.assignServicesToPathway = this.assignServicesToPathway.bind(this)
             this.createBus = this.createBus.bind(this)
             this.createBusDiagramModel = this.createBusDiagramModel.bind(this)
             this.createBusDiagramModelZone = this.createBusDiagramModelZone.bind(this)
@@ -111,7 +110,6 @@ export namespace inventory {
             this.createInstallationType = this.createInstallationType.bind(this)
             this.createNode = this.createNode.bind(this)
             this.createPathway = this.createPathway.bind(this)
-            this.createPathwayService = this.createPathwayService.bind(this)
             this.createPopulation = this.createPopulation.bind(this)
             this.createRoute = this.createRoute.bind(this)
             this.createSeatDiagramZone = this.createSeatDiagramZone.bind(this)
@@ -133,7 +131,6 @@ export namespace inventory {
             this.deleteInstallationType = this.deleteInstallationType.bind(this)
             this.deleteNode = this.deleteNode.bind(this)
             this.deletePathway = this.deletePathway.bind(this)
-            this.deletePathwayService = this.deletePathwayService.bind(this)
             this.deletePopulation = this.deletePopulation.bind(this)
             this.deleteRoute = this.deleteRoute.bind(this)
             this.deleteSeatDiagram = this.deleteSeatDiagram.bind(this)
@@ -162,8 +159,6 @@ export namespace inventory {
             this.getInstallationType = this.getInstallationType.bind(this)
             this.getNode = this.getNode.bind(this)
             this.getPathway = this.getPathway.bind(this)
-            this.getPathwayService = this.getPathwayService.bind(this)
-            this.getPathwayWithServiceAssignments = this.getPathwayWithServiceAssignments.bind(this)
             this.getPopulation = this.getPopulation.bind(this)
             this.getPopulationCities = this.getPopulationCities.bind(this)
             this.getRoute = this.getRoute.bind(this)
@@ -203,8 +198,6 @@ export namespace inventory {
             this.listInstallationsPaginated = this.listInstallationsPaginated.bind(this)
             this.listNodes = this.listNodes.bind(this)
             this.listNodesPaginated = this.listNodesPaginated.bind(this)
-            this.listPathwayServices = this.listPathwayServices.bind(this)
-            this.listPathwayServicesPaginated = this.listPathwayServicesPaginated.bind(this)
             this.listPathways = this.listPathways.bind(this)
             this.listPathwaysPaginated = this.listPathwaysPaginated.bind(this)
             this.listPopulations = this.listPopulations.bind(this)
@@ -237,7 +230,6 @@ export namespace inventory {
             this.searchTerminalsPaginated = this.searchTerminalsPaginated.bind(this)
             this.searchTransporters = this.searchTransporters.bind(this)
             this.searchTransportersPaginated = this.searchTransportersPaginated.bind(this)
-            this.unassignServiceFromPathway = this.unassignServiceFromPathway.bind(this)
             this.updateBus = this.updateBus.bind(this)
             this.updateBusDiagramModel = this.updateBusDiagramModel.bind(this)
             this.updateBusDiagramModelZone = this.updateBusDiagramModelZone.bind(this)
@@ -255,8 +247,6 @@ export namespace inventory {
             this.updateInstallationType = this.updateInstallationType.bind(this)
             this.updateNode = this.updateNode.bind(this)
             this.updatePathway = this.updatePathway.bind(this)
-            this.updatePathwayService = this.updatePathwayService.bind(this)
-            this.updatePathwayServiceAssignment = this.updatePathwayServiceAssignment.bind(this)
             this.updatePopulation = this.updatePopulation.bind(this)
             this.updateSeatConfiguration = this.updateSeatConfiguration.bind(this)
             this.updateSeatDiagram = this.updateSeatDiagram.bind(this)
@@ -286,18 +276,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/populations/${encodeURIComponent(id)}/cities/assign`, JSON.stringify(params))
             return await resp.json() as populations.PopulationWithRelations
-        }
-
-        /**
-         * Assigns a service to a pathway with automatically calculated sequence.
-         * @param params - Assignment data including pathway ID and service ID
-         * @returns {Promise<PathwayWithServiceAssignments>} The updated pathway with all its service assignments
-         * @throws {APIError} If the assignment fails due to validation or other errors
-         */
-        public async assignServicesToPathway(pathwayId: number, params: pathway_service_assignments.CreatePathwayServiceAssignmentPayload): Promise<pathways.PathwayWithServiceAssignments> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/pathways/${encodeURIComponent(pathwayId)}/service-assignments`, JSON.stringify(params))
-            return await resp.json() as pathways.PathwayWithServiceAssignments
         }
 
         /**
@@ -500,18 +478,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/pathways`, JSON.stringify(params))
             return await resp.json() as pathways.Pathway
-        }
-
-        /**
-         * Creates a new pathway service.
-         * @param params - The pathway service data to create
-         * @returns {Promise<PathwayService>} The created pathway service
-         * @throws {APIError} If the pathway service creation fails
-         */
-        public async createPathwayService(params: pathway_services.CreatePathwayServicePayload): Promise<pathway_services.PathwayService> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/pathway-services`, JSON.stringify(params))
-            return await resp.json() as pathway_services.PathwayService
         }
 
         /**
@@ -789,19 +755,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/pathways/${encodeURIComponent(id)}`)
             return await resp.json() as pathways.Pathway
-        }
-
-        /**
-         * Deletes a pathway service by its ID.
-         * @param params - Object containing the pathway service ID
-         * @param params.id - The ID of the pathway service to delete
-         * @returns {Promise<PathwayService>} The deleted pathway service
-         * @throws {APIError} If the pathway service is not found or deletion fails
-         */
-        public async deletePathwayService(id: number): Promise<pathway_services.PathwayService> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/pathway-services/${encodeURIComponent(id)}`)
-            return await resp.json() as pathway_services.PathwayService
         }
 
         /**
@@ -1145,42 +1098,16 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves a pathway by its ID.
+         * Retrieves a pathway by its ID
          * @param params - Object containing the pathway ID
          * @param params.id - The ID of the pathway to retrieve
          * @returns {Promise<Pathway>} The found pathway
-         * @throws {APIError} If the pathway is not found or retrieval fails
+         * @throws {APIError} If the pathway is not found
          */
         public async getPathway(id: number): Promise<pathways.Pathway> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/pathways/${encodeURIComponent(id)}`)
             return await resp.json() as pathways.Pathway
-        }
-
-        /**
-         * Retrieves a pathway service by its ID.
-         * @param params - Object containing the pathway service ID
-         * @param params.id - The ID of the pathway service to retrieve
-         * @returns {Promise<PathwayService>} The found pathway service
-         * @throws {APIError} If the pathway service is not found or retrieval fails
-         */
-        public async getPathwayService(id: number): Promise<pathway_services.PathwayService> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/pathway-services/${encodeURIComponent(id)}`)
-            return await resp.json() as pathway_services.PathwayService
-        }
-
-        /**
-         * Retrieves a pathway by its ID including all its services with assignment details.
-         * @param params - Object containing the pathway ID
-         * @param params.id - The ID of the pathway to retrieve
-         * @returns {Promise<PathwayWithServiceAssignments>} The found pathway with its services
-         * @throws {APIError} If the pathway is not found or retrieval fails
-         */
-        public async getPathwayWithServiceAssignments(id: number): Promise<pathways.PathwayWithServiceAssignments> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/pathways/${encodeURIComponent(id)}/services`)
-            return await resp.json() as pathways.PathwayWithServiceAssignments
         }
 
         /**
@@ -1659,38 +1586,9 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves all pathway services without pagination (useful for dropdowns).
-         * @returns {Promise<PathwayServices>} An object containing an array of pathway services
-         * @throws {APIError} If retrieval fails
-         */
-        public async listPathwayServices(): Promise<pathway_services.PathwayServices> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/pathway-services`)
-            return await resp.json() as pathway_services.PathwayServices
-        }
-
-        /**
-         * Retrieves pathway services with pagination (useful for tables).
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedPathwayServices>} Paginated list of pathway services
-         * @throws {APIError} If retrieval fails
-         */
-        public async listPathwayServicesPaginated(params: shared.PaginationParams): Promise<pathway_services.PaginatedPathwayServices> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:     params.page === undefined ? undefined : String(params.page),
-                pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/pathway-services/paginated`, undefined, {query})
-            return await resp.json() as pathway_services.PaginatedPathwayServices
-        }
-
-        /**
-         * Retrieves all pathways without pagination (useful for dropdowns).
-         * @returns {Promise<Pathways>} An object containing an array of pathways
-         * @throws {APIError} If retrieval fails
+         * Retrieves all pathways
+         * @returns {Promise<Pathways>} All pathways
+         * @throws {APIError} If the operation fails
          */
         public async listPathways(): Promise<pathways.Pathways> {
             // Now make the actual call to the API
@@ -1699,10 +1597,10 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves pathways with pagination (useful for tables).
+         * Retrieves all pathways with pagination
          * @param params - Pagination parameters
-         * @returns {Promise<PaginatedPathways>} Paginated list of pathways
-         * @throws {APIError} If retrieval fails
+         * @returns {Promise<PaginatedPathways>} Paginated pathways
+         * @throws {APIError} If the operation fails
          */
         public async listPathwaysPaginated(params: shared.PaginationParams): Promise<pathways.PaginatedPathways> {
             // Convert our params into the objects we need for the request
@@ -2322,18 +2220,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/transporters/search/paginated`, JSON.stringify(params))
             return await resp.json() as transporters.PaginatedTransportersWithCity
-        }
-
-        /**
-         * Unassigns a service from a pathway
-         * @param params - Object containing the pathway ID and assignment ID
-         * @returns {Promise<PathwayWithServiceAssignments>} The updated pathway with all its service assignments
-         * @throws {APIError} If the pathway is not found, assignment is not found, or unassignment fails
-         */
-        public async unassignServiceFromPathway(pathwayId: number, assignmentId: number): Promise<pathways.PathwayWithServiceAssignments> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/pathways/${encodeURIComponent(pathwayId)}/service-assignments/${encodeURIComponent(assignmentId)}`)
-            return await resp.json() as pathways.PathwayWithServiceAssignments
         }
 
         /**
@@ -3252,10 +3138,9 @@ export namespace inventory {
         }
 
         /**
-         * Updates an existing pathway.
+         * Updates an existing pathway
          * @param params - Object containing the pathway ID and update data
          * @param params.id - The ID of the pathway to update
-         * @param params - Object containing the pathway ID and the fields to update
          * @returns {Promise<Pathway>} The updated pathway
          * @throws {APIError} If the pathway is not found or update fails
          */
@@ -3293,93 +3178,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/pathways/${encodeURIComponent(id)}`, JSON.stringify(params))
             return await resp.json() as pathways.Pathway
-        }
-
-        /**
-         * Updates an existing pathway service.
-         * @param params - Object containing the pathway service ID and update data
-         * @param params.id - The ID of the pathway service to update
-         * @param params.data - The pathway service data to update
-         * @returns {Promise<PathwayService>} The updated pathway service
-         * @throws {APIError} If the pathway service is not found or update fails
-         */
-        public async updatePathwayService(id: number, params: {
-    /**
-     * Name of the service
-     */
-    name?: string
-
-    /**
-     * Type of service (washing, diesel_charge, medical_service, etc.)
-     */
-    serviceType?: string
-
-    /**
-     * Latitude coordinate of the service location
-     * Must be a number between -90 and 90
-     */
-    latitude?: number
-
-    /**
-     * Longitude coordinate of the service location
-     * Must be a number between -180 and 180
-     */
-    longitude?: number
-
-    /**
-     * Grouping of similar services
-     */
-    category?: string
-
-    /**
-     * Name of service provider
-     */
-    provider?: string
-
-    /**
-     * Provider's schedule hours
-     */
-    providerScheduleHours?: pathway_services.OperatingHours
-
-    /**
-     * Typical duration of the service in minutes
-     */
-    duration?: number
-}): Promise<pathway_services.PathwayService> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/pathway-services/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as pathway_services.PathwayService
-        }
-
-        /**
-         * Updates an existing pathway service assignment's metadata
-         * Only allows updating associatedCost, distanceFromOrigin, and mandatory fields
-         * @param params - Object containing the assignment ID and update data
-         * @param params.id - The ID of the assignment to update
-         * @returns {Promise<PathwayServiceAssignment>} The updated assignment
-         * @throws {APIError} If the assignment is not found or update fails
-         */
-        public async updatePathwayServiceAssignment(id: number, params: {
-    /**
-     * Cost associated with this service on this pathway
-     * Must be a non-negative number
-     */
-    associatedCost?: number
-
-    /**
-     * Whether this service is mandatory for the pathway
-     */
-    mandatory?: boolean
-
-    /**
-     * Distance from origin in kilometers
-     * Must be a non-negative number
-     */
-    distanceFromOrigin?: number
-}): Promise<pathway_service_assignments.PathwayServiceAssignment> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PATCH", `/pathway-service-assignments/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as pathway_service_assignments.PathwayServiceAssignment
         }
 
         /**
@@ -9319,245 +9117,6 @@ export namespace nodes {
     }
 }
 
-export namespace pathway_service_assignments {
-    export interface CreatePathwayServiceAssignmentPayload {
-        /**
-         * Reference to the pathway service
-         */
-        pathwayServiceId: number
-
-        /**
-         * Cost associated with this service on this pathway (optional)
-         * Must be a non-negative number if provided
-         */
-        associatedCost?: number
-
-        /**
-         * Distance from origin in kilometers
-         * Must be a non-negative number
-         */
-        distanceFromOrigin: number
-
-        /**
-         * Whether this service is mandatory for the pathway
-         */
-        mandatory?: boolean
-    }
-
-    export interface PathwayServiceAssignment {
-        /**
-         * Unique identifier for the pathway service assignment
-         */
-        id: number
-
-        /**
-         * Reference to the pathway
-         */
-        pathwayId: number
-
-        /**
-         * Reference to the pathway service
-         */
-        pathwayServiceId: number
-
-        /**
-         * Cost associated with this service on this pathway (optional)
-         */
-        associatedCost?: number
-
-        /**
-         * Order sequence along the pathway
-         */
-        sequence: number
-
-        /**
-         * Distance from origin in kilometers
-         */
-        distanceFromOrigin: number
-
-        /**
-         * Whether this service is mandatory for the pathway
-         */
-        mandatory: boolean
-
-        /**
-         * Timestamp when the assignment was created
-         */
-        createdAt: string
-
-        /**
-         * Timestamp when the assignment was last updated
-         */
-        updatedAt: string
-    }
-}
-
-export namespace pathway_services {
-    export interface CreatePathwayServicePayload {
-        /**
-         * Name of the service
-         * Must have at least 1 character
-         */
-        name: string
-
-        /**
-         * Type of service (washing, diesel_charge, medical_service, etc.)
-         * Must have at least 1 character
-         */
-        serviceType: string
-
-        /**
-         * Latitude coordinate of the service location
-         * Must be a number between -90 and 90
-         */
-        latitude: number
-
-        /**
-         * Longitude coordinate of the service location
-         * Must be a number between -180 and 180
-         */
-        longitude: number
-
-        /**
-         * Grouping of similar services
-         * Must have at least 1 character
-         */
-        category: string
-
-        /**
-         * Name of service provider
-         * Must have at least 1 character
-         */
-        provider: string
-
-        /**
-         * Provider's schedule hours
-         */
-        providerScheduleHours: OperatingHours
-
-        /**
-         * Typical duration of the service in minutes
-         * Must be a positive number
-         */
-        duration: number
-    }
-
-    export interface OperatingHours {
-        /**
-         * Monday opening hours
-         */
-        monday?: TimeSlot[]
-
-        /**
-         * Tuesday opening hours
-         */
-        tuesday?: TimeSlot[]
-
-        /**
-         * Wednesday opening hours
-         */
-        wednesday?: TimeSlot[]
-
-        /**
-         * Thursday opening hours
-         */
-        thursday?: TimeSlot[]
-
-        /**
-         * Friday opening hours
-         */
-        friday?: TimeSlot[]
-
-        /**
-         * Saturday opening hours
-         */
-        saturday?: TimeSlot[]
-
-        /**
-         * Sunday opening hours
-         */
-        sunday?: TimeSlot[]
-    }
-
-    export interface PaginatedPathwayServices {
-        pagination: shared.PaginationMeta
-        data: PathwayService[]
-    }
-
-    export interface PathwayService {
-        /**
-         * Unique identifier for the pathway service
-         */
-        id: number
-
-        /**
-         * Name of the service
-         */
-        name: string
-
-        /**
-         * Type of service (washing, diesel_charge, medical_service, etc.)
-         */
-        serviceType: string
-
-        /**
-         * Latitude coordinate of the service location
-         */
-        latitude: number
-
-        /**
-         * Longitude coordinate of the service location
-         */
-        longitude: number
-
-        /**
-         * Grouping of similar services
-         */
-        category: string
-
-        /**
-         * Name of service provider
-         */
-        provider: string
-
-        /**
-         * Provider's schedule hours
-         */
-        providerScheduleHours: OperatingHours
-
-        /**
-         * Typical duration of the service in minutes
-         */
-        duration: number
-
-        /**
-         * Timestamp when the pathway service was created
-         */
-        createdAt: string
-
-        /**
-         * Timestamp when the pathway service was last updated
-         */
-        updatedAt: string
-    }
-
-    export interface PathwayServices {
-        pathwayServices: PathwayService[]
-    }
-
-    export interface TimeSlot {
-        /**
-         * Opening time in format HH:MM (24-hour format)
-         */
-        open: string
-
-        /**
-         * Closing time in format HH:MM (24-hour format)
-         */
-        close: string
-    }
-}
-
 export namespace pathways {
     export interface CreatePathwayPayload {
         /**
@@ -9600,101 +9159,6 @@ export namespace pathways {
     }
 
     export interface Pathway {
-        /**
-         * Unique identifier for the pathway
-         */
-        id: number
-
-        /**
-         * Name of the pathway
-         */
-        name: string
-
-        /**
-         * Distance of the pathway
-         */
-        distance: number
-
-        /**
-         * Typical time to travel the pathway
-         */
-        typicalTime: number
-
-        /**
-         * Metadata about the pathway
-         */
-        meta: { [key: string]: any }
-
-        /**
-         * Whether the pathway is a toll road
-         */
-        tollRoad: boolean
-
-        /**
-         * Whether the pathway is active
-         */
-        active: boolean
-
-        /**
-         * Timestamp when the pathway was created
-         */
-        createdAt: string
-
-        /**
-         * Timestamp when the pathway was last updated
-         */
-        updatedAt: string
-    }
-
-    export interface PathwayWithServiceAssignments {
-        pathwayServiceAssignments: {
-            /**
-             * Unique identifier for the pathway service assignment
-             */
-            id: number
-
-            /**
-             * Reference to the pathway
-             */
-            pathwayId: number
-
-            /**
-             * Reference to the pathway service
-             */
-            pathwayServiceId: number
-
-            /**
-             * Cost associated with this service on this pathway (optional)
-             */
-            associatedCost?: number
-
-            /**
-             * Order sequence along the pathway
-             */
-            sequence: number
-
-            /**
-             * Distance from origin in kilometers
-             */
-            distanceFromOrigin: number
-
-            /**
-             * Whether this service is mandatory for the pathway
-             */
-            mandatory: boolean
-
-            /**
-             * Timestamp when the assignment was created
-             */
-            createdAt: string
-
-            /**
-             * Timestamp when the assignment was last updated
-             */
-            updatedAt: string
-
-            pathwayService: pathway_services.PathwayService
-        }[]
         /**
          * Unique identifier for the pathway
          */
@@ -10802,11 +10266,6 @@ export namespace shared {
          * Whether there is a previous page available
          */
         hasPreviousPage: boolean
-    }
-
-    export interface PaginationParams {
-        page?: number
-        pageSize?: number
     }
 
     export interface PaginationParams {

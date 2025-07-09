@@ -60,18 +60,7 @@ export {
   busSeatModelsRelations,
 } from '../inventory/bus-seat-models/bus-seat-models.schema';
 export { buses, busesRelations } from '../inventory/buses/buses.schema';
-export {
-  pathways,
-  pathwaysRelations,
-} from '../inventory/pathways/pathways.schema';
-export {
-  pathwayServices,
-  pathwayServicesRelations,
-} from '../inventory/pathway-services/pathway-services.schema';
-export {
-  pathwayServiceAssignments,
-  pathwayServiceAssignmentsRelations,
-} from '../inventory/pathway-service-assignments/pathway-service-assignments.schema';
+export { pathways } from '../inventory/pathways/pathways.schema';
 export { routes, routesRelations } from '../inventory/routes/routes.schema';
 export {
   routeSegments,

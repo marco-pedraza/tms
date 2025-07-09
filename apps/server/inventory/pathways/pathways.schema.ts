@@ -8,8 +8,6 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
-import { pathwayServiceAssignments } from '../pathway-service-assignments/pathway-service-assignments.schema';
 
 /**
  * Database table for pathways
@@ -25,10 +23,3 @@ export const pathways = pgTable('pathways', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
-
-/**
- * Relations for pathways table
- */
-export const pathwaysRelations = relations(pathways, ({ many }) => ({
-  pathwayServiceAssignments: many(pathwayServiceAssignments),
-}));

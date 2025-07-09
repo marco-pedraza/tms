@@ -7,14 +7,9 @@ import { Country } from '../../inventory/countries/countries.types';
 import { db } from '../../inventory/db-service';
 import { Installation } from '../../inventory/installations/installations.types';
 import { Node } from '../../inventory/nodes/nodes.types';
-import { PathwayService } from '../../inventory/pathway-services/pathway-services.types';
-import { pathwayUseCases } from '../../inventory/pathways/pathways.use-cases';
 import { populationCities } from '../../inventory/populations/populations.schema';
 import { Population } from '../../inventory/populations/populations.types';
-import {
-  CreateSimpleRoutePayload,
-  Route,
-} from '../../inventory/routes/routes.types';
+import { CreateSimpleRoutePayload } from '../../inventory/routes/routes.types';
 import { routeUseCases } from '../../inventory/routes/routes.use-cases';
 import { State } from '../../inventory/states/states.types';
 import { Terminal } from '../../inventory/terminals/terminals.types';
@@ -34,7 +29,6 @@ import { busLineFactory } from '../../tests/factories/bus-line.factory';
 import { busModelFactory } from '../../tests/factories/bus-models.factory';
 import { busFactory } from '../../tests/factories/buses.factory';
 import { getFactoryDb } from '../../tests/factories/factory-utils';
-import { pathwayServicesFactory } from '../../tests/factories/pathway-services.factory';
 import { populationFactory } from '../../tests/factories/populations.factory';
 import { seatDiagramZoneFactory } from '../../tests/factories/seat-diagram-zones.factory';
 import { seatDiagramFactory } from '../../tests/factories/seat-diagrams.factory';
@@ -207,28 +201,6 @@ async function seedBusLines(transporters: Transporter[]) {
   return allBusLines;
 }
 
-async function seedPathwayServices() {
-  const PATHWAY_SERVICE_COUNT = 15; // Increased count to account for potential duplicates
-  const rawPathwayPayload = Array.from(
-    { length: PATHWAY_SERVICE_COUNT },
-    () => ({
-      name: faker.commerce.productAdjective(),
-    }),
-  );
-  // Remove duplicates by name
-  const uniquePathwayServices = removeDuplicatesByAnyKey(rawPathwayPayload, [
-    (service) => service.name,
-  ]);
-
-  const pathwayServices = (await pathwayServicesFactory(factoryDb).create(
-    uniquePathwayServices,
-  )) as PathwayService[];
-
-  console.log(`Seeded ${pathwayServices.length} pathway services`);
-
-  return pathwayServices;
-}
-
 async function seedSimpleRoutes(terminals: Terminal[]) {
   // Generate simple route payloads using available terminals
   const simpleRoutePayloads: CreateSimpleRoutePayload[] = [];
@@ -303,32 +275,6 @@ async function seedCompoundRoutes(simpleRoutes: { id: number }[]) {
   console.log(`Seeded ${createdCompoundRoutes.length} compound routes`);
 
   return createdCompoundRoutes;
-}
-
-async function assignServicesToAllPathways(
-  simpleRoutes: Route[],
-  pathwayServices: PathwayService[],
-) {
-  for (const simpleRoute of simpleRoutes) {
-    if (!simpleRoute.pathwayId) {
-      console.log(`Skipping route ${simpleRoute.id} as it has no pathwayId`);
-      continue;
-    }
-
-    const numServices = Math.floor(Math.random() * 3) + 1;
-    const servicesToAssign = pathwayServices
-      .sort(() => 0.5 - Math.random())
-      .slice(0, numServices);
-    for (const service of servicesToAssign) {
-      await pathwayUseCases.assignServicesToPathway({
-        pathwayId: simpleRoute.pathwayId,
-        pathwayServiceId: service.id,
-        distanceFromOrigin: Math.floor(Math.random() * 100),
-        mandatory: Math.random() > 0.5,
-      });
-    }
-  }
-  console.log('Assigned pathway services to all pathways of simple routes');
 }
 
 async function seedBusModels() {
@@ -625,10 +571,8 @@ export async function seedInventory(): Promise<void> {
     await seedNodes(cities, populations, installations);
     const transporters = await seedTransporters(cities);
     const busLines = await seedBusLines(transporters);
-    const pathwayServices = (await seedPathwayServices()) as PathwayService[];
     // Seed simple and compound routes
     const simpleRoutes = await seedSimpleRoutes(terminals);
-    await assignServicesToAllPathways(simpleRoutes, pathwayServices);
     await seedCompoundRoutes(simpleRoutes);
     const busModels = (await seedBusModels()) as BusModel[];
     const buses = (await seedBuses(busModels)) as Bus[];

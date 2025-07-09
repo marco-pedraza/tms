@@ -1,7 +1,5 @@
 import { MatchesRegexp, Min, MinLen } from 'encore.dev/validate';
 import { PaginatedResult } from '../../shared/types';
-import { PathwayServiceAssignment } from '../pathway-service-assignments/pathway-service-assignments.types';
-import type { PathwayService } from '../pathway-services/pathway-services.types';
 
 /**
  * Base interface representing a pathway entity
@@ -33,15 +31,6 @@ export interface Pathway {
 
   /** Timestamp when the pathway was last updated */
   updatedAt: Date;
-}
-
-/**
- * Interface for a pathway with its services and assignment details
- */
-export interface PathwayWithServiceAssignments extends Pathway {
-  pathwayServiceAssignments: (PathwayServiceAssignment & {
-    pathwayService: PathwayService;
-  })[];
 }
 
 /**

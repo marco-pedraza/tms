@@ -23,7 +23,6 @@ export interface Routes {
   busLines: CrudRoute;
   routes: CrudRoute;
   pathways: CrudRoute;
-  pathwayServices: CrudRoute;
   services: CrudRoute;
   drivers: CrudRoute;
   busModels: CrudRoute;
@@ -88,12 +87,6 @@ const routes: Routes = {
     new: '/pathways/new',
     getDetailsRoute: (id: string) => `/pathways/${id}`,
     getEditRoute: (id: string) => `/pathways/${id}/edit`,
-  },
-  pathwayServices: {
-    index: '/pathway-services',
-    new: '/pathway-services/new',
-    getDetailsRoute: (id: string) => `/pathway-services/${id}`,
-    getEditRoute: (id: string) => `/pathway-services/${id}/edit`,
   },
   services: {
     index: '/services',

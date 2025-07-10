@@ -23,6 +23,7 @@ interface SelectInputProps
   items: SelectItem[];
   description?: string;
   isRequired?: boolean;
+  emptyOptionsLabel?: string;
 }
 
 export default function SelectInput({
@@ -31,6 +32,7 @@ export default function SelectInput({
   items,
   description,
   isRequired = false,
+  emptyOptionsLabel,
   ...inputProps
 }: SelectInputProps) {
   const field = useFieldContext<string>();
@@ -50,6 +52,15 @@ export default function SelectInput({
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
+          {emptyOptionsLabel && !items.length && (
+            <SelectItem
+              key="empty-list-label"
+              value="empty-list-label"
+              disabled
+            >
+              {emptyOptionsLabel}
+            </SelectItem>
+          )}
           {items.map((item) => (
             <SelectItem key={item.id} value={item.id}>
               {item.name}

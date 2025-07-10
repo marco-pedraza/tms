@@ -702,7 +702,8 @@
         "population": "Selecciona una población",
         "radius": "Ej: 100",
         "latitude": "Ej: 19.4326",
-        "longitude": "Ej: -99.1332"
+        "longitude": "Ej: -99.1332",
+        "emptyCityList": "Selecciona una población con ciudades asignadas"
       }
     },
     "edit": {

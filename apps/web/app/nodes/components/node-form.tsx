@@ -1,12 +1,13 @@
+import { useStore } from '@tanstack/react-form';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
-import useQueryAllCities from '@/cities/hooks/use-query-all-cities';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useForm from '@/hooks/use-form';
 import useQueryAllPopulations from '@/populations/hooks/use-query-all-populations';
+import useQueryPopulationCities from '@/populations/hooks/use-query-population-cities';
 import { UseTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
@@ -127,8 +128,15 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
       }
     },
   });
-  const { data: cities } = useQueryAllCities();
   const { data: populations } = useQueryAllPopulations();
+  const selectedPopulationId = useStore(
+    form.store,
+    (state) => state.values.populationId,
+  );
+  const { data: cities } = useQueryPopulationCities({
+    populationId: parseInt(selectedPopulationId),
+    enabled: !!selectedPopulationId,
+  });
 
   return (
     <Form onSubmit={form.handleSubmit}>
@@ -166,7 +174,14 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
         <TabsContent value="location">
           <FormLayout title={tNodes('form.sections.location')}>
             <div className="grid grid-cols-2 gap-4">
-              <form.AppField name="populationId">
+              <form.AppField
+                name="populationId"
+                listeners={{
+                  onChange: () => {
+                    form.setFieldValue('cityId', '');
+                  },
+                }}
+              >
                 {(field) => (
                   <field.SelectInput
                     label={tNodes('fields.population')}
@@ -187,6 +202,9 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
                     label={tNodes('fields.city')}
                     placeholder={tNodes('form.placeholders.city')}
                     isRequired
+                    emptyOptionsLabel={tNodes(
+                      'form.placeholders.emptyCityList',
+                    )}
                     items={
                       cities?.data.map((city) => ({
                         id: city.id.toString(),

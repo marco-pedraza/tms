@@ -104,6 +104,7 @@ export namespace inventory {
             this.createCompoundRoute = this.createCompoundRoute.bind(this)
             this.createCountry = this.createCountry.bind(this)
             this.createDriver = this.createDriver.bind(this)
+            this.createEventType = this.createEventType.bind(this)
             this.createGate = this.createGate.bind(this)
             this.createInstallation = this.createInstallation.bind(this)
             this.createInstallationSchema = this.createInstallationSchema.bind(this)
@@ -125,6 +126,7 @@ export namespace inventory {
             this.deleteCity = this.deleteCity.bind(this)
             this.deleteCountry = this.deleteCountry.bind(this)
             this.deleteDriver = this.deleteDriver.bind(this)
+            this.deleteEventType = this.deleteEventType.bind(this)
             this.deleteGate = this.deleteGate.bind(this)
             this.deleteInstallation = this.deleteInstallation.bind(this)
             this.deleteInstallationSchema = this.deleteInstallationSchema.bind(this)
@@ -152,6 +154,7 @@ export namespace inventory {
             this.getCity = this.getCity.bind(this)
             this.getCountry = this.getCountry.bind(this)
             this.getDriver = this.getDriver.bind(this)
+            this.getEventType = this.getEventType.bind(this)
             this.getFacility = this.getFacility.bind(this)
             this.getGate = this.getGate.bind(this)
             this.getInstallation = this.getInstallation.bind(this)
@@ -187,6 +190,8 @@ export namespace inventory {
             this.listDriverValidNextStatuses = this.listDriverValidNextStatuses.bind(this)
             this.listDrivers = this.listDrivers.bind(this)
             this.listDriversPaginated = this.listDriversPaginated.bind(this)
+            this.listEventTypes = this.listEventTypes.bind(this)
+            this.listEventTypesPaginated = this.listEventTypesPaginated.bind(this)
             this.listFacilities = this.listFacilities.bind(this)
             this.listGates = this.listGates.bind(this)
             this.listGatesPaginated = this.listGatesPaginated.bind(this)
@@ -240,6 +245,7 @@ export namespace inventory {
             this.updateCompoundRouteSegments = this.updateCompoundRouteSegments.bind(this)
             this.updateCountry = this.updateCountry.bind(this)
             this.updateDriver = this.updateDriver.bind(this)
+            this.updateEventType = this.updateEventType.bind(this)
             this.updateGate = this.updateGate.bind(this)
             this.updateInstallation = this.updateInstallation.bind(this)
             this.updateInstallationProperties = this.updateInstallationProperties.bind(this)
@@ -406,6 +412,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/drivers`, JSON.stringify(params))
             return await resp.json() as drivers.Driver
+        }
+
+        /**
+         * Creates a new event type.
+         * @param params - The event type data to create
+         * @returns {Promise<EventType>} The created event type
+         * @throws {APIError} If the event type creation fails
+         */
+        public async createEventType(params: event_types.CreateEventTypePayload): Promise<event_types.EventType> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/event-types/create`, JSON.stringify(params))
+            return await resp.json() as event_types.EventType
         }
 
         /**
@@ -677,6 +695,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/drivers/${encodeURIComponent(id)}`)
             return await resp.json() as drivers.Driver
+        }
+
+        /**
+         * Deletes an event type by its ID.
+         * @param params - Object containing the event type ID
+         * @param params.id - The ID of the event type to delete
+         * @returns {Promise<EventType>} The deleted event type
+         * @throws {APIError} If the event type is not found or deletion fails
+         */
+        public async deleteEventType(id: number): Promise<event_types.EventType> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/event-types/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as event_types.EventType
         }
 
         /**
@@ -1017,6 +1048,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/drivers/${encodeURIComponent(id)}`)
             return await resp.json() as drivers.Driver
+        }
+
+        /**
+         * Retrieves an event type by its ID.
+         * @param params - Object containing the event type ID
+         * @param params.id - The ID of the event type to retrieve
+         * @returns {Promise<EventType>} The found event type
+         * @throws {APIError} If the event type is not found or retrieval fails
+         */
+        public async getEventType(id: number): Promise<event_types.EventType> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/event-types/${encodeURIComponent(id)}`)
+            return await resp.json() as event_types.EventType
         }
 
         /**
@@ -1454,6 +1498,30 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/drivers/list/paginated`, JSON.stringify(params))
             return await resp.json() as drivers.PaginatedListDriversResult
+        }
+
+        /**
+         * Retrieves all event types without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListEventTypesResult>} Unified response with data property containing array of event types
+         * @throws {APIError} If retrieval fails
+         */
+        public async listEventTypes(params: event_types.ListEventTypesQueryParams): Promise<event_types.ListEventTypesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/event-types/list/all`, JSON.stringify(params))
+            return await resp.json() as event_types.ListEventTypesResult
+        }
+
+        /**
+         * Retrieves event types with pagination (useful for tables).
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListEventTypesResult>} Unified paginated response with data and pagination properties
+         * @throws {APIError} If retrieval fails
+         */
+        public async listEventTypesPaginated(params: event_types.PaginatedListEventTypesQueryParams): Promise<event_types.PaginatedListEventTypesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/event-types/list`, JSON.stringify(params))
+            return await resp.json() as event_types.PaginatedListEventTypesResult
         }
 
         /**
@@ -2909,6 +2977,62 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/drivers/${encodeURIComponent(id)}`, JSON.stringify(params))
             return await resp.json() as drivers.Driver
+        }
+
+        /**
+         * Updates an existing event type.
+         * @param params - Object containing the event type ID and update data
+         * @param params.id - The ID of the event type to update
+         * @returns {Promise<EventType>} The updated event type
+         * @throws {APIError} If the event type is not found or update fails
+         */
+        public async updateEventType(id: number, params: {
+    /**
+     * Name of the event type (optional, but if provided must be non-empty)
+     * Must have at least 1 non-whitespace character
+     */
+    name?: string
+
+    /**
+     * Unique code for the event type (optional, but if provided must be non-empty)
+     * Must have at least 1 non-whitespace character
+     */
+    code?: string
+
+    /**
+     * Optional description of the event type
+     */
+    description?: string
+
+    /**
+     * Base time in minutes (optional, but if provided must be positive integer)
+     * @minimum 1
+     */
+    baseTime?: number
+
+    /**
+     * Whether this event type requires cost tracking
+     */
+    needsCost?: boolean
+
+    /**
+     * Whether this event type requires quantity tracking
+     */
+    needsQuantity?: boolean
+
+    /**
+     * Whether this event type is part of system integration
+     */
+    integration?: boolean
+
+    /**
+     * Whether this event type is active
+     */
+    active?: boolean
+}): Promise<event_types.EventType> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/event-types/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as event_types.EventType
         }
 
         /**
@@ -8198,6 +8322,167 @@ export namespace drivers {
     export interface PaginatedListDriversResult {
         pagination: shared.PaginationMeta
         data: DriverWithRelations[]
+    }
+}
+
+export namespace event_types {
+    export interface CreateEventTypePayload {
+        /**
+         * Name of the event type (required, non-empty)
+         * Must have at least 1 non-whitespace character
+         */
+        name: string
+
+        /**
+         * Unique code for the event type (required, non-empty)
+         * Must have at least 1 non-whitespace character
+         */
+        code: string
+
+        /**
+         * Optional description of the event type
+         */
+        description?: string
+
+        /**
+         * Base time in minutes (required, must be positive integer)
+         * @minimum 1
+         */
+        baseTime: number
+
+        /**
+         * Whether this event type requires cost tracking (defaults to false)
+         * @default false
+         */
+        needsCost?: boolean
+
+        /**
+         * Whether this event type requires quantity tracking (defaults to false)
+         * @default false
+         */
+        needsQuantity?: boolean
+
+        /**
+         * Whether this event type is part of system integration
+         * @default false
+         */
+        integration?: boolean
+
+        /**
+         * Whether this event type is active
+         * @default true
+         */
+        active?: boolean
+    }
+
+    export interface EventType {
+        /**
+         * Unique identifier for the event type
+         */
+        id: number
+
+        /**
+         * Name of the event type
+         */
+        name: string
+
+        /**
+         * Unique code for the event type
+         */
+        code: string
+
+        /**
+         * Optional description of the event type
+         */
+        description: string | null
+
+        /**
+         * Base time in minutes for this event type
+         */
+        baseTime: number
+
+        /**
+         * Whether this event type requires cost tracking
+         */
+        needsCost: boolean
+
+        /**
+         * Whether this event type requires quantity tracking
+         */
+        needsQuantity: boolean
+
+        /**
+         * Whether this is an integration event type
+         */
+        integration: boolean
+
+        /**
+         * Whether the event type is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the event type was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the event type was last updated
+         */
+        updatedAt: string | null
+    }
+
+    export interface ListEventTypesQueryParams {
+        orderBy?: {
+            field: "id" | "name" | "code" | "description" | "baseTime" | "needsCost" | "needsQuantity" | "integration" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            code?: string
+            description?: string | null
+            baseTime?: number
+            needsCost?: boolean
+            needsQuantity?: boolean
+            integration?: boolean
+            active?: boolean
+            createdAt?: string | null
+            updatedAt?: string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListEventTypesResult {
+        data: EventType[]
+    }
+
+    export interface PaginatedListEventTypesQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "code" | "description" | "baseTime" | "needsCost" | "needsQuantity" | "integration" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            code?: string
+            description?: string | null
+            baseTime?: number
+            needsCost?: boolean
+            needsQuantity?: boolean
+            integration?: boolean
+            active?: boolean
+            createdAt?: string | null
+            updatedAt?: string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListEventTypesResult {
+        pagination: shared.PaginationMeta
+        data: EventType[]
     }
 }
 

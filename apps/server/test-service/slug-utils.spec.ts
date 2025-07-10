@@ -49,5 +49,35 @@ describe('slug-utils', () => {
     it('should handle empty prefix', () => {
       expect(createSlug('Terminal', '')).toBe('terminal');
     });
+
+    it('should add suffix when provided', () => {
+      expect(createSlug('Terminal Norte', undefined, 'n')).toBe(
+        'terminal-norte-n',
+      );
+      expect(createSlug('Central Sur', undefined, 'sur')).toBe(
+        'central-sur-sur',
+      );
+    });
+
+    it('should handle suffixes with special characters', () => {
+      expect(createSlug('Central', undefined, 't.')).toBe('central-t');
+      expect(createSlug('Norte', undefined, 'T-1')).toBe('norte-t1');
+    });
+
+    it('should handle empty suffix', () => {
+      expect(createSlug('Terminal', undefined, '')).toBe('terminal');
+    });
+
+    it('should handle both prefix and suffix', () => {
+      expect(createSlug('Terminal Norte', 't', 'n')).toBe('t-terminal-norte-n');
+      expect(createSlug('Central Sur', 'term', 'sur')).toBe(
+        'term-central-sur-sur',
+      );
+    });
+
+    it('should handle prefix and suffix with special characters', () => {
+      expect(createSlug('Central', 't.', 's.')).toBe('t-central-s');
+      expect(createSlug('Norte', 'T-1', 'N-2')).toBe('t1-norte-n2');
+    });
   });
 });

@@ -31,6 +31,15 @@ export interface Node {
   /** Radius of coverage for the node in meters */
   radius: number;
 
+  /** URL-friendly identifier for the node */
+  slug: string;
+
+  /** Whether passengers can board at this node */
+  allowsBoarding: boolean;
+
+  /** Whether passengers can alight at this node */
+  allowsAlighting: boolean;
+
   /** Whether the node is active or not */
   active: boolean;
 
@@ -85,6 +94,18 @@ export interface CreateNodePayload {
   radius: number & Min<1>;
 
   /**
+   * Whether passengers can board at this node
+   * @default false
+   */
+  allowsBoarding?: boolean;
+
+  /**
+   * Whether passengers can alight at this node
+   * @default false
+   */
+  allowsAlighting?: boolean;
+
+  /**
    * Whether the node is active or not
    * @default true
    */
@@ -101,6 +122,12 @@ export interface CreateNodePayload {
    * Must be a positive number
    */
   populationId: number & Min<1>;
+
+  /**
+   * Optional ID of the installation associated with this node
+   * Must be a positive number if provided
+   */
+  installationId?: number & Min<1>;
 }
 
 /**
@@ -138,6 +165,16 @@ export interface UpdateNodePayload {
   radius?: number & Min<1>;
 
   /**
+   * Whether passengers can board at this node
+   */
+  allowsBoarding?: boolean;
+
+  /**
+   * Whether passengers can alight at this node
+   */
+  allowsAlighting?: boolean;
+
+  /**
    * Whether the node is active or not
    */
   active?: boolean;
@@ -153,6 +190,12 @@ export interface UpdateNodePayload {
    * Must be a positive number
    */
   populationId?: number & Min<1>;
+
+  /**
+   * Optional ID of the installation associated with this node
+   * Must be a positive number if provided
+   */
+  installationId?: number & Min<1>;
 }
 
 /**

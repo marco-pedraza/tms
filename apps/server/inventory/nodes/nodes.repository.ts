@@ -19,11 +19,11 @@ import type {
 export function createNodeRepository() {
   const baseRepository = createBaseRepository<
     Node,
-    CreateNodePayload,
-    UpdateNodePayload,
+    CreateNodePayload & { slug: string },
+    UpdateNodePayload & { slug?: string },
     typeof nodes
   >(db, nodes, 'Node', {
-    searchableFields: [nodes.code, nodes.name],
+    searchableFields: [nodes.code, nodes.name, nodes.slug],
     softDeleteEnabled: true,
   });
 

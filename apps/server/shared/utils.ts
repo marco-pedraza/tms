@@ -2,6 +2,10 @@
  * Shared utility functions
  */
 
+function normalizeString(str: string): string {
+  return str.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
 /**
  * Creates a URL-friendly slug from a string
  *
@@ -9,7 +13,11 @@
  * @param prefix - Optional prefix to add to the slug (will be separated by a hyphen)
  * @returns A normalized, URL-friendly slug in kebab-case format
  */
-export const createSlug = (source: string, prefix?: string): string => {
+export const createSlug = (
+  source: string,
+  prefix?: string,
+  suffix?: string,
+): string => {
   // Convert to lowercase
   let slug = source.toLowerCase();
 
@@ -31,8 +39,15 @@ export const createSlug = (source: string, prefix?: string): string => {
   // Add prefix if provided
   if (prefix) {
     // Convert prefix to lowercase and remove special characters and hyphens
-    const formattedPrefix = prefix.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const formattedPrefix = normalizeString(prefix);
     slug = `${formattedPrefix}-${slug}`;
+  }
+
+  // Add suffix if provided
+  if (suffix) {
+    // Convert suffix to lowercase and remove special characters and hyphens
+    const formattedSuffix = normalizeString(suffix);
+    slug = `${slug}-${formattedSuffix}`;
   }
 
   return slug;

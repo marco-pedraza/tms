@@ -24,6 +24,9 @@ export const nodes = pgTable(
     latitude: real('latitude').notNull(),
     longitude: real('longitude').notNull(),
     radius: real('radius').notNull(),
+    slug: text('slug').notNull(),
+    allowsBoarding: boolean('allows_boarding').notNull().default(false),
+    allowsAlighting: boolean('allows_alighting').notNull().default(false),
     active: boolean('active').notNull().default(true),
     cityId: integer('city_id')
       .notNull()
@@ -45,6 +48,7 @@ export const nodes = pgTable(
     index().on(table.deletedAt),
     uniqueIndex().on(table.installationId).where(isNull(table.deletedAt)),
     uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
+    uniqueIndex().on(table.slug).where(isNull(table.deletedAt)),
   ],
 );
 

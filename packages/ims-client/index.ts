@@ -3116,6 +3116,16 @@ export namespace inventory {
     radius?: number
 
     /**
+     * Whether passengers can board at this node
+     */
+    allowsBoarding?: boolean
+
+    /**
+     * Whether passengers can alight at this node
+     */
+    allowsAlighting?: boolean
+
+    /**
      * Whether the node is active or not
      */
     active?: boolean
@@ -3131,6 +3141,12 @@ export namespace inventory {
      * Must be a positive number
      */
     populationId?: number
+
+    /**
+     * Optional ID of the installation associated with this node
+     * Must be a positive number if provided
+     */
+    installationId?: number
 }): Promise<nodes.Node> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/nodes/${encodeURIComponent(id)}/update`, JSON.stringify(params))
@@ -8916,6 +8932,18 @@ export namespace nodes {
         radius: number
 
         /**
+         * Whether passengers can board at this node
+         * @default false
+         */
+        allowsBoarding?: boolean
+
+        /**
+         * Whether passengers can alight at this node
+         * @default false
+         */
+        allowsAlighting?: boolean
+
+        /**
          * Whether the node is active or not
          * @default true
          */
@@ -8932,11 +8960,17 @@ export namespace nodes {
          * Must be a positive number
          */
         populationId: number
+
+        /**
+         * Optional ID of the installation associated with this node
+         * Must be a positive number if provided
+         */
+        installationId?: number
     }
 
     export interface ListNodesQueryParams {
         orderBy?: {
-            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "active" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
+            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "slug" | "allowsBoarding" | "allowsAlighting" | "active" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -8946,6 +8980,9 @@ export namespace nodes {
             latitude?: number
             longitude?: number
             radius?: number
+            slug?: string
+            allowsBoarding?: boolean
+            allowsAlighting?: boolean
             active?: boolean
             cityId?: number
             populationId?: number
@@ -8990,6 +9027,21 @@ export namespace nodes {
          * Radius of coverage for the node in meters
          */
         radius: number
+
+        /**
+         * URL-friendly identifier for the node
+         */
+        slug: string
+
+        /**
+         * Whether passengers can board at this node
+         */
+        allowsBoarding: boolean
+
+        /**
+         * Whether passengers can alight at this node
+         */
+        allowsAlighting: boolean
 
         /**
          * Whether the node is active or not
@@ -9057,6 +9109,21 @@ export namespace nodes {
         radius: number
 
         /**
+         * URL-friendly identifier for the node
+         */
+        slug: string
+
+        /**
+         * Whether passengers can board at this node
+         */
+        allowsBoarding: boolean
+
+        /**
+         * Whether passengers can alight at this node
+         */
+        allowsAlighting: boolean
+
+        /**
          * Whether the node is active or not
          */
         active: boolean
@@ -9091,7 +9158,7 @@ export namespace nodes {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "active" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
+            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "slug" | "allowsBoarding" | "allowsAlighting" | "active" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -9101,6 +9168,9 @@ export namespace nodes {
             latitude?: number
             longitude?: number
             radius?: number
+            slug?: string
+            allowsBoarding?: boolean
+            allowsAlighting?: boolean
             active?: boolean
             cityId?: number
             populationId?: number

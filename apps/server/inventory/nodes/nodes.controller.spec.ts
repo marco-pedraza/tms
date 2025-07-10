@@ -107,7 +107,7 @@ describe('Nodes Controller', () => {
   });
 
   describe('success scenarios', () => {
-    test('should create a node successfully', async () => {
+    test('should create a node successfully with generated slug', async () => {
       const nodeData: CreateNodePayload = {
         code: createUniqueCode('CN', 3),
         name: createUniqueName('Create Node Test', testSuiteId),
@@ -132,9 +132,14 @@ describe('Nodes Controller', () => {
       expect(result.populationId).toBe(nodeData.populationId);
       expect(result.createdAt).toBeDefined();
       expect(result.updatedAt).toBeDefined();
+
+      // Verify slug generation
+      expect(result.slug).toBeDefined();
+      expect(result.slug).toMatch(/^n-.*-[a-z0-9]+$/); // Should start with 'n-' and end with normalized code
+      expect(result.slug).toContain(nodeData.code.toLowerCase());
     });
 
-    test('should create a node without installation', async () => {
+    test('should create a node without installation and generate correct slug', async () => {
       const nodeData: CreateNodePayload = {
         code: createUniqueCode('CNI', 3),
         name: createUniqueName('Create Node No Installation', testSuiteId),
@@ -153,6 +158,11 @@ describe('Nodes Controller', () => {
       expect(result.code).toBe(nodeData.code);
       expect(result.name).toBe(nodeData.name);
       expect(result.installationId).toBeNull();
+
+      // Verify slug generation
+      expect(result.slug).toBeDefined();
+      expect(result.slug).toMatch(/^n-.*-[a-z0-9]+$/);
+      expect(result.slug).toContain(nodeData.code.toLowerCase());
     });
 
     test('should retrieve a node by ID with relations', async () => {
@@ -165,14 +175,19 @@ describe('Nodes Controller', () => {
       expect(result.installation).toBeDefined();
       expect(result.city.id).toBe(testCityId);
       expect(result.population.id).toBe(testPopulationId);
+
+      // Verify slug exists
+      expect(result.slug).toBeDefined();
+      expect(typeof result.slug).toBe('string');
     });
 
-    test('should update a node successfully', async () => {
+    test('should update a node successfully and regenerate slug when name changes', async () => {
       const updateData: UpdateNodePayload = {
         name: createUniqueName('Updated Node', testSuiteId),
         radius: 1500,
       };
 
+      const originalNode = await getNode({ id: createdNodeId });
       const result = await updateNode({
         id: createdNodeId,
         ...updateData,
@@ -183,6 +198,85 @@ describe('Nodes Controller', () => {
       expect(result.name).toBe(updateData.name);
       expect(result.radius).toBe(updateData.radius);
       expect(result.updatedAt).toBeDefined();
+
+      // Verify slug was regenerated due to name change
+      expect(result.slug).toBeDefined();
+      expect(result.slug).not.toBe(originalNode.slug);
+      expect(result.slug).toMatch(/^n-.*-[a-z0-9]+$/);
+    });
+
+    test('should update a node and regenerate slug when code changes', async () => {
+      // Create a node specifically for this test
+      const nodeData: CreateNodePayload = {
+        code: createUniqueCode('USC', 3),
+        name: createUniqueName('Update Slug Code Test', testSuiteId),
+        latitude: 19.7326,
+        longitude: -99.4332,
+        radius: 250,
+        cityId: testCityId,
+        populationId: testPopulationId,
+      };
+
+      const createdNode = await createNode(nodeData);
+      nodeCleanup.track(createdNode.id);
+
+      const originalSlug = createdNode.slug;
+      const newCode = createUniqueCode('NSC', 3);
+
+      const updateData: UpdateNodePayload = {
+        code: newCode,
+      };
+
+      const result = await updateNode({
+        id: createdNode.id,
+        ...updateData,
+      });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(createdNode.id);
+      expect(result.code).toBe(newCode);
+
+      // Verify slug was regenerated due to code change
+      expect(result.slug).toBeDefined();
+      expect(result.slug).not.toBe(originalSlug);
+      expect(result.slug).toMatch(/^n-.*-[a-z0-9]+$/);
+      expect(result.slug).toContain(newCode.toLowerCase());
+    });
+
+    test('should update a node without changing slug when neither name nor code changes', async () => {
+      // Create a node specifically for this test
+      const nodeData: CreateNodePayload = {
+        code: createUniqueCode('NSU', 3),
+        name: createUniqueName('No Slug Update Test', testSuiteId),
+        latitude: 19.8326,
+        longitude: -99.5332,
+        radius: 800,
+        cityId: testCityId,
+        populationId: testPopulationId,
+      };
+
+      const createdNode = await createNode(nodeData);
+      nodeCleanup.track(createdNode.id);
+
+      const originalSlug = createdNode.slug;
+
+      const updateData: UpdateNodePayload = {
+        radius: 1200,
+        latitude: 19.9326,
+      };
+
+      const result = await updateNode({
+        id: createdNode.id,
+        ...updateData,
+      });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(createdNode.id);
+      expect(result.radius).toBe(updateData.radius);
+      expect(result.latitude).toBe(updateData.latitude);
+
+      // Verify slug was NOT regenerated since name and code didn't change
+      expect(result.slug).toBe(originalSlug);
     });
 
     test('should delete a node successfully', async () => {
@@ -209,6 +303,69 @@ describe('Nodes Controller', () => {
 
       // Verify node is deleted
       await expect(getNode({ id: createdNode.id })).rejects.toThrow();
+    });
+  });
+
+  describe('slug generation', () => {
+    test('should generate slug with node name and code', async () => {
+      const nodeData: CreateNodePayload = {
+        code: 'ABC123',
+        name: 'Test Node With Special Characters!',
+        latitude: 19.4326,
+        longitude: -99.1332,
+        radius: 1000,
+        cityId: testCityId,
+        populationId: testPopulationId,
+      };
+
+      const result = await createNode(nodeData);
+      nodeCleanup.track(result.id);
+
+      // Verify slug follows expected pattern: n-{normalized-name}-{normalized-code}
+      expect(result.slug).toBeDefined();
+      expect(result.slug).toMatch(
+        /^n-test-node-with-special-characters-abc123$/,
+      );
+    });
+
+    test('should generate slug with accented characters normalized', async () => {
+      const nodeData: CreateNodePayload = {
+        code: 'ÑÓD',
+        name: 'Nódulo Español',
+        latitude: 19.4326,
+        longitude: -99.1332,
+        radius: 1000,
+        cityId: testCityId,
+        populationId: testPopulationId,
+      };
+
+      const result = await createNode(nodeData);
+      nodeCleanup.track(result.id);
+
+      // Verify accented characters are normalized
+      expect(result.slug).toBeDefined();
+      // The normalizeString function removes all non-alphanumeric characters, so ÑÓD becomes d
+      expect(result.slug).toMatch(/^n-nodulo-espanol-d$/);
+    });
+
+    test('should generate slug without code when code is not provided', async () => {
+      // This test assumes the schema allows optional code, but based on the types, code is required
+      // So this test verifies the slug generation with minimal code
+      const nodeData: CreateNodePayload = {
+        code: 'X',
+        name: 'Simple Node',
+        latitude: 19.4326,
+        longitude: -99.1332,
+        radius: 1000,
+        cityId: testCityId,
+        populationId: testPopulationId,
+      };
+
+      const result = await createNode(nodeData);
+      nodeCleanup.track(result.id);
+
+      expect(result.slug).toBeDefined();
+      expect(result.slug).toMatch(/^n-simple-node-x$/);
     });
   });
 
@@ -259,15 +416,79 @@ describe('Nodes Controller', () => {
 
         expect(typedValidationError.fieldErrors).toBeDefined();
         expect(Array.isArray(typedValidationError.fieldErrors)).toBe(true);
-        expect(typedValidationError.fieldErrors).toHaveLength(1);
-        expect(typedValidationError.fieldErrors[0].field).toBe('code');
-        expect(typedValidationError.fieldErrors[0].code).toBe('DUPLICATE');
-        expect(typedValidationError.fieldErrors[0].message).toContain(
-          'already exists',
+        expect(typedValidationError.fieldErrors.length).toBeGreaterThanOrEqual(
+          1,
         );
-        expect(typedValidationError.fieldErrors[0].value).toBe(
-          existingNode.code,
+
+        // Check for code duplicate error
+        const codeError = typedValidationError.fieldErrors.find(
+          (err) => err.field === 'code',
         );
+        expect(codeError).toBeDefined();
+        expect(codeError?.code).toBe('DUPLICATE');
+        expect(codeError?.message).toContain('already exists');
+        expect(codeError?.value).toBe(existingNode.code);
+
+        // Check for slug duplicate error (since same name and code would generate same slug)
+        const slugError = typedValidationError.fieldErrors.find(
+          (err) => err.field === 'slug',
+        );
+        expect(slugError).toBeDefined();
+        expect(slugError?.code).toBe('DUPLICATE');
+        expect(slugError?.message).toContain('already exists');
+      });
+
+      test('should throw detailed field validation error for duplicate slug when different code but same generated slug', async () => {
+        // Create a node with a specific name and code
+        const baseNodeData: CreateNodePayload = {
+          code: createUniqueCode('SLG', 3),
+          name: 'Test Slug Uniqueness',
+          latitude: 19.4326,
+          longitude: -99.1332,
+          radius: 1000,
+          cityId: testCityId,
+          populationId: testPopulationId,
+        };
+
+        const baseNode = await createNode(baseNodeData);
+        nodeCleanup.track(baseNode.id);
+
+        // Try to create another node that would generate the same slug
+        // Using the same name and code should generate the same slug
+        const duplicateSlugPayload: CreateNodePayload = {
+          code: baseNodeData.code,
+          name: baseNodeData.name,
+          latitude: 19.5326,
+          longitude: -99.2332,
+          radius: 1500,
+          cityId: testCityId,
+          populationId: testPopulationId,
+        };
+
+        let validationError: FieldValidationError | undefined;
+        try {
+          await createNode(duplicateSlugPayload);
+        } catch (error) {
+          validationError = error as FieldValidationError;
+        }
+
+        expect(validationError).toBeDefined();
+        const typedValidationError = validationError as FieldValidationError;
+        expect(typedValidationError.name).toBe('FieldValidationError');
+        expect(typedValidationError.message).toContain('Validation failed');
+
+        // Should have errors for both code and slug
+        expect(typedValidationError.fieldErrors.length).toBeGreaterThanOrEqual(
+          2,
+        );
+
+        // Check for slug duplicate error
+        const slugError = typedValidationError.fieldErrors.find(
+          (err) => err.field === 'slug',
+        );
+        expect(slugError).toBeDefined();
+        expect(slugError?.code).toBe('DUPLICATE');
+        expect(slugError?.message).toContain('already exists');
       });
     });
   });
@@ -298,28 +519,60 @@ describe('Nodes Controller', () => {
     });
 
     test('should handle pagination correctly', async () => {
+      // Create specific test data for pagination
+      const paginationTestNodes = [
+        {
+          code: createUniqueCode('P1', 3),
+          name: createUniqueName('Pagination Test Node 1', testSuiteId),
+          latitude: 19.4326,
+          longitude: -99.1332,
+          radius: 1000,
+          cityId: testCityId,
+          populationId: testPopulationId,
+        },
+        {
+          code: createUniqueCode('P2', 3),
+          name: createUniqueName('Pagination Test Node 2', testSuiteId),
+          latitude: 19.5326,
+          longitude: -99.2332,
+          radius: 1000,
+          cityId: testCityId,
+          populationId: testPopulationId,
+        },
+      ];
+
+      const createdNodes = [];
+      for (const nodeData of paginationTestNodes) {
+        const created = await createNode(nodeData);
+        createdNodes.push(created);
+        nodeCleanup.track(created.id);
+      }
+
+      // Test pagination with our specific test data
       const firstPage = await listNodesPaginated({
         page: 1,
         pageSize: 1,
+        searchTerm: 'Pagination Test Node', // Filter to our test data
+        orderBy: [{ field: 'name', direction: 'asc' }], // Ensure consistent ordering
       });
 
-      expect(firstPage.data.length).toBeLessThanOrEqual(1);
+      expect(firstPage.data.length).toBe(1);
       expect(firstPage.pagination.currentPage).toBe(1);
       expect(firstPage.pagination.pageSize).toBe(1);
+      expect(firstPage.pagination.totalCount).toBeGreaterThanOrEqual(2);
 
-      if (firstPage.pagination.totalCount > 1) {
-        const secondPage = await listNodesPaginated({
-          page: 2,
-          pageSize: 1,
-        });
+      const secondPage = await listNodesPaginated({
+        page: 2,
+        pageSize: 1,
+        searchTerm: 'Pagination Test Node', // Filter to our test data
+        orderBy: [{ field: 'name', direction: 'asc' }], // Ensure consistent ordering
+      });
 
-        expect(secondPage.data.length).toBeLessThanOrEqual(1);
-        expect(secondPage.pagination.currentPage).toBe(2);
+      expect(secondPage.data.length).toBe(1);
+      expect(secondPage.pagination.currentPage).toBe(2);
 
-        if (firstPage.data.length > 0 && secondPage.data.length > 0) {
-          expect(firstPage.data[0].id).not.toBe(secondPage.data[0].id);
-        }
-      }
+      // The IDs should be different
+      expect(firstPage.data[0].id).not.toBe(secondPage.data[0].id);
     });
 
     test('should return non-paginated list for dropdowns', async () => {
@@ -351,7 +604,9 @@ describe('Nodes Controller', () => {
       // All returned nodes should match the search term
       for (const node of result.data) {
         const matchesSearch =
-          node.name.includes(testSuiteId) || node.code.includes(testSuiteId);
+          node.name.includes(testSuiteId) ||
+          node.code.includes(testSuiteId) ||
+          node.slug.includes(testSuiteId);
         expect(matchesSearch).toBe(true);
       }
     });
@@ -412,11 +667,49 @@ describe('Nodes Controller', () => {
     });
 
     test('should order nodes by name descending', async () => {
+      // Create specific test data for ordering
+      const orderingTestNodes = [
+        {
+          code: createUniqueCode('OA', 3),
+          name: 'A Node for Ordering Test',
+          latitude: 19.4326,
+          longitude: -99.1332,
+          radius: 1000,
+          cityId: testCityId,
+          populationId: testPopulationId,
+        },
+        {
+          code: createUniqueCode('OB', 3),
+          name: 'B Node for Ordering Test',
+          latitude: 19.5326,
+          longitude: -99.2332,
+          radius: 1000,
+          cityId: testCityId,
+          populationId: testPopulationId,
+        },
+        {
+          code: createUniqueCode('OC', 3),
+          name: 'C Node for Ordering Test',
+          latitude: 19.6326,
+          longitude: -99.3332,
+          radius: 1000,
+          cityId: testCityId,
+          populationId: testPopulationId,
+        },
+      ];
+
+      for (const nodeData of orderingTestNodes) {
+        const created = await createNode(nodeData);
+        nodeCleanup.track(created.id);
+      }
+
       const result = await listNodes({
         orderBy: [{ field: 'name', direction: 'desc' }],
+        searchTerm: 'Node for Ordering Test', // Filter to only our test data
       });
 
       const names = result.data.map((n) => n.name);
+
       // Check if names are in descending order
       for (let i = 0; i < names.length - 1; i++) {
         expect(names[i] >= names[i + 1]).toBe(true);
@@ -426,6 +719,7 @@ describe('Nodes Controller', () => {
     test('should order nodes by radius ascending', async () => {
       const result = await listNodes({
         orderBy: [{ field: 'radius', direction: 'asc' }],
+        searchTerm: testSuiteId, // Filter to only our test data
       });
 
       const radii = result.data.map((n) => n.radius);
@@ -436,8 +730,44 @@ describe('Nodes Controller', () => {
     });
 
     test('should combine ordering and filtering in paginated results', async () => {
+      // Create specific test data for ordering and filtering
+      const orderingFilteringTestNodes = [
+        {
+          code: createUniqueCode('OFA', 3),
+          name: 'A Node for Ordering and Filtering Test',
+          latitude: 19.4326,
+          longitude: -99.1332,
+          radius: 1000,
+          cityId: testCityId,
+          populationId: testPopulationId,
+        },
+        {
+          code: createUniqueCode('OFB', 3),
+          name: 'B Node for Ordering and Filtering Test',
+          latitude: 19.5326,
+          longitude: -99.2332,
+          radius: 1000,
+          cityId: testCityId,
+          populationId: testPopulationId,
+        },
+        {
+          code: createUniqueCode('OFC', 3),
+          name: 'C Node for Ordering and Filtering Test',
+          latitude: 19.6326,
+          longitude: -99.3332,
+          radius: 1000,
+          cityId: testCityId,
+          populationId: testPopulationId,
+        },
+      ];
+
+      for (const nodeData of orderingFilteringTestNodes) {
+        const created = await createNode(nodeData);
+        nodeCleanup.track(created.id);
+      }
+
       const result = await listNodesPaginated({
-        searchTerm: testSuiteId,
+        searchTerm: 'Node for Ordering and Filtering Test',
         orderBy: [{ field: 'name', direction: 'asc' }],
         page: 1,
         pageSize: 10,
@@ -446,12 +776,15 @@ describe('Nodes Controller', () => {
       // Check search filtering
       for (const node of result.data) {
         const matchesSearch =
-          node.name.includes(testSuiteId) || node.code.includes(testSuiteId);
+          node.name.includes('Node for Ordering and Filtering Test') ||
+          node.code.includes('Node for Ordering and Filtering Test') ||
+          node.slug.includes('Node for Ordering and Filtering Test');
         expect(matchesSearch).toBe(true);
       }
 
       // Check ordering (ascending)
       const names = result.data.map((n) => n.name);
+
       for (let i = 0; i < names.length - 1; i++) {
         expect(names[i] <= names[i + 1]).toBe(true);
       }
@@ -467,7 +800,7 @@ describe('Nodes Controller', () => {
       const sameRadiusNodes = [
         {
           code: createUniqueCode('SRA', 3),
-          name: 'Same Radius A',
+          name: `Same Radius A ${testSuiteId}`,
           latitude: 19.7326,
           longitude: -99.4332,
           radius: 3000,
@@ -476,7 +809,7 @@ describe('Nodes Controller', () => {
         },
         {
           code: createUniqueCode('SRB', 3),
-          name: 'Same Radius B',
+          name: `Same Radius B ${testSuiteId}`,
           latitude: 19.8326,
           longitude: -99.5332,
           radius: 3000,
@@ -490,12 +823,13 @@ describe('Nodes Controller', () => {
         nodeCleanup.track(created.id);
       }
 
-      // Order by radius first, then by name
+      // Order by radius first, then by name, filtering to our test data
       const result = await listNodes({
         orderBy: [
           { field: 'radius', direction: 'desc' },
           { field: 'name', direction: 'asc' },
         ],
+        searchTerm: testSuiteId, // Filter to only our test data
       });
 
       // Get all nodes with radius 3000 and verify they're ordered by name

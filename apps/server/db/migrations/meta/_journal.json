@@ -187,6 +187,13 @@
     {
       "idx": 26,
       "version": "7",
+      "when": 1751932081909,
+      "tag": "20250707234801_add_boarding_and_slug_fields_to_nodes",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
       "when": 1751998663021,
       "tag": "20250708181743_create_event_types_tables",
       "breakpoints": true

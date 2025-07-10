@@ -10,7 +10,7 @@ import type {
   UpdateNodePayload,
 } from './nodes.types';
 import { nodeRepository } from './nodes.repository';
-import { validateNode } from './nodes.domain';
+import { nodeDomain } from './nodes.domain';
 
 /**
  * Creates a new node.
@@ -21,8 +21,7 @@ import { validateNode } from './nodes.domain';
 export const createNode = api(
   { expose: true, method: 'POST', path: '/nodes/create' },
   async (params: CreateNodePayload): Promise<Node> => {
-    await validateNode(params);
-    return await nodeRepository.create(params);
+    return await nodeDomain.createNode(params);
   },
 );
 
@@ -90,8 +89,7 @@ export const updateNode = api(
     id,
     ...data
   }: UpdateNodePayload & { id: number }): Promise<Node> => {
-    await validateNode(data, id);
-    return await nodeRepository.update(id, data);
+    return await nodeDomain.updateNode(id, data);
   },
 );
 

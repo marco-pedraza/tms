@@ -1,15 +1,20 @@
 import { api } from 'encore.dev/api';
+import { installationSchemaRepository } from '../installation-schemas/installation-schemas.repository';
 import type {
   CreateInstallationTypePayload,
+  GetInstallationSchemaResult,
   InstallationType,
   ListInstallationTypesQueryParams,
   ListInstallationTypesResult,
   PaginatedListInstallationTypesQueryParams,
   PaginatedListInstallationTypesResult,
+  SyncInstallationSchemaPayload,
+  SyncInstallationSchemasResult,
   UpdateInstallationTypePayload,
 } from './installation-types.types';
 import { installationTypeRepository } from './installation-types.repository';
 import { validateInstallationType } from './installation-types.domain';
+import { installationTypeUseCases } from './installation-types.use-cases';
 
 /**
  * Creates a new installation type.
@@ -36,6 +41,53 @@ export const getInstallationType = api(
   { expose: true, method: 'GET', path: '/installation/types/:id' },
   async ({ id }: { id: number }): Promise<InstallationType> => {
     return await installationTypeRepository.findOne(id);
+  },
+);
+
+/**
+ * Retrieves the schema definition for a specific installation type.
+ * @param params - Object containing the installation type ID
+ * @param params.id - The ID of the installation type to get schema for
+ * @returns {Promise<GetInstallationSchemaResult>} Object containing array of schema definitions for the installation type
+ * @throws {APIError} If the installation type is not found or retrieval fails
+ */
+export const getInstallationTypeSchema = api(
+  { expose: true, method: 'GET', path: '/installation/types/:id/schema' },
+  async ({ id }: { id: number }): Promise<GetInstallationSchemaResult> => {
+    // First validate that the installation type exists
+    await installationTypeRepository.findOne(id);
+
+    // Get all schemas for this installation type
+    const data =
+      await installationSchemaRepository.findByInstallationTypeId(id);
+
+    return { data };
+  },
+);
+
+/**
+ * Synchronizes installation schemas for a specific installation type.
+ * Creates, updates, or deletes schemas based on the provided data.
+ * @param params - Object containing the installation type ID and schemas to sync
+ * @param params.id - The ID of the installation type to sync schemas for
+ * @param params.schemas - Array of schema definitions to synchronize
+ * @returns {Promise<SyncInstallationSchemasResult>} Object containing array of synchronized installation schemas
+ * @throws {APIError} If the installation type is not found or synchronization fails
+ */
+export const syncInstallationSchemas = api(
+  { expose: true, method: 'PUT', path: '/installation/types/:id/schemas' },
+  async ({
+    id,
+    schemas,
+  }: {
+    id: number;
+    schemas: SyncInstallationSchemaPayload[];
+  }): Promise<SyncInstallationSchemasResult> => {
+    const data = await installationTypeUseCases.syncInstallationSchemas(
+      id,
+      schemas,
+    );
+    return { data };
   },
 );
 

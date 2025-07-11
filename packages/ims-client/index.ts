@@ -160,6 +160,7 @@ export namespace inventory {
             this.getInstallation = this.getInstallation.bind(this)
             this.getInstallationSchema = this.getInstallationSchema.bind(this)
             this.getInstallationType = this.getInstallationType.bind(this)
+            this.getInstallationTypeSchema = this.getInstallationTypeSchema.bind(this)
             this.getNode = this.getNode.bind(this)
             this.getPathway = this.getPathway.bind(this)
             this.getPopulation = this.getPopulation.bind(this)
@@ -235,6 +236,7 @@ export namespace inventory {
             this.searchTerminalsPaginated = this.searchTerminalsPaginated.bind(this)
             this.searchTransporters = this.searchTransporters.bind(this)
             this.searchTransportersPaginated = this.searchTransportersPaginated.bind(this)
+            this.syncInstallationSchemas = this.syncInstallationSchemas.bind(this)
             this.updateBus = this.updateBus.bind(this)
             this.updateBusDiagramModel = this.updateBusDiagramModel.bind(this)
             this.updateBusDiagramModelZone = this.updateBusDiagramModelZone.bind(this)
@@ -1126,6 +1128,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/installation/types/${encodeURIComponent(id)}`)
             return await resp.json() as installation_types.InstallationType
+        }
+
+        /**
+         * Retrieves the schema definition for a specific installation type.
+         * @param params - Object containing the installation type ID
+         * @param params.id - The ID of the installation type to get schema for
+         * @returns {Promise<GetInstallationSchemaResult>} Object containing array of schema definitions for the installation type
+         * @throws {APIError} If the installation type is not found or retrieval fails
+         */
+        public async getInstallationTypeSchema(id: number): Promise<installation_types.GetInstallationSchemaResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/installation/types/${encodeURIComponent(id)}/schema`)
+            return await resp.json() as installation_types.GetInstallationSchemaResult
         }
 
         /**
@@ -2288,6 +2303,23 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/transporters/search/paginated`, JSON.stringify(params))
             return await resp.json() as transporters.PaginatedTransportersWithCity
+        }
+
+        /**
+         * Synchronizes installation schemas for a specific installation type.
+         * Creates, updates, or deletes schemas based on the provided data.
+         * @param params - Object containing the installation type ID and schemas to sync
+         * @param params.id - The ID of the installation type to sync schemas for
+         * @param params.schemas - Array of schema definitions to synchronize
+         * @returns {Promise<SyncInstallationSchemasResult>} Object containing array of synchronized installation schemas
+         * @throws {APIError} If the installation type is not found or synchronization fails
+         */
+        public async syncInstallationSchemas(id: number, params: {
+    schemas: installation_types.SyncInstallationSchemaPayload[]
+}): Promise<installation_types.SyncInstallationSchemasResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/installation/types/${encodeURIComponent(id)}/schemas`, JSON.stringify(params))
+            return await resp.json() as installation_types.SyncInstallationSchemasResult
         }
 
         /**
@@ -8835,6 +8867,13 @@ export namespace installation_types {
         description?: string | null
     }
 
+    export interface GetInstallationSchemaResult {
+        /**
+         * Array of installation schemas
+         */
+        data: installation_schemas.InstallationSchema[]
+    }
+
     export interface InstallationType {
         /**
          * Unique identifier for the installation type
@@ -8901,6 +8940,28 @@ export namespace installation_types {
     export interface PaginatedListInstallationTypesResult {
         pagination: shared.PaginationMeta
         data: InstallationType[]
+    }
+
+    export interface SyncInstallationSchemaPayload {
+        /**
+         * Optional ID for existing schemas (null/undefined for new schemas)
+         * If provided, the schema will be updated; if not, a new schema will be created
+         */
+        id?: number | null
+
+        name: string
+        label: string
+        description?: string
+        type: installation_schemas.InstallationSchemaFieldType
+        options?: installation_schemas.InstallationSchemaOptions
+        required?: boolean
+    }
+
+    export interface SyncInstallationSchemasResult {
+        /**
+         * Array of synchronized installation schemas
+         */
+        data: installation_schemas.InstallationSchema[]
     }
 }
 

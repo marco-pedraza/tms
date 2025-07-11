@@ -1,6 +1,7 @@
 import { FieldErrorCollector } from '@repo/base-repo';
 import { standardFieldErrors } from '../../shared/errors';
 import { cityRepository } from '../cities/cities.repository';
+import { cities } from '../cities/cities.schema';
 import { populations } from './populations.schema';
 import type {
   AssignCitiesPayload,
@@ -71,13 +72,41 @@ export async function validatePopulation(
   validator.throwIfErrors();
 }
 
+export async function validateCityAssignment(
+  populationId: number,
+  cityId: number,
+): Promise<void> {
+  const collector = new FieldErrorCollector();
+  // Validate population exists
+  const populationExists = await populationRepository.existsBy(
+    populations.id,
+    populationId,
+  );
+  collector.addIf(
+    !populationExists,
+    'populationId',
+    'NOT_FOUND',
+    `Population with id ${populationId} not found`,
+    populationId,
+  );
+  // Validate city exists
+  const cityExists = await cityRepository.existsBy(cities.id, cityId);
+  collector.addIf(
+    !cityExists,
+    'cityId',
+    'NOT_FOUND',
+    `City with id ${cityId} not found`,
+    cityId,
+  );
+  collector.throwIfErrors();
+}
 /**
  * Validates city assignment data for a population
  * @param populationId - The ID of the population to validate
  * @param data - The assignment data containing city IDs
  * @throws {FieldValidationError} If there are validation violations
  */
-export async function validateCityAssignment(
+export async function validateCityListAssignment(
   populationId: number,
   data: AssignCitiesPayload,
 ): Promise<void> {

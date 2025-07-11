@@ -120,3 +120,10 @@ export type PaginatedListPopulationsResult =
  */
 export type ListAvailableCitiesResult =
   ListQueryResult<CityWithStateAndCountry>;
+
+/**
+ * Response for finding a population by its assigned city
+ */
+export interface FindPopulationByAssignedCityResult {
+  data?: PopulationWithRelations;
+}

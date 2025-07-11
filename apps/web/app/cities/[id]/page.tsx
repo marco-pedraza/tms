@@ -12,6 +12,7 @@ import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import useQueryPopulationByAssignedCity from '@/populations/hooks/use-query-population-by-assigned-city';
 import routes from '@/services/routes';
 import createGoogleMapsLink from '@/utils/create-google-maps-link';
 
@@ -20,6 +21,10 @@ export default function CityDetailsPage() {
   const tCommon = useTranslations('common');
   const { cityId, isValidId } = useCityDetailsParams();
   const { data: city, isLoading } = useQueryCity({
+    cityId,
+    enabled: isValidId,
+  });
+  const { data: population } = useQueryPopulationByAssignedCity({
     cityId,
     enabled: isValidId,
   });
@@ -73,6 +78,25 @@ export default function CityDetailsPage() {
 
               <dt className="font-medium">{tCities('fields.state')}:</dt>
               <dd>{city.state.name}</dd>
+
+              <dt className="font-medium">{tCities('fields.population')}:</dt>
+              <dd>
+                {population?.data ? (
+                  <a
+                    href={routes.populations.getDetailsRoute(
+                      population.data.id.toString(),
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center hover:text-primary"
+                  >
+                    {population.data.name}
+                    <ExternalLink className="ml-1 h-4 w-4" />
+                  </a>
+                ) : (
+                  '-'
+                )}
+              </dd>
 
               <dt className="font-medium">{tCities('fields.timezone')}:</dt>
               <dd>{city.timezone}</dd>

@@ -264,7 +264,8 @@
       "state": "Estado",
       "timezone": "Zona Horaria",
       "latitude": "Latitud",
-      "longitude": "Longitud"
+      "longitude": "Longitud",
+      "population": "Población"
     },
     "form": {
       "title": "Información de la ciudad",
@@ -272,12 +273,14 @@
         "name": "Ej: Guadalajara",
         "code": "Ej: GDL",
         "state": "Selecciona un estado",
+        "population": "Selecciona una población",
         "timezone": "Ej: America/Mexico_City"
       },
       "codeHelp": "Usa un código de 2-5 letras para identificar la ciudad",
       "timezoneHelp": "Usa el formato IANA (Ej: America/Mexico_City)",
       "state": "Estado",
-      "timezone": "Zona Horaria"
+      "timezone": "Zona Horaria",
+      "population": "Población"
     },
     "details": {
       "description": "Detalles de la ciudad"
@@ -311,6 +314,11 @@
         "loading": "Eliminando ciudad...",
         "success": "Ciudad eliminada correctamente",
         "error": "No pudimos eliminar la ciudad"
+      },
+      "assignPopulation": {
+        "loading": "Asignando población...",
+        "success": "Población asignada correctamente",
+        "error": "No pudimos asignar la población"
       }
     }
   },

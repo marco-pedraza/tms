@@ -173,6 +173,64 @@ export function createPopulationUseCases() {
     };
   }
 
+  async function assignCityToPopulation(
+    populationId: number,
+    cityId: number,
+  ): Promise<PopulationWithRelations> {
+    await populationRepo.transaction(async (txPopRepo, tx) => {
+      // Get currently assigned cities for this population
+      const currentAssignments = await tx
+        .select({ cityId: populationCities.cityId })
+        .from(populationCities)
+        .where(eq(populationCities.populationId, populationId));
+
+      const cityIsAlreadyAssignedToPopulation = currentAssignments.some(
+        (assignment) => assignment.cityId === cityId,
+      );
+      if (cityIsAlreadyAssignedToPopulation) {
+        return;
+      }
+      // Check if the city is already assigned to another population
+      const cityIsAlreadyAssignedToAnotherPopulation = await tx
+        .select({ populationId: populationCities.populationId })
+        .from(populationCities)
+        .where(eq(populationCities.cityId, cityId));
+      if (cityIsAlreadyAssignedToAnotherPopulation.length > 0) {
+        await tx
+          .delete(populationCities)
+          .where(
+            and(
+              eq(populationCities.cityId, cityId),
+              not(eq(populationCities.populationId, populationId)),
+            ),
+          );
+      }
+      // Assign the city to the population
+      await tx.insert(populationCities).values({
+        populationId,
+        cityId,
+      });
+      await updatePopulationTimestamp(tx, populationId);
+    });
+    return await populationRepo.findOneWithRelations(populationId);
+  }
+
+  async function findPopulationByAssignedCity(
+    cityId: number,
+  ): Promise<PopulationWithRelations | undefined> {
+    // Get current assignments for the city
+    const currentAssignments = await db
+      .select({ populationId: populationCities.populationId })
+      .from(populationCities)
+      .where(eq(populationCities.cityId, cityId));
+
+    const populationId = currentAssignments[0]?.populationId;
+    if (!populationId) {
+      return undefined;
+    }
+    return await populationRepo.findOneWithRelations(populationId);
+  }
+
   /**
    * Gets cities assigned to a specific population
    * @param populationId - The ID of the population
@@ -198,6 +256,8 @@ export function createPopulationUseCases() {
   return {
     assignCities,
     findAvailableCities,
+    assignCityToPopulation,
+    findPopulationByAssignedCity,
     getPopulationCities,
   };
 }

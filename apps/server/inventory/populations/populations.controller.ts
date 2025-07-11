@@ -3,6 +3,7 @@ import type { ListCitiesResult } from '../cities/cities.types';
 import type {
   AssignCitiesPayload,
   CreatePopulationPayload,
+  FindPopulationByAssignedCityResult,
   ListAvailableCitiesResult,
   ListPopulationsQueryParams,
   ListPopulationsResult,
@@ -15,6 +16,7 @@ import type {
 import { populationRepository } from './populations.repository';
 import {
   validateCityAssignment,
+  validateCityListAssignment,
   validatePopulation,
 } from './populations.domain';
 import { populationUseCases } from './populations.use-cases';
@@ -119,8 +121,34 @@ export const assignCitiesToPopulation = api(
   }: AssignCitiesPayload & {
     id: number;
   }): Promise<PopulationWithRelations> => {
-    await validateCityAssignment(id, data);
+    await validateCityListAssignment(id, data);
     return await populationUseCases.assignCities(id, data);
+  },
+);
+
+/**
+ * Assigns a city to a population.
+ * @param params - Object containing the population ID and city ID
+ * @param params.id - The ID of the population to assign the city to
+ * @param params.cityId - The ID of the city to assign to the population
+ * @returns {Promise<Population>} The updated population
+ * @throws {APIError} If the population or city is not found or assignment fails
+ */
+export const assignCityToPopulation = api(
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/populations/:id/cities/assign/one',
+  },
+  async ({
+    id,
+    cityId,
+  }: {
+    id: number;
+    cityId: number;
+  }): Promise<PopulationWithRelations> => {
+    await validateCityAssignment(id, cityId);
+    return await populationUseCases.assignCityToPopulation(id, cityId);
   },
 );
 
@@ -170,5 +198,26 @@ export const deletePopulation = api(
   { expose: true, method: 'DELETE', path: '/populations/:id/delete' },
   async ({ id }: { id: number }): Promise<Population> => {
     return await populationRepository.delete(id);
+  },
+);
+
+/**
+ * Finds a population by its assigned city.
+ * @param params - Object containing the city ID
+ * @param params.cityId - The ID of the city to find the population by
+ * @returns {Promise<FindPopulationByAssignedCityResult>} The found population with related cities or undefined if no population is assigned to the city
+ * @throws {APIError} If the population is not found or retrieval fails
+ */
+export const findPopulationByAssignedCity = api(
+  { expose: true, method: 'GET', path: '/populations/find/:cityId' },
+  async (params: {
+    cityId: number;
+  }): Promise<FindPopulationByAssignedCityResult> => {
+    const { cityId } = params;
+    const population =
+      await populationUseCases.findPopulationByAssignedCity(cityId);
+    return {
+      data: population,
+    };
   },
 );

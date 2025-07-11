@@ -7,6 +7,7 @@ import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
+import useQueryAllPopulations from '@/populations/hooks/use-query-all-populations';
 import useQueryAllStates from '@/states/hooks/use-query-all-states';
 import { UseTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
@@ -24,6 +25,10 @@ const createCitySchema = (tCommon: UseTranslationsResult) =>
       .string()
       .min(1, tCommon('validations.required'))
       .transform((val) => parseInt(val)),
+    populationId: z
+      .string()
+      .optional()
+      .transform((val) => (val ? parseInt(val) : undefined)),
     timezone: z.string().min(1, { message: tCommon('validations.required') }),
     active: z.boolean(),
     latitude: z
@@ -76,6 +81,7 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
         stateId: defaultValues.stateId?.toString() || '',
         latitude: defaultValues.latitude?.toString() || '',
         longitude: defaultValues.longitude?.toString() || '',
+        populationId: defaultValues.populationId?.toString() || '',
       }
     : undefined;
   const citySchema = createCitySchema(tCommon);
@@ -87,6 +93,7 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
       active: true,
       latitude: '',
       longitude: '',
+      populationId: '',
     },
     validators: {
       onChange: citySchema,
@@ -110,6 +117,7 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
   });
   const { data: states } = useQueryAllStates();
   const { data: timezones } = useQueryAllTimezones();
+  const { data: populations } = useQueryAllPopulations();
 
   return (
     <Form onSubmit={form.handleSubmit}>
@@ -134,6 +142,21 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
                 states?.data?.map((state) => ({
                   id: state.id.toString(),
                   name: state.name,
+                })) ?? []
+              }
+            />
+          )}
+        </form.AppField>
+
+        <form.AppField name="populationId">
+          {(field) => (
+            <field.SelectInput
+              label={tCities('form.population')}
+              placeholder={tCities('form.placeholders.population')}
+              items={
+                populations?.data?.map((population) => ({
+                  id: population.id.toString(),
+                  name: population.name,
                 })) ?? []
               }
             />

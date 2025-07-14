@@ -137,7 +137,8 @@
         "states": "Estados",
         "cities": "Ciudades",
         "populations": "Poblaciones",
-        "nodes": "Nodos"
+        "nodes": "Nodos",
+        "installationTypes": "Tipos de Instalación"
       },
       "terminals": "Terminales",
       "transporters": "Transportistas",
@@ -742,6 +743,55 @@
         "loading": "Eliminando nodo...",
         "success": "Nodo eliminado correctamente",
         "error": "No pudimos eliminar el nodo"
+      }
+    }
+  },
+  "installationTypes": {
+    "title": "Tipos de Instalación",
+    "description": "Administra información de tipos de instalación para el Sistema de Inventario",
+    "actions": {
+      "create": "Crear Tipo de Instalación",
+      "update": "Actualizar Tipo de Instalación",
+      "backToList": "Volver a tipos de instalación"
+    },
+    "fields": {
+      "description": "Descripción"
+    },
+    "form": {
+      "title": "Información del tipo de instalación",
+      "placeholders": {
+        "name": "Ej: Terminal de Autobuses",
+        "description": "Ej: Instalación para el embarque y desembarque de pasajeros"
+      }
+    },
+    "details": {
+      "description": "Detalles del tipo de instalación"
+    },
+    "edit": {
+      "title": "Editar Tipo de Instalación",
+      "description": "Actualiza la información del tipo de instalación"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Tipo de instalación no encontrado",
+        "description": "No pudimos encontrar el tipo de instalación que buscas. Es posible que haya sido eliminado o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando tipo de instalación...",
+        "success": "Tipo de instalación creado correctamente",
+        "error": "No pudimos crear el tipo de instalación"
+      },
+      "update": {
+        "loading": "Actualizando tipo de instalación...",
+        "success": "Tipo de instalación actualizado correctamente",
+        "error": "No pudimos actualizar el tipo de instalación"
+      },
+      "delete": {
+        "loading": "Eliminando tipo de instalación...",
+        "success": "Tipo de instalación eliminado correctamente",
+        "error": "No pudimos eliminar el tipo de instalación"
       }
     }
   }

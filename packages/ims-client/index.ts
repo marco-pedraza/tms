@@ -3255,9 +3255,21 @@ export namespace inventory {
     name?: string
 
     /**
+     * Code of the installation type
+     * Must have at least 1 non-whitespace character
+     */
+    code?: string
+
+    /**
      * Optional description of the installation type
      */
     description?: string | null
+
+    /**
+     * Whether the installation type is active
+     * @default true
+     */
+    active?: boolean
 }): Promise<installation_types.InstallationType> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/installation/types/${encodeURIComponent(id)}/update`, JSON.stringify(params))
@@ -8893,9 +8905,21 @@ export namespace installation_types {
         name: string
 
         /**
+         * Code of the installation type
+         * Must have at least 1 non-whitespace character
+         */
+        code: string
+
+        /**
          * Optional description of the installation type
          */
         description?: string | null
+
+        /**
+         * Whether the installation type is active
+         * @default true
+         */
+        active?: boolean
     }
 
     export interface GetInstallationSchemaResult {
@@ -8917,9 +8941,19 @@ export namespace installation_types {
         name: string
 
         /**
+         * Code of the installation type
+         */
+        code: string
+
+        /**
          * Optional description of the installation type
          */
         description: string | null
+
+        /**
+         * Whether the installation type is active
+         */
+        active: boolean
 
         /**
          * Timestamp when the installation type record was created
@@ -8934,13 +8968,15 @@ export namespace installation_types {
 
     export interface ListInstallationTypesQueryParams {
         orderBy?: {
-            field: "id" | "name" | "description" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "code" | "description" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
             name?: string
+            code?: string
             description?: string | null
+            active?: boolean
             createdAt?: string | null
             updatedAt?: string | null
         }
@@ -8955,13 +8991,15 @@ export namespace installation_types {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "description" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "code" | "description" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
             name?: string
+            code?: string
             description?: string | null
+            active?: boolean
             createdAt?: string | null
             updatedAt?: string | null
         }

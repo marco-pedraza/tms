@@ -26,6 +26,7 @@ describe('Installation Properties Use Cases', () => {
   // Test data
   const testInstallationType = {
     name: 'Test Installation Type for Properties',
+    code: 'TIT',
     description: 'Test installation type for property validation testing',
   };
 

@@ -2,6 +2,7 @@ import { afterAll, describe, expect, test } from 'vitest';
 import {
   createCleanupHelper,
   createTestSuiteId,
+  createUniqueCode,
   createUniqueName,
 } from '../../tests/shared/test-utils';
 import { InstallationSchemaFieldType } from '../installation-schemas/installation-schemas.types';
@@ -32,6 +33,7 @@ describe('Installation Types Controller', () => {
   // Test data and setup
   const testInstallationType = {
     name: createUniqueName('Test Installation Type', testSuiteId),
+    code: createUniqueCode('TEST', 3),
     description: 'Test installation type description',
   };
 
@@ -43,11 +45,14 @@ describe('Installation Types Controller', () => {
    */
   async function createTestInstallationType(
     baseName = 'Test Installation Type',
+    code = 'TEST',
     options: Partial<CreateInstallationTypePayload> = {},
   ) {
     const uniqueName = createUniqueName(baseName, testSuiteId);
+    const uniqueCode = createUniqueCode(code, 3);
     const data = {
       name: uniqueName,
+      code: uniqueCode,
       description: 'Test installation type description',
       ...options,
     };
@@ -114,6 +119,7 @@ describe('Installation Types Controller', () => {
       // Create an installation type specifically for deletion test
       const installationTypeToDeleteId = await createTestInstallationType(
         'Installation Type To Delete',
+        'ITD',
         {
           description: 'Installation type to be deleted',
         },
@@ -191,6 +197,7 @@ describe('Installation Types Controller', () => {
       // Create a unique installation type for search testing
       const searchableInstallationTypeId = await createTestInstallationType(
         'Searchable Test Installation Type',
+        'STT',
         {
           description: 'Searchable description',
         },

@@ -31,6 +31,13 @@ export async function validateInstallationTypeUniqueness(
     });
   }
 
+  if (payload.code) {
+    fieldsToCheck.push({
+      field: installationTypes.code,
+      value: payload.code,
+    });
+  }
+
   // If no fields to check, return early
   if (fieldsToCheck.length === 0) {
     return collector;

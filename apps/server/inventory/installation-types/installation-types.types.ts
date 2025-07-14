@@ -21,8 +21,14 @@ export interface InstallationType {
   /** Name of the installation type */
   name: string;
 
+  /** Code of the installation type */
+  code: string;
+
   /** Optional description of the installation type */
   description: string | null;
+
+  /** Whether the installation type is active */
+  active: boolean;
 
   /** Timestamp when the installation type record was created */
   createdAt: Date | null;
@@ -42,9 +48,21 @@ export interface CreateInstallationTypePayload {
   name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
+   * Code of the installation type
+   * Must have at least 1 non-whitespace character
+   */
+  code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
    * Optional description of the installation type
    */
   description?: string | null;
+
+  /**
+   * Whether the installation type is active
+   * @default true
+   */
+  active?: boolean;
 }
 
 /**
@@ -58,9 +76,21 @@ export interface UpdateInstallationTypePayload {
   name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
+   * Code of the installation type
+   * Must have at least 1 non-whitespace character
+   */
+  code?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
    * Optional description of the installation type
    */
   description?: string | null;
+
+  /**
+   * Whether the installation type is active
+   * @default true
+   */
+  active?: boolean;
 }
 
 /**

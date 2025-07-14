@@ -60,6 +60,7 @@ describe('Installations Controller', () => {
     // Create test installation type first
     const testInstallationType = await createInstallationType({
       name: createUniqueName('Test Installation Type', testSuiteId),
+      code: createUniqueCode('TIT', 3),
       description: 'Test installation type for installations tests',
     });
     testInstallationTypeId = testInstallationType.id;

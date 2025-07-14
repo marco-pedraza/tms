@@ -19,6 +19,7 @@ describe('Installation Schemas Controller', () => {
   // Test data
   const testInstallationType = {
     name: 'Test Installation Type for Schema',
+    code: 'TIT',
     description: 'Test installation type for schema testing',
   };
 
@@ -262,8 +263,8 @@ describe('Installation Schemas Controller', () => {
       // Create a second installation type
       const secondInstallationType = {
         name: 'Second Test Type',
+        code: 'STIT',
         description: 'Second test installation type',
-        isActive: true,
       };
       const secondInstallationTypeResponse = await createInstallationType(
         secondInstallationType,

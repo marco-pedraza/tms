@@ -197,6 +197,13 @@
       "when": 1751998663021,
       "tag": "20250708181743_create_event_types_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1752197299692,
+      "tag": "20250711012819_add_code_and_active_to_installation_type",
+      "breakpoints": true
     }
   ]
 }

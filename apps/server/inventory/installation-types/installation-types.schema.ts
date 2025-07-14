@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   pgTable,
   serial,
@@ -14,7 +15,9 @@ export const installationTypes = pgTable(
   {
     id: serial('id').primaryKey(),
     name: text('name').notNull(),
+    code: text('code').notNull(),
     description: text('description'),
+    active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
     deletedAt: timestamp('deleted_at'),
@@ -22,6 +25,7 @@ export const installationTypes = pgTable(
   (table) => [
     index().on(table.deletedAt),
     uniqueIndex().on(table.name).where(isNull(table.deletedAt)),
+    uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
   ],
 );
 

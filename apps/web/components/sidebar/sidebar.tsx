@@ -11,6 +11,7 @@ import {
   Map,
   MapPin,
   Package,
+  Settings,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import routes from '@/services/routes';
@@ -63,6 +64,11 @@ export default function Sidebar() {
             href={routes.nodes.index}
             icon={Building2}
             label={tSidebar('inventory.localities.nodes')}
+          />
+          <SidebarLink
+            href={routes.installationTypes.index}
+            icon={Settings}
+            label={tSidebar('inventory.localities.installationTypes')}
           />
         </SidebarSection>
 

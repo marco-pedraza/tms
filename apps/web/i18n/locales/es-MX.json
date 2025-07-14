@@ -124,7 +124,8 @@
       "state": "Estado",
       "city": "Ciudad",
       "population": "Población",
-      "node": "Nodo"
+      "node": "Nodo",
+      "installationType": "Tipo de Instalación"
     }
   },
   "sidebar": {
@@ -761,6 +762,7 @@
       "title": "Información del tipo de instalación",
       "placeholders": {
         "name": "Ej: Terminal de Autobuses",
+        "code": "Ej: TRL",
         "description": "Ej: Instalación para el embarque y desembarque de pasajeros"
       }
     },

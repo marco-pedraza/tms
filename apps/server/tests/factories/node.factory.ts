@@ -16,6 +16,7 @@ export const nodeFactory = defineFactory({
       id,
       code: `NODE${String(sequence).padStart(3, '0')}`,
       name: `Node ${id}`,
+      slug: `n-node-${id}`,
       latitude: faker.location.latitude(),
       longitude: faker.location.longitude(),
       radius: faker.number.float({ min: 0.5, max: 10.0, fractionDigits: 2 }),

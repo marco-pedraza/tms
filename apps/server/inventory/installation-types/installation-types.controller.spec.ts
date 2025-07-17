@@ -10,6 +10,7 @@ import {
   deleteEventType,
 } from '../event-types/event-types.controller';
 import type { CreateEventTypePayload } from '../event-types/event-types.types';
+import { installationSchemaRepository } from '../installation-schemas/installation-schemas.repository';
 import { InstallationSchemaFieldType } from '../installation-schemas/installation-schemas.types';
 import type {
   CreateInstallationTypePayload,
@@ -31,12 +32,31 @@ describe('Installation Types Controller', () => {
   const testSuiteId = createTestSuiteId('installation-types-controller');
 
   // Cleanup helpers using test-utils
-  const installationTypeCleanup = createCleanupHelper(
-    deleteInstallationType,
-    'installation type',
-  );
+  const installationTypeCleanup = createCleanupHelper(async ({ id }) => {
+    // First, delete all schemas for this installation type
+    try {
+      const schemas =
+        await installationSchemaRepository.findByInstallationTypeId(id);
+      for (const schema of schemas) {
+        await installationSchemaRepository.delete(schema.id);
+      }
+    } catch (error) {
+      console.log(
+        `Error cleaning up schemas for installation type ${id}:`,
+        error,
+      );
+    }
+
+    // Then delete the installation type
+    return await deleteInstallationType({ id });
+  }, 'installation type');
 
   const eventTypeCleanup = createCleanupHelper(deleteEventType, 'event type');
+
+  const installationSchemaCleanup = createCleanupHelper(
+    ({ id }) => installationSchemaRepository.delete(id),
+    'installation schema',
+  );
 
   // Test data and setup
   const testInstallationType = {
@@ -97,12 +117,20 @@ describe('Installation Types Controller', () => {
 
   afterAll(async () => {
     // Clean up all tracked resources using test-utils
+    await installationSchemaCleanup.cleanupAll();
     await installationTypeCleanup.cleanupAll();
     await eventTypeCleanup.cleanupAll();
 
-    // Also clean up the main test installation type if it exists
     if (createdInstallationTypeId) {
       try {
+        const remainingSchemas =
+          await installationSchemaRepository.findByInstallationTypeId(
+            createdInstallationTypeId,
+          );
+        for (const schema of remainingSchemas) {
+          await installationSchemaRepository.delete(schema.id);
+        }
+
         await deleteInstallationType({ id: createdInstallationTypeId });
       } catch (error) {
         console.log('Error cleaning up main test installation type:', error);
@@ -195,7 +223,7 @@ describe('Installation Types Controller', () => {
         // Assign event types to installation type
         const response = await assignEventTypesToInstallationType({
           id: createdInstallationTypeId,
-          event_type_ids: [eventType1Id, eventType2Id],
+          eventTypeIds: [eventType1Id, eventType2Id],
         });
 
         // Verify response structure
@@ -233,7 +261,7 @@ describe('Installation Types Controller', () => {
         // Clean up assignments regardless of test success or failure
         await assignEventTypesToInstallationType({
           id: createdInstallationTypeId,
-          event_type_ids: [],
+          eventTypeIds: [],
         });
       }
     });
@@ -283,7 +311,7 @@ describe('Installation Types Controller', () => {
         // First assignment
         const firstResponse = await assignEventTypesToInstallationType({
           id: createdInstallationTypeId,
-          event_type_ids: [eventType1Id, eventType2Id],
+          eventTypeIds: [eventType1Id, eventType2Id],
         });
 
         expect(firstResponse.eventTypes).toHaveLength(2);
@@ -291,7 +319,7 @@ describe('Installation Types Controller', () => {
         // Second assignment (should replace first)
         const secondResponse = await assignEventTypesToInstallationType({
           id: createdInstallationTypeId,
-          event_type_ids: [eventType3Id],
+          eventTypeIds: [eventType3Id],
         });
 
         expect(secondResponse.eventTypes).toHaveLength(1);
@@ -301,7 +329,7 @@ describe('Installation Types Controller', () => {
         // Clean up assignments regardless of test success or failure
         await assignEventTypesToInstallationType({
           id: createdInstallationTypeId,
-          event_type_ids: [],
+          eventTypeIds: [],
         });
       }
     });
@@ -338,7 +366,7 @@ describe('Installation Types Controller', () => {
         // Assign event types to installation type
         await assignEventTypesToInstallationType({
           id: createdInstallationTypeId,
-          event_type_ids: [eventType1Id, eventType2Id],
+          eventTypeIds: [eventType1Id, eventType2Id],
         });
 
         // Get assigned event types
@@ -376,7 +404,7 @@ describe('Installation Types Controller', () => {
         // Clean up assignments regardless of test success or failure
         await assignEventTypesToInstallationType({
           id: createdInstallationTypeId,
-          event_type_ids: [],
+          eventTypeIds: [],
         });
       }
     });
@@ -385,7 +413,7 @@ describe('Installation Types Controller', () => {
       // Assign empty array (should remove all assignments)
       const response = await assignEventTypesToInstallationType({
         id: createdInstallationTypeId,
-        event_type_ids: [],
+        eventTypeIds: [],
       });
 
       expect(response).toBeDefined();
@@ -429,7 +457,7 @@ describe('Installation Types Controller', () => {
       await expect(
         assignEventTypesToInstallationType({
           id: 9999,
-          event_type_ids: [1, 2],
+          eventTypeIds: [1, 2],
         }),
       ).rejects.toThrow();
     });
@@ -438,7 +466,7 @@ describe('Installation Types Controller', () => {
       await expect(
         assignEventTypesToInstallationType({
           id: createdInstallationTypeId,
-          event_type_ids: [9999, 8888],
+          eventTypeIds: [9999, 8888],
         }),
       ).rejects.toThrow();
     });
@@ -462,7 +490,7 @@ describe('Installation Types Controller', () => {
       await expect(
         assignEventTypesToInstallationType({
           id: createdInstallationTypeId,
-          event_type_ids: [validEventTypeId, 9999],
+          eventTypeIds: [validEventTypeId, 9999],
         }),
       ).rejects.toThrow();
     });

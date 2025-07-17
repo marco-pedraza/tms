@@ -14,11 +14,15 @@ import {
 } from '../../tests/shared/test-utils';
 import { cityRepository } from '../cities/cities.repository';
 import { db } from '../db-service';
+import { eventTypeInstallationTypeRepository } from '../event-type-installation-types/event-type-installation-types.repository';
+import { eventTypeRepository } from '../event-types/event-types.repository';
+import { installationTypeRepository } from '../installation-types/installation-types.repository';
 import { installationRepository } from '../installations/installations.repository';
 import { populationRepository } from '../populations/populations.repository';
 import type { CreateNodePayload, Node, UpdateNodePayload } from './nodes.types';
 import { nodeRepository } from './nodes.repository';
 import {
+  assignEventsToNode,
   createNode,
   deleteNode,
   getNode,
@@ -82,7 +86,7 @@ describe('Nodes Controller', () => {
     // Clean up all created nodes first
     await nodeCleanup.cleanupAll();
 
-    // Clean up factory-created entities by specific IDs to avoid affecting other tests
+    // Clean up factory-created entities in dependency order (children before parents)
     if (testInstallationId) {
       try {
         await installationRepository.forceDelete(testInstallationId);
@@ -842,6 +846,333 @@ describe('Nodes Controller', () => {
           expect(radius3000Names[i] <= radius3000Names[i + 1]).toBe(true);
         }
       }
+    });
+  });
+
+  describe('event assignment', () => {
+    let testInstallationTypeId: number;
+    let testEventType1Id: number;
+    let testEventType2Id: number;
+    let testNodeWithInstallationId: number;
+    let testInstallationWithTypeId: number;
+
+    // Setup cleanup helpers for event assignment tests
+    const eventTypeCleanup = createCleanupHelper(
+      ({ id }) => eventTypeRepository.forceDelete(id),
+      'event type',
+    );
+
+    const installationTypeCleanup = createCleanupHelper(
+      ({ id }) => installationTypeRepository.forceDelete(id),
+      'installation type',
+    );
+
+    const installationCleanup = createCleanupHelper(
+      ({ id }) => installationRepository.forceDelete(id),
+      'installation',
+    );
+
+    beforeAll(async () => {
+      // Create test installation type
+      const testInstallationType = await installationTypeRepository.create({
+        name: createUniqueName(
+          'Test Installation Type for Events',
+          testSuiteId,
+        ),
+        code: createUniqueCode('TITE', 3),
+        description: 'Test installation type for event assignment',
+      });
+      testInstallationTypeId = installationTypeCleanup.track(
+        testInstallationType.id,
+      );
+
+      // Create test event types
+      const testEventType1 = await eventTypeRepository.create({
+        name: createUniqueName('Test Event Type 1', testSuiteId),
+        code: createUniqueCode('TET1', 3),
+        description: 'Test event type 1',
+        baseTime: 30,
+        needsCost: false,
+        needsQuantity: false,
+        integration: false,
+        active: true,
+      });
+      testEventType1Id = eventTypeCleanup.track(testEventType1.id);
+
+      const testEventType2 = await eventTypeRepository.create({
+        name: createUniqueName('Test Event Type 2', testSuiteId),
+        code: createUniqueCode('TET2', 3),
+        description: 'Test event type 2',
+        baseTime: 45,
+        needsCost: true,
+        needsQuantity: false,
+        integration: false,
+        active: true,
+      });
+      testEventType2Id = eventTypeCleanup.track(testEventType2.id);
+
+      // Assign event types to installation type
+      await eventTypeInstallationTypeRepository.createMany([
+        {
+          eventTypeId: testEventType1Id,
+          installationTypeId: testInstallationTypeId,
+        },
+        {
+          eventTypeId: testEventType2Id,
+          installationTypeId: testInstallationTypeId,
+        },
+      ]);
+
+      // Create test installation with the installation type
+      const testInstallationWithType = await installationRepository.create({
+        name: createUniqueName('Test Installation with Type', testSuiteId),
+        address: '123 Test Street',
+        description: 'Test installation with type for event assignment',
+        installationTypeId: testInstallationTypeId,
+      });
+      testInstallationWithTypeId = installationCleanup.track(
+        testInstallationWithType.id,
+      );
+
+      // Create test node with installation
+      const testNodeWithInstallation = await createNode({
+        code: createUniqueCode('TNWI', 3),
+        name: createUniqueName('Test Node with Installation', testSuiteId),
+        latitude: 19.4326,
+        longitude: -99.1332,
+        radius: 1000,
+        cityId: testCityId,
+        populationId: testPopulationId,
+        installationId: testInstallationWithTypeId,
+      });
+      testNodeWithInstallationId = nodeCleanup.track(
+        testNodeWithInstallation.id,
+      );
+    });
+
+    afterAll(async () => {
+      // Clean up all tracked resources using cleanup helpers
+      // Order matters: clean up dependencies first (children before parents)
+      await nodeCleanup.cleanupAll(); // nodes depend on installations (and have node_events)
+      await installationCleanup.cleanupAll(); // installations depend on installation_types
+      await eventTypeCleanup.cleanupAll(); // event_types can be deleted after node_events (cascade)
+      await installationTypeCleanup.cleanupAll(); // installation_types last (parent entity)
+    });
+
+    describe('success scenarios', () => {
+      test('should assign events to node successfully', async () => {
+        const eventsToAssign = [
+          { eventTypeId: testEventType1Id, customTime: 30 },
+          { eventTypeId: testEventType2Id },
+        ];
+
+        const response = await assignEventsToNode({
+          id: testNodeWithInstallationId,
+          events: eventsToAssign,
+        });
+
+        expect(response).toBeDefined();
+        expect(response.nodeEvents).toBeDefined();
+        expect(Array.isArray(response.nodeEvents)).toBe(true);
+        expect(response.nodeEvents).toHaveLength(2);
+
+        // Verify first event
+        const event1 = response.nodeEvents.find(
+          (e) => e.eventTypeId === testEventType1Id,
+        );
+        expect(event1).toBeDefined();
+        expect(event1?.nodeId).toBe(testNodeWithInstallationId);
+        expect(event1?.eventTypeId).toBe(testEventType1Id);
+        expect(event1?.customTime).toBe(30);
+
+        // Verify second event
+        const event2 = response.nodeEvents.find(
+          (e) => e.eventTypeId === testEventType2Id,
+        );
+        expect(event2).toBeDefined();
+        expect(event2?.nodeId).toBe(testNodeWithInstallationId);
+        expect(event2?.eventTypeId).toBe(testEventType2Id);
+        expect(event2?.customTime).toBeNull();
+      });
+
+      test('should get events assigned to node', async () => {
+        // First assign some events
+        const eventsToAssign = [
+          { eventTypeId: testEventType1Id, customTime: 25 },
+          { eventTypeId: testEventType2Id, customTime: 40 },
+        ];
+
+        await assignEventsToNode({
+          id: testNodeWithInstallationId,
+          events: eventsToAssign,
+        });
+
+        // Now get the events via getNode
+        const response = await getNode({
+          id: testNodeWithInstallationId,
+        });
+
+        expect(response).toBeDefined();
+        expect(response.nodeEvents).toBeDefined();
+        expect(Array.isArray(response.nodeEvents)).toBe(true);
+        expect(response.nodeEvents).toHaveLength(2);
+
+        // Verify first event
+        const event1 = response.nodeEvents.find(
+          (e) => e.eventTypeId === testEventType1Id,
+        );
+        expect(event1).toBeDefined();
+        expect(event1?.nodeId).toBe(testNodeWithInstallationId);
+        expect(event1?.eventTypeId).toBe(testEventType1Id);
+        expect(event1?.customTime).toBe(25);
+
+        // Verify second event
+        const event2 = response.nodeEvents.find(
+          (e) => e.eventTypeId === testEventType2Id,
+        );
+        expect(event2).toBeDefined();
+        expect(event2?.nodeId).toBe(testNodeWithInstallationId);
+        expect(event2?.eventTypeId).toBe(testEventType2Id);
+        expect(event2?.customTime).toBe(40);
+      });
+
+      test('should return empty array when node has no events', async () => {
+        // First clear any existing events
+        await assignEventsToNode({
+          id: testNodeWithInstallationId,
+          events: [],
+        });
+
+        // Now get the events via getNode
+        const response = await getNode({
+          id: testNodeWithInstallationId,
+        });
+
+        expect(response).toBeDefined();
+        expect(response.nodeEvents).toBeDefined();
+        expect(Array.isArray(response.nodeEvents)).toBe(true);
+        expect(response.nodeEvents).toHaveLength(0);
+      });
+
+      test('should replace existing events (destructive behavior)', async () => {
+        // First assignment
+        const firstEvents = [
+          { eventTypeId: testEventType1Id, customTime: 30 },
+          { eventTypeId: testEventType2Id, customTime: 45 },
+        ];
+
+        const firstResponse = await assignEventsToNode({
+          id: testNodeWithInstallationId,
+          events: firstEvents,
+        });
+
+        expect(firstResponse.nodeEvents).toHaveLength(2);
+
+        // Second assignment (should replace first)
+        const secondEvents = [
+          { eventTypeId: testEventType1Id, customTime: 60 },
+        ];
+
+        const secondResponse = await assignEventsToNode({
+          id: testNodeWithInstallationId,
+          events: secondEvents,
+        });
+
+        expect(secondResponse.nodeEvents).toHaveLength(1);
+        expect(secondResponse.nodeEvents[0].eventTypeId).toBe(testEventType1Id);
+        expect(secondResponse.nodeEvents[0].customTime).toBe(60);
+      });
+
+      test('should handle empty events array', async () => {
+        // First assign some events
+        await assignEventsToNode({
+          id: testNodeWithInstallationId,
+          events: [{ eventTypeId: testEventType1Id }],
+        });
+
+        // Then assign empty array (should remove all events)
+        const response = await assignEventsToNode({
+          id: testNodeWithInstallationId,
+          events: [],
+        });
+
+        expect(response.nodeEvents).toHaveLength(0);
+      });
+    });
+
+    describe('error scenarios', () => {
+      test('should handle node not found', async () => {
+        await expect(
+          assignEventsToNode({
+            id: 99999,
+            events: [{ eventTypeId: testEventType1Id }],
+          }),
+        ).rejects.toThrow();
+      });
+
+      test('should handle node not found for get events', async () => {
+        await expect(
+          getNode({
+            id: 99999,
+          }),
+        ).rejects.toThrow();
+      });
+
+      test('should handle node with no installation', async () => {
+        // Create a node without installation
+        const nodeWithoutInstallation = await createNode({
+          code: createUniqueCode('TNWOI', 3),
+          name: createUniqueName('Test Node without Installation', testSuiteId),
+          latitude: 19.4326,
+          longitude: -99.1332,
+          radius: 1000,
+          cityId: testCityId,
+          populationId: testPopulationId,
+        });
+        const nodeWithoutInstallationId = nodeCleanup.track(
+          nodeWithoutInstallation.id,
+        );
+
+        await expect(
+          assignEventsToNode({
+            id: nodeWithoutInstallationId,
+            events: [{ eventTypeId: testEventType1Id }],
+          }),
+        ).rejects.toThrow();
+      });
+
+      test('should handle invalid event type IDs', async () => {
+        await expect(
+          assignEventsToNode({
+            id: testNodeWithInstallationId,
+            events: [{ eventTypeId: 99999 }],
+          }),
+        ).rejects.toThrow();
+      });
+
+      test('should handle event types not allowed for installation type', async () => {
+        // Create an event type that's not assigned to our installation type
+        const unassignedEventType = await eventTypeRepository.create({
+          name: createUniqueName('Unassigned Event Type', testSuiteId),
+          code: createUniqueCode('UET', 3),
+          description: 'Event type not assigned to installation type',
+          baseTime: 30,
+          needsCost: false,
+          needsQuantity: false,
+          integration: false,
+          active: true,
+        });
+        const unassignedEventTypeId = eventTypeCleanup.track(
+          unassignedEventType.id,
+        );
+
+        await expect(
+          assignEventsToNode({
+            id: testNodeWithInstallationId,
+            events: [{ eventTypeId: unassignedEventTypeId }],
+          }),
+        ).rejects.toThrow();
+      });
     });
   });
 });

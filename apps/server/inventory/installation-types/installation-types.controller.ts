@@ -164,7 +164,7 @@ export const deleteInstallationType = api(
  * This replaces all existing event type assignments for the installation type.
  * @param params - Object containing the installation type ID and event type IDs to assign
  * @param params.id - The ID of the installation type to assign event types to
- * @param params.event_type_ids - Array of event type IDs to assign
+ * @param params.eventTypeIds - Array of event type IDs to assign
  * @returns {Promise<InstallationTypeWithRelations>} The updated installation type with new event type relationships
  * @throws {APIError} If the installation type is not found, event types are not found, or assignment fails
  */
@@ -176,13 +176,13 @@ export const assignEventTypesToInstallationType = api(
   },
   async ({
     id,
-    event_type_ids,
+    eventTypeIds,
   }: AssignEventTypesToInstallationTypePayload & {
     id: number;
   }): Promise<InstallationTypeWithRelations> => {
     const installationType = await installationTypeUseCases.assignEventTypes(
       id,
-      event_type_ids,
+      eventTypeIds,
     );
     return installationType;
   },

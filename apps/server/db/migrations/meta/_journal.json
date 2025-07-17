@@ -204,6 +204,13 @@
       "when": 1752197299692,
       "tag": "20250711012819_add_code_and_active_to_installation_type",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1752523374682,
+      "tag": "20250714200254_deletes_unnecessary_fields_from_nodes",
+      "breakpoints": true
     }
   ]
 }

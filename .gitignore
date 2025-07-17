@@ -41,3 +41,7 @@ encore.gen.go
 encore.gen.cue
 /.encore
 /encore.gen
+
+
+#Ignore cursor AI rules
+.cursor/rules/codacy.mdc

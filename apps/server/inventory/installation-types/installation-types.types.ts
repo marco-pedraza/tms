@@ -117,7 +117,7 @@ export interface SyncInstallationSchemaPayload
  */
 export interface AssignEventTypesToInstallationTypePayload {
   /** Array of event type IDs to assign */
-  event_type_ids: number[];
+  eventTypeIds: number[];
 }
 
 // List and pagination types

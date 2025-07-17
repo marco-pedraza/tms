@@ -68,18 +68,10 @@ export const nodeEvents = pgTable(
       .notNull()
       .references(() => eventTypes.id, { onDelete: 'cascade' }),
     customTime: integer('custom_time'),
-    notes: text('notes'),
-    active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
-    deletedAt: timestamp('deleted_at'),
   },
-  (table) => [
-    index().on(table.nodeId),
-    index().on(table.eventTypeId),
-    index().on(table.active),
-    index().on(table.deletedAt),
-  ],
+  (table) => [index().on(table.nodeId), index().on(table.eventTypeId)],
 );
 
 export const eventTypesRelations = relations(eventTypes, ({ many }) => ({

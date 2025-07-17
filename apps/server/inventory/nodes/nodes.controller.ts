@@ -1,5 +1,6 @@
 import { api } from 'encore.dev/api';
 import type {
+  AssignEventsToNodePayload,
   CreateNodePayload,
   ListNodesQueryParams,
   ListNodesResult,
@@ -11,6 +12,7 @@ import type {
 } from './nodes.types';
 import { nodeRepository } from './nodes.repository';
 import { nodeDomain } from './nodes.domain';
+import { nodeUseCases } from './nodes.use-cases';
 
 /**
  * Creates a new node.
@@ -104,5 +106,29 @@ export const deleteNode = api(
   { expose: true, method: 'DELETE', path: '/nodes/:id/delete' },
   async ({ id }: { id: number }): Promise<Node> => {
     return await nodeRepository.delete(id);
+  },
+);
+
+/**
+ * Assigns events to a node.
+ * This is a destructive operation that replaces existing events.
+ * @param params - Object containing the node ID and events to assign
+ * @param params.id - The ID of the node to assign events to
+ * @param params.events - Array of events to assign to the node
+ * @returns {Promise<NodeWithRelations>} The updated node with its relations and assigned events
+ * @throws {APIError} If the node is not found, validation fails, or assignment fails
+ */
+export const assignEventsToNode = api(
+  { expose: true, method: 'POST', path: '/nodes/:id/events/assign' },
+  async ({
+    id,
+    events,
+  }: {
+    id: number;
+    events: AssignEventsToNodePayload['events'];
+  }): Promise<NodeWithRelations> => {
+    return await nodeUseCases.assignEventsToNode(id, {
+      events,
+    });
   },
 );

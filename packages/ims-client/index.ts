@@ -97,6 +97,7 @@ export namespace inventory {
             this.assignCitiesToPopulation = this.assignCitiesToPopulation.bind(this)
             this.assignCityToPopulation = this.assignCityToPopulation.bind(this)
             this.assignEventTypesToInstallationType = this.assignEventTypesToInstallationType.bind(this)
+            this.assignEventsToNode = this.assignEventsToNode.bind(this)
             this.createBus = this.createBus.bind(this)
             this.createBusDiagramModel = this.createBusDiagramModel.bind(this)
             this.createBusDiagramModelZone = this.createBusDiagramModelZone.bind(this)
@@ -310,7 +311,7 @@ export namespace inventory {
          * This replaces all existing event type assignments for the installation type.
          * @param params - Object containing the installation type ID and event type IDs to assign
          * @param params.id - The ID of the installation type to assign event types to
-         * @param params.event_type_ids - Array of event type IDs to assign
+         * @param params.eventTypeIds - Array of event type IDs to assign
          * @returns {Promise<InstallationTypeWithRelations>} The updated installation type with new event type relationships
          * @throws {APIError} If the installation type is not found, event types are not found, or assignment fails
          */
@@ -318,11 +319,28 @@ export namespace inventory {
     /**
      * Array of event type IDs to assign
      */
-    "event_type_ids": number[]
+    eventTypeIds: number[]
 }): Promise<installation_types.InstallationTypeWithRelations> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/installation/types/${encodeURIComponent(id)}/event-types/assign`, JSON.stringify(params))
             return await resp.json() as installation_types.InstallationTypeWithRelations
+        }
+
+        /**
+         * Assigns events to a node.
+         * This is a destructive operation that replaces existing events.
+         * @param params - Object containing the node ID and events to assign
+         * @param params.id - The ID of the node to assign events to
+         * @param params.events - Array of events to assign to the node
+         * @returns {Promise<NodeWithRelations>} The updated node with its relations and assigned events
+         * @throws {APIError} If the node is not found, validation fails, or assignment fails
+         */
+        public async assignEventsToNode(id: number, params: {
+    events: nodes.NodeEventAssignmentPayload[]
+}): Promise<nodes.NodeWithRelations> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/nodes/${encodeURIComponent(id)}/events/assign`, JSON.stringify(params))
+            return await resp.json() as nodes.NodeWithRelations
         }
 
         /**
@@ -9363,6 +9381,33 @@ export namespace installations {
     }
 }
 
+export namespace node_events {
+    export interface NodeEventFlat {
+        /**
+         * From node_events table
+         */
+        id: number
+
+        nodeId: number
+        eventTypeId: number
+        customTime: number | null
+        createdAt: string | null
+        updatedAt: string | null
+        /**
+         * From event_types table (flattened)
+         */
+        name: string
+
+        code: string
+        description: string | null
+        baseTime: number
+        needsCost: boolean
+        needsQuantity: boolean
+        integration: boolean
+        active: boolean
+    }
+}
+
 export namespace nodes {
     export interface CreateNodePayload {
         /**
@@ -9538,10 +9583,23 @@ export namespace nodes {
         updatedAt: string | null
     }
 
+    export interface NodeEventAssignmentPayload {
+        /**
+         * ID of the event type to assign
+         */
+        eventTypeId: number
+
+        /**
+         * Optional custom time that overrides the base time
+         */
+        customTime?: number
+    }
+
     export interface NodeWithRelations {
         city: cities.City
         population: populations.Population
         installation: installations.Installation | null
+        nodeEvents: node_events.NodeEventFlat[]
         /**
          * Unique identifier for the node
          */

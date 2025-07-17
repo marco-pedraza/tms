@@ -685,11 +685,14 @@ describe('Populations Controller', () => {
     });
 
     afterAll(async () => {
-      // Clean up test population
+      try {
+        await db.delete(populationCities);
+      } catch (error) {
+        console.log('Error cleaning up population_cities:', error);
+      }
+
       await cityAssignmentCleanup.cleanupAll();
 
-      // Clean up factory-created entities in reverse order of dependencies
-      // First clean up city (it has foreign key to state)
       if (testCity?.id) {
         try {
           await cityRepository.delete(testCity.id);
@@ -698,7 +701,6 @@ describe('Populations Controller', () => {
         }
       }
 
-      // Then clean up state (it has foreign key to country)
       if (testState?.id) {
         try {
           await stateRepository.delete(testState.id);
@@ -707,7 +709,6 @@ describe('Populations Controller', () => {
         }
       }
 
-      // Finally clean up country
       if (testCountry?.id) {
         try {
           await countryRepository.delete(testCountry.id);
@@ -837,11 +838,14 @@ describe('Populations Controller', () => {
     });
 
     afterAll(async () => {
-      // Clean up test population
+      try {
+        await db.delete(populationCities);
+      } catch (error) {
+        console.log('Error cleaning up population_cities:', error);
+      }
+
       await cityAssignmentCleanup.cleanupAll();
 
-      // Clean up factory-created entities in reverse order of dependencies
-      // First clean up cities (they have foreign keys to states)
       for (const city of testCities) {
         if (city?.id) {
           try {
@@ -852,7 +856,6 @@ describe('Populations Controller', () => {
         }
       }
 
-      // Then clean up state (it has foreign key to country)
       if (testState?.id) {
         try {
           await stateRepository.delete(testState.id);
@@ -861,7 +864,6 @@ describe('Populations Controller', () => {
         }
       }
 
-      // Finally clean up country
       if (testCountry?.id) {
         try {
           await countryRepository.delete(testCountry.id);
@@ -1203,10 +1205,14 @@ describe('Populations Controller', () => {
     });
 
     afterAll(async () => {
-      // Clean up in reverse order of dependencies
+      try {
+        await db.delete(populationCities);
+      } catch (error) {
+        console.log('Error cleaning up population_cities:', error);
+      }
+
       await testPopulationCleanup.cleanupAll();
 
-      // Clean up cities
       for (const city of testCitiesForAvailable) {
         if (city?.id) {
           try {
@@ -1217,7 +1223,6 @@ describe('Populations Controller', () => {
         }
       }
 
-      // Clean up state
       if (testStateForAvailable?.id) {
         try {
           await stateRepository.delete(testStateForAvailable.id);
@@ -1226,7 +1231,6 @@ describe('Populations Controller', () => {
         }
       }
 
-      // Clean up country
       if (testCountryForAvailable?.id) {
         try {
           await countryRepository.delete(testCountryForAvailable.id);

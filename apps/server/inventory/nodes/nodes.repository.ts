@@ -2,6 +2,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { PaginationMeta } from '../../shared/types';
 import { db } from '../db-service';
+import { nodeEventRepository } from '../node-events/node-events.repository';
 import { nodes } from './nodes.schema';
 import type {
   CreateNodePayload,
@@ -28,7 +29,7 @@ export function createNodeRepository() {
   });
 
   /**
-   * Finds a single node with its relations (city, population, installation)
+   * Finds a single node with its relations (city, population, installation, nodeEvents)
    * @param id - The ID of the node to find
    * @returns The node with related information
    * @throws {NotFoundError} If the node is not found
@@ -48,7 +49,13 @@ export function createNodeRepository() {
       throw new NotFoundError(`Node with id ${id} not found`);
     }
 
-    return node;
+    // Get node events with flattened event type information
+    const nodeEvents = await nodeEventRepository.findByNodeIdFlat(id);
+
+    return {
+      ...node,
+      nodeEvents,
+    };
   }
 
   /**
@@ -88,8 +95,17 @@ export function createNodeRepository() {
       },
     });
 
+    // Get node events for all nodes in a single query
+    const nodeEventsMap = await nodeEventRepository.findByNodeIdsFlat(ids);
+
+    // Add node events to each node
+    const nodesWithEvents = nodesWithRelations.map((node) => ({
+      ...node,
+      nodeEvents: nodeEventsMap.get(node.id) || [],
+    }));
+
     return {
-      data: nodesWithRelations,
+      data: nodesWithEvents,
       pagination,
     };
   }
@@ -123,11 +139,40 @@ export function createNodeRepository() {
     return updatedNode;
   }
 
+  /**
+   * Gets the installation type ID for a node
+   * @param nodeId - The ID of the node
+   * @returns The installation type ID or null if no installation is assigned
+   * @throws {NotFoundError} If the node is not found
+   */
+  async function getInstallationTypeIdByNodeId(
+    nodeId: number,
+  ): Promise<number | null> {
+    const nodeWithInstallation = await db.query.nodes.findFirst({
+      where: (nodes, { eq, and, isNull }) =>
+        and(eq(nodes.id, nodeId), isNull(nodes.deletedAt)),
+      with: {
+        installation: {
+          columns: {
+            installationTypeId: true,
+          },
+        },
+      },
+    });
+
+    if (!nodeWithInstallation) {
+      throw new NotFoundError(`Node with id ${nodeId} not found`);
+    }
+
+    return nodeWithInstallation.installation?.installationTypeId || null;
+  }
+
   return {
     ...baseRepository,
     findOneWithRelations,
     appendRelations,
     assignInstallation,
+    getInstallationTypeIdByNodeId,
   };
 }
 

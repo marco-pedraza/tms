@@ -688,7 +688,6 @@ describe('Installations Controller', () => {
   });
 
   describe('installation properties', () => {
-    // Cleanup helper for schemas
     const schemaCleanup = createCleanupHelper(
       ({ id }) => installationSchemaRepository.delete(id),
       'installation schema',
@@ -750,7 +749,12 @@ describe('Installations Controller', () => {
     });
 
     afterAll(async () => {
-      // Clean up all tracked schemas using the helper
+      try {
+        await installationPropertyRepository.deleteAll();
+      } catch (error) {
+        console.log('Error cleaning up installation properties:', error);
+      }
+
       await schemaCleanup.cleanupAll();
     });
 

@@ -113,11 +113,49 @@ export function createEventTypeInstallationTypeRepository() {
     });
   }
 
+  /**
+   * Validates that event types are allowed for a specific installation type
+   * @param installationTypeId - The ID of the installation type
+   * @param eventTypeIds - Array of event type IDs to validate
+   * @param tx - Optional transaction instance
+   * @returns Array of event type IDs that are NOT allowed for this installation type
+   */
+  async function validateEventTypesForInstallationType(
+    installationTypeId: number,
+    eventTypeIds: number[],
+    tx?: TransactionalDB,
+  ): Promise<number[]> {
+    if (eventTypeIds.length === 0) {
+      return [];
+    }
+
+    const repo = getRepository(tx);
+
+    // Get all allowed event types for this installation type
+    const allowedAssignments = await repo.findAllBy(
+      eventTypeInstallationTypes.installationTypeId,
+      installationTypeId,
+    );
+
+    // Extract allowed event type IDs
+    const allowedEventTypeIds = allowedAssignments.map(
+      (assignment) => assignment.eventTypeId,
+    );
+
+    // Find event type IDs that are NOT allowed
+    const notAllowedIds = eventTypeIds.filter(
+      (id) => !allowedEventTypeIds.includes(id),
+    );
+
+    return notAllowedIds;
+  }
+
   return {
     ...baseRepository,
     findByInstallationTypeId,
     deleteByInstallationTypeId,
     createMany,
+    validateEventTypesForInstallationType,
   };
 }
 

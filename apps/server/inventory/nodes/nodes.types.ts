@@ -7,6 +7,7 @@ import {
 } from '../../shared/types';
 import type { City } from '../cities/cities.types';
 import type { Installation } from '../installations/installations.types';
+import type { NodeEventFlat } from '../node-events/node-events.types';
 import type { Population } from '../populations/populations.types';
 
 /**
@@ -205,6 +206,7 @@ export interface NodeWithRelations extends Node {
   city: City;
   population: Population;
   installation: Installation | null;
+  nodeEvents: NodeEventFlat[];
 }
 
 export type ListNodesQueryParams = ListQueryParams<Node>;
@@ -213,3 +215,22 @@ export type ListNodesResult = ListQueryResult<Node>;
 export type PaginatedListNodesQueryParams = PaginatedListQueryParams<Node>;
 export type PaginatedListNodesResult =
   PaginatedListQueryResult<NodeWithRelations>;
+
+/**
+ * Individual event assignment payload for the assign endpoint
+ */
+export interface NodeEventAssignmentPayload {
+  /** ID of the event type to assign */
+  eventTypeId: number;
+
+  /** Optional custom time that overrides the base time */
+  customTime?: number;
+}
+
+/**
+ * Payload for assigning multiple events to a node
+ */
+export interface AssignEventsToNodePayload {
+  /** Array of event assignments */
+  events: NodeEventAssignmentPayload[];
+}

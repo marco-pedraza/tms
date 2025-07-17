@@ -8,6 +8,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { isNull, relations } from 'drizzle-orm';
+import { eventTypeInstallationTypes } from '../event-types/event-types.schema';
 import { installations } from '../installations/installations.schema';
 
 export const installationTypes = pgTable(
@@ -33,5 +34,6 @@ export const installationTypesRelations = relations(
   installationTypes,
   ({ many }) => ({
     installations: many(installations),
+    eventTypeInstallationTypes: many(eventTypeInstallationTypes),
   }),
 );

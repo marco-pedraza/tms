@@ -1,15 +1,16 @@
 import { api } from 'encore.dev/api';
 import { installationSchemaRepository } from '../installation-schemas/installation-schemas.repository';
+import { ListInstallationSchemasResult } from '../installation-schemas/installation-schemas.types';
 import type {
+  AssignEventTypesToInstallationTypePayload,
   CreateInstallationTypePayload,
-  GetInstallationSchemaResult,
   InstallationType,
+  InstallationTypeWithRelations,
   ListInstallationTypesQueryParams,
   ListInstallationTypesResult,
   PaginatedListInstallationTypesQueryParams,
   PaginatedListInstallationTypesResult,
   SyncInstallationSchemaPayload,
-  SyncInstallationSchemasResult,
   UpdateInstallationTypePayload,
 } from './installation-types.types';
 import { installationTypeRepository } from './installation-types.repository';
@@ -31,16 +32,16 @@ export const createInstallationType = api(
 );
 
 /**
- * Retrieves an installation type by its ID.
+ * Retrieves an installation type by its ID with related event types information.
  * @param params - Object containing the installation type ID
  * @param params.id - The ID of the installation type to retrieve
- * @returns {Promise<InstallationType>} The found installation type
+ * @returns {Promise<InstallationTypeWithRelations>} The found installation type with related event types
  * @throws {APIError} If the installation type is not found or retrieval fails
  */
 export const getInstallationType = api(
   { expose: true, method: 'GET', path: '/installation/types/:id' },
-  async ({ id }: { id: number }): Promise<InstallationType> => {
-    return await installationTypeRepository.findOne(id);
+  async ({ id }: { id: number }): Promise<InstallationTypeWithRelations> => {
+    return await installationTypeRepository.findOneWithRelations(id);
   },
 );
 
@@ -48,12 +49,12 @@ export const getInstallationType = api(
  * Retrieves the schema definition for a specific installation type.
  * @param params - Object containing the installation type ID
  * @param params.id - The ID of the installation type to get schema for
- * @returns {Promise<GetInstallationSchemaResult>} Object containing array of schema definitions for the installation type
+ * @returns {Promise<ListInstallationSchemasResult>} Object containing array of schema definitions for the installation type
  * @throws {APIError} If the installation type is not found or retrieval fails
  */
 export const getInstallationTypeSchema = api(
   { expose: true, method: 'GET', path: '/installation/types/:id/schema' },
-  async ({ id }: { id: number }): Promise<GetInstallationSchemaResult> => {
+  async ({ id }: { id: number }): Promise<ListInstallationSchemasResult> => {
     // First validate that the installation type exists
     await installationTypeRepository.findOne(id);
 
@@ -71,7 +72,7 @@ export const getInstallationTypeSchema = api(
  * @param params - Object containing the installation type ID and schemas to sync
  * @param params.id - The ID of the installation type to sync schemas for
  * @param params.schemas - Array of schema definitions to synchronize
- * @returns {Promise<SyncInstallationSchemasResult>} Object containing array of synchronized installation schemas
+ * @returns {Promise<ListInstallationSchemasResult>} Object containing array of synchronized installation schemas
  * @throws {APIError} If the installation type is not found or synchronization fails
  */
 export const syncInstallationSchemas = api(
@@ -82,7 +83,7 @@ export const syncInstallationSchemas = api(
   }: {
     id: number;
     schemas: SyncInstallationSchemaPayload[];
-  }): Promise<SyncInstallationSchemasResult> => {
+  }): Promise<ListInstallationSchemasResult> => {
     const data = await installationTypeUseCases.syncInstallationSchemas(
       id,
       schemas,
@@ -155,5 +156,34 @@ export const deleteInstallationType = api(
   { expose: true, method: 'DELETE', path: '/installation/types/:id/delete' },
   async ({ id }: { id: number }): Promise<InstallationType> => {
     return await installationTypeRepository.delete(id);
+  },
+);
+
+/**
+ * Assigns multiple event types to an installation type (destructive operation).
+ * This replaces all existing event type assignments for the installation type.
+ * @param params - Object containing the installation type ID and event type IDs to assign
+ * @param params.id - The ID of the installation type to assign event types to
+ * @param params.event_type_ids - Array of event type IDs to assign
+ * @returns {Promise<InstallationTypeWithRelations>} The updated installation type with new event type relationships
+ * @throws {APIError} If the installation type is not found, event types are not found, or assignment fails
+ */
+export const assignEventTypesToInstallationType = api(
+  {
+    expose: true,
+    method: 'POST',
+    path: '/installation/types/:id/event-types/assign',
+  },
+  async ({
+    id,
+    event_type_ids,
+  }: AssignEventTypesToInstallationTypePayload & {
+    id: number;
+  }): Promise<InstallationTypeWithRelations> => {
+    const installationType = await installationTypeUseCases.assignEventTypes(
+      id,
+      event_type_ids,
+    );
+    return installationType;
   },
 );

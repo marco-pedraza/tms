@@ -6,10 +6,8 @@ import {
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '../../shared/types';
-import type {
-  CreateInstallationSchemaPayload,
-  InstallationSchema,
-} from '../installation-schemas/installation-schemas.types';
+import type { EventType } from '../event-types/event-types.types';
+import type { CreateInstallationSchemaPayload } from '../installation-schemas/installation-schemas.types';
 
 /**
  * Base interface representing an installation type entity
@@ -35,6 +33,14 @@ export interface InstallationType {
 
   /** Timestamp when the installation type record was last updated */
   updatedAt: Date | null;
+}
+
+/**
+ * Installation type entity with its related event types
+ */
+export interface InstallationTypeWithRelations extends InstallationType {
+  /** Array of event types assigned to this installation type */
+  eventTypes: EventType[];
 }
 
 /**
@@ -106,6 +112,15 @@ export interface SyncInstallationSchemaPayload
   id?: number | null;
 }
 
+/**
+ * Payload for assigning multiple event types to an installation type
+ */
+export interface AssignEventTypesToInstallationTypePayload {
+  /** Array of event type IDs to assign */
+  event_type_ids: number[];
+}
+
+// List and pagination types
 export type ListInstallationTypesQueryParams =
   ListQueryParams<InstallationType>;
 export type ListInstallationTypesResult = ListQueryResult<InstallationType>;
@@ -114,19 +129,3 @@ export type PaginatedListInstallationTypesQueryParams =
   PaginatedListQueryParams<InstallationType>;
 export type PaginatedListInstallationTypesResult =
   PaginatedListQueryResult<InstallationType>;
-
-/**
- * Response type for getting installation schemas
- */
-export interface GetInstallationSchemaResult {
-  /** Array of installation schemas */
-  data: InstallationSchema[];
-}
-
-/**
- * Response type for syncing installation schemas
- */
-export interface SyncInstallationSchemasResult {
-  /** Array of synchronized installation schemas */
-  data: InstallationSchema[];
-}

@@ -5,12 +5,18 @@ import {
   createUniqueCode,
   createUniqueName,
 } from '../../tests/shared/test-utils';
+import {
+  createEventType,
+  deleteEventType,
+} from '../event-types/event-types.controller';
+import type { CreateEventTypePayload } from '../event-types/event-types.types';
 import { InstallationSchemaFieldType } from '../installation-schemas/installation-schemas.types';
 import type {
   CreateInstallationTypePayload,
   SyncInstallationSchemaPayload,
 } from './installation-types.types';
 import {
+  assignEventTypesToInstallationType,
   createInstallationType,
   deleteInstallationType,
   getInstallationType,
@@ -24,11 +30,13 @@ import {
 describe('Installation Types Controller', () => {
   const testSuiteId = createTestSuiteId('installation-types-controller');
 
-  // Cleanup helper using test-utils
+  // Cleanup helpers using test-utils
   const installationTypeCleanup = createCleanupHelper(
     deleteInstallationType,
     'installation type',
   );
+
+  const eventTypeCleanup = createCleanupHelper(deleteEventType, 'event type');
 
   // Test data and setup
   const testInstallationType = {
@@ -61,9 +69,36 @@ describe('Installation Types Controller', () => {
     return installationTypeCleanup.track(installationType.id);
   }
 
+  /**
+   * Helper function to create a test event type with automatic cleanup
+   */
+  async function createTestEventType(
+    baseName = 'Test Event Type',
+    code = 'TET',
+    options: Partial<CreateEventTypePayload> = {},
+  ) {
+    const uniqueName = createUniqueName(baseName, testSuiteId);
+    const uniqueCode = createUniqueCode(code, 3);
+    const data = {
+      name: uniqueName,
+      code: uniqueCode,
+      description: 'Test event type description',
+      baseTime: 30,
+      needsCost: false,
+      needsQuantity: false,
+      integration: false,
+      active: true,
+      ...options,
+    };
+
+    const eventType = await createEventType(data);
+    return eventTypeCleanup.track(eventType.id);
+  }
+
   afterAll(async () => {
-    // Clean up all tracked installation types using test-utils
+    // Clean up all tracked resources using test-utils
     await installationTypeCleanup.cleanupAll();
+    await eventTypeCleanup.cleanupAll();
 
     // Also clean up the main test installation type if it exists
     if (createdInstallationTypeId) {
@@ -135,6 +170,241 @@ describe('Installation Types Controller', () => {
         getInstallationType({ id: installationTypeToDeleteId }),
       ).rejects.toThrow();
     });
+
+    test('should assign event types to installation type', async () => {
+      // Create test event types using helper (automatic cleanup)
+      const eventType1Id = await createTestEventType('Event Type 1', 'ET1', {
+        description: 'Test event type 1',
+        baseTime: 30,
+        needsCost: false,
+        needsQuantity: false,
+        integration: false,
+        active: true,
+      });
+
+      const eventType2Id = await createTestEventType('Event Type 2', 'ET2', {
+        description: 'Test event type 2',
+        baseTime: 45,
+        needsCost: true,
+        needsQuantity: false,
+        integration: false,
+        active: true,
+      });
+
+      try {
+        // Assign event types to installation type
+        const response = await assignEventTypesToInstallationType({
+          id: createdInstallationTypeId,
+          event_type_ids: [eventType1Id, eventType2Id],
+        });
+
+        // Verify response structure
+        expect(response).toBeDefined();
+        expect(response.eventTypes).toBeDefined();
+        expect(Array.isArray(response.eventTypes)).toBe(true);
+        expect(response.eventTypes).toHaveLength(2);
+
+        // Verify installation type properties
+        expect(response.id).toBe(createdInstallationTypeId);
+        expect(response.name).toBeDefined();
+        expect(response.code).toBeDefined();
+
+        // Verify event types are included correctly
+        const eventTypeIds = response.eventTypes.map((et) => et.id);
+        expect(eventTypeIds).toContain(eventType1Id);
+        expect(eventTypeIds).toContain(eventType2Id);
+
+        // Verify event types have correct properties
+        const eventType1 = response.eventTypes.find(
+          (et) => et.id === eventType1Id,
+        );
+        const eventType2 = response.eventTypes.find(
+          (et) => et.id === eventType2Id,
+        );
+
+        expect(eventType1).toBeDefined();
+        expect(eventType1?.name).toMatch(/^Event Type 1/);
+        expect(eventType1?.id).toBe(eventType1Id);
+
+        expect(eventType2).toBeDefined();
+        expect(eventType2?.name).toMatch(/^Event Type 2/);
+        expect(eventType2?.id).toBe(eventType2Id);
+      } finally {
+        // Clean up assignments regardless of test success or failure
+        await assignEventTypesToInstallationType({
+          id: createdInstallationTypeId,
+          event_type_ids: [],
+        });
+      }
+    });
+
+    test('should replace existing event type assignments (destructive)', async () => {
+      // Create test event types using helper (automatic cleanup)
+      const eventType1Id = await createTestEventType(
+        'Event Type Replace 1',
+        'ETR1',
+        {
+          description: 'Test event type replace 1',
+          baseTime: 30,
+          needsCost: false,
+          needsQuantity: false,
+          integration: false,
+          active: true,
+        },
+      );
+
+      const eventType2Id = await createTestEventType(
+        'Event Type Replace 2',
+        'ETR2',
+        {
+          description: 'Test event type replace 2',
+          baseTime: 45,
+          needsCost: true,
+          needsQuantity: false,
+          integration: false,
+          active: true,
+        },
+      );
+
+      const eventType3Id = await createTestEventType(
+        'Event Type Replace 3',
+        'ETR3',
+        {
+          description: 'Test event type replace 3',
+          baseTime: 60,
+          needsCost: false,
+          needsQuantity: true,
+          integration: false,
+          active: true,
+        },
+      );
+
+      try {
+        // First assignment
+        const firstResponse = await assignEventTypesToInstallationType({
+          id: createdInstallationTypeId,
+          event_type_ids: [eventType1Id, eventType2Id],
+        });
+
+        expect(firstResponse.eventTypes).toHaveLength(2);
+
+        // Second assignment (should replace first)
+        const secondResponse = await assignEventTypesToInstallationType({
+          id: createdInstallationTypeId,
+          event_type_ids: [eventType3Id],
+        });
+
+        expect(secondResponse.eventTypes).toHaveLength(1);
+        expect(secondResponse.eventTypes[0]?.id).toBe(eventType3Id);
+        expect(secondResponse.id).toBe(createdInstallationTypeId);
+      } finally {
+        // Clean up assignments regardless of test success or failure
+        await assignEventTypesToInstallationType({
+          id: createdInstallationTypeId,
+          event_type_ids: [],
+        });
+      }
+    });
+
+    test('should get event types assigned to installation type', async () => {
+      // Create test event types using helper (automatic cleanup)
+      const eventType1Id = await createTestEventType(
+        'Get Event Type 1',
+        'GET1',
+        {
+          description: 'Test event type get 1',
+          baseTime: 30,
+          needsCost: false,
+          needsQuantity: false,
+          integration: false,
+          active: true,
+        },
+      );
+
+      const eventType2Id = await createTestEventType(
+        'Get Event Type 2',
+        'GET2',
+        {
+          description: 'Test event type get 2',
+          baseTime: 45,
+          needsCost: true,
+          needsQuantity: false,
+          integration: false,
+          active: true,
+        },
+      );
+
+      try {
+        // Assign event types to installation type
+        await assignEventTypesToInstallationType({
+          id: createdInstallationTypeId,
+          event_type_ids: [eventType1Id, eventType2Id],
+        });
+
+        // Get assigned event types
+        const response = await getInstallationType({
+          id: createdInstallationTypeId,
+        });
+
+        // Verify response structure
+        expect(response).toBeDefined();
+        expect(response.eventTypes).toBeDefined();
+        expect(Array.isArray(response.eventTypes)).toBe(true);
+        expect(response.eventTypes).toHaveLength(2);
+
+        // Verify event types are included correctly
+        const eventTypeIds = response.eventTypes.map((et) => et.id);
+        expect(eventTypeIds).toContain(eventType1Id);
+        expect(eventTypeIds).toContain(eventType2Id);
+
+        // Verify event types have correct properties
+        const eventType1 = response.eventTypes.find(
+          (et) => et.id === eventType1Id,
+        );
+        const eventType2 = response.eventTypes.find(
+          (et) => et.id === eventType2Id,
+        );
+
+        expect(eventType1).toBeDefined();
+        expect(eventType1?.name).toMatch(/^Get Event Type 1/);
+        expect(eventType1?.id).toBe(eventType1Id);
+
+        expect(eventType2).toBeDefined();
+        expect(eventType2?.name).toMatch(/^Get Event Type 2/);
+        expect(eventType2?.id).toBe(eventType2Id);
+      } finally {
+        // Clean up assignments regardless of test success or failure
+        await assignEventTypesToInstallationType({
+          id: createdInstallationTypeId,
+          event_type_ids: [],
+        });
+      }
+    });
+
+    test('should handle empty event type array', async () => {
+      // Assign empty array (should remove all assignments)
+      const response = await assignEventTypesToInstallationType({
+        id: createdInstallationTypeId,
+        event_type_ids: [],
+      });
+
+      expect(response).toBeDefined();
+      expect(response.eventTypes).toBeDefined();
+      expect(Array.isArray(response.eventTypes)).toBe(true);
+      expect(response.eventTypes).toHaveLength(0);
+    });
+
+    test('should return empty array when no event types are assigned', async () => {
+      // Get event types for installation type with no assignments
+      const response = await getInstallationType({
+        id: createdInstallationTypeId,
+      });
+
+      expect(response).toBeDefined();
+      expect(response.eventTypes).toBeDefined();
+      expect(Array.isArray(response.eventTypes)).toBe(true);
+      expect(response.eventTypes).toHaveLength(0);
+    });
   });
 
   describe('error scenarios', () => {
@@ -153,6 +423,52 @@ describe('Installation Types Controller', () => {
 
     test('should handle not found errors for delete', async () => {
       await expect(deleteInstallationType({ id: 9999 })).rejects.toThrow();
+    });
+
+    test('should handle not found errors for installation type assignment', async () => {
+      await expect(
+        assignEventTypesToInstallationType({
+          id: 9999,
+          event_type_ids: [1, 2],
+        }),
+      ).rejects.toThrow();
+    });
+
+    test('should handle not found errors for event types assignment', async () => {
+      await expect(
+        assignEventTypesToInstallationType({
+          id: createdInstallationTypeId,
+          event_type_ids: [9999, 8888],
+        }),
+      ).rejects.toThrow();
+    });
+
+    test('should handle mixed valid and invalid event type IDs', async () => {
+      // Create a valid event type using helper (automatic cleanup)
+      const validEventTypeId = await createTestEventType(
+        'Valid Event Type',
+        'VET',
+        {
+          description: 'Valid event type',
+          baseTime: 30,
+          needsCost: false,
+          needsQuantity: false,
+          integration: false,
+          active: true,
+        },
+      );
+
+      // Try to assign both valid and invalid event type IDs
+      await expect(
+        assignEventTypesToInstallationType({
+          id: createdInstallationTypeId,
+          event_type_ids: [validEventTypeId, 9999],
+        }),
+      ).rejects.toThrow();
+    });
+
+    test('should handle not found errors for get event types', async () => {
+      await expect(getInstallationType({ id: 9999 })).rejects.toThrow();
     });
   });
 
@@ -431,6 +747,7 @@ describe('Installation Types Controller', () => {
       // Start fresh with a new installation type
       const newInstallationTypeId = await createTestInstallationType(
         'Schema Sync Test Installation Type',
+        'SSTT',
         {
           description: 'For testing schema sync operations',
         },
@@ -514,6 +831,7 @@ describe('Installation Types Controller', () => {
       // Create a new installation type
       const newInstallationTypeId = await createTestInstallationType(
         'Empty Schema Test Installation Type',
+        'ESTT',
         {
           description: 'For testing empty schema sync',
         },

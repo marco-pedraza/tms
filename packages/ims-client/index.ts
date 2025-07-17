@@ -96,6 +96,7 @@ export namespace inventory {
             this.baseClient = baseClient
             this.assignCitiesToPopulation = this.assignCitiesToPopulation.bind(this)
             this.assignCityToPopulation = this.assignCityToPopulation.bind(this)
+            this.assignEventTypesToInstallationType = this.assignEventTypesToInstallationType.bind(this)
             this.createBus = this.createBus.bind(this)
             this.createBusDiagramModel = this.createBusDiagramModel.bind(this)
             this.createBusDiagramModelZone = this.createBusDiagramModelZone.bind(this)
@@ -302,6 +303,26 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/populations/${encodeURIComponent(id)}/cities/assign/one`, JSON.stringify(params))
             return await resp.json() as populations.PopulationWithRelations
+        }
+
+        /**
+         * Assigns multiple event types to an installation type (destructive operation).
+         * This replaces all existing event type assignments for the installation type.
+         * @param params - Object containing the installation type ID and event type IDs to assign
+         * @param params.id - The ID of the installation type to assign event types to
+         * @param params.event_type_ids - Array of event type IDs to assign
+         * @returns {Promise<InstallationTypeWithRelations>} The updated installation type with new event type relationships
+         * @throws {APIError} If the installation type is not found, event types are not found, or assignment fails
+         */
+        public async assignEventTypesToInstallationType(id: number, params: {
+    /**
+     * Array of event type IDs to assign
+     */
+    "event_type_ids": number[]
+}): Promise<installation_types.InstallationTypeWithRelations> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/installation/types/${encodeURIComponent(id)}/event-types/assign`, JSON.stringify(params))
+            return await resp.json() as installation_types.InstallationTypeWithRelations
         }
 
         /**
@@ -1149,29 +1170,29 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves an installation type by its ID.
+         * Retrieves an installation type by its ID with related event types information.
          * @param params - Object containing the installation type ID
          * @param params.id - The ID of the installation type to retrieve
-         * @returns {Promise<InstallationType>} The found installation type
+         * @returns {Promise<InstallationTypeWithRelations>} The found installation type with related event types
          * @throws {APIError} If the installation type is not found or retrieval fails
          */
-        public async getInstallationType(id: number): Promise<installation_types.InstallationType> {
+        public async getInstallationType(id: number): Promise<installation_types.InstallationTypeWithRelations> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/installation/types/${encodeURIComponent(id)}`)
-            return await resp.json() as installation_types.InstallationType
+            return await resp.json() as installation_types.InstallationTypeWithRelations
         }
 
         /**
          * Retrieves the schema definition for a specific installation type.
          * @param params - Object containing the installation type ID
          * @param params.id - The ID of the installation type to get schema for
-         * @returns {Promise<GetInstallationSchemaResult>} Object containing array of schema definitions for the installation type
+         * @returns {Promise<ListInstallationSchemasResult>} Object containing array of schema definitions for the installation type
          * @throws {APIError} If the installation type is not found or retrieval fails
          */
-        public async getInstallationTypeSchema(id: number): Promise<installation_types.GetInstallationSchemaResult> {
+        public async getInstallationTypeSchema(id: number): Promise<installation_schemas.ListInstallationSchemasResult> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/installation/types/${encodeURIComponent(id)}/schema`)
-            return await resp.json() as installation_types.GetInstallationSchemaResult
+            return await resp.json() as installation_schemas.ListInstallationSchemasResult
         }
 
         /**
@@ -2342,15 +2363,15 @@ export namespace inventory {
          * @param params - Object containing the installation type ID and schemas to sync
          * @param params.id - The ID of the installation type to sync schemas for
          * @param params.schemas - Array of schema definitions to synchronize
-         * @returns {Promise<SyncInstallationSchemasResult>} Object containing array of synchronized installation schemas
+         * @returns {Promise<ListInstallationSchemasResult>} Object containing array of synchronized installation schemas
          * @throws {APIError} If the installation type is not found or synchronization fails
          */
         public async syncInstallationSchemas(id: number, params: {
     schemas: installation_types.SyncInstallationSchemaPayload[]
-}): Promise<installation_types.SyncInstallationSchemasResult> {
+}): Promise<installation_schemas.ListInstallationSchemasResult> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/installation/types/${encodeURIComponent(id)}/schemas`, JSON.stringify(params))
-            return await resp.json() as installation_types.SyncInstallationSchemasResult
+            return await resp.json() as installation_schemas.ListInstallationSchemasResult
         }
 
         /**
@@ -8922,14 +8943,49 @@ export namespace installation_types {
         active?: boolean
     }
 
-    export interface GetInstallationSchemaResult {
+    export interface InstallationType {
         /**
-         * Array of installation schemas
+         * Unique identifier for the installation type
          */
-        data: installation_schemas.InstallationSchema[]
+        id: number
+
+        /**
+         * Name of the installation type
+         */
+        name: string
+
+        /**
+         * Code of the installation type
+         */
+        code: string
+
+        /**
+         * Optional description of the installation type
+         */
+        description: string | null
+
+        /**
+         * Whether the installation type is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the installation type record was created
+         */
+        createdAt: string | null
+
+        /**
+         * Timestamp when the installation type record was last updated
+         */
+        updatedAt: string | null
     }
 
-    export interface InstallationType {
+    export interface InstallationTypeWithRelations {
+        /**
+         * Array of event types assigned to this installation type
+         */
+        eventTypes: event_types.EventType[]
+
         /**
          * Unique identifier for the installation type
          */
@@ -9024,13 +9080,6 @@ export namespace installation_types {
         type: installation_schemas.InstallationSchemaFieldType
         options?: installation_schemas.InstallationSchemaOptions
         required?: boolean
-    }
-
-    export interface SyncInstallationSchemasResult {
-        /**
-         * Array of synchronized installation schemas
-         */
-        data: installation_schemas.InstallationSchema[]
     }
 }
 

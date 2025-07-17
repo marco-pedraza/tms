@@ -1,9 +1,10 @@
-import { createBaseRepository } from '@repo/base-repo';
+import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
 import { installationTypes } from './installation-types.schema';
 import type {
   CreateInstallationTypePayload,
   InstallationType,
+  InstallationTypeWithRelations,
   UpdateInstallationTypePayload,
 } from './installation-types.types';
 
@@ -22,7 +23,48 @@ export function createInstallationTypeRepository() {
     softDeleteEnabled: true,
   });
 
-  return baseRepository;
+  /**
+   * Finds a single installation type with its related event types
+   * @param id - The ID of the installation type to find
+   * @returns The installation type with its related event types
+   * @throws {NotFoundError} If the installation type is not found
+   */
+  const findOneWithRelations = async (
+    id: number,
+  ): Promise<InstallationTypeWithRelations> => {
+    const installationType = await db.query.installationTypes.findFirst({
+      where: (installationTypes, { eq, and, isNull }) =>
+        and(
+          eq(installationTypes.id, id),
+          isNull(installationTypes.deletedAt), // Respect soft delete
+        ),
+      with: {
+        eventTypeInstallationTypes: {
+          with: {
+            eventType: true,
+          },
+        },
+      },
+    });
+
+    if (!installationType) {
+      throw new NotFoundError(`InstallationType with id ${id} not found`);
+    }
+
+    // Transform the data to return only event types directly
+    const { eventTypeInstallationTypes, ...installationTypeData } =
+      installationType;
+
+    return {
+      ...installationTypeData,
+      eventTypes: eventTypeInstallationTypes.map((etit) => etit.eventType),
+    };
+  };
+
+  return {
+    ...baseRepository,
+    findOneWithRelations,
+  };
 }
 
 // Export the installation type repository instance

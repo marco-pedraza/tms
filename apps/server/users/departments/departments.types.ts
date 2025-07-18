@@ -25,10 +25,10 @@ export interface Department {
   isActive: boolean;
 
   /** Timestamp when the department record was created */
-  createdAt: Date;
+  createdAt: Date | string | null;
 
   /** Timestamp when the department record was last updated */
-  updatedAt: Date;
+  updatedAt: Date | string | null;
 }
 
 /**

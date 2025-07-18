@@ -14,9 +14,9 @@ export interface ServiceType {
   /** Whether this service type is currently active */
   active: boolean;
   /** Timestamp when this service type was created */
-  createdAt: Date;
+  createdAt: Date | string | null;
   /** Timestamp when this service type was last updated */
-  updatedAt: Date;
+  updatedAt: Date | string | null;
 }
 
 /**

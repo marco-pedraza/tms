@@ -121,10 +121,10 @@ export interface Bus {
   active: boolean;
 
   /** Timestamp when the bus was created */
-  createdAt: Date;
+  createdAt: Date | string | null;
 
   /** Timestamp when the bus was last updated */
-  updatedAt: Date;
+  updatedAt: Date | string | null;
 }
 
 /**

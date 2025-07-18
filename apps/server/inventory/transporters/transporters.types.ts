@@ -43,10 +43,10 @@ export interface Transporter {
   active: boolean;
 
   /** Timestamp when the transporter record was created */
-  createdAt: Date | null;
+  createdAt: Date | string | null;
 
   /** Timestamp when the transporter record was last updated */
-  updatedAt: Date | null;
+  updatedAt: Date | string | null;
 }
 
 /**

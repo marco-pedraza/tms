@@ -9,8 +9,8 @@ export interface Tenant {
   code: string;
   description?: string | null;
   isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string | null;
+  updatedAt: Date | string | null;
 }
 
 /**

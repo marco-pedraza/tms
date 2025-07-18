@@ -19,10 +19,10 @@ export interface Role {
   tenantId: number;
 
   /** Timestamp when the role was created */
-  createdAt: Date | null;
+  createdAt: Date | string | null;
 
   /** Timestamp when the role was last updated */
-  updatedAt: Date | null;
+  updatedAt: Date | string | null;
 }
 
 /**

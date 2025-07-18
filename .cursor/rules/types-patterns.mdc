@@ -16,8 +16,8 @@ Each feature should have these core type definitions:
      name: string;
      code: string;
      active: boolean;
-     createdAt: Date | null;
-     updatedAt: Date | null;
+     createdAt: Date | string | null;
+     updatedAt: Date | string | null;
    }
    ```
 

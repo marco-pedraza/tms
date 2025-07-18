@@ -33,10 +33,10 @@ export interface BusDiagramModel {
   active: boolean;
 
   /** Timestamp when the bus diagram model was created */
-  createdAt: Date;
+  createdAt: Date | string | null;
 
   /** Timestamp when the bus diagram model was last updated */
-  updatedAt: Date;
+  updatedAt: Date | string | null;
 }
 
 /**

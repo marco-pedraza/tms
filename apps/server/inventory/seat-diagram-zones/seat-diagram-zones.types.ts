@@ -21,10 +21,10 @@ export interface SeatDiagramZone {
   priceMultiplier: number;
 
   /** Timestamp when the zone was created */
-  createdAt: Date;
+  createdAt: Date | string | null;
 
   /** Timestamp when the zone was last updated */
-  updatedAt: Date;
+  updatedAt: Date | string | null;
 }
 
 /**

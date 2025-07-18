@@ -27,10 +27,10 @@ export interface Pathway {
   active: boolean;
 
   /** Timestamp when the pathway was created */
-  createdAt: Date;
+  createdAt: Date | string | null;
 
   /** Timestamp when the pathway was last updated */
-  updatedAt: Date;
+  updatedAt: Date | string | null;
 }
 
 /**

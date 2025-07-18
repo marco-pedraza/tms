@@ -43,7 +43,7 @@ export interface User {
   mfaSettings: Record<string, unknown> | null;
 
   /** Last login timestamp */
-  lastLogin: Date | null;
+  lastLogin: Date | string | null;
 
   /** Whether the user is currently active */
   isActive: boolean;
@@ -52,10 +52,10 @@ export interface User {
   isSystemAdmin: boolean;
 
   /** Timestamp when the user record was created */
-  createdAt: Date | null;
+  createdAt: Date | string | null;
 
   /** Timestamp when the user record was last updated */
-  updatedAt: Date | null;
+  updatedAt: Date | string | null;
 }
 
 /**

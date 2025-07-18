@@ -15,10 +15,10 @@ export interface Gate {
   active: boolean;
 
   /** Timestamp when the gate record was created */
-  createdAt: Date | null;
+  createdAt: Date | string | null;
 
   /** Timestamp when the gate record was last updated */
-  updatedAt: Date | null;
+  updatedAt: Date | string | null;
 }
 
 /**

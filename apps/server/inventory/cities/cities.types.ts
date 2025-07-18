@@ -35,10 +35,10 @@ export interface City {
   active: boolean;
 
   /** Timestamp when the city record was created */
-  createdAt: Date | null;
+  createdAt: Date | string | null;
 
   /** Timestamp when the city record was last updated */
-  updatedAt: Date | null;
+  updatedAt: Date | string | null;
 
   /** URL-friendly identifier for the city */
   slug: string;

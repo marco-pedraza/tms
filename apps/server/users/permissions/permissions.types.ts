@@ -19,11 +19,12 @@ export interface Permission {
 
   /** ID of the permission group this permission belongs to (nullable when un-assigned) */
   permissionGroupId: number | null;
+
   /** Timestamp when the permission was created */
-  createdAt: Date | null;
+  createdAt: Date | string | null;
 
   /** Timestamp when the permission was last updated */
-  updatedAt: Date | null;
+  updatedAt: Date | string | null;
 }
 
 /**

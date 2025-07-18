@@ -119,7 +119,7 @@ export default function ServiceTypePage() {
                 {tCommon('fields.createdAt')}
               </dt>
               <dd className="mt-1 text-sm text-gray-900">
-                {new Date(serviceType.createdAt).toLocaleString()}
+                {new Date(serviceType.createdAt ?? '').toLocaleString()}
               </dd>
             </div>
             <div className="sm:col-span-1">
@@ -127,7 +127,7 @@ export default function ServiceTypePage() {
                 {tCommon('fields.updatedAt')}
               </dt>
               <dd className="mt-1 text-sm text-gray-900">
-                {new Date(serviceType.updatedAt).toLocaleString()}
+                {new Date(serviceType.updatedAt ?? '').toLocaleString()}
               </dd>
             </div>
           </dl>

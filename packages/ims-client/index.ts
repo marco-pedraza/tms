@@ -1932,8 +1932,8 @@ export namespace inventory {
         name?: string
         rowNumbers?: number[]
         priceMultiplier?: number
-        createdAt?: string
-        updatedAt?: string
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
 }): Promise<seat_diagram_zones.SeatDiagramZones> {
             // Now make the actual call to the API
@@ -1959,8 +1959,8 @@ export namespace inventory {
         name?: string
         rowNumbers?: number[]
         priceMultiplier?: number
-        createdAt?: string
-        updatedAt?: string
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
 }): Promise<bus_diagram_model_zones.BusDiagramModelZones> {
             // Now make the actual call to the API
@@ -1988,8 +1988,8 @@ export namespace inventory {
         name?: string
         rowNumbers?: number[]
         priceMultiplier?: number
-        createdAt?: string
-        updatedAt?: string
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
 }): Promise<bus_diagram_model_zones.PaginatedBusDiagramModelZones> {
             // Now make the actual call to the API
@@ -2017,8 +2017,8 @@ export namespace inventory {
         name?: string
         rowNumbers?: number[]
         priceMultiplier?: number
-        createdAt?: string
-        updatedAt?: string
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
 }): Promise<seat_diagram_zones.PaginatedSeatDiagramZones> {
             // Now make the actual call to the API
@@ -2090,8 +2090,8 @@ export namespace inventory {
         primaryColor?: string | null
         secondaryColor?: string | null
         active?: boolean
-        createdAt?: string
-        updatedAt?: string
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     term: string
 }): Promise<bus_lines.PaginatedBusLines> {
@@ -2173,8 +2173,8 @@ export namespace inventory {
         nextMaintenanceDate?: string | null
         gpsId?: string | null
         active?: boolean
-        createdAt?: string
-        updatedAt?: string
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     term: string
 }): Promise<buses.PaginatedBuses> {
@@ -2236,8 +2236,8 @@ export namespace inventory {
         connectionCount?: number
         totalTravelTime?: number
         totalDistance?: number
-        createdAt?: string
-        updatedAt?: string
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     term: string
 }): Promise<routes.PaginatedRoutes> {
@@ -2303,8 +2303,8 @@ export namespace inventory {
         code?: string
         slug?: string
         active?: boolean
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     term: string
 }): Promise<terminals.PaginatedTerminals> {
@@ -2364,8 +2364,8 @@ export namespace inventory {
         contactInfo?: string | null
         licenseNumber?: string | null
         active?: boolean
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     searchTerm?: string
     term: string
@@ -3888,11 +3888,11 @@ export namespace users {
             position?: string | null
             employeeId?: string | null
             mfaSettings?: { [key: string]: any } | null
-            lastLogin?: string | null
+            lastLogin?: string | string | null
             isActive?: boolean
             isSystemAdmin?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 
@@ -3908,11 +3908,11 @@ export namespace users {
         position: string | null
         employeeId: string | null
         mfaSettings: { [key: string]: any } | null
-        lastLogin: string | null
+        lastLogin: string | string | null
         isActive: boolean
         isSystemAdmin: boolean
-        createdAt: string | null
-        updatedAt: string | null
+        createdAt: string | string | null
+        updatedAt: string | string | null
     }
 
     export interface Users {
@@ -3939,11 +3939,11 @@ export namespace users {
             position?: string | null
             employeeId?: string | null
             mfaSettings?: { [key: string]: any } | null
-            lastLogin?: string | null
+            lastLogin?: string | string | null
             isActive?: boolean
             isSystemAdmin?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 
@@ -4458,11 +4458,11 @@ export namespace users {
         position?: string | null
         employeeId?: string | null
         mfaSettings?: { [key: string]: any } | null
-        lastLogin?: string | null
+        lastLogin?: string | string | null
         isActive?: boolean
         isSystemAdmin?: boolean
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
 }): Promise<Users> {
             // Now make the actual call to the API
@@ -4496,11 +4496,11 @@ export namespace users {
         position?: string | null
         employeeId?: string | null
         mfaSettings?: { [key: string]: any } | null
-        lastLogin?: string | null
+        lastLogin?: string | string | null
         isActive?: boolean
         isSystemAdmin?: boolean
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
 }): Promise<PaginatedUsers> {
             // Now make the actual call to the API
@@ -4596,8 +4596,8 @@ export namespace users {
         name?: string
         description?: string | null
         tenantId?: number
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     includePermissions?: boolean
 }): Promise<roles.Roles> {
@@ -4625,8 +4625,8 @@ export namespace users {
         name?: string
         description?: string | null
         tenantId?: number
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     includePermissions?: boolean
 }): Promise<roles.PaginatedRoles> {
@@ -4702,8 +4702,8 @@ export namespace users {
         code?: string
         description?: string | null
         isActive?: boolean
-        createdAt?: string
-        updatedAt?: string
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
 }): Promise<departments.Departments> {
             // Now make the actual call to the API
@@ -4732,8 +4732,8 @@ export namespace users {
         code?: string
         description?: string | null
         isActive?: boolean
-        createdAt?: string
-        updatedAt?: string
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
 }): Promise<departments.PaginatedDepartments> {
             // Now make the actual call to the API
@@ -4773,8 +4773,8 @@ export namespace users {
         name?: string
         description?: string | null
         tenantId?: number
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     includePermissions?: boolean
 }): Promise<roles.PaginatedRoles> {
@@ -4807,11 +4807,11 @@ export namespace users {
         position?: string | null
         employeeId?: string | null
         mfaSettings?: { [key: string]: any } | null
-        lastLogin?: string | null
+        lastLogin?: string | string | null
         isActive?: boolean
         isSystemAdmin?: boolean
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
 }): Promise<Users> {
             // Now make the actual call to the API
@@ -4845,11 +4845,11 @@ export namespace users {
         position?: string | null
         employeeId?: string | null
         mfaSettings?: { [key: string]: any } | null
-        lastLogin?: string | null
+        lastLogin?: string | string | null
         isActive?: boolean
         isSystemAdmin?: boolean
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
 }): Promise<PaginatedUsers> {
             // Now make the actual call to the API
@@ -5008,8 +5008,8 @@ export namespace users {
         code?: string
         description?: string | null
         isActive?: boolean
-        createdAt?: string
-        updatedAt?: string
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     term: string
 }): Promise<departments.PaginatedDepartments> {
@@ -5062,8 +5062,8 @@ export namespace users {
         name?: string
         description?: string | null
         permissionGroupId?: number | null
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     term: string
 }): Promise<permissions.PaginatedPermissions> {
@@ -5090,8 +5090,8 @@ export namespace users {
         name?: string
         description?: string | null
         tenantId?: number
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     includePermissions?: boolean
 }): Promise<roles.Roles> {
@@ -5119,8 +5119,8 @@ export namespace users {
         name?: string
         description?: string | null
         tenantId?: number
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     includePermissions?: boolean
     term: string
@@ -5170,8 +5170,8 @@ export namespace users {
         code?: string
         description?: string | null
         isActive?: boolean
-        createdAt?: string
-        updatedAt?: string
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     term: string
 }): Promise<tenants.PaginatedTenants> {
@@ -5226,11 +5226,11 @@ export namespace users {
         position?: string | null
         employeeId?: string | null
         mfaSettings?: { [key: string]: any } | null
-        lastLogin?: string | null
+        lastLogin?: string | string | null
         isActive?: boolean
         isSystemAdmin?: boolean
-        createdAt?: string | null
-        updatedAt?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
     }
     term: string
 }): Promise<PaginatedUsers> {
@@ -5496,7 +5496,7 @@ export namespace audits {
         /**
          * Timestamp when the audit record was created
          */
-        createdAt: string
+        createdAt: string | string | null
     }
 
     export interface PaginatedAudits {
@@ -5519,7 +5519,7 @@ export namespace audits {
             details?: { [key: string]: any } | null
             ipAddress?: string | null
             userAgent?: string | null
-            createdAt?: string
+            createdAt?: string | string | null
         }
     }
 }
@@ -5599,12 +5599,12 @@ export namespace bus_diagram_model_zones {
         /**
          * Timestamp when the zone was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the zone was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface BusDiagramModelZones {
@@ -5670,12 +5670,12 @@ export namespace bus_diagram_models {
         /**
          * Timestamp when the bus diagram model was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the bus diagram model was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface BusDiagramModels {
@@ -5822,12 +5822,12 @@ export namespace bus_lines {
         /**
          * Timestamp when the bus line record was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the bus line record was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface BusLines {
@@ -5853,8 +5853,8 @@ export namespace bus_lines {
             primaryColor?: string | null
             secondaryColor?: string | null
             active?: boolean
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 
@@ -5935,8 +5935,8 @@ export namespace bus_lines {
             primaryColor?: string | null
             secondaryColor?: string | null
             active?: boolean
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 }
@@ -6001,12 +6001,12 @@ export namespace bus_models {
         /**
          * Timestamp when the bus model was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the bus model was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface BusModels {
@@ -6127,12 +6127,12 @@ export namespace bus_seat_models {
         /**
          * Timestamp when the space model was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the space model was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export type BusSeatModel = SeatBusSeatModel | HallwayBusSeatModel | BathroomBusSeatModel | EmptyBusSeatModel | StairsBusSeatModel
@@ -6188,12 +6188,12 @@ export namespace bus_seat_models {
         /**
          * Timestamp when the space model was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the space model was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface HallwayBusSeatModel {
@@ -6240,12 +6240,12 @@ export namespace bus_seat_models {
         /**
          * Timestamp when the space model was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the space model was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface SeatBusSeatModel {
@@ -6307,12 +6307,12 @@ export namespace bus_seat_models {
         /**
          * Timestamp when the space model was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the space model was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface SeatConfigurationInput {
@@ -6406,12 +6406,12 @@ export namespace bus_seat_models {
         /**
          * Timestamp when the space model was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the space model was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface UpdatedSeatConfiguration {
@@ -6482,12 +6482,12 @@ export namespace bus_seats {
         /**
          * Timestamp when the space was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the space was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export type BusSeat = SeatBusSeat | HallwayBusSeat | BathroomBusSeat | EmptyBusSeat | StairsBusSeat
@@ -6543,12 +6543,12 @@ export namespace bus_seats {
         /**
          * Timestamp when the space was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the space was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface HallwayBusSeat {
@@ -6595,12 +6595,12 @@ export namespace bus_seats {
         /**
          * Timestamp when the space was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the space was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface SeatBusSeat {
@@ -6662,12 +6662,12 @@ export namespace bus_seats {
         /**
          * Timestamp when the space was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the space was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface SeatConfigurationInput {
@@ -6761,12 +6761,12 @@ export namespace bus_seats {
         /**
          * Timestamp when the space was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the space was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface UpdatedSeatConfiguration {
@@ -6967,12 +6967,12 @@ export namespace buses {
         /**
          * Timestamp when the bus was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the bus was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export type BusStatus = "ACTIVE" | "MAINTENANCE" | "REPAIR" | "OUT_OF_SERVICE" | "RESERVED" | "IN_TRANSIT" | "RETIRED"
@@ -7024,8 +7024,8 @@ export namespace buses {
             nextMaintenanceDate?: string | null
             gpsId?: string | null
             active?: boolean
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 
@@ -7251,8 +7251,8 @@ export namespace buses {
             nextMaintenanceDate?: string | null
             gpsId?: string | null
             active?: boolean
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 }
@@ -7297,12 +7297,12 @@ export namespace cities {
         /**
          * Timestamp when the city record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the city record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
 
         /**
          * URL-friendly identifier for the city
@@ -7340,12 +7340,12 @@ export namespace cities {
             /**
              * Timestamp when the state record was created
              */
-            createdAt: string | null
+            createdAt: string | string | null
 
             /**
              * Timestamp when the state record was last updated
              */
-            updatedAt: string | null
+            updatedAt: string | string | null
 
             country: countries.Country
         }
@@ -7388,12 +7388,12 @@ export namespace cities {
         /**
          * Timestamp when the city record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the city record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
 
         /**
          * URL-friendly identifier for the city
@@ -7431,12 +7431,12 @@ export namespace cities {
             /**
              * Timestamp when the state record was created
              */
-            createdAt: string | null
+            createdAt: string | string | null
 
             /**
              * Timestamp when the state record was last updated
              */
-            updatedAt: string | null
+            updatedAt: string | string | null
 
             country: countries.Country
         }
@@ -7478,12 +7478,12 @@ export namespace cities {
         /**
          * Timestamp when the city record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the city record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
 
         /**
          * URL-friendly identifier for the city
@@ -7542,8 +7542,8 @@ export namespace cities {
             longitude?: number
             timezone?: string
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
             slug?: string
         }
         searchTerm?: string
@@ -7568,8 +7568,8 @@ export namespace cities {
             longitude?: number
             timezone?: string
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
             slug?: string
         }
         searchTerm?: string
@@ -7738,12 +7738,12 @@ export namespace departments {
         /**
          * Timestamp when the department record was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the department record was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface Departments {
@@ -7765,8 +7765,8 @@ export namespace departments {
             code?: string
             description?: string | null
             isActive?: boolean
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 
@@ -7789,8 +7789,8 @@ export namespace departments {
             code?: string
             description?: string | null
             isActive?: boolean
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 }
@@ -8070,7 +8070,7 @@ export namespace drivers {
         /**
          * Date of hiring (Fec. Ingreso)
          */
-        hireDate: string | null
+        hireDate: string | string | null
 
         /**
          * Current status (Estado Actual)
@@ -8080,7 +8080,7 @@ export namespace drivers {
         /**
          * Status date (Fecha Estado)
          */
-        statusDate: string
+        statusDate: string | string
 
         /**
          * Federal license (Licencia Federal)
@@ -8090,7 +8090,7 @@ export namespace drivers {
         /**
          * Federal license expiry (Fecha Lic. Fed)
          */
-        federalLicenseExpiry: string | null
+        federalLicenseExpiry: string | string | null
 
         /**
          * State license (Licencia Estatal)
@@ -8100,7 +8100,7 @@ export namespace drivers {
         /**
          * State license expiry (Fecha Lic. Est)
          */
-        stateLicenseExpiry: string | null
+        stateLicenseExpiry: string | string | null
 
         /**
          * Credit card info (Tarjeta Crédito)
@@ -8110,7 +8110,7 @@ export namespace drivers {
         /**
          * Credit card expiry (Fecha T. Crédito)
          */
-        creditCardExpiry: string | null
+        creditCardExpiry: string | string | null
 
         /**
          * Company (Empresa Alterna)
@@ -8140,12 +8140,12 @@ export namespace drivers {
         /**
          * Timestamp when the driver record was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the driver record was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export type DriverPosition = "driver" | "senior_driver" | "auxiliary_driver" | "tourist_driver" | "premium_driver"
@@ -8255,7 +8255,7 @@ export namespace drivers {
         /**
          * Date of hiring (Fec. Ingreso)
          */
-        hireDate: string | null
+        hireDate: string | string | null
 
         /**
          * Current status (Estado Actual)
@@ -8265,7 +8265,7 @@ export namespace drivers {
         /**
          * Status date (Fecha Estado)
          */
-        statusDate: string
+        statusDate: string | string
 
         /**
          * Federal license (Licencia Federal)
@@ -8275,7 +8275,7 @@ export namespace drivers {
         /**
          * Federal license expiry (Fecha Lic. Fed)
          */
-        federalLicenseExpiry: string | null
+        federalLicenseExpiry: string | string | null
 
         /**
          * State license (Licencia Estatal)
@@ -8285,7 +8285,7 @@ export namespace drivers {
         /**
          * State license expiry (Fecha Lic. Est)
          */
-        stateLicenseExpiry: string | null
+        stateLicenseExpiry: string | string | null
 
         /**
          * Credit card info (Tarjeta Crédito)
@@ -8295,7 +8295,7 @@ export namespace drivers {
         /**
          * Credit card expiry (Fecha T. Crédito)
          */
-        creditCardExpiry: string | null
+        creditCardExpiry: string | string | null
 
         /**
          * Company (Empresa Alterna)
@@ -8325,12 +8325,12 @@ export namespace drivers {
         /**
          * Timestamp when the driver record was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the driver record was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface ListDriversQueryParams {
@@ -8358,22 +8358,22 @@ export namespace drivers {
             position?: DriverPosition | null
             officeCode?: string | null
             officeLocation?: string | null
-            hireDate?: string | null
+            hireDate?: string | string | null
             status?: DriverStatus
-            statusDate?: string
+            statusDate?: string | string
             federalLicense?: string | null
-            federalLicenseExpiry?: string | null
+            federalLicenseExpiry?: string | string | null
             stateLicense?: string | null
-            stateLicenseExpiry?: string | null
+            stateLicenseExpiry?: string | string | null
             creditCard?: string | null
-            creditCardExpiry?: string | null
+            creditCardExpiry?: string | string | null
             company?: string | null
             transporterId?: number | null
             busLineId?: number | null
             busId?: number | null
             active?: boolean
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -8413,22 +8413,22 @@ export namespace drivers {
             position?: DriverPosition | null
             officeCode?: string | null
             officeLocation?: string | null
-            hireDate?: string | null
+            hireDate?: string | string | null
             status?: DriverStatus
-            statusDate?: string
+            statusDate?: string | string
             federalLicense?: string | null
-            federalLicenseExpiry?: string | null
+            federalLicenseExpiry?: string | string | null
             stateLicense?: string | null
-            stateLicenseExpiry?: string | null
+            stateLicenseExpiry?: string | string | null
             creditCard?: string | null
-            creditCardExpiry?: string | null
+            creditCardExpiry?: string | string | null
             company?: string | null
             transporterId?: number | null
             busLineId?: number | null
             busId?: number | null
             active?: boolean
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -8538,12 +8538,12 @@ export namespace event_types {
         /**
          * Timestamp when the event type was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the event type was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface ListEventTypesQueryParams {
@@ -8561,8 +8561,8 @@ export namespace event_types {
             needsQuantity?: boolean
             integration?: boolean
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -8588,8 +8588,8 @@ export namespace event_types {
             needsQuantity?: boolean
             integration?: boolean
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -8655,12 +8655,12 @@ export namespace gates {
         /**
          * Timestamp when the gate record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the gate record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface Gates {
@@ -8679,8 +8679,8 @@ export namespace gates {
             id?: number
             terminalId?: number
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 
@@ -8700,8 +8700,8 @@ export namespace gates {
             id?: number
             terminalId?: number
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 }
@@ -8805,12 +8805,12 @@ export namespace installation_schemas {
         /**
          * Timestamp when the installation schema record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the installation schema record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export type InstallationSchemaFieldType = "string" | "long_text" | "number" | "boolean" | "date" | "enum"
@@ -8875,12 +8875,12 @@ export namespace installation_schemas {
         /**
          * Timestamp when the installation schema record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the installation schema record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface ListInstallationSchemasQueryParams {
@@ -8897,8 +8897,8 @@ export namespace installation_schemas {
             options?: InstallationSchemaOptions
             required?: boolean
             installationTypeId?: number
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -8923,8 +8923,8 @@ export namespace installation_schemas {
             options?: InstallationSchemaOptions
             required?: boolean
             installationTypeId?: number
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -8990,12 +8990,12 @@ export namespace installation_types {
         /**
          * Timestamp when the installation type record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the installation type record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface InstallationTypeWithRelations {
@@ -9032,12 +9032,12 @@ export namespace installation_types {
         /**
          * Timestamp when the installation type record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the installation type record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface ListInstallationTypesQueryParams {
@@ -9051,8 +9051,8 @@ export namespace installation_types {
             code?: string
             description?: string | null
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -9074,8 +9074,8 @@ export namespace installation_types {
             code?: string
             description?: string | null
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -9195,12 +9195,12 @@ export namespace installations {
         /**
          * Timestamp when the installation record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the installation record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface InstallationLocation {
@@ -9321,12 +9321,12 @@ export namespace installations {
         /**
          * Timestamp when the installation record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the installation record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface ListInstallationsQueryParams {
@@ -9343,8 +9343,8 @@ export namespace installations {
             contactEmail?: string | null
             website?: string | null
             installationTypeId?: number | null
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -9369,8 +9369,8 @@ export namespace installations {
             contactEmail?: string | null
             website?: string | null
             installationTypeId?: number | null
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -9391,8 +9391,8 @@ export namespace node_events {
         nodeId: number
         eventTypeId: number
         customTime: number | null
-        createdAt: string | null
-        updatedAt: string | null
+        createdAt: string | string | null
+        updatedAt: string | string | null
         /**
          * From event_types table (flattened)
          */
@@ -9496,8 +9496,8 @@ export namespace nodes {
             cityId?: number
             populationId?: number
             installationId?: number | null
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -9575,12 +9575,12 @@ export namespace nodes {
         /**
          * Timestamp when the node record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the node record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface NodeEventAssignmentPayload {
@@ -9668,12 +9668,12 @@ export namespace nodes {
         /**
          * Timestamp when the node record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the node record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface PaginatedListNodesQueryParams {
@@ -9697,8 +9697,8 @@ export namespace nodes {
             cityId?: number
             populationId?: number
             installationId?: number | null
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -9789,12 +9789,12 @@ export namespace pathways {
         /**
          * Timestamp when the pathway was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the pathway was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface Pathways {
@@ -9840,12 +9840,12 @@ export namespace permission_groups {
         /**
          * Timestamp when the permission group record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the permission group record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
 
         /**
          * Array of permissions associated with this group (optional for flexibility)
@@ -9904,8 +9904,8 @@ export namespace permissions {
             name?: string
             description?: string | null
             permissionGroupId?: number | null
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 
@@ -9938,12 +9938,12 @@ export namespace permissions {
         /**
          * Timestamp when the permission was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the permission was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface Permissions {
@@ -9964,8 +9964,8 @@ export namespace permissions {
             name?: string
             description?: string | null
             permissionGroupId?: number | null
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 }
@@ -10015,8 +10015,8 @@ export namespace populations {
             name?: string
             description?: string | null
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -10038,8 +10038,8 @@ export namespace populations {
             name?: string
             description?: string | null
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -10078,12 +10078,12 @@ export namespace populations {
         /**
          * Timestamp when the population record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the population record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface PopulationWithRelations {
@@ -10120,12 +10120,12 @@ export namespace populations {
         /**
          * Timestamp when the population record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the population record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 }
 
@@ -10175,8 +10175,8 @@ export namespace roles {
             name?: string
             description?: string | null
             tenantId?: number
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         includePermissions?: boolean
     }
@@ -10193,8 +10193,8 @@ export namespace roles {
             name?: string
             description?: string | null
             tenantId?: number
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         includePermissions?: boolean
     }
@@ -10223,12 +10223,12 @@ export namespace roles {
         /**
          * Timestamp when the role was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the role was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface RoleWithPermissions {
@@ -10260,12 +10260,12 @@ export namespace roles {
         /**
          * Timestamp when the role was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the role was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface Roles {
@@ -10285,8 +10285,8 @@ export namespace roles {
             name?: string
             description?: string | null
             tenantId?: number
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         includePermissions?: boolean
     }
@@ -10379,8 +10379,8 @@ export namespace routes {
             connectionCount?: number
             totalTravelTime?: number
             totalDistance?: number
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 
@@ -10458,12 +10458,12 @@ export namespace routes {
         /**
          * Timestamp when the route was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the route was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface RouteWithFullDetails {
@@ -10478,8 +10478,8 @@ export namespace routes {
             typicalTime: number
             tollRoad: boolean
             active: boolean
-            createdAt: string
-            updatedAt: string
+            createdAt: string | string | null
+            updatedAt: string | string | null
         } | null
         routeSegments: route_segment.RouteSegment[]
         /**
@@ -10555,12 +10555,12 @@ export namespace routes {
         /**
          * Timestamp when the route was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the route was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface Routes {
@@ -10587,8 +10587,8 @@ export namespace routes {
             connectionCount?: number
             totalTravelTime?: number
             totalDistance?: number
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 }
@@ -10628,12 +10628,12 @@ export namespace seat_diagram_zones {
         /**
          * Timestamp when the zone was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the zone was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface SeatDiagramZones {
@@ -10704,12 +10704,12 @@ export namespace seat_diagrams {
         /**
          * Timestamp when the seat diagram was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when the seat diagram was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 }
 
@@ -10750,8 +10750,8 @@ export namespace service_types {
             name?: string
             description?: string
             active?: boolean
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -10780,12 +10780,12 @@ export namespace service_types {
         /**
          * Timestamp when this service type was created
          */
-        createdAt: string
+        createdAt: string | string | null
 
         /**
          * Timestamp when this service type was last updated
          */
-        updatedAt: string
+        updatedAt: string | string | null
     }
 
     export interface ServiceTypes {
@@ -10802,8 +10802,8 @@ export namespace service_types {
             name?: string
             description?: string
             active?: boolean
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -10927,8 +10927,8 @@ export namespace states {
             code?: string
             countryId?: number
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -10950,8 +10950,8 @@ export namespace states {
             code?: string
             countryId?: number
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -10990,12 +10990,12 @@ export namespace states {
         /**
          * Timestamp when the state record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the state record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 }
 
@@ -11038,8 +11038,8 @@ export namespace tenants {
             code?: string
             description?: string | null
             isActive?: boolean
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 
@@ -11049,8 +11049,8 @@ export namespace tenants {
         code: string
         description?: string | null
         isActive: boolean
-        createdAt: string
-        updatedAt: string
+        createdAt: string | string | null
+        updatedAt: string | string | null
     }
 
     export interface Tenants {
@@ -11068,8 +11068,8 @@ export namespace tenants {
             code?: string
             description?: string | null
             isActive?: boolean
-            createdAt?: string
-            updatedAt?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 }
@@ -11201,8 +11201,8 @@ export namespace terminals {
             code?: string
             slug?: string
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 
@@ -11270,12 +11270,12 @@ export namespace terminals {
         /**
          * Timestamp when the terminal record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the terminal record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface TerminalWithCity {
@@ -11343,12 +11343,12 @@ export namespace terminals {
         /**
          * Timestamp when the terminal record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the terminal record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface Terminals {
@@ -11376,8 +11376,8 @@ export namespace terminals {
             code?: string
             slug?: string
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
     }
 
@@ -11497,8 +11497,8 @@ export namespace transporters {
             contactInfo?: string | null
             licenseNumber?: string | null
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -11567,12 +11567,12 @@ export namespace transporters {
         /**
          * Timestamp when the transporter record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the transporter record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface TransporterWithCity {
@@ -11640,12 +11640,12 @@ export namespace transporters {
         /**
          * Timestamp when the transporter record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the transporter record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface Transporters {
@@ -11670,8 +11670,8 @@ export namespace transporters {
             contactInfo?: string | null
             licenseNumber?: string | null
             active?: boolean
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -11710,11 +11710,11 @@ export namespace user_permissions {
         position: string | null
         employeeId: string | null
         mfaSettings: { [key: string]: any } | null
-        lastLogin: string | null
+        lastLogin: string | string | null
         isActive: boolean
         isSystemAdmin: boolean
-        createdAt: string | null
-        updatedAt: string | null
+        createdAt: string | string | null
+        updatedAt: string | string | null
     }
 
     export interface UserWithRoles {
@@ -11734,11 +11734,11 @@ export namespace user_permissions {
         position: string | null
         employeeId: string | null
         mfaSettings: { [key: string]: any } | null
-        lastLogin: string | null
+        lastLogin: string | string | null
         isActive: boolean
         isSystemAdmin: boolean
-        createdAt: string | null
-        updatedAt: string | null
+        createdAt: string | string | null
+        updatedAt: string | string | null
     }
 }
 

@@ -98,31 +98,31 @@ export interface Driver {
   officeLocation: string | null;
 
   /** Date of hiring (Fec. Ingreso) */
-  hireDate: Date | null;
+  hireDate: Date | string | null;
 
   /** Current status (Estado Actual) */
   status: DriverStatus;
 
   /** Status date (Fecha Estado) */
-  statusDate: Date;
+  statusDate: Date | string;
 
   /** Federal license (Licencia Federal) */
   federalLicense: string | null;
 
   /** Federal license expiry (Fecha Lic. Fed) */
-  federalLicenseExpiry: Date | null;
+  federalLicenseExpiry: Date | string | null;
 
   /** State license (Licencia Estatal) */
   stateLicense: string | null;
 
   /** State license expiry (Fecha Lic. Est) */
-  stateLicenseExpiry: Date | null;
+  stateLicenseExpiry: Date | string | null;
 
   /** Credit card info (Tarjeta Crédito) */
   creditCard: string | null;
 
   /** Credit card expiry (Fecha T. Crédito) */
-  creditCardExpiry: Date | null;
+  creditCardExpiry: Date | string | null;
 
   /** Company (Empresa Alterna) */
   company: string | null;
@@ -140,10 +140,10 @@ export interface Driver {
   active: boolean;
 
   /** Timestamp when the driver record was created */
-  createdAt: Date;
+  createdAt: Date | string | null;
 
   /** Timestamp when the driver record was last updated */
-  updatedAt: Date;
+  updatedAt: Date | string | null;
 }
 
 /**

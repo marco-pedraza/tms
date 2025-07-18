@@ -128,7 +128,7 @@ export interface RefreshToken {
   /**
    * Timestamp when the token was created
    */
-  createdAt: Date | null;
+  createdAt: Date | string | null;
 }
 
 /**

@@ -139,10 +139,10 @@ export default function BusLinePage() {
               </dd>
 
               <dt className="font-medium">{tCommon('fields.createdAt')}</dt>
-              <dd>{new Date(busLine.createdAt).toLocaleString()}</dd>
+              <dd>{new Date(busLine.createdAt ?? '').toLocaleString()}</dd>
 
               <dt className="font-medium">{tCommon('fields.updatedAt')}</dt>
-              <dd>{new Date(busLine.updatedAt).toLocaleString()}</dd>
+              <dd>{new Date(busLine.updatedAt ?? '').toLocaleString()}</dd>
             </dl>
           </CardContent>
         </Card>

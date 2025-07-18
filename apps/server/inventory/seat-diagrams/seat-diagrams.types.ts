@@ -39,10 +39,10 @@ export interface SeatDiagram {
   active: boolean;
 
   /** Timestamp when the seat diagram was created */
-  createdAt: Date;
+  createdAt: Date | string | null;
 
   /** Timestamp when the seat diagram was last updated */
-  updatedAt: Date;
+  updatedAt: Date | string | null;
 }
 
 /**

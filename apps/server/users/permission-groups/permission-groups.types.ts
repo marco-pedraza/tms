@@ -15,10 +15,10 @@ export interface PermissionGroup {
   description?: string | null;
 
   /** Timestamp when the permission group record was created */
-  createdAt: Date | null;
+  createdAt: Date | string | null;
 
   /** Timestamp when the permission group record was last updated */
-  updatedAt: Date | null;
+  updatedAt: Date | string | null;
 
   /** Array of permissions associated with this group (optional for flexibility) */
   permissions?: Permission[];

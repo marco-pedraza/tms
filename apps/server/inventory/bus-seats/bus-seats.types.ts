@@ -32,10 +32,10 @@ interface BaseBusSeat {
   active: boolean;
 
   /** Timestamp when the space was created */
-  createdAt: Date;
+  createdAt: Date | string | null;
 
   /** Timestamp when the space was last updated */
-  updatedAt: Date;
+  updatedAt: Date | string | null;
 }
 
 /**

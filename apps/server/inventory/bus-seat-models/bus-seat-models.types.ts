@@ -32,10 +32,10 @@ interface BaseBusSeatModel {
   active: boolean;
 
   /** Timestamp when the space model was created */
-  createdAt: Date;
+  createdAt: Date | string | null;
 
   /** Timestamp when the space model was last updated */
-  updatedAt: Date;
+  updatedAt: Date | string | null;
 }
 
 /**

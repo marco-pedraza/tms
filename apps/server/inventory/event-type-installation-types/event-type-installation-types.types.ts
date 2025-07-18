@@ -12,10 +12,10 @@ export interface EventTypeInstallationType {
   installationTypeId: number;
 
   /** Timestamp when the assignment was created */
-  createdAt: Date | null;
+  createdAt: Date | string | null;
 
   /** Timestamp when the assignment was last updated */
-  updatedAt: Date | null;
+  updatedAt: Date | string | null;
 }
 
 /**

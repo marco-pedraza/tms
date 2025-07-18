@@ -17,10 +17,10 @@ export interface NodeEvent {
   customTime: number | null;
 
   /** Timestamp when the event was created */
-  createdAt: Date | null;
+  createdAt: Date | string | null;
 
   /** Timestamp when the event was last updated */
-  updatedAt: Date | null;
+  updatedAt: Date | string | null;
 }
 
 /**
@@ -39,8 +39,8 @@ export interface NodeEventFlat {
   nodeId: number;
   eventTypeId: number;
   customTime: number | null;
-  createdAt: Date | null;
-  updatedAt: Date | null;
+  createdAt: Date | string | null;
+  updatedAt: Date | string | null;
 
   // From event_types table (flattened)
   name: string;

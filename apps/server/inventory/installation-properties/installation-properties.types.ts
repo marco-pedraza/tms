@@ -25,13 +25,10 @@ export interface InstallationProperty {
   installationSchemaId: number;
 
   /** Timestamp when the installation property record was created */
-  createdAt: Date | null;
+  createdAt: Date | string | null;
 
   /** Timestamp when the installation property record was last updated */
-  updatedAt: Date | null;
-
-  /** Timestamp when the installation property record was soft deleted */
-  deletedAt: Date | null;
+  updatedAt: Date | string | null;
 }
 
 /**

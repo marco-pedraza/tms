@@ -26,7 +26,7 @@ export interface Audit {
   userAgent: string | null;
 
   /** Timestamp when the audit record was created */
-  createdAt: Date;
+  createdAt: Date | string | null;
 }
 
 /**

@@ -52,10 +52,10 @@ export interface Route {
   totalDistance: number;
 
   /** Timestamp when the route was created */
-  createdAt: Date;
+  createdAt: Date | string | null;
 
   /** Timestamp when the route was last updated */
-  updatedAt: Date;
+  updatedAt: Date | string | null;
 }
 
 export interface RouteWithFullDetails extends Route {

@@ -7606,12 +7606,12 @@ export namespace countries {
         /**
          * Timestamp when the country record was created
          */
-        createdAt: string | null
+        createdAt: string | string | null
 
         /**
          * Timestamp when the country record was last updated
          */
-        updatedAt: string | null
+        updatedAt: string | string | null
     }
 
     export interface CreateCountryPayload {
@@ -7644,8 +7644,8 @@ export namespace countries {
             name?: string
             active?: boolean
             code?: string
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }
@@ -7666,8 +7666,8 @@ export namespace countries {
             name?: string
             active?: boolean
             code?: string
-            createdAt?: string | null
-            updatedAt?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
         }
         searchTerm?: string
     }

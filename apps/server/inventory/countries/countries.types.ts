@@ -24,10 +24,10 @@ export interface Country {
   code: string;
 
   /** Timestamp when the country record was created */
-  createdAt: Date | null;
+  createdAt: Date | string | null;
 
   /** Timestamp when the country record was last updated */
-  updatedAt: Date | null;
+  updatedAt: Date | string | null;
 }
 
 /**

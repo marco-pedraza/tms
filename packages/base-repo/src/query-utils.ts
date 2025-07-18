@@ -1,7 +1,58 @@
 import { asc, desc } from 'drizzle-orm';
-import { eq, and, or, ilike, SQL, isNull } from 'drizzle-orm';
+import { eq, and, or, ilike, SQL, isNull, gte, lte } from 'drizzle-orm';
 import { PgColumn, PgTable } from 'drizzle-orm/pg-core';
+import { fromZonedTime } from 'date-fns-tz';
 import { OrderBy, PaginationMeta, Filters, RepositoryConfig } from './types';
+
+/**
+ * Default timezone for date filtering operations
+ * TODO: Adjust for multi-tenant
+ */
+export const DEFAULT_TIMEZONE = 'America/Mexico_City';
+
+/**
+ * Creates a Date object representing the start of day in the specified timezone
+ * @param date - The date to get start of day for
+ * @param timezone - The timezone to use (defaults to DEFAULT_TIMEZONE)
+ * @returns Date object representing 00:00:00 in the specified timezone converted to UTC
+ */
+function getStartOfDayInTimezone(
+  date: Date,
+  timezone: string = DEFAULT_TIMEZONE,
+): Date {
+  // Get the date string in the target timezone (YYYY-MM-DD format)
+  const localDateString = date.toLocaleDateString('en-CA', {
+    timeZone: timezone,
+  });
+
+  // Create a date representing midnight (00:00:00) on that day in the target timezone
+  const localMidnight = new Date(`${localDateString}T00:00:00`);
+
+  // Convert this local time to UTC using fromZonedTime
+  return fromZonedTime(localMidnight, timezone);
+}
+
+/**
+ * Creates a Date object representing the end of day in the specified timezone
+ * @param date - The date to get end of day for
+ * @param timezone - The timezone to use (defaults to DEFAULT_TIMEZONE)
+ * @returns Date object representing 23:59:59.999 in the specified timezone converted to UTC
+ */
+function getEndOfDayInTimezone(
+  date: Date,
+  timezone: string = DEFAULT_TIMEZONE,
+): Date {
+  // Get the date string in the target timezone (YYYY-MM-DD format)
+  const localDateString = date.toLocaleDateString('en-CA', {
+    timeZone: timezone,
+  });
+
+  // Create a date representing end of day (23:59:59.999) on that day in the target timezone
+  const localEndOfDay = new Date(`${localDateString}T23:59:59.999`);
+
+  // Convert this local time to UTC using fromZonedTime
+  return fromZonedTime(localEndOfDay, timezone);
+}
 
 /**
  * Creates pagination metadata based on query results
@@ -81,6 +132,40 @@ export const applyOrdering = <Q extends object, TTable>(
 };
 
 /**
+ * Creates a single filter condition for a field and value
+ * @param column - The database column
+ * @param value - The filter value
+ * @returns SQL condition for the filter
+ */
+const createSingleFilterCondition = (column: PgColumn, value: unknown): SQL => {
+  // Handle Date objects and date strings - filter by entire day in configured timezone
+  if (
+    value instanceof Date ||
+    (typeof value === 'string' && !isNaN(Date.parse(value)))
+  ) {
+    let startOfDay: Date;
+    let endOfDay: Date;
+
+    if (typeof value === 'string') {
+      // For string dates, interpret them directly in the target timezone
+      // Extract just the date part (YYYY-MM-DD) to avoid timezone confusion
+      const dateString = value.split('T')[0]; // Get only the date part
+      startOfDay = fromZonedTime(`${dateString}T00:00:00`, DEFAULT_TIMEZONE);
+      endOfDay = fromZonedTime(`${dateString}T23:59:59.999`, DEFAULT_TIMEZONE);
+    } else {
+      // For Date objects, use the existing timezone conversion functions
+      startOfDay = getStartOfDayInTimezone(value);
+      endOfDay = getEndOfDayInTimezone(value);
+    }
+
+    return and(gte(column, startOfDay), lte(column, endOfDay)) as SQL;
+  }
+
+  // Handle simple equality for non-date values
+  return eq(column, value) as SQL;
+};
+
+/**
  * Creates filter conditions without modifying a query
  * @param table - The table to create filters for
  * @param filters - Filters object
@@ -101,7 +186,7 @@ export const createFilterConditions = <T = unknown>(
         `Invalid filter field: ${field}. Field does not exist in the table.`,
       );
     }
-    return eq(column, value);
+    return createSingleFilterCondition(column, value);
   });
 
   return conditions.length > 0 ? and(...conditions) : undefined;

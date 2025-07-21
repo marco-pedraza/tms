@@ -211,6 +211,13 @@
       "when": 1752523374682,
       "tag": "20250714200254_deletes_unnecessary_fields_from_nodes",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1753133130458,
+      "tag": "20250721212530_create_labels_tables",
+      "breakpoints": true
     }
   ]
 }

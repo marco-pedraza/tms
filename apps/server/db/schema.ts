@@ -94,3 +94,8 @@ export {
   nodeEvents,
   nodeEventsRelations,
 } from '../inventory/event-types/event-types.schema';
+export {
+  labels,
+  labelNodes,
+  labelNodesRelations,
+} from '../inventory/labels/labels.schema';

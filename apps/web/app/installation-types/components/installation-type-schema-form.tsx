@@ -47,9 +47,12 @@ export const createInstallationTypeSchemaFormSchema = (
         .string()
         .min(1, { message: tCommon('validations.required') })
         .trim()
-        .regex(/^[a-zA-Z0-9\s]+(?:,[a-zA-Z0-9\s]+)*$/, {
-          message: tCommon('validations.enumValues.commaSeparated'),
-        })
+        .regex(
+          /^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ0-9\s]+(?:,[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ0-9\s]+)*$/,
+          {
+            message: tCommon('validations.enumValues.commaSeparated'),
+          },
+        )
         .transform((val) => {
           const splitted = val
             .split(',')

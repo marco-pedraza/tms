@@ -21,69 +21,65 @@ const installationSchemaTypes =
 
 export const createInstallationTypeSchemaFormSchema = (
   tCommon: UseTranslationsResult,
-) =>
-  z.discriminatedUnion(
-    'type',
-    [
-      z.object({
-        id: z
-          .string()
-          .optional()
-          .transform((val) => (val ? parseInt(val) : undefined)),
-        name: z.string(),
-        label: z.string().min(1, { message: tCommon('validations.required') }),
-        required: z.boolean(),
-        description: z.string(),
-        type: z
-          .enum(['enum'], {
-            message: tCommon('validations.required'),
-          })
-          .transform((val) => {
-            return val as installation_schemas.InstallationSchemaFieldType;
-          }),
-        options: z.object({
-          enumValues: z
-            .string()
-            .min(1, { message: tCommon('validations.required') })
-            .trim()
-            // validate that the string is a comma separated list of strings
-            .regex(/^[a-zA-Z0-9\s]+(?:,[a-zA-Z0-9\s]+)*$/, {
-              message: tCommon('validations.enumValues.commaSeparated'),
-            })
-            .transform((val) => {
-              const splitted = val
-                .split(',')
-                .map((item) => item.trim())
-                .filter((item) => item !== '');
-              return splitted;
-            }),
+) => {
+  const baseSchema = z.object({
+    id: z
+      .string()
+      .optional()
+      .transform((val) => (val ? parseInt(val) : undefined)),
+    name: z.string(),
+    label: z.string().min(1, { message: tCommon('validations.required') }),
+    required: z.boolean(),
+    description: z.string(),
+  });
+
+  // Esquema para el tipo de dato enum
+  const enumSchema = baseSchema.extend({
+    type: z
+      .enum(['enum'], {
+        message: tCommon('validations.required'),
+      })
+      .transform(
+        (val) => val as installation_schemas.InstallationSchemaFieldType,
+      ),
+    options: z.object({
+      enumValues: z
+        .string()
+        .min(1, { message: tCommon('validations.required') })
+        .trim()
+        .regex(/^[a-zA-Z0-9\s]+(?:,[a-zA-Z0-9\s]+)*$/, {
+          message: tCommon('validations.enumValues.commaSeparated'),
+        })
+        .transform((val) => {
+          const splitted = val
+            .split(',')
+            .map((item) => item.trim())
+            .filter((item) => item !== '');
+          return splitted;
         }),
-      }),
-      z.object({
-        id: z
-          .string()
-          .optional()
-          .transform((val) => (val ? parseInt(val) : undefined)),
-        name: z.string(),
-        label: z.string().min(1, { message: tCommon('validations.required') }),
-        required: z.boolean(),
-        description: z.string(),
-        type: z
-          .enum(['string', 'long_text', 'number', 'boolean', 'date'], {
-            message: tCommon('validations.required'),
-          })
-          .transform((val) => {
-            return val as installation_schemas.InstallationSchemaFieldType;
-          }),
-        options: z
-          .object({
-            enumValues: z.string().transform(() => [] as string[]),
-          })
-          .transform(() => undefined),
-      }),
-    ],
-    { message: tCommon('validations.required') },
-  );
+    }),
+  });
+
+  // Esquema para otros tipos de dato
+  const otherTypesSchema = baseSchema.extend({
+    type: z
+      .enum(['string', 'long_text', 'number', 'boolean', 'date'], {
+        message: tCommon('validations.required'),
+      })
+      .transform(
+        (val) => val as installation_schemas.InstallationSchemaFieldType,
+      ),
+    options: z
+      .object({
+        enumValues: z.string().transform(() => [] as string[]),
+      })
+      .transform(() => undefined),
+  });
+
+  return z.discriminatedUnion('type', [enumSchema, otherTypesSchema], {
+    message: tCommon('validations.required'),
+  });
+};
 
 export type InstallationTypeSchemaFormRawValues = z.input<
   ReturnType<typeof createInstallationTypeSchemaFormSchema>
@@ -104,13 +100,7 @@ export default function InstallationTypeSchemaForm({
     defaultValues: {
       label: '',
       name: '',
-      type: 'string' as
-        | 'string'
-        | 'long_text'
-        | 'number'
-        | 'boolean'
-        | 'date'
-        | 'enum',
+      type: 'string' as installation_schemas.InstallationSchemaFieldType,
       required: true,
       options: {
         enumValues: '',

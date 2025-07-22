@@ -795,7 +795,8 @@
           "date": "Fecha",
           "enum": "Lista de Opciones"
         },
-        "required": "Requerido"
+        "required": "Requerido",
+        "notRequired": "Opcional"
       },
       "helpText": {
         "enumValues": "Ingresa una lista de valores separados por comas."

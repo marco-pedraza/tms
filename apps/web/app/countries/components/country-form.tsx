@@ -20,7 +20,12 @@ const createCountryFormSchema = (tCommon: UseTranslationsResult) =>
       }),
     code: z
       .string()
-      .min(2, { message: tCommon('validations.code.length', { length: 2 }) })
+      .min(2, {
+        // @todo Temporal fix to avoid posibble infinite inference loop.
+        // Wee need to understand better why this is happening and find a better solution.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        message: (tCommon as any)('validations.code.length', { length: 2 }),
+      })
       .max(2)
       .regex(/^[A-Z]+$/, { message: tCommon('validations.code.uppercase') }),
     active: z.boolean(),

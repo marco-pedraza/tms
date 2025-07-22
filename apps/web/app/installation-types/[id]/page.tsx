@@ -1,8 +1,10 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { installation_schemas } from '@repo/ims-client';
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import { DataTable, DataTableColumnDef } from '@/components/data-table';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +13,62 @@ import useDeleteDialog from '@/hooks/use-delete-dialog';
 import InstallationTypeSkeleton from '@/installation-types/components/installation-type-skeleton';
 import useInstallationTypeMutations from '@/installation-types/hooks/use-installation-type-mutations';
 import useQueryInstallationType from '@/installation-types/hooks/use-query-installation-type';
+import useQueryInstallationTypeSchemas from '@/installation-types/hooks/use-query-installation-type-schemas';
 import routes from '@/services/routes';
+import { UseTranslationsResult } from '@/types/translations';
+
+const createInstallationTypeSchemasColumns = ({
+  tCommon,
+  tInstallationTypes,
+}: {
+  tCommon: UseTranslationsResult;
+  tInstallationTypes: UseTranslationsResult;
+}): DataTableColumnDef<installation_schemas.InstallationSchema>[] => {
+  return [
+    {
+      accessorKey: 'label',
+      header: tCommon('fields.name'),
+      cell: ({ row }) => (
+        <div className="capitalize font-medium">{row.getValue('label')}</div>
+      ),
+    },
+    {
+      accessorKey: 'type',
+      header: tInstallationTypes('form.fields.dataType'),
+      cell: ({ row }) =>
+        // @ts-expect-error - No better way to type this for now
+        tInstallationTypes(`form.schemas.fieldTypes.${row.getValue('type')}`),
+    },
+    {
+      accessorKey: 'required',
+      header: tInstallationTypes('form.fields.required'),
+      cell: ({ row }) =>
+        tInstallationTypes(
+          `form.schemas.${row.getValue('required') ? 'required' : 'notRequired'}`,
+        ),
+    },
+    {
+      accessorKey: 'enumValues',
+      header: tInstallationTypes('form.fields.enumValues'),
+      cell: ({ row }) => {
+        const enumValues = row.original.options?.enumValues;
+        return <div>{enumValues?.join(', ')}</div>;
+      },
+    },
+    {
+      accessorKey: 'description',
+      header: tCommon('fields.description'),
+    },
+    {
+      accessorKey: 'createdAt',
+      header: tCommon('fields.createdAt'),
+      cell: ({ row }) => {
+        const value = row.getValue('createdAt');
+        return value ? new Date(value as string).toLocaleDateString() : '-';
+      },
+    },
+  ];
+};
 
 export default function InstallationTypeDetailsPage() {
   const tInstallationTypes = useTranslations('installationTypes');
@@ -20,6 +77,15 @@ export default function InstallationTypeDetailsPage() {
     useCollectionItemDetailsParams();
   const { data: installationType, isLoading } = useQueryInstallationType({
     itemId: installationTypeId,
+    enabled: isValidId,
+  });
+  const {
+    data: installationSchemas,
+    isLoading: isLoadingSchemas,
+    error: errorLoadingSchemas,
+    refetch: refetchSchemas,
+  } = useQueryInstallationTypeSchemas({
+    installationTypeId,
     enabled: isValidId,
   });
   const { delete: deleteInstallationType } = useInstallationTypeMutations();
@@ -118,6 +184,33 @@ export default function InstallationTypeDetailsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>
+            {tInstallationTypes('form.sections.schemas.title')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* @todo Implement segregated interfaces for read only and editable cases for the DataTable component. */}
+          {/* @ts-expect-error - This table is read only, so we don't need to pass the onDelete prop.*/}
+          <DataTable
+            data={installationSchemas?.data ?? []}
+            columns={createInstallationTypeSchemasColumns({
+              tCommon,
+              tInstallationTypes,
+            })}
+            isLoading={isLoadingSchemas}
+            hasError={!!errorLoadingSchemas}
+            onRetry={refetchSchemas}
+            addHref={routes.installationTypes.getEditRoute(
+              installationType.id.toString(),
+            )}
+            routes={routes.installationTypes}
+            displayActionsColumn={false}
+          />
+        </CardContent>
+      </Card>
 
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

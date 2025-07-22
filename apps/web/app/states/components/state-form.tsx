@@ -25,7 +25,13 @@ const createStateFormSchema = (tCommon: UseTranslationsResult) =>
     code: z
       .string()
       .min(2, {
-        message: tCommon('validations.code.length-range', { min: 2, max: 3 }),
+        // @todo Temporal fix to avoid posibble infinite inference loop.
+        // Wee need to understand better why this is happening and find a better solution.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        message: (tCommon as any)('validations.code.length-range', {
+          min: 2,
+          max: 3,
+        }),
       })
       .max(3)
       .regex(/^[A-Z]+$/, { message: tCommon('validations.code.uppercase') }),

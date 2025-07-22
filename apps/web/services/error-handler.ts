@@ -29,7 +29,10 @@ export function getTranslatedValidationError({
   entity,
 }: GetTranslatedValidationErrorProps): string {
   const translatedValidationErrors: TranslatedValidationErrors = {
-    duplicate: tCommon('validations.server.duplicate', {
+    // @todo Temporal fix to avoid posibble infinite inference loop.
+    // Wee need to understand better why this is happening and find a better solution.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    duplicate: (tCommon as any)('validations.server.duplicate', {
       entity: tCommon(`entities.${entity as KnownEntities}`),
       property: tCommon(`fields.${property as KnownFields}`),
       value: error.value,

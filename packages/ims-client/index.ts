@@ -112,6 +112,7 @@ export namespace inventory {
             this.createInstallation = this.createInstallation.bind(this)
             this.createInstallationSchema = this.createInstallationSchema.bind(this)
             this.createInstallationType = this.createInstallationType.bind(this)
+            this.createLabel = this.createLabel.bind(this)
             this.createNode = this.createNode.bind(this)
             this.createPathway = this.createPathway.bind(this)
             this.createPopulation = this.createPopulation.bind(this)
@@ -134,6 +135,7 @@ export namespace inventory {
             this.deleteInstallation = this.deleteInstallation.bind(this)
             this.deleteInstallationSchema = this.deleteInstallationSchema.bind(this)
             this.deleteInstallationType = this.deleteInstallationType.bind(this)
+            this.deleteLabel = this.deleteLabel.bind(this)
             this.deleteNode = this.deleteNode.bind(this)
             this.deletePathway = this.deletePathway.bind(this)
             this.deletePopulation = this.deletePopulation.bind(this)
@@ -165,6 +167,7 @@ export namespace inventory {
             this.getInstallationSchema = this.getInstallationSchema.bind(this)
             this.getInstallationType = this.getInstallationType.bind(this)
             this.getInstallationTypeSchema = this.getInstallationTypeSchema.bind(this)
+            this.getLabel = this.getLabel.bind(this)
             this.getNode = this.getNode.bind(this)
             this.getPathway = this.getPathway.bind(this)
             this.getPopulation = this.getPopulation.bind(this)
@@ -206,6 +209,8 @@ export namespace inventory {
             this.listInstallationTypesPaginated = this.listInstallationTypesPaginated.bind(this)
             this.listInstallations = this.listInstallations.bind(this)
             this.listInstallationsPaginated = this.listInstallationsPaginated.bind(this)
+            this.listLabels = this.listLabels.bind(this)
+            this.listLabelsPaginated = this.listLabelsPaginated.bind(this)
             this.listNodes = this.listNodes.bind(this)
             this.listNodesPaginated = this.listNodesPaginated.bind(this)
             this.listPathways = this.listPathways.bind(this)
@@ -257,6 +262,7 @@ export namespace inventory {
             this.updateInstallationProperties = this.updateInstallationProperties.bind(this)
             this.updateInstallationSchema = this.updateInstallationSchema.bind(this)
             this.updateInstallationType = this.updateInstallationType.bind(this)
+            this.updateLabel = this.updateLabel.bind(this)
             this.updateNode = this.updateNode.bind(this)
             this.updatePathway = this.updatePathway.bind(this)
             this.updatePopulation = this.updatePopulation.bind(this)
@@ -531,6 +537,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/installation/types/create`, JSON.stringify(params))
             return await resp.json() as installation_types.InstallationType
+        }
+
+        /**
+         * Creates a new label.
+         * @param params - The label data to create
+         * @returns {Promise<Label>} The created label
+         * @throws {APIError} If the label creation fails
+         */
+        public async createLabel(params: labels.CreateLabelPayload): Promise<labels.Label> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/labels/create`, JSON.stringify(params))
+            return await resp.json() as labels.Label
         }
 
         /**
@@ -819,6 +837,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/installation/types/${encodeURIComponent(id)}/delete`)
             return await resp.json() as installation_types.InstallationType
+        }
+
+        /**
+         * Deletes a label by ID.
+         * @param params - Object containing the label ID to delete
+         * @returns {Promise<Label>} The deleted label
+         * @throws {APIError} If the label is not found
+         */
+        public async deleteLabel(id: number): Promise<labels.Label> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/labels/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as labels.Label
         }
 
         /**
@@ -1211,6 +1241,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/installation/types/${encodeURIComponent(id)}/schema`)
             return await resp.json() as installation_schemas.ListInstallationSchemasResult
+        }
+
+        /**
+         * Retrieves a single label by ID with node count.
+         * @param params - Object containing the label ID to retrieve
+         * @returns {Promise<LabelWithNodeCount>} The label with node count
+         * @throws {APIError} If the label is not found
+         */
+        public async getLabel(id: number): Promise<labels.LabelWithNodeCount> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/labels/${encodeURIComponent(id)}`)
+            return await resp.json() as labels.LabelWithNodeCount
         }
 
         /**
@@ -1712,6 +1754,28 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/installations/list`, JSON.stringify(params))
             return await resp.json() as installations.PaginatedListInstallationsResult
+        }
+
+        /**
+         * Lists all labels with optional filtering, searching, and ordering (non-paginated).
+         * @param params - Query parameters for filtering, searching, and ordering
+         * @returns {Promise<ListLabelsResult>} List of all labels with node count
+         */
+        public async listLabels(params: labels.ListLabelsQueryParams): Promise<labels.ListLabelsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/labels/list/all`, JSON.stringify(params))
+            return await resp.json() as labels.ListLabelsResult
+        }
+
+        /**
+         * Lists all labels with optional filtering, searching, and ordering (paginated).
+         * @param params - Query parameters for filtering, searching, and pagination
+         * @returns {Promise<PaginatedListLabelsResult>} Paginated list of labels with node count
+         */
+        public async listLabelsPaginated(params: labels.PaginatedListLabelsQueryParams): Promise<labels.PaginatedListLabelsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/labels/list`, JSON.stringify(params))
+            return await resp.json() as labels.PaginatedListLabelsResult
         }
 
         /**
@@ -3313,6 +3377,35 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/installation/types/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as installation_types.InstallationType
+        }
+
+        /**
+         * Updates an existing label.
+         * @param params - The label ID and data to update
+         * @returns {Promise<Label>} The updated label
+         * @throws {APIError} If the label update fails or label is not found
+         */
+        public async updateLabel(id: number, params: {
+    /**
+     * Name of the label
+     * Must have at least 1 non-whitespace character
+     */
+    name?: string
+
+    /**
+     * Optional description of the label
+     */
+    description?: string
+
+    /**
+     * Color of the label in hexadecimal format (#RRGGBB or #RGB)
+     * Must be a valid hexadecimal color code
+     */
+    color?: string
+}): Promise<labels.Label> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/labels/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as labels.Label
         }
 
         /**
@@ -9378,6 +9471,139 @@ export namespace installations {
     export interface PaginatedListInstallationsResult {
         pagination: shared.PaginationMeta
         data: InstallationWithDetails[]
+    }
+}
+
+export namespace labels {
+    export interface CreateLabelPayload {
+        /**
+         * Name of the label
+         * Must have at least 1 non-whitespace character
+         */
+        name: string
+
+        /**
+         * Optional description of the label
+         */
+        description?: string
+
+        /**
+         * Color of the label in hexadecimal format (#RRGGBB or #RGB)
+         * Must be a valid hexadecimal color code
+         */
+        color: string
+    }
+
+    export interface Label {
+        /**
+         * Unique identifier for the label
+         */
+        id: number
+
+        /**
+         * Name of the label
+         */
+        name: string
+
+        /**
+         * Optional description of the label
+         */
+        description: string | null
+
+        /**
+         * Color of the label in hexadecimal format (#RRGGBB or #RGB)
+         */
+        color: string
+
+        /**
+         * Timestamp when the label record was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the label record was last updated
+         */
+        updatedAt: string | string | null
+    }
+
+    export interface LabelWithNodeCount {
+        /**
+         * Number of nodes associated with this label
+         */
+        nodeCount: number
+
+        /**
+         * Unique identifier for the label
+         */
+        id: number
+
+        /**
+         * Name of the label
+         */
+        name: string
+
+        /**
+         * Optional description of the label
+         */
+        description: string | null
+
+        /**
+         * Color of the label in hexadecimal format (#RRGGBB or #RGB)
+         */
+        color: string
+
+        /**
+         * Timestamp when the label record was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the label record was last updated
+         */
+        updatedAt: string | string | null
+    }
+
+    export interface ListLabelsQueryParams {
+        orderBy?: {
+            field: "id" | "name" | "description" | "color" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            description?: string | null
+            color?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListLabelsResult {
+        data: LabelWithNodeCount[]
+    }
+
+    export interface PaginatedListLabelsQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "description" | "color" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            description?: string | null
+            color?: string
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListLabelsResult {
+        pagination: shared.PaginationMeta
+        data: LabelWithNodeCount[]
     }
 }
 

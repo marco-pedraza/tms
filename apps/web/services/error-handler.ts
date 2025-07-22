@@ -1,4 +1,9 @@
-import { KnownServerErrors, UseTranslationsResult } from '@/types/translations';
+import {
+  KnownEntities,
+  KnownFields,
+  KnownServerErrors,
+  UseTranslationsResult,
+} from '@/types/translations';
 
 type TranslatedValidationErrors = {
   [key in KnownServerErrors]: string;
@@ -25,11 +30,8 @@ export function getTranslatedValidationError({
 }: GetTranslatedValidationErrorProps): string {
   const translatedValidationErrors: TranslatedValidationErrors = {
     duplicate: tCommon('validations.server.duplicate', {
-      // @todo Entity and property should be dynamic.
-      // @ts-expect-error - No better way to type this for now
-      entity: tCommon(`entities.${entity}`),
-      // @ts-expect-error - No better way to type this for now
-      property: tCommon(`fields.${property}`),
+      entity: tCommon(`entities.${entity as KnownEntities}`),
+      property: tCommon(`fields.${property as KnownFields}`),
       value: error.value,
     }),
   };

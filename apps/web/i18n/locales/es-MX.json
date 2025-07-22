@@ -96,27 +96,30 @@
       }
     },
     "validations": {
-      "required": "Este campo es obligatorio",
+      "required": "Este campo es obligatorio.",
       "name": {
-        "letters": "El nombre debe contener solo letras y espacios"
+        "letters": "El nombre debe contener solo letras y espacios."
       },
       "code": {
-        "length": "El código debe contener {length} carácteres",
-        "length-range": "El código debe contener entre {min} y {max} carácteres",
-        "uppercase": "El código debe contener solo letras mayúsculas",
-        "alphanumeric": "El código debe contener solo letras mayúsculas, números y guiones"
+        "length": "El código debe contener {length} carácteres.",
+        "length-range": "El código debe contener entre {min} y {max} carácteres.",
+        "uppercase": "El código debe contener solo letras mayúsculas.",
+        "alphanumeric": "El código debe contener solo letras mayúsculas, números y guiones."
       },
       "latitude": {
-        "range": "La latitud debe ser un número entre -90 y 90"
+        "range": "La latitud debe ser un número entre -90 y 90."
       },
       "longitude": {
-        "range": "La longitud debe ser un número entre -180 y 180"
+        "range": "La longitud debe ser un número entre -180 y 180."
       },
       "radius": {
-        "positive": "El radio debe ser un número positivo"
+        "positive": "El radio debe ser un número positivo."
+      },
+      "enumValues": {
+        "commaSeparated": "Elimina cualquier coma al inicio o al final de la lista. Ingresa solo letras, números y espacios por cada valor."
       },
       "server": {
-        "duplicate": "Ya existe un {entity} con {property}: \"{value}\""
+        "duplicate": "Ya existe un {entity} con {property}: \"{value}\"."
       }
     },
     "entities": {
@@ -759,11 +762,43 @@
       "description": "Descripción"
     },
     "form": {
+      "sections": {
+        "schemas": {
+          "title": "Atributos Personalizados",
+          "emptyText": "No hay atributos personalizados asignados",
+          "addAttribute": "Agregar atributo"
+        }
+      },
       "title": "Información del tipo de instalación",
       "placeholders": {
         "name": "Ej: Terminal de Autobuses",
         "code": "Ej: TRL",
-        "description": "Ej: Instalación para el embarque y desembarque de pasajeros"
+        "description": "Ej: Instalación para el embarque y desembarque de pasajeros",
+        "dataType": "Selecciona el tipo de dato",
+        "enumValues": "Ej: Opción 1, Opción 2, Opción 3",
+        "schemaLabel": "Ej: Dirección",
+        "schemaDescription": "Ej: Dirección de la instalación"
+      },
+      "fields": {
+        "dataType": "Tipo de dato",
+        "label": "Nombre",
+        "description": "Descripción",
+        "required": "Es Requerido",
+        "enumValues": "Opciones"
+      },
+      "schemas": {
+        "fieldTypes": {
+          "string": "Texto",
+          "long_text": "Texto Largo",
+          "number": "Número",
+          "boolean": "Verdadero o Falso",
+          "date": "Fecha",
+          "enum": "Lista de Opciones"
+        },
+        "required": "Requerido"
+      },
+      "helpText": {
+        "enumValues": "Ingresa una lista de valores separados por comas."
       }
     },
     "details": {
@@ -794,6 +829,11 @@
         "loading": "Eliminando tipo de instalación...",
         "success": "Tipo de instalación eliminado correctamente",
         "error": "No pudimos eliminar el tipo de instalación"
+      },
+      "syncInstallationSchemas": {
+        "loading": "Sincronizando atributos...",
+        "success": "Atributos sincronizados correctamente",
+        "error": "No pudimos sincronizar los atributos, por favor intenta nuevamente"
       }
     }
   }

@@ -12,7 +12,7 @@ export default function Form({ children, onSubmit, ...formProps }: FormProps) {
         e.stopPropagation();
         onSubmit();
       }}
-      className="max-w-2xl mx-auto"
+      className="max-w-2xl mx-auto w-full"
     >
       {children}
     </form>

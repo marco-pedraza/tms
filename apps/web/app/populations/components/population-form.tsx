@@ -192,7 +192,7 @@ export default function PopulationForm({
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="justify-start"
+                      className="justify-start rounded-none rounded-bl-lg rounded-br-lg"
                     >
                       <PlusCircle className="mr-2 h-4 w-4" />
                       {tPopulations('sections.cities.assignCity')}

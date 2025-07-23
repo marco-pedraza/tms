@@ -99,3 +99,9 @@ export {
   labelNodes,
   labelNodesRelations,
 } from '../inventory/labels/labels.schema';
+export {
+  amenities,
+  amenitiesRelations,
+  installationAmenities,
+  installationAmenitiesRelations,
+} from '../inventory/amenities/amenities.schema';

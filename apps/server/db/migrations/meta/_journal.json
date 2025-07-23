@@ -225,6 +225,13 @@
       "when": 1753219937047,
       "tag": "20250722213217_removes_label_from_installation_schemas",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1753310247787,
+      "tag": "20250723223727_creates_amenities_table",
+      "breakpoints": true
     }
   ]
 }

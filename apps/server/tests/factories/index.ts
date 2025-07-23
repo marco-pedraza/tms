@@ -4,6 +4,7 @@ export { cityFactory } from './city.factory';
 export { countryFactory } from './country.factory';
 export { driverFactory } from './drivers.factory';
 export { installationFactory } from './installation.factory';
+export { labelFactory } from './labels.factory';
 export { nodeFactory } from './node.factory';
 export { populationFactory } from './populations.factory';
 export { seatDiagramFactory } from './seat-diagrams.factory';

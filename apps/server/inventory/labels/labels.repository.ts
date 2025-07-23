@@ -1,4 +1,4 @@
-import { count, eq, inArray, sql } from 'drizzle-orm';
+import { and, count, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
 import { labelNodes, labels } from './labels.schema';
@@ -135,11 +135,79 @@ export function createLabelRepository() {
     };
   }
 
+  /**
+   * Finds all labels assigned to a specific node
+   * @param nodeId - The ID of the node
+   * @returns Array of labels assigned to the node
+   */
+  async function findByNodeId(nodeId: number): Promise<Label[]> {
+    const nodeLabels = await db.query.labelNodes.findMany({
+      where: eq(labelNodes.nodeId, nodeId),
+      with: {
+        label: true,
+      },
+    });
+
+    return nodeLabels.map((nl) => nl.label);
+  }
+
+  /**
+   * Finds all labels assigned to multiple nodes
+   * @param nodeIds - Array of node IDs
+   * @returns Map of nodeId to array of labels
+   */
+  async function findByNodeIds(
+    nodeIds: number[],
+  ): Promise<Map<number, Label[]>> {
+    if (nodeIds.length === 0) {
+      return new Map();
+    }
+
+    const nodeLabelResults = await db.query.labelNodes.findMany({
+      where: inArray(labelNodes.nodeId, nodeIds),
+      with: {
+        label: true,
+      },
+    });
+
+    // Create a map of nodeId -> labels[]
+    const nodeLabelsMap = new Map<number, Label[]>();
+    for (const result of nodeLabelResults) {
+      if (!nodeLabelsMap.has(result.nodeId)) {
+        nodeLabelsMap.set(result.nodeId, []);
+      }
+      nodeLabelsMap.get(result.nodeId)?.push(result.label);
+    }
+
+    return nodeLabelsMap;
+  }
+
+  /**
+   * Finds existing label IDs from a given array of IDs
+   * @param labelIds - Array of label IDs to check
+   * @returns Array of label IDs that exist in the database
+   */
+  async function findExistingIds(labelIds: number[]): Promise<number[]> {
+    if (labelIds.length === 0) {
+      return [];
+    }
+
+    const results = await db
+      .select({ id: labels.id })
+      .from(labels)
+      .where(and(inArray(labels.id, labelIds), isNull(labels.deletedAt)));
+
+    return results.map((result: { id: number }) => result.id);
+  }
+
   return {
     ...baseRepository,
     findOneWithNodeCount,
     findAllWithNodeCount,
     findAllPaginatedWithNodeCount,
+    findByNodeId,
+    findByNodeIds,
+    findExistingIds,
   };
 }
 

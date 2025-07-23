@@ -1,11 +1,14 @@
+import { eq } from 'drizzle-orm';
 import { ValidationError } from '@repo/base-repo';
 import type { TransactionalDB } from '@repo/base-repo';
 import { eventTypeInstallationTypeRepository } from '../event-type-installation-types/event-type-installation-types.repository';
 import { eventTypeRepository } from '../event-types/event-types.repository';
+import { labelNodes } from '../labels/labels.schema';
 import { nodeEventRepository } from '../node-events/node-events.repository';
 import type { CreateNodeEventPayload } from '../node-events/node-events.types';
 import type {
   AssignEventsToNodePayload,
+  AssignLabelsToNodePayload,
   NodeWithRelations,
 } from './nodes.types';
 import { nodeRepository } from './nodes.repository';
@@ -139,8 +142,44 @@ export function createNodeUseCases() {
     }
   }
 
+  /**
+   * Assigns labels to a node with validation and atomicity
+   * This is a destructive operation that replaces existing labels
+   * @param nodeId - The ID of the node to assign labels to
+   * @param payload - The assignment payload with label IDs
+   * @returns The updated node with its relations and assigned labels
+   * @throws {ValidationError} If validation fails
+   */
+  async function assignLabelsToNode(
+    nodeId: number,
+    payload: AssignLabelsToNodePayload,
+  ): Promise<NodeWithRelations> {
+    return await nodeRepo
+      .transaction(async (txRepo, tx) => {
+        // Remove duplicates from labelIds
+        const uniqueLabelIds = [...new Set(payload.labelIds)];
+
+        // Delete existing label assignments
+        await tx.delete(labelNodes).where(eq(labelNodes.nodeId, nodeId));
+
+        // Insert new label assignments if any
+        if (uniqueLabelIds.length > 0) {
+          const labelAssignments = uniqueLabelIds.map((labelId) => ({
+            nodeId,
+            labelId,
+          }));
+
+          await tx.insert(labelNodes).values(labelAssignments);
+        }
+
+        return nodeId;
+      })
+      .then((nodeId) => nodeRepo.findOneWithRelations(nodeId));
+  }
+
   return {
     assignEventsToNode,
+    assignLabelsToNode,
   };
 }
 

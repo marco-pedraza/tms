@@ -1,6 +1,7 @@
 import { api } from 'encore.dev/api';
 import type {
   AssignEventsToNodePayload,
+  AssignLabelsToNodePayload,
   CreateNodePayload,
   ListNodesQueryParams,
   ListNodesResult,
@@ -130,5 +131,27 @@ export const assignEventsToNode = api(
     return await nodeUseCases.assignEventsToNode(id, {
       events,
     });
+  },
+);
+
+/**
+ * Assigns labels to a node by replacing all existing label assignments.
+ * This is a destructive operation that replaces existing labels.
+ * @param params - Object containing the node ID and label IDs to assign
+ * @param params.id - The ID of the node to assign labels to
+ * @param params.labelIds - Array of label IDs to assign to the node
+ * @returns {Promise<NodeWithRelations>} The updated node with its relations including the new labels
+ * @throws {APIError} If the node is not found, validation fails, or assignment fails
+ */
+export const assignLabelsToNode = api(
+  { expose: true, method: 'PUT', path: '/nodes/:id/labels/assign' },
+  async ({
+    id,
+    ...data
+  }: AssignLabelsToNodePayload & {
+    id: number;
+  }): Promise<NodeWithRelations> => {
+    await nodeDomain.validateLabelAssignment(id, data);
+    return await nodeUseCases.assignLabelsToNode(id, data);
   },
 );

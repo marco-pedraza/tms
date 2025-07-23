@@ -2,6 +2,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { PaginationMeta } from '../../shared/types';
 import { db } from '../db-service';
+import { labelRepository } from '../labels/labels.repository';
 import { nodeEventRepository } from '../node-events/node-events.repository';
 import { nodes } from './nodes.schema';
 import type {
@@ -29,7 +30,7 @@ export function createNodeRepository() {
   });
 
   /**
-   * Finds a single node with its relations (city, population, installation, nodeEvents)
+   * Finds a single node with its relations (city, population, installation, nodeEvents, labels)
    * @param id - The ID of the node to find
    * @returns The node with related information
    * @throws {NotFoundError} If the node is not found
@@ -52,14 +53,18 @@ export function createNodeRepository() {
     // Get node events with flattened event type information
     const nodeEvents = await nodeEventRepository.findByNodeIdFlat(id);
 
+    // Get node labels using labelRepository
+    const labels = await labelRepository.findByNodeId(id);
+
     return {
       ...node,
       nodeEvents,
+      labels,
     };
   }
 
   /**
-   * Appends relations (city, population, installation) to nodes
+   * Appends relations (city, population, installation, labels) to nodes
    *
    * This function takes a list of nodes and enriches them with related information.
    * It's designed to be used after getting paginated results from the base repository.
@@ -98,10 +103,14 @@ export function createNodeRepository() {
     // Get node events for all nodes in a single query
     const nodeEventsMap = await nodeEventRepository.findByNodeIdsFlat(ids);
 
-    // Add node events to each node
+    // Get labels for all nodes using labelRepository
+    const nodeLabelsMap = await labelRepository.findByNodeIds(ids);
+
+    // Add node events and labels to each node
     const nodesWithEvents = nodesWithRelations.map((node) => ({
       ...node,
       nodeEvents: nodeEventsMap.get(node.id) || [],
+      labels: nodeLabelsMap.get(node.id) || [],
     }));
 
     return {

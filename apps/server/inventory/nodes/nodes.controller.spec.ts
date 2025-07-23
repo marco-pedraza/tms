@@ -18,11 +18,13 @@ import { eventTypeInstallationTypeRepository } from '../event-type-installation-
 import { eventTypeRepository } from '../event-types/event-types.repository';
 import { installationTypeRepository } from '../installation-types/installation-types.repository';
 import { installationRepository } from '../installations/installations.repository';
+import { labelRepository } from '../labels/labels.repository';
 import { populationRepository } from '../populations/populations.repository';
 import type { CreateNodePayload, Node, UpdateNodePayload } from './nodes.types';
 import { nodeRepository } from './nodes.repository';
 import {
   assignEventsToNode,
+  assignLabelsToNode,
   createNode,
   deleteNode,
   getNode,
@@ -42,6 +44,11 @@ describe('Nodes Controller', () => {
   const nodeCleanup = createCleanupHelper(
     ({ id }) => nodeRepository.forceDelete(id),
     'node',
+  );
+
+  const labelCleanup = createCleanupHelper(
+    ({ id }) => labelRepository.forceDelete(id),
+    'label',
   );
 
   beforeAll(async () => {
@@ -85,6 +92,7 @@ describe('Nodes Controller', () => {
   afterAll(async () => {
     // Clean up all created nodes first
     await nodeCleanup.cleanupAll();
+    await labelCleanup.cleanupAll();
 
     // Clean up factory-created entities in dependency order (children before parents)
     if (testInstallationId) {
@@ -308,6 +316,90 @@ describe('Nodes Controller', () => {
       // Verify node is deleted
       await expect(getNode({ id: createdNode.id })).rejects.toThrow();
     });
+
+    test('should assign labels to a node', async () => {
+      // Create test labels directly using repository
+      const label1 = await labelRepository.create({
+        name: createUniqueName('Test Label 1', testSuiteId),
+        color: '#FF0000',
+        description: 'First test label',
+      });
+      labelCleanup.track(label1.id);
+
+      const label2 = await labelRepository.create({
+        name: createUniqueName('Test Label 2', testSuiteId),
+        color: '#00FF00',
+        description: 'Second test label',
+      });
+      labelCleanup.track(label2.id);
+
+      // Assign labels to the node
+      const result = await assignLabelsToNode({
+        id: createdNodeId,
+        labelIds: [label1.id, label2.id],
+      });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(createdNodeId);
+      expect(result.labels).toHaveLength(2);
+      expect(result.labels.map((l) => l.id)).toContain(label1.id);
+      expect(result.labels.map((l) => l.id)).toContain(label2.id);
+    });
+
+    test('should include labels in getNode response', async () => {
+      // Create and assign a label
+      const label5 = await labelRepository.create({
+        name: createUniqueName('Test Label 5', testSuiteId),
+        color: '#FF00FF',
+        description: 'Fifth test label',
+      });
+      labelCleanup.track(label5.id);
+
+      await assignLabelsToNode({
+        id: createdNodeId,
+        labelIds: [label5.id],
+      });
+
+      // Get the node and verify labels are included
+      const result = await getNode({ id: createdNodeId });
+
+      expect(result).toBeDefined();
+      expect(result.labels).toHaveLength(1);
+      expect(result.labels[0].id).toBe(label5.id);
+      expect(result.labels[0].name).toBe(label5.name);
+      expect(result.labels[0].color).toBe(label5.color);
+    });
+
+    test('should replace existing labels when assigning new ones', async () => {
+      // Create another test label
+      const label3 = await labelRepository.create({
+        name: createUniqueName('Test Label 3', testSuiteId),
+        color: '#0000FF',
+        description: 'Third test label',
+      });
+      labelCleanup.track(label3.id);
+
+      // Assign only the new label (should replace previous ones)
+      const result = await assignLabelsToNode({
+        id: createdNodeId,
+        labelIds: [label3.id],
+      });
+
+      expect(result).toBeDefined();
+      expect(result.labels).toHaveLength(1);
+      expect(result.labels[0].id).toBe(label3.id);
+    });
+
+    test('should handle empty label assignment', async () => {
+      // Assign empty array (should remove all labels)
+      const result = await assignLabelsToNode({
+        id: createdNodeId,
+        labelIds: [],
+      });
+
+      expect(result).toBeDefined();
+      expect(result.labels).toHaveLength(0);
+    });
   });
 
   describe('slug generation', () => {
@@ -494,6 +586,97 @@ describe('Nodes Controller', () => {
         expect(slugError?.code).toBe('DUPLICATE');
         expect(slugError?.message).toContain('already exists');
       });
+    });
+
+    test('should handle assignment to non-existent node', async () => {
+      try {
+        await assignLabelsToNode({
+          id: 99999,
+          labelIds: [1],
+        });
+        expect.fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(FieldValidationError);
+        const fieldError = error as FieldValidationError;
+        const nodeIdError = fieldError.fieldErrors.find(
+          (err) => err.field === 'nodeId',
+        );
+        expect(nodeIdError).toBeDefined();
+        expect(nodeIdError?.code).toBe('NOT_FOUND');
+      }
+    });
+
+    test('should handle assignment of non-existent labels', async () => {
+      try {
+        await assignLabelsToNode({
+          id: createdNodeId,
+          labelIds: [99999],
+        });
+        expect.fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(FieldValidationError);
+        const fieldError = error as FieldValidationError;
+        const labelIdsError = fieldError.fieldErrors.find(
+          (err) => err.field === 'labelIds',
+        );
+        expect(labelIdsError).toBeDefined();
+        expect(labelIdsError?.code).toBe('NOT_FOUND');
+      }
+    });
+
+    test('should handle duplicate label IDs in assignment', async () => {
+      // Create a test label with a more unique name
+      const testLabel = await labelRepository.create({
+        name: createUniqueName('Duplicate Validation Label', testSuiteId),
+        color: '#ABCDEF',
+        description: 'Test label for duplicate validation',
+      });
+      labelCleanup.track(testLabel.id);
+
+      try {
+        await assignLabelsToNode({
+          id: createdNodeId,
+          labelIds: [testLabel.id, testLabel.id, testLabel.id],
+        });
+        expect.fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(FieldValidationError);
+        const fieldError = error as FieldValidationError;
+        const labelIdsError = fieldError.fieldErrors.find(
+          (err) => err.field === 'labelIds',
+        );
+        expect(labelIdsError).toBeDefined();
+        expect(labelIdsError?.code).toBe('DUPLICATE_INPUT');
+        expect(labelIdsError?.message).toBe(
+          'Duplicate label IDs are not allowed in the assignment',
+        );
+      }
+    });
+
+    test('should handle assignment with mixed valid and invalid labels', async () => {
+      // Create a valid test label
+      const validLabel = await labelRepository.create({
+        name: createUniqueName('Valid Test Label', testSuiteId),
+        color: '#123456',
+        description: 'Valid test label',
+      });
+      labelCleanup.track(validLabel.id);
+
+      try {
+        await assignLabelsToNode({
+          id: createdNodeId,
+          labelIds: [validLabel.id, 99999, 99998],
+        });
+        expect.fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(FieldValidationError);
+        const fieldError = error as FieldValidationError;
+        const labelIdsError = fieldError.fieldErrors.find(
+          (err) => err.field === 'labelIds',
+        );
+        expect(labelIdsError).toBeDefined();
+        expect(labelIdsError?.code).toBe('NOT_FOUND');
+      }
     });
   });
 

@@ -1,8 +1,14 @@
 import { FieldErrorCollector } from '@repo/base-repo';
 import { standardFieldErrors } from '../../shared/errors';
 import { createSlug } from '../../shared/utils';
+import { labelRepository } from '../labels/labels.repository';
 import { nodes } from './nodes.schema';
-import type { CreateNodePayload, Node, UpdateNodePayload } from './nodes.types';
+import type {
+  AssignLabelsToNodePayload,
+  CreateNodePayload,
+  Node,
+  UpdateNodePayload,
+} from './nodes.types';
 import { nodeRepository } from './nodes.repository';
 
 // Constants
@@ -123,6 +129,67 @@ async function validateNode(
 }
 
 /**
+ * Validates label assignment payload
+ * @param nodeId - The ID of the node to validate
+ * @param payload - The label assignment payload to validate
+ * @throws {FieldValidationError} If validation fails
+ */
+async function validateLabelAssignment(
+  nodeId: number,
+  payload: AssignLabelsToNodePayload,
+): Promise<void> {
+  const collector = new FieldErrorCollector();
+
+  // Validate that labelIds array has no duplicates
+  const uniqueLabelIds = new Set(payload.labelIds);
+  collector.addIf(
+    uniqueLabelIds.size !== payload.labelIds.length,
+    'labelIds',
+    'DUPLICATE_INPUT',
+    'Duplicate label IDs are not allowed in the assignment',
+    payload.labelIds,
+  );
+  collector.throwIfErrors(); // Stop immediately if duplicates found
+
+  // Validate node exists
+  const nodeExists = await nodeRepository.existsBy(nodes.id, nodeId);
+  collector.addIf(
+    !nodeExists,
+    'nodeId',
+    'NOT_FOUND',
+    `Node with id ${nodeId} not found`,
+    nodeId,
+  );
+  collector.throwIfErrors(); // Stop immediately if node not found
+
+  // If labelIds is empty, no need to validate labels
+  if (payload.labelIds.length === 0) {
+    return;
+  }
+
+  // Validate all labels exist using batch operation
+  const uniqueLabelIdsArray = Array.from(uniqueLabelIds);
+  const existingLabelIds =
+    await labelRepository.findExistingIds(uniqueLabelIdsArray);
+
+  // Find missing label IDs by comparing requested vs existing
+  const missingLabelIds = uniqueLabelIdsArray.filter(
+    (labelId) => !existingLabelIds.includes(labelId),
+  );
+
+  // Add single error for missing labels if any
+  if (missingLabelIds.length > 0) {
+    collector.addError(
+      'labelIds',
+      'NOT_FOUND',
+      `Labels with ids [${missingLabelIds.join(', ')}] not found`,
+      missingLabelIds,
+    );
+  }
+  collector.throwIfErrors(); // Stop immediately if any labels not found
+}
+
+/**
  * Creates domain functions for managing node business logic
  */
 export function createNodeDomain() {
@@ -164,6 +231,7 @@ export function createNodeDomain() {
     updateNode,
     validateNode,
     validateNodeUniqueness,
+    validateLabelAssignment,
   };
 }
 

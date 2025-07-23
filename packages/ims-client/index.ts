@@ -98,6 +98,7 @@ export namespace inventory {
             this.assignCityToPopulation = this.assignCityToPopulation.bind(this)
             this.assignEventTypesToInstallationType = this.assignEventTypesToInstallationType.bind(this)
             this.assignEventsToNode = this.assignEventsToNode.bind(this)
+            this.assignLabelsToNode = this.assignLabelsToNode.bind(this)
             this.createBus = this.createBus.bind(this)
             this.createBusDiagramModel = this.createBusDiagramModel.bind(this)
             this.createBusDiagramModelZone = this.createBusDiagramModelZone.bind(this)
@@ -346,6 +347,27 @@ export namespace inventory {
 }): Promise<nodes.NodeWithRelations> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/nodes/${encodeURIComponent(id)}/events/assign`, JSON.stringify(params))
+            return await resp.json() as nodes.NodeWithRelations
+        }
+
+        /**
+         * Assigns labels to a node by replacing all existing label assignments.
+         * This is a destructive operation that replaces existing labels.
+         * @param params - Object containing the node ID and label IDs to assign
+         * @param params.id - The ID of the node to assign labels to
+         * @param params.labelIds - Array of label IDs to assign to the node
+         * @returns {Promise<NodeWithRelations>} The updated node with its relations including the new labels
+         * @throws {APIError} If the node is not found, validation fails, or assignment fails
+         */
+        public async assignLabelsToNode(id: number, params: {
+    /**
+     * Array of label IDs to assign to the node
+     * Replaces all existing label assignments
+     */
+    labelIds: number[]
+}): Promise<nodes.NodeWithRelations> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/nodes/${encodeURIComponent(id)}/labels/assign`, JSON.stringify(params))
             return await resp.json() as nodes.NodeWithRelations
         }
 
@@ -9826,6 +9848,7 @@ export namespace nodes {
         population: populations.Population
         installation: installations.Installation | null
         nodeEvents: node_events.NodeEventFlat[]
+        labels: labels.Label[]
         /**
          * Unique identifier for the node
          */

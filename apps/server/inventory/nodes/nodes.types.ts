@@ -7,6 +7,7 @@ import {
 } from '../../shared/types';
 import type { City } from '../cities/cities.types';
 import type { Installation } from '../installations/installations.types';
+import type { Label } from '../labels/labels.types';
 import type { NodeEventFlat } from '../node-events/node-events.types';
 import type { Population } from '../populations/populations.types';
 
@@ -207,6 +208,7 @@ export interface NodeWithRelations extends Node {
   population: Population;
   installation: Installation | null;
   nodeEvents: NodeEventFlat[];
+  labels: Label[];
 }
 
 export type ListNodesQueryParams = ListQueryParams<Node>;
@@ -233,4 +235,15 @@ export interface NodeEventAssignmentPayload {
 export interface AssignEventsToNodePayload {
   /** Array of event assignments */
   events: NodeEventAssignmentPayload[];
+}
+
+/**
+ * Input for assigning labels to a node
+ */
+export interface AssignLabelsToNodePayload {
+  /**
+   * Array of label IDs to assign to the node
+   * Replaces all existing label assignments
+   */
+  labelIds: number[];
 }

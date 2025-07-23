@@ -37,9 +37,6 @@ export interface InstallationSchema {
   /** Name of the schema field */
   name: string;
 
-  /** Human-readable label for the field */
-  label: string;
-
   /** Optional description of the schema field */
   description: string | null;
 
@@ -85,12 +82,6 @@ export interface CreateInstallationSchemaPayload {
   name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * Human-readable label for the field
-   * Must have at least 1 non-whitespace character
-   */
-  label: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-
-  /**
    * Optional description of the schema field
    */
   description?: string;
@@ -126,12 +117,6 @@ export interface UpdateInstallationSchemaPayload {
    * Must have at least 1 non-whitespace character
    */
   name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-
-  /**
-   * Human-readable label for the field
-   * Must have at least 1 non-whitespace character
-   */
-  label?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
    * Optional description of the schema field

@@ -17,7 +17,6 @@ export const installationSchemas = pgTable(
   {
     id: serial('id').primaryKey(),
     name: text('name').notNull(),
-    label: text('label').notNull(),
     description: text('description'),
     type: text('type').notNull(),
     options: jsonb('options').notNull().default({}),

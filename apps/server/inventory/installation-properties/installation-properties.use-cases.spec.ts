@@ -110,7 +110,6 @@ describe('Installation Properties Use Cases', () => {
     // Create various schema types for testing
     const stringSchema = await createInstallationSchema({
       name: 'test_string',
-      label: 'Test String',
       type: InstallationSchemaFieldType.STRING,
       required: false,
       installationTypeId: createdInstallationTypeId,
@@ -119,7 +118,6 @@ describe('Installation Properties Use Cases', () => {
 
     const numberSchema = await createInstallationSchema({
       name: 'test_number',
-      label: 'Test Number',
       type: InstallationSchemaFieldType.NUMBER,
       required: false,
       installationTypeId: createdInstallationTypeId,
@@ -128,7 +126,6 @@ describe('Installation Properties Use Cases', () => {
 
     const booleanSchema = await createInstallationSchema({
       name: 'test_boolean',
-      label: 'Test Boolean',
       type: InstallationSchemaFieldType.BOOLEAN,
       required: false,
       installationTypeId: createdInstallationTypeId,
@@ -137,7 +134,6 @@ describe('Installation Properties Use Cases', () => {
 
     const dateSchema = await createInstallationSchema({
       name: 'test_date',
-      label: 'Test Date',
       type: InstallationSchemaFieldType.DATE,
       required: false,
       installationTypeId: createdInstallationTypeId,
@@ -146,7 +142,6 @@ describe('Installation Properties Use Cases', () => {
 
     const enumSchema = await createInstallationSchema({
       name: 'test_enum',
-      label: 'Test Enum',
       type: InstallationSchemaFieldType.ENUM,
       options: {
         enumValues: ['option1', 'option2', 'option3'],
@@ -158,7 +153,6 @@ describe('Installation Properties Use Cases', () => {
 
     const requiredStringSchema = await createInstallationSchema({
       name: 'required_string',
-      label: 'Required String',
       type: InstallationSchemaFieldType.STRING,
       required: true,
       installationTypeId: createdInstallationTypeId,
@@ -450,7 +444,6 @@ describe('Installation Properties Use Cases', () => {
         expect(property.schema).toBeDefined();
         expect(property.schema.id).toBe(stringSchemaId);
         expect(property.schema.name).toBe('test_string');
-        expect(property.schema.label).toBe('Test String');
         expect(property.schema.type).toBe('string');
         expect(property.schema.required).toBe(false);
         expect(property.schema.options).toBeDefined();

@@ -22,7 +22,7 @@ export function createInstallationSchemaRepository() {
     UpdateInstallationSchemaPayload,
     typeof installationSchemas
   >(db, installationSchemas, 'InstallationSchema', {
-    searchableFields: [installationSchemas.name, installationSchemas.label],
+    searchableFields: [installationSchemas.name],
     softDeleteEnabled: true,
   });
 

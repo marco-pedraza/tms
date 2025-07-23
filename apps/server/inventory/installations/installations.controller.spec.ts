@@ -209,7 +209,6 @@ describe('Installations Controller', () => {
       if (response.installationTypeId) {
         response.properties.forEach((property) => {
           expect(property.name).toBeDefined();
-          expect(property.label).toBeDefined();
           expect(property.type).toBeDefined();
           expect(typeof property.required).toBe('boolean');
           expect(property.schemaId).toBeDefined();
@@ -270,7 +269,6 @@ describe('Installations Controller', () => {
         // Only validate properties if installation has a type
         response.properties.forEach((property) => {
           expect(property.name).toBeDefined();
-          expect(property.label).toBeDefined();
           expect(property.type).toBeDefined();
           expect(typeof property.required).toBe('boolean');
           expect(property.schemaId).toBeDefined();
@@ -350,7 +348,6 @@ describe('Installations Controller', () => {
       if (response.installationTypeId) {
         response.properties.forEach((property) => {
           expect(property.name).toBeDefined();
-          expect(property.label).toBeDefined();
           expect(property.type).toBeDefined();
           expect(typeof property.required).toBe('boolean');
           expect(property.schemaId).toBeDefined();
@@ -698,7 +695,6 @@ describe('Installations Controller', () => {
       const schemas = [
         {
           name: 'price_per_booth',
-          label: 'Price per Booth',
           description: 'Price charged per booth in pesos',
           type: InstallationSchemaFieldType.NUMBER,
           required: true,
@@ -706,7 +702,6 @@ describe('Installations Controller', () => {
         },
         {
           name: 'is_affiliated',
-          label: 'Is Affiliated',
           description: 'Whether the installation is affiliated',
           type: InstallationSchemaFieldType.BOOLEAN,
           required: false,
@@ -714,7 +709,6 @@ describe('Installations Controller', () => {
         },
         {
           name: 'opening_date',
-          label: 'Opening Date',
           description: 'Date when the installation opened',
           type: InstallationSchemaFieldType.DATE,
           required: false,
@@ -722,7 +716,6 @@ describe('Installations Controller', () => {
         },
         {
           name: 'installation_size',
-          label: 'Installation Size',
           description: 'Size category of the installation',
           type: InstallationSchemaFieldType.ENUM,
           options: {
@@ -733,7 +726,6 @@ describe('Installations Controller', () => {
         },
         {
           name: 'description_text',
-          label: 'Description',
           description: 'Detailed description of the installation',
           type: InstallationSchemaFieldType.STRING,
           required: false,
@@ -803,7 +795,6 @@ describe('Installations Controller', () => {
         expect(priceProperty).toBeDefined();
         expect(priceProperty?.value).toBe(45.5); // Should be cast to number
         expect(priceProperty?.type).toBe('number');
-        expect(priceProperty?.label).toBe('Price per Booth');
 
         const affiliatedProperty = response.properties.find(
           (p) => p.name === 'is_affiliated',
@@ -840,7 +831,6 @@ describe('Installations Controller', () => {
         // (Since we're setting all properties, let's verify structure consistency)
         response.properties.forEach((property) => {
           expect(property.name).toBeDefined();
-          expect(property.label).toBeDefined();
           expect(property.type).toBeDefined();
           expect(typeof property.required).toBe('boolean');
           expect(property.schemaId).toBeDefined();
@@ -912,7 +902,6 @@ describe('Installations Controller', () => {
         expect(dateProperty).toBeDefined();
         expect(dateProperty?.value).toBeNull(); // Not set
         expect(dateProperty?.type).toBe('date');
-        expect(dateProperty?.label).toBe('Opening Date');
 
         const descriptionProperty = response.properties.find(
           (p) => p.name === 'description_text',

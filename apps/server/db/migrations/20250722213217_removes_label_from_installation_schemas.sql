@@ -1,0 +1,1 @@
+ALTER TABLE "installation_schemas" DROP COLUMN IF EXISTS "label";

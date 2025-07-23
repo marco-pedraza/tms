@@ -27,8 +27,7 @@ export const createInstallationTypeSchemaFormSchema = (
       .string()
       .optional()
       .transform((val) => (val ? parseInt(val) : undefined)),
-    name: z.string(),
-    label: z.string().min(1, { message: tCommon('validations.required') }),
+    name: z.string().min(1, { message: tCommon('validations.required') }),
     required: z.boolean(),
     description: z.string(),
   });
@@ -101,7 +100,6 @@ export default function InstallationTypeSchemaForm({
     createInstallationTypeSchemaFormSchema(tCommon);
   const form = useForm({
     defaultValues: {
-      label: '',
       name: '',
       type: 'string' as installation_schemas.InstallationSchemaFieldType,
       required: true,
@@ -125,11 +123,11 @@ export default function InstallationTypeSchemaForm({
   return (
     <Form onSubmit={form.handleSubmit}>
       <div className="grid gap-4 pt-6">
-        <form.AppField name="label">
+        <form.AppField name="name">
           {(field) => (
             <field.TextInput
-              label={tInstallationTypes('form.fields.label')}
-              placeholder={tInstallationTypes('form.placeholders.schemaLabel')}
+              label={tInstallationTypes('form.fields.name')}
+              placeholder={tInstallationTypes('form.placeholders.schemaName')}
               isRequired
             />
           )}

@@ -776,12 +776,12 @@
         "description": "Ej: Instalación para el embarque y desembarque de pasajeros",
         "dataType": "Selecciona el tipo de dato",
         "enumValues": "Ej: Opción 1, Opción 2, Opción 3",
-        "schemaLabel": "Ej: Dirección",
+        "schemaName": "Ej: Dirección",
         "schemaDescription": "Ej: Dirección de la instalación"
       },
       "fields": {
         "dataType": "Tipo de dato",
-        "label": "Nombre",
+        "name": "Nombre",
         "description": "Descripción",
         "required": "Es Requerido",
         "enumValues": "Opciones"

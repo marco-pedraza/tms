@@ -163,7 +163,7 @@ export default function InstallationTypeForm({
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
                                     <span className="font-bold">
-                                      {schema.label}
+                                      {schema.name}
                                     </span>
                                     <span className="text-sm text-muted-foreground">
                                       {tInstallationTypes(
@@ -184,8 +184,8 @@ export default function InstallationTypeForm({
                                     onClick={() => {
                                       field.setValue(
                                         field.state.value?.filter(
-                                          (stateSchema) =>
-                                            stateSchema.label !== schema.label,
+                                          (_, stateIndex) =>
+                                            stateIndex !== index,
                                         ),
                                       );
                                     }}

@@ -6,7 +6,7 @@ import {
 import { eventTypeInstallationTypeRepository } from '../event-type-installation-types/event-type-installation-types.repository';
 import type { EventTypeInstallationType } from '../event-type-installation-types/event-type-installation-types.types';
 import { eventTypeRepository } from '../event-types/event-types.repository';
-import { validateInstallationSchemasBatch } from '../installation-schemas/installation-schemas.domain';
+import { validateInstallationSchemaFieldType } from '../installation-schemas/installation-schemas.domain';
 import { installationSchemaRepository } from '../installation-schemas/installation-schemas.repository';
 import { installationSchemas } from '../installation-schemas/installation-schemas.schema';
 import type {
@@ -39,6 +39,10 @@ const INSTALLATION_TYPE_ERRORS = {
   EVENT_TYPE_ASSIGNMENT_FAILED:
     'Failed to assign event types to installation type',
   EVENT_TYPE_NOT_FOUND: (id: number) => `Event type with id ${id} not found`,
+  DUPLICATE_NAME_IN_SYNC: (name: string, index: number) =>
+    `Duplicate schema name '${name}' found at position ${index}. Schema names must be unique within the same installation type.`,
+  DUPLICATE_NAME_IN_DATABASE: (name: string, index: number) =>
+    `Schema name '${name}' at position ${index} already exists in the database. Each schema name must be unique within the installation type.`,
 };
 
 /**
@@ -63,6 +67,126 @@ function detectSchemaOperations(
 }
 
 /**
+ * Creates a map of schema names to their indices in the original array
+ */
+function createNameToIndicesMap(
+  schemas: SyncInstallationSchemaPayload[],
+): Map<string, number[]> {
+  const nameToIndicesMap = new Map<string, number[]>();
+
+  schemas.forEach((schema, index) => {
+    if (schema.name) {
+      const normalizedName = schema.name.toLowerCase();
+
+      if (!nameToIndicesMap.has(normalizedName)) {
+        nameToIndicesMap.set(normalizedName, []);
+      }
+      nameToIndicesMap.get(normalizedName)?.push(index);
+    }
+  });
+
+  return nameToIndicesMap;
+}
+
+/**
+ * Gets the set of names that will remain in the database after operations
+ */
+function getRemainingNames(
+  currentSchemas: InstallationSchema[],
+  namesToDelete: Set<string>,
+): Set<string> {
+  return new Set(
+    currentSchemas
+      .filter((s) => !namesToDelete.has(s.name.toLowerCase()))
+      .map((s) => s.name.toLowerCase()),
+  );
+}
+
+/**
+ * Checks if a schema would conflict with existing database schemas
+ */
+function wouldConflictWithDatabase(
+  schema: SyncInstallationSchemaPayload,
+  currentSchemas: InstallationSchema[],
+): boolean {
+  // New schemas (no ID) would always conflict if name exists
+  if (!schema.id) {
+    return true;
+  }
+
+  // For updates, check if we're actually changing the name
+  const currentSchema = currentSchemas.find((s) => s.id === schema.id);
+  if (!currentSchema) {
+    return true; // Schema doesn't exist, would conflict
+  }
+
+  // If name is the same as current, no conflict
+  return currentSchema.name.toLowerCase() !== schema.name?.toLowerCase();
+}
+
+/**
+ * Validates that schema names will be unique after all operations are performed
+ * This prevents conflicts when deleting a schema and creating a new one with the same name
+ */
+function validateSchemaUniquenessInSync(
+  operations: {
+    toCreate: SyncInstallationSchemaPayload[];
+    toUpdate: SyncInstallationSchemaPayload[];
+    toDelete: InstallationSchema[];
+  },
+  currentSchemas: InstallationSchema[],
+  originalSchemas: SyncInstallationSchemaPayload[],
+): void {
+  const collector = new FieldErrorCollector();
+
+  // Get names that will be deleted (to exclude from conflict checks)
+  const namesToDelete = new Set(
+    operations.toDelete.map((s) => s.name.toLowerCase()),
+  );
+
+  // Get names that will remain from current schemas (excluding deleted ones)
+  const remainingNames = getRemainingNames(currentSchemas, namesToDelete);
+
+  // Track names and their original indices for error reporting
+  const nameToIndicesMap = createNameToIndicesMap(originalSchemas);
+
+  // Check for duplicate names within the sync operation
+  for (const [name, indices] of nameToIndicesMap) {
+    if (indices.length > 1) {
+      indices.forEach((index) => {
+        collector.addError(
+          `schemas[${index}].name`,
+          'DUPLICATE_NAME_IN_BATCH',
+          INSTALLATION_TYPE_ERRORS.DUPLICATE_NAME_IN_SYNC(name, index),
+          name,
+        );
+      });
+    }
+  }
+
+  // Check for conflicts with remaining database names
+  for (const [name, indices] of nameToIndicesMap) {
+    if (remainingNames.has(name)) {
+      // This name conflicts with an existing schema that won't be deleted
+      indices.forEach((index) => {
+        const schema = originalSchemas[index];
+
+        if (wouldConflictWithDatabase(schema, currentSchemas)) {
+          collector.addError(
+            `schemas[${index}].name`,
+            'DUPLICATE_NAME_IN_DATABASE',
+            INSTALLATION_TYPE_ERRORS.DUPLICATE_NAME_IN_DATABASE(name, index),
+            name,
+          );
+        }
+      });
+    }
+  }
+
+  collector.throwIfErrors();
+}
+
+/**
  * Executes the detected operations within a transaction
  */
 async function executeSchemaOperations(
@@ -74,7 +198,7 @@ async function executeSchemaOperations(
   },
   installationTypeId: number,
 ) {
-  // Delete schemas that are no longer needed
+  // Delete schemas that are no longer needed first
   if (operations.toDelete.length > 0) {
     const idsToDelete = operations.toDelete.map((schema) => schema.id);
     await txRepo.deleteMany(idsToDelete);
@@ -113,19 +237,36 @@ async function syncInstallationSchemas(
   const schemaRepository = installationSchemaRepository;
 
   try {
-    // 1. Validate aggregate root exists and all schemas using batch validation
+    // 1. Validate that installation type exists
+    await installationTypeRepository.findOne(installationTypeId);
+
+    // 2. Validate individual schemas for field type and basic validation
     const schemasWithContext = schemas.map((schema, index) => ({
-      payload: schema,
+      payload: { ...schema, installationTypeId },
       currentId: schema.id ?? undefined,
       index,
     }));
 
-    await validateInstallationSchemasBatch(
-      schemasWithContext,
-      installationTypeId,
-    );
+    // Validate field types and related entities for each schema
+    const collector = new FieldErrorCollector();
+    for (const { payload, index } of schemasWithContext) {
+      const fieldTypeValidator = validateInstallationSchemaFieldType(payload);
 
-    // 2. Perform sync operation using installation schema repository
+      // Add errors with schema index context
+      for (const error of fieldTypeValidator.getErrors()) {
+        collector.addError(
+          `schemas[${index}].${error.field}`,
+          error.code,
+          error.message,
+          error.value,
+        );
+      }
+    }
+
+    // Throw field type validation errors early
+    collector.throwIfErrors();
+
+    // 3. Perform sync operation using installation schema repository
     return await schemaRepository
       .transaction(async (txRepo) => {
         // Get current schemas for this installation type using transactional repository
@@ -135,6 +276,9 @@ async function syncInstallationSchemas(
 
         // Detect operations
         const operations = detectSchemaOperations(currentSchemas, schemas);
+
+        // Validate schema uniqueness after detecting operations
+        validateSchemaUniquenessInSync(operations, currentSchemas, schemas);
 
         // Execute operations
         await executeSchemaOperations(txRepo, operations, installationTypeId);

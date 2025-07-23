@@ -3330,12 +3330,6 @@ export namespace inventory {
     name?: string
 
     /**
-     * Human-readable label for the field
-     * Must have at least 1 non-whitespace character
-     */
-    label?: string
-
-    /**
      * Optional description of the schema field
      */
     description?: string
@@ -8844,12 +8838,6 @@ export namespace installation_schemas {
         name: string
 
         /**
-         * Human-readable label for the field
-         * Must have at least 1 non-whitespace character
-         */
-        label: string
-
-        /**
          * Optional description of the schema field
          */
         description?: string
@@ -8886,11 +8874,6 @@ export namespace installation_schemas {
          * Name of the schema field
          */
         name: string
-
-        /**
-         * Human-readable label for the field
-         */
-        label: string
 
         /**
          * Optional description of the schema field
@@ -8958,11 +8941,6 @@ export namespace installation_schemas {
         name: string
 
         /**
-         * Human-readable label for the field
-         */
-        label: string
-
-        /**
          * Optional description of the schema field
          */
         description: string | null
@@ -9000,13 +8978,12 @@ export namespace installation_schemas {
 
     export interface ListInstallationSchemasQueryParams {
         orderBy?: {
-            field: "id" | "name" | "label" | "description" | "type" | "options" | "required" | "installationTypeId" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "description" | "type" | "options" | "required" | "installationTypeId" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
             name?: string
-            label?: string
             description?: string | null
             type?: InstallationSchemaFieldType
             options?: InstallationSchemaOptions
@@ -9026,13 +9003,12 @@ export namespace installation_schemas {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "label" | "description" | "type" | "options" | "required" | "installationTypeId" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "description" | "type" | "options" | "required" | "installationTypeId" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
             name?: string
-            label?: string
             description?: string | null
             type?: InstallationSchemaFieldType
             options?: InstallationSchemaOptions
@@ -9208,7 +9184,6 @@ export namespace installation_types {
         id?: number | null
 
         name: string
-        label: string
         description?: string
         type: installation_schemas.InstallationSchemaFieldType
         options?: installation_schemas.InstallationSchemaOptions

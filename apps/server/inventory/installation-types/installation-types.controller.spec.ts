@@ -647,14 +647,12 @@ describe('Installation Types Controller', () => {
       const schemas: SyncInstallationSchemaPayload[] = [
         {
           name: 'capacity',
-          label: 'Capacity',
           description: 'Maximum capacity of the installation',
           type: InstallationSchemaFieldType.NUMBER,
           required: true,
         },
         {
           name: 'location_type',
-          label: 'Location Type',
           description: 'Type of location',
           type: InstallationSchemaFieldType.ENUM,
           required: true,
@@ -664,7 +662,6 @@ describe('Installation Types Controller', () => {
         },
         {
           name: 'notes',
-          label: 'Additional Notes',
           description: 'Optional notes about the installation',
           type: InstallationSchemaFieldType.LONG_TEXT,
           required: false,
@@ -684,7 +681,6 @@ describe('Installation Types Controller', () => {
       // Check that schemas were created correctly
       const capacitySchema = response.data.find((s) => s.name === 'capacity');
       expect(capacitySchema).toBeDefined();
-      expect(capacitySchema?.label).toBe('Capacity');
       expect(capacitySchema?.type).toBe(InstallationSchemaFieldType.NUMBER);
       expect(capacitySchema?.required).toBe(true);
 
@@ -718,7 +714,6 @@ describe('Installation Types Controller', () => {
         {
           id: currentSchemas.data.find((s) => s.name === 'capacity')?.id,
           name: 'capacity',
-          label: 'Maximum Capacity',
           description: 'Updated: Maximum capacity of the installation',
           type: InstallationSchemaFieldType.NUMBER,
           required: true,
@@ -726,7 +721,6 @@ describe('Installation Types Controller', () => {
         {
           id: currentSchemas.data.find((s) => s.name === 'location_type')?.id,
           name: 'location_type',
-          label: 'Location Type',
           description: 'Type of location',
           type: InstallationSchemaFieldType.ENUM,
           required: true,
@@ -750,7 +744,6 @@ describe('Installation Types Controller', () => {
       // Check that schemas were updated correctly
       const capacitySchema = response.data.find((s) => s.name === 'capacity');
       expect(capacitySchema).toBeDefined();
-      expect(capacitySchema?.label).toBe('Maximum Capacity');
       expect(capacitySchema?.description).toBe(
         'Updated: Maximum capacity of the installation',
       );
@@ -785,14 +778,12 @@ describe('Installation Types Controller', () => {
       const initialSchemas: SyncInstallationSchemaPayload[] = [
         {
           name: 'height',
-          label: 'Height',
           description: 'Height in meters',
           type: InstallationSchemaFieldType.NUMBER,
           required: true,
         },
         {
           name: 'material',
-          label: 'Material',
           description: 'Construction material',
           type: InstallationSchemaFieldType.STRING,
           required: true,
@@ -811,7 +802,6 @@ describe('Installation Types Controller', () => {
         {
           id: initialResponse.data.find((s) => s.name === 'height')?.id,
           name: 'height',
-          label: 'Height (Updated)',
           description: 'Updated: Height in meters',
           type: InstallationSchemaFieldType.NUMBER,
           required: false, // Changed from required to optional
@@ -820,7 +810,6 @@ describe('Installation Types Controller', () => {
         {
           // No id, so this will be created
           name: 'width',
-          label: 'Width',
           description: 'Width in meters',
           type: InstallationSchemaFieldType.NUMBER,
           required: true,
@@ -839,13 +828,11 @@ describe('Installation Types Controller', () => {
         (s) => s.name === 'height',
       );
       expect(heightSchema).toBeDefined();
-      expect(heightSchema?.label).toBe('Height (Updated)');
       expect(heightSchema?.required).toBe(false);
 
       // Check new width schema
       const widthSchema = complexResponse.data.find((s) => s.name === 'width');
       expect(widthSchema).toBeDefined();
-      expect(widthSchema?.label).toBe('Width');
       expect(widthSchema?.required).toBe(true);
 
       // Check that material schema was deleted
@@ -881,7 +868,6 @@ describe('Installation Types Controller', () => {
       const schemas: SyncInstallationSchemaPayload[] = [
         {
           name: 'test_field',
-          label: 'Test Field',
           type: InstallationSchemaFieldType.STRING,
           required: false,
         },
@@ -899,7 +885,6 @@ describe('Installation Types Controller', () => {
       const invalidSchemas: SyncInstallationSchemaPayload[] = [
         {
           name: 'invalid_enum',
-          label: 'Invalid Enum',
           type: InstallationSchemaFieldType.ENUM,
           required: false,
           // Missing enumValues in options - should cause validation error
@@ -921,13 +906,11 @@ describe('Installation Types Controller', () => {
       const duplicateSchemas: SyncInstallationSchemaPayload[] = [
         {
           name: 'duplicate_name',
-          label: 'First Schema',
           type: InstallationSchemaFieldType.STRING,
           required: false,
         },
         {
           name: 'duplicate_name', // Same name as above
-          label: 'Second Schema',
           type: InstallationSchemaFieldType.NUMBER,
           required: true,
         },
@@ -941,11 +924,73 @@ describe('Installation Types Controller', () => {
       ).rejects.toThrow();
     });
 
+    test('should allow reusing name when deleting a schema and creating a new one with same name', async () => {
+      // First, create some initial schemas
+      const initialSchemas: SyncInstallationSchemaPayload[] = [
+        {
+          name: 'Schema A',
+          type: InstallationSchemaFieldType.STRING,
+          required: true,
+        },
+        {
+          name: 'Schema B',
+          type: InstallationSchemaFieldType.NUMBER,
+          required: true,
+        },
+      ];
+
+      const firstSync = await syncInstallationSchemas({
+        id: createdInstallationTypeId,
+        schemas: initialSchemas,
+      });
+
+      expect(firstSync.data).toHaveLength(2);
+      const schemaA = firstSync.data.find((s) => s.name === 'Schema A');
+      const schemaB = firstSync.data.find((s) => s.name === 'Schema B');
+      expect(schemaA).toBeDefined();
+      expect(schemaB).toBeDefined();
+
+      // Now simulate the user's scenario:
+      // Keep Schema A, delete Schema B, create a new Schema B with different type
+      const syncSchemas: SyncInstallationSchemaPayload[] = [
+        {
+          id: schemaA?.id,
+          name: 'Schema A',
+          type: InstallationSchemaFieldType.STRING,
+          required: true,
+        },
+        // Note: Schema B is omitted (will be deleted), and we create a new one with same name
+        {
+          name: 'Schema B', // Same name as deleted schema but different type
+          type: InstallationSchemaFieldType.BOOLEAN, // Changed from NUMBER to BOOLEAN
+          required: false,
+        },
+      ];
+
+      // This should succeed - the old Schema B is deleted and a new one is created
+      const result = await syncInstallationSchemas({
+        id: createdInstallationTypeId,
+        schemas: syncSchemas,
+      });
+
+      expect(result.data).toHaveLength(2);
+
+      // Verify Schema A was preserved
+      const preservedSchemaA = result.data.find((s) => s.name === 'Schema A');
+      expect(preservedSchemaA?.id).toBe(schemaA?.id); // Same ID
+      expect(preservedSchemaA?.type).toBe(InstallationSchemaFieldType.STRING);
+
+      // Verify new Schema B was created (different ID but same name)
+      const newSchemaB = result.data.find((s) => s.name === 'Schema B');
+      expect(newSchemaB?.id).not.toBe(schemaB?.id); // Different ID
+      expect(newSchemaB?.type).toBe(InstallationSchemaFieldType.BOOLEAN);
+      expect(newSchemaB?.required).toBe(false);
+    });
+
     test('should handle unsupported field types', async () => {
       const unsupportedTypeSchemas: SyncInstallationSchemaPayload[] = [
         {
           name: 'unsupported_field',
-          label: 'Unsupported Field',
           type: 'unsupported_type' as InstallationSchemaFieldType,
           required: false,
         },
@@ -963,7 +1008,6 @@ describe('Installation Types Controller', () => {
       const invalidEnumSchemas: SyncInstallationSchemaPayload[] = [
         {
           name: 'invalid_enum_values',
-          label: 'Invalid Enum Values',
           type: InstallationSchemaFieldType.ENUM,
           required: false,
           options: {
@@ -984,7 +1028,6 @@ describe('Installation Types Controller', () => {
       const stringWithOptionsSchemas: SyncInstallationSchemaPayload[] = [
         {
           name: 'string_with_options',
-          label: 'String With Options',
           type: InstallationSchemaFieldType.STRING,
           required: false,
           options: {
@@ -1005,13 +1048,11 @@ describe('Installation Types Controller', () => {
       const multipleErrorSchemas: SyncInstallationSchemaPayload[] = [
         {
           name: 'duplicate_name',
-          label: 'First Duplicate',
           type: InstallationSchemaFieldType.STRING,
           required: false,
         },
         {
           name: 'duplicate_name', // Duplicate name
-          label: 'Second Duplicate',
           type: InstallationSchemaFieldType.ENUM,
           required: true,
           options: {
@@ -1020,7 +1061,6 @@ describe('Installation Types Controller', () => {
         },
         {
           name: 'invalid_type_with_options',
-          label: 'Invalid Type With Options',
           type: InstallationSchemaFieldType.NUMBER,
           required: false,
           options: {

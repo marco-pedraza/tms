@@ -26,10 +26,10 @@ const createInstallationTypeSchemasColumns = ({
 }): DataTableColumnDef<installation_schemas.InstallationSchema>[] => {
   return [
     {
-      accessorKey: 'label',
+      accessorKey: 'name',
       header: tCommon('fields.name'),
       cell: ({ row }) => (
-        <div className="capitalize font-medium">{row.getValue('label')}</div>
+        <div className="capitalize font-medium">{row.getValue('name')}</div>
       ),
     },
     {

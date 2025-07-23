@@ -25,7 +25,6 @@ describe('Installation Schemas Controller', () => {
 
   const testInstallationSchema = {
     name: 'test_field',
-    label: 'Test Field',
     description: 'Test field description for testing purposes',
     type: InstallationSchemaFieldType.STRING,
     required: true,
@@ -65,7 +64,6 @@ describe('Installation Schemas Controller', () => {
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
       expect(response.name).toBe(testInstallationSchema.name);
-      expect(response.label).toBe(testInstallationSchema.label);
       expect(response.description).toBe(testInstallationSchema.description);
       expect(response.type).toBe(testInstallationSchema.type);
       expect(response.required).toBe(testInstallationSchema.required);
@@ -82,7 +80,6 @@ describe('Installation Schemas Controller', () => {
       expect(response).toBeDefined();
       expect(response.id).toBe(createdInstallationSchemaId);
       expect(response.name).toBe(testInstallationSchema.name);
-      expect(response.label).toBe(testInstallationSchema.label);
       expect(response.description).toBe(testInstallationSchema.description);
     });
 
@@ -100,19 +97,16 @@ describe('Installation Schemas Controller', () => {
     });
 
     test('should update an installation schema', async () => {
-      const updatedLabel = 'Updated Test Field Label';
       const updatedDescription = 'Updated description for test field';
       const updatedRequired = false;
       const response = await updateInstallationSchema({
         id: createdInstallationSchemaId,
-        label: updatedLabel,
         description: updatedDescription,
         required: updatedRequired,
       });
 
       expect(response).toBeDefined();
       expect(response.id).toBe(createdInstallationSchemaId);
-      expect(response.label).toBe(updatedLabel);
       expect(response.description).toBe(updatedDescription);
       expect(response.required).toBe(updatedRequired);
       expect(response.name).toBe(testInstallationSchema.name); // Should remain unchanged
@@ -174,7 +168,6 @@ describe('Installation Schemas Controller', () => {
       // Test with number type (no specific options required)
       const numberSchema = {
         name: 'test_number',
-        label: 'Test Number',
         description: 'A numeric field for testing',
         type: InstallationSchemaFieldType.NUMBER,
         required: false,
@@ -188,7 +181,6 @@ describe('Installation Schemas Controller', () => {
       // Test with enum type (only enumValues required)
       const enumSchema = {
         name: 'test_enum',
-        label: 'Test Enum',
         description: 'An enum field with predefined options',
         type: InstallationSchemaFieldType.ENUM,
         options: {
@@ -211,7 +203,6 @@ describe('Installation Schemas Controller', () => {
     test('should create installation schema without description (optional field)', async () => {
       const schemaWithoutDescription = {
         name: 'no_description_field',
-        label: 'Field Without Description',
         type: InstallationSchemaFieldType.STRING,
         required: false,
         installationTypeId: createdInstallationTypeId,
@@ -222,7 +213,6 @@ describe('Installation Schemas Controller', () => {
 
       expect(response).toBeDefined();
       expect(response.name).toBe(schemaWithoutDescription.name);
-      expect(response.label).toBe(schemaWithoutDescription.label);
       expect(response.description).toBeNull(); // Should be null when not provided
       expect(response.type).toBe(schemaWithoutDescription.type);
     });
@@ -237,7 +227,6 @@ describe('Installation Schemas Controller', () => {
       // Try to create another schema with the same name and installation type
       const duplicatePayload = {
         ...testInstallationSchema,
-        label: 'Different Label',
       };
 
       await expect(
@@ -277,7 +266,6 @@ describe('Installation Schemas Controller', () => {
         const duplicateNameSchema = {
           ...testInstallationSchema,
           installationTypeId: secondInstallationTypeResponse.id,
-          label: 'Same Name Different Type',
           description: 'Schema with same name but different installation type',
         };
 
@@ -350,7 +338,6 @@ describe('Installation Schemas Controller', () => {
       // Test enum without options should fail
       const enumWithoutOptionsPayload = {
         name: 'invalid_enum',
-        label: 'Invalid Enum',
         type: InstallationSchemaFieldType.ENUM,
         // Missing options entirely
         installationTypeId: createdInstallationTypeId,
@@ -378,7 +365,6 @@ describe('Installation Schemas Controller', () => {
       await expect(
         createInstallationSchema({
           name: 'empty_enum',
-          label: 'Empty Enum',
           type: InstallationSchemaFieldType.ENUM,
           options: {
             enumValues: [], // Empty array
@@ -391,7 +377,6 @@ describe('Installation Schemas Controller', () => {
       await expect(
         createInstallationSchema({
           name: 'invalid_enum_values',
-          label: 'Invalid Enum Values',
           type: InstallationSchemaFieldType.ENUM,
           options: {
             enumValues: ['valid', '', '  '], // Contains empty/whitespace strings
@@ -405,7 +390,6 @@ describe('Installation Schemas Controller', () => {
       // Test string type with options should fail
       const stringWithOptionsPayload = {
         name: 'string_with_options',
-        label: 'String with Options',
         type: InstallationSchemaFieldType.STRING,
         options: {
           enumValues: ['invalid'],
@@ -437,7 +421,6 @@ describe('Installation Schemas Controller', () => {
       await expect(
         createInstallationSchema({
           name: 'date_with_options',
-          label: 'Date with Options',
           type: InstallationSchemaFieldType.DATE,
           options: {
             enumValues: ['invalid'],
@@ -450,7 +433,6 @@ describe('Installation Schemas Controller', () => {
       await expect(
         createInstallationSchema({
           name: 'long_text_with_options',
-          label: 'Long Text with Options',
           type: InstallationSchemaFieldType.LONG_TEXT,
           options: {
             enumValues: ['invalid'],
@@ -463,7 +445,6 @@ describe('Installation Schemas Controller', () => {
       await expect(
         createInstallationSchema({
           name: 'number_with_options',
-          label: 'Number with Options',
           type: InstallationSchemaFieldType.NUMBER,
           options: {
             enumValues: ['invalid'],
@@ -476,7 +457,6 @@ describe('Installation Schemas Controller', () => {
       await expect(
         createInstallationSchema({
           name: 'boolean_with_options',
-          label: 'Boolean with Options',
           type: InstallationSchemaFieldType.BOOLEAN,
           options: {
             enumValues: ['invalid'],
@@ -490,7 +470,6 @@ describe('Installation Schemas Controller', () => {
       // Valid enum schema (only type that should use options)
       const enumSchema = {
         name: 'valid_enum',
-        label: 'Valid Enum',
         description: 'Size selection enum field',
         type: InstallationSchemaFieldType.ENUM,
         options: {
@@ -512,7 +491,6 @@ describe('Installation Schemas Controller', () => {
       // Valid string schema (no options)
       const stringSchema = {
         name: 'valid_string',
-        label: 'Valid String',
         description: 'A simple text field',
         type: InstallationSchemaFieldType.STRING,
         required: false,
@@ -526,7 +504,6 @@ describe('Installation Schemas Controller', () => {
       // Valid long text schema (no options)
       const longTextSchema = {
         name: 'valid_long_text',
-        label: 'Valid Long Text',
         description: 'A field for longer text content',
         type: InstallationSchemaFieldType.LONG_TEXT,
         required: false,
@@ -540,7 +517,6 @@ describe('Installation Schemas Controller', () => {
       // Valid boolean schema (no options)
       const booleanSchema = {
         name: 'valid_boolean',
-        label: 'Valid Boolean',
         description: 'A true/false field',
         type: InstallationSchemaFieldType.BOOLEAN,
         required: false,

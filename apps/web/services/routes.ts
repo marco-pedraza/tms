@@ -31,6 +31,7 @@ export interface Routes {
   populations: CrudRoute;
   nodes: CrudRoute;
   installationTypes: CrudRoute;
+  events: CrudRoute;
 }
 
 const routes: Routes = {
@@ -136,6 +137,12 @@ const routes: Routes = {
     new: '/installation-types/new',
     getDetailsRoute: (id: string) => `/installation-types/${id}`,
     getEditRoute: (id: string) => `/installation-types/${id}/edit`,
+  },
+  events: {
+    index: '/events',
+    new: '/events/new',
+    getDetailsRoute: (id: string) => `/events/${id}`,
+    getEditRoute: (id: string) => `/events/${id}/edit`,
   },
 };
 

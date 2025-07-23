@@ -6,6 +6,7 @@ import {
   // Briefcase,
   Building,
   Building2,
+  Calendar,
   //Bus,
   Globe,
   Map,
@@ -69,6 +70,11 @@ export default function Sidebar() {
             href={routes.installationTypes.index}
             icon={Settings}
             label={tSidebar('inventory.localities.installationTypes')}
+          />
+          <SidebarLink
+            href={routes.events.index}
+            icon={Calendar}
+            label={tSidebar('inventory.localities.events')}
           />
         </SidebarSection>
 

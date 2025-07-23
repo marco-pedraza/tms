@@ -22,7 +22,9 @@
     },
     "status": {
       "active": "Activo",
-      "inactive": "Inactivo"
+      "inactive": "Inactivo",
+      "yes": "Si",
+      "no": "No"
     },
     "fields": {
       "id": "ID",
@@ -128,7 +130,8 @@
       "city": "Ciudad",
       "population": "Población",
       "node": "Nodo",
-      "installationType": "Tipo de Instalación"
+      "installationType": "Tipo de Instalación",
+      "event": "Evento"
     }
   },
   "sidebar": {
@@ -142,7 +145,8 @@
         "cities": "Ciudades",
         "populations": "Poblaciones",
         "nodes": "Nodos",
-        "installationTypes": "Tipos de Instalación"
+        "installationTypes": "Tipos de Instalación",
+        "events": "Eventos"
       },
       "terminals": "Terminales",
       "transporters": "Transportistas",
@@ -835,6 +839,64 @@
         "loading": "Sincronizando atributos...",
         "success": "Atributos sincronizados correctamente",
         "error": "No pudimos sincronizar los atributos, por favor intenta nuevamente"
+      }
+    }
+  },
+  "eventTypes": {
+    "title": "Tipos de Eventos",
+    "description": "Administra información de tipos de eventos para el Sistema de Inventario",
+    "actions": {
+      "create": "Crear Tipo de Evento",
+      "update": "Actualizar Tipo de Evento",
+      "backToList": "Volver a tipos de eventos"
+    },
+    "fields": {
+      "description": "Descripción",
+      "integration": "Integración",
+      "baseTime": "Tiempo Base",
+      "needsCost": "Costo",
+      "needsQuantity": "Cantidad"
+    },
+    "filters": {
+      "withIntegration": "Con Integración",
+      "withoutIntegration": "Sin Integración"
+    },
+    "form": {
+      "title": "Información del tipo de evento",
+      "placeholders": {
+        "name": "Ej: Terminal de Autobuses",
+        "code": "Ej: TRL",
+        "description": "Ej: Instalación para el embarque y desembarque de pasajeros"
+      }
+    },
+    "details": {
+      "description": "Detalles del tipo de evento"
+    },
+    "edit": {
+      "title": "Editar Tipo de Evento",
+      "description": "Actualiza la información del tipo de evento"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Tipo de evento no encontrado",
+        "description": "No pudimos encontrar el tipo de evento que buscas. Es posible que haya sido eliminado o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando tipo de evento...",
+        "success": "Tipo de evento creado correctamente",
+        "error": "No pudimos crear el tipo de evento"
+      },
+      "update": {
+        "loading": "Actualizando tipo de evento...",
+        "success": "Tipo de evento actualizado correctamente",
+        "error": "No pudimos actualizar el tipo de evento"
+      },
+      "delete": {
+        "loading": "Eliminando tipo de evento...",
+        "success": "Tipo de evento eliminado correctamente",
+        "error": "No pudimos eliminar el tipo de evento"
       }
     }
   }

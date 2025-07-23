@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS "labels" (
 	"name" text NOT NULL,
 	"description" text,
 	"color" text NOT NULL,
+	"active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	"deleted_at" timestamp
@@ -31,5 +32,6 @@ END $$;
 CREATE UNIQUE INDEX IF NOT EXISTS "label_nodes_label_id_node_id_index" ON "label_nodes" USING btree ("label_id","node_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "label_nodes_node_id_index" ON "label_nodes" USING btree ("node_id");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "labels_name_index" ON "labels" USING btree ("name") WHERE "labels"."deleted_at" is null;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "labels_active_index" ON "labels" USING btree ("active");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "labels_description_index" ON "labels" USING btree ("description");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "labels_deleted_at_index" ON "labels" USING btree ("deleted_at");

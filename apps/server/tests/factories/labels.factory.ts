@@ -25,11 +25,12 @@ export const labelFactory = defineFactory({
 
     return {
       id,
-      name: faker.word.adjective() + id,
+      name: faker.word.adjective() + ' ' + id,
       description: faker.helpers.maybe(() => faker.lorem.sentence(), {
         probability: 0.7,
       }),
       color: faker.helpers.arrayElement(colors),
+      active: faker.datatype.boolean(),
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: faker.helpers.maybe(() => faker.date.recent({ days: 30 }), {

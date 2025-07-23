@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   integer,
   pgTable,
@@ -17,12 +18,14 @@ export const labels = pgTable(
     name: text('name').notNull(),
     description: text('description'),
     color: text('color').notNull(),
+    active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
     deletedAt: timestamp('deleted_at'),
   },
   (table) => [
     uniqueIndex().on(table.name).where(isNull(table.deletedAt)),
+    index().on(table.active),
     index().on(table.description),
     index().on(table.deletedAt),
   ],

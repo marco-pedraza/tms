@@ -6,28 +6,29 @@ import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
-import { UseTranslationsResult } from '@/types/translations';
+import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
-const createCountryFormSchema = (tCommon: UseTranslationsResult) =>
+const createCountryFormSchema = (
+  tValidations: UseValidationsTranslationsResult,
+) =>
   z.object({
     name: z
       .string()
       .trim()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
-        message: tCommon('validations.name.letters'),
+        message: tValidations('name.letters'),
       }),
     code: z
       .string()
       .min(2, {
-        // @todo Temporal fix to avoid posibble infinite inference loop.
-        // Wee need to understand better why this is happening and find a better solution.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        message: (tCommon as any)('validations.code.length', { length: 2 }),
+        message: tValidations('code.length', { length: 2 }),
       })
       .max(2)
-      .regex(/^[A-Z]+$/, { message: tCommon('validations.code.uppercase') }),
+      .regex(/^[A-Z]+$/, {
+        message: tValidations('code.uppercase'),
+      }),
     active: z.boolean(),
   });
 
@@ -46,7 +47,7 @@ export default function CountryForm({
 }: CountryFormProps) {
   const tCountries = useTranslations('countries');
   const tCommon = useTranslations('common');
-
+  const tValidations = useTranslations('validations');
   const form = useForm({
     defaultValues: defaultValues ?? {
       name: '',
@@ -54,7 +55,7 @@ export default function CountryForm({
       active: true,
     },
     validators: {
-      onChange: createCountryFormSchema(tCommon),
+      onChange: createCountryFormSchema(tValidations),
     },
     onSubmit: async (values) => {
       try {
@@ -65,7 +66,7 @@ export default function CountryForm({
           form,
           entity: 'country',
           error,
-          tCommon,
+          tValidations,
         });
       }
     },

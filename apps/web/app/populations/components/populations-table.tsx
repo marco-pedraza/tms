@@ -11,10 +11,10 @@ import useTableUrlState from '@/hooks/use-table-url-state';
 import usePopulationMutations from '@/populations/hooks/use-population-mutations';
 import useQueryPopulations from '@/populations/hooks/use-query-populations';
 import routes from '@/services/routes';
-import type { UseTranslationsResult } from '@/types/translations';
+import type { UseCommonTranslationsResult } from '@/types/translations';
 
 interface PopulationsColumnsFactoryProps {
-  tCommon: UseTranslationsResult;
+  tCommon: UseCommonTranslationsResult;
 }
 
 function populationsColumnsFactory({

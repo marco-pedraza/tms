@@ -23,23 +23,25 @@ import {
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import useForm from '@/hooks/use-form';
 import useQueryAssignableCities from '@/populations/hooks/use-query-assignable-cities';
-import { UseTranslationsResult } from '@/types/translations';
+import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
-const createPopulationSchema = (tCommon: UseTranslationsResult) =>
+const createPopulationSchema = (
+  tValidations: UseValidationsTranslationsResult,
+) =>
   z.object({
     name: z
       .string()
       .trim()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
-        message: tCommon('validations.name.letters'),
+        message: tValidations('name.letters'),
       }),
     code: z
       .string()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .regex(/^[A-Z0-9-]+$/, {
-        message: tCommon('validations.code.alphanumeric'),
+        message: tValidations('code.alphanumeric'),
       }),
     description: z.string().optional(),
     active: z.boolean(),
@@ -66,7 +68,8 @@ export default function PopulationForm({
 }: PopulationFormProps) {
   const tPopulations = useTranslations('populations');
   const tCommon = useTranslations('common');
-  const populationSchema = createPopulationSchema(tCommon);
+  const tValidations = useTranslations('validations');
+  const populationSchema = createPopulationSchema(tValidations);
   const form = useForm({
     defaultValues: defaultValues ?? {
       name: '',
@@ -90,7 +93,7 @@ export default function PopulationForm({
           form,
           entity: 'population',
           error,
-          tCommon,
+          tValidations,
         });
       }
     },

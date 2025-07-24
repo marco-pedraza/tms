@@ -16,14 +16,17 @@ import usePopulationDetailsParams from '@/populations/hooks/use-population-detai
 import usePopulationMutations from '@/populations/hooks/use-population-mutations';
 import useQueryPopulation from '@/populations/hooks/use-query-population';
 import routes from '@/services/routes';
-import { UseTranslationsResult } from '@/types/translations';
+import {
+  UseCitiesTranslationsResult,
+  UseCommonTranslationsResult,
+} from '@/types/translations';
 
 const createPopulationCitiesColumns = ({
   tCommon,
   tCities,
 }: {
-  tCommon: UseTranslationsResult;
-  tCities: UseTranslationsResult;
+  tCommon: UseCommonTranslationsResult;
+  tCities: UseCitiesTranslationsResult;
 }): DataTableColumnDef<cities.City>[] => {
   return [
     {

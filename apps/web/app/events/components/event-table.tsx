@@ -14,11 +14,14 @@ import useDeleteDialog from '@/hooks/use-delete-dialog';
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
-import type { UseTranslationsResult } from '@/types/translations';
+import type {
+  UseCommonTranslationsResult,
+  UseEventsTranslationsResult,
+} from '@/types/translations';
 
 interface EventsColumnsFactoryProps {
-  tCommon: UseTranslationsResult;
-  tEvents: UseTranslationsResult;
+  tCommon: UseCommonTranslationsResult;
+  tEvents: UseEventsTranslationsResult;
 }
 
 function EventsColumnsFactory({

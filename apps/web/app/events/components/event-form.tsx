@@ -4,23 +4,25 @@ import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
-import { UseTranslationsResult } from '@/types/translations';
+import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
-const createEventFormSchema = (tCommon: UseTranslationsResult) =>
+const createEventFormSchema = (
+  tValidations: UseValidationsTranslationsResult,
+) =>
   z.object({
     name: z
       .string()
       .trim()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
-        message: tCommon('validations.name.letters'),
+        message: tValidations('name.letters'),
       }),
     code: z
       .string()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .regex(/^[A-Z0-9-]+$/, {
-        message: tCommon('validations.code.alphanumeric'),
+        message: tValidations('code.alphanumeric'),
       }),
     description: z.string().optional(),
     active: z.boolean().optional(),
@@ -38,6 +40,7 @@ interface EventFormProps {
 export default function EventForm({ defaultValues, onSubmit }: EventFormProps) {
   const tCommon = useTranslations('common');
   const tEvents = useTranslations('eventTypes');
+  const tValidations = useTranslations('validations');
   const form = useForm({
     defaultValues: defaultValues ?? {
       name: '',
@@ -46,7 +49,7 @@ export default function EventForm({ defaultValues, onSubmit }: EventFormProps) {
       active: true,
     },
     validators: {
-      onChange: createEventFormSchema(tCommon),
+      onChange: createEventFormSchema(tValidations),
     },
     onSubmit: async ({ value }) => {
       try {
@@ -55,9 +58,9 @@ export default function EventForm({ defaultValues, onSubmit }: EventFormProps) {
         injectTranslatedErrorsToForm({
           // @ts-expect-error - form param is not typed correctly.
           form,
-          entity: 'eventType',
+          entity: 'event',
           error,
-          tCommon,
+          tValidations,
         });
       }
     },

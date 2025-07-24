@@ -8,36 +8,35 @@ import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useQueryAllCountries from '@/countries/hooks/use-query-all-countries';
 import useForm from '@/hooks/use-form';
-import { UseTranslationsResult } from '@/types/translations';
+import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
 type Country = countries.Country;
 
-const createStateFormSchema = (tCommon: UseTranslationsResult) =>
+const createStateFormSchema = (
+  tValidations: UseValidationsTranslationsResult,
+) =>
   z.object({
     name: z
       .string()
       .trim()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
-        message: tCommon('validations.name.letters'),
+        message: tValidations('name.letters'),
       }),
     code: z
       .string()
       .min(2, {
-        // @todo Temporal fix to avoid posibble infinite inference loop.
-        // Wee need to understand better why this is happening and find a better solution.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        message: (tCommon as any)('validations.code.length-range', {
+        message: tValidations('code.length-range', {
           min: 2,
           max: 3,
         }),
       })
       .max(3)
-      .regex(/^[A-Z]+$/, { message: tCommon('validations.code.uppercase') }),
+      .regex(/^[A-Z]+$/, { message: tValidations('code.uppercase') }),
     countryId: z
       .string()
-      .min(1, tCommon('validations.required'))
+      .min(1, tValidations('required'))
       .transform((val) => parseInt(val)),
     active: z.boolean(),
   });
@@ -55,7 +54,8 @@ interface StateFormProps {
 export default function StateForm({ defaultValues, onSubmit }: StateFormProps) {
   const tStates = useTranslations('states');
   const tCommon = useTranslations('common');
-  const stateFormSchema = createStateFormSchema(tCommon);
+  const tValidations = useTranslations('validations');
+  const stateFormSchema = createStateFormSchema(tValidations);
   const rawDefaultValues: StateFormRawValues | undefined = defaultValues
     ? {
         ...defaultValues,
@@ -84,7 +84,7 @@ export default function StateForm({ defaultValues, onSubmit }: StateFormProps) {
           form,
           entity: 'state',
           error,
-          tCommon,
+          tValidations,
         });
       }
     },

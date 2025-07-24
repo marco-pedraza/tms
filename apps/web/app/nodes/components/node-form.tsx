@@ -8,46 +8,46 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useForm from '@/hooks/use-form';
 import useQueryAllPopulations from '@/populations/hooks/use-query-all-populations';
 import useQueryPopulationCities from '@/populations/hooks/use-query-population-cities';
-import { UseTranslationsResult } from '@/types/translations';
+import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
-const createNodeFormSchema = (tCommon: UseTranslationsResult) =>
+const createNodeFormSchema = (tValidations: UseValidationsTranslationsResult) =>
   z.object({
     name: z
       .string()
       .trim()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
-        message: tCommon('validations.name.letters'),
+        message: tValidations('name.letters'),
       }),
     code: z
       .string()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .regex(/^[A-Z0-9-]+$/, {
-        message: tCommon('validations.code.alphanumeric'),
+        message: tValidations('code.alphanumeric'),
       }),
     radius: z
       .string()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .refine(
         (val) => {
           const num = parseFloat(val);
           return num > 0;
         },
-        { message: tCommon('validations.radius.positive') },
+        { message: tValidations('radius.positive') },
       )
       .transform((val) => parseFloat(val)),
     cityId: z
       .string()
-      .min(1, tCommon('validations.required'))
+      .min(1, tValidations('required'))
       .transform((val) => parseInt(val)),
     populationId: z
       .string()
-      .min(1, tCommon('validations.required'))
+      .min(1, tValidations('required'))
       .transform((val) => parseInt(val)),
     latitude: z
       .string()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .refine(
         (val) => {
           if (isNaN(parseFloat(val))) {
@@ -56,12 +56,12 @@ const createNodeFormSchema = (tCommon: UseTranslationsResult) =>
           const num = parseFloat(val);
           return num >= -90 && num <= 90;
         },
-        { message: tCommon('validations.latitude.range') },
+        { message: tValidations('latitude.range') },
       )
       .transform((val) => parseFloat(val)),
     longitude: z
       .string()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .refine(
         (val) => {
           if (isNaN(parseFloat(val))) {
@@ -70,7 +70,7 @@ const createNodeFormSchema = (tCommon: UseTranslationsResult) =>
           const num = parseFloat(val);
           return num >= -180 && num <= 180;
         },
-        { message: tCommon('validations.longitude.range') },
+        { message: tValidations('longitude.range') },
       )
       .transform((val) => parseFloat(val)),
   });
@@ -86,7 +86,8 @@ interface NodeFormProps {
 export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
   const tCommon = useTranslations('common');
   const tNodes = useTranslations('nodes');
-  const nodeSchema = createNodeFormSchema(tCommon);
+  const tValidations = useTranslations('validations');
+  const nodeSchema = createNodeFormSchema(tValidations);
   const rawDefaultValues: NodeFormRawValues | undefined = defaultValues
     ? {
         name: defaultValues.name,
@@ -123,7 +124,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
           form,
           entity: 'node',
           error,
-          tCommon,
+          tValidations,
         });
       }
     },

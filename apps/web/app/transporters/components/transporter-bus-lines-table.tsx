@@ -8,11 +8,14 @@ import IsActiveBadge from '@/components/is-active-badge';
 import routes from '@/services/routes';
 import useQueryTransporterBusLines from '@/transporters/hooks/use-query-transporter-bus-lines';
 import useTransporterDetailsParams from '@/transporters/hooks/use-transporter-details-params';
-import { UseTranslationsResult } from '@/types/translations';
+import {
+  UseBusLinesTranslationsResult,
+  UseCommonTranslationsResult,
+} from '@/types/translations';
 
 interface TransporterBusLinesColumnsFactoryProps {
-  tCommon: UseTranslationsResult;
-  tBusLines: UseTranslationsResult;
+  tCommon: UseCommonTranslationsResult;
+  tBusLines: UseBusLinesTranslationsResult;
 }
 
 function transporterBusLinesColumnsFactory({

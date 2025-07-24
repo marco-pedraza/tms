@@ -12,11 +12,14 @@ import useTableUrlState from '@/hooks/use-table-url-state';
 import useNodeMutations from '@/nodes/hooks/use-node-mutations';
 import useQueryNodes from '@/nodes/hooks/use-query-nodes';
 import routes from '@/services/routes';
-import type { UseTranslationsResult } from '@/types/translations';
+import type {
+  UseCommonTranslationsResult,
+  UseNodesTranslationsResult,
+} from '@/types/translations';
 
 interface NodesColumnsFactoryProps {
-  tCommon: UseTranslationsResult;
-  tNodes: UseTranslationsResult;
+  tCommon: UseCommonTranslationsResult;
+  tNodes: UseNodesTranslationsResult;
 }
 
 function nodesColumnsFactory({

@@ -11,11 +11,11 @@ import driverTypeTranslationKeys from '@/drivers/translations/driver-type-transl
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
-import { UseTranslationsResult } from '@/types/translations';
+import { UseDriversTranslationsResult } from '@/types/translations';
 import driverStatusTranslationKeys from '../translations/driver-status-translation-keys';
 
 interface DriversColumnsFactoryProps {
-  tDrivers: UseTranslationsResult;
+  tDrivers: UseDriversTranslationsResult;
 }
 
 const driversColumnsFactory = ({

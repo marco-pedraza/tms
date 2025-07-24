@@ -9,31 +9,31 @@ import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
 import useQueryAllPopulations from '@/populations/hooks/use-query-all-populations';
 import useQueryAllStates from '@/states/hooks/use-query-all-states';
-import { UseTranslationsResult } from '@/types/translations';
+import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
-const createCitySchema = (tCommon: UseTranslationsResult) =>
+const createCitySchema = (tValidations: UseValidationsTranslationsResult) =>
   z.object({
     name: z
       .string()
       .trim()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
-        message: tCommon('validations.name.letters'),
+        message: tValidations('name.letters'),
       }),
     stateId: z
       .string()
-      .min(1, tCommon('validations.required'))
+      .min(1, tValidations('required'))
       .transform((val) => parseInt(val)),
     populationId: z
       .string()
       .optional()
       .transform((val) => (val ? parseInt(val) : undefined)),
-    timezone: z.string().min(1, { message: tCommon('validations.required') }),
+    timezone: z.string().min(1, { message: tValidations('required') }),
     active: z.boolean(),
     latitude: z
       .string()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .refine(
         (val) => {
           if (isNaN(parseFloat(val))) {
@@ -42,12 +42,12 @@ const createCitySchema = (tCommon: UseTranslationsResult) =>
           const num = parseFloat(val);
           return num >= -90 && num <= 90;
         },
-        { message: tCommon('validations.latitude.range') },
+        { message: tValidations('latitude.range') },
       )
       .transform((val) => parseFloat(val)),
     longitude: z
       .string()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .refine(
         (val) => {
           if (isNaN(parseFloat(val))) {
@@ -56,7 +56,7 @@ const createCitySchema = (tCommon: UseTranslationsResult) =>
           const num = parseFloat(val);
           return num >= -180 && num <= 180;
         },
-        { message: tCommon('validations.longitude.range') },
+        { message: tValidations('longitude.range') },
       )
       .transform((val) => parseFloat(val)),
   });
@@ -75,6 +75,7 @@ interface CityFormProps {
 function CityForm({ defaultValues, onSubmit }: CityFormProps) {
   const tCities = useTranslations('cities');
   const tCommon = useTranslations('common');
+  const tValidations = useTranslations('validations');
   const rawDefaultValues: CityFormRawValues | undefined = defaultValues
     ? {
         ...defaultValues,
@@ -84,7 +85,7 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
         populationId: defaultValues.populationId?.toString() || '',
       }
     : undefined;
-  const citySchema = createCitySchema(tCommon);
+  const citySchema = createCitySchema(tValidations);
   const form = useForm({
     defaultValues: rawDefaultValues ?? {
       name: '',
@@ -110,7 +111,7 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
           form,
           entity: 'city',
           error,
-          tCommon,
+          tValidations,
         });
       }
     },

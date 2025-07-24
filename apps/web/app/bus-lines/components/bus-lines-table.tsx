@@ -14,11 +14,14 @@ import IsActiveBadge from '@/components/is-active-badge';
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
-import { UseTranslationsResult } from '@/types/translations';
+import {
+  UseBusLinesTranslationsResult,
+  UseCommonTranslationsResult,
+} from '@/types/translations';
 
 interface BusLinesColumnsFactoryProps {
-  tCommon: UseTranslationsResult;
-  tBusLines: UseTranslationsResult;
+  tCommon: UseCommonTranslationsResult;
+  tBusLines: UseBusLinesTranslationsResult;
 }
 
 function busLinesColumnsFactory({

@@ -11,10 +11,10 @@ import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
 import useQueryStates from '@/states/hooks/use-query-states';
 import useStateMutations from '@/states/hooks/use-state-mutations';
-import { UseTranslationsResult } from '@/types/translations';
+import { UseCommonTranslationsResult } from '@/types/translations';
 
 interface StatesColumnsFactoryProps {
-  tCommon: UseTranslationsResult;
+  tCommon: UseCommonTranslationsResult;
 }
 
 const statesColumnsFactory = ({

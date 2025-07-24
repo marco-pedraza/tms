@@ -13,11 +13,14 @@ import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
 import useQueryTransporters from '@/transporters/hooks/use-query-transporters';
 import useTransporterMutations from '@/transporters/hooks/use-transporter-mutations';
-import type { UseTranslationsResult } from '@/types/translations';
+import type {
+  UseCommonTranslationsResult,
+  UseTransportersTranslationsResult,
+} from '@/types/translations';
 
 interface TransportersColumnsFactoryProps {
-  tCommon: UseTranslationsResult;
-  tTransporters: UseTranslationsResult;
+  tCommon: UseCommonTranslationsResult;
+  tTransporters: UseTransportersTranslationsResult;
 }
 
 function transportersColumnsFactory({

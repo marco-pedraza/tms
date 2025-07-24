@@ -11,10 +11,10 @@ import useQueryCountries from '@/countries/hooks/use-query-countries';
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
-import { UseTranslationsResult } from '@/types/translations';
+import { UseCommonTranslationsResult } from '@/types/translations';
 
 interface CountriesColumnsFactoryProps {
-  tCommon: UseTranslationsResult;
+  tCommon: UseCommonTranslationsResult;
 }
 
 const countriesColumnsFactory = ({

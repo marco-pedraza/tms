@@ -11,11 +11,14 @@ import useTableUrlState from '@/hooks/use-table-url-state';
 import useInstallationTypeMutations from '@/installation-types/hooks/use-installation-type-mutations';
 import useQueryInstallationTypes from '@/installation-types/hooks/use-query-installation-types';
 import routes from '@/services/routes';
-import type { UseTranslationsResult } from '@/types/translations';
+import type {
+  UseCommonTranslationsResult,
+  UseInstallationTypesTranslationsResult,
+} from '@/types/translations';
 
 interface InstallationTypesColumnsFactoryProps {
-  tCommon: UseTranslationsResult;
-  tInstallationTypes: UseTranslationsResult;
+  tCommon: UseCommonTranslationsResult;
+  tInstallationTypes: UseInstallationTypesTranslationsResult;
 }
 
 function installationTypesColumnsFactory({

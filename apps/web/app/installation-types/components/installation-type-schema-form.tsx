@@ -5,7 +5,7 @@ import { installation_schemas } from '@repo/ims-client';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import useForm from '@/hooks/use-form';
-import { UseTranslationsResult } from '@/types/translations';
+import { UseValidationsTranslationsResult } from '@/types/translations';
 import { cn } from '@/utils/cn';
 import { createEnumArray } from '@/utils/create-enum-array';
 
@@ -20,14 +20,14 @@ const installationSchemaTypes =
   });
 
 export const createInstallationTypeSchemaFormSchema = (
-  tCommon: UseTranslationsResult,
+  tValidations: UseValidationsTranslationsResult,
 ) => {
   const baseSchema = z.object({
     id: z
       .string()
       .optional()
       .transform((val) => (val ? parseInt(val) : undefined)),
-    name: z.string().min(1, { message: tCommon('validations.required') }),
+    name: z.string().min(1, { message: tValidations('required') }),
     required: z.boolean(),
     description: z.string(),
   });
@@ -36,7 +36,7 @@ export const createInstallationTypeSchemaFormSchema = (
   const enumSchema = baseSchema.extend({
     type: z
       .enum(['enum'], {
-        message: tCommon('validations.required'),
+        message: tValidations('required'),
       })
       .transform(
         (val) => val as installation_schemas.InstallationSchemaFieldType,
@@ -44,12 +44,12 @@ export const createInstallationTypeSchemaFormSchema = (
     options: z.object({
       enumValues: z
         .string()
-        .min(1, { message: tCommon('validations.required') })
+        .min(1, { message: tValidations('required') })
         .trim()
         .regex(
           /^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ0-9\s]+(?:,[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ0-9\s]+)*$/,
           {
-            message: tCommon('validations.enumValues.commaSeparated'),
+            message: tValidations('enumValues.commaSeparated'),
           },
         )
         .transform((val) => {
@@ -66,7 +66,7 @@ export const createInstallationTypeSchemaFormSchema = (
   const otherTypesSchema = baseSchema.extend({
     type: z
       .enum(['string', 'long_text', 'number', 'boolean', 'date'], {
-        message: tCommon('validations.required'),
+        message: tValidations('required'),
       })
       .transform(
         (val) => val as installation_schemas.InstallationSchemaFieldType,
@@ -79,7 +79,7 @@ export const createInstallationTypeSchemaFormSchema = (
   });
 
   return z.discriminatedUnion('type', [enumSchema, otherTypesSchema], {
-    message: tCommon('validations.required'),
+    message: tValidations('required'),
   });
 };
 
@@ -94,10 +94,10 @@ interface InstallationTypeSchemaFormProps {
 export default function InstallationTypeSchemaForm({
   onSubmit,
 }: InstallationTypeSchemaFormProps) {
-  const tCommon = useTranslations('common');
   const tInstallationTypes = useTranslations('installationTypes');
+  const tValidations = useTranslations('validations');
   const installationTypeSchemaFormSchema =
-    createInstallationTypeSchemaFormSchema(tCommon);
+    createInstallationTypeSchemaFormSchema(tValidations);
   const form = useForm({
     defaultValues: {
       name: '',

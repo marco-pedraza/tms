@@ -15,29 +15,31 @@ import {
 } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import useForm from '@/hooks/use-form';
-import { UseTranslationsResult } from '@/types/translations';
+import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 import InstallationTypeSchemaForm from './installation-type-schema-form';
 import { createInstallationTypeSchemaFormSchema } from './installation-type-schema-form';
 
-const createInstallationTypeFormSchema = (tCommon: UseTranslationsResult) =>
+const createInstallationTypeFormSchema = (
+  tValidations: UseValidationsTranslationsResult,
+) =>
   z.object({
     name: z
       .string()
       .trim()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
-        message: tCommon('validations.name.letters'),
+        message: tValidations('name.letters'),
       }),
     code: z
       .string()
-      .min(1, { message: tCommon('validations.required') })
+      .min(1, { message: tValidations('required') })
       .regex(/^[A-Z0-9-]+$/, {
-        message: tCommon('validations.code.alphanumeric'),
+        message: tValidations('code.alphanumeric'),
       }),
     description: z.string().optional(),
     active: z.boolean().optional(),
-    schemas: z.array(createInstallationTypeSchemaFormSchema(tCommon)),
+    schemas: z.array(createInstallationTypeSchemaFormSchema(tValidations)),
   });
 
 export type InstallationTypeFormValues = z.output<
@@ -59,7 +61,8 @@ export default function InstallationTypeForm({
 }: InstallationTypeFormProps) {
   const tCommon = useTranslations('common');
   const tInstallationTypes = useTranslations('installationTypes');
-  const installationTypeSchema = createInstallationTypeFormSchema(tCommon);
+  const tValidations = useTranslations('validations');
+  const installationTypeSchema = createInstallationTypeFormSchema(tValidations);
   const rawDefaultValues: InstallationTypeFormRawValues = defaultValues
     ? {
         ...defaultValues,
@@ -96,7 +99,7 @@ export default function InstallationTypeForm({
           form,
           entity: 'installationType',
           error,
-          tCommon,
+          tValidations,
         });
       }
     },

@@ -15,14 +15,17 @@ import useInstallationTypeMutations from '@/installation-types/hooks/use-install
 import useQueryInstallationType from '@/installation-types/hooks/use-query-installation-type';
 import useQueryInstallationTypeSchemas from '@/installation-types/hooks/use-query-installation-type-schemas';
 import routes from '@/services/routes';
-import { UseTranslationsResult } from '@/types/translations';
+import {
+  UseCommonTranslationsResult,
+  UseInstallationTypesTranslationsResult,
+} from '@/types/translations';
 
 const createInstallationTypeSchemasColumns = ({
   tCommon,
   tInstallationTypes,
 }: {
-  tCommon: UseTranslationsResult;
-  tInstallationTypes: UseTranslationsResult;
+  tCommon: UseCommonTranslationsResult;
+  tInstallationTypes: UseInstallationTypesTranslationsResult;
 }): DataTableColumnDef<installation_schemas.InstallationSchema>[] => {
   return [
     {

@@ -21,10 +21,17 @@ const createEventFormSchema = (
     code: z
       .string()
       .min(1, { message: tValidations('required') })
-      .regex(/^[A-Z0-9-]+$/, {
+      // Alphanumeric, may contain dashes/underscores, but not start or end with them
+      .regex(/^(?![_-])[A-Z0-9_-]+(?<![_-])$/, {
         message: tValidations('code.alphanumeric'),
       }),
     description: z.string().optional(),
+    baseTime: z.coerce.number().min(1, {
+      message: tValidations('greaterThanOrEquals', { value: 1 }),
+    }),
+    integration: z.boolean().optional(),
+    needsCost: z.boolean().optional(),
+    needsQuantity: z.boolean().optional(),
     active: z.boolean().optional(),
   });
 
@@ -46,6 +53,10 @@ export default function EventForm({ defaultValues, onSubmit }: EventFormProps) {
       name: '',
       code: '',
       description: '',
+      baseTime: 1,
+      integration: false,
+      needsCost: false,
+      needsQuantity: false,
       active: true,
     },
     validators: {
@@ -80,7 +91,7 @@ export default function EventForm({ defaultValues, onSubmit }: EventFormProps) {
         </form.AppField>
         <form.AppField name="code">
           {(field) => (
-            <field.TextInput
+            <field.SlugInput
               label={tCommon('fields.code')}
               placeholder={tEvents('form.placeholders.code')}
               isRequired
@@ -95,8 +106,47 @@ export default function EventForm({ defaultValues, onSubmit }: EventFormProps) {
             />
           )}
         </form.AppField>
+        <form.AppField name="baseTime">
+          {(field) => (
+            <field.NumberInput
+              label={tEvents('fields.baseTimeMinutes')}
+              allowDecimals={true}
+              isRequired
+              description={tEvents('details.baseTime')}
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="integration">
+          {(field) => (
+            <field.SwitchInput
+              label={tEvents('fields.integration')}
+              description={tEvents('details.integration')}
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="needsCost">
+          {(field) => (
+            <field.SwitchInput
+              label={tEvents('fields.needsCost')}
+              description={tEvents('details.needsCost')}
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="needsQuantity">
+          {(field) => (
+            <field.SwitchInput
+              label={tEvents('fields.needsQuantity')}
+              description={tEvents('details.needsQuantity')}
+            />
+          )}
+        </form.AppField>
         <form.AppField name="active">
-          {(field) => <field.SwitchInput label={tCommon('fields.active')} />}
+          {(field) => (
+            <field.SwitchInput
+              label={tCommon('fields.active')}
+              description={tEvents('details.active')}
+            />
+          )}
         </form.AppField>
         <FormFooter>
           <form.AppForm>

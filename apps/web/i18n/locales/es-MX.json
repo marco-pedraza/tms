@@ -100,6 +100,7 @@
   },
   "validations": {
     "required": "Este campo es obligatorio.",
+    "greaterThanOrEquals": "El valor debe ser mayor o igual a {value}.",
     "name": {
       "letters": "El nombre debe contener solo letras y espacios."
     },
@@ -859,6 +860,7 @@
       "description": "Descripción",
       "integration": "Integración",
       "baseTime": "Tiempo Base",
+      "baseTimeMinutes": "Tiempo Base (minutos)",
       "needsCost": "Costo",
       "needsQuantity": "Cantidad"
     },
@@ -875,7 +877,12 @@
       }
     },
     "details": {
-      "description": "Detalles del tipo de evento"
+      "description": "Detalles del tipo de evento",
+      "baseTime": "Tiempo estimado en minutos para completar este evento",
+      "integration": "Indica si el evento requiere integración con sistemas externos",
+      "needsCost": "Indica si se debe solicitar el costo durante la creación de roles",
+      "needsQuantity": "Indica si se debe solicitar la cantidad durante la creación de roles",
+      "active": "Indica si el tipo de evento está activo en el sistema"
     },
     "edit": {
       "title": "Editar Tipo de Evento",

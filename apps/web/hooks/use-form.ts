@@ -1,5 +1,7 @@
 import { createFormHook } from '@tanstack/react-form';
+import NumberInput from '@/components/form/number-input';
 import SelectInput from '@/components/form/select-input';
+import SlugInput from '@/components/form/slug-input';
 import SubmitButton from '@/components/form/submit-button';
 import SwitchInput from '@/components/form/switch-input';
 import TextAreaInput from '@/components/form/text-area-input';
@@ -16,6 +18,8 @@ const { useAppForm: useForm, withForm } = createFormHook({
     TextAreaInput,
     SelectInput,
     TimeSelectInput,
+    SlugInput,
+    NumberInput,
   },
   formComponents: {
     SubmitButton,

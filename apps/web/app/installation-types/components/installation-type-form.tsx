@@ -107,45 +107,43 @@ export default function InstallationTypeForm({
   const [showSchemaForm, setShowSchemaForm] = useState(false);
 
   return (
-    <Dialog open={showSchemaForm} onOpenChange={setShowSchemaForm}>
-      <Form onSubmit={form.handleSubmit}>
-        <FormLayout title={tCommon('sections.basicInfo')}>
-          <form.AppField name="name">
+    <Form onSubmit={form.handleSubmit}>
+      <FormLayout title={tCommon('sections.basicInfo')}>
+        <form.AppField name="name">
+          {(field) => (
+            <field.TextInput
+              label={tCommon('fields.name')}
+              placeholder={tInstallationTypes('form.placeholders.name')}
+              isRequired
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="code">
+          {(field) => (
+            <field.TextInput
+              label={tCommon('fields.code')}
+              placeholder={tInstallationTypes('form.placeholders.code')}
+              isRequired
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="description">
+          {(field) => (
+            <field.TextAreaInput
+              label={tCommon('fields.description')}
+              placeholder={tInstallationTypes('form.placeholders.description')}
+            />
+          )}
+        </form.AppField>
+        <form.AppField name="active">
+          {(field) => <field.SwitchInput label={tCommon('fields.active')} />}
+        </form.AppField>
+      </FormLayout>
+      <div className="pt-4">
+        <FormLayout title={tInstallationTypes('form.sections.schemas.title')}>
+          <form.AppField name="schemas">
             {(field) => (
-              <field.TextInput
-                label={tCommon('fields.name')}
-                placeholder={tInstallationTypes('form.placeholders.name')}
-                isRequired
-              />
-            )}
-          </form.AppField>
-          <form.AppField name="code">
-            {(field) => (
-              <field.TextInput
-                label={tCommon('fields.code')}
-                placeholder={tInstallationTypes('form.placeholders.code')}
-                isRequired
-              />
-            )}
-          </form.AppField>
-          <form.AppField name="description">
-            {(field) => (
-              <field.TextAreaInput
-                label={tCommon('fields.description')}
-                placeholder={tInstallationTypes(
-                  'form.placeholders.description',
-                )}
-              />
-            )}
-          </form.AppField>
-          <form.AppField name="active">
-            {(field) => <field.SwitchInput label={tCommon('fields.active')} />}
-          </form.AppField>
-        </FormLayout>
-        <div className="pt-4">
-          <FormLayout title={tInstallationTypes('form.sections.schemas.title')}>
-            <form.AppField name="schemas">
-              {(field) => (
+              <Dialog open={showSchemaForm} onOpenChange={setShowSchemaForm}>
                 <div className="w-full border rounded-md grid">
                   <Table>
                     <TableBody>
@@ -218,33 +216,36 @@ export default function InstallationTypeForm({
                     </Button>
                   </DialogTrigger>
                 </div>
-              )}
-            </form.AppField>
-          </FormLayout>
-        </div>
-        <FormFooter>
-          <form.AppForm>
-            <form.SubmitButton>
-              {defaultValues
-                ? tInstallationTypes('actions.update')
-                : tInstallationTypes('actions.create')}
-            </form.SubmitButton>
-          </form.AppForm>
-        </FormFooter>
-      </Form>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {tInstallationTypes('form.sections.schemas.addAttribute')}
-          </DialogTitle>
-        </DialogHeader>
-        <InstallationTypeSchemaForm
-          onSubmit={(values) => {
-            form.pushFieldValue('schemas', values);
-            setShowSchemaForm(false);
-          }}
-        />
-      </DialogContent>
-    </Dialog>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {tInstallationTypes('form.sections.schemas.addAttribute')}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <InstallationTypeSchemaForm
+                    invalidNameValues={
+                      field.state.value?.map((schema) => schema.name) ?? []
+                    }
+                    onSubmit={(values) => {
+                      form.pushFieldValue('schemas', values);
+                      setShowSchemaForm(false);
+                    }}
+                  />
+                </DialogContent>
+              </Dialog>
+            )}
+          </form.AppField>
+        </FormLayout>
+      </div>
+      <FormFooter>
+        <form.AppForm>
+          <form.SubmitButton>
+            {defaultValues
+              ? tInstallationTypes('actions.update')
+              : tInstallationTypes('actions.create')}
+          </form.SubmitButton>
+        </form.AppForm>
+      </FormFooter>
+    </Form>
   );
 }

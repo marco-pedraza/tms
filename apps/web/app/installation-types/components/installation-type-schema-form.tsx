@@ -88,10 +88,12 @@ export type InstallationTypeSchemaFormRawValues = z.input<
 >;
 
 interface InstallationTypeSchemaFormProps {
+  invalidNameValues: string[];
   onSubmit: (values: InstallationTypeSchemaFormRawValues) => void;
 }
 
 export default function InstallationTypeSchemaForm({
+  invalidNameValues,
   onSubmit,
 }: InstallationTypeSchemaFormProps) {
   const tInstallationTypes = useTranslations('installationTypes');
@@ -123,7 +125,18 @@ export default function InstallationTypeSchemaForm({
   return (
     <Form onSubmit={form.handleSubmit}>
       <div className="grid gap-4 pt-6">
-        <form.AppField name="name">
+        <form.AppField
+          name="name"
+          validators={{
+            onChange: ({ value }) => {
+              if (invalidNameValues.includes(value)) {
+                return {
+                  message: tInstallationTypes('errors.duplicatedAttributeName'),
+                };
+              }
+            },
+          }}
+        >
           {(field) => (
             <field.TextInput
               label={tInstallationTypes('form.fields.name')}

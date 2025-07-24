@@ -78,7 +78,6 @@ export default function EditInstallationTypePage() {
       syncInstallationSchemas.mutateWithToast(
         data.schemas.map((schema) => ({
           ...schema,
-          name: schema.name,
           installationTypeId: data.installationType.id,
         })),
       );

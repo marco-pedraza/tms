@@ -75,7 +75,6 @@ export default function NewInstallationTypePage() {
         installationTypeId: data.installationType.id,
         schemas: data.schemas.map((schema) => ({
           ...schema,
-          name: schema.name,
           installationTypeId: data.installationType.id,
         })),
       });

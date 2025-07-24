@@ -821,7 +821,8 @@
       "notFound": {
         "title": "Tipo de instalación no encontrado",
         "description": "No pudimos encontrar el tipo de instalación que buscas. Es posible que haya sido eliminado o que no exista."
-      }
+      },
+      "duplicatedAttributeName": "Ya existe un atributo con este nombre"
     },
     "messages": {
       "create": {

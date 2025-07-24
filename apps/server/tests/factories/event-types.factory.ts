@@ -3,28 +3,24 @@ import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
 import { extractTablesFromSchema, generateId } from './factory-utils';
 
-export const installationFactory = defineFactory({
+export const eventTypeFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
-  table: 'installations',
+  table: 'eventTypes',
   resolver: ({ sequence }) => {
     const id = generateId(sequence);
+
     return {
       id,
-      name: `Installation ${id}`,
-      address: faker.location.streetAddress(),
+      name: `Event Type ${id}`,
+      code: `EVT${String(sequence).padStart(3, '0')}`,
       description: faker.helpers.maybe(() => faker.lorem.sentence(), {
         probability: 0.7,
       }),
-      contactPhone: faker.helpers.maybe(() => faker.phone.number(), {
-        probability: 0.6,
-      }),
-      contactEmail: faker.helpers.maybe(() => faker.internet.email(), {
-        probability: 0.6,
-      }),
-      website: faker.helpers.maybe(() => faker.internet.url(), {
-        probability: 0.3,
-      }),
-      installationTypeId: null, // Will be provided by the seeder or test
+      baseTime: faker.number.int({ min: 15, max: 120 }), // 15 to 120 minutes
+      needsCost: faker.datatype.boolean(),
+      needsQuantity: faker.datatype.boolean(),
+      integration: faker.helpers.maybe(() => true, { probability: 0.2 }), // 20% chance of being integration
+      active: faker.datatype.boolean(),
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: faker.helpers.maybe(() => faker.date.recent({ days: 30 }), {

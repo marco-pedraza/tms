@@ -3,28 +3,19 @@ import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
 import { extractTablesFromSchema, generateId } from './factory-utils';
 
-export const installationFactory = defineFactory({
+export const installationTypeFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
-  table: 'installations',
+  table: 'installationTypes',
   resolver: ({ sequence }) => {
     const id = generateId(sequence);
     return {
       id,
-      name: `Installation ${id}`,
-      address: faker.location.streetAddress(),
+      name: `Installation Type ${id}`,
+      code: `IT${String(sequence).padStart(3, '0')}`,
       description: faker.helpers.maybe(() => faker.lorem.sentence(), {
         probability: 0.7,
       }),
-      contactPhone: faker.helpers.maybe(() => faker.phone.number(), {
-        probability: 0.6,
-      }),
-      contactEmail: faker.helpers.maybe(() => faker.internet.email(), {
-        probability: 0.6,
-      }),
-      website: faker.helpers.maybe(() => faker.internet.url(), {
-        probability: 0.3,
-      }),
-      installationTypeId: null, // Will be provided by the seeder or test
+      active: faker.datatype.boolean(),
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt: faker.helpers.maybe(() => faker.date.recent({ days: 30 }), {

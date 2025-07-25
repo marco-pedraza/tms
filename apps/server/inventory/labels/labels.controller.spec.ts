@@ -1,16 +1,30 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { FieldValidationError } from '@repo/base-repo';
+import { nodeFactory } from '../../tests/factories';
+import { getFactoryDb } from '../../tests/factories/factory-utils';
+import {
+  createCleanupHelper,
+  createTestSuiteId,
+} from '../../tests/shared/test-utils';
+import { db } from '../db-service';
+import { assignLabelsToNode } from '../nodes/nodes.controller';
+import { nodeRepository } from '../nodes/nodes.repository';
 import type { Label, LabelWithNodeCount } from './labels.types';
 import {
   createLabel,
   deleteLabel,
   getLabel,
+  getLabelsMetrics,
   listLabels,
   listLabelsPaginated,
   updateLabel,
 } from './labels.controller';
 
 describe('Labels Controller', () => {
+  // Test configuration
+  const testSuiteId = createTestSuiteId('labels');
+  const factoryDb = getFactoryDb(db);
+
   // Test data and setup
   const testLabel = {
     name: 'Test Label',
@@ -464,6 +478,254 @@ describe('Labels Controller', () => {
           await deleteLabel({ id: label.id });
         }
       }
+    });
+  });
+
+  describe('metrics', () => {
+    // Cleanup helper for metrics tests
+    const labelsCleanup = createCleanupHelper(
+      ({ id }) => deleteLabel({ id }),
+      'label',
+    );
+
+    // Cleanup helpers
+    const nodeCleanup = createCleanupHelper(
+      ({ id }) => nodeRepository.forceDelete(id),
+      'node',
+    );
+
+    afterAll(async () => {
+      await labelsCleanup.cleanupAll();
+      await nodeCleanup.cleanupAll();
+    });
+
+    test('should return metrics with correct structure and data types', async () => {
+      const response = await getLabelsMetrics();
+
+      // Verify basic structure and data types
+      expect(response).toBeDefined();
+      expect(typeof response.totalLabels).toBe('number');
+      expect(typeof response.labelsInUse).toBe('number');
+      expect(Array.isArray(response.mostUsedLabels)).toBe(true);
+
+      // Verify logical constraints
+      expect(response.totalLabels).toBeGreaterThanOrEqual(0);
+      expect(response.labelsInUse).toBeGreaterThanOrEqual(0);
+      expect(response.labelsInUse).toBeLessThanOrEqual(response.totalLabels);
+
+      // Verify structure of mostUsedLabels array
+      for (const label of response.mostUsedLabels) {
+        expect(typeof label.nodeCount).toBe('number');
+        expect(label.nodeCount).toBeGreaterThanOrEqual(0);
+        expect(typeof label.name).toBe('string');
+        expect(typeof label.color).toBe('string');
+      }
+    });
+
+    test('should handle case when no labels are in use', async () => {
+      // Create a label without assigning it to any nodes
+      const unusedLabel = await createLabel({
+        name: `Unused Metrics Test ${testSuiteId}`,
+        color: '#FEDCBA',
+      });
+      labelsCleanup.track(unusedLabel.id);
+
+      const response = await getLabelsMetrics();
+
+      // Should have labels but potentially none in use
+      expect(response.totalLabels).toBeGreaterThan(0);
+
+      // mostUsedLabels array should always be defined
+      expect(Array.isArray(response.mostUsedLabels)).toBe(true);
+
+      // If no labels are in use, mostUsedLabels should be empty
+      if (response.labelsInUse === 0) {
+        expect(response.mostUsedLabels).toHaveLength(0);
+      }
+    });
+
+    test('should return consistent results when called multiple times', async () => {
+      // Get metrics twice in succession without any data changes
+      const firstResponse = await getLabelsMetrics();
+      const secondResponse = await getLabelsMetrics();
+
+      // Results should be identical
+      expect(secondResponse.totalLabels).toBe(firstResponse.totalLabels);
+      expect(secondResponse.labelsInUse).toBe(firstResponse.labelsInUse);
+      expect(secondResponse.mostUsedLabels).toEqual(
+        firstResponse.mostUsedLabels,
+      );
+    });
+
+    test('should accurately count labels and usage', async () => {
+      // Create test labels with unique names
+      const label1 = await createLabel({
+        name: `Metrics Count Test 1 ${testSuiteId}`,
+        color: '#FF0000',
+      });
+      const label2 = await createLabel({
+        name: `Metrics Count Test 2 ${testSuiteId}`,
+        color: '#00FF00',
+      });
+      labelsCleanup.track(label1.id);
+      labelsCleanup.track(label2.id);
+
+      // Create nodes
+      const node1 = await nodeFactory(factoryDb).create({
+        installationId: null,
+        deletedAt: null,
+      });
+      const node2 = await nodeFactory(factoryDb).create({
+        installationId: null,
+        deletedAt: null,
+      });
+      nodeCleanup.track(node1.id);
+      nodeCleanup.track(node2.id);
+
+      // Assign only label1 to nodes (label2 remains unused)
+      await assignLabelsToNode({
+        id: node1.id,
+        labelIds: [label1.id],
+      });
+      await assignLabelsToNode({
+        id: node2.id,
+        labelIds: [label1.id],
+      });
+
+      const response = await getLabelsMetrics();
+
+      // Should include our created labels in total count
+      expect(response.totalLabels).toBeGreaterThanOrEqual(2);
+
+      // Should have at least 1 label in use (label1)
+      expect(response.labelsInUse).toBeGreaterThanOrEqual(1);
+
+      // Verify consistency
+      expect(response.labelsInUse).toBeLessThanOrEqual(response.totalLabels);
+
+      // Clean up label assignments before test ends
+      await assignLabelsToNode({
+        id: node1.id,
+        labelIds: [], // Remove all assignments
+      });
+      await assignLabelsToNode({
+        id: node2.id,
+        labelIds: [], // Remove all assignments
+      });
+    });
+
+    test('should correctly identify most used labels', async () => {
+      // Create test labels
+      const lightlyUsedLabel = await createLabel({
+        name: `Lightly Used ${testSuiteId}`,
+        color: '#FFE4E1',
+      });
+      const heavilyUsedLabel = await createLabel({
+        name: `Heavily Used ${testSuiteId}`,
+        color: '#8B0000',
+      });
+      labelsCleanup.track(lightlyUsedLabel.id);
+      labelsCleanup.track(heavilyUsedLabel.id);
+
+      // Create test nodes (let factory handle dependencies)
+      const nodes = [];
+      for (let i = 0; i < 4; i++) {
+        const node = await nodeFactory(factoryDb).create({
+          installationId: null,
+          deletedAt: null,
+        });
+        nodes.push(node);
+        nodeCleanup.track(node.id);
+      }
+
+      // Assign heavily used label to 3 nodes, lightly used to 1
+      await assignLabelsToNode({
+        id: nodes[0].id,
+        labelIds: [heavilyUsedLabel.id],
+      });
+      await assignLabelsToNode({
+        id: nodes[1].id,
+        labelIds: [heavilyUsedLabel.id],
+      });
+      await assignLabelsToNode({
+        id: nodes[2].id,
+        labelIds: [heavilyUsedLabel.id],
+      });
+      await assignLabelsToNode({
+        id: nodes[3].id,
+        labelIds: [lightlyUsedLabel.id],
+      });
+
+      const response = await getLabelsMetrics();
+
+      // Should show 2 labels in use
+      expect(response.labelsInUse).toBeGreaterThanOrEqual(2);
+
+      // Should have at least one most used label
+      expect(response.mostUsedLabels.length).toBeGreaterThan(0);
+
+      // The most used label should have 3 nodes and be the heavily used one
+      const topMostUsed = response.mostUsedLabels[0];
+      expect(topMostUsed.nodeCount).toBeGreaterThanOrEqual(3);
+      expect(topMostUsed.name).toBe(heavilyUsedLabel.name);
+      expect(topMostUsed.color).toBe(heavilyUsedLabel.color);
+
+      // Clean up label assignments before test ends
+      for (const node of nodes) {
+        await assignLabelsToNode({
+          id: node.id,
+          labelIds: [], // Remove all assignments
+        });
+      }
+    });
+
+    test('should handle mixed label usage scenarios', async () => {
+      // Create multiple labels with different usage patterns
+      const usedLabel = await createLabel({
+        name: `Used Label ${testSuiteId}`,
+        color: '#00AAAA',
+      });
+      const unusedLabel = await createLabel({
+        name: `Unused Label ${testSuiteId}`,
+        color: '#AA0000',
+      });
+      labelsCleanup.track(usedLabel.id);
+      labelsCleanup.track(unusedLabel.id);
+
+      // Create node
+      const node = await nodeFactory(factoryDb).create({
+        installationId: null,
+        deletedAt: null,
+      });
+      nodeCleanup.track(node.id);
+
+      await assignLabelsToNode({
+        id: node.id,
+        labelIds: [usedLabel.id], // Only assign one label
+      });
+
+      const response = await getLabelsMetrics();
+
+      // Should include both labels in total count
+      expect(response.totalLabels).toBeGreaterThanOrEqual(2);
+
+      // Only one label should be in use
+      expect(response.labelsInUse).toBeGreaterThanOrEqual(1);
+
+      // Should have at least one most used label with at least 1 node
+      expect(response.mostUsedLabels.length).toBeGreaterThan(0);
+      expect(response.mostUsedLabels[0].nodeCount).toBeGreaterThanOrEqual(1);
+      expect(typeof response.mostUsedLabels[0].name).toBe('string');
+      expect(typeof response.mostUsedLabels[0].color).toBe('string');
+
+      // Verify consistency
+      expect(response.labelsInUse).toBeLessThanOrEqual(response.totalLabels);
+
+      // Clean up label assignments before test ends
+      await assignLabelsToNode({
+        id: node.id,
+        labelIds: [], // Remove all assignments
+      });
     });
   });
 });

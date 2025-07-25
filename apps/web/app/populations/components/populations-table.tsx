@@ -38,7 +38,7 @@ function populationsColumnsFactory({
     },
     {
       accessorKey: 'active',
-      header: tCommon('fields.active'),
+      header: tCommon('fields.status'),
       cell: ({ row }) => {
         const active = row.original.active;
         return <IsActiveBadge isActive={active} />;

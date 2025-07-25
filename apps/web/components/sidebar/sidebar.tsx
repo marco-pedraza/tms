@@ -13,6 +13,7 @@ import {
   MapPin,
   Package,
   Settings,
+  Tag,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import routes from '@/services/routes';
@@ -75,6 +76,11 @@ export default function Sidebar() {
             href={routes.events.index}
             icon={Calendar}
             label={tSidebar('inventory.localities.events')}
+          />
+          <SidebarLink
+            href={routes.labels.index}
+            icon={Tag}
+            label={tSidebar('inventory.localities.labels')}
           />
         </SidebarSection>
 

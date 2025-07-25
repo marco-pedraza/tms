@@ -49,7 +49,9 @@
       "serviceType": "Tipo de Servicio",
       "logo": "Logo",
       "primaryColor": "Color Primario",
-      "secondaryColor": "Color Secundario"
+      "secondaryColor": "Color Secundario",
+      "color": "Color",
+      "usageCount": "Uso"
     },
     "sections": {
       "basicInfo": "Información Básica",
@@ -119,6 +121,9 @@
     "radius": {
       "positive": "El radio debe ser un número positivo."
     },
+    "color": {
+      "format": "Debe ser un color hexadecimal válido (ej: #FF5733 o #FFF)."
+    },
     "enumValues": {
       "commaSeparated": "Elimina cualquier coma al inicio o al final de la lista. Ingresa solo letras, números y espacios por cada valor."
     },
@@ -132,7 +137,8 @@
       "population": "Población",
       "node": "Nodo",
       "installationType": "Tipo de Instalación",
-      "event": "Evento"
+      "event": "Evento",
+      "label": "Etiqueta"
     },
     "fields": {
       "name": "Nombre",
@@ -151,7 +157,8 @@
         "populations": "Poblaciones",
         "nodes": "Nodos",
         "installationTypes": "Tipos de Instalación",
-        "events": "Eventos"
+        "events": "Eventos",
+        "labels": "Etiquetas"
       },
       "terminals": "Terminales",
       "transporters": "Transportistas",
@@ -215,6 +222,66 @@
         "success": "País eliminado correctamente",
         "error": "No pudimos eliminar el país"
       }
+    }
+  },
+  "labels": {
+    "title": "Etiquetas",
+    "description": "Administra etiquetas para clasificar y organizar nodos en el sistema",
+    "actions": {
+      "create": "Crear Etiqueta",
+      "update": "Actualizar Etiqueta",
+      "backToList": "Volver a etiquetas"
+    },
+    "form": {
+      "title": "Información de la etiqueta",
+      "placeholders": {
+        "name": "Ej: Mantenimiento",
+        "description": "Descripción opcional de la etiqueta",
+        "color": "Ej: #FF5733"
+      }
+    },
+    "details": {
+      "description": "Detalles de la etiqueta"
+    },
+    "edit": {
+      "title": "Editar Etiqueta",
+      "description": "Actualiza la información de la etiqueta"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Etiqueta no encontrada",
+        "description": "No pudimos encontrar la etiqueta que buscas. Es posible que haya sido eliminada o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando etiqueta...",
+        "success": "Etiqueta creada correctamente",
+        "error": "No pudimos crear la etiqueta"
+      },
+      "update": {
+        "loading": "Actualizando etiqueta...",
+        "success": "Etiqueta actualizada correctamente",
+        "error": "No pudimos actualizar la etiqueta"
+      },
+      "delete": {
+        "loading": "Eliminando etiqueta...",
+        "success": "Etiqueta eliminada correctamente",
+        "error": "No pudimos eliminar la etiqueta"
+      }
+    },
+    "nodeCount": {
+      "nodo": "nodo",
+      "nodos": "nodos"
+    },
+    "metrics": {
+      "totalLabels": "Total de etiquetas",
+      "labelsInUse": "Etiquetas en uso",
+      "mostUsedLabels": "Etiqueta más usada",
+      "noData": "N/A",
+      "andMore": "y {count} más",
+      "loadError": "Error al cargar métricas",
+      "loadErrorDescription": "No se pudieron cargar las métricas de las etiquetas. Por favor, intenta de nuevo."
     }
   },
   "states": {

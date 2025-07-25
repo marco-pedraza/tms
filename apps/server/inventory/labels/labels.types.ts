@@ -22,6 +22,9 @@ export interface Label {
   /** Color of the label in hexadecimal format (#RRGGBB or #RGB) */
   color: string;
 
+  /** Whether the label is active */
+  active: boolean;
+
   /** Timestamp when the label record was created */
   createdAt: Date | string | null;
 
@@ -59,6 +62,12 @@ export interface CreateLabelPayload {
   color: string &
     MinLen<1> &
     MatchesRegexp<'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'>;
+
+  /**
+   * Whether the label is active
+   * @default true
+   */
+  active?: boolean;
 }
 
 /**
@@ -83,6 +92,11 @@ export interface UpdateLabelPayload {
   color?: string &
     MinLen<1> &
     MatchesRegexp<'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'>;
+
+  /**
+   * Whether the label is active
+   */
+  active?: boolean;
 }
 
 export type ListLabelsQueryParams = ListQueryParams<Label>;
@@ -91,3 +105,24 @@ export type ListLabelsResult = ListQueryResult<LabelWithNodeCount>;
 export type PaginatedListLabelsQueryParams = PaginatedListQueryParams<Label>;
 export type PaginatedListLabelsResult =
   PaginatedListQueryResult<LabelWithNodeCount>;
+
+/**
+ * Metrics data for labels dashboard
+ */
+export interface LabelsMetrics {
+  /** Total number of labels in the system */
+  totalLabels: number;
+
+  /** Number of labels that are currently assigned to at least one node */
+  labelsInUse: number;
+
+  /** Information about the most used labels (all labels with the highest node count) */
+  mostUsedLabels: {
+    /** Number of nodes assigned to this label */
+    nodeCount: number;
+    /** Name of the label */
+    name: string;
+    /** Color of the label */
+    color: string;
+  }[];
+}

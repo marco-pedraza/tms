@@ -25,7 +25,7 @@ export const labelFactory = defineFactory({
 
     return {
       id,
-      name: faker.word.adjective() + ' ' + id,
+      name: faker.word.adjective() + ' ' + faker.word.adjective(),
       description: faker.helpers.maybe(() => faker.lorem.sentence(), {
         probability: 0.7,
       }),

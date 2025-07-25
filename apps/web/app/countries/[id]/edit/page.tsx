@@ -34,7 +34,7 @@ export default function EditCountryPage() {
   return (
     <div>
       <PageHeader
-        title={tCountries('details.description')}
+        title={tCountries('edit.title')}
         description={`${data?.name} (${data?.code})`}
         backHref={routes.countries.index}
       />

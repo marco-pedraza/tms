@@ -28,6 +28,9 @@ export type UseEventsTranslationsResult = ReturnType<
 export type UseInstallationTypesTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'installationTypes'>
 >;
+export type UseLabelsTranslationsResult = ReturnType<
+  typeof createTranslator<Messages, 'labels'>
+>;
 export type UseNodesTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'nodes'>
 >;

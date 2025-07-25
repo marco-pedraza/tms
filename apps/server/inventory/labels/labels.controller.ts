@@ -3,6 +3,7 @@ import type {
   CreateLabelPayload,
   Label,
   LabelWithNodeCount,
+  LabelsMetrics,
   ListLabelsQueryParams,
   ListLabelsResult,
   PaginatedListLabelsQueryParams,
@@ -93,5 +94,16 @@ export const listLabels = api(
   async (params: ListLabelsQueryParams): Promise<ListLabelsResult> => {
     const labels = await labelRepository.findAllWithNodeCount(params);
     return { data: labels };
+  },
+);
+
+/**
+ * Gets metrics data for labels dashboard.
+ * @returns {Promise<LabelsMetrics>} Metrics including total labels, labels in use, and most used label info
+ */
+export const getLabelsMetrics = api(
+  { expose: true, method: 'GET', path: '/labels/metrics' },
+  async (): Promise<LabelsMetrics> => {
+    return await labelRepository.getMetrics();
   },
 );

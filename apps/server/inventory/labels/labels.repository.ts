@@ -6,6 +6,7 @@ import type {
   CreateLabelPayload,
   Label,
   LabelWithNodeCount,
+  LabelsMetrics,
   ListLabelsQueryParams,
   PaginatedListLabelsQueryParams,
   PaginatedListLabelsResult,
@@ -60,6 +61,7 @@ export function createLabelRepository() {
         name: labels.name,
         description: labels.description,
         color: labels.color,
+        active: labels.active,
         createdAt: labels.createdAt,
         updatedAt: labels.updatedAt,
         nodeCount: sql<number>`coalesce(${count(labelNodes.nodeId)}, 0)`,
@@ -72,6 +74,7 @@ export function createLabelRepository() {
         labels.name,
         labels.description,
         labels.color,
+        labels.active,
         labels.createdAt,
         labels.updatedAt,
       )
@@ -200,6 +203,60 @@ export function createLabelRepository() {
     return results.map((result: { id: number }) => result.id);
   }
 
+  /**
+   * Gets metrics data
+   * @returns Metrics including total labels, labels in use, and most used labels info
+   */
+  async function getMetrics(): Promise<LabelsMetrics> {
+    // Single optimized query to get all label statistics
+    // Ordered by node count descending, then alphabetically for consistent tie-breaking
+    const labelsWithNodeCount = await db
+      .select({
+        id: labels.id,
+        name: labels.name,
+        color: labels.color,
+        nodeCount: sql<number>`coalesce(count(${labelNodes.nodeId}), 0)`,
+      })
+      .from(labels)
+      .leftJoin(labelNodes, eq(labels.id, labelNodes.labelId))
+      .where(isNull(labels.deletedAt))
+      .groupBy(labels.id, labels.name, labels.color)
+      .orderBy(sql`count(${labelNodes.nodeId}) desc`, labels.name);
+
+    // Calculate metrics from the single query result
+    const totalLabels = labelsWithNodeCount.length;
+    const labelsInUse = labelsWithNodeCount.filter(
+      (label) => label.nodeCount > 0,
+    ).length;
+
+    // Find the maximum node count among labels in use
+    const labelsWithPositiveCount = labelsWithNodeCount.filter(
+      (label) => label.nodeCount > 0,
+    );
+
+    let mostUsedLabels: { nodeCount: number; name: string; color: string }[] =
+      [];
+
+    if (labelsWithPositiveCount.length > 0) {
+      const maxNodeCount = labelsWithPositiveCount[0].nodeCount;
+
+      // Get ALL labels with the maximum node count
+      mostUsedLabels = labelsWithPositiveCount
+        .filter((label) => label.nodeCount === maxNodeCount)
+        .map((label) => ({
+          nodeCount: Number(label.nodeCount),
+          name: label.name,
+          color: label.color,
+        }));
+    }
+
+    return {
+      totalLabels,
+      labelsInUse,
+      mostUsedLabels,
+    };
+  }
+
   return {
     ...baseRepository,
     findOneWithNodeCount,
@@ -208,6 +265,7 @@ export function createLabelRepository() {
     findByNodeId,
     findByNodeIds,
     findExistingIds,
+    getMetrics,
   };
 }
 

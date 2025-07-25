@@ -169,6 +169,7 @@ export namespace inventory {
             this.getInstallationType = this.getInstallationType.bind(this)
             this.getInstallationTypeSchema = this.getInstallationTypeSchema.bind(this)
             this.getLabel = this.getLabel.bind(this)
+            this.getLabelsMetrics = this.getLabelsMetrics.bind(this)
             this.getNode = this.getNode.bind(this)
             this.getPathway = this.getPathway.bind(this)
             this.getPopulation = this.getPopulation.bind(this)
@@ -1275,6 +1276,16 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/labels/${encodeURIComponent(id)}`)
             return await resp.json() as labels.LabelWithNodeCount
+        }
+
+        /**
+         * Gets metrics data for labels dashboard.
+         * @returns {Promise<LabelsMetrics>} Metrics including total labels, labels in use, and most used label info
+         */
+        public async getLabelsMetrics(): Promise<labels.LabelsMetrics> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/labels/metrics`)
+            return await resp.json() as labels.LabelsMetrics
         }
 
         /**
@@ -3418,6 +3429,11 @@ export namespace inventory {
      * Must be a valid hexadecimal color code
      */
     color?: string
+
+    /**
+     * Whether the label is active
+     */
+    active?: boolean
 }): Promise<labels.Label> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/labels/${encodeURIComponent(id)}/update`, JSON.stringify(params))
@@ -9489,6 +9505,12 @@ export namespace labels {
          * Must be a valid hexadecimal color code
          */
         color: string
+
+        /**
+         * Whether the label is active
+         * @default true
+         */
+        active?: boolean
     }
 
     export interface Label {
@@ -9511,6 +9533,11 @@ export namespace labels {
          * Color of the label in hexadecimal format (#RRGGBB or #RGB)
          */
         color: string
+
+        /**
+         * Whether the label is active
+         */
+        active: boolean
 
         /**
          * Timestamp when the label record was created
@@ -9550,6 +9577,11 @@ export namespace labels {
         color: string
 
         /**
+         * Whether the label is active
+         */
+        active: boolean
+
+        /**
          * Timestamp when the label record was created
          */
         createdAt: string | string | null
@@ -9560,9 +9592,41 @@ export namespace labels {
         updatedAt: string | string | null
     }
 
+    export interface LabelsMetrics {
+        /**
+         * Total number of labels in the system
+         */
+        totalLabels: number
+
+        /**
+         * Number of labels that are currently assigned to at least one node
+         */
+        labelsInUse: number
+
+        /**
+         * Information about the most used labels (all labels with the highest node count)
+         */
+        mostUsedLabels: {
+            /**
+             * Number of nodes assigned to this label
+             */
+            nodeCount: number
+
+            /**
+             * Name of the label
+             */
+            name: string
+
+            /**
+             * Color of the label
+             */
+            color: string
+        }[]
+    }
+
     export interface ListLabelsQueryParams {
         orderBy?: {
-            field: "id" | "name" | "description" | "color" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "description" | "color" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -9570,6 +9634,7 @@ export namespace labels {
             name?: string
             description?: string | null
             color?: string
+            active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }
@@ -9584,7 +9649,7 @@ export namespace labels {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "description" | "color" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "description" | "color" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -9592,6 +9657,7 @@ export namespace labels {
             name?: string
             description?: string | null
             color?: string
+            active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }

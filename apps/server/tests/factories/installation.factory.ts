@@ -1,17 +1,22 @@
 import { faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
-import { extractTablesFromSchema, generateId } from './factory-utils';
+import {
+  extractTablesFromSchema,
+  generateAlphabeticName,
+  generateId,
+} from './factory-utils';
 
 export const installationFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'installations',
-  resolver: ({ sequence }) => {
-    const id = generateId(sequence);
+  resolver: () => {
+    const id = generateId();
+
     return {
       id,
-      name: `Installation ${id}`,
-      address: faker.location.streetAddress(),
+      name: generateAlphabeticName('Installation'),
+      address: faker.location.streetAddress(), // Required field
       description: faker.helpers.maybe(() => faker.lorem.sentence(), {
         probability: 0.7,
       }),
@@ -25,8 +30,6 @@ export const installationFactory = defineFactory({
         probability: 0.3,
       }),
       installationTypeId: null, // Will be provided by the seeder or test
-      createdAt: new Date(),
-      updatedAt: new Date(),
       deletedAt: faker.helpers.maybe(() => faker.date.recent({ days: 30 }), {
         probability: 0.1,
       }),

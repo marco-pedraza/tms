@@ -6,8 +6,8 @@ import { extractTablesFromSchema, generateId } from './factory-utils';
 export const nodeEventFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'nodeEvents',
-  resolver: ({ sequence }) => {
-    const id = generateId(sequence);
+  resolver: () => {
+    const id = generateId();
 
     return {
       id,

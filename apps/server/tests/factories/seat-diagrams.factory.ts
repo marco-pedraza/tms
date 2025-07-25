@@ -1,23 +1,19 @@
-import { fakerES_MX as faker } from '@faker-js/faker';
+import { faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
 import { busDiagramModelFactory } from './bus-diagram-models.factory';
-import { extractTablesFromSchema, generateId } from './factory-utils';
+import {
+  extractTablesFromSchema,
+  generateAlphabeticName,
+  generateId,
+} from './factory-utils';
 
 export const seatDiagramFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'seatDiagrams',
-  resolver: ({ sequence, use }) => {
-    const id = generateId(sequence);
+  resolver: ({ use }) => {
+    const id = generateId();
     const floorCount = faker.helpers.maybe(() => 2, { probability: 0.25 }) || 1;
-    const layoutNames = [
-      'Standard',
-      'Executive',
-      'Premium',
-      'Luxury',
-      'Tourist',
-      'Custom',
-    ];
 
     // Calculate seats configuration
     const seatsPerFloor = Array.from({ length: floorCount }, (_, index) => {
@@ -46,7 +42,7 @@ export const seatDiagramFactory = defineFactory({
         use(busDiagramModelFactory)
           .create()
           .then((model) => model.id),
-      name: `${faker.helpers.arrayElement(layoutNames)} Diagram ${faker.number.int({ min: 100, max: 999 })}`,
+      name: generateAlphabeticName('Seat Diagram'),
       description: faker.lorem.sentence(),
       maxCapacity: totalSeats + faker.number.int({ min: 0, max: 6 }), // Slight buffer for staff
       observations: faker.helpers.maybe(() => faker.lorem.paragraph(), {

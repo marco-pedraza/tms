@@ -1,27 +1,26 @@
-import { fakerES_MX as faker } from '@faker-js/faker';
+import { faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
-import { extractTablesFromSchema, generateId } from './factory-utils';
+import {
+  extractTablesFromSchema,
+  generateAlphabeticCode,
+  generateAlphabeticName,
+  generateId,
+} from './factory-utils';
 
 export const populationFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'populations',
-  resolver: ({ sequence }) => {
-    const id = generateId(sequence);
-    const populationTypes = ['Metropolitan', 'Suburban', 'Tourist'];
-
-    const basePopulationType = faker.helpers.arrayElement(populationTypes);
-    const regionName = faker.location.state();
+  resolver: () => {
+    const id = generateId();
 
     return {
       id,
-      code: `POP${String(sequence).padStart(3, '0')}`,
-      name: `${basePopulationType} ${regionName}`,
-      description: faker.helpers.maybe(
-        () =>
-          `Population for ${basePopulationType.toLowerCase()} areas in ${regionName} region`,
-        { probability: 0.7 },
-      ),
+      code: generateAlphabeticCode(3, 'POP'),
+      name: generateAlphabeticName('Population'),
+      description: faker.helpers.maybe(() => faker.lorem.sentence(), {
+        probability: 0.7,
+      }),
       active: faker.helpers.weightedArrayElement([
         { weight: 0.8, value: true },
         { weight: 0.2, value: false },

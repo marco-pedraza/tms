@@ -1,4 +1,6 @@
+export { amenityFactory } from './amenities.factory';
 export { busFactory } from './buses.factory';
+export { busLineFactory } from './bus-line.factory';
 export { busModelFactory } from './bus-models.factory';
 export { cityFactory } from './city.factory';
 export { countryFactory } from './country.factory';
@@ -19,3 +21,4 @@ export { busDiagramModelFactory } from './bus-diagram-models.factory';
 export { serviceTypeFactory } from './service-type.factory';
 export { stateFactory } from './state.factory';
 export { terminalFactory } from './terminal.factory';
+export { transporterFactory } from './transporters.factory';

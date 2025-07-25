@@ -7,8 +7,8 @@ import { installationFactory } from './installation.factory';
 export const installationPropertyFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'installationProperties',
-  resolver: ({ sequence, use }) => {
-    const id = generateId(sequence);
+  resolver: ({ use }) => {
+    const id = generateId();
 
     return {
       id,

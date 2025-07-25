@@ -1,43 +1,39 @@
+import { faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
-import { AVAILABLE_FACILITIES } from '../../inventory/facilities/facilities.constants';
+import { AVAILABLE_TIMEZONES } from '../../inventory/timezones/timezones.constants';
+import { createSlug } from '../../shared/utils';
 import { cityFactory } from './city.factory';
-import { extractTablesFromSchema, generateId } from './factory-utils';
+import {
+  extractTablesFromSchema,
+  generateAlphabeticCode,
+  generateAlphabeticName,
+  generateId,
+} from './factory-utils';
 
 export const terminalFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'terminals',
-  resolver: ({ sequence, use }) => {
-    const id = generateId(sequence);
+  resolver: ({ use }) => {
+    const id = generateId();
+    const name = generateAlphabeticName('Terminal');
+
     return {
       id,
-      name: `Terminal ${id}`,
-      address: `Address ${id}`,
+      name,
+      address: faker.location.streetAddress(),
+      latitude: faker.location.latitude(),
+      longitude: faker.location.longitude(),
+      code: generateAlphabeticCode(5), // Generate unique 5-letter code for better uniqueness
+      slug: createSlug(name, 't'),
+      timezone: faker.helpers.arrayElement(AVAILABLE_TIMEZONES).id,
       cityId: () =>
         use(cityFactory)
           .create()
           .then((city) => city.id),
-      latitude: 37.774929 + sequence,
-      longitude: -122.419418 + sequence,
-      contactphone: `+123456789${id}`,
-      operatingHours: {
-        monday: { open: '08:00', close: '20:00' },
-        tuesday: { open: '08:00', close: '20:00' },
-        wednesday: { open: '08:00', close: '20:00' },
-        thursday: { open: '08:00', close: '20:00' },
-        friday: { open: '08:00', close: '20:00' },
-        saturday: { open: '08:00', close: '20:00' },
-        sunday: { open: '08:00', close: '20:00' },
-      },
-      facilities: () => {
-        const facilities = AVAILABLE_FACILITIES;
-        const count = Math.floor(Math.random() * 4) + 2; // Random number between 2-5
-        const shuffled = facilities.sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, count);
-      },
-      code: `TRM${id}`,
-      slug: `t-terminal-${id}`,
-      active: true,
+      deletedAt: faker.helpers.maybe(() => faker.date.recent({ days: 30 }), {
+        probability: 0.1,
+      }),
     };
   },
 });

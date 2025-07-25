@@ -1,38 +1,33 @@
 import { faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
-import { extractTablesFromSchema, generateId } from './factory-utils';
+import {
+  extractTablesFromSchema,
+  generateAlphabeticName,
+  generateId,
+} from './factory-utils';
 
 export const installationSchemaFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'installationSchemas',
-  resolver: ({ sequence }) => {
-    const id = generateId(sequence);
-    const fieldTypes = [
-      'string',
-      'long_text',
-      'number',
-      'boolean',
-      'date',
-      'enum',
-    ];
+  resolver: () => {
+    const id = generateId();
+    const fieldTypes = ['text', 'number', 'boolean', 'date', 'select'];
     const fieldType = faker.helpers.arrayElement(fieldTypes);
 
-    // Generate appropriate options based on field type
-    let options = {};
-    if (fieldType === 'enum') {
-      options = {
-        enumValues: [
-          `Option ${sequence}A`,
-          `Option ${sequence}B`,
-          `Option ${sequence}C`,
-        ],
-      };
+    let options: string[] | null = null;
+    if (fieldType === 'select') {
+      // Generate some select options
+      const optionCount = faker.number.int({ min: 2, max: 5 });
+      options = Array.from(
+        { length: optionCount },
+        (_, index) => `Option ${index + 1}`,
+      );
     }
 
     return {
       id,
-      name: `field_${id}`,
+      name: generateAlphabeticName('Schema Field'),
       description: faker.helpers.maybe(() => faker.lorem.sentence(), {
         probability: 0.7,
       }),

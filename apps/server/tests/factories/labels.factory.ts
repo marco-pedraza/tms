@@ -6,12 +6,12 @@ import { extractTablesFromSchema, generateId } from './factory-utils';
 export const labelFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'labels',
-  resolver: ({ sequence }) => {
-    const id = generateId(sequence);
+  resolver: () => {
+    const id = generateId();
     const colors = [
       '#FF0000',
-      '#0F0',
-      '#00F',
+      '#00FF00',
+      '#0000FF',
       '#FFFF00',
       '#FF00FF',
       '#00FFFF',
@@ -21,6 +21,18 @@ export const labelFactory = defineFactory({
       '#A52A2A',
       '#808080',
       '#000000',
+      '#FF6B6B',
+      '#4ECDC4',
+      '#45B7D1',
+      '#96CEB4',
+      '#FFEAA7',
+      '#DDA0DD',
+      '#98D8C8',
+      '#F7DC6F',
+      '#BB8FCE',
+      '#85C1E9',
+      '#F8C471',
+      '#82E0AA',
     ];
 
     return {
@@ -29,10 +41,8 @@ export const labelFactory = defineFactory({
       description: faker.helpers.maybe(() => faker.lorem.sentence(), {
         probability: 0.7,
       }),
-      color: faker.helpers.arrayElement(colors),
-      active: faker.datatype.boolean(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      color: faker.helpers.arrayElement(colors), // Required field
+      active: faker.helpers.arrayElement([true, true, true, false]), // 75% active
       deletedAt: faker.helpers.maybe(() => faker.date.recent({ days: 30 }), {
         probability: 0.1,
       }),

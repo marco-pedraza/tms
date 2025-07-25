@@ -1,36 +1,32 @@
-import { fakerES_MX as faker } from '@faker-js/faker';
+import { faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
-import { extractTablesFromSchema, generateId } from './factory-utils';
+import {
+  extractTablesFromSchema,
+  generateAlphabeticName,
+  generateId,
+} from './factory-utils';
 
 export const busDiagramModelFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'busDiagramModels',
-  resolver: ({ sequence }) => {
-    const id = generateId(sequence);
+  resolver: () => {
+    const id = generateId();
     const floorCount = faker.helpers.maybe(() => 2, { probability: 0.25 }) || 1;
-    const layoutNames = [
-      'Standard',
-      'Executive',
-      'Premium',
-      'Luxury',
-      'Tourist',
-      'Custom',
-    ];
 
     // Calculate seats configuration
     const seatsPerFloor = Array.from({ length: floorCount }, (_, index) => {
       // Fewer seats on upper floor if double decker
       const rowCount =
         index === 0
-          ? faker.number.int({ min: 10, max: 16 })
+          ? faker.number.int({ min: 10, max: 15 })
           : faker.number.int({ min: 8, max: 12 });
-
-      // Usually 4 seats per row, sometimes 3 for premium layouts
-      const seatsPerRow =
-        faker.helpers.maybe(() => 3, { probability: 0.2 }) || 4;
-
-      return { rows: rowCount, seatsPerRow };
+      const seatsPerRow = faker.number.int({ min: 3, max: 5 });
+      return {
+        floor: index + 1,
+        rows: rowCount,
+        seatsPerRow,
+      };
     });
 
     // Calculate total seats
@@ -41,7 +37,7 @@ export const busDiagramModelFactory = defineFactory({
 
     return {
       id,
-      name: `${faker.helpers.arrayElement(layoutNames)} Layout ${faker.number.int({ min: 100, max: 999 })}`,
+      name: generateAlphabeticName('Bus Diagram Model'),
       description: faker.lorem.sentence(),
       maxCapacity: totalSeats + faker.number.int({ min: 0, max: 6 }), // Slight buffer for staff
       numFloors: floorCount,

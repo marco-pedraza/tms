@@ -1,16 +1,19 @@
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
-import { extractTablesFromSchema, generateId } from './factory-utils';
+import {
+  extractTablesFromSchema,
+  generateAlphabeticName,
+  generateId,
+} from './factory-utils';
 
 export const serviceTypeFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'serviceTypes',
-  resolver: ({ sequence }) => {
-    const id = generateId(sequence);
+  resolver: () => {
+    const id = generateId();
     return {
       id,
-      name: `Service Type ${id}`,
-      description: `Description for service type ${id}`,
+      name: generateAlphabeticName('Service Type'),
       active: true,
     };
   },

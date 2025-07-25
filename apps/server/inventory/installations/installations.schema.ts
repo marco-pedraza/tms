@@ -7,6 +7,7 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { installationAmenities } from '../amenities/amenities.schema';
 import { installationTypes } from '../installation-types/installation-types.schema';
 
 export const installations = pgTable(
@@ -30,9 +31,13 @@ export const installations = pgTable(
   (table) => [index().on(table.name), index().on(table.deletedAt)],
 );
 
-export const installationsRelations = relations(installations, ({ one }) => ({
-  installationType: one(installationTypes, {
-    fields: [installations.installationTypeId],
-    references: [installationTypes.id],
+export const installationsRelations = relations(
+  installations,
+  ({ one, many }) => ({
+    installationType: one(installationTypes, {
+      fields: [installations.installationTypeId],
+      references: [installationTypes.id],
+    }),
+    installationAmenities: many(installationAmenities),
   }),
-}));
+);

@@ -1,6 +1,9 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
-import { ValidationError } from '@repo/base-repo';
+import { FieldErrorCollector, ValidationError } from '@repo/base-repo';
 import { PaginationMeta } from '../../shared/types';
+import { amenitiesRepository } from '../amenities/amenities.repository';
+import { AmenityCategory, AmenityType } from '../amenities/amenities.types';
+import { installationAmenityRepository } from '../amenities/installation-amenities.repository';
 import { db } from '../db-service';
 import type { PropertyInput } from '../installation-properties/installation-properties.types';
 import { installationPropertyUseCases } from '../installation-properties/installation-properties.use-cases';
@@ -132,7 +135,18 @@ export function createInstallationUseCases() {
         )
       : [];
 
-    // Build the result with location information and properties
+    // Get amenities for this installation
+    const amenitiesData =
+      await installationAmenityRepository.getInstallationAmenities(id);
+
+    // Type cast the amenities to match the interface
+    const typedAmenities = amenitiesData.map((amenity) => ({
+      ...amenity,
+      category: amenity.category as AmenityCategory,
+      amenityType: amenity.amenityType as AmenityType,
+    }));
+
+    // Build the result with location information, properties, and amenities
     const result: InstallationWithDetails = {
       ...installation,
       location: nodeWithLocation
@@ -143,9 +157,137 @@ export function createInstallationUseCases() {
           }
         : null,
       properties,
+      amenities: typedAmenities,
     };
 
     return result;
+  }
+
+  /**
+   * Assigns amenities to an installation (destructive operation)
+   * This replaces all existing amenity assignments for the installation
+   * @param installationId - The ID of the installation to assign amenities to
+   * @param amenityIds - Array of amenity IDs to assign
+   * @returns The updated installation with amenities
+   */
+  async function assignAmenities(
+    installationId: number,
+    amenityIds: number[],
+  ): Promise<InstallationWithDetails> {
+    // Validate installation exists
+    await installationRepository.findOne(installationId);
+
+    // Handle empty amenity list case
+    if (amenityIds.length === 0) {
+      return await clearAllAmenities(installationId);
+    }
+
+    // Validate amenity assignments
+    await validateAmenityAssignments(amenityIds);
+
+    // Execute amenity assignment transaction
+    await executeAmenityAssignment(installationId, amenityIds);
+
+    // Return updated installation
+    return findOneWithLocation(installationId);
+  }
+
+  /**
+   * Clears all amenity assignments for an installation
+   */
+  async function clearAllAmenities(
+    installationId: number,
+  ): Promise<InstallationWithDetails> {
+    await db.transaction(async (tx) => {
+      await installationAmenityRepository.clearInstallationAmenities(
+        installationId,
+        tx,
+      );
+    });
+
+    return findOneWithLocation(installationId);
+  }
+
+  /**
+   * Validates amenity IDs for assignment to installation
+   */
+  async function validateAmenityAssignments(
+    amenityIds: number[],
+  ): Promise<void> {
+    const validator = new FieldErrorCollector();
+
+    // Check for duplicate amenity IDs
+    validateNoDuplicateAmenities(amenityIds, validator);
+
+    // Validate amenities exist and meet criteria
+    await validateAmenitiesExistAndMeetCriteria(amenityIds, validator);
+
+    // Throw all validation errors at once
+    validator.throwIfErrors();
+  }
+
+  /**
+   * Validates no duplicate amenity IDs in the array
+   */
+  function validateNoDuplicateAmenities(
+    amenityIds: number[],
+    validator: FieldErrorCollector,
+  ): void {
+    const uniqueAmenityIds = [...new Set(amenityIds)];
+
+    if (uniqueAmenityIds.length !== amenityIds.length) {
+      validator.addError(
+        'amenityIds',
+        'DUPLICATE_VALUES',
+        'Duplicate amenity IDs are not allowed',
+        amenityIds,
+      );
+    }
+  }
+
+  /**
+   * Validates amenities exist, are active, and have correct type
+   */
+  async function validateAmenitiesExistAndMeetCriteria(
+    amenityIds: number[],
+    validator: FieldErrorCollector,
+  ): Promise<void> {
+    const invalidIds = await amenitiesRepository.validateInstallationAmenityIds(
+      amenityIds,
+      AmenityType.INSTALLATION,
+    );
+
+    if (invalidIds.length > 0) {
+      validator.addError(
+        'amenityIds',
+        'INVALID_VALUES',
+        `Invalid amenity IDs: ${invalidIds.join(', ')}. Amenities must exist, be active, and have type 'installation'`,
+        invalidIds,
+      );
+    }
+  }
+
+  /**
+   * Executes the amenity assignment transaction
+   */
+  async function executeAmenityAssignment(
+    installationId: number,
+    amenityIds: number[],
+  ): Promise<void> {
+    await db.transaction(async (tx) => {
+      // Clear existing assignments
+      await installationAmenityRepository.clearInstallationAmenities(
+        installationId,
+        tx,
+      );
+
+      // Assign new amenities
+      await installationAmenityRepository.assignAmenitiesToInstallation(
+        installationId,
+        amenityIds,
+        tx,
+      );
+    });
   }
 
   /**
@@ -219,6 +361,7 @@ export function createInstallationUseCases() {
         ...installation,
         location: locationMap.get(installation.id) || null,
         properties: propertiesMap.get(installation.id) ?? [],
+        amenities: [], // Amenities are not included in list operations for performance
       }));
 
     return {
@@ -231,6 +374,7 @@ export function createInstallationUseCases() {
     createNodeInstallation,
     updateInstallationProperties,
     findOneWithLocation,
+    assignAmenities,
     appendLocationInfo,
   };
 }

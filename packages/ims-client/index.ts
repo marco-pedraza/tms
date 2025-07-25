@@ -94,11 +94,13 @@ export namespace inventory {
 
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
+            this.assignAmenitiesToInstallation = this.assignAmenitiesToInstallation.bind(this)
             this.assignCitiesToPopulation = this.assignCitiesToPopulation.bind(this)
             this.assignCityToPopulation = this.assignCityToPopulation.bind(this)
             this.assignEventTypesToInstallationType = this.assignEventTypesToInstallationType.bind(this)
             this.assignEventsToNode = this.assignEventsToNode.bind(this)
             this.assignLabelsToNode = this.assignLabelsToNode.bind(this)
+            this.createAmenity = this.createAmenity.bind(this)
             this.createBus = this.createBus.bind(this)
             this.createBusDiagramModel = this.createBusDiagramModel.bind(this)
             this.createBusDiagramModelZone = this.createBusDiagramModelZone.bind(this)
@@ -123,6 +125,7 @@ export namespace inventory {
             this.createState = this.createState.bind(this)
             this.createTerminal = this.createTerminal.bind(this)
             this.createTransporter = this.createTransporter.bind(this)
+            this.deleteAmenity = this.deleteAmenity.bind(this)
             this.deleteBus = this.deleteBus.bind(this)
             this.deleteBusDiagramModel = this.deleteBusDiagramModel.bind(this)
             this.deleteBusDiagramModelZone = this.deleteBusDiagramModelZone.bind(this)
@@ -149,6 +152,7 @@ export namespace inventory {
             this.deleteTransporter = this.deleteTransporter.bind(this)
             this.findPopulationByAssignedCity = this.findPopulationByAssignedCity.bind(this)
             this.getAllowedBusStatusTransitions = this.getAllowedBusStatusTransitions.bind(this)
+            this.getAmenity = this.getAmenity.bind(this)
             this.getAvailableBuses = this.getAvailableBuses.bind(this)
             this.getBus = this.getBus.bind(this)
             this.getBusDiagramModel = this.getBusDiagramModel.bind(this)
@@ -184,6 +188,8 @@ export namespace inventory {
             this.getTerminal = this.getTerminal.bind(this)
             this.getTimezone = this.getTimezone.bind(this)
             this.getTransporter = this.getTransporter.bind(this)
+            this.listAmenities = this.listAmenities.bind(this)
+            this.listAmenitiesPaginated = this.listAmenitiesPaginated.bind(this)
             this.listAvailableCities = this.listAvailableCities.bind(this)
             this.listBusDiagramModels = this.listBusDiagramModels.bind(this)
             this.listBusDiagramModelsPaginated = this.listBusDiagramModelsPaginated.bind(this)
@@ -248,6 +254,7 @@ export namespace inventory {
             this.searchTransporters = this.searchTransporters.bind(this)
             this.searchTransportersPaginated = this.searchTransportersPaginated.bind(this)
             this.syncInstallationSchemas = this.syncInstallationSchemas.bind(this)
+            this.updateAmenity = this.updateAmenity.bind(this)
             this.updateBus = this.updateBus.bind(this)
             this.updateBusDiagramModel = this.updateBusDiagramModel.bind(this)
             this.updateBusDiagramModelZone = this.updateBusDiagramModelZone.bind(this)
@@ -276,6 +283,28 @@ export namespace inventory {
             this.updateState = this.updateState.bind(this)
             this.updateTerminal = this.updateTerminal.bind(this)
             this.updateTransporter = this.updateTransporter.bind(this)
+        }
+
+        /**
+         * Assigns amenities to an installation (destructive operation).
+         * This replaces all existing amenity assignments for the installation.
+         * @param params - Object containing the installation ID and amenity IDs to assign
+         * @param params.id - The ID of the installation to assign amenities to
+         * @param params.amenityIds - Array of amenity IDs to assign
+         * @returns {Promise<InstallationWithDetails>} The updated installation with new amenity assignments
+         * @throws {APIError} If the installation is not found, amenities are not found, or assignment fails
+         */
+        public async assignAmenitiesToInstallation(id: number, params: {
+    /**
+     * Array of amenity IDs to assign to the installation
+     * Only amenities with type = 'installation' are allowed
+     * Must be positive numbers
+     */
+    amenityIds: number[]
+}): Promise<installations.InstallationWithDetails> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/installations/${encodeURIComponent(id)}/amenities/assign`, JSON.stringify(params))
+            return await resp.json() as installations.InstallationWithDetails
         }
 
         /**
@@ -370,6 +399,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/nodes/${encodeURIComponent(id)}/labels/assign`, JSON.stringify(params))
             return await resp.json() as nodes.NodeWithRelations
+        }
+
+        /**
+         * Creates a new amenity.
+         * @param params - The amenity data to create
+         * @returns {Promise<Amenity>} The created amenity
+         * @throws {APIError} If the amenity creation fails
+         */
+        public async createAmenity(params: amenities.CreateAmenityPayload): Promise<amenities.Amenity> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/amenities/create`, JSON.stringify(params))
+            return await resp.json() as amenities.Amenity
         }
 
         /**
@@ -690,6 +731,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/transporters`, JSON.stringify(params))
             return await resp.json() as transporters.Transporter
+        }
+
+        /**
+         * Deletes an amenity by its ID.
+         * @param params - Object containing the amenity ID
+         * @param params.id - The ID of the amenity to delete
+         * @returns {Promise<Amenity>} The deleted amenity
+         * @throws {APIError} If the amenity is not found or deletion fails
+         */
+        public async deleteAmenity(id: number): Promise<amenities.Amenity> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/amenities/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as amenities.Amenity
         }
 
         /**
@@ -1021,6 +1075,19 @@ export namespace inventory {
             return await resp.json() as {
     allowedTransitions: buses.BusStatus[]
 }
+        }
+
+        /**
+         * Retrieves an amenity by its ID.
+         * @param params - Object containing the amenity ID
+         * @param params.id - The ID of the amenity to retrieve
+         * @returns {Promise<Amenity>} The found amenity
+         * @throws {APIError} If the amenity is not found or retrieval fails
+         */
+        public async getAmenity(id: number): Promise<amenities.Amenity> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/amenities/${encodeURIComponent(id)}`)
+            return await resp.json() as amenities.Amenity
         }
 
         /**
@@ -1459,6 +1526,30 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/transporters/${encodeURIComponent(id)}`)
             return await resp.json() as transporters.TransporterWithCity
+        }
+
+        /**
+         * Retrieves all amenities without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListAmenitiesResult>} Unified response with data property containing array of amenities
+         * @throws {APIError} If retrieval fails
+         */
+        public async listAmenities(params: amenities.ListAmenitiesQueryParams): Promise<amenities.ListAmenitiesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/amenities/list/all`, JSON.stringify(params))
+            return await resp.json() as amenities.ListAmenitiesResult
+        }
+
+        /**
+         * Retrieves amenities with pagination (useful for tables).
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListAmenitiesResult>} Unified paginated response with data and pagination properties
+         * @throws {APIError} If retrieval fails
+         */
+        public async listAmenitiesPaginated(params: amenities.PaginatedListAmenitiesQueryParams): Promise<amenities.PaginatedListAmenitiesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/amenities/list`, JSON.stringify(params))
+            return await resp.json() as amenities.PaginatedListAmenitiesResult
         }
 
         /**
@@ -2487,6 +2578,52 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/installation/types/${encodeURIComponent(id)}/schemas`, JSON.stringify(params))
             return await resp.json() as installation_schemas.ListInstallationSchemasResult
+        }
+
+        /**
+         * Updates an existing amenity.
+         * @param params - Object containing the amenity ID and update data
+         * @param params.id - The ID of the amenity to update
+         * @returns {Promise<Amenity>} The updated amenity
+         * @throws {APIError} If the amenity is not found or update fails
+         */
+        public async updateAmenity(id: number, params: {
+    /**
+     * Name of the amenity
+     * Must have at least 1 non-whitespace character
+     */
+    name?: string
+
+    /**
+     * Category of the amenity
+     * Must be one of the allowed categories
+     */
+    category?: amenities.AmenityCategory
+
+    /**
+     * Type of amenity within the category
+     * Must be either 'bus' or 'installation'
+     */
+    amenityType?: amenities.AmenityType
+
+    /**
+     * Optional description of the amenity
+     */
+    description?: string | null
+
+    /**
+     * Optional icon name for UI display
+     */
+    iconName?: string | null
+
+    /**
+     * Whether the amenity is active/available
+     */
+    active?: boolean
+}): Promise<amenities.Amenity> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/amenities/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as amenities.Amenity
         }
 
         /**
@@ -5578,6 +5715,151 @@ export namespace users {
             const resp = await this.baseClient.callTypedAPI("PUT", `/users/${encodeURIComponent(id)}`, JSON.stringify(params))
             return await resp.json() as SafeUser
         }
+    }
+}
+
+export namespace amenities {
+    export interface Amenity {
+        /**
+         * Unique identifier for the amenity
+         */
+        id: number
+
+        /**
+         * Name of the amenity
+         */
+        name: string
+
+        /**
+         * Category of the amenity
+         */
+        category: AmenityCategory
+
+        /**
+         * Type of amenity within the category
+         */
+        amenityType: AmenityType
+
+        /**
+         * Optional description of the amenity
+         */
+        description: string | null
+
+        /**
+         * Optional icon name for UI display
+         */
+        iconName: string | null
+
+        /**
+         * Whether the amenity is active/available
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the amenity record was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the amenity record was last updated
+         */
+        updatedAt: string | string | null
+
+        /**
+         * Timestamp when the amenity was soft deleted
+         */
+        deletedAt: string | string | null
+    }
+
+    export type AmenityCategory = "basic" | "comfort" | "technology" | "security" | "accessibility" | "services"
+
+    export type AmenityType = "bus" | "installation"
+
+    export interface CreateAmenityPayload {
+        /**
+         * Name of the amenity
+         * Must have at least 1 non-whitespace character
+         */
+        name: string
+
+        /**
+         * Category of the amenity
+         * Must be one of the allowed categories
+         */
+        category: AmenityCategory
+
+        /**
+         * Type of amenity within the category
+         * Must be either 'bus' or 'installation'
+         */
+        amenityType: AmenityType
+
+        /**
+         * Optional description of the amenity
+         */
+        description?: string | null
+
+        /**
+         * Optional icon name for UI display
+         */
+        iconName?: string | null
+
+        /**
+         * Whether the amenity is active/available
+         * @default true
+         */
+        active?: boolean
+    }
+
+    export interface ListAmenitiesQueryParams {
+        orderBy?: {
+            field: "id" | "name" | "category" | "amenityType" | "description" | "iconName" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            category?: AmenityCategory
+            amenityType?: AmenityType
+            description?: string | null
+            iconName?: string | null
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+            deletedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListAmenitiesResult {
+        data: Amenity[]
+    }
+
+    export interface PaginatedListAmenitiesQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "category" | "amenityType" | "description" | "iconName" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            category?: AmenityCategory
+            amenityType?: AmenityType
+            description?: string | null
+            iconName?: string | null
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+            deletedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListAmenitiesResult {
+        pagination: shared.PaginationMeta
+        data: Amenity[]
     }
 }
 
@@ -9383,6 +9665,11 @@ export namespace installations {
          * Complete property definitions with values for this installation
          */
         properties: InstallationPropertyResponse[]
+
+        /**
+         * Amenities assigned to this installation (filtered by type = 'installation')
+         */
+        amenities: amenities.Amenity[]
 
         /**
          * Unique identifier for the installation

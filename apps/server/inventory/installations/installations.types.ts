@@ -6,6 +6,7 @@ import {
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '../../shared/types';
+import { Amenity } from '../amenities/amenities.types';
 import {
   InstallationSchemaFieldType,
   InstallationSchemaOptions,
@@ -92,6 +93,8 @@ export interface InstallationWithDetails extends Installation {
   location: InstallationLocation | null;
   /** Complete property definitions with values for this installation */
   properties: InstallationPropertyResponse[];
+  /** Amenities assigned to this installation (filtered by type = 'installation') */
+  amenities: Amenity[];
 }
 
 /**
@@ -250,6 +253,18 @@ export interface UpdateInstallationPayload {
    * Must be a positive number
    */
   installationTypeId?: (number & Min<1>) | null;
+}
+
+/**
+ * Input for assigning amenities to an installation
+ */
+export interface AssignAmenitiesToInstallationPayload {
+  /**
+   * Array of amenity IDs to assign to the installation
+   * Only amenities with type = 'installation' are allowed
+   * Must be positive numbers
+   */
+  amenityIds: (number & Min<1>)[];
 }
 
 export type ListInstallationsQueryParams = ListQueryParams<Installation>;

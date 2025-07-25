@@ -1,6 +1,7 @@
 import { api } from 'encore.dev/api';
 import type { PropertyInput } from '../installation-properties/installation-properties.types';
 import type {
+  AssignAmenitiesToInstallationPayload,
   CreateNodeInstallationPayload,
   Installation,
   InstallationWithDetails,
@@ -142,5 +143,30 @@ export const updateInstallationProperties = api(
       id,
       properties,
     );
+  },
+);
+
+/**
+ * Assigns amenities to an installation (destructive operation).
+ * This replaces all existing amenity assignments for the installation.
+ * @param params - Object containing the installation ID and amenity IDs to assign
+ * @param params.id - The ID of the installation to assign amenities to
+ * @param params.amenityIds - Array of amenity IDs to assign
+ * @returns {Promise<InstallationWithDetails>} The updated installation with new amenity assignments
+ * @throws {APIError} If the installation is not found, amenities are not found, or assignment fails
+ */
+export const assignAmenitiesToInstallation = api(
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/installations/:id/amenities/assign',
+  },
+  async ({
+    id,
+    amenityIds,
+  }: AssignAmenitiesToInstallationPayload & {
+    id: number;
+  }): Promise<InstallationWithDetails> => {
+    return await installationUseCases.assignAmenities(id, amenityIds);
   },
 );

@@ -9,6 +9,11 @@ import {
   createUniqueCode,
   createUniqueName,
 } from '../../tests/shared/test-utils';
+import {
+  createAmenity,
+  deleteAmenity,
+} from '../amenities/amenities.controller';
+import { AmenityCategory, AmenityType } from '../amenities/amenities.types';
 import { cityRepository } from '../cities/cities.repository';
 import { db } from '../db-service';
 import { installationPropertyRepository } from '../installation-properties/installation-properties.repository';
@@ -26,6 +31,7 @@ import { populationRepository } from '../populations/populations.repository';
 import type { CreateNodeInstallationPayload } from './installations.types';
 import { installationRepository } from './installations.repository';
 import {
+  assignAmenitiesToInstallation,
   createInstallation,
   deleteInstallation,
   getInstallation,
@@ -1066,6 +1072,180 @@ describe('Installations Controller', () => {
         // Verify this is the same installation but with updated properties
         expect(secondResponse.name).toBe(firstResponse.name);
         expect(secondResponse.address).toBe(firstResponse.address);
+      });
+    });
+  });
+
+  describe('amenity assignment', () => {
+    let testInstallationAmenityId: number;
+    let testBusAmenityId: number;
+
+    beforeAll(async () => {
+      // Create installation amenities for testing
+      const installationAmenity = await createAmenity({
+        name: createUniqueName('WiFi Service', testSuiteId),
+        category: AmenityCategory.TECHNOLOGY,
+        amenityType: AmenityType.INSTALLATION,
+        description: 'High-speed internet access',
+        iconName: 'wifi',
+        active: true,
+      });
+      testInstallationAmenityId = installationAmenity.id;
+
+      // Create a bus amenity to test type validation
+      const busAmenity = await createAmenity({
+        name: createUniqueName('Bus AC', testSuiteId),
+        category: AmenityCategory.COMFORT,
+        amenityType: AmenityType.BUS,
+        description: 'Air conditioning',
+        iconName: 'air-vent',
+        active: true,
+      });
+      testBusAmenityId = busAmenity.id;
+    });
+
+    afterAll(async () => {
+      // Clean up amenities
+      if (testInstallationAmenityId || testBusAmenityId) {
+        try {
+          if (testInstallationAmenityId) {
+            await deleteAmenity({ id: testInstallationAmenityId });
+          }
+          if (testBusAmenityId) {
+            await deleteAmenity({ id: testBusAmenityId });
+          }
+        } catch (error) {
+          console.log('Error cleaning up test amenities:', error);
+        }
+      }
+    });
+
+    describe('success scenarios', () => {
+      test('should assign amenities to installation and return installation with amenities', async () => {
+        const response = await assignAmenitiesToInstallation({
+          id: createdInstallationId,
+          amenityIds: [testInstallationAmenityId],
+        });
+
+        expect(response).toBeDefined();
+        expect(response.id).toBe(createdInstallationId);
+        expect(response.amenities).toBeDefined();
+        expect(Array.isArray(response.amenities)).toBe(true);
+        expect(response.amenities).toHaveLength(1);
+        expect(response.amenities[0].id).toBe(testInstallationAmenityId);
+        expect(response.amenities[0].name).toContain('WiFi Service');
+        expect(response.amenities[0].amenityType).toBe('installation');
+      });
+
+      test('should replace existing amenities (destructive operation)', async () => {
+        // First assign multiple amenities
+        const amenity2 = await createAmenity({
+          name: createUniqueName('Parking Space', testSuiteId),
+          category: AmenityCategory.BASIC,
+          amenityType: AmenityType.INSTALLATION,
+          description: 'Secure parking',
+          iconName: 'car',
+          active: true,
+        });
+
+        await assignAmenitiesToInstallation({
+          id: createdInstallationId,
+          amenityIds: [testInstallationAmenityId, amenity2.id],
+        });
+
+        // Verify both amenities are assigned
+        let installation = await getInstallation({ id: createdInstallationId });
+        expect(installation.amenities).toHaveLength(2);
+
+        // Now replace with just one amenity
+        await assignAmenitiesToInstallation({
+          id: createdInstallationId,
+          amenityIds: [amenity2.id],
+        });
+
+        // Verify only the new amenity is assigned
+        installation = await getInstallation({ id: createdInstallationId });
+        expect(installation.amenities).toHaveLength(1);
+        expect(installation.amenities[0].id).toBe(amenity2.id);
+
+        // Clean up - first clear amenity assignments, then delete
+        await assignAmenitiesToInstallation({
+          id: createdInstallationId,
+          amenityIds: [],
+        });
+        await deleteAmenity({ id: amenity2.id });
+      });
+
+      test('should allow empty amenity list (removes all amenities)', async () => {
+        // First assign an amenity
+        await assignAmenitiesToInstallation({
+          id: createdInstallationId,
+          amenityIds: [testInstallationAmenityId],
+        });
+
+        // Verify amenity is assigned
+        let installation = await getInstallation({ id: createdInstallationId });
+        expect(installation.amenities).toHaveLength(1);
+
+        // Now remove all amenities
+        await assignAmenitiesToInstallation({
+          id: createdInstallationId,
+          amenityIds: [],
+        });
+
+        // Verify no amenities are assigned
+        installation = await getInstallation({ id: createdInstallationId });
+        expect(installation.amenities).toHaveLength(0);
+      });
+    });
+
+    describe('error scenarios', () => {
+      test('should handle installation not found', async () => {
+        await expect(
+          assignAmenitiesToInstallation({
+            id: 99999,
+            amenityIds: [testInstallationAmenityId],
+          }),
+        ).rejects.toThrow();
+      });
+
+      test('should reject bus amenities (wrong type)', async () => {
+        await expect(
+          assignAmenitiesToInstallation({
+            id: createdInstallationId,
+            amenityIds: [testBusAmenityId],
+          }),
+        ).rejects.toThrow();
+      });
+
+      test('should reject non-existent amenity IDs', async () => {
+        await expect(
+          assignAmenitiesToInstallation({
+            id: createdInstallationId,
+            amenityIds: [99999],
+          }),
+        ).rejects.toThrow();
+      });
+
+      test('should reject duplicate amenity IDs', async () => {
+        try {
+          await assignAmenitiesToInstallation({
+            id: createdInstallationId,
+            amenityIds: [testInstallationAmenityId, testInstallationAmenityId],
+          });
+          expect.fail('Expected function to throw');
+        } catch (error: unknown) {
+          expect(error).toBeInstanceOf(Error);
+          const fieldError = error as {
+            name: string;
+            fieldErrors: { message: string }[];
+          };
+          expect(fieldError.name).toBe('FieldValidationError');
+          expect(fieldError.fieldErrors).toBeDefined();
+          expect(fieldError.fieldErrors[0].message).toContain(
+            'Duplicate amenity IDs are not allowed',
+          );
+        }
       });
     });
   });

@@ -1,10 +1,12 @@
 'use client';
 
+import { formatDuration } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import ActionButtons from '@/components/action-buttons';
+import AffirmationBadge from '@/components/affirmation-badge';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import IsActiveBadge from '@/components/is-active-badge';
 import PageHeader from '@/components/page-header';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import EventSkeleton from '@/events/components/event-skeleton';
 import useEventMutations from '@/events/hooks/use-event-mutations';
@@ -75,15 +77,53 @@ export default function EventDetailsPage() {
 
               <dt className="font-medium">{tCommon('fields.status')}:</dt>
               <dd>
-                {eventType.active ? (
-                  <Badge variant="outline" className="bg-green-100">
-                    {tCommon('status.active')}
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-red-100">
-                    {tCommon('status.inactive')}
-                  </Badge>
-                )}
+                <IsActiveBadge isActive={eventType.active} />
+              </dd>
+            </dl>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{tCommon('sections.operativeConfig')}</CardTitle>
+            <small className="text-muted-foreground">
+              {tCommon('sections.operativeConfigDescription')}
+            </small>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-[1fr_2fr] gap-4">
+              <dt className="font-medium">{tEvents('fields.baseTime')}:</dt>
+              <dd className="flex flex-col gap-2">
+                {formatDuration({ minutes: eventType.baseTime })}
+                <small className="text-muted-foreground">
+                  {tEvents('details.baseTime')}
+                </small>
+              </dd>
+
+              <dt className="font-medium">{tEvents('fields.integration')}:</dt>
+              <dd className="flex flex-col gap-2">
+                <AffirmationBadge value={eventType.integration} />
+                <small className="text-muted-foreground">
+                  {tEvents('details.integration')}
+                </small>
+              </dd>
+
+              <dt className="font-medium">{tEvents('fields.needsCost')}:</dt>
+              <dd className="flex flex-col gap-2">
+                <AffirmationBadge value={eventType.needsCost} />
+                <small className="text-muted-foreground">
+                  {tEvents('details.needsCost')}
+                </small>
+              </dd>
+
+              <dt className="font-medium">
+                {tEvents('fields.needsQuantity')}:
+              </dt>
+              <dd className="flex flex-col gap-2">
+                <AffirmationBadge value={eventType.needsQuantity} />
+                <small className="text-muted-foreground">
+                  {tEvents('details.needsQuantity')}
+                </small>
               </dd>
             </dl>
           </CardContent>

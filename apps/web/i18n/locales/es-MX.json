@@ -57,6 +57,8 @@
       "basicInfo": "Información Básica",
       "systemInfo": "Información del Sistema",
       "contactInfo": "Información de Contacto",
+      "operativeConfig": "Configuración Operativa",
+      "operativeConfigDescription": "Parámetros de tiempo e integración",
       "location": "Ubicación"
     },
     "crud": {

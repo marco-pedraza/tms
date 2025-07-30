@@ -43,3 +43,6 @@ export type UseTerminalsTranslationsResult = ReturnType<
 export type UseTransportersTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'transporters'>
 >;
+export type UseAmenitiesTranslationsResult = ReturnType<
+  typeof createTranslator<Messages, 'amenities'>
+>;

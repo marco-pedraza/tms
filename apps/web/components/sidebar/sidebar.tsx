@@ -13,6 +13,7 @@ import {
   MapPin,
   Package,
   Settings,
+  Star,
   Tag,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -71,6 +72,11 @@ export default function Sidebar() {
             href={routes.installationTypes.index}
             icon={Settings}
             label={tSidebar('inventory.localities.installationTypes')}
+          />
+          <SidebarLink
+            href={routes.amenities.index}
+            icon={Star}
+            label={tSidebar('inventory.localities.amenities')}
           />
           <SidebarLink
             href={routes.events.index}

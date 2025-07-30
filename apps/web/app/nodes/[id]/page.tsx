@@ -2,6 +2,7 @@
 
 import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import useQueryInstallationType from '@/app/installation-types/hooks/use-query-installation-type';
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
@@ -21,6 +22,10 @@ export default function NodeDetailsPage() {
   const { data: node, isLoading } = useQueryNode({
     nodeId,
     enabled: isValidId,
+  });
+  const { data: installationType } = useQueryInstallationType({
+    itemId: node?.installation?.installationTypeId as number,
+    enabled: !!node?.installation?.installationTypeId,
   });
   const { delete: deleteNode } = useNodeMutations();
   const { deleteId, setDeleteId, onConfirmDelete, onCancelDelete } =
@@ -58,7 +63,7 @@ export default function NodeDetailsPage() {
         />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4">
         <Card>
           <CardHeader>
             <CardTitle>{tCommon('sections.basicInfo')}</CardTitle>
@@ -68,8 +73,34 @@ export default function NodeDetailsPage() {
               <dt className="font-medium">{tCommon('fields.name')}:</dt>
               <dd>{node.name}</dd>
 
+              <dt className="font-medium">{tCommon('fields.slug')}:</dt>
+              <dd>{node.slug}</dd>
+
               <dt className="font-medium">{tCommon('fields.code')}:</dt>
               <dd>{node.code}</dd>
+
+              <dt className="font-medium">
+                {tNodes('fields.installationType')}:
+              </dt>
+              <dd>{installationType?.name ?? '-'}</dd>
+
+              <dt className="font-medium">
+                {tNodes('fields.allowsBoarding')}:
+              </dt>
+              <dd>
+                {node.allowsBoarding
+                  ? tCommon('status.yes')
+                  : tCommon('status.no')}
+              </dd>
+
+              <dt className="font-medium">
+                {tNodes('fields.allowsAlighting')}:
+              </dt>
+              <dd>
+                {node.allowsAlighting
+                  ? tCommon('status.yes')
+                  : tCommon('status.no')}
+              </dd>
             </dl>
           </CardContent>
         </Card>
@@ -80,6 +111,9 @@ export default function NodeDetailsPage() {
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
+              <dt className="font-medium">{tNodes('fields.address')}:</dt>
+              <dd>{node.installation?.address ?? '-'}</dd>
+
               <dt className="font-medium">{tNodes('fields.city')}:</dt>
               <dd>{node.city.name}</dd>
 
@@ -105,12 +139,44 @@ export default function NodeDetailsPage() {
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>{tCommon('sections.contactInfo')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-[1fr_2fr] gap-4">
+              <dt className="font-medium">{tNodes('fields.contactPhone')}:</dt>
+              <dd>{node.installation?.contactPhone ?? '-'}</dd>
+
+              <dt className="font-medium">{tNodes('fields.contactEmail')}:</dt>
+              <dd>{node.installation?.contactEmail ?? '-'}</dd>
+
+              <dt className="font-medium">{tNodes('fields.website')}:</dt>
+              <dd>
+                {node.installation?.website ? (
+                  <a
+                    href={node.installation?.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center hover:text-primary"
+                  >
+                    {node.installation?.website}
+                    <ExternalLink className="ml-1 h-4 w-4" />
+                  </a>
+                ) : (
+                  '-'
+                )}
+              </dd>
+            </dl>
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader>
             <CardTitle>{tCommon('sections.systemInfo')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <dl className="grid grid-cols-[1fr_2fr] gap-4 md:grid-cols-[1fr_2fr_1fr_2fr]">
+            <dl className="grid grid-cols-[1fr_2fr] gap-4">
               <dt className="font-medium">{tCommon('fields.id')}:</dt>
               <dd>{node.id}</dd>
 

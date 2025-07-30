@@ -129,6 +129,15 @@
     "enumValues": {
       "commaSeparated": "Elimina cualquier coma al inicio o al final de la lista. Ingresa solo letras, números y espacios por cada valor."
     },
+    "url": {
+      "invalid": "La URL no es válida."
+    },
+    "email": {
+      "invalid": "El correo electrónico no es válido."
+    },
+    "phone": {
+      "invalid": "El teléfono no es válido."
+    },
     "server": {
       "duplicate": "Ya existe un {entity} con {property}: \"{value}\"."
     },
@@ -779,12 +788,21 @@
     "fields": {
       "city": "Ciudad",
       "population": "Población",
-      "radius": "Radio"
+      "radius": "Radio",
+      "installationType": "Tipo de Instalación",
+      "address": "Dirección",
+      "contactPhone": "Teléfono",
+      "contactEmail": "Correo Electrónico",
+      "website": "Sitio Web",
+      "allowsBoarding": "Permite ascenso de pasajeros",
+      "allowsAlighting": "Permite descenso de pasajeros"
     },
     "form": {
       "sections": {
         "basicInfo": "Información Básica",
-        "location": "Información Geográfica"
+        "locationInfo": "Información Geográfica",
+        "contactInfo": "Información de Contacto Y Gestión",
+        "locationAndContactInfo": "Ubicación y Contacto"
       },
       "placeholders": {
         "name": "Ej: Nodo Central",
@@ -794,7 +812,13 @@
         "radius": "Ej: 100",
         "latitude": "Ej: 19.4326",
         "longitude": "Ej: -99.1332",
-        "emptyCityList": "Selecciona una población con ciudades asignadas"
+        "emptyCityList": "Selecciona una población con ciudades asignadas",
+        "installationType": "Selecciona un tipo de instalación",
+        "address": "Ej: Av. Central #123, Col. Centro",
+        "contactPhone": "Ej: (33) 1234-5678",
+        "contactEmail": "Ej: info@autobusesdemexico.com",
+        "website": "Ej: https://autobusesdemexico.com",
+        "description": "Ej: Nodo central de autobuses"
       }
     },
     "edit": {
@@ -825,6 +849,29 @@
         "loading": "Eliminando nodo...",
         "success": "Nodo eliminado correctamente",
         "error": "No pudimos eliminar el nodo"
+      },
+      "syncIntallationError": {
+        "create": "No pudimos completar la creación del Nodo correctamente. Por favor revisa la información y rellena nuevamente los datos faltantes.",
+        "update": "No pudimos completar la actualización del Nodo correctamente. Por favor intenta nuevamente."
+      }
+    }
+  },
+  "installations": {
+    "messages": {
+      "create": {
+        "loading": "Creando instalación...",
+        "success": "Instalación creada correctamente",
+        "error": "No pudimos crear la instalación."
+      },
+      "update": {
+        "loading": "Actualizando instalación...",
+        "success": "Instalación actualizada correctamente",
+        "error": "No pudimos actualizar la instalación"
+      },
+      "delete": {
+        "loading": "Eliminando instalación...",
+        "success": "Instalación eliminada correctamente",
+        "error": "No pudimos eliminar la instalación"
       }
     }
   },

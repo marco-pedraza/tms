@@ -6,6 +6,7 @@ import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useForm from '@/hooks/use-form';
+import useQueryAllInstallationTypes from '@/installation-types/hooks/use-query-all-installation-types';
 import useQueryAllPopulations from '@/populations/hooks/use-query-all-populations';
 import useQueryPopulationCities from '@/populations/hooks/use-query-population-cities';
 import { UseValidationsTranslationsResult } from '@/types/translations';
@@ -37,6 +38,10 @@ const createNodeFormSchema = (tValidations: UseValidationsTranslationsResult) =>
         { message: tValidations('radius.positive') },
       )
       .transform((val) => parseFloat(val)),
+    installationTypeId: z
+      .string()
+      .min(1, tValidations('required'))
+      .transform((val) => parseInt(val)),
     cityId: z
       .string()
       .min(1, tValidations('required'))
@@ -73,14 +78,77 @@ const createNodeFormSchema = (tValidations: UseValidationsTranslationsResult) =>
         { message: tValidations('longitude.range') },
       )
       .transform((val) => parseFloat(val)),
+    address: z.string().min(1, { message: tValidations('required') }),
+    description: z.string().nullable(),
+    contactPhone: z
+      .string()
+      .trim()
+      .refine(
+        (val) => {
+          if (val.length === 0) {
+            return true;
+          }
+          return val.match(/^\+[1-9][\d\s()-]{1,20}$/);
+        },
+        {
+          message: tValidations('phone.invalid'),
+        },
+      )
+      .transform((val) => (val.length === 0 ? null : val))
+      .nullable(),
+    contactEmail: z
+      .string()
+      .trim()
+      .refine(
+        (val) => {
+          if (val.length === 0) {
+            return true;
+          }
+          return val.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/);
+        },
+        {
+          message: tValidations('email.invalid'),
+        },
+      )
+      .transform((val) => (val.length === 0 ? null : val))
+      .nullable(),
+    website: z
+      .string()
+      .trim()
+      .refine(
+        (val) => {
+          if (val.length === 0) {
+            return true;
+          }
+          return val.match(
+            /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/,
+          );
+        },
+        {
+          message: tValidations('url.invalid'),
+        },
+      )
+      .transform((val) => (val.length === 0 ? null : val))
+      .nullable(),
+    allowsBoarding: z.boolean().optional(),
+    allowsAlighting: z.boolean().optional(),
   });
 
-export type NodeFormValues = z.output<ReturnType<typeof createNodeFormSchema>>;
+export type NodeFormOutputValues = z.output<
+  ReturnType<typeof createNodeFormSchema>
+>;
 type NodeFormRawValues = z.input<ReturnType<typeof createNodeFormSchema>>;
+
+export type NodeFormValues = Omit<
+  NodeFormOutputValues,
+  'installationTypeId'
+> & {
+  installationTypeId: number | null | undefined;
+};
 
 interface NodeFormProps {
   defaultValues?: NodeFormValues;
-  onSubmit: (values: NodeFormValues) => Promise<unknown>;
+  onSubmit: (values: NodeFormOutputValues) => Promise<unknown>;
 }
 
 export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
@@ -90,9 +158,9 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
   const nodeSchema = createNodeFormSchema(tValidations);
   const rawDefaultValues: NodeFormRawValues | undefined = defaultValues
     ? {
-        name: defaultValues.name,
-        code: defaultValues.code,
+        ...defaultValues,
         radius: defaultValues.radius.toString(),
+        installationTypeId: defaultValues.installationTypeId?.toString() ?? '',
         cityId: defaultValues.cityId.toString(),
         populationId: defaultValues.populationId.toString(),
         latitude: defaultValues.latitude.toString(),
@@ -104,10 +172,16 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
       name: '',
       code: '',
       radius: '',
+      installationTypeId: '',
       cityId: '',
       populationId: '',
       latitude: '',
       longitude: '',
+      address: '',
+      description: '',
+      contactPhone: '',
+      contactEmail: '',
+      website: '',
     },
     validators: {
       onChange: nodeSchema,
@@ -130,6 +204,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
     },
   });
   const { data: populations } = useQueryAllPopulations();
+  const { data: installationTypes } = useQueryAllInstallationTypes();
   const selectedPopulationId = useStore(
     form.store,
     (state) => state.values.populationId,
@@ -147,11 +222,26 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
             {tCommon('sections.basicInfo')}
           </TabsTrigger>
           <TabsTrigger value="location">
-            {tCommon('sections.location')}
+            {tNodes('form.sections.locationAndContactInfo')}
           </TabsTrigger>
         </TabsList>
         <TabsContent value="basic">
           <FormLayout title={tNodes('form.sections.basicInfo')}>
+            <form.AppField name="installationTypeId">
+              {(field) => (
+                <field.SelectInput
+                  label={tNodes('fields.installationType')}
+                  placeholder={tNodes('form.placeholders.installationType')}
+                  isRequired
+                  items={
+                    installationTypes?.data.map((installationType) => ({
+                      id: installationType.id.toString(),
+                      name: installationType.name,
+                    })) ?? []
+                  }
+                />
+              )}
+            </form.AppField>
             <form.AppField name="name">
               {(field) => (
                 <field.TextInput
@@ -170,10 +260,28 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
                 />
               )}
             </form.AppField>
+            <form.AppField name="description">
+              {(field) => (
+                <field.TextInput
+                  label={tCommon('fields.description')}
+                  placeholder={tNodes('form.placeholders.description')}
+                />
+              )}
+            </form.AppField>
+            <form.AppField name="allowsBoarding">
+              {(field) => (
+                <field.SwitchInput label={tNodes('fields.allowsBoarding')} />
+              )}
+            </form.AppField>
+            <form.AppField name="allowsAlighting">
+              {(field) => (
+                <field.SwitchInput label={tNodes('fields.allowsAlighting')} />
+              )}
+            </form.AppField>
           </FormLayout>
         </TabsContent>
-        <TabsContent value="location">
-          <FormLayout title={tNodes('form.sections.location')}>
+        <TabsContent value="location" className="space-y-4">
+          <FormLayout title={tNodes('form.sections.locationInfo')}>
             <div className="grid grid-cols-2 gap-4">
               <form.AppField
                 name="populationId"
@@ -216,6 +324,15 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
                 )}
               </form.AppField>
             </div>
+            <form.AppField name="address">
+              {(field) => (
+                <field.TextInput
+                  label={tNodes('fields.address')}
+                  placeholder={tNodes('form.placeholders.address')}
+                  isRequired
+                />
+              )}
+            </form.AppField>
             <div className="grid grid-cols-2 gap-4">
               <form.AppField name="latitude">
                 {(field) => (
@@ -248,6 +365,32 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
                 )}
               </form.AppField>
             </div>
+          </FormLayout>
+          <FormLayout title={tNodes('form.sections.contactInfo')}>
+            <form.AppField name="contactPhone">
+              {(field) => (
+                <field.TextInput
+                  label={tNodes('fields.contactPhone')}
+                  placeholder={tNodes('form.placeholders.contactPhone')}
+                />
+              )}
+            </form.AppField>
+            <form.AppField name="contactEmail">
+              {(field) => (
+                <field.TextInput
+                  label={tNodes('fields.contactEmail')}
+                  placeholder={tNodes('form.placeholders.contactEmail')}
+                />
+              )}
+            </form.AppField>
+            <form.AppField name="website">
+              {(field) => (
+                <field.TextInput
+                  label={tNodes('fields.website')}
+                  placeholder={tNodes('form.placeholders.website')}
+                />
+              )}
+            </form.AppField>
           </FormLayout>
         </TabsContent>
       </Tabs>

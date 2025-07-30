@@ -24,8 +24,8 @@ import { toast } from 'sonner';
 export function useToastMutation<TData, TVariables>({
   mutation,
   messages,
-  onSuccess,
-  onError,
+  onSuccess: onStandaloneSuccess,
+  onError: onStandaloneError,
 }: {
   mutation: UseMutationResult<TData, Error, TVariables>;
   messages: {
@@ -40,10 +40,26 @@ export function useToastMutation<TData, TVariables>({
    * Executes the mutation with toast notifications for each state.
    *
    * @param variables - The variables to pass to the mutation function
+   * @param options - Options for the mutation
+   * @param options.standalone - Whether to use the mutation standalone or not.
+   * If true, it will trigger the onSuccess and onError callbacks.
+   * If false, it will expect that success and error cases are handled by the caller.
+   * @default true
    * @returns A promise that resolves with the mutation result
    * @throws Will throw an error if the mutation fails
    */
-  const mutateWithToast = async (variables: TVariables) => {
+  const mutateWithToast = async (
+    variables: TVariables,
+    {
+      standalone = true,
+      onError,
+      onSuccess,
+    }: {
+      standalone?: boolean;
+      onError?: (error: unknown, variables: TVariables) => void;
+      onSuccess?: (data: TData) => void;
+    } = {},
+  ) => {
     try {
       const promise = toast.promise(mutation.mutateAsync(variables), {
         loading: messages.loading,
@@ -55,10 +71,18 @@ export function useToastMutation<TData, TVariables>({
       const response = await promise.unwrap();
 
       // Handle business logic
-      onSuccess(response);
+      if (standalone) {
+        onStandaloneSuccess(response);
+      } else {
+        onSuccess?.(response);
+      }
       return response;
     } catch (error) {
-      onError?.(error, variables);
+      if (standalone) {
+        onStandaloneError?.(error, variables);
+      } else {
+        onError?.(error, variables);
+      }
       /**
        * Re-throw should not be needed since this method is not meant to be used
        * in a try-catch block.

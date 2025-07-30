@@ -3,13 +3,17 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
 import type { CrudRoute } from '@/services/routes';
+import type { NamespaceTranslationKey } from '@/types/translations';
 
 export interface CreateCollectionMutations<
   CollectionModel extends { id: number },
   CreateCollectionPayload,
 > {
   queryKey: string[];
-  translationKey: string;
+  translationKey: Exclude<
+    NamespaceTranslationKey,
+    'common' | 'validations' | 'sidebar'
+  >;
   createMutationFn: (
     payload: CreateCollectionPayload,
   ) => Promise<CollectionModel>;
@@ -33,7 +37,6 @@ export default function createCollectionMutations<
   routes,
 }: CreateCollectionMutations<CollectionModel, CreateCollectionPayload>) {
   function useCollectionMutations() {
-    // @ts-expect-error - Need to improve typing for translationKey
     const t = useTranslations(translationKey);
     const router = useRouter();
     const queryClient = useQueryClient();

@@ -2,7 +2,7 @@ import { createTranslator } from 'next-intl';
 import messages from '@/i18n/locales/es-MX.json';
 
 export type Messages = typeof messages;
-
+export type NamespaceTranslationKey = keyof Messages;
 export type KnownServerErrors = keyof Messages['validations']['server'];
 export type KnownServerEntities = keyof Messages['validations']['entities'];
 export type KnownServerFields = keyof Messages['validations']['fields'];

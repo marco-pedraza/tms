@@ -10054,10 +10054,6 @@ export namespace nodes {
     }
 
     export interface ListNodesQueryParams {
-        orderBy?: {
-            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "slug" | "allowsBoarding" | "allowsAlighting" | "active" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
         filters?: {
             id?: number
             code?: string
@@ -10074,7 +10070,15 @@ export namespace nodes {
             installationId?: number | null
             createdAt?: string | string | null
             updatedAt?: string | string | null
+            /**
+             * Optional label IDs to filter nodes that have any of these labels assigned
+             */
+            labelIds?: number[] | null
         }
+        orderBy?: {
+            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "slug" | "allowsBoarding" | "allowsAlighting" | "active" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
         searchTerm?: string
     }
 
@@ -10254,12 +10258,6 @@ export namespace nodes {
     }
 
     export interface PaginatedListNodesQueryParams {
-        page?: number
-        pageSize?: number
-        orderBy?: {
-            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "slug" | "allowsBoarding" | "allowsAlighting" | "active" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
         filters?: {
             id?: number
             code?: string
@@ -10276,7 +10274,17 @@ export namespace nodes {
             installationId?: number | null
             createdAt?: string | string | null
             updatedAt?: string | string | null
+            /**
+             * Optional label IDs to filter nodes that have any of these labels assigned
+             */
+            labelIds?: number[] | null
         }
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "slug" | "allowsBoarding" | "allowsAlighting" | "active" | "cityId" | "populationId" | "installationId" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
         searchTerm?: string
     }
 

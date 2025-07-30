@@ -1,12 +1,14 @@
-import { eq, inArray } from 'drizzle-orm';
+import { and, count, eq, exists, inArray } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { PaginationMeta } from '../../shared/types';
 import { db } from '../db-service';
 import { labelRepository } from '../labels/labels.repository';
+import { labelNodes } from '../labels/labels.schema';
 import { nodeEventRepository } from '../node-events/node-events.repository';
 import { nodes } from './nodes.schema';
 import type {
   CreateNodePayload,
+  ListNodesQueryParams,
   Node,
   NodeWithRelations,
   PaginatedListNodesQueryParams,
@@ -28,6 +30,133 @@ export function createNodeRepository() {
     searchableFields: [nodes.code, nodes.name, nodes.slug],
     softDeleteEnabled: true,
   });
+
+  /**
+   * Enhanced findAll method that supports labelIds filtering using EXISTS
+   * @param params - Query parameters including optional labelIds in filters
+   * @returns Array of nodes matching the criteria
+   */
+  async function findAll(params: ListNodesQueryParams = {}): Promise<Node[]> {
+    // Extract labelIds from filters and create params without it
+    const {
+      filters: { labelIds, ...filtersWithoutLabelIds } = {},
+      ...otherParams
+    } = params;
+    const baseParams = {
+      ...otherParams,
+      filters: filtersWithoutLabelIds,
+    };
+
+    // If no labelIds or empty array, use base findAll method
+    if (!labelIds || labelIds.length === 0) {
+      return await baseRepository.findAll(baseParams);
+    }
+
+    // Build optimized query with labelIds filter using EXISTS
+    const { baseWhere, baseOrderBy } =
+      baseRepository.buildQueryExpressions(baseParams);
+
+    // Create EXISTS condition for labelNodes with multiple labelIds
+    const labelExistsCondition = exists(
+      db
+        .select()
+        .from(labelNodes)
+        .where(
+          and(
+            eq(labelNodes.nodeId, nodes.id),
+            inArray(labelNodes.labelId, labelIds),
+          ),
+        ),
+    );
+
+    // Combine filters
+    const combinedWhere = baseWhere
+      ? and(baseWhere, labelExistsCondition)
+      : labelExistsCondition;
+
+    // Execute single optimized query
+    let query = db.select().from(nodes).where(combinedWhere);
+
+    if (baseOrderBy) {
+      query = query.orderBy(...baseOrderBy) as typeof query;
+    }
+
+    return await query;
+  }
+
+  /**
+   * Enhanced findAllPaginated method that supports labelIds filtering using EXISTS
+   * @param params - Paginated query parameters including optional labelIds in filters
+   * @returns Paginated result of nodes matching the criteria
+   */
+  async function findAllPaginated(params: PaginatedListNodesQueryParams = {}) {
+    const { page = 1, pageSize = 10 } = params;
+
+    const { filters = {}, ...otherParams } = params;
+    const { labelIds, ...filtersWithoutLabelIds } = filters;
+    const baseParams = {
+      ...otherParams,
+      filters: filtersWithoutLabelIds,
+    };
+
+    // If no labelIds or empty array, use base findAllPaginated method
+    if (!labelIds || labelIds.length === 0) {
+      return await baseRepository.findAllPaginated(baseParams);
+    }
+
+    // Build optimized queries with labelIds filter using EXISTS
+    const { baseWhere, baseOrderBy } =
+      baseRepository.buildQueryExpressions(baseParams);
+
+    // Create EXISTS condition for labelNodes with multiple labelIds
+    const labelExistsCondition = exists(
+      db
+        .select()
+        .from(labelNodes)
+        .where(
+          and(
+            eq(labelNodes.nodeId, nodes.id),
+            inArray(labelNodes.labelId, labelIds),
+          ),
+        ),
+    );
+
+    // Combine filters
+    const combinedWhere = baseWhere
+      ? and(baseWhere, labelExistsCondition)
+      : labelExistsCondition;
+
+    // Single count query
+    const [{ count: totalCount }] = await db
+      .select({ count: count() })
+      .from(nodes)
+      .where(combinedWhere);
+
+    // Single data query with pagination
+    const offset = (page - 1) * pageSize;
+    let dataQuery = db.select().from(nodes).where(combinedWhere);
+
+    if (baseOrderBy) {
+      dataQuery = dataQuery.orderBy(...baseOrderBy) as typeof dataQuery;
+    }
+
+    const data = await dataQuery.limit(pageSize).offset(offset);
+
+    // Create pagination metadata
+    const totalPages = Math.ceil(Number(totalCount) / pageSize);
+
+    return {
+      data,
+      pagination: {
+        currentPage: page,
+        pageSize,
+        totalCount: Number(totalCount),
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
 
   /**
    * Finds a single node with its relations (city, population, installation, nodeEvents, labels)
@@ -87,7 +216,17 @@ export function createNodeRepository() {
       };
     }
 
-    const { baseOrderBy } = baseRepository.buildQueryExpressions(params);
+    // Extract labelIds from filters before calling buildQueryExpressions
+    // since labelIds is not a valid field in the nodes table
+    const { filters = {}, ...otherParams } = params;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { labelIds, ...filtersWithoutLabelIds } = filters;
+    const baseParams = {
+      ...otherParams,
+      filters: filtersWithoutLabelIds,
+    };
+
+    const { baseOrderBy } = baseRepository.buildQueryExpressions(baseParams);
     const ids = nodesResult.map((node) => node.id);
 
     const nodesWithRelations = await db.query.nodes.findMany({
@@ -178,6 +317,10 @@ export function createNodeRepository() {
 
   return {
     ...baseRepository,
+    // Override base repository methods with custom implementations
+    findAll,
+    findAllPaginated,
+    // Custom methods
     findOneWithRelations,
     appendRelations,
     assignInstallation,

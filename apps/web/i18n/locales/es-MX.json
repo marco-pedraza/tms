@@ -139,7 +139,7 @@
       "invalid": "El teléfono no es válido."
     },
     "server": {
-      "duplicate": "Ya existe un {entity} con {property}: \"{value}\"."
+      "duplicate": "Ya existe un registro de {entity} con {property}: \"{value}\"."
     },
     "entities": {
       "country": "País",
@@ -789,6 +789,7 @@
       "city": "Ciudad",
       "population": "Población",
       "radius": "Radio",
+      "label": "Etiqueta",
       "installationType": "Tipo de Instalación",
       "address": "Dirección",
       "contactPhone": "Teléfono",

@@ -211,10 +211,29 @@ export interface NodeWithRelations extends Node {
   labels: Label[];
 }
 
-export type ListNodesQueryParams = ListQueryParams<Node>;
+/**
+ * Extended query parameters for listing nodes with additional filter for labelId
+ */
+export interface ListNodesQueryParams extends ListQueryParams<Node> {
+  filters?: Partial<Node> & {
+    /** Optional label IDs to filter nodes that have any of these labels assigned */
+    labelIds?: number[] | null;
+  };
+}
+
 export type ListNodesResult = ListQueryResult<Node>;
 
-export type PaginatedListNodesQueryParams = PaginatedListQueryParams<Node>;
+/**
+ * Extended paginated query parameters for listing nodes with additional filter for labelIds
+ */
+export interface PaginatedListNodesQueryParams
+  extends PaginatedListQueryParams<Node> {
+  filters?: Partial<Node> & {
+    /** Optional label IDs to filter nodes that have any of these labels assigned */
+    labelIds?: number[] | null;
+  };
+}
+
 export type PaginatedListNodesResult =
   PaginatedListQueryResult<NodeWithRelations>;
 

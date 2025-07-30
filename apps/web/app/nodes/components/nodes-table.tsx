@@ -9,6 +9,7 @@ import { FilterConfig } from '@/components/data-table/data-table-header';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
+import useQueryAllLabels from '@/labels/hooks/use-query-all-labels';
 import useNodeMutations from '@/nodes/hooks/use-node-mutations';
 import useQueryNodes from '@/nodes/hooks/use-query-nodes';
 import routes from '@/services/routes';
@@ -73,6 +74,7 @@ export default function NodesTable() {
     setSortingUrlState,
   });
   const { data: cities } = useQueryAllCities();
+  const { data: labels } = useQueryAllLabels();
   const { delete: deleteNode } = useNodeMutations();
   const { deleteId, setDeleteId, onConfirmDelete, onCancelDelete } =
     useDeleteDialog({
@@ -87,6 +89,15 @@ export default function NodesTable() {
         cities?.data.map((city) => ({
           label: city.name,
           value: city.id,
+        })) ?? [],
+    },
+    {
+      name: tNodes('fields.label'),
+      key: 'labelId',
+      options:
+        labels?.data.map((label) => ({
+          label: label.name,
+          value: label.id,
         })) ?? [],
     },
   ];

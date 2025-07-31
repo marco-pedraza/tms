@@ -54,9 +54,15 @@ interface DataTableProps<TData extends object> {
   initialSearchValue?: string;
   onSearchChange?: (value: string) => void;
   filtersConfig?: FilterConfig[];
-  filtersState?: Record<string, FilterSelectOption['value']>;
+  filtersState?: Record<
+    string,
+    FilterSelectOption['value'] | FilterSelectOption['value'][]
+  >;
   onFiltersChange?: (
-    value: Record<string, FilterSelectOption['value']>,
+    value: Record<
+      string,
+      FilterSelectOption['value'] | FilterSelectOption['value'][]
+    >,
   ) => void;
   onDelete: (id: number) => void;
   routes: {

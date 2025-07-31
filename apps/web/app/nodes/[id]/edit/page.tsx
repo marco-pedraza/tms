@@ -9,6 +9,7 @@ import NodeForm from '@/nodes/components/node-form';
 import NodeFormSkeleton from '@/nodes/components/node-form-skeleton';
 import useInstallationMutations from '@/nodes/hooks/use-installation-mutations';
 import useNodeDetailsParams from '@/nodes/hooks/use-node-details-params';
+import useNodeLabelMutations from '@/nodes/hooks/use-node-label-mutations';
 import useNodeMutations from '@/nodes/hooks/use-node-mutations';
 import useQueryNode from '@/nodes/hooks/use-query-node';
 import routes from '@/services/routes';
@@ -24,6 +25,7 @@ export default function EditNodePage() {
   const { update: updateNode } = useNodeMutations();
   const { create: createInstallation, update: updateInstallation } =
     useInstallationMutations();
+  const { assignLabels } = useNodeLabelMutations();
 
   const handleSubmit = async (values: NodeFormOutputValues) => {
     const updatedNode = await updateNode.mutateWithToast(
@@ -35,6 +37,18 @@ export default function EditNodePage() {
         standalone: false,
       },
     );
+
+    // Update label assignment (this replaces all existing labels)
+    await assignLabels.mutateWithToast(
+      {
+        nodeId: nodeId,
+        labelIds: values.labelIds || [],
+      },
+      {
+        standalone: false,
+      },
+    );
+
     if (data?.installation?.id) {
       await updateInstallation.mutateWithToast(
         {
@@ -94,6 +108,7 @@ export default function EditNodePage() {
           contactPhone: data.installation?.contactPhone || '',
           contactEmail: data.installation?.contactEmail || '',
           website: data.installation?.website || '',
+          labelIds: data.labels?.map((label) => label.id) || [],
         }}
         onSubmit={handleSubmit}
       />

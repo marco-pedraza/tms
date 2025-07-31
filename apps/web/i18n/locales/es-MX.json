@@ -791,14 +791,15 @@
       "city": "Ciudad",
       "population": "Población",
       "radius": "Radio",
-      "label": "Etiqueta",
       "installationType": "Tipo de Instalación",
       "address": "Dirección",
       "contactPhone": "Teléfono",
       "contactEmail": "Correo Electrónico",
       "website": "Sitio Web",
       "allowsBoarding": "Permite ascenso de pasajeros",
-      "allowsAlighting": "Permite descenso de pasajeros"
+      "allowsAlighting": "Permite descenso de pasajeros",
+      "label": "Etiqueta",
+      "labels": "Etiquetas"
     },
     "form": {
       "sections": {
@@ -821,7 +822,9 @@
         "contactPhone": "Ej: (33) 1234-5678",
         "contactEmail": "Ej: info@autobusesdemexico.com",
         "website": "Ej: https://autobusesdemexico.com",
-        "description": "Ej: Nodo central de autobuses"
+        "description": "Ej: Nodo central de autobuses",
+        "labels": "Selecciona etiquetas",
+        "emptyLabelsList": "No hay etiquetas disponibles"
       }
     },
     "edit": {
@@ -856,6 +859,11 @@
       "syncIntallationError": {
         "create": "No pudimos completar la creación del Nodo correctamente. Por favor revisa la información y rellena nuevamente los datos faltantes.",
         "update": "No pudimos completar la actualización del Nodo correctamente. Por favor intenta nuevamente."
+      },
+      "assignLabels": {
+        "loading": "Asignando etiquetas...",
+        "success": "Etiquetas asignadas correctamente",
+        "error": "No pudimos asignar las etiquetas"
       }
     }
   },

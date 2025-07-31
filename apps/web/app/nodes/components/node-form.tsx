@@ -7,6 +7,7 @@ import FormLayout from '@/components/form/form-layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useForm from '@/hooks/use-form';
 import useQueryAllInstallationTypes from '@/installation-types/hooks/use-query-all-installation-types';
+import useQueryAllLabels from '@/labels/hooks/use-query-all-labels';
 import useQueryAllPopulations from '@/populations/hooks/use-query-all-populations';
 import useQueryPopulationCities from '@/populations/hooks/use-query-population-cities';
 import { UseValidationsTranslationsResult } from '@/types/translations';
@@ -132,6 +133,7 @@ const createNodeFormSchema = (tValidations: UseValidationsTranslationsResult) =>
       .nullable(),
     allowsBoarding: z.boolean().optional(),
     allowsAlighting: z.boolean().optional(),
+    labelIds: z.array(z.number()).optional().default([]),
   });
 
 export type NodeFormOutputValues = z.output<
@@ -182,6 +184,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
       contactPhone: '',
       contactEmail: '',
       website: '',
+      labelIds: [],
     },
     validators: {
       onChange: nodeSchema,
@@ -205,6 +208,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
   });
   const { data: populations } = useQueryAllPopulations();
   const { data: installationTypes } = useQueryAllInstallationTypes();
+  const { data: labels } = useQueryAllLabels();
   const selectedPopulationId = useStore(
     form.store,
     (state) => state.values.populationId,
@@ -265,6 +269,24 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
                 <field.TextInput
                   label={tCommon('fields.description')}
                   placeholder={tNodes('form.placeholders.description')}
+                />
+              )}
+            </form.AppField>
+            <form.AppField name="labelIds">
+              {(field) => (
+                <field.MultiSelectInput
+                  label={tNodes('fields.labels')}
+                  placeholder={tNodes('form.placeholders.labels')}
+                  items={
+                    labels?.data.map((label) => ({
+                      id: label.id.toString(),
+                      name: label.name,
+                      color: label.color,
+                    })) ?? []
+                  }
+                  emptyOptionsLabel={tNodes(
+                    'form.placeholders.emptyLabelsList',
+                  )}
                 />
               )}
             </form.AppField>

@@ -28,6 +28,17 @@ export async function seedLabelNodes(
   labels: Label[],
   nodes: Node[],
 ): Promise<void> {
+  // Filter out deleted and inactive labels
+  const availableLabels = (
+    labels as (Label & { deletedAt?: Date | string | null })[]
+  ).filter((label) => label.active && !label.deletedAt);
+
+  // If no available labels, exit early
+  if (availableLabels.length === 0) {
+    console.log('No active labels available for assignment');
+    return;
+  }
+
   // Create random label-node associations
   // Each node can have 0-3 labels, and each label can be associated with multiple nodes
   const labelNodeAssociations = [];
@@ -37,8 +48,8 @@ export async function seedLabelNodes(
     const labelCount = Math.floor(Math.random() * 4); // 0 to 3 labels
 
     if (labelCount > 0) {
-      // Select random labels for this node
-      const selectedLabels = labels
+      // Select random labels for this node from available labels only
+      const selectedLabels = availableLabels
         .sort(() => 0.5 - Math.random())
         .slice(0, labelCount);
 

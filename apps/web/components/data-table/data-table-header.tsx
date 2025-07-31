@@ -7,14 +7,24 @@ import SearchField from './search-field';
 export interface FilterConfig
   extends Omit<FilterSelectProps, 'onChange' | 'selectedValue'> {
   key: string;
+  /** If true, the filter value will be sent as an array even for single selections */
+  multipleValues?: boolean;
 }
 
 interface DataTableHeaderProps {
   initialSearchValue: string;
   onSearchChange?: (value: string) => void;
   filtersConfig: FilterConfig[];
-  filtersState: Record<string, FilterSelectOption['value']>;
-  onFiltersChange: (value: Record<string, FilterSelectOption['value']>) => void;
+  filtersState: Record<
+    string,
+    FilterSelectOption['value'] | FilterSelectOption['value'][]
+  >;
+  onFiltersChange: (
+    value: Record<
+      string,
+      FilterSelectOption['value'] | FilterSelectOption['value'][]
+    >,
+  ) => void;
 }
 
 export default function DataTableHeader({
@@ -26,7 +36,18 @@ export default function DataTableHeader({
 }: DataTableHeaderProps) {
   const onChange = (key: string, value: FilterSelectOption['value']) => {
     if (value || value === false) {
-      const newFilters = { ...filtersState, [key]: value };
+      const newFilters: Record<
+        string,
+        FilterSelectOption['value'] | FilterSelectOption['value'][]
+      > = { ...filtersState };
+      // Find the filter configuration to check if it should handle multiple values
+      const filterConfig = filtersConfig.find((config) => config.key === key);
+
+      if (filterConfig?.multipleValues) {
+        newFilters[key] = [value];
+      } else {
+        newFilters[key] = value;
+      }
       onFiltersChange(newFilters);
     } else {
       /**
@@ -49,15 +70,26 @@ export default function DataTableHeader({
           placeholder="Buscar"
         />
       )}
-      {filtersConfig.map((filter) => (
-        <FilterSelect
-          key={filter.key}
-          name={filter.name}
-          options={filter.options}
-          selectedValue={filtersState[filter.key] ?? ''}
-          onChange={(value) => onChange(filter.key, value)}
-        />
-      ))}
+      {filtersConfig.map((filter) => {
+        // Handle multiple values - get first value for display
+        const filterValue = filtersState[filter.key];
+        const selectedValue: FilterSelectOption['value'] =
+          filter.multipleValues && Array.isArray(filterValue)
+            ? (filterValue[0] ?? '')
+            : ((filterValue as FilterSelectOption['value']) ?? '');
+
+        return (
+          <FilterSelect
+            key={filter.key}
+            name={filter.name}
+            options={filter.options}
+            selectedValue={selectedValue}
+            onChange={(value) => {
+              onChange(filter.key, value);
+            }}
+          />
+        );
+      })}
     </div>
   );
 }

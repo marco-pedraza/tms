@@ -6,6 +6,7 @@ import useQueryInstallationType from '@/app/installation-types/hooks/use-query-i
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import NodeSkeleton from '@/nodes/components/node-skeleton';
@@ -83,6 +84,29 @@ export default function NodeDetailsPage() {
                 {tNodes('fields.installationType')}:
               </dt>
               <dd>{installationType?.name ?? '-'}</dd>
+
+              <dt className="font-medium">{tNodes('fields.labels')}:</dt>
+              <dd>
+                {node.labels?.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {node.labels.map((label) => (
+                      <Badge
+                        key={label.id}
+                        variant="outline"
+                        className="flex items-center gap-2 px-3 py-1"
+                      >
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: label.color }}
+                        />
+                        {label.name}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  '-'
+                )}
+              </dd>
 
               <dt className="font-medium">
                 {tNodes('fields.allowsBoarding')}:

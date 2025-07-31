@@ -16,7 +16,7 @@ export type TableUrlState<SortFields extends object> = {
   };
   sorting: SortBy<SortFields>;
   filters: {
-    [key: string]: string | number | boolean;
+    [key: string]: string | number | boolean | (string | number | boolean)[];
   };
   search: string;
 };
@@ -56,7 +56,25 @@ const mapUrlStateToTableUrlState = <SortFields extends object>(
   filtersKeys.forEach((key) => {
     const [field, value] = key.split(':').map((part) => part.trim());
     if (field && value) {
-      if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
+      // Check if value is an array format like [123] or [123,456]
+      if (value.startsWith('[') && value.endsWith(']')) {
+        const arrayContent = value.slice(1, -1);
+        if (arrayContent) {
+          const arrayValues = arrayContent.split(',').map((item) => {
+            const trimmed = item.trim();
+            if (!isNaN(Number(trimmed)) && trimmed !== '') {
+              return Number(trimmed);
+            }
+            return trimmed;
+          });
+          filters[field] = arrayValues;
+        } else {
+          filters[field] = [];
+        }
+      } else if (
+        value.toLowerCase() === 'true' ||
+        value.toLowerCase() === 'false'
+      ) {
         filters[field] = value.toLowerCase() === 'true';
       } else if (!isNaN(Number(value)) && value.trim() !== '') {
         filters[field] = Number(value);
@@ -81,7 +99,13 @@ const mapTableUrlStateToUrlState = <SortFields extends object>(
     .map((sort) => `${sort.field.toString()}:${sort.direction}`)
     .join(',');
   const filters = Object.entries(tableUrlState.filters)
-    .map(([key, value]) => `${key}:${value}`)
+    .map(([key, value]) => {
+      // Handle arrays by wrapping them in brackets
+      if (Array.isArray(value)) {
+        return `${key}:[${value.join(',')}]`;
+      }
+      return `${key}:${value}`;
+    })
     .join(',');
   const urlState: UrlState = {
     page: tableUrlState.pagination.page,

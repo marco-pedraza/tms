@@ -93,7 +93,8 @@ export default function NodesTable() {
     },
     {
       name: tNodes('fields.label'),
-      key: 'labelId',
+      key: 'labelIds',
+      multipleValues: true,
       options:
         labels?.data.map((label) => ({
           label: label.name,

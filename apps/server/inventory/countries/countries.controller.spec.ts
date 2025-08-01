@@ -424,11 +424,12 @@ describe('Countries Controller', () => {
     const testCountries: Country[] = [];
 
     beforeAll(async () => {
-      // Create test countries with different properties
+      // Create test countries with different properties using unique codes
+      const timestamp = Date.now().toString().slice(-6);
       const countries = [
-        { name: 'Alpha Country', code: 'AC', active: true },
-        { name: 'Beta Country', code: 'BC', active: false },
-        { name: 'Gamma Country', code: 'GC', active: true },
+        { name: 'Alpha Country', code: `AC${timestamp}`, active: true },
+        { name: 'Beta Country', code: `BC${timestamp}`, active: false },
+        { name: 'Gamma Country', code: `GC${timestamp}`, active: true },
       ];
 
       for (const country of countries) {

@@ -23,10 +23,10 @@ import { installationPropertyUseCases } from './installation-properties.use-case
 describe('Installation Properties Use Cases', () => {
   const factoryDb = getFactoryDb(db);
 
-  // Test data
+  // Test data with unique code to avoid conflicts in suite runs
   const testInstallationType = {
     name: 'Test Installation Type for Properties',
-    code: 'TIT',
+    code: `TIT${Date.now().toString().slice(-6)}`,
     description: 'Test installation type for property validation testing',
   };
 

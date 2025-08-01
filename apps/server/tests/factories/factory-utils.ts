@@ -90,13 +90,16 @@ function generateAlphabeticSuffix(length: number = 6): string {
  * @param baseName - The base name (e.g., 'Country', 'City', 'User')
  * @returns A unique name with random alphabetic suffix
  */
-export function generateAlphabeticName(baseName: string): string {
-  const suffix = generateAlphabeticSuffix();
+export function generateAlphabeticName(
+  baseName: string,
+  length: number = 6,
+): string {
+  const suffix = generateAlphabeticSuffix(length);
   return `${baseName} ${suffix}`;
 }
 
 /**
- * Generates a unique alphabetic code using random letters
+ * Generates a unique alphabetic code using random letters with timestamp for uniqueness
  * @param length - Length of the code (default 6 characters for better uniqueness)
  * @param prefix - Optional prefix for the code
  * @returns A unique random alphabetic code without numbers
@@ -106,9 +109,33 @@ export function generateAlphabeticCode(
   prefix?: string,
 ): string {
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let code = '';
 
-  // Generate truly random code
+  // For short codes (like country codes), include timestamp to ensure uniqueness
+  if (length <= 3) {
+    const timestamp = Date.now();
+    const timestampSuffix = timestamp.toString().slice(-3); // Last 3 digits
+
+    // Convert timestamp digits to letters for alphabetic codes
+    const timestampLetters = timestampSuffix
+      .split('')
+      .map((digit) => letters[parseInt(digit) % 26])
+      .join('');
+
+    // Generate remaining random characters
+    const remainingLength = Math.max(0, length - timestampLetters.length);
+    let randomPart = '';
+
+    for (let i = 0; i < remainingLength; i++) {
+      const randomIndex = Math.floor(Math.random() * letters.length);
+      randomPart += letters[randomIndex];
+    }
+
+    const code = (randomPart + timestampLetters).substring(0, length);
+    return prefix ? `${prefix}${code}` : code;
+  }
+
+  // For longer codes, use the original random approach
+  let code = '';
   for (let i = 0; i < length; i++) {
     const randomIndex = Math.floor(Math.random() * letters.length);
     code += letters[randomIndex];

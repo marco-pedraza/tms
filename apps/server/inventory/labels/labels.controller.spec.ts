@@ -570,16 +570,20 @@ describe('Labels Controller', () => {
       labelsCleanup.track(label1.id);
       labelsCleanup.track(label2.id);
 
-      // Create nodes
+      // Create nodes with shared dependencies to avoid conflicts
       const node1 = await nodeFactory(factoryDb).create({
         installationId: null,
         deletedAt: null,
       });
+      nodeCleanup.track(node1.id);
+
+      // Reuse dependencies from node1 for node2
       const node2 = await nodeFactory(factoryDb).create({
         installationId: null,
         deletedAt: null,
+        cityId: node1.cityId,
+        populationId: node1.populationId,
       });
-      nodeCleanup.track(node1.id);
       nodeCleanup.track(node2.id);
 
       // Assign only label1 to nodes (label2 remains unused)
@@ -627,12 +631,24 @@ describe('Labels Controller', () => {
       labelsCleanup.track(lightlyUsedLabel.id);
       labelsCleanup.track(heavilyUsedLabel.id);
 
-      // Create test nodes (let factory handle dependencies)
+      // Create test nodes with shared dependencies to avoid conflicts
       const nodes = [];
-      for (let i = 0; i < 4; i++) {
+
+      // Create first node (this will create the dependencies)
+      const firstNode = await nodeFactory(factoryDb).create({
+        installationId: null,
+        deletedAt: null,
+      });
+      nodes.push(firstNode);
+      nodeCleanup.track(firstNode.id);
+
+      // Create additional nodes reusing the same dependencies
+      for (let i = 1; i < 4; i++) {
         const node = await nodeFactory(factoryDb).create({
           installationId: null,
           deletedAt: null,
+          cityId: firstNode.cityId,
+          populationId: firstNode.populationId,
         });
         nodes.push(node);
         nodeCleanup.track(node.id);

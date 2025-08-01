@@ -626,6 +626,7 @@ describe('Cities Controller', () => {
     test('should order cities by name descending', async () => {
       const response = await listCities({
         orderBy: [{ field: 'name', direction: 'desc' }],
+        searchTerm: testSuiteId,
       });
 
       const names = response.data.map((c) => c.name);
@@ -657,6 +658,7 @@ describe('Cities Controller', () => {
         orderBy: [{ field: 'name', direction: 'asc' }],
         page: 1,
         pageSize: 10,
+        searchTerm: testSuiteId,
       });
 
       expect(response.data.every((c) => c.active === true)).toBe(true);
@@ -706,6 +708,7 @@ describe('Cities Controller', () => {
           { field: 'active', direction: 'desc' },
           { field: 'name', direction: 'asc' },
         ],
+        searchTerm: testSuiteId,
       });
 
       const activeCities = response.data.filter((c) => c.active === true);

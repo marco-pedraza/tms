@@ -110,6 +110,8 @@
   },
   "validations": {
     "required": "Este campo es obligatorio.",
+    "mustBeNumber": "El valor debe ser un número.",
+    "mustBeDate": "El valor debe ser una fecha válida.",
     "greaterThanOrEquals": "El valor debe ser mayor o igual a {value}.",
     "name": {
       "letters": "El nombre debe contener solo letras y espacios."
@@ -815,7 +817,8 @@
         "basicInfo": "Información Básica",
         "locationInfo": "Información Geográfica",
         "contactInfo": "Información de Contacto Y Gestión",
-        "locationAndContactInfo": "Ubicación y Contacto"
+        "locationAndContactInfo": "Ubicación y Contacto",
+        "customAttributes": "Atributos Específicos"
       },
       "placeholders": {
         "name": "Ej: Nodo Central",
@@ -832,6 +835,11 @@
         "contactEmail": "Ej: info@autobusesdemexico.com",
         "website": "Ej: https://autobusesdemexico.com",
         "description": "Ej: Nodo central de autobuses",
+        "selectInstallationTypeFirst": "Selecciona un tipo de instalación primero",
+        "selectInstallationTypeFirstDescription": "Para configurar los atributos específicos, primero debes seleccionar un tipo de instalación en la pestaña de información básica.",
+        "noCustomAttributes": "No hay atributos específicos configurados",
+        "noCustomAttributesDescription": "Este tipo de instalación no tiene atributos específicos definidos.",
+        "selectEnumOption": "Selecciona una opción",
         "labels": "Selecciona etiquetas",
         "emptyLabelsList": "No hay etiquetas disponibles",
         "amenities": "Selecciona amenidades",
@@ -872,6 +880,12 @@
       "syncIntallationError": {
         "create": "No pudimos completar la creación del Nodo correctamente. Por favor revisa la información y rellena nuevamente los datos faltantes.",
         "update": "No pudimos completar la actualización del Nodo correctamente. Por favor intenta nuevamente."
+      },
+      "syncCustomAttributesError": "No pudimos actualizar las propiedades específicas de la instalación correctamente",
+      "syncCustomAttributes": {
+        "loading": "Actualizando atributos específicos...",
+        "success": "Atributos específicos actualizados correctamente",
+        "error": "No pudimos actualizar los atributos específicos"
       },
       "assignLabels": {
         "loading": "Asignando etiquetas...",

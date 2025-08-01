@@ -1,6 +1,6 @@
 interface FormProps
   extends Omit<React.ComponentProps<'form'>, 'onSubmit' | 'className'> {
-  onSubmit: () => Promise<void>;
+  onSubmit: () => Promise<void> | void;
 }
 
 export default function Form({ children, onSubmit, ...formProps }: FormProps) {

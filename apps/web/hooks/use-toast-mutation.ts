@@ -33,7 +33,7 @@ export function useToastMutation<TData, TVariables>({
     success: string;
     error: string;
   };
-  onSuccess: (data: TData) => void;
+  onSuccess?: (data: TData) => void;
   onError?: (error: unknown, variables: TVariables) => void;
 }) {
   /**
@@ -72,7 +72,7 @@ export function useToastMutation<TData, TVariables>({
 
       // Handle business logic
       if (standalone) {
-        onStandaloneSuccess(response);
+        onStandaloneSuccess?.(response);
       } else {
         onSuccess?.(response);
       }

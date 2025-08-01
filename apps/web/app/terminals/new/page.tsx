@@ -12,11 +12,7 @@ export default function NewTerminalPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={t('new.title')}
-        description={t('new.description')}
-        backHref={routes.terminals.index}
-      />
+      <PageHeader title={t('new.title')} backHref={routes.terminals.index} />
 
       <TerminalForm onSubmit={createTerminal.mutateWithToast} />
     </div>

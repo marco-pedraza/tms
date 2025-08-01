@@ -5,6 +5,7 @@ import type { labels } from '@repo/ims-client';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
 import IsActiveBadge from '@/components/is-active-badge';
+import { Badge } from '@/components/ui/badge';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
@@ -34,12 +35,16 @@ function labelsColumnsFactory({
         const name = row.original.name;
         const color = row.original.color;
         return (
-          <span
-            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white"
-            style={{ backgroundColor: color }}
+          <Badge
+            variant="outline"
+            style={{
+              backgroundColor: `${color}20`, // 20% opacity for subtle background
+              borderColor: color,
+              color: color,
+            }}
           >
             {name}
-          </span>
+          </Badge>
         );
       },
     },

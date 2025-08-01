@@ -35,7 +35,7 @@ export default function EditTerminalPage() {
     <div className="space-y-6">
       <PageHeader
         title={t('edit.title')}
-        description={t('edit.description')}
+        description={terminal.name}
         backHref={routes.terminals.getDetailsRoute(terminalId.toString())}
       />
       <TerminalForm defaultValues={terminal} onSubmit={handleSubmit} />

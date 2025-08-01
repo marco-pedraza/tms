@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import IsActiveBadge from '@/components/is-active-badge';
 import PageHeader from '@/components/page-header';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import LabelSkeleton from '@/labels/components/label-skeleton';
@@ -90,15 +90,7 @@ export default function LabelDetailsPage() {
 
               <dt className="font-medium">{tCommon('fields.status')}:</dt>
               <dd>
-                {label.active ? (
-                  <Badge variant="outline" className="bg-green-100">
-                    {tCommon('status.active')}
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-red-100">
-                    {tCommon('status.inactive')}
-                  </Badge>
-                )}
+                <IsActiveBadge isActive={label.active} />
               </dd>
             </dl>
           </CardContent>

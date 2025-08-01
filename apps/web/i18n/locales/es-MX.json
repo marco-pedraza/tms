@@ -218,8 +218,7 @@
       "description": "Detalles del país"
     },
     "edit": {
-      "title": "Editar País",
-      "description": "Actualiza la información del país"
+      "title": "Editar País"
     },
     "errors": {
       "notFound": {
@@ -265,8 +264,7 @@
       "description": "Detalles de la etiqueta"
     },
     "edit": {
-      "title": "Editar Etiqueta",
-      "description": "Actualiza la información de la etiqueta"
+      "title": "Editar Etiqueta"
     },
     "errors": {
       "notFound": {
@@ -327,8 +325,7 @@
       "description": "Detalles del estado"
     },
     "edit": {
-      "title": "Editar Estado",
-      "description": "Actualiza la información del estado"
+      "title": "Editar Estado"
     },
     "errors": {
       "notFound": {
@@ -388,12 +385,10 @@
       "description": "Detalles de la ciudad"
     },
     "new": {
-      "title": "Crear Ciudad",
-      "description": "Agrega una nueva ciudad al sistema"
+      "title": "Crear Ciudad"
     },
     "edit": {
-      "title": "Editar Ciudad",
-      "description": "Actualiza la información de la ciudad"
+      "title": "Editar Ciudad"
     },
     "errors": {
       "notFound": {
@@ -457,12 +452,10 @@
       "description": "Detalles de la terminal"
     },
     "new": {
-      "title": "Crear Terminal",
-      "description": "Agrega una nueva terminal al sistema"
+      "title": "Crear Terminal"
     },
     "edit": {
-      "title": "Editar Terminal",
-      "description": "Actualiza la información de la terminal"
+      "title": "Editar Terminal"
     },
     "errors": {
       "notFound": {
@@ -588,8 +581,7 @@
       }
     },
     "edit": {
-      "title": "Editar Tipo de Servicio",
-      "description": "Actualiza la información del tipo de servicio"
+      "title": "Editar Tipo de Servicio"
     },
     "details": {
       "description": "Detalles del tipo de servicio"
@@ -646,8 +638,7 @@
       }
     },
     "edit": {
-      "title": "Editar Línea de Autobus",
-      "description": "Actualiza la información de la línea de autobus"
+      "title": "Editar Línea de Autobus"
     },
     "details": {
       "description": "Detalles de la línea de autobus"
@@ -752,8 +743,7 @@
       }
     },
     "edit": {
-      "title": "Editar Población",
-      "description": "Actualiza la información de la población"
+      "title": "Editar Población"
     },
     "details": {
       "description": "Detalles de la población"
@@ -847,8 +837,7 @@
       }
     },
     "edit": {
-      "title": "Editar Nodo",
-      "description": "Actualiza la información del nodo"
+      "title": "Editar Nodo"
     },
     "details": {
       "description": "Detalles del nodo",
@@ -974,8 +963,7 @@
       "description": "Detalles del tipo de instalación"
     },
     "edit": {
-      "title": "Editar Tipo de Instalación",
-      "description": "Actualiza la información del tipo de instalación"
+      "title": "Editar Tipo de Instalación"
     },
     "errors": {
       "notFound": {
@@ -1044,8 +1032,7 @@
       "active": "Indica si el tipo de evento está activo en el sistema"
     },
     "edit": {
-      "title": "Editar Tipo de Evento",
-      "description": "Actualiza la información del tipo de evento"
+      "title": "Editar Tipo de Evento"
     },
     "errors": {
       "notFound": {
@@ -1109,8 +1096,7 @@
       "description": "Detalles de la amenidad"
     },
     "edit": {
-      "title": "Editar Amenidad",
-      "description": "Actualiza la información de la amenidad"
+      "title": "Editar Amenidad"
     },
     "errors": {
       "notFound": {

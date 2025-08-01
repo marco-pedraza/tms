@@ -76,7 +76,6 @@ export default function NewCityPage() {
     <div>
       <PageHeader
         title={tCities('new.title')}
-        description={tCities('new.description')}
         backHref={routes.cities.index}
         backLabel={tCities('actions.backToList')}
       />

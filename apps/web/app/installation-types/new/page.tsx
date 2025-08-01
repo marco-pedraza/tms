@@ -85,7 +85,6 @@ export default function NewInstallationTypePage() {
     <div>
       <PageHeader
         title={tInstallationTypes('actions.create')}
-        description={tInstallationTypes('description')}
         backHref={routes.installationTypes.index}
         backLabel={tInstallationTypes('actions.backToList')}
       />

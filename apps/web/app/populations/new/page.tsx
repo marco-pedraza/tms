@@ -66,7 +66,6 @@ export default function NewPopulationPage() {
     <div>
       <PageHeader
         title={tPopulations('actions.create')}
-        description={tPopulations('description')}
         backHref={routes.populations.index}
         backLabel={tPopulations('actions.backToList')}
       />

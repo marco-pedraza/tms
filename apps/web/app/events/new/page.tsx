@@ -22,7 +22,6 @@ export default function NewEventPage() {
     <div>
       <PageHeader
         title={tEvents('actions.create')}
-        description={tEvents('description')}
         backHref={routes.events.index}
         backLabel={tEvents('actions.backToList')}
       />

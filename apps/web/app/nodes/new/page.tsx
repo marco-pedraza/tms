@@ -102,7 +102,6 @@ export default function NewNodePage() {
     <div>
       <PageHeader
         title={tNodes('actions.create')}
-        description={tNodes('description')}
         backHref={routes.nodes.index}
         backLabel={tNodes('actions.backToList')}
       />

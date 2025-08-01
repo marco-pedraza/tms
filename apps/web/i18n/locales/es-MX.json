@@ -52,7 +52,8 @@
       "secondaryColor": "Color Secundario",
       "color": "Color",
       "usageCount": "Uso",
-      "category": "Categoría"
+      "category": "Categoría",
+      "noDescription": "Sin descripción"
     },
     "sections": {
       "basicInfo": "Información Básica",
@@ -101,6 +102,10 @@
         "all": "Todos",
         "clear": "Limpiar filtros"
       }
+    },
+    "iconSelector": {
+      "searchPlaceholder": "Buscar icono...",
+      "selectIcon": "Seleccionar icono"
     }
   },
   "validations": {
@@ -150,7 +155,8 @@
       "node": "Nodo",
       "installationType": "Tipo de Instalación",
       "event": "Evento",
-      "label": "Etiqueta"
+      "label": "Etiqueta",
+      "amenity": "Amenidad"
     },
     "fields": {
       "name": "Nombre",

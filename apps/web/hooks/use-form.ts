@@ -1,4 +1,5 @@
 import { createFormHook } from '@tanstack/react-form';
+import IconInput from '@/components/form/icon-input';
 import MultiSelectInput from '@/components/form/multi-select-input';
 import NumberInput from '@/components/form/number-input';
 import SelectInput from '@/components/form/select-input';
@@ -22,6 +23,7 @@ const { useAppForm: useForm, withForm } = createFormHook({
     TimeSelectInput,
     SlugInput,
     NumberInput,
+    IconInput,
   },
   formComponents: {
     SubmitButton,

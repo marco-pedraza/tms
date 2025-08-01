@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import PageHeader from '@/components/page-header';
 import NodeForm, { NodeFormOutputValues } from '@/nodes/components/node-form';
+import useInstallationAmenityMutations from '@/nodes/hooks/use-installation-amenity-mutations';
 import useInstallationMutations from '@/nodes/hooks/use-installation-mutations';
 import useNodeLabelMutations from '@/nodes/hooks/use-node-label-mutations';
 import useNodeMutations from '@/nodes/hooks/use-node-mutations';
@@ -15,6 +16,7 @@ export default function NewNodePage() {
   const { create: createNode } = useNodeMutations();
   const { create: createInstallation } = useInstallationMutations();
   const { assignLabels } = useNodeLabelMutations();
+  const { assignAmenities } = useInstallationAmenityMutations();
   const tNodes = useTranslations('nodes');
 
   const onSubmit = async (values: NodeFormOutputValues) => {
@@ -35,19 +37,35 @@ export default function NewNodePage() {
       );
     }
 
-    await createInstallation.mutateWithToast(
-      { nodeId: node.id, ...values },
-      {
-        standalone: false,
-        onSuccess: () => {
-          router.push(routes.nodes.getDetailsRoute(node.id.toString()));
+    // Create installation if installationTypeId is provided
+    if (values.installationTypeId) {
+      const createdInstallation = await createInstallation.mutateWithToast(
+        { nodeId: node.id, ...values },
+        {
+          standalone: false,
         },
-        onError: () => {
-          toast.info(tNodes('messages.syncIntallationError.create'));
-          router.push(routes.nodes.getEditRoute(node.id.toString()));
-        },
-      },
-    );
+      );
+
+      // Assign amenities to the newly created installation if any were selected (optional operation)
+      if (createdInstallation?.id && values.amenityIds?.length > 0) {
+        await assignAmenities.mutateWithToast(
+          {
+            installationId: createdInstallation.id,
+            amenityIds: values.amenityIds,
+          },
+          {
+            standalone: false,
+            onError: () => {
+              // Show warning that amenity assignment failed but don't block navigation
+              toast.warning(tNodes('messages.assignAmenities.error'));
+            },
+          },
+        );
+      }
+    }
+
+    // Navigate to the node details page regardless of installation/amenity assignment results
+    router.push(routes.nodes.getDetailsRoute(node.id.toString()));
     return node;
   };
 

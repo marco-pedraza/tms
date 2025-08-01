@@ -805,7 +805,10 @@
       "allowsBoarding": "Permite ascenso de pasajeros",
       "allowsAlighting": "Permite descenso de pasajeros",
       "label": "Etiqueta",
-      "labels": "Etiquetas"
+      "labels": "Etiquetas",
+      "amenity": "Amenidad",
+      "amenities": "Amenidades",
+      "selectedAmenities": "{count, plural, =0 {No hay amenidades seleccionadas} =1 {# amenidad seleccionada} other {# amenidades seleccionadas}}"
     },
     "form": {
       "sections": {
@@ -830,7 +833,9 @@
         "website": "Ej: https://autobusesdemexico.com",
         "description": "Ej: Nodo central de autobuses",
         "labels": "Selecciona etiquetas",
-        "emptyLabelsList": "No hay etiquetas disponibles"
+        "emptyLabelsList": "No hay etiquetas disponibles",
+        "amenities": "Selecciona amenidades",
+        "emptyAmenitiesList": "No hay amenidades disponibles"
       }
     },
     "edit": {
@@ -838,7 +843,9 @@
       "description": "Actualiza la información del nodo"
     },
     "details": {
-      "description": "Detalles del nodo"
+      "description": "Detalles del nodo",
+      "amenitiesTitle": "Amenidades de la Instalación",
+      "noAmenitiesAssigned": "No hay amenidades asignadas a esta instalación"
     },
     "errors": {
       "notFound": {
@@ -870,6 +877,11 @@
         "loading": "Asignando etiquetas...",
         "success": "Etiquetas asignadas correctamente",
         "error": "No pudimos asignar las etiquetas"
+      },
+      "assignAmenities": {
+        "loading": "Asignando amenidades...",
+        "success": "Amenidades asignadas correctamente",
+        "error": "No pudimos asignar las amenidades"
       }
     }
   },

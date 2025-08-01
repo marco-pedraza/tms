@@ -2,6 +2,7 @@ import { and, count, eq, exists, inArray } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { PaginationMeta } from '../../shared/types';
 import { db } from '../db-service';
+import { installationUseCases } from '../installations/installations.use-cases';
 import { labelRepository } from '../labels/labels.repository';
 import { labelNodes } from '../labels/labels.schema';
 import { nodeEventRepository } from '../node-events/node-events.repository';
@@ -159,7 +160,7 @@ export function createNodeRepository() {
   }
 
   /**
-   * Finds a single node with its relations (city, population, installation, nodeEvents, labels)
+   * Finds a single node with its relations (city, population, installation with details, nodeEvents, labels)
    * @param id - The ID of the node to find
    * @returns The node with related information
    * @throws {NotFoundError} If the node is not found
@@ -179,6 +180,11 @@ export function createNodeRepository() {
       throw new NotFoundError(`Node with id ${id} not found`);
     }
 
+    // Get installation with details if the node has an installation
+    const installationWithDetails = node.installationId
+      ? await installationUseCases.findOneWithLocation(node.installationId)
+      : null;
+
     // Get node events with flattened event type information
     const nodeEvents = await nodeEventRepository.findByNodeIdFlat(id);
 
@@ -187,6 +193,7 @@ export function createNodeRepository() {
 
     return {
       ...node,
+      installation: installationWithDetails,
       nodeEvents,
       labels,
     };
@@ -245,9 +252,18 @@ export function createNodeRepository() {
     // Get labels for all nodes using labelRepository
     const nodeLabelsMap = await labelRepository.findByNodeIds(ids);
 
-    // Add node events and labels to each node
+    // Add node events, labels, and basic installation info to each node
+    // Note: For performance, we don't include installation details (amenities, properties) in list operations
     const nodesWithEvents = nodesWithRelations.map((node) => ({
       ...node,
+      installation: node.installation
+        ? {
+            ...node.installation,
+            location: null, // Location info not needed for list operations
+            properties: [], // Properties not needed for list operations
+            amenities: [], // Amenities not needed for list operations
+          }
+        : null,
       nodeEvents: nodeEventsMap.get(node.id) || [],
       labels: nodeLabelsMap.get(node.id) || [],
     }));

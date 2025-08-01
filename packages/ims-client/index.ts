@@ -10178,7 +10178,7 @@ export namespace nodes {
     export interface NodeWithRelations {
         city: cities.City
         population: populations.Population
-        installation: installations.Installation | null
+        installation: installations.InstallationWithDetails | null
         nodeEvents: node_events.NodeEventFlat[]
         labels: labels.Label[]
         /**

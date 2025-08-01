@@ -2,11 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
 import PageHeader from '@/components/page-header';
 import { NodeFormOutputValues } from '@/nodes/components/node-form';
 import NodeForm from '@/nodes/components/node-form';
 import NodeFormSkeleton from '@/nodes/components/node-form-skeleton';
+import useInstallationAmenityMutations from '@/nodes/hooks/use-installation-amenity-mutations';
 import useInstallationMutations from '@/nodes/hooks/use-installation-mutations';
 import useNodeDetailsParams from '@/nodes/hooks/use-node-details-params';
 import useNodeLabelMutations from '@/nodes/hooks/use-node-label-mutations';
@@ -26,6 +26,7 @@ export default function EditNodePage() {
   const { create: createInstallation, update: updateInstallation } =
     useInstallationMutations();
   const { assignLabels } = useNodeLabelMutations();
+  const { assignAmenities } = useInstallationAmenityMutations();
 
   const handleSubmit = async (values: NodeFormOutputValues) => {
     const updatedNode = await updateNode.mutateWithToast(
@@ -57,28 +58,43 @@ export default function EditNodePage() {
         },
         {
           standalone: false,
-          onSuccess: () => {
-            router.push(routes.nodes.getDetailsRoute(nodeId.toString()));
-          },
-          onError: () => {
-            toast.info(tNodes('messages.syncIntallationError.update'));
-          },
         },
       );
+
+      await assignAmenities.mutateWithToast(
+        {
+          installationId: data.installation.id,
+          amenityIds: values.amenityIds || [],
+        },
+        {
+          standalone: false,
+        },
+      );
+
+      router.push(routes.nodes.getDetailsRoute(nodeId.toString()));
     } else {
       if (values.installationTypeId) {
-        await createInstallation.mutateWithToast(
+        const createdInstallation = await createInstallation.mutateWithToast(
           { nodeId: nodeId, ...values },
           {
             standalone: false,
-            onSuccess: () => {
-              router.push(routes.nodes.getDetailsRoute(nodeId.toString()));
-            },
-            onError: () => {
-              toast.info(tNodes('messages.syncIntallationError.create'));
-            },
           },
         );
+
+        if (createdInstallation?.id) {
+          await assignAmenities.mutateWithToast(
+            {
+              installationId: createdInstallation.id,
+              amenityIds: values.amenityIds || [],
+            },
+            {
+              standalone: false,
+            },
+          );
+        }
+        router.push(routes.nodes.getDetailsRoute(nodeId.toString()));
+      } else {
+        router.push(routes.nodes.getDetailsRoute(nodeId.toString()));
       }
     }
     return updatedNode;
@@ -109,6 +125,8 @@ export default function EditNodePage() {
           contactEmail: data.installation?.contactEmail || '',
           website: data.installation?.website || '',
           labelIds: data.labels?.map((label) => label.id) || [],
+          amenityIds:
+            data.installation?.amenities?.map((amenity) => amenity.id) || [],
         }}
         onSubmit={handleSubmit}
       />

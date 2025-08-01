@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { FieldValidationError } from '@repo/base-repo';
 import {
+  amenityFactory,
   cityFactory,
   installationFactory,
   populationFactory,
@@ -18,6 +19,7 @@ import { eventTypeInstallationTypeRepository } from '../event-type-installation-
 import { eventTypeRepository } from '../event-types/event-types.repository';
 import { installationTypeRepository } from '../installation-types/installation-types.repository';
 import { installationRepository } from '../installations/installations.repository';
+import { installationUseCases } from '../installations/installations.use-cases';
 import { labelRepository } from '../labels/labels.repository';
 import { populationRepository } from '../populations/populations.repository';
 import type { CreateNodePayload, Node, UpdateNodePayload } from './nodes.types';
@@ -1356,6 +1358,145 @@ describe('Nodes Controller', () => {
           }),
         ).rejects.toThrow();
       });
+    });
+  });
+
+  describe('installation relations', () => {
+    let testInstallationWithAmenitiesId: number;
+    let testNodeWithInstallationId: number;
+
+    const installationCleanup = createCleanupHelper(
+      ({ id }) => installationRepository.forceDelete(id),
+      'installation',
+    );
+
+    beforeAll(async () => {
+      // Create test installation with amenities using existing setup
+      const testInstallation = await installationFactory(factoryDb).create({
+        name: createUniqueName('Test Installation for Relations', testSuiteId),
+        address: '456 Relations Street',
+        description: 'Test installation for node relations',
+      });
+      testInstallationWithAmenitiesId = installationCleanup.track(
+        testInstallation.id,
+      );
+
+      // Assign some amenities to test the relation loading
+      const testAmenity = await amenityFactory(factoryDb).create({
+        name: createUniqueName('Test Amenity for Node', testSuiteId),
+        category: 'convenience',
+        amenityType: 'installation',
+      });
+
+      await installationUseCases.assignAmenities(
+        testInstallationWithAmenitiesId,
+        [testAmenity.id],
+      );
+
+      // Create test node with installation
+      const testNodeWithInstallation = await createNode({
+        code: createUniqueCode('TNWR', 3),
+        name: createUniqueName('Test Node with Relations', testSuiteId),
+        latitude: 19.4326,
+        longitude: -99.1332,
+        radius: 1000,
+        cityId: testCityId,
+        populationId: testPopulationId,
+        installationId: testInstallationWithAmenitiesId,
+      });
+      testNodeWithInstallationId = nodeCleanup.track(
+        testNodeWithInstallation.id,
+      );
+    });
+
+    afterAll(async () => {
+      // Clean up nodes first (they depend on installations)
+      await nodeCleanup.cleanupAll();
+
+      // Clean up amenity assignments before deleting installation
+      try {
+        await installationUseCases.assignAmenities(
+          testInstallationWithAmenitiesId,
+          [],
+        );
+      } catch (error) {
+        console.log('Error cleaning up amenity assignments:', error);
+      }
+
+      // Then clean up installations
+      await installationCleanup.cleanupAll();
+    });
+
+    test('should include installation with amenities in getNode', async () => {
+      const result = await getNode({ id: testNodeWithInstallationId });
+
+      expect(result.installation).toBeDefined();
+      expect(result.installation).not.toBeNull();
+
+      if (result.installation) {
+        // Verify installation basic info
+        expect(result.installation.id).toBe(testInstallationWithAmenitiesId);
+        expect(result.installation.name).toContain(
+          'Test Installation for Relations',
+        );
+
+        // Verify amenities are loaded
+        expect(result.installation.amenities).toBeDefined();
+        expect(Array.isArray(result.installation.amenities)).toBe(true);
+        expect(result.installation.amenities.length).toBeGreaterThan(0);
+
+        // Verify location is loaded
+        expect(result.installation.location).toBeDefined();
+        expect(result.installation.location).not.toBeNull();
+
+        // Verify properties are loaded
+        expect(result.installation.properties).toBeDefined();
+        expect(Array.isArray(result.installation.properties)).toBe(true);
+      }
+    });
+
+    test('should handle node without installation', async () => {
+      const nodeWithoutInstallation = await createNode({
+        code: createUniqueCode('TNWOI', 3),
+        name: createUniqueName('Test Node without Installation', testSuiteId),
+        latitude: 19.6326,
+        longitude: -99.3332,
+        radius: 800,
+        cityId: testCityId,
+        populationId: testPopulationId,
+      });
+      const nodeWithoutInstallationId = nodeCleanup.track(
+        nodeWithoutInstallation.id,
+      );
+
+      const result = await getNode({ id: nodeWithoutInstallationId });
+
+      expect(result.installation).toBeNull();
+      // Verify other relations are still included
+      expect(result.city).toBeDefined();
+      expect(result.population).toBeDefined();
+    });
+
+    test('should not include amenities in paginated list for performance', async () => {
+      const result = await listNodesPaginated({
+        page: 1,
+        pageSize: 10,
+        searchTerm: testSuiteId,
+      });
+
+      const testNode = result.data.find(
+        (node) => node.id === testNodeWithInstallationId,
+      );
+
+      if (testNode?.installation) {
+        // Basic installation info should be included
+        expect(testNode.installation.id).toBe(testInstallationWithAmenitiesId);
+
+        // But amenities and location should not be loaded for performance
+        expect(testNode.installation.amenities).toHaveLength(0);
+        expect(testNode.installation.location).toBeNull();
+        expect(testNode.installation.properties).toHaveLength(0);
+      }
     });
   });
 });

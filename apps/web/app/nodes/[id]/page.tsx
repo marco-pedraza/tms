@@ -6,6 +6,7 @@ import useQueryInstallationType from '@/app/installation-types/hooks/use-query-i
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
+import AmenityCard from '@/components/ui/amenity-card';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
@@ -194,6 +195,27 @@ export default function NodeDetailsPage() {
             </dl>
           </CardContent>
         </Card>
+
+        {node.installation && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{tNodes('details.amenitiesTitle')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {node.installation.amenities?.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {node.installation.amenities.map((amenity) => (
+                    <AmenityCard key={amenity.id} amenity={amenity} />
+                  ))}
+                </div>
+              ) : (
+                <span className="text-muted-foreground">
+                  {tNodes('details.noAmenitiesAssigned')}
+                </span>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

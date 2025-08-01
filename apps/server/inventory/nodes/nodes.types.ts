@@ -6,7 +6,7 @@ import {
   PaginatedListQueryResult,
 } from '../../shared/types';
 import type { City } from '../cities/cities.types';
-import type { Installation } from '../installations/installations.types';
+import type { InstallationWithDetails } from '../installations/installations.types';
 import type { Label } from '../labels/labels.types';
 import type { NodeEventFlat } from '../node-events/node-events.types';
 import type { Population } from '../populations/populations.types';
@@ -206,7 +206,7 @@ export interface UpdateNodePayload {
 export interface NodeWithRelations extends Node {
   city: City;
   population: Population;
-  installation: Installation | null;
+  installation: InstallationWithDetails | null;
   nodeEvents: NodeEventFlat[];
   labels: Label[];
 }

@@ -28,7 +28,11 @@ import { createNode } from '../nodes/nodes.controller';
 import { nodeRepository } from '../nodes/nodes.repository';
 import { nodes } from '../nodes/nodes.schema';
 import { populationRepository } from '../populations/populations.repository';
-import type { CreateNodeInstallationPayload } from './installations.types';
+import type {
+  CreateNodeInstallationPayload,
+  OperatingHours,
+  TimeSlot,
+} from './installations.types';
 import { installationRepository } from './installations.repository';
 import {
   assignAmenitiesToInstallation,
@@ -136,7 +140,8 @@ describe('Installations Controller', () => {
     };
 
     const installation = await createInstallation(data);
-    return installationCleanup.track(installation.id);
+    installationCleanup.track(installation.id);
+    return installation;
   }
 
   afterAll(async () => {
@@ -364,13 +369,14 @@ describe('Installations Controller', () => {
 
     test('should delete an installation', async () => {
       // Create an installation specifically for deletion test
-      const installationToDeleteId = await createTestInstallation(
+      const installationToDelete = await createTestInstallation(
         'Installation To Delete',
         {
           address: 'Delete Address 456',
           description: 'Installation to be deleted',
         },
       );
+      const installationToDeleteId = installationToDelete.id;
 
       // Find the node associated with this installation
       const associatedNode = await db.query.nodes.findFirst({
@@ -516,13 +522,14 @@ describe('Installations Controller', () => {
   describe('search functionality', () => {
     test('should search installations using searchTerm in list endpoint', async () => {
       // Create a unique installation for search testing
-      const searchableInstallationId = await createTestInstallation(
+      const searchableInstallation = await createTestInstallation(
         'Searchable Test Installation',
         {
           address: 'Searchable Address',
           description: 'Searchable description',
         },
       );
+      const searchableInstallationId = searchableInstallation.id;
 
       // Search for the installation using searchTerm in listInstallations
       const response = await listInstallations({ searchTerm: 'Searchable' });
@@ -551,13 +558,14 @@ describe('Installations Controller', () => {
     test('should search by address as well as name', async () => {
       // Create installation with unique address for search testing
       const addressCode = createUniqueCode('USAddr');
-      const addressSearchInstallationId = await createTestInstallation(
+      const addressSearchInstallation = await createTestInstallation(
         'Regular Installation Name',
         {
           address: `UniqueSearchableAddress-${addressCode}`,
           description: 'Regular description',
         },
       );
+      const addressSearchInstallationId = addressSearchInstallation.id;
 
       // Search for the installation using address term
       const response = await listInstallations({
@@ -759,7 +767,7 @@ describe('Installations Controller', () => {
     describe('success scenarios', () => {
       test('should update installation properties with all field types and return installation with location', async () => {
         // Create a test installation with installation type
-        const installationId = await createTestInstallation(
+        const installation = await createTestInstallation(
           'Properties Test Installation',
           {
             address: 'Properties Test Address',
@@ -767,6 +775,7 @@ describe('Installations Controller', () => {
             installationTypeId: testInstallationTypeId,
           },
         );
+        const installationId = installation.id;
 
         // Valid properties data covering all field types
         const propertiesData = [
@@ -845,12 +854,13 @@ describe('Installations Controller', () => {
       });
 
       test('should handle partial updates and different boolean formats', async () => {
-        const installationId = await createTestInstallation(
+        const installation = await createTestInstallation(
           'Partial Properties Test',
           {
             installationTypeId: testInstallationTypeId,
           },
         );
+        const installationId = installation.id;
 
         // Update only some properties, test boolean format conversion
         const partialPropertiesData = [
@@ -956,12 +966,13 @@ describe('Installations Controller', () => {
       });
 
       test('should handle property schema not found error', async () => {
-        const installationId = await createTestInstallation(
+        const installation = await createTestInstallation(
           'Schema Not Found Test',
           {
             installationTypeId: testInstallationTypeId,
           },
         );
+        const installationId = installation.id;
 
         const invalidPropertiesData = [
           { name: 'non_existent_property', value: 'some_value' },
@@ -976,12 +987,13 @@ describe('Installations Controller', () => {
       });
 
       test('should handle validation errors for invalid field values', async () => {
-        const installationId = await createTestInstallation(
+        const installation = await createTestInstallation(
           'Validation Error Test',
           {
             installationTypeId: testInstallationTypeId,
           },
         );
+        const installationId = installation.id;
 
         // Test invalid number format
         const invalidNumberData = [
@@ -1027,12 +1039,13 @@ describe('Installations Controller', () => {
 
     describe('upsert behavior', () => {
       test('should create new properties and update existing ones', async () => {
-        const installationId = await createTestInstallation(
+        const installation = await createTestInstallation(
           'Upsert Test Installation',
           {
             installationTypeId: testInstallationTypeId,
           },
         );
+        const installationId = installation.id;
 
         // First, create some properties
         const initialProperties = [
@@ -1244,6 +1257,409 @@ describe('Installations Controller', () => {
           expect(fieldError.fieldErrors).toBeDefined();
           expect(fieldError.fieldErrors[0].message).toContain(
             'Duplicate amenity IDs are not allowed',
+          );
+        }
+      });
+    });
+  });
+
+  describe('operating hours support', () => {
+    describe('success scenarios', () => {
+      test('should create and retrieve installations with operating hours (legacy format)', async () => {
+        const installation = await createTestInstallation(
+          'Installation with Legacy Hours',
+          {
+            operatingHours: {
+              monday: { open: '08:00', close: '20:00' },
+              saturday: { open: '09:00', close: '18:00' },
+              sunday: { open: '10:00', close: '16:00' },
+            },
+          },
+        );
+        const trackedId = installationCleanup.track(installation.id);
+
+        // Verify operating hours in creation response
+        expect(installation.operatingHours).toBeDefined();
+        const mondaySlot = installation.operatingHours?.monday as TimeSlot;
+        const saturdaySlot = installation.operatingHours?.saturday as TimeSlot;
+        expect(mondaySlot?.open).toBe('08:00');
+        expect(mondaySlot?.close).toBe('20:00');
+        expect(saturdaySlot?.open).toBe('09:00');
+
+        // Verify persistence when retrieving
+        const retrieved = await getInstallation({ id: trackedId });
+        expect(retrieved.operatingHours).toBeDefined();
+        const retrievedMondaySlot = retrieved.operatingHours
+          ?.monday as TimeSlot;
+        expect(retrievedMondaySlot?.open).toBe('08:00');
+      });
+
+      test('should create and retrieve installations with operating hours (new format - multiple slots)', async () => {
+        const installation = await createTestInstallation(
+          'Installation with Multiple Hours',
+          {
+            operatingHours: {
+              monday: [
+                { open: '08:00', close: '12:00' },
+                { open: '14:00', close: '18:00' },
+              ],
+              tuesday: [{ open: '09:00', close: '17:00' }],
+              // Mixed format: some days with arrays, some with single objects
+              thursday: { open: '09:00', close: '18:00' },
+            },
+          },
+        );
+        const trackedId = installationCleanup.track(installation.id);
+
+        // Verify new format (array of slots)
+        expect(Array.isArray(installation.operatingHours?.monday)).toBe(true);
+        const mondaySlots = installation.operatingHours?.monday as TimeSlot[];
+        expect(mondaySlots).toHaveLength(2);
+        expect(mondaySlots[0]?.open).toBe('08:00');
+        expect(mondaySlots[1]?.open).toBe('14:00');
+
+        // Verify single slot in array
+        expect(Array.isArray(installation.operatingHours?.tuesday)).toBe(true);
+        const tuesdaySlots = installation.operatingHours?.tuesday as TimeSlot[];
+        expect(tuesdaySlots).toHaveLength(1);
+
+        // Verify mixed format compatibility
+        const thursdaySlot = installation.operatingHours?.thursday as TimeSlot;
+        expect(thursdaySlot?.open).toBe('09:00');
+
+        // Verify persistence
+        const retrieved = await getInstallation({ id: trackedId });
+        expect(Array.isArray(retrieved.operatingHours?.monday)).toBe(true);
+        const retrievedMondaySlots = retrieved.operatingHours
+          ?.monday as TimeSlot[];
+        expect(retrievedMondaySlots).toHaveLength(2);
+      });
+
+      test('should handle partial operating hours and updates', async () => {
+        // Create with partial hours
+        const installation = await createTestInstallation(
+          'Installation Partial Hours',
+          {
+            operatingHours: {
+              monday: { open: '08:00', close: '17:00' },
+              friday: { open: '08:00', close: '16:00' },
+            },
+          },
+        );
+        installationCleanup.track(installation.id);
+
+        // Verify only specified days are included
+        expect(installation.operatingHours?.monday).toBeDefined();
+        expect(installation.operatingHours?.friday).toBeDefined();
+        expect(installation.operatingHours?.tuesday).toBeUndefined();
+
+        // Test update with new format
+        const updatedInstallation = await updateInstallation({
+          id: installation.id,
+          operatingHours: {
+            monday: [
+              { open: '07:00', close: '12:00' },
+              { open: '13:00', close: '19:00' },
+            ],
+            wednesday: { open: '09:00', close: '17:00' },
+          },
+        });
+
+        // Verify update applied correctly
+        expect(Array.isArray(updatedInstallation.operatingHours?.monday)).toBe(
+          true,
+        );
+        const mondaySlots = updatedInstallation.operatingHours
+          ?.monday as TimeSlot[];
+        expect(mondaySlots).toHaveLength(2);
+        expect(mondaySlots[0]?.open).toBe('07:00');
+
+        const wednesdaySlot = updatedInstallation.operatingHours
+          ?.wednesday as TimeSlot;
+        expect(wednesdaySlot?.open).toBe('09:00');
+      });
+
+      test('should handle edge cases and special hours', async () => {
+        const installation = await createTestInstallation(
+          'Installation Edge Cases',
+          {
+            operatingHours: {
+              // Full day operation
+              monday: { open: '00:00', close: '23:59' },
+              // Overnight hours
+              friday: { open: '18:00', close: '00:00' },
+              // Multiple overnight slots
+              saturday: [
+                { open: '22:00', close: '00:00' },
+                { open: '06:00', close: '10:00' },
+              ],
+            },
+          },
+        );
+        installationCleanup.track(installation.id);
+
+        const mondaySlot = installation.operatingHours?.monday as TimeSlot;
+        expect(mondaySlot?.open).toBe('00:00');
+        expect(mondaySlot?.close).toBe('23:59');
+
+        const fridaySlot = installation.operatingHours?.friday as TimeSlot;
+        expect(fridaySlot?.open).toBe('18:00');
+        expect(fridaySlot?.close).toBe('00:00');
+
+        const saturdaySlots = installation.operatingHours
+          ?.saturday as TimeSlot[];
+        expect(saturdaySlots).toHaveLength(2);
+        expect(saturdaySlots[0]?.close).toBe('00:00');
+      });
+
+      test('should handle null and undefined operating hours', async () => {
+        // Test explicit null
+        const nullInstallation = await createTestInstallation('Null Hours', {
+          operatingHours: null,
+        });
+        installationCleanup.track(nullInstallation.id);
+        expect(nullInstallation.operatingHours).toBeNull();
+
+        // Test undefined (not provided)
+        const undefinedInstallation =
+          await createTestInstallation('Undefined Hours');
+        installationCleanup.track(undefinedInstallation.id);
+        expect(undefinedInstallation.operatingHours).toBeNull();
+      });
+
+      test('should maintain format consistency and handle complex data', async () => {
+        const complexHours = {
+          monday: [
+            { open: '06:00', close: '10:00' },
+            { open: '14:00', close: '22:00' },
+          ],
+          wednesday: { open: '08:00', close: '17:00' },
+          friday: [{ open: '00:00', close: '23:59' }],
+        };
+
+        const installation = await createTestInstallation('Complex Hours', {
+          operatingHours: complexHours,
+        });
+        installationCleanup.track(installation.id);
+
+        // Verify structure is maintained across database roundtrip
+        const retrieved = await getInstallation({ id: installation.id });
+        expect(retrieved.operatingHours).toEqual(complexHours);
+
+        // Test format conversion on update
+        const updated = await updateInstallation({
+          id: installation.id,
+          operatingHours: {
+            monday: { open: '09:00', close: '18:00' }, // Legacy format
+            thursday: [{ open: '10:00', close: '19:00' }], // New format
+          },
+        });
+
+        // Should maintain respective formats
+        expect(updated.operatingHours?.monday).toBeDefined();
+        expect(Array.isArray(updated.operatingHours?.thursday)).toBe(true);
+      });
+    });
+
+    describe('validation and error scenarios', () => {
+      test('should reject invalid time formats with specific error messages', async () => {
+        // Test invalid hours in legacy format
+        try {
+          await createTestInstallation('Installation Invalid Hours', {
+            operatingHours: {
+              monday: { open: '25:00', close: '20:00' },
+            },
+          });
+          expect(true).toBe(false); // Should not reach here
+        } catch (error: unknown) {
+          const fieldError = error as {
+            fieldErrors: { field: string; message: string }[];
+          };
+          expect(fieldError.fieldErrors).toBeDefined();
+          expect(fieldError.fieldErrors[0].field).toBe('operatingHours');
+          expect(fieldError.fieldErrors[0].message).toBe(
+            'Invalid time format for monday. Use HH:MM format (24-hour) with valid time values.',
+          );
+        }
+
+        // Test invalid minutes in array format
+        try {
+          await createTestInstallation('Installation Invalid Minutes', {
+            operatingHours: {
+              tuesday: [{ open: '08:60', close: '17:00' }],
+            },
+          });
+          expect(true).toBe(false); // Should not reach here
+        } catch (error: unknown) {
+          const fieldError = error as {
+            fieldErrors: { field: string; message: string }[];
+          };
+          expect(fieldError.fieldErrors).toBeDefined();
+          expect(fieldError.fieldErrors[0].field).toBe('operatingHours');
+          expect(fieldError.fieldErrors[0].message).toBe(
+            'Invalid time format for tuesday. Use HH:MM format (24-hour) with valid time values.',
+          );
+        }
+
+        // Test invalid time relationships (same time, reverse time, empty values)
+        const timeRelationshipCases = [
+          {
+            hours: { wednesday: { open: '09:00', close: '09:00' } },
+            day: 'wednesday',
+            desc: 'same time',
+          },
+          {
+            hours: { friday: { open: '', close: '17:00' } },
+            day: 'friday',
+            desc: 'empty open time',
+          },
+          {
+            hours: { saturday: { open: '08:00', close: '' } },
+            day: 'saturday',
+            desc: 'empty close time',
+          },
+        ];
+
+        for (const { hours, day, desc } of timeRelationshipCases) {
+          try {
+            await createTestInstallation(`Installation ${desc}`, {
+              operatingHours: hours as OperatingHours,
+            });
+            expect(true).toBe(false); // Should not reach here
+          } catch (error: unknown) {
+            const fieldError = error as {
+              fieldErrors: { field: string; message: string }[];
+            };
+            expect(fieldError.fieldErrors).toBeDefined();
+            expect(fieldError.fieldErrors[0].field).toBe('operatingHours');
+            expect(fieldError.fieldErrors[0].message).toBe(
+              `Invalid time format for ${day}. Use HH:MM format (24-hour) with valid time values.`,
+            );
+          }
+        }
+      });
+
+      test('should reject invalid data types with specific error messages', async () => {
+        // Test string instead of object/array
+        try {
+          await createTestInstallation('Installation Invalid Type', {
+            operatingHours: {
+              monday: 'not an object',
+            } as unknown as OperatingHours,
+          });
+          expect(true).toBe(false); // Should not reach here
+        } catch (error: unknown) {
+          const fieldError = error as {
+            fieldErrors: { field: string; message: string }[];
+          };
+          expect(fieldError.fieldErrors).toBeDefined();
+          expect(fieldError.fieldErrors[0].field).toBe('operatingHours');
+          expect(fieldError.fieldErrors[0].message).toBe(
+            'Invalid value for monday. Expected an array or object of time slots.',
+          );
+        }
+
+        // Test number instead of object/array
+        try {
+          await createTestInstallation('Installation Invalid Number', {
+            operatingHours: {
+              tuesday: 123,
+            } as unknown as OperatingHours,
+          });
+          expect(true).toBe(false); // Should not reach here
+        } catch (error: unknown) {
+          const fieldError = error as {
+            fieldErrors: { field: string; message: string }[];
+          };
+          expect(fieldError.fieldErrors).toBeDefined();
+          expect(fieldError.fieldErrors[0].field).toBe('operatingHours');
+          expect(fieldError.fieldErrors[0].message).toBe(
+            'Invalid value for tuesday. Expected an array or object of time slots.',
+          );
+        }
+
+        // Test invalid array element (results in time format error)
+        try {
+          await createTestInstallation('Installation Invalid Array Element', {
+            operatingHours: {
+              wednesday: [{ open: '08:00', close: '12:00' }, 'not an object'],
+            } as unknown as OperatingHours,
+          });
+          expect(true).toBe(false); // Should not reach here
+        } catch (error: unknown) {
+          const fieldError = error as {
+            fieldErrors: { field: string; message: string }[];
+          };
+          expect(fieldError.fieldErrors).toBeDefined();
+          expect(fieldError.fieldErrors[0].field).toBe('operatingHours');
+          expect(fieldError.fieldErrors[0].message).toBe(
+            'Invalid time format for wednesday. Use HH:MM format (24-hour) with valid time values.',
+          );
+        }
+      });
+
+      test('should validate error messages also work in update operations', async () => {
+        // Create a valid installation first
+        const installation = await createTestInstallation('Valid Installation');
+        installationCleanup.track(installation.id);
+
+        // Test validation in update with invalid time format
+        try {
+          await updateInstallation({
+            id: installation.id,
+            operatingHours: {
+              monday: { open: '25:00', close: '20:00' },
+            },
+          });
+          expect(true).toBe(false); // Should not reach here
+        } catch (error: unknown) {
+          const fieldError = error as {
+            fieldErrors: { field: string; message: string }[];
+          };
+          expect(fieldError.fieldErrors).toBeDefined();
+          expect(fieldError.fieldErrors[0].field).toBe('operatingHours');
+          expect(fieldError.fieldErrors[0].message).toBe(
+            'Invalid time format for monday. Use HH:MM format (24-hour) with valid time values.',
+          );
+        }
+
+        // Test validation in update with invalid data type
+        try {
+          await updateInstallation({
+            id: installation.id,
+            operatingHours: {
+              tuesday: 'invalid data',
+            } as unknown as OperatingHours,
+          });
+          expect(true).toBe(false); // Should not reach here
+        } catch (error: unknown) {
+          const fieldError = error as {
+            fieldErrors: { field: string; message: string }[];
+          };
+          expect(fieldError.fieldErrors).toBeDefined();
+          expect(fieldError.fieldErrors[0].field).toBe('operatingHours');
+          expect(fieldError.fieldErrors[0].message).toBe(
+            'Invalid value for tuesday. Expected an array or object of time slots.',
+          );
+        }
+
+        // Test validation in update with invalid time relationship (same open and close time, not midnight)
+        try {
+          await updateInstallation({
+            id: installation.id,
+            operatingHours: {
+              wednesday: { open: '12:00', close: '12:00' },
+            },
+          });
+          expect(true).toBe(false); // Should not reach here
+        } catch (error: unknown) {
+          const fieldError = error as {
+            fieldErrors: { field: string; message: string }[];
+          };
+          expect(fieldError.fieldErrors).toBeDefined();
+          expect(fieldError.fieldErrors[0].field).toBe('operatingHours');
+          expect(fieldError.fieldErrors[0].message).toBe(
+            'Invalid time format for wednesday. Use HH:MM format (24-hour) with valid time values.',
           );
         }
       });

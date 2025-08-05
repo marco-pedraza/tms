@@ -3443,6 +3443,11 @@ export namespace inventory {
      * Must be a positive number
      */
     installationTypeId?: number | null
+
+    /**
+     * Operating hours of the installation
+     */
+    operatingHours?: installations.OperatingHours | null
 }): Promise<installations.InstallationWithDetails> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/installations/${encodeURIComponent(id)}/update`, JSON.stringify(params))
@@ -9537,6 +9542,11 @@ export namespace installations {
          * Must be a positive number if provided
          */
         installationTypeId?: number | null
+
+        /**
+         * Optional operating hours of the installation
+         */
+        operatingHours?: OperatingHours | null
     }
 
     export interface Installation {
@@ -9579,6 +9589,11 @@ export namespace installations {
          * ID of the installation type this installation belongs to
          */
         installationTypeId: number | null
+
+        /**
+         * Operating hours of the installation
+         */
+        operatingHours: OperatingHours | null
 
         /**
          * Timestamp when the installation record was created
@@ -9712,6 +9727,11 @@ export namespace installations {
         installationTypeId: number | null
 
         /**
+         * Operating hours of the installation
+         */
+        operatingHours: OperatingHours | null
+
+        /**
          * Timestamp when the installation record was created
          */
         createdAt: string | string | null
@@ -9724,7 +9744,7 @@ export namespace installations {
 
     export interface ListInstallationsQueryParams {
         orderBy?: {
-            field: "id" | "name" | "address" | "description" | "contactPhone" | "contactEmail" | "website" | "installationTypeId" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "address" | "description" | "contactPhone" | "contactEmail" | "website" | "installationTypeId" | "operatingHours" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -9736,6 +9756,7 @@ export namespace installations {
             contactEmail?: string | null
             website?: string | null
             installationTypeId?: number | null
+            operatingHours?: OperatingHours | null
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }
@@ -9746,11 +9767,48 @@ export namespace installations {
         data: Installation[]
     }
 
+    export interface OperatingHours {
+        /**
+         * Monday opening hours - can be a single TimeSlot or array of TimeSlots
+         */
+        monday?: TimeSlot | TimeSlot[]
+
+        /**
+         * Tuesday opening hours - can be a single TimeSlot or array of TimeSlots
+         */
+        tuesday?: TimeSlot | TimeSlot[]
+
+        /**
+         * Wednesday opening hours - can be a single TimeSlot or array of TimeSlots
+         */
+        wednesday?: TimeSlot | TimeSlot[]
+
+        /**
+         * Thursday opening hours - can be a single TimeSlot or array of TimeSlots
+         */
+        thursday?: TimeSlot | TimeSlot[]
+
+        /**
+         * Friday opening hours - can be a single TimeSlot or array of TimeSlots
+         */
+        friday?: TimeSlot | TimeSlot[]
+
+        /**
+         * Saturday opening hours - can be a single TimeSlot or array of TimeSlots
+         */
+        saturday?: TimeSlot | TimeSlot[]
+
+        /**
+         * Sunday opening hours - can be a single TimeSlot or array of TimeSlots
+         */
+        sunday?: TimeSlot | TimeSlot[]
+    }
+
     export interface PaginatedListInstallationsQueryParams {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "address" | "description" | "contactPhone" | "contactEmail" | "website" | "installationTypeId" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "address" | "description" | "contactPhone" | "contactEmail" | "website" | "installationTypeId" | "operatingHours" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -9762,6 +9820,7 @@ export namespace installations {
             contactEmail?: string | null
             website?: string | null
             installationTypeId?: number | null
+            operatingHours?: OperatingHours | null
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }
@@ -9771,6 +9830,18 @@ export namespace installations {
     export interface PaginatedListInstallationsResult {
         pagination: shared.PaginationMeta
         data: InstallationWithDetails[]
+    }
+
+    export interface TimeSlot {
+        /**
+         * Opening time in format HH:MM (24-hour format)
+         */
+        open: string
+
+        /**
+         * Closing time in format HH:MM (24-hour format)
+         */
+        close: string
     }
 }
 

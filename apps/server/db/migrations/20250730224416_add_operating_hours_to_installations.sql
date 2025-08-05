@@ -1,0 +1,1 @@
+ALTER TABLE "installations" ADD COLUMN "operating_hours" jsonb;

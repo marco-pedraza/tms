@@ -47,6 +47,7 @@ export function createInstallationUseCases() {
         contactEmail: params.contactEmail,
         website: params.website,
         installationTypeId: params.installationTypeId || null,
+        operatingHours: params.operatingHours ?? null,
       });
 
       // Assign the installation to the node within the same transaction

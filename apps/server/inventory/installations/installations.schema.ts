@@ -1,6 +1,7 @@
 import {
   index,
   integer,
+  jsonb,
   pgTable,
   serial,
   text,
@@ -24,6 +25,7 @@ export const installations = pgTable(
     installationTypeId: integer('installation_type_id').references(
       () => installationTypes.id,
     ),
+    operatingHours: jsonb('operating_hours'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
     deletedAt: timestamp('deleted_at'),

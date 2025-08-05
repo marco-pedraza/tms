@@ -12,7 +12,10 @@ import type {
   UpdateInstallationPayload,
 } from './installations.types';
 import { installationRepository } from './installations.repository';
-import { validateNodeInstallation } from './installations.domain';
+import {
+  validateNodeInstallation,
+  validateNodeInstallationUpdate,
+} from './installations.domain';
 import { installationUseCases } from './installations.use-cases';
 
 /**
@@ -62,6 +65,7 @@ export const updateInstallation = api(
   }: UpdateInstallationPayload & {
     id: number;
   }): Promise<InstallationWithDetails> => {
+    validateNodeInstallationUpdate(data);
     await installationRepository.update(id, data);
     return await installationUseCases.findOneWithLocation(id);
   },

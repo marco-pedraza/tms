@@ -232,6 +232,13 @@
       "when": 1753310247787,
       "tag": "20250723223727_creates_amenities_table",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1753915456527,
+      "tag": "20250730224416_add_operating_hours_to_installations",
+      "breakpoints": true
     }
   ]
 }

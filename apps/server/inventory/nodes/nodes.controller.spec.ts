@@ -1410,10 +1410,7 @@ describe('Nodes Controller', () => {
     });
 
     afterAll(async () => {
-      // Clean up nodes first (they depend on installations)
-      await nodeCleanup.cleanupAll();
-
-      // Clean up amenity assignments before deleting installation
+      // Clean up amenity assignments first (before installations are affected)
       try {
         await installationUseCases.assignAmenities(
           testInstallationWithAmenitiesId,
@@ -1423,7 +1420,10 @@ describe('Nodes Controller', () => {
         console.log('Error cleaning up amenity assignments:', error);
       }
 
-      // Then clean up installations
+      // Clean up nodes second (they depend on installations)
+      await nodeCleanup.cleanupAll();
+
+      // Clean up installations last
       await installationCleanup.cleanupAll();
     });
 

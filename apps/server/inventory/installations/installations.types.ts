@@ -13,6 +13,44 @@ import {
 } from '../installation-schemas/installation-schemas.types';
 
 /**
+ * Represents a time slot with opening and closing times
+ */
+export interface TimeSlot {
+  /** Opening time in format HH:MM (24-hour format) */
+  open: string;
+
+  /** Closing time in format HH:MM (24-hour format) */
+  close: string;
+}
+
+/**
+ * Represents operating hours for an installation
+ * Supports both legacy format (single TimeSlot) and new format (array of TimeSlots)
+ */
+export interface OperatingHours {
+  /** Monday opening hours - can be a single TimeSlot or array of TimeSlots */
+  monday?: TimeSlot | TimeSlot[];
+
+  /** Tuesday opening hours - can be a single TimeSlot or array of TimeSlots */
+  tuesday?: TimeSlot | TimeSlot[];
+
+  /** Wednesday opening hours - can be a single TimeSlot or array of TimeSlots */
+  wednesday?: TimeSlot | TimeSlot[];
+
+  /** Thursday opening hours - can be a single TimeSlot or array of TimeSlots */
+  thursday?: TimeSlot | TimeSlot[];
+
+  /** Friday opening hours - can be a single TimeSlot or array of TimeSlots */
+  friday?: TimeSlot | TimeSlot[];
+
+  /** Saturday opening hours - can be a single TimeSlot or array of TimeSlots */
+  saturday?: TimeSlot | TimeSlot[];
+
+  /** Sunday opening hours - can be a single TimeSlot or array of TimeSlots */
+  sunday?: TimeSlot | TimeSlot[];
+}
+
+/**
  * Base interface representing an installation entity
  */
 export interface Installation {
@@ -39,6 +77,9 @@ export interface Installation {
 
   /** ID of the installation type this installation belongs to */
   installationTypeId: number | null;
+
+  /** Operating hours of the installation */
+  operatingHours: OperatingHours | null;
 
   /** Timestamp when the installation record was created */
   createdAt: Date | string | null;
@@ -147,6 +188,11 @@ export interface CreateInstallationPayload {
    * Must be a positive number
    */
   installationTypeId: (number & Min<1>) | null;
+
+  /**
+   * Operating hours of the installation
+   */
+  operatingHours?: OperatingHours | null;
 }
 
 /**
@@ -203,6 +249,11 @@ export interface CreateNodeInstallationPayload {
    * Must be a positive number if provided
    */
   installationTypeId?: (number & Min<1>) | null;
+
+  /**
+   * Optional operating hours of the installation
+   */
+  operatingHours?: OperatingHours | null;
 }
 
 /**
@@ -253,6 +304,11 @@ export interface UpdateInstallationPayload {
    * Must be a positive number
    */
   installationTypeId?: (number & Min<1>) | null;
+
+  /**
+   * Operating hours of the installation
+   */
+  operatingHours?: OperatingHours | null;
 }
 
 /**

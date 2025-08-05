@@ -7,6 +7,7 @@ import PageHeader from '@/components/page-header';
 import { NodeFormOutputValues } from '@/nodes/components/node-form';
 import NodeForm from '@/nodes/components/node-form';
 import NodeFormSkeleton from '@/nodes/components/node-form-skeleton';
+import useEventMutations from '@/nodes/hooks/use-event-mutations';
 import useInstallationAmenityMutations from '@/nodes/hooks/use-installation-amenity-mutations';
 import useInstallationMutations from '@/nodes/hooks/use-installation-mutations';
 import useNodeDetailsParams from '@/nodes/hooks/use-node-details-params';
@@ -29,6 +30,7 @@ export default function EditNodePage() {
   const { update: updateNode } = useNodeMutations();
   const { create: createInstallation, update: updateInstallation } =
     useInstallationMutations();
+  const { update: updateNodeEvents } = useEventMutations();
   const updateProperties = useUpdateInstallationPropertiesMutation();
   const { data: installation, isLoading: isLoadingInstallation } =
     useQueryInstallation({
@@ -61,7 +63,9 @@ export default function EditNodePage() {
       },
     );
 
+    // Handle installation creation/update
     if (data?.installation?.id) {
+      // Update existing installation
       await updateInstallation.mutateWithToast(
         {
           id: data.installation.id,
@@ -74,21 +78,21 @@ export default function EditNodePage() {
           },
         },
       );
-    } else {
-      if (values.installationTypeId) {
-        const newInstallation = await createInstallation.mutateWithToast(
-          { nodeId: nodeId, ...values },
-          {
-            standalone: false,
-            onError: () => {
-              toast.info(tNodes('messages.syncIntallationError.create'));
-            },
+    } else if (values.installationTypeId) {
+      // Create new installation only if installation type is selected
+      const newInstallation = await createInstallation.mutateWithToast(
+        { nodeId: nodeId, ...values },
+        {
+          standalone: false,
+          onError: () => {
+            toast.info(tNodes('messages.syncIntallationError.create'));
           },
-        );
-        installationId = newInstallation.id;
-      }
+        },
+      );
+      installationId = newInstallation.id;
     }
 
+    // Assign amenities only if we have a valid installation ID
     if (installationId) {
       await assignAmenities.mutateWithToast(
         {
@@ -101,6 +105,18 @@ export default function EditNodePage() {
       );
     }
 
+    await updateNodeEvents.mutateWithToast(
+      {
+        id: nodeId,
+        nodeEvents: (values.nodeEvents ?? []).map((event) => ({
+          eventTypeId: event.eventTypeId,
+          customTime: event.customTime ?? undefined,
+        })),
+      },
+      { standalone: false },
+    );
+
+    // Update custom attributes if installation exists and attributes are provided
     if (installationId && values.customAttributes) {
       await updateProperties.mutateWithToast(
         {
@@ -121,6 +137,7 @@ export default function EditNodePage() {
       );
     }
 
+    // Navigate to the node details page after all operations are complete
     router.push(routes.nodes.getDetailsRoute(nodeId.toString()));
     return updatedNode;
   };
@@ -149,6 +166,11 @@ export default function EditNodePage() {
           contactPhone: data.installation?.contactPhone || '',
           contactEmail: data.installation?.contactEmail || '',
           website: data.installation?.website || '',
+          nodeEvents:
+            data.nodeEvents?.map((event) => ({
+              eventTypeId: event.eventTypeId,
+              customTime: event.customTime,
+            })) || [],
           customAttributes: installation?.properties?.map((property) => ({
             name: property.name,
             value: property.value

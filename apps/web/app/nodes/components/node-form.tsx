@@ -1,5 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '@tanstack/react-form';
+import { formatDuration } from 'date-fns';
+import { Calendar, Clock, Loader2, Zap } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import useQueryAllInstallationAmenities from '@/amenities/hooks/use-query-all-installation-amenities';
@@ -7,10 +9,16 @@ import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import AmenityCard from '@/components/ui/amenity-card';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useForm from '@/hooks/use-form';
 import useQueryInstallationTypeSchemas from '@/hooks/use-query-installation-type-schemas';
 import useQueryAllInstallationTypes from '@/installation-types/hooks/use-query-all-installation-types';
+import useQueryInstallationTypeEvents from '@/installation-types/hooks/use-query-installation-type-events';
 import useQueryAllLabels from '@/labels/hooks/use-query-all-labels';
 import InstallationDynamicForm from '@/nodes/components/installation-dynamic-form';
 import useQueryAllPopulations from '@/populations/hooks/use-query-all-populations';
@@ -145,6 +153,12 @@ const createBaseNodeFormSchema = (
       .nullable(),
     allowsBoarding: z.boolean().optional(),
     allowsAlighting: z.boolean().optional(),
+    nodeEvents: z.array(
+      z.object({
+        eventTypeId: z.number(),
+        customTime: z.number().nullable().optional(),
+      }),
+    ),
     labelIds: z.array(z.number()).optional().default([]),
     amenityIds: z.array(z.number()).optional().default([]),
   });
@@ -173,6 +187,7 @@ interface NodeFormProps {
 export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
   const tCommon = useTranslations('common');
   const tNodes = useTranslations('nodes');
+  const tNodeEvents = useTranslations('nodeEvents');
   const tValidations = useTranslations('validations');
 
   // Start with base schema - we'll handle dynamic validation differently
@@ -187,6 +202,10 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
         populationId: defaultValues.populationId.toString(),
         latitude: defaultValues.latitude.toString(),
         longitude: defaultValues.longitude.toString(),
+        nodeEvents: (defaultValues.nodeEvents || []).map((event) => ({
+          eventTypeId: event.eventTypeId,
+          customTime: event.customTime,
+        })),
       }
     : undefined;
 
@@ -205,6 +224,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
       contactPhone: '',
       contactEmail: '',
       website: '',
+      nodeEvents: [],
       labelIds: [],
       amenityIds: [],
     },
@@ -243,6 +263,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
   const { data: installationTypes } = useQueryAllInstallationTypes();
   const { data: labels } = useQueryAllLabels();
   const { data: amenities } = useQueryAllInstallationAmenities();
+
   const selectedPopulationId = useStore(
     form.store,
     (state) => state.values.populationId,
@@ -257,6 +278,188 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
     form.store,
     (state) => state.values.installationTypeId,
   );
+
+  // Use the hook properly with the selected installation type ID
+  const { data: events, isLoading: isLoadingEvents } =
+    useQueryInstallationTypeEvents({
+      installationTypeId: currentInstallationTypeId
+        ? parseInt(currentInstallationTypeId)
+        : 0,
+      enabled: !!currentInstallationTypeId,
+    });
+
+  const [selectedEvents, setSelectedEvents] = useState<number[]>([]);
+
+  // Get form events from store to avoid circular dependencies
+  const formEvents = useStore(form.store, (state) => state.values.nodeEvents);
+
+  // Memoize the initial events from default values
+  const initialEvents = useMemo(() => {
+    if (defaultValues?.nodeEvents && defaultValues.nodeEvents.length > 0) {
+      return new Set(
+        defaultValues.nodeEvents.map((event) => event.eventTypeId),
+      );
+    }
+    return new Set<number>();
+  }, [defaultValues?.nodeEvents]);
+
+  // Helper function to compare arrays reliably (order-independent)
+  const areArraysEqual = useCallback((arr1: number[], arr2: number[]) => {
+    if (arr1.length !== arr2.length) return false;
+
+    const set1 = new Set(arr1);
+
+    if (set1.size !== arr1.length) return false;
+
+    return arr2.every((item) => set1.has(item));
+  }, []);
+
+  // Track previous states to avoid circular dependencies
+  const prevFormEvents = useRef<unknown>(undefined);
+  const prevInstallationTypeId = useRef<string | undefined>(undefined);
+  const prevSelectedEvents = useRef<number[]>([]);
+  const hasInitialized = useRef(false);
+  const hasUserClearedEvents = useRef(false);
+
+  const syncFormEventsWithSelectedEvents = useCallback(() => {
+    const currentFormEvents = form.getFieldValue('nodeEvents') || [];
+    const currentEventIds = currentFormEvents.map((event) => event.eventTypeId);
+
+    // Only update if the arrays are actually different (order-independent comparison)
+    if (!areArraysEqual(currentEventIds, selectedEvents)) {
+      setSelectedEvents(currentEventIds);
+      prevSelectedEvents.current = currentEventIds;
+    }
+
+    // Update the previous form events reference without including it in dependencies
+    prevFormEvents.current = form.getFieldValue('nodeEvents');
+  }, [form, selectedEvents, areArraysEqual]);
+
+  const handleInstallationTypeChange = useCallback(() => {
+    const hasInstallationTypeChanged =
+      currentInstallationTypeId !== prevInstallationTypeId.current;
+
+    if (hasInstallationTypeChanged) {
+      // Clear events when installation type changes
+      setSelectedEvents([]);
+      prevSelectedEvents.current = [];
+      form.setFieldValue('nodeEvents', []);
+      // Reset the user cleared flag when installation type changes
+      hasUserClearedEvents.current = false;
+      prevInstallationTypeId.current = currentInstallationTypeId;
+    }
+  }, [currentInstallationTypeId, form]);
+
+  const handleInitialEventsForEditMode = useCallback(() => {
+    if (!hasInitialized.current && initialEvents.size > 0) {
+      const initialEventArray = Array.from(initialEvents);
+      setSelectedEvents(initialEventArray);
+      prevSelectedEvents.current = initialEventArray;
+      // Set form events from default values
+      if (defaultValues?.nodeEvents) {
+        form.setFieldValue('nodeEvents', defaultValues.nodeEvents);
+      }
+      hasInitialized.current = true;
+    }
+  }, [initialEvents, defaultValues?.nodeEvents, form]);
+
+  // Single consolidated effect to handle form events synchronization
+  useEffect(() => {
+    syncFormEventsWithSelectedEvents();
+  }, [syncFormEventsWithSelectedEvents]);
+
+  // Handle installation type changes
+  useEffect(() => {
+    handleInstallationTypeChange();
+  }, [handleInstallationTypeChange]);
+
+  // Handle initial events for edit mode (only run once)
+  useEffect(() => {
+    handleInitialEventsForEditMode();
+  }, [handleInitialEventsForEditMode]);
+
+  // Restore events when installation type is changed back to original in edit mode
+  useEffect(() => {
+    if (
+      defaultValues?.installationTypeId &&
+      currentInstallationTypeId &&
+      defaultValues.nodeEvents &&
+      defaultValues.nodeEvents.length > 0
+    ) {
+      const originalInstallationTypeId =
+        defaultValues.installationTypeId.toString();
+      const isBackToOriginal =
+        currentInstallationTypeId === originalInstallationTypeId;
+
+      // Only restore events if we're back to original installation type,
+      // there are no currently selected events, and the user hasn't manually cleared them
+      if (
+        isBackToOriginal &&
+        selectedEvents.length === 0 &&
+        !hasUserClearedEvents.current
+      ) {
+        const eventIds = defaultValues.nodeEvents.map(
+          (event) => event.eventTypeId,
+        );
+        setSelectedEvents(eventIds);
+        prevSelectedEvents.current = eventIds;
+        form.setFieldValue('nodeEvents', defaultValues.nodeEvents);
+      }
+    }
+  }, [currentInstallationTypeId, defaultValues, form, selectedEvents]);
+
+  const handleEventSelection = useCallback(
+    (eventTypeId: number, checked: boolean) => {
+      if (checked) {
+        setSelectedEvents((prevEvents) => {
+          const newSelectedEvents = [...prevEvents, eventTypeId];
+          prevSelectedEvents.current = newSelectedEvents;
+          return newSelectedEvents;
+        });
+        // Add to form state
+        const currentEvents = form.getFieldValue('nodeEvents') || [];
+        const newEvent = { eventTypeId, customTime: null };
+        form.setFieldValue('nodeEvents', [...currentEvents, newEvent]);
+        // Reset the user cleared flag when user starts adding events again
+        hasUserClearedEvents.current = false;
+      } else {
+        setSelectedEvents((prevEvents) => {
+          const newSelectedEvents = prevEvents.filter(
+            (id) => id !== eventTypeId,
+          );
+          prevSelectedEvents.current = newSelectedEvents;
+          return newSelectedEvents;
+        });
+        // Remove from form state
+        const currentEvents = form.getFieldValue('nodeEvents') || [];
+        form.setFieldValue(
+          'nodeEvents',
+          currentEvents.filter((event) => event.eventTypeId !== eventTypeId),
+        );
+        // Mark that user has manually cleared events if this results in empty selection
+        if (currentEvents.length === 1) {
+          hasUserClearedEvents.current = true;
+        }
+      }
+    },
+    [form],
+  );
+
+  const handleEventTimeChange = useCallback(
+    (eventTypeId: number, time: number | null) => {
+      const currentEvents = form.getFieldValue('nodeEvents') || [];
+      const updatedEvents = currentEvents.map((event) =>
+        event.eventTypeId === eventTypeId
+          ? { ...event, customTime: time }
+          : event,
+      );
+      form.setFieldValue('nodeEvents', updatedEvents);
+    },
+    [form],
+  );
+
+  // Use formEvents directly since it's the reactive state from the form store
+  const currentFormEvents = formEvents || [];
 
   // Fetch installation type schemas based on selected installation type
   const { data: schemasData } = useQueryInstallationTypeSchemas({
@@ -390,6 +593,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
           <TabsTrigger value="location">
             {tNodes('form.sections.locationAndContactInfo')}
           </TabsTrigger>
+          <TabsTrigger value="events">{tCommon('sections.events')}</TabsTrigger>
           <TabsTrigger value="custom">
             {tNodes('form.sections.customAttributes')}
           </TabsTrigger>
@@ -582,6 +786,144 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
               )}
             </form.AppField>
           </FormLayout>
+        </TabsContent>
+        <TabsContent value="events">
+          {!currentInstallationTypeId ? (
+            <Card>
+              <CardContent>
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground text-lg mb-4">
+                    {tNodes('form.placeholders.selectInstallationTypeFirst')}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {tNodes(
+                      'form.placeholders.selectInstallationTypeFirstDescription',
+                    )}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : events && events.length === 0 ? (
+            <Card>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">
+                    {tNodeEvents('noEventsAvailable')}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : isLoadingEvents ? (
+            <Card>
+              <CardContent>
+                <div className="flex justify-center items-center h-full">
+                  <Loader2 className="h-10 w-10 animate-spin" />
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  {tNodeEvents('title')}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {tNodeEvents('description')}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {events?.map((eventType) => (
+                    <div
+                      key={eventType.id}
+                      className="p-3 border rounded-lg hover:bg-accent cursor-pointer"
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`event-${eventType.id}`}
+                            checked={selectedEvents.includes(eventType.id)}
+                            onCheckedChange={(checked: boolean) => {
+                              handleEventSelection(eventType.id, checked);
+                            }}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <Label
+                            htmlFor={`event-${eventType.id}`}
+                            className="font-medium cursor-pointer block"
+                          >
+                            {eventType.name}
+                          </Label>
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              {eventType.code}
+                            </Badge>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              {formatDuration({
+                                minutes: eventType.baseTime,
+                              })}
+                            </div>
+                            {eventType.integration && (
+                              <div className="flex items-center gap-1 text-xs text-blue-600">
+                                <Zap className="h-3 w-3" />
+                                {tNodeEvents('integration')}
+                              </div>
+                            )}
+                          </div>
+                          {eventType.description && (
+                            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                              {eventType.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {selectedEvents.includes(eventType.id) && (
+                        <div className="mt-3 ml-8">
+                          <div className="flex items-center gap-3">
+                            <Label
+                              htmlFor={`time-${eventType.id}`}
+                              className="text-sm font-medium min-w-0"
+                            >
+                              {tNodeEvents('customTime')}
+                            </Label>
+                            <Input
+                              id={`time-${eventType.id}`}
+                              min={0}
+                              step={1}
+                              type="number"
+                              placeholder={`${eventType.baseTime}`}
+                              value={
+                                currentFormEvents.find(
+                                  (event) => event.eventTypeId === eventType.id,
+                                )?.customTime || ''
+                              }
+                              onChange={(e) => {
+                                if (e.target.value === '') {
+                                  handleEventTimeChange(eventType.id, null);
+                                } else {
+                                  handleEventTimeChange(
+                                    eventType.id,
+                                    parseInt(e.target.value),
+                                  );
+                                }
+                              }}
+                              className="w-24"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
         <TabsContent value="custom">
           {!currentInstallationTypeId ? (

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import PageHeader from '@/components/page-header';
 import NodeForm, { NodeFormOutputValues } from '@/nodes/components/node-form';
+import useEventMutations from '@/nodes/hooks/use-event-mutations';
 import useInstallationAmenityMutations from '@/nodes/hooks/use-installation-amenity-mutations';
 import useInstallationMutations from '@/nodes/hooks/use-installation-mutations';
 import useNodeLabelMutations from '@/nodes/hooks/use-node-label-mutations';
@@ -16,6 +17,7 @@ export default function NewNodePage() {
   const router = useRouter();
   const { create: createNode } = useNodeMutations();
   const { create: createInstallation } = useInstallationMutations();
+  const { create: createNodeEvents } = useEventMutations();
   const updateProperties = useUpdateInstallationPropertiesMutation();
   const { assignLabels } = useNodeLabelMutations();
   const { assignAmenities } = useInstallationAmenityMutations();
@@ -93,6 +95,19 @@ export default function NewNodePage() {
         },
       );
     }
+
+    await createNodeEvents.mutateWithToast(
+      {
+        id: node.id,
+        nodeEvents: (values.nodeEvents ?? []).map((event) => ({
+          eventTypeId: event.eventTypeId,
+          customTime: event.customTime ?? undefined,
+        })),
+      },
+      {
+        standalone: false,
+      },
+    );
 
     router.push(routes.nodes.getDetailsRoute(node.id.toString()));
     return node;

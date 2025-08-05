@@ -61,7 +61,8 @@
       "contactInfo": "Información de Contacto",
       "operativeConfig": "Configuración Operativa",
       "operativeConfigDescription": "Parámetros de tiempo e integración",
-      "location": "Ubicación"
+      "location": "Ubicación",
+      "events": "Eventos"
     },
     "crud": {
       "create": {
@@ -906,6 +907,30 @@
         "error": "No pudimos eliminar la instalación"
       }
     }
+  },
+  "nodeEvents": {
+    "title": "Eventos",
+    "description": "Seleccione los tipos de eventos que pueden ocurrir en este nodo.",
+    "messages": {
+      "create": {
+        "loading": "Creando evento...",
+        "success": "Evento creado correctamente",
+        "error": "No pudimos crear el evento."
+      },
+      "update": {
+        "loading": "Actualizando evento...",
+        "success": "Evento actualizado correctamente",
+        "error": "No pudimos actualizar el evento"
+      },
+      "delete": {
+        "loading": "Eliminando evento...",
+        "success": "Evento eliminado correctamente",
+        "error": "No pudimos eliminar el evento"
+      }
+    },
+    "integration": "Integración",
+    "customTime": "Tiempo personalizado (minutos)",
+    "noEventsAvailable": "No hay eventos disponibles en el sistema."
   },
   "installationTypes": {
     "title": "Tipos de Instalación",

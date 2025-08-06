@@ -1,5 +1,6 @@
 'use client';
 
+import { Fragment } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import useQueryInstallationType from '@/app/installation-types/hooks/use-query-installation-type';
@@ -11,6 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import NodeSkeleton from '@/nodes/components/node-skeleton';
+import {
+  DAYS_OF_WEEK,
+  OperatingHours,
+} from '@/nodes/components/operating-hours-form';
 import useNodeDetailsParams from '@/nodes/hooks/use-node-details-params';
 import useNodeMutations from '@/nodes/hooks/use-node-mutations';
 import useQueryNode from '@/nodes/hooks/use-query-node';
@@ -21,6 +26,48 @@ export default function NodeDetailsPage() {
   const tNodes = useTranslations('nodes');
   const tCommon = useTranslations('common');
   const { nodeId, isValidId } = useNodeDetailsParams();
+
+  /**
+   * Formats operating hours for display
+   */
+  const formatOperatingHours = (operatingHours: OperatingHours) => {
+    if (!operatingHours) {
+      return null;
+    }
+
+    const DAY_LABELS = {
+      monday: tCommon('days.monday'),
+      tuesday: tCommon('days.tuesday'),
+      wednesday: tCommon('days.wednesday'),
+      thursday: tCommon('days.thursday'),
+      friday: tCommon('days.friday'),
+      saturday: tCommon('days.saturday'),
+      sunday: tCommon('days.sunday'),
+    };
+
+    return DAYS_OF_WEEK.map(({ key }) => {
+      const hours = operatingHours[key as keyof OperatingHours];
+      let timeDisplay = '';
+
+      if (Array.isArray(hours)) {
+        timeDisplay = hours
+          .map((h: { open: string; close: string }) => `${h.open} - ${h.close}`)
+          .join(', ');
+      } else if (hours && 'open' in hours && 'close' in hours) {
+        if (hours.open === '00:00' && hours.close === '23:59') {
+          timeDisplay = tNodes('fields.operatingHours.24hours');
+        } else {
+          timeDisplay = `${hours.open} - ${hours.close}`;
+        }
+      }
+
+      return {
+        day: key,
+        label: DAY_LABELS[key as keyof typeof DAY_LABELS],
+        timeDisplay: timeDisplay || tNodes('fields.operatingHours.closed'),
+      };
+    });
+  };
   const { data: node, isLoading } = useQueryNode({
     nodeId,
     enabled: isValidId,
@@ -211,6 +258,40 @@ export default function NodeDetailsPage() {
               ) : (
                 <span className="text-muted-foreground">
                   {tNodes('details.noAmenitiesAssigned')}
+                </span>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {node.installation && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{tNodes('fields.operatingHours.title')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {node.installation.operatingHours ? (
+                <dl className="grid grid-cols-[1fr_2fr] gap-4">
+                  {formatOperatingHours(node.installation.operatingHours)?.map(
+                    ({
+                      day,
+                      label,
+                      timeDisplay,
+                    }: {
+                      day: string;
+                      label: string;
+                      timeDisplay: string;
+                    }) => (
+                      <Fragment key={day}>
+                        <dt className="font-medium">{label}:</dt>
+                        <dd>{timeDisplay}</dd>
+                      </Fragment>
+                    ),
+                  )}
+                </dl>
+              ) : (
+                <span className="text-muted-foreground">
+                  {tNodes('details.noOperatingHoursDefined')}
                 </span>
               )}
             </CardContent>

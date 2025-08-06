@@ -16,7 +16,7 @@ export const populationFactory = defineFactory({
 
     return {
       id,
-      code: generateAlphabeticCode(3, 'POP'),
+      code: generateAlphabeticCode(4, 'POP'),
       name: generateAlphabeticName('Population'),
       description: faker.helpers.maybe(() => faker.lorem.sentence(), {
         probability: 0.7,

@@ -34,9 +34,9 @@ function generateOperatingHours() {
     },
     // 24/7 operation
     {
-      weekdays: [{ open: '00:00', close: '00:00' }],
-      saturday: [{ open: '00:00', close: '00:00' }],
-      sunday: [{ open: '00:00', close: '00:00' }],
+      weekdays: [{ open: '00:00', close: '23:59' }],
+      saturday: [{ open: '00:00', close: '23:59' }],
+      sunday: [{ open: '00:00', close: '23:59' }],
     },
     // Night shift (Mon-Fri: 22-06)
     {

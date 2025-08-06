@@ -21,6 +21,9 @@ import useQueryAllInstallationTypes from '@/installation-types/hooks/use-query-a
 import useQueryInstallationTypeEvents from '@/installation-types/hooks/use-query-installation-type-events';
 import useQueryAllLabels from '@/labels/hooks/use-query-all-labels';
 import InstallationDynamicForm from '@/nodes/components/installation-dynamic-form';
+import OperatingHoursForm, {
+  OperatingHours,
+} from '@/nodes/components/operating-hours-form';
 import useQueryAllPopulations from '@/populations/hooks/use-query-all-populations';
 import useQueryPopulationCities from '@/populations/hooks/use-query-population-cities';
 import { UseValidationsTranslationsResult } from '@/types/translations';
@@ -161,6 +164,7 @@ const createBaseNodeFormSchema = (
     ),
     labelIds: z.array(z.number()).optional().default([]),
     amenityIds: z.array(z.number()).optional().default([]),
+    operatingHours: z.any().optional().nullable(),
   });
 
 export type NodeFormOutputValues = z.output<
@@ -177,6 +181,7 @@ export type NodeFormValues = Omit<
 > & {
   installationTypeId: number | null | undefined;
   customAttributes?: { name: string; value: string | boolean }[];
+  operatingHours?: OperatingHours | null;
 };
 
 interface NodeFormProps {
@@ -202,6 +207,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
         populationId: defaultValues.populationId.toString(),
         latitude: defaultValues.latitude.toString(),
         longitude: defaultValues.longitude.toString(),
+        operatingHours: defaultValues.operatingHours || null,
         nodeEvents: (defaultValues.nodeEvents || []).map((event) => ({
           eventTypeId: event.eventTypeId,
           customTime: event.customTime,
@@ -227,6 +233,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
       nodeEvents: [],
       labelIds: [],
       amenityIds: [],
+      operatingHours: null,
     },
     validators: {
       onSubmit: baseNodeSchema,
@@ -254,6 +261,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
           entity: 'node',
           error,
           tValidations,
+          tCommon,
         });
       }
     },
@@ -598,7 +606,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
             {tNodes('form.sections.customAttributes')}
           </TabsTrigger>
           <TabsTrigger value="amenities">
-            {tNodes('fields.amenities')}
+            {tNodes('fields.amenitiesAndHours')}
           </TabsTrigger>
         </TabsList>
         <TabsContent value="basic">
@@ -996,6 +1004,25 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
                   )}
                 </div>
               )}
+            </form.AppField>
+          </FormLayout>
+
+          <FormLayout title={tNodes('fields.operatingHours.title')}>
+            <form.AppField name="operatingHours">
+              {(field) => {
+                return (
+                  <OperatingHoursForm
+                    value={field.state.value}
+                    onChange={(value) => field.handleChange(value)}
+                    errors={
+                      (field.state.meta.errors
+                        ?.filter(Boolean)
+                        .map((err) => err?.message)
+                        .filter(Boolean) as string[]) || []
+                    }
+                  />
+                );
+              }}
             </form.AppField>
           </FormLayout>
         </TabsContent>

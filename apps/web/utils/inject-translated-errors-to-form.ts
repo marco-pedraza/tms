@@ -7,6 +7,7 @@ import {
 import {
   KnownServerEntities,
   KnownServerFields,
+  UseCommonTranslationsResult,
   UseValidationsTranslationsResult,
 } from '@/types/translations';
 
@@ -14,6 +15,7 @@ interface InjectTranslatedErrorsToFormProps {
   form: ReturnType<typeof useForm>;
   error: unknown;
   tValidations: UseValidationsTranslationsResult;
+  tCommon: UseCommonTranslationsResult;
   entity: KnownServerEntities;
 }
 
@@ -21,6 +23,7 @@ export default function injectTranslatedErrorsToForm({
   form,
   error,
   tValidations,
+  tCommon,
   entity,
 }: InjectTranslatedErrorsToFormProps) {
   if (!isAPIError(error)) return;
@@ -36,6 +39,7 @@ export default function injectTranslatedErrorsToForm({
             return {
               message: getTranslatedValidationError({
                 tValidations,
+                tCommon,
                 error,
                 entity,
                 property: key as KnownServerFields,

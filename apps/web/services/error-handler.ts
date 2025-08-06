@@ -2,6 +2,7 @@ import {
   KnownServerEntities,
   KnownServerErrors,
   KnownServerFields,
+  UseCommonTranslationsResult,
   UseValidationsTranslationsResult,
 } from '@/types/translations';
 
@@ -11,19 +12,58 @@ type TranslatedValidationErrors = {
 
 export interface ValidationErrorMetadata {
   code: KnownServerErrors | string;
-  value: string;
+  value: string | { fieldName?: string };
   message: string;
 }
 
 interface GetTranslatedValidationErrorProps {
   tValidations: UseValidationsTranslationsResult;
+  tCommon: UseCommonTranslationsResult;
   error: ValidationErrorMetadata;
   property: KnownServerFields;
   entity: KnownServerEntities;
 }
 
+/**
+ * Handles invalid format error translation with specific domain logic.
+ *
+ * @param error - The validation error metadata
+ * @param property - The field property that failed validation
+ * @param tValidations - Validation translations function
+ * @param tCommon - Common translations function
+ * @returns The appropriate validation message for invalid format errors
+ */
+function getInvalidFormatMessage(
+  error: ValidationErrorMetadata,
+  property: KnownServerFields,
+  tValidations: UseValidationsTranslationsResult,
+  tCommon: UseCommonTranslationsResult,
+): string {
+  // Check if value contains field information from the form
+  if (typeof error.value === 'object' && error.value !== null) {
+    // Special handling for operating hours errors that include day information
+    if (
+      property === 'operatingHours' &&
+      'day' in error.value &&
+      error.value.day
+    ) {
+      const day = error.value.day as string;
+      const dayName = tCommon(`days.${day}` as never);
+      return tValidations('server.invalid_format', {
+        fieldName: dayName,
+      });
+    }
+  }
+
+  // Default case for other fields
+  return tValidations('server.invalid_format', {
+    fieldName: tValidations(`fields.${property}`),
+  });
+}
+
 export function getTranslatedValidationError({
   tValidations,
+  tCommon,
   error,
   property,
   entity,
@@ -32,8 +72,17 @@ export function getTranslatedValidationError({
     duplicate: tValidations('server.duplicate', {
       entity: tValidations(`entities.${entity}`),
       property: tValidations(`fields.${property}`),
-      value: error.value,
+      value:
+        typeof error.value === 'string'
+          ? error.value
+          : JSON.stringify(error.value),
     }),
+    invalid_format: getInvalidFormatMessage(
+      error,
+      property,
+      tValidations,
+      tCommon,
+    ),
   };
   const errorCode = error.code.toLowerCase();
   const isKnownServerError = Object.keys(translatedValidationErrors).includes(

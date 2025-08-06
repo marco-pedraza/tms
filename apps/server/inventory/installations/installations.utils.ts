@@ -92,7 +92,7 @@ export function validateOperatingHours(
             'operatingHours',
             'INVALID_FORMAT',
             `Invalid time format for ${day}. Use HH:MM format (24-hour) with valid time values.`,
-            slot,
+            { ...slot, day },
           );
         }
       }
@@ -103,7 +103,7 @@ export function validateOperatingHours(
           'operatingHours',
           'INVALID_FORMAT',
           `Invalid time format for ${day}. Use HH:MM format (24-hour) with valid time values.`,
-          timeSlots,
+          { ...timeSlots, day },
         );
       }
     } else {

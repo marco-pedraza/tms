@@ -184,6 +184,7 @@ export default function EditNodePage() {
           labelIds: data.labels?.map((label) => label.id) || [],
           amenityIds:
             data.installation?.amenities?.map((amenity) => amenity.id) || [],
+          operatingHours: data.installation?.operatingHours || null,
         }}
         onSubmit={handleSubmit}
       />

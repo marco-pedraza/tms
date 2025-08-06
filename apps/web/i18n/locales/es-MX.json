@@ -949,6 +949,11 @@
           "title": "Atributos Personalizados",
           "emptyText": "No hay atributos personalizados asignados",
           "addAttribute": "Agregar atributo"
+        },
+        "events": {
+          "title": "Eventos",
+          "emptyText": "No hay eventos asignados",
+          "addEvent": "Agregar evento"
         }
       },
       "title": "Información del tipo de instalación",
@@ -966,7 +971,8 @@
         "name": "Nombre",
         "description": "Descripción",
         "required": "Es Requerido",
-        "enumValues": "Opciones"
+        "enumValues": "Opciones",
+        "selectedEvents": "{count, plural, =0 {No hay eventos seleccionados} =1 {# evento seleccionado} other {# eventos seleccionados}}"
       },
       "schemas": {
         "fieldTypes": {
@@ -1017,6 +1023,11 @@
         "loading": "Sincronizando atributos...",
         "success": "Atributos sincronizados correctamente",
         "error": "No pudimos sincronizar los atributos, por favor intenta nuevamente"
+      },
+      "assignEventTypes": {
+        "loading": "Asignando tipos de eventos...",
+        "success": "Tipos de eventos asignados correctamente",
+        "error": "No pudimos asignar los tipos de eventos, por favor intenta nuevamente"
       }
     }
   },

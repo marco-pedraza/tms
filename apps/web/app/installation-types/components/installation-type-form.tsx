@@ -13,7 +13,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import EventCard from '@/components/ui/event-card';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import useQueryAllEvents from '@/events/hooks/use-query-all-events';
 import useForm from '@/hooks/use-form';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
@@ -40,6 +42,7 @@ const createInstallationTypeFormSchema = (
     description: z.string().optional(),
     active: z.boolean().optional(),
     schemas: z.array(createInstallationTypeSchemaFormSchema(tValidations)),
+    eventTypeIds: z.array(z.number()).optional(),
   });
 
 export type InstallationTypeFormValues = z.output<
@@ -63,6 +66,9 @@ export default function InstallationTypeForm({
   const tInstallationTypes = useTranslations('installationTypes');
   const tValidations = useTranslations('validations');
   const installationTypeSchema = createInstallationTypeFormSchema(tValidations);
+
+  const { data: events } = useQueryAllEvents();
+
   const rawDefaultValues: InstallationTypeFormRawValues = defaultValues
     ? {
         ...defaultValues,
@@ -74,6 +80,7 @@ export default function InstallationTypeForm({
               enumValues: schema.options?.enumValues?.join(',') ?? '',
             },
           })) || [],
+        eventTypeIds: defaultValues?.eventTypeIds ?? [],
       }
     : {
         name: '',
@@ -81,6 +88,7 @@ export default function InstallationTypeForm({
         description: '',
         active: true,
         schemas: [],
+        eventTypeIds: [],
       };
   const form = useForm({
     defaultValues: rawDefaultValues,
@@ -233,6 +241,53 @@ export default function InstallationTypeForm({
                   />
                 </DialogContent>
               </Dialog>
+            )}
+          </form.AppField>
+        </FormLayout>
+      </div>
+
+      <div className="pt-4">
+        <FormLayout title={tCommon('sections.events')}>
+          <form.AppField name="eventTypeIds">
+            {(field) => (
+              <div className="space-y-4">
+                <field.MultiSelectInput
+                  label={''}
+                  placeholder={tInstallationTypes(
+                    'form.sections.events.addEvent',
+                  )}
+                  items={
+                    events?.data.map((event) => ({
+                      id: event.id.toString(),
+                      name: event.name,
+                      description: event.description,
+                    })) ?? []
+                  }
+                  emptyOptionsLabel={tInstallationTypes(
+                    'form.sections.events.emptyText',
+                  )}
+                />
+
+                {field.state.value && field.state.value.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-foreground">
+                      {tInstallationTypes('form.fields.selectedEvents', {
+                        count: field.state.value.length,
+                      })}
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {field.state.value.map((eventId: number) => {
+                        const event = events?.data.find(
+                          (a) => a.id === eventId,
+                        );
+                        return event ? (
+                          <EventCard key={event.id} event={event} />
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </form.AppField>
         </FormLayout>

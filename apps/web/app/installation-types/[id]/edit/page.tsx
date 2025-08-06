@@ -11,6 +11,7 @@ import InstallationTypeForm from '@/installation-types/components/installation-t
 import { InstallationTypeFormValues } from '@/installation-types/components/installation-type-form';
 import InstallationTypeFormSkeleton from '@/installation-types/components/installation-type-form-skeleton';
 import useQueryInstallationType from '@/installation-types/hooks/use-query-installation-type';
+import useQueryInstallationTypeEvents from '@/installation-types/hooks/use-query-installation-type-events';
 import useQueryInstallationTypeSchemas from '@/installation-types/hooks/use-query-installation-type-schemas';
 import imsClient from '@/services/ims-client';
 import routes from '@/services/routes';
@@ -23,6 +24,12 @@ export default function EditInstallationTypePage() {
     itemId: installationTypeId,
     enabled: isValidId,
   });
+
+  const { data: events } = useQueryInstallationTypeEvents({
+    installationTypeId,
+    enabled: isValidId,
+  });
+
   const { data: schemas, isLoading: isSchemasLoading } =
     useQueryInstallationTypeSchemas({
       installationTypeId,
@@ -54,6 +61,30 @@ export default function EditInstallationTypePage() {
     },
   });
   const queryClient = useQueryClient();
+
+  const assignEventTypesMutation = useMutation({
+    mutationKey: ['installationTypes', 'assignEventTypes'],
+    mutationFn: async (payload: { eventTypeIds: number[] }) =>
+      await imsClient.inventory.assignEventTypesToInstallationType(
+        installationTypeId,
+        { eventTypeIds: payload.eventTypeIds },
+      ),
+  });
+
+  const assignEventTypes = useToastMutation({
+    mutation: assignEventTypesMutation,
+    messages: {
+      loading: tInstallationTypes('messages.assignEventTypes.loading'),
+      success: tInstallationTypes('messages.assignEventTypes.success'),
+      error: tInstallationTypes('messages.assignEventTypes.error'),
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['installationType', installationTypeId, 'events'],
+      });
+    },
+  });
+
   const updateInstallationTypeMutation = useMutation({
     mutationFn: async (values: InstallationTypeFormValues) => {
       const installationType = await imsClient.inventory.updateInstallationType(
@@ -63,9 +94,11 @@ export default function EditInstallationTypePage() {
       return {
         installationType,
         schemas: values.schemas,
+        eventTypeIds: values.eventTypeIds,
       };
     },
   });
+
   const updateInstallationType = useToastMutation({
     mutation: updateInstallationTypeMutation,
     messages: {
@@ -81,6 +114,9 @@ export default function EditInstallationTypePage() {
           installationTypeId: data.installationType.id,
         })),
       );
+      assignEventTypes.mutateWithToast({
+        eventTypeIds: data.eventTypeIds ?? [],
+      });
     },
   });
 
@@ -113,6 +149,7 @@ export default function EditInstallationTypePage() {
                 },
               }),
             ) ?? [],
+          eventTypeIds: events?.map((event) => event.id) ?? [],
         }}
         onSubmit={updateInstallationType.mutateWithToast}
       />

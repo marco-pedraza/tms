@@ -52,6 +52,39 @@ export default function NewInstallationTypePage() {
     },
   });
   const queryClient = useQueryClient();
+
+  const assignEventTypesMutation = useMutation({
+    mutationKey: ['installationTypes', 'assignEventTypes'],
+    mutationFn: async (payload: {
+      installationTypeId: number;
+      eventTypeIds: number[];
+    }) => {
+      await imsClient.inventory.assignEventTypesToInstallationType(
+        payload.installationTypeId,
+        { eventTypeIds: payload.eventTypeIds },
+      );
+
+      return {
+        installationTypeId: payload.installationTypeId,
+        eventTypeIds: payload.eventTypeIds,
+      };
+    },
+  });
+
+  const assignEventTypes = useToastMutation({
+    mutation: assignEventTypesMutation,
+    messages: {
+      loading: tInstallationTypes('messages.update.loading'),
+      success: tInstallationTypes('messages.update.success'),
+      error: tInstallationTypes('messages.update.error'),
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ['installationType', data.installationTypeId, 'events'],
+      });
+    },
+  });
+
   const createInstallationTypeMutation = useMutation({
     mutationFn: async (values: InstallationTypeFormValues) => {
       const installationType =
@@ -59,9 +92,11 @@ export default function NewInstallationTypePage() {
       return {
         installationType,
         schemas: values.schemas,
+        eventTypeIds: values.eventTypeIds,
       };
     },
   });
+
   const createInstallationType = useToastMutation({
     mutation: createInstallationTypeMutation,
     messages: {
@@ -77,6 +112,10 @@ export default function NewInstallationTypePage() {
           ...schema,
           installationTypeId: data.installationType.id,
         })),
+      });
+      assignEventTypes.mutateWithToast({
+        installationTypeId: data.installationType.id,
+        eventTypeIds: data.eventTypeIds ?? [],
       });
     },
   });

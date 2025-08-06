@@ -8,11 +8,14 @@ import { DataTable, DataTableColumnDef } from '@/components/data-table';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import EventCard from '@/components/ui/event-card';
+import { Skeleton } from '@/components/ui/skeleton';
 import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import InstallationTypeSkeleton from '@/installation-types/components/installation-type-skeleton';
 import useInstallationTypeMutations from '@/installation-types/hooks/use-installation-type-mutations';
 import useQueryInstallationType from '@/installation-types/hooks/use-query-installation-type';
+import useQueryInstallationTypeEvents from '@/installation-types/hooks/use-query-installation-type-events';
 import useQueryInstallationTypeSchemas from '@/installation-types/hooks/use-query-installation-type-schemas';
 import routes from '@/services/routes';
 import {
@@ -91,6 +94,11 @@ export default function InstallationTypeDetailsPage() {
     installationTypeId,
     enabled: isValidId,
   });
+  const { data: installationTypeEvents, isLoading: isLoadingEvents } =
+    useQueryInstallationTypeEvents({
+      installationTypeId,
+      enabled: isValidId,
+    });
   const { delete: deleteInstallationType } = useInstallationTypeMutations();
   const { deleteId, setDeleteId, onConfirmDelete, onCancelDelete } =
     useDeleteDialog({
@@ -212,6 +220,29 @@ export default function InstallationTypeDetailsPage() {
             routes={routes.installationTypes}
             displayActionsColumn={false}
           />
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>
+            {tInstallationTypes('form.sections.events.title')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {isLoadingEvents ? (
+              <>
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </>
+            ) : (
+              installationTypeEvents?.map((event) => (
+                <EventCard event={event} className="h-full" key={event.id} />
+              ))
+            )}
+          </div>
         </CardContent>
       </Card>
 

@@ -33,8 +33,6 @@ export const createRouteRepository = () => {
       with: {
         originCity: true,
         destinationCity: true,
-        destinationTerminal: true,
-        originTerminal: true,
         pathway: true,
         routeSegments: {
           orderBy: [asc(routeSegments.sequence)],

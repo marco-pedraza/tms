@@ -3,9 +3,7 @@ import { pathwayRepository } from '../pathways/pathways.repository';
 import { CreatePathwayPayload } from '../pathways/pathways.types';
 import { routeSegmentRepository } from '../route-segment/route-segment.repository';
 import { routeSegments } from '../route-segment/route-segment.schema';
-import { terminalRepository } from '../terminals/terminals.repository';
 import {
-  CreateRoutePayload,
   CreateRoutePayloadWithCityIds,
   CreateSimpleRoutePayload,
   Route,
@@ -13,32 +11,16 @@ import {
 import { routeRepository } from './routes.repository';
 
 const ROUTE_ERRORS = {
-  SAME_TERMINAL: 'Origin and destination terminals cannot be the same',
+  SAME_CITY: 'Origin and destination cities cannot be the same',
   REPEATED_SEGMENTS: 'Route segments cannot be repeated',
   ROUTES_NOT_FOUND: (ids: number[]) =>
     `Routes with ids [${ids.join(', ')}] not found or are compound routes`,
   INVALID_CONNECTION: (idA: number, idB: number) =>
-    `Invalid route connection between route id ${idA} and route id ${idB}: origin and destination terminals mismatch`,
+    `Invalid route connection between route id ${idA} and route id ${idB}: origin and destination cities mismatch`,
   COMPOUND_ROUTE_MINIMUM: 'A compound route requires at least two routes',
   FAILED_CREATE_SEGMENTS: 'Failed to create all route segments',
   FAILED_REPLACE_SEGMENTS: 'Failed to replace route segments',
 };
-
-async function extractCityIds(
-  payload: CreateRoutePayload | CreateSimpleRoutePayload,
-) {
-  const { originTerminalId, destinationTerminalId } = payload;
-
-  const originTerminal = await terminalRepository.findOne(originTerminalId);
-  const destinationTerminal = await terminalRepository.findOne(
-    destinationTerminalId,
-  );
-
-  return {
-    originCityId: originTerminal.cityId,
-    destinationCityId: destinationTerminal.cityId,
-  };
-}
 
 /**
  * Creates a simple route by first creating a pathway and then creating a route that uses it
@@ -46,7 +28,7 @@ async function extractCityIds(
  * @param payload - The payload containing both pathway and route information
  * @returns The created route
  */
-async function createSimpleRoute(payload: CreateSimpleRoutePayload) {
+function createSimpleRoute(payload: CreateSimpleRoutePayload) {
   const {
     // Pathway properties
     pathwayName,
@@ -58,20 +40,17 @@ async function createSimpleRoute(payload: CreateSimpleRoutePayload) {
     active,
 
     // Route properties
-    originTerminalId,
-    destinationTerminalId,
+    originCityId,
+    destinationCityId,
     baseTime,
     description,
     connectionCount = 0,
     isCompound = false,
   } = payload;
 
-  if (originTerminalId === destinationTerminalId) {
-    throw new ValidationError(ROUTE_ERRORS.SAME_TERMINAL);
+  if (originCityId === destinationCityId) {
+    throw new ValidationError(ROUTE_ERRORS.SAME_CITY);
   }
-
-  // Extract city IDs outside the transaction as this is a validation step
-  const { originCityId, destinationCityId } = await extractCityIds(payload);
 
   // Create the pathway and route in a single transaction
   return routeRepository.transaction(async (txRouteRepo, tx) => {
@@ -93,8 +72,6 @@ async function createSimpleRoute(payload: CreateSimpleRoutePayload) {
     const routePayload: CreateRoutePayloadWithCityIds = {
       name,
       description,
-      originTerminalId,
-      destinationTerminalId,
       originCityId,
       destinationCityId,
       pathwayId: pathway.id,
@@ -224,7 +201,7 @@ function validateRouteConnections(routes: Route[]) {
       return;
     }
 
-    if (route.destinationTerminalId !== nextRoute.originTerminalId) {
+    if (route.destinationCityId !== nextRoute.originCityId) {
       throw new ValidationError(
         ROUTE_ERRORS.INVALID_CONNECTION(route.id, nextRoute.id),
       );
@@ -255,9 +232,7 @@ function createCompoundRouteFromChildren(
   return {
     name,
     description,
-    originTerminalId: firstRoute.originTerminalId,
     originCityId: firstRoute.originCityId,
-    destinationTerminalId: lastRoute.destinationTerminalId,
     destinationCityId: lastRoute.destinationCityId,
     baseTime,
     isCompound: true,
@@ -333,8 +308,8 @@ async function updateCompoundRouteSegments({
         } = calculateRouteTotals(simpleRoutesOrdered);
 
         await txRouteRepo.update(compoundRouteId, {
-          originTerminalId: firstRoute.originTerminalId,
-          destinationTerminalId: lastRoute.destinationTerminalId,
+          originCityId: firstRoute.originCityId,
+          destinationCityId: lastRoute.destinationCityId,
           connectionCount: simpleRoutesOrdered.length - 1,
           totalDistance,
           totalTravelTime,

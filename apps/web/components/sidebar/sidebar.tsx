@@ -91,11 +91,6 @@ export default function Sidebar() {
         </SidebarSection>
 
         {/* <SidebarLink
-          href={routes.terminals.index}
-          icon={Building2}
-          label={tSidebar('inventory.terminals')}
-        /> */}
-        {/* <SidebarLink
           href={routes.transporters.index}
           icon={Briefcase}
           label={tSidebar('inventory.transporters')}

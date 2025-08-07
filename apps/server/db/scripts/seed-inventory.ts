@@ -11,7 +11,6 @@ import {
   seedCities,
   seedCountries,
   seedStates,
-  seedTerminals,
 } from './seeders/geography.seeder';
 import {
   seedEventTypeInstallationTypes,
@@ -85,7 +84,6 @@ export async function seedInventory(): Promise<void> {
 
     const states = await seedStates(mexicoCountry, factoryDb);
     const cities = await seedCities(states, factoryDb);
-    await seedTerminals(cities, factoryDb);
     console.log('✅ Geography seeding completed\n');
 
     // === TRANSPORTATION SEEDING ===

@@ -184,7 +184,6 @@
         "events": "Eventos",
         "labels": "Etiquetas"
       },
-      "terminals": "Terminales",
       "transporters": "Transportistas",
       "serviceTypes": "Tipos de Servicio",
       "busLines": "Líneas de Autobus",
@@ -419,91 +418,6 @@
         "loading": "Asignando población...",
         "success": "Población asignada correctamente",
         "error": "No pudimos asignar la población"
-      }
-    }
-  },
-  "terminals": {
-    "title": "Terminales",
-    "description": "Administra información de terminales de autobuses para el Sistema de Inventario",
-    "actions": {
-      "create": "Crear Terminal",
-      "update": "Actualizar Terminal",
-      "backToList": "Volver a terminales"
-    },
-    "fields": {
-      "address": "Dirección",
-      "contactPhone": "Teléfono de Contacto",
-      "city": "Ciudad",
-      "operatingHours": "Horarios de Operación",
-      "facilities": "Instalaciones",
-      "slug": "Slug"
-    },
-    "form": {
-      "basicInfo": "Información Básica",
-      "placeholders": {
-        "name": "Ej: Terminal Central de Autobuses",
-        "code": "Ej: TERM-GDL",
-        "address": "Ej: Av. Central #123, Col. Centro",
-        "contactPhone": "Ej: (33) 1234-5678",
-        "city": "Selecciona una ciudad"
-      },
-      "helpText": {
-        "code": "Usa un código alfanumérico único para identificar la terminal"
-      }
-    },
-    "details": {
-      "description": "Detalles de la terminal"
-    },
-    "new": {
-      "title": "Crear Terminal"
-    },
-    "edit": {
-      "title": "Editar Terminal"
-    },
-    "errors": {
-      "notFound": {
-        "title": "Terminal no encontrada",
-        "description": "No pudimos encontrar la terminal que buscas. Es posible que haya sido eliminada o que no exista."
-      }
-    },
-    "messages": {
-      "create": {
-        "loading": "Creando terminal...",
-        "success": "Terminal creada correctamente",
-        "error": "No pudimos crear la terminal"
-      },
-      "update": {
-        "loading": "Actualizando terminal...",
-        "success": "Terminal actualizada correctamente",
-        "error": "No pudimos actualizar la terminal"
-      },
-      "delete": {
-        "loading": "Eliminando terminal...",
-        "success": "Terminal eliminada correctamente",
-        "error": "No pudimos eliminar la terminal"
-      }
-    },
-    "facilities": {
-      "waitingRoom": "Sala de Espera",
-      "restrooms": "Baños",
-      "restaurants": "Restaurantes",
-      "ticketOffices": "Taquillas",
-      "luggageStorage": "Almacenamiento de Equipaje",
-      "wifi": "WiFi",
-      "atm": "Cajeros Automáticos",
-      "parking": "Estacionamiento",
-      "accessibleFacilities": "Acceso para Discapacitados",
-      "infoModule": "Módulo de Información"
-    },
-    "operatingHours": {
-      "openingTime": "Hora de apertura",
-      "closingTime": "Hora de cierre",
-      "open24hours": "Abierto 24 horas",
-      "closed": "Cerrado",
-      "timeSelectors": {
-        "hour": "Hora",
-        "minute": "Min",
-        "period": "AM/PM"
       }
     }
   },
@@ -1067,9 +981,9 @@
     "form": {
       "title": "Información del tipo de evento",
       "placeholders": {
-        "name": "Ej: Terminal de Autobuses",
-        "code": "Ej: TRL",
-        "description": "Ej: Instalación para el embarque y desembarque de pasajeros"
+        "name": "Ej: Recarga de diésel",
+        "code": "Ej: FUEL-DIESEL",
+        "description": "Descripción opcional del evento"
       }
     },
     "details": {

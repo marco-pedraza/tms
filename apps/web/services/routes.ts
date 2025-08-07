@@ -17,7 +17,6 @@ export interface Routes {
   countries: CrudRoute;
   states: CrudRoute;
   cities: CrudRoute;
-  terminals: CrudRoute;
   transporters: CrudRoute;
   serviceTypes: CrudRoute;
   busLines: CrudRoute;
@@ -55,12 +54,6 @@ const routes: Routes = {
     new: '/cities/new',
     getDetailsRoute: (id: string) => `/cities/${id}`,
     getEditRoute: (id: string) => `/cities/${id}/edit`,
-  },
-  terminals: {
-    index: '/terminals',
-    new: '/terminals/new',
-    getDetailsRoute: (id: string) => `/terminals/${id}`,
-    getEditRoute: (id: string) => `/terminals/${id}/edit`,
   },
   transporters: {
     index: '/transporters',

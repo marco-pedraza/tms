@@ -111,7 +111,6 @@ export namespace inventory {
             this.createCountry = this.createCountry.bind(this)
             this.createDriver = this.createDriver.bind(this)
             this.createEventType = this.createEventType.bind(this)
-            this.createGate = this.createGate.bind(this)
             this.createInstallation = this.createInstallation.bind(this)
             this.createInstallationSchema = this.createInstallationSchema.bind(this)
             this.createInstallationType = this.createInstallationType.bind(this)
@@ -123,7 +122,6 @@ export namespace inventory {
             this.createSeatDiagramZone = this.createSeatDiagramZone.bind(this)
             this.createServiceType = this.createServiceType.bind(this)
             this.createState = this.createState.bind(this)
-            this.createTerminal = this.createTerminal.bind(this)
             this.createTransporter = this.createTransporter.bind(this)
             this.deleteAmenity = this.deleteAmenity.bind(this)
             this.deleteBus = this.deleteBus.bind(this)
@@ -135,7 +133,6 @@ export namespace inventory {
             this.deleteCountry = this.deleteCountry.bind(this)
             this.deleteDriver = this.deleteDriver.bind(this)
             this.deleteEventType = this.deleteEventType.bind(this)
-            this.deleteGate = this.deleteGate.bind(this)
             this.deleteInstallation = this.deleteInstallation.bind(this)
             this.deleteInstallationSchema = this.deleteInstallationSchema.bind(this)
             this.deleteInstallationType = this.deleteInstallationType.bind(this)
@@ -148,7 +145,6 @@ export namespace inventory {
             this.deleteSeatDiagramZone = this.deleteSeatDiagramZone.bind(this)
             this.deleteServiceType = this.deleteServiceType.bind(this)
             this.deleteState = this.deleteState.bind(this)
-            this.deleteTerminal = this.deleteTerminal.bind(this)
             this.deleteTransporter = this.deleteTransporter.bind(this)
             this.findPopulationByAssignedCity = this.findPopulationByAssignedCity.bind(this)
             this.getAllowedBusStatusTransitions = this.getAllowedBusStatusTransitions.bind(this)
@@ -166,8 +162,6 @@ export namespace inventory {
             this.getCountry = this.getCountry.bind(this)
             this.getDriver = this.getDriver.bind(this)
             this.getEventType = this.getEventType.bind(this)
-            this.getFacility = this.getFacility.bind(this)
-            this.getGate = this.getGate.bind(this)
             this.getInstallation = this.getInstallation.bind(this)
             this.getInstallationSchema = this.getInstallationSchema.bind(this)
             this.getInstallationType = this.getInstallationType.bind(this)
@@ -185,7 +179,6 @@ export namespace inventory {
             this.getSeatDiagramZone = this.getSeatDiagramZone.bind(this)
             this.getServiceType = this.getServiceType.bind(this)
             this.getState = this.getState.bind(this)
-            this.getTerminal = this.getTerminal.bind(this)
             this.getTimezone = this.getTimezone.bind(this)
             this.getTransporter = this.getTransporter.bind(this)
             this.listAmenities = this.listAmenities.bind(this)
@@ -208,9 +201,6 @@ export namespace inventory {
             this.listDriversPaginated = this.listDriversPaginated.bind(this)
             this.listEventTypes = this.listEventTypes.bind(this)
             this.listEventTypesPaginated = this.listEventTypesPaginated.bind(this)
-            this.listFacilities = this.listFacilities.bind(this)
-            this.listGates = this.listGates.bind(this)
-            this.listGatesPaginated = this.listGatesPaginated.bind(this)
             this.listInstallationSchemas = this.listInstallationSchemas.bind(this)
             this.listInstallationSchemasPaginated = this.listInstallationSchemasPaginated.bind(this)
             this.listInstallationTypes = this.listInstallationTypes.bind(this)
@@ -231,8 +221,6 @@ export namespace inventory {
             this.listServiceTypesPaginated = this.listServiceTypesPaginated.bind(this)
             this.listStates = this.listStates.bind(this)
             this.listStatesPaginated = this.listStatesPaginated.bind(this)
-            this.listTerminals = this.listTerminals.bind(this)
-            this.listTerminalsPaginated = this.listTerminalsPaginated.bind(this)
             this.listTimezones = this.listTimezones.bind(this)
             this.listTransporters = this.listTransporters.bind(this)
             this.listTransportersPaginated = this.listTransportersPaginated.bind(this)
@@ -249,8 +237,6 @@ export namespace inventory {
             this.searchRoutes = this.searchRoutes.bind(this)
             this.searchRoutesPaginated = this.searchRoutesPaginated.bind(this)
             this.searchServiceTypes = this.searchServiceTypes.bind(this)
-            this.searchTerminals = this.searchTerminals.bind(this)
-            this.searchTerminalsPaginated = this.searchTerminalsPaginated.bind(this)
             this.searchTransporters = this.searchTransporters.bind(this)
             this.searchTransportersPaginated = this.searchTransportersPaginated.bind(this)
             this.syncInstallationSchemas = this.syncInstallationSchemas.bind(this)
@@ -266,7 +252,6 @@ export namespace inventory {
             this.updateCountry = this.updateCountry.bind(this)
             this.updateDriver = this.updateDriver.bind(this)
             this.updateEventType = this.updateEventType.bind(this)
-            this.updateGate = this.updateGate.bind(this)
             this.updateInstallation = this.updateInstallation.bind(this)
             this.updateInstallationProperties = this.updateInstallationProperties.bind(this)
             this.updateInstallationSchema = this.updateInstallationSchema.bind(this)
@@ -281,7 +266,6 @@ export namespace inventory {
             this.updateSeatDiagramZone = this.updateSeatDiagramZone.bind(this)
             this.updateServiceType = this.updateServiceType.bind(this)
             this.updateState = this.updateState.bind(this)
-            this.updateTerminal = this.updateTerminal.bind(this)
             this.updateTransporter = this.updateTransporter.bind(this)
         }
 
@@ -556,18 +540,6 @@ export namespace inventory {
         }
 
         /**
-         * Creates a new gate.
-         * @param params - The gate data to create
-         * @returns {Promise<Gate>} The created gate
-         * @throws {APIError} If the gate creation fails
-         */
-        public async createGate(params: gates.CreateGatePayload): Promise<gates.Gate> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/gates`, JSON.stringify(params))
-            return await resp.json() as gates.Gate
-        }
-
-        /**
          * Creates a new installation associated with a node.
          * @param params - The installation data including nodeId, name, and optional description
          * @returns {Promise<InstallationWithDetails>} The created installation with location information from the associated node
@@ -713,15 +685,6 @@ export namespace inventory {
         }
 
         /**
-         * Creates a new terminal.
-         */
-        public async createTerminal(params: terminals.CreateTerminalPayload): Promise<terminals.Terminal> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/terminals`, JSON.stringify(params))
-            return await resp.json() as terminals.Terminal
-        }
-
-        /**
          * Creates a new transporter.
          * @param params - The transporter data to create
          * @returns {Promise<Transporter>} The created transporter
@@ -862,19 +825,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/event-types/${encodeURIComponent(id)}/delete`)
             return await resp.json() as event_types.EventType
-        }
-
-        /**
-         * Deletes a gate by its ID.
-         * @param params - Object containing the gate ID
-         * @param params.id - The ID of the gate to delete
-         * @returns {Promise<Gate>} The deleted gate
-         * @throws {APIError} If the gate is not found or deletion fails
-         */
-        public async deleteGate(id: number): Promise<gates.Gate> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/gates/${encodeURIComponent(id)}`)
-            return await resp.json() as gates.Gate
         }
 
         /**
@@ -1023,15 +973,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/states/${encodeURIComponent(id)}/delete`)
             return await resp.json() as states.State
-        }
-
-        /**
-         * Deletes a terminal by its ID.
-         */
-        public async deleteTerminal(id: number): Promise<terminals.Terminal> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/terminals/${encodeURIComponent(id)}`)
-            return await resp.json() as terminals.Terminal
         }
 
         /**
@@ -1256,32 +1197,6 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves a facility by its code.
-         * @param params - Object containing the facility code
-         * @param params.code - The code of the facility to retrieve
-         * @returns {Facility} The found facility
-         * @throws {NotFoundError} If the facility is not found
-         */
-        public async getFacility(code: string): Promise<facilities.Facility> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/facilities/${encodeURIComponent(code)}`)
-            return await resp.json() as facilities.Facility
-        }
-
-        /**
-         * Retrieves a gate by its ID.
-         * @param params - Object containing the gate ID
-         * @param params.id - The ID of the gate to retrieve
-         * @returns {Promise<Gate>} The found gate
-         * @throws {APIError} If the gate is not found or retrieval fails
-         */
-        public async getGate(id: number): Promise<gates.Gate> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/gates/${encodeURIComponent(id)}`)
-            return await resp.json() as gates.Gate
-        }
-
-        /**
          * Retrieves an installation by its ID with location information.
          * @param params - Object containing the installation ID
          * @param params.id - The ID of the installation to retrieve
@@ -1491,15 +1406,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/states/${encodeURIComponent(id)}`)
             return await resp.json() as states.State
-        }
-
-        /**
-         * Retrieves a terminal by its ID.
-         */
-        public async getTerminal(id: number): Promise<terminals.TerminalWithCity> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/terminals/${encodeURIComponent(id)}`)
-            return await resp.json() as terminals.TerminalWithCity
         }
 
         /**
@@ -1776,39 +1682,6 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves all facilities.
-         * @returns {Facilities} An object containing an array of facilities
-         */
-        public async listFacilities(): Promise<facilities.Facilities> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/facilities`)
-            return await resp.json() as facilities.Facilities
-        }
-
-        /**
-         * Retrieves all gates without pagination (useful for dropdowns).
-         * @returns {Promise<Gates>} An object containing an array of gates
-         * @throws {APIError} If retrieval fails
-         */
-        public async listGates(params: gates.GatesQueryOptions): Promise<gates.Gates> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-gates`, JSON.stringify(params))
-            return await resp.json() as gates.Gates
-        }
-
-        /**
-         * Retrieves gates with pagination (useful for tables).
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedGates>} Paginated list of gates
-         * @throws {APIError} If retrieval fails
-         */
-        public async listGatesPaginated(params: gates.PaginationParamsGates): Promise<gates.PaginatedGates> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-gates/paginated`, JSON.stringify(params))
-            return await resp.json() as gates.PaginatedGates
-        }
-
-        /**
          * Retrieves all installation schemas without pagination (useful for dropdowns).
          * @param params - Query parameters including orderBy, filters, and searchTerm
          * @returns {Promise<ListInstallationSchemasResult>} Unified response with data property containing array of installation schemas
@@ -2040,24 +1913,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/states/list`, JSON.stringify(params))
             return await resp.json() as states.PaginatedListStatesResult
-        }
-
-        /**
-         * Retrieves all terminals without pagination (useful for dropdowns).
-         */
-        public async listTerminals(params: terminals.TerminalsQueryOptions): Promise<terminals.Terminals> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-terminals`, JSON.stringify(params))
-            return await resp.json() as terminals.Terminals
-        }
-
-        /**
-         * Retrieves terminals with pagination (useful for tables).
-         */
-        public async listTerminalsPaginated(params: terminals.PaginationParamsTerminals): Promise<terminals.PaginatedTerminalsWithCity> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-terminals/paginated`, JSON.stringify(params))
-            return await resp.json() as terminals.PaginatedTerminalsWithCity
         }
 
         /**
@@ -2406,7 +2261,7 @@ export namespace inventory {
     page?: number
     pageSize?: number
     orderBy?: {
-        field: "id" | "name" | "description" | "originCityId" | "destinationCityId" | "originTerminalId" | "destinationTerminalId" | "pathwayId" | "distance" | "baseTime" | "isCompound" | "connectionCount" | "totalTravelTime" | "totalDistance" | "createdAt" | "updatedAt"
+        field: "id" | "name" | "description" | "originCityId" | "destinationCityId" | "pathwayId" | "distance" | "baseTime" | "isCompound" | "connectionCount" | "totalTravelTime" | "totalDistance" | "createdAt" | "updatedAt"
         direction: "asc" | "desc"
     }[]
     filters?: {
@@ -2415,8 +2270,6 @@ export namespace inventory {
         description?: string | null
         originCityId?: number
         destinationCityId?: number
-        originTerminalId?: number
-        destinationTerminalId?: number
         pathwayId?: number | null
         distance?: number
         baseTime?: number
@@ -2450,55 +2303,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/service-types/search`, undefined, {query})
             return await resp.json() as service_types.ServiceTypes
-        }
-
-        /**
-         * Searches for terminals by matching a search term against name, code, and slug.
-         */
-        public async searchTerminals(params: {
-    term: string
-}): Promise<terminals.Terminals> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                term: params.term,
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/terminals/search`, undefined, {query})
-            return await resp.json() as terminals.Terminals
-        }
-
-        /**
-         * Searches for terminals with pagination by matching a search term against name, code, and slug.
-         */
-        public async searchTerminalsPaginated(params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "name" | "address" | "cityId" | "latitude" | "longitude" | "contactphone" | "operatingHours" | "facilities" | "code" | "slug" | "active" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        name?: string
-        address?: string
-        cityId?: number
-        latitude?: number
-        longitude?: number
-        contactphone?: string | null
-        operatingHours?: terminals.OperatingHours
-        facilities?: facilities.Facility[]
-        code?: string
-        slug?: string
-        active?: boolean
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-    term: string
-}): Promise<terminals.PaginatedTerminals> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/terminals/search/paginated`, JSON.stringify(params))
-            return await resp.json() as terminals.PaginatedTerminals
         }
 
         /**
@@ -3372,30 +3176,6 @@ export namespace inventory {
         }
 
         /**
-         * Updates an existing gate.
-         * @param params - Object containing the gate ID and update data
-         * @param params.id - The ID of the gate to update
-         * @returns {Promise<Gate>} The updated gate
-         * @throws {APIError} If the gate is not found or update fails
-         */
-        public async updateGate(id: number, params: {
-    /**
-     * The ID of the terminal this gate belongs to
-     * Must be a positive number
-     */
-    terminalId?: number
-
-    /**
-     * Whether the gate is active
-     */
-    active?: boolean
-}): Promise<gates.Gate> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/gates/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as gates.Gate
-        }
-
-        /**
          * Updates an existing installation.
          * @param params - Object containing the installation ID and update data
          * @param params.id - The ID of the installation to update
@@ -3916,71 +3696,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/states/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as states.State
-        }
-
-        /**
-         * Updates an existing terminal.
-         */
-        public async updateTerminal(id: number, params: {
-    /**
-     * The name of the terminal
-     * Must have at least 1 non-whitespace character
-     */
-    name?: string
-
-    /**
-     * Physical address of the terminal
-     * Must have at least 1 non-whitespace character
-     */
-    address?: string
-
-    /**
-     * The ID of the city where the terminal is located
-     * Must be a positive number
-     */
-    cityId?: number
-
-    /**
-     * Latitude coordinate of the terminal
-     * Must be a number between -90 and 90
-     */
-    latitude?: number
-
-    /**
-     * Longitude coordinate of the terminal
-     * Must be a number between -180 and 180
-     */
-    longitude?: number
-
-    /**
-     * Contact phone number for the terminal
-     */
-    contactphone?: string
-
-    /**
-     * Operating hours of the terminal
-     */
-    operatingHours?: terminals.OperatingHours
-
-    /**
-     * List of facilities available at the terminal
-     */
-    facilityCodes?: string[]
-
-    /**
-     * Terminal code (unique identifier)
-     * Must have at least 1 non-whitespace character
-     */
-    code?: string
-
-    /**
-     * Whether the terminal is active
-     */
-    active?: boolean
-}): Promise<terminals.Terminal> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/terminals/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as terminals.Terminal
         }
 
         /**
@@ -9012,112 +8727,6 @@ export namespace event_types {
     }
 }
 
-export namespace facilities {
-    export interface Facilities {
-        /**
-         * List of facilities
-         */
-        facilities: Facility[]
-    }
-
-    export interface Facility {
-        /**
-         * Unique code identifier for the facility
-         */
-        code: string
-
-        /**
-         * Name of the facility in Spanish
-         */
-        name: string
-    }
-}
-
-export namespace gates {
-    export interface CreateGatePayload {
-        /**
-         * The ID of the terminal this gate belongs to
-         * Must be a positive number
-         */
-        terminalId: number
-
-        /**
-         * Whether the gate is active
-         * @default true
-         */
-        active?: boolean
-    }
-
-    export interface Gate {
-        /**
-         * Unique identifier for the gate
-         */
-        id: number
-
-        /**
-         * ID of the terminal this gate belongs to
-         */
-        terminalId: number
-
-        /**
-         * Whether the gate is currently active in the system
-         */
-        active: boolean
-
-        /**
-         * Timestamp when the gate record was created
-         */
-        createdAt: string | string | null
-
-        /**
-         * Timestamp when the gate record was last updated
-         */
-        updatedAt: string | string | null
-    }
-
-    export interface Gates {
-        /**
-         * List of gates
-         */
-        gates: Gate[]
-    }
-
-    export interface GatesQueryOptions {
-        orderBy?: {
-            field: "id" | "terminalId" | "active" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            terminalId?: number
-            active?: boolean
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
-    }
-
-    export interface PaginatedGates {
-        pagination: shared.PaginationMeta
-        data: Gate[]
-    }
-
-    export interface PaginationParamsGates {
-        page?: number
-        pageSize?: number
-        orderBy?: {
-            field: "id" | "terminalId" | "active" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            terminalId?: number
-            active?: boolean
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
-    }
-}
-
 export namespace installation_properties {
     export interface PropertyInput {
         /**
@@ -10993,8 +10602,8 @@ export namespace routes {
 
         name: string
         description?: string
-        originTerminalId: number
-        destinationTerminalId: number
+        originCityId: number
+        destinationCityId: number
         baseTime: number
         connectionCount?: number
         distance: number
@@ -11017,7 +10626,7 @@ export namespace routes {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "description" | "originCityId" | "destinationCityId" | "originTerminalId" | "destinationTerminalId" | "pathwayId" | "distance" | "baseTime" | "isCompound" | "connectionCount" | "totalTravelTime" | "totalDistance" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "description" | "originCityId" | "destinationCityId" | "pathwayId" | "distance" | "baseTime" | "isCompound" | "connectionCount" | "totalTravelTime" | "totalDistance" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -11026,8 +10635,6 @@ export namespace routes {
             description?: string | null
             originCityId?: number
             destinationCityId?: number
-            originTerminalId?: number
-            destinationTerminalId?: number
             pathwayId?: number | null
             distance?: number
             baseTime?: number
@@ -11065,16 +10672,6 @@ export namespace routes {
          * Reference to the destination city
          */
         destinationCityId: number
-
-        /**
-         * Reference to the origin terminal
-         */
-        originTerminalId: number
-
-        /**
-         * Reference to the destination terminal
-         */
-        destinationTerminalId: number
 
         /**
          * Reference to the pathway used by this route
@@ -11125,8 +10722,6 @@ export namespace routes {
     export interface RouteWithFullDetails {
         originCity: cities.City
         destinationCity: cities.City
-        originTerminal: terminals.Terminal
-        destinationTerminal: terminals.Terminal
         pathway: {
             id: number
             name: string
@@ -11162,16 +10757,6 @@ export namespace routes {
          * Reference to the destination city
          */
         destinationCityId: number
-
-        /**
-         * Reference to the origin terminal
-         */
-        originTerminalId: number
-
-        /**
-         * Reference to the destination terminal
-         */
-        destinationTerminalId: number
 
         /**
          * Reference to the pathway used by this route
@@ -11225,7 +10810,7 @@ export namespace routes {
 
     export interface RoutesQueryOptions {
         orderBy?: {
-            field: "id" | "name" | "description" | "originCityId" | "destinationCityId" | "originTerminalId" | "destinationTerminalId" | "pathwayId" | "distance" | "baseTime" | "isCompound" | "connectionCount" | "totalTravelTime" | "totalDistance" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "description" | "originCityId" | "destinationCityId" | "pathwayId" | "distance" | "baseTime" | "isCompound" | "connectionCount" | "totalTravelTime" | "totalDistance" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -11234,8 +10819,6 @@ export namespace routes {
             description?: string | null
             originCityId?: number
             destinationCityId?: number
-            originTerminalId?: number
-            destinationTerminalId?: number
             pathwayId?: number | null
             distance?: number
             baseTime?: number
@@ -11727,326 +11310,6 @@ export namespace tenants {
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }
-    }
-}
-
-export namespace terminals {
-    export interface CreateTerminalPayload {
-        /**
-         * The name of the terminal
-         * Must have at least 1 non-whitespace character
-         */
-        name: string
-
-        /**
-         * Physical address of the terminal
-         * Must have at least 1 non-whitespace character
-         */
-        address: string
-
-        /**
-         * The ID of the city where the terminal is located
-         * Must be a positive number
-         */
-        cityId: number
-
-        /**
-         * Latitude coordinate of the terminal
-         * Must be a number between -90 and 90
-         */
-        latitude: number
-
-        /**
-         * Longitude coordinate of the terminal
-         * Must be a number between -180 and 180
-         */
-        longitude: number
-
-        /**
-         * Contact phone number for the terminal
-         */
-        contactphone?: string
-
-        /**
-         * Operating hours of the terminal
-         */
-        operatingHours?: OperatingHours
-
-        /**
-         * List of facilities available at the terminal
-         */
-        facilityCodes?: string[]
-
-        /**
-         * Terminal code (unique identifier)
-         * Must have at least 1 non-whitespace character
-         */
-        code: string
-
-        /**
-         * Whether the terminal is active
-         * @default true
-         */
-        active?: boolean
-    }
-
-    export interface OperatingHours {
-        /**
-         * Monday opening hours
-         */
-        monday?: TimeSlot
-
-        /**
-         * Tuesday opening hours
-         */
-        tuesday?: TimeSlot
-
-        /**
-         * Wednesday opening hours
-         */
-        wednesday?: TimeSlot
-
-        /**
-         * Thursday opening hours
-         */
-        thursday?: TimeSlot
-
-        /**
-         * Friday opening hours
-         */
-        friday?: TimeSlot
-
-        /**
-         * Saturday opening hours
-         */
-        saturday?: TimeSlot
-
-        /**
-         * Sunday opening hours
-         */
-        sunday?: TimeSlot
-    }
-
-    export interface PaginatedTerminals {
-        pagination: shared.PaginationMeta
-        data: Terminal[]
-    }
-
-    export interface PaginatedTerminalsWithCity {
-        pagination: shared.PaginationMeta
-        data: TerminalWithCity[]
-    }
-
-    export interface PaginationParamsTerminals {
-        page?: number
-        pageSize?: number
-        orderBy?: {
-            field: "id" | "name" | "address" | "cityId" | "latitude" | "longitude" | "contactphone" | "operatingHours" | "facilities" | "code" | "slug" | "active" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            name?: string
-            address?: string
-            cityId?: number
-            latitude?: number
-            longitude?: number
-            contactphone?: string | null
-            operatingHours?: OperatingHours
-            facilities?: facilities.Facility[]
-            code?: string
-            slug?: string
-            active?: boolean
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
-    }
-
-    export interface Terminal {
-        /**
-         * Unique identifier for the terminal
-         */
-        id: number
-
-        /**
-         * Name of the terminal
-         */
-        name: string
-
-        /**
-         * Physical address of the terminal
-         */
-        address: string
-
-        /**
-         * ID of the city where the terminal is located
-         */
-        cityId: number
-
-        /**
-         * Latitude coordinate
-         */
-        latitude: number
-
-        /**
-         * Longitude coordinate
-         */
-        longitude: number
-
-        /**
-         * Contact phone number for the terminal
-         */
-        contactphone?: string | null
-
-        /**
-         * Operating hours of the terminal
-         */
-        operatingHours?: OperatingHours
-
-        /**
-         * List of facilities available at the terminal
-         */
-        facilities?: facilities.Facility[]
-
-        /**
-         * Terminal code (unique identifier)
-         */
-        code: string
-
-        /**
-         * URL-friendly identifier for the terminal
-         */
-        slug: string
-
-        /**
-         * Whether the terminal is currently active in the system
-         */
-        active: boolean
-
-        /**
-         * Timestamp when the terminal record was created
-         */
-        createdAt: string | string | null
-
-        /**
-         * Timestamp when the terminal record was last updated
-         */
-        updatedAt: string | string | null
-    }
-
-    export interface TerminalWithCity {
-        city: cities.City
-        /**
-         * Unique identifier for the terminal
-         */
-        id: number
-
-        /**
-         * Name of the terminal
-         */
-        name: string
-
-        /**
-         * Physical address of the terminal
-         */
-        address: string
-
-        /**
-         * ID of the city where the terminal is located
-         */
-        cityId: number
-
-        /**
-         * Latitude coordinate
-         */
-        latitude: number
-
-        /**
-         * Longitude coordinate
-         */
-        longitude: number
-
-        /**
-         * Contact phone number for the terminal
-         */
-        contactphone?: string | null
-
-        /**
-         * Operating hours of the terminal
-         */
-        operatingHours?: OperatingHours
-
-        /**
-         * List of facilities available at the terminal
-         */
-        facilities?: facilities.Facility[]
-
-        /**
-         * Terminal code (unique identifier)
-         */
-        code: string
-
-        /**
-         * URL-friendly identifier for the terminal
-         */
-        slug: string
-
-        /**
-         * Whether the terminal is currently active in the system
-         */
-        active: boolean
-
-        /**
-         * Timestamp when the terminal record was created
-         */
-        createdAt: string | string | null
-
-        /**
-         * Timestamp when the terminal record was last updated
-         */
-        updatedAt: string | string | null
-    }
-
-    export interface Terminals {
-        /**
-         * List of terminals
-         */
-        terminals: Terminal[] | TerminalWithCity[]
-    }
-
-    export interface TerminalsQueryOptions {
-        orderBy?: {
-            field: "id" | "name" | "address" | "cityId" | "latitude" | "longitude" | "contactphone" | "operatingHours" | "facilities" | "code" | "slug" | "active" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            name?: string
-            address?: string
-            cityId?: number
-            latitude?: number
-            longitude?: number
-            contactphone?: string | null
-            operatingHours?: OperatingHours
-            facilities?: facilities.Facility[]
-            code?: string
-            slug?: string
-            active?: boolean
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
-    }
-
-    export interface TimeSlot {
-        /**
-         * Opening time in format HH:MM (24-hour format)
-         */
-        open: string
-
-        /**
-         * Closing time in format HH:MM (24-hour format)
-         */
-        close: string
     }
 }
 

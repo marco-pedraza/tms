@@ -3,7 +3,6 @@ import { PaginatedResult, PaginationParams } from '../../shared/types';
 import { City } from '../cities/cities.types';
 import { CreatePathwayPayload, Pathway } from '../pathways/pathways.types';
 import { RouteSegment } from '../route-segment/route-segment.types';
-import { Terminal } from '../terminals/terminals.types';
 
 /**
  * Base interface representing a route entity
@@ -23,12 +22,6 @@ export interface Route {
 
   /** Reference to the destination city */
   destinationCityId: number;
-
-  /** Reference to the origin terminal */
-  originTerminalId: number;
-
-  /** Reference to the destination terminal */
-  destinationTerminalId: number;
 
   /** Reference to the pathway used by this route */
   pathwayId: number | null;
@@ -61,8 +54,6 @@ export interface Route {
 export interface RouteWithFullDetails extends Route {
   originCity: City;
   destinationCity: City;
-  originTerminal: Terminal;
-  destinationTerminal: Terminal;
   pathway: Omit<Pathway, 'meta'> | null;
   routeSegments: RouteSegment[];
 }
@@ -82,14 +73,14 @@ export interface CreateRoutePayload {
   description?: string;
 
   /**
-   * Reference to the origin terminal
+   * Reference to the origin city
    */
-  originTerminalId: number & Min<1>;
+  originCityId: number & Min<1>;
 
   /**
-   * Reference to the destination terminal
+   * Reference to the destination city
    */
-  destinationTerminalId: number & Min<1>;
+  destinationCityId: number & Min<1>;
 
   /**
    * Reference to the pathway used by this route
@@ -146,14 +137,14 @@ export interface UpdateRoutePayload {
   description?: string;
 
   /**
-   * Reference to the origin terminal
+   * Reference to the origin city
    */
-  originTerminalId?: number & Min<1>;
+  originCityId?: number & Min<1>;
 
   /**
-   * Reference to the destination terminal
+   * Reference to the destination city
    */
-  destinationTerminalId?: number & Min<1>;
+  destinationCityId?: number & Min<1>;
 
   /**
    * Reference to the pathway used by this route

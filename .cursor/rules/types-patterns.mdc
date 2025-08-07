@@ -71,16 +71,16 @@ For entities with relationships, define extended interfaces:
 
 ```typescript
 // Base entity
-export interface Terminal {
+export interface State {
   id: number;
   name: string;
-  cityId: number;
+  countryId: number;
   // ...other properties
 }
 
 // Extended entity with relationships
-export interface TerminalWithCity extends Terminal {
-  city: City;
+export interface StateWithCountry extends State {
+  country: Country;
 }
 ```
 
@@ -114,22 +114,23 @@ For entities with nested structures, define helper interfaces:
 
 ```typescript
 // Helper interface for nested structure
-export interface Facility {
-  name: string;
-  description?: string;
-  icon?: string;
-}
-
-// Helper interface for nested structure
 export interface TimeSlot {
   open: string;
   close: string;
 }
 
+// Helper interface for nested structure
+export interface OperatingHours {
+  monday?: TimeSlot | TimeSlot[];
+  tuesday?: TimeSlot | TimeSlot[];
+  wednesday?: TimeSlot | TimeSlot[];
+  thursday?: TimeSlot | TimeSlot[];
+  friday?: TimeSlot | TimeSlot[];
+}
+
 // Main entity interface using nested types
-export interface Terminal {
+export interface Installation {
   // ...base fields
-  facilities?: Facility[];
   operatingHours?: OperatingHours;
 }
 ```
@@ -150,14 +151,14 @@ export interface Terminal {
 
 3. **Naming Conventions**
    - Use consistent naming patterns:
-     - Entity interface: `Feature` (ex: `Country`, `Terminal`)
+     - Entity interface: `Feature` (ex: `Country`, `State`)
      - Create DTO: `CreateFeaturePayload` (ex: `CreateCountryPayload`)
-     - Update DTO: `UpdateFeaturePayload` (ex: `UpdateTerminalPayload`)
+     - Update DTO: `UpdateFeaturePayload` (ex: `UpdateStatePayload`)
      - List params: `ListFeaturesQueryParams` (ex: `ListCountriesQueryParams`)
      - List result: `ListFeaturesResult` (ex: `ListCountriesResult`)
      - Paginated params: `PaginatedListFeaturesQueryParams`
      - Paginated result: `PaginatedListFeaturesResult`
-     - With relations: `FeatureWithRelation` (ex: `TerminalWithCity`)
+     - With relations: `FeatureWithRelation` (ex: `StateWithCountry`)
 
 4. **Type Composition**
    - Use `extends` for specializing interfaces

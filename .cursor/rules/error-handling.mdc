@@ -270,7 +270,7 @@ export function createFeatureUseCases() {
     // For domain-specific error messages, use constants
     const ERRORS = {
       INVALID_CONNECTION: (idA, idB) =>
-        `Invalid connection between ${idA} and ${idB}: mismatched terminals`,
+        `Invalid connection between ${idA} and ${idB}: mismatched nodes`,
     };
 
     if (someBusinessRuleViolation) {

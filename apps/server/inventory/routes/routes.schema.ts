@@ -12,7 +12,6 @@ import { relations } from 'drizzle-orm';
 import { cities } from '../cities/cities.schema';
 import { pathways } from '../pathways/pathways.schema';
 import { routeSegments } from '../route-segment/route-segment.schema';
-import { terminals } from '../terminals/terminals.schema';
 
 export const routes = pgTable(
   'routes',
@@ -27,12 +26,6 @@ export const routes = pgTable(
     destinationCityId: integer('destination_city_id')
       .notNull()
       .references(() => cities.id),
-    originTerminalId: integer('origin_terminal_id')
-      .notNull()
-      .references(() => terminals.id),
-    destinationTerminalId: integer('destination_terminal_id')
-      .notNull()
-      .references(() => terminals.id),
     pathwayId: integer('pathway_id')
       .references(() => pathways.id)
       .unique(),
@@ -48,7 +41,6 @@ export const routes = pgTable(
   (table) => [
     index().on(table.name),
     index().on(table.originCityId, table.destinationCityId),
-    index().on(table.originTerminalId, table.destinationTerminalId),
   ],
 );
 
@@ -60,14 +52,6 @@ export const routesRelations = relations(routes, ({ one, many }) => ({
   destinationCity: one(cities, {
     fields: [routes.destinationCityId],
     references: [cities.id],
-  }),
-  originTerminal: one(terminals, {
-    fields: [routes.originTerminalId],
-    references: [terminals.id],
-  }),
-  destinationTerminal: one(terminals, {
-    fields: [routes.destinationTerminalId],
-    references: [terminals.id],
   }),
   pathway: one(pathways, {
     fields: [routes.pathwayId],

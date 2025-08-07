@@ -1,13 +1,5 @@
 import Link from 'next/link';
-import {
-  Briefcase,
-  Building,
-  Building2,
-  Bus,
-  Globe,
-  Map,
-  Route,
-} from 'lucide-react';
+import { Briefcase, Building, Bus, Globe, Map, Route } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,21 +59,6 @@ export default async function HomePage() {
             </p>
             <Link href={routes.cities.index}>
               <Button className="w-full">Ver {tCities('title')}</Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-medium">Terminales</CardTitle>
-            <Building2 className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Administra información de terminales
-            </p>
-            <Link href={routes.terminals.index}>
-              <Button className="w-full">Ver Terminales</Button>
             </Link>
           </CardContent>
         </Card>

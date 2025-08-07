@@ -7,7 +7,7 @@ import DriversTable from '@/drivers/components/drivers-tables';
 import routes from '@/services/routes';
 
 /**
- * Main page component for managing terminals
+ * Main page component for managing drivers
  */
 export default function DriversPage() {
   const t = useTranslations('drivers');

@@ -2,14 +2,12 @@ import { fakerES_MX as faker } from '@faker-js/faker';
 import { City } from '../../../inventory/cities/cities.types';
 import { Country } from '../../../inventory/countries/countries.types';
 import { State } from '../../../inventory/states/states.types';
-import { Terminal } from '../../../inventory/terminals/terminals.types';
 import { AVAILABLE_TIMEZONES } from '../../../inventory/timezones/timezones.constants';
 import { createSlug } from '../../../shared/utils';
 import {
   cityFactory,
   countryFactory,
   stateFactory,
-  terminalFactory,
 } from '../../../tests/factories';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -118,40 +116,4 @@ export async function seedCities(
 
   console.log(`Seeded ${cities.length} cities`);
   return cities;
-}
-
-/**
- * Seeds terminals for given cities
- */
-export async function seedTerminals(
-  cities: City[],
-  factoryDb: FactoryDb,
-): Promise<Terminal[]> {
-  const TERMINAL_COUNT = 100;
-  const rawTerminals = Array.from({ length: TERMINAL_COUNT }, () => {
-    const randomCity = cities[Math.floor(Math.random() * cities.length)];
-    const name = faker.location.city();
-    const slug = createSlug(name, 't');
-
-    return {
-      name,
-      slug,
-      cityId: randomCity.id,
-      latitude: faker.location.latitude(),
-      longitude: faker.location.longitude(),
-      address: faker.location.streetAddress(),
-    };
-  });
-
-  // Remove duplicates by name
-  const uniqueTerminals = removeDuplicatesByAnyKey(rawTerminals, [
-    (terminal) => terminal.name,
-  ]);
-
-  const terminals = (await terminalFactory(factoryDb).create(
-    uniqueTerminals,
-  )) as Terminal[];
-
-  console.log(`Seeded ${terminals.length} terminals`);
-  return terminals;
 }

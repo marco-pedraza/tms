@@ -1,10 +1,6 @@
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { vi } from 'vitest';
-import {
-  cityFactory,
-  stateFactory,
-  terminalFactory,
-} from '../../tests/factories';
+import { cityFactory, stateFactory } from '../../tests/factories';
 import { getFactoryDb } from '../../tests/factories/factory-utils';
 import { cityRepository } from '../cities/cities.repository';
 import { City } from '../cities/cities.types';
@@ -14,8 +10,6 @@ import { routeSegmentRepository } from '../route-segment/route-segment.repositor
 import { routeRepository } from '../routes/routes.repository';
 import { stateRepository } from '../states/states.repository';
 import { State } from '../states/states.types';
-import { terminalRepository } from '../terminals/terminals.repository';
-import { Terminal } from '../terminals/terminals.types';
 import {
   createCompoundRoute,
   createRoute,
@@ -33,8 +27,6 @@ describe.skip('Routes Controller', () => {
   let testState: State;
   let testCity1: City;
   let testCity2: City;
-  let testTerminal1: Terminal;
-  let testTerminal2: Terminal;
   let createdRouteId: number;
 
   beforeAll(async () => {
@@ -56,19 +48,6 @@ describe.skip('Routes Controller', () => {
       slug: 'destination-city',
       deletedAt: null,
     })) as City;
-
-    // Create terminals in each city
-    testTerminal1 = (await terminalFactory(factoryDb).create({
-      cityId: testCity1.id,
-      name: 'Origin Terminal',
-      slug: 't-origin-terminal',
-    })) as Terminal;
-
-    testTerminal2 = (await terminalFactory(factoryDb).create({
-      cityId: testCity2.id,
-      name: 'Destination Terminal',
-      slug: 't-destination-terminal',
-    })) as Terminal;
   });
 
   afterAll(async () => {
@@ -83,7 +62,6 @@ describe.skip('Routes Controller', () => {
 
     await routeSegmentRepository.deleteAll();
     await routeRepository.deleteAll();
-    await terminalRepository.deleteAll();
     await cityRepository.deleteAll();
     await stateRepository.deleteAll();
     await countryRepository.deleteAll();
@@ -98,8 +76,6 @@ describe.skip('Routes Controller', () => {
       const routeData = {
         name: 'Test Simple Route',
         description: 'A test route for unit testing',
-        originTerminalId: testTerminal1.id,
-        destinationTerminalId: testTerminal2.id,
 
         // Pathway data
         pathwayName: 'Test Simple Pathway',
@@ -110,6 +86,8 @@ describe.skip('Routes Controller', () => {
         active: true,
 
         // Route specific data
+        originCityId: testCity1.id,
+        destinationCityId: testCity2.id,
         baseTime: 110, // minutes
         connectionCount: 0,
         isCompound: false as const,
@@ -123,8 +101,6 @@ describe.skip('Routes Controller', () => {
       expect(createdRoute.id).toBeDefined();
       expect(createdRoute.name).toBe(routeData.name);
       expect(createdRoute.description).toBe(routeData.description);
-      expect(createdRoute.originTerminalId).toBe(testTerminal1.id);
-      expect(createdRoute.destinationTerminalId).toBe(testTerminal2.id);
       expect(createdRoute.distance).toBe(routeData.distance);
       expect(createdRoute.baseTime).toBe(routeData.baseTime);
       expect(createdRoute.isCompound).toBe(false);
@@ -139,15 +115,13 @@ describe.skip('Routes Controller', () => {
       expect(retrievedRoute.id).toBe(createdRoute.id);
     });
 
-    test('should fail when origin and destination are the same terminal', async () => {
+    test('should fail when origin and destination are the same city', async () => {
       const routeData = {
-        name: 'Invalid Same Terminal Route',
+        name: 'Invalid Same City Route',
         description: 'A route with the same origin and destination',
-        originTerminalId: testTerminal1.id,
-        destinationTerminalId: testTerminal1.id, // Same as origin
 
         // Pathway data
-        pathwayName: 'Invalid Same Terminal Pathway',
+        pathwayName: 'Invalid Same City Pathway',
         distance: 0,
         typicalTime: 0,
         meta: {},
@@ -155,26 +129,26 @@ describe.skip('Routes Controller', () => {
         active: true,
 
         // Route specific data
+        originCityId: testCity1.id,
+        destinationCityId: testCity1.id, // Same city
         baseTime: 0,
         connectionCount: 0,
         isCompound: false as const,
       };
 
-      // The request should fail with an error about same terminals
+      // The request should fail with an error about same cities
       await expect(createRoute(routeData)).rejects.toThrow(
-        'Origin and destination terminals cannot be the same',
+        'Origin and destination cities cannot be the same',
       );
     });
 
-    test('should fail with invalid terminal IDs', async () => {
+    test('should fail with invalid city IDs', async () => {
       const routeData = {
-        name: 'Invalid Terminal Route',
-        description: 'A route with invalid terminal IDs',
-        originTerminalId: 99999, // Non-existent terminal
-        destinationTerminalId: testTerminal2.id,
+        name: 'Invalid City Route',
+        description: 'A route with invalid city IDs',
 
         // Pathway data
-        pathwayName: 'Invalid Terminal Pathway',
+        pathwayName: 'Invalid City Pathway',
         distance: 100,
         typicalTime: 120,
         meta: {},
@@ -182,6 +156,8 @@ describe.skip('Routes Controller', () => {
         active: true,
 
         // Route specific data
+        originCityId: 99999, // Invalid city ID
+        destinationCityId: 99998, // Invalid city ID
         baseTime: 110,
         connectionCount: 0,
         isCompound: false as const,
@@ -195,45 +171,37 @@ describe.skip('Routes Controller', () => {
   describe('Compound Routes', () => {
     let simpleRoute1Id: number;
     let simpleRoute2Id: number;
-    let testTerminal3: Terminal;
 
     beforeAll(async () => {
-      // Create first simple route: City1.Terminal1 -> City2.Terminal2
+      // Create first simple route: City1 -> City2
       const route1Data = {
         name: 'First Simple Route',
         description: 'First segment of compound route',
-        originTerminalId: testTerminal1.id,
-        destinationTerminalId: testTerminal2.id,
         pathwayName: 'First Simple Pathway',
         distance: 100,
         typicalTime: 120, // 2 hours
         meta: { stops: 1 },
         tollRoad: false,
         active: true,
+        originCityId: testCity1.id,
+        destinationCityId: testCity2.id,
         baseTime: 110,
         connectionCount: 0,
         isCompound: false as const,
       };
 
-      // We need a third terminal in City2 for the connection
-      testTerminal3 = (await terminalFactory(factoryDb).create({
-        cityId: testCity2.id,
-        name: 'Connection Terminal',
-        slug: 't-connection-terminal',
-      })) as Terminal;
-
-      // Create second simple route: City2.Terminal2 -> City2.Terminal3
+      // Create second simple route: City2 -> City1 (for circular route)
       const route2Data = {
         name: 'Second Simple Route',
         description: 'Second segment of compound route',
-        originTerminalId: testTerminal2.id,
-        destinationTerminalId: testTerminal3.id,
         pathwayName: 'Second Simple Pathway',
         distance: 50,
         typicalTime: 60, // 1 hour
         meta: { stops: 1 },
         tollRoad: false,
         active: true,
+        originCityId: testCity2.id,
+        destinationCityId: testCity1.id,
         baseTime: 55,
         connectionCount: 0,
         isCompound: false as const,
@@ -268,10 +236,6 @@ describe.skip('Routes Controller', () => {
       expect(createdRoute.totalTravelTime).toBe(180); // 120 + 60
       expect(createdRoute.baseTime).toBe(165); // 110 + 55
 
-      // Verify origin and destination terminals
-      expect(createdRoute.originTerminalId).toBe(testTerminal1.id);
-      expect(createdRoute.destinationTerminalId).toBe(testTerminal3.id);
-
       // Verify segments
       expect(createdRoute.routeSegments).toBeDefined();
 
@@ -282,12 +246,12 @@ describe.skip('Routes Controller', () => {
 
     describe('Validation Scenarios', () => {
       test('should fail when creating compound route with disconnected routes', async () => {
-        // Create a route that starts at a different terminal than the end of the first route
+        // Create a route that starts at a different city than the end of the first route
         const disconnectedRoute = await createRoute({
           name: 'Disconnected Route',
-          description: 'A route that starts at a different terminal',
-          originTerminalId: testTerminal1.id, // Different terminal than the end of route2
-          destinationTerminalId: testTerminal2.id,
+          description: 'A route that starts at a different city',
+          originCityId: testCity1.id, // Different city than the end of route2
+          destinationCityId: testCity2.id,
           pathwayName: 'Disconnected Pathway',
           distance: 75,
           typicalTime: 90,
@@ -337,8 +301,8 @@ describe.skip('Routes Controller', () => {
         const route1 = await createRoute({
           name: 'First Simple Route for Compound route',
           description: 'First segment of compound route',
-          originTerminalId: testTerminal1.id,
-          destinationTerminalId: testTerminal2.id,
+          originCityId: testCity1.id,
+          destinationCityId: testCity2.id,
           pathwayName: 'First Simple Pathway for Compound route',
           distance: 100,
           typicalTime: 120,
@@ -353,8 +317,8 @@ describe.skip('Routes Controller', () => {
         const route2 = await createRoute({
           name: 'Second Simple Route for Compound route',
           description: 'Second segment of compound route',
-          originTerminalId: testTerminal2.id,
-          destinationTerminalId: testTerminal3.id,
+          originCityId: testCity2.id,
+          destinationCityId: testCity1.id,
           pathwayName: 'Second Simple Pathway for Compound route',
           distance: 50,
           typicalTime: 60,
@@ -423,19 +387,12 @@ describe.skip('Routes Controller', () => {
 
     describe('Complex Compound Routes', () => {
       test('should create compound route with three or more segments', async () => {
-        // Create an additional terminal for the third segment
-        const testTerminal4 = (await terminalFactory(factoryDb).create({
-          cityId: testCity2.id,
-          name: 'Final Terminal',
-          slug: 't-final-terminal',
-        })) as Terminal;
-
         // Create third segment
         const route3Data = {
           name: 'Third Simple Route',
           description: 'Third segment of compound route',
-          originTerminalId: testTerminal3.id,
-          destinationTerminalId: testTerminal4.id,
+          originCityId: testCity1.id,
+          destinationCityId: testCity2.id,
           pathwayName: 'Third Simple Pathway',
           distance: 25,
           typicalTime: 30,
@@ -477,8 +434,6 @@ describe.skip('Routes Controller', () => {
         // Verify complete details
         expect(routeWithDetails.originCity).toBeDefined();
         expect(routeWithDetails.destinationCity).toBeDefined();
-        expect(routeWithDetails.originTerminal).toBeDefined();
-        expect(routeWithDetails.destinationTerminal).toBeDefined();
         expect(routeWithDetails.routeSegments).toBeDefined();
 
         // Verify city information
@@ -492,9 +447,9 @@ describe.skip('Routes Controller', () => {
         // Create a route that returns to the origin point
         const circularRoute = await createRoute({
           name: 'Return Route',
-          description: 'Returns to the first terminal',
-          originTerminalId: testTerminal2.id,
-          destinationTerminalId: testTerminal1.id,
+          description: 'Returns to the first city',
+          originCityId: testCity2.id,
+          destinationCityId: testCity1.id,
           pathwayName: 'Return Pathway',
           distance: 100,
           typicalTime: 120,
@@ -512,10 +467,8 @@ describe.skip('Routes Controller', () => {
           routeIds: [simpleRoute1Id, circularRoute.id],
         });
 
-        expect(circularCompoundRoute.originTerminalId).toBe(testTerminal1.id);
-        expect(circularCompoundRoute.destinationTerminalId).toBe(
-          testTerminal1.id,
-        );
+        expect(circularCompoundRoute.originCityId).toBe(testCity1.id);
+        expect(circularCompoundRoute.destinationCityId).toBe(testCity1.id);
         expect(circularCompoundRoute.totalDistance).toBe(200); // 100 + 100
       });
 
@@ -524,8 +477,8 @@ describe.skip('Routes Controller', () => {
         const tollRoute = await createRoute({
           name: 'Toll Route',
           description: 'Route with toll road',
-          originTerminalId: testTerminal2.id,
-          destinationTerminalId: testTerminal3.id,
+          originCityId: testCity2.id,
+          destinationCityId: testCity1.id,
           pathwayName: 'Toll Pathway',
           distance: 40,
           typicalTime: 45,
@@ -661,19 +614,12 @@ describe.skip('Routes Controller', () => {
           routeIds: [simpleRoute1Id, simpleRoute2Id],
         });
 
-        // Create a new route to add to the compound route
-        const testTerminal4 = (await terminalFactory(factoryDb).create({
-          cityId: testCity2.id,
-          name: 'New Terminal',
-          slug: 't-new-terminal',
-        })) as Terminal;
-
         // Create a new route that connects to the end of simpleRoute1
         const newRoute = await createRoute({
           name: 'New Route',
           description: 'New segment to add',
-          originTerminalId: testTerminal2.id, // This must match the destination of simpleRoute1
-          destinationTerminalId: testTerminal4.id,
+          originCityId: testCity2.id, // This must match the destination of simpleRoute1
+          destinationCityId: testCity1.id,
           pathwayName: 'New Pathway for Update',
           distance: 30,
           typicalTime: 35,
@@ -702,9 +648,9 @@ describe.skip('Routes Controller', () => {
         expect(updatedRoute.totalTravelTime).toBe(155); // 120 + 35
         expect(updatedRoute.baseTime).toBe(142); // 110 + 32
 
-        // Verify new terminals
-        expect(updatedRoute.originTerminalId).toBe(testTerminal1.id);
-        expect(updatedRoute.destinationTerminalId).toBe(testTerminal4.id);
+        // Verify new cities
+        expect(updatedRoute.originCityId).toBe(testCity1.id);
+        expect(updatedRoute.destinationCityId).toBe(testCity1.id);
 
         // Verify new segments
         expect(updatedRoute.routeSegments.length).toBe(2);
@@ -734,9 +680,9 @@ describe.skip('Routes Controller', () => {
         // Create a disconnected route with a unique pathway name
         const disconnectedRoute = await createRoute({
           name: 'Disconnected Route',
-          description: 'Route that starts at a different terminal',
-          originTerminalId: testTerminal1.id,
-          destinationTerminalId: testTerminal2.id,
+          description: 'Route that starts at a different city',
+          originCityId: testCity1.id,
+          destinationCityId: testCity2.id,
           pathwayName: 'Disconnected Pathway for Update Test',
           distance: 75,
           typicalTime: 90,

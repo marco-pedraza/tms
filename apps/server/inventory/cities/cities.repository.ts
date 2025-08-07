@@ -18,7 +18,7 @@ import type {
  * Creates a repository for managing city entities
  * @returns {Object} An object containing city-specific operations and base CRUD operations
  */
-export const createCityRepository = () => {
+export function createCityRepository() {
   const baseRepository = createBaseRepository<
     City,
     CreateCityPayload & { slug: string },
@@ -179,7 +179,7 @@ export const createCityRepository = () => {
     appendRelations,
     validateCitiesExist,
   };
-};
+}
 
 // Export the city repository instance
 export const cityRepository = createCityRepository();

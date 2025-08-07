@@ -37,9 +37,6 @@ export type UseNodesTranslationsResult = ReturnType<
 export type UseServiceTypesTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'serviceTypes'>
 >;
-export type UseTerminalsTranslationsResult = ReturnType<
-  typeof createTranslator<Messages, 'terminals'>
->;
 export type UseTransportersTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'transporters'>
 >;

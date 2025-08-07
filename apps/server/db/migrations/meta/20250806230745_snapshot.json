@@ -1,6 +1,6 @@
 {
-  "id": "3b76566a-25bd-4d78-95e4-55ae13be411b",
-  "prevId": "c533d4c4-e9a0-4835-8329-451352055ebd",
+  "id": "fa7c46cc-45c1-44e6-bfd5-c957cbae7dca",
+  "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2586,82 +2586,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.gates": {
-      "name": "gates",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "terminal_id": {
-          "name": "terminal_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "active": {
-          "name": "active",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "gates_terminal_id_index": {
-          "name": "gates_terminal_id_index",
-          "columns": [
-            {
-              "expression": "terminal_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "gates_terminal_id_terminals_id_fk": {
-          "name": "gates_terminal_id_terminals_id_fk",
-          "tableFrom": "gates",
-          "tableTo": "terminals",
-          "columnsFrom": [
-            "terminal_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.installation_amenities": {
       "name": "installation_amenities",
       "schema": "",
@@ -4771,18 +4695,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "origin_terminal_id": {
-          "name": "origin_terminal_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "destination_terminal_id": {
-          "name": "destination_terminal_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
         "pathway_id": {
           "name": "pathway_id",
           "type": "integer",
@@ -4878,27 +4790,6 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "routes_origin_terminal_id_destination_terminal_id_index": {
-          "name": "routes_origin_terminal_id_destination_terminal_id_index",
-          "columns": [
-            {
-              "expression": "origin_terminal_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "destination_terminal_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {
@@ -4921,32 +4812,6 @@
           "tableTo": "cities",
           "columnsFrom": [
             "destination_city_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "routes_origin_terminal_id_terminals_id_fk": {
-          "name": "routes_origin_terminal_id_terminals_id_fk",
-          "tableFrom": "routes",
-          "tableTo": "terminals",
-          "columnsFrom": [
-            "origin_terminal_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "routes_destination_terminal_id_terminals_id_fk": {
-          "name": "routes_destination_terminal_id_terminals_id_fk",
-          "tableFrom": "routes",
-          "tableTo": "terminals",
-          "columnsFrom": [
-            "destination_terminal_id"
           ],
           "columnsTo": [
             "id"
@@ -5503,166 +5368,6 @@
           "nullsNotDistinct": false,
           "columns": [
             "code"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.terminals": {
-      "name": "terminals",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "address": {
-          "name": "address",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "city_id": {
-          "name": "city_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "latitude": {
-          "name": "latitude",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "longitude": {
-          "name": "longitude",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "contactphone": {
-          "name": "contactphone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "operating_hours": {
-          "name": "operating_hours",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "facilities": {
-          "name": "facilities",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "code": {
-          "name": "code",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "slug": {
-          "name": "slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "active": {
-          "name": "active",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "terminals_name_index": {
-          "name": "terminals_name_index",
-          "columns": [
-            {
-              "expression": "name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "terminals_city_id_index": {
-          "name": "terminals_city_id_index",
-          "columns": [
-            {
-              "expression": "city_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "terminals_city_id_cities_id_fk": {
-          "name": "terminals_city_id_cities_id_fk",
-          "tableFrom": "terminals",
-          "tableTo": "cities",
-          "columnsFrom": [
-            "city_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "terminals_code_unique": {
-          "name": "terminals_code_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
-        },
-        "terminals_slug_unique": {
-          "name": "terminals_slug_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "slug"
           ]
         }
       },

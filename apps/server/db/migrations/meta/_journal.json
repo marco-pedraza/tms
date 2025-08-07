@@ -20,7 +20,7 @@
       "idx": 2,
       "version": "7",
       "when": 1743192644897,
-      "tag": "20250328201044_creates_cities_terminals_and_gates_tables",
+      "tag": "20250328201044_creates_cities_table",
       "breakpoints": true
     },
     {

@@ -20,5 +20,4 @@ export { seatDiagramZoneFactory } from './seat-diagram-zones.factory';
 export { busDiagramModelFactory } from './bus-diagram-models.factory';
 export { serviceTypeFactory } from './service-type.factory';
 export { stateFactory } from './state.factory';
-export { terminalFactory } from './terminal.factory';
 export { transporterFactory } from './transporters.factory';

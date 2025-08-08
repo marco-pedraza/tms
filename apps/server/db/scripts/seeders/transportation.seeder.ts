@@ -137,6 +137,7 @@ export async function seedBusLines(
           transporterId: transporter.id,
           serviceTypeId: serviceType?.id,
           active: true,
+          deletedAt: null,
         },
       ])) as BusLine[];
 

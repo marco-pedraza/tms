@@ -22,13 +22,15 @@ import useQueryAllTransporters from '@/transporters/hooks/use-query-all-transpor
 
 const busLineSchema = z.object({
   name: nameSchema,
-  code: codeSchema(1, 10),
+  code: codeSchema(1, 20),
   description: z.string().optional(),
   transporterId: z.number().nonnegative(),
   serviceTypeId: z.number().nonnegative(),
-  logoUrl: z.string().url().optional(),
-  primaryColor: z.string().optional(),
-  secondaryColor: z.string().optional(),
+  pricePerKilometer: z.number().positive(),
+  fleetSize: z.number().positive().optional(),
+  website: z.string().url().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
   active: z.boolean(),
 });
 
@@ -56,9 +58,11 @@ export default function BusLineForm({
       description: '',
       transporterId: -1,
       serviceTypeId: -1,
-      logoUrl: '',
-      primaryColor: '',
-      secondaryColor: '',
+      pricePerKilometer: 1.0,
+      fleetSize: undefined,
+      website: '',
+      email: '',
+      phone: '',
       active: true,
     },
     validators: {
@@ -186,74 +190,84 @@ export default function BusLineForm({
           )}
         </form.Field>
 
-        <form.Field name="logoUrl">
+        <form.Field name="pricePerKilometer">
           {(field) => (
             <div className="space-y-2">
-              <Label htmlFor="logo_url">{tCommon('fields.logo')}</Label>
+              <Label htmlFor="price_per_kilometer">Precio por kilómetro</Label>
+              <Input
+                id={field.name}
+                name={field.name}
+                type="number"
+                step="0.01"
+                min="0"
+                value={field.state.value ?? ''}
+                onChange={(e) => field.handleChange(Number(e.target.value))}
+                placeholder="1.0"
+              />
+            </div>
+          )}
+        </form.Field>
+
+        <form.Field name="fleetSize">
+          {(field) => (
+            <div className="space-y-2">
+              <Label htmlFor="fleet_size">Tamaño de flota</Label>
+              <Input
+                id={field.name}
+                name={field.name}
+                type="number"
+                min="1"
+                value={field.state.value ?? ''}
+                onChange={(e) => field.handleChange(Number(e.target.value))}
+                placeholder="Número de vehículos"
+              />
+            </div>
+          )}
+        </form.Field>
+
+        <form.Field name="website">
+          {(field) => (
+            <div className="space-y-2">
+              <Label htmlFor="website">{tCommon('fields.website')}</Label>
+              <Input
+                id={field.name}
+                name={field.name}
+                type="url"
+                value={field.state.value ?? ''}
+                onChange={(e) => field.handleChange(e.target.value)}
+                placeholder="https://ejemplo.com"
+              />
+            </div>
+          )}
+        </form.Field>
+
+        <form.Field name="email">
+          {(field) => (
+            <div className="space-y-2">
+              <Label htmlFor="email">{tCommon('fields.email')}</Label>
+              <Input
+                id={field.name}
+                name={field.name}
+                type="email"
+                value={field.state.value ?? ''}
+                onChange={(e) => field.handleChange(e.target.value)}
+                placeholder="contacto@ejemplo.com"
+              />
+            </div>
+          )}
+        </form.Field>
+
+        <form.Field name="phone">
+          {(field) => (
+            <div className="space-y-2">
+              <Label htmlFor="phone">{tCommon('fields.phone')}</Label>
               <Input
                 id={field.name}
                 name={field.name}
                 value={field.state.value ?? ''}
                 onChange={(e) => field.handleChange(e.target.value)}
-                placeholder={tBusLines('form.placeholders.logo')}
+                placeholder="+52 55 1234 5678"
               />
-              <p className="text-sm text-muted-foreground">
-                {tBusLines('form.placeholders.logo')}
-              </p>
-            </div>
-          )}
-        </form.Field>
-
-        <form.Field name="primaryColor">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="primary_color">
-                {tCommon('fields.primaryColor')}
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  type="color"
-                  id="primary_color"
-                  name="primary_color"
-                  value={field.state.value ?? ''}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  className="w-12 h-10 p-1"
-                />
-                <Input
-                  type="text"
-                  value={field.state.value ?? ''}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  name="primary_color"
-                  placeholder="#000000"
-                />
-              </div>
-            </div>
-          )}
-        </form.Field>
-
-        <form.Field name="secondaryColor">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="secondary_color">
-                {tCommon('fields.secondaryColor')}
-              </Label>
-              <div className="flex gap-2">
-                <Input
-                  type="color"
-                  id="secondary_color"
-                  name="secondary_color"
-                  value={field.state.value ?? ''}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  className="w-12 h-10 p-1"
-                />
-                <Input
-                  type="text"
-                  value={field.state.value ?? ''}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  name="secondary_color"
-                  placeholder="#ffffff"
-                />
-              </div>
             </div>
           )}
         </form.Field>

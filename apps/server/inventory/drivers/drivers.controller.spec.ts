@@ -94,7 +94,7 @@ describe('Drivers Controller', () => {
 
       // Create test bus line
       const testBusLine = await busLineRepository.create({
-        name: 'Test Bus Line',
+        name: 'Test Bus Line 1',
         code: 'BL001',
         transporterId: createdTransporterId,
         serviceTypeId: createdServiceTypeId,
@@ -219,7 +219,7 @@ describe('Drivers Controller', () => {
     // Clean up test bus line
     if (createdBusLineId) {
       try {
-        await busLineRepository.delete(createdBusLineId);
+        await busLineRepository.forceDelete(createdBusLineId);
       } catch (error) {
         console.log('Error cleaning up test bus line:', error);
       }

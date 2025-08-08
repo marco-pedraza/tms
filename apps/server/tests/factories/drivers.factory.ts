@@ -96,7 +96,7 @@ export const driverFactory = defineFactory({
       busLineId: faker.helpers.maybe(
         () => () =>
           use(busLineFactory)
-            .create()
+            .create({ active: true, deletedAt: null })
             .then((busLine) => busLine.id),
         { probability: 0.33 },
       ),

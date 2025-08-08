@@ -23,7 +23,7 @@ export default function useQueryTransporterBusLines({
           transporterId,
         },
       });
-      return response.busLines;
+      return response.data;
     },
   });
 }

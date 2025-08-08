@@ -19,6 +19,7 @@ export const createBusLineRepository = () => {
     typeof busLines
   >(db, busLines, 'Bus Line', {
     searchableFields: [busLines.name, busLines.code],
+    softDeleteEnabled: true,
   });
 
   return baseRepository;

@@ -230,8 +230,6 @@ export namespace inventory {
             this.listZonesByDiagramModelPaginated = this.listZonesByDiagramModelPaginated.bind(this)
             this.listZonesByDiagramPaginated = this.listZonesByDiagramPaginated.bind(this)
             this.regenerateSeats = this.regenerateSeats.bind(this)
-            this.searchBusLines = this.searchBusLines.bind(this)
-            this.searchBusLinesPaginated = this.searchBusLinesPaginated.bind(this)
             this.searchBuses = this.searchBuses.bind(this)
             this.searchBusesPaginated = this.searchBusesPaginated.bind(this)
             this.searchRoutes = this.searchRoutes.bind(this)
@@ -458,7 +456,7 @@ export namespace inventory {
          */
         public async createBusLine(params: bus_lines.CreateBusLinePayload): Promise<bus_lines.BusLine> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/bus-lines`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("POST", `/bus-lines/create`, JSON.stringify(params))
             return await resp.json() as bus_lines.BusLine
         }
 
@@ -758,7 +756,7 @@ export namespace inventory {
          */
         public async deleteBusLine(id: number): Promise<bus_lines.BusLine> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/bus-lines/${encodeURIComponent(id)}`)
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/bus-lines/${encodeURIComponent(id)}/delete`)
             return await resp.json() as bus_lines.BusLine
         }
 
@@ -1505,25 +1503,26 @@ export namespace inventory {
 
         /**
          * Retrieves all bus lines without pagination (useful for dropdowns).
-         * @returns {Promise<BusLines>} An object containing an array of bus lines
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListBusLinesResult>} Unified response with data property containing array of bus lines
          * @throws {APIError} If retrieval fails
          */
-        public async listBusLines(params: bus_lines.BusLinesQueryOptions): Promise<bus_lines.BusLines> {
+        public async listBusLines(params: bus_lines.ListBusLinesQueryParams): Promise<bus_lines.ListBusLinesResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-bus-lines`, JSON.stringify(params))
-            return await resp.json() as bus_lines.BusLines
+            const resp = await this.baseClient.callTypedAPI("POST", `/bus-lines/list/all`, JSON.stringify(params))
+            return await resp.json() as bus_lines.ListBusLinesResult
         }
 
         /**
          * Retrieves bus lines with pagination (useful for tables).
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedBusLines>} Paginated list of bus lines
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListBusLinesResult>} Unified paginated response with data and pagination properties
          * @throws {APIError} If retrieval fails
          */
-        public async listBusLinesPaginated(params: bus_lines.PaginationParamsBusLines): Promise<bus_lines.PaginatedBusLines> {
+        public async listBusLinesPaginated(params: bus_lines.PaginatedListBusLinesQueryParams): Promise<bus_lines.PaginatedListBusLinesResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-bus-lines/paginated`, JSON.stringify(params))
-            return await resp.json() as bus_lines.PaginatedBusLines
+            const resp = await this.baseClient.callTypedAPI("POST", `/bus-lines/list`, JSON.stringify(params))
+            return await resp.json() as bus_lines.PaginatedListBusLinesResult
         }
 
         /**
@@ -2082,65 +2081,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/bus-diagram-models/${encodeURIComponent(id)}/regenerate-seats`)
             return await resp.json() as bus_diagram_models.RegenerateSeatsResponse
-        }
-
-        /**
-         * Searches for bus lines by matching a search term against name and code.
-         * @param params - Search parameters
-         * @param params.term - The search term to match against bus line name and code
-         * @returns {Promise<BusLines>} List of matching bus lines
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchBusLines(params: {
-    term: string
-}): Promise<bus_lines.BusLines> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                term: params.term,
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/bus-lines/search`, undefined, {query})
-            return await resp.json() as bus_lines.BusLines
-        }
-
-        /**
-         * Searches for bus lines with pagination by matching a search term against name and code.
-         * @param params - Search and pagination parameters
-         * @param params.term - The search term to match against bus line name and code
-         * @param params.page - Page number for pagination (optional, default: 1)
-         * @param params.pageSize - Number of items per page (optional, default: 10)
-         * @param params.orderBy - Sorting criteria (optional)
-         * @param params.filters - Additional filters to apply (optional)
-         * @returns {Promise<PaginatedBusLines>} Paginated list of matching bus lines
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchBusLinesPaginated(params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "name" | "code" | "transporterId" | "serviceTypeId" | "description" | "logoUrl" | "primaryColor" | "secondaryColor" | "active" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        name?: string
-        code?: string
-        transporterId?: number
-        serviceTypeId?: number
-        description?: string | null
-        logoUrl?: string | null
-        primaryColor?: string | null
-        secondaryColor?: string | null
-        active?: boolean
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-    term: string
-}): Promise<bus_lines.PaginatedBusLines> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/bus-lines/search/paginated`, JSON.stringify(params))
-            return await resp.json() as bus_lines.PaginatedBusLines
         }
 
         /**
@@ -2728,26 +2668,35 @@ export namespace inventory {
     serviceTypeId?: number
 
     /**
+     * Multiplier for price per kilometer
+     * Must be a positive number
+     */
+    pricePerKilometer?: number
+
+    /**
      * Description of the bus line
      */
     description?: string
 
     /**
-     * URL to the bus line's logo
+     * Number of vehicles in the fleet
      */
-    logoUrl?: string
+    fleetSize?: number
 
     /**
-     * Primary color of the bus line (hex code)
-     * Must be a valid hex color code
+     * Website
      */
-    primaryColor?: string
+    website?: string
 
     /**
-     * Secondary color of the bus line (hex code)
-     * Must be a valid hex color code
+     * Email
      */
-    secondaryColor?: string
+    email?: string
+
+    /**
+     * Phone
+     */
+    phone?: string
 
     /**
      * Whether the bus line is active
@@ -2755,7 +2704,7 @@ export namespace inventory {
     active?: boolean
 }): Promise<bus_lines.BusLine> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/bus-lines/${encodeURIComponent(id)}`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("PUT", `/bus-lines/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as bus_lines.BusLine
         }
 
@@ -5922,24 +5871,34 @@ export namespace bus_lines {
         serviceTypeId: number
 
         /**
+         * Multiplier for price per kilometer
+         */
+        pricePerKilometer: number
+
+        /**
          * Description of the bus line
          */
         description: string | null
 
         /**
-         * URL to the bus line's logo
+         * Number of vehicles in the fleet
          */
-        logoUrl: string | null
+        fleetSize: number | null
 
         /**
-         * Primary color of the bus line (hex code)
+         * Website
          */
-        primaryColor: string | null
+        website: string | null
 
         /**
-         * Secondary color of the bus line (hex code)
+         * Email
          */
-        secondaryColor: string | null
+        email: string | null
+
+        /**
+         * Phone
+         */
+        phone: string | null
 
         /**
          * Whether the bus line is currently active in the system
@@ -5955,34 +5914,6 @@ export namespace bus_lines {
          * Timestamp when the bus line record was last updated
          */
         updatedAt: string | string | null
-    }
-
-    export interface BusLines {
-        /**
-         * List of bus line entities
-         */
-        busLines: BusLine[]
-    }
-
-    export interface BusLinesQueryOptions {
-        orderBy?: {
-            field: "id" | "name" | "code" | "transporterId" | "serviceTypeId" | "description" | "logoUrl" | "primaryColor" | "secondaryColor" | "active" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            name?: string
-            code?: string
-            transporterId?: number
-            serviceTypeId?: number
-            description?: string | null
-            logoUrl?: string | null
-            primaryColor?: string | null
-            secondaryColor?: string | null
-            active?: boolean
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
     }
 
     export interface CreateBusLinePayload {
@@ -6011,26 +5942,36 @@ export namespace bus_lines {
         serviceTypeId: number
 
         /**
+         * Multiplier for price per kilometer
+         * Must be a positive number
+         * @default 1
+         */
+        pricePerKilometer?: number
+
+        /**
          * Description of the bus line
          */
         description?: string
 
         /**
-         * URL to the bus line's logo
+         * Number of vehicles in the fleet
          */
-        logoUrl?: string
+        fleetSize?: number
 
         /**
-         * Primary color of the bus line (hex code)
-         * Must be a valid hex color code
+         * Website
          */
-        primaryColor?: string
+        website?: string
 
         /**
-         * Secondary color of the bus line (hex code)
-         * Must be a valid hex color code
+         * Email
          */
-        secondaryColor?: string
+        email?: string
+
+        /**
+         * Phone
+         */
+        phone?: string
 
         /**
          * Whether the bus line is active
@@ -6039,16 +5980,9 @@ export namespace bus_lines {
         active?: boolean
     }
 
-    export interface PaginatedBusLines {
-        pagination: shared.PaginationMeta
-        data: BusLine[]
-    }
-
-    export interface PaginationParamsBusLines {
-        page?: number
-        pageSize?: number
+    export interface ListBusLinesQueryParams {
         orderBy?: {
-            field: "id" | "name" | "code" | "transporterId" | "serviceTypeId" | "description" | "logoUrl" | "primaryColor" | "secondaryColor" | "active" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "code" | "transporterId" | "serviceTypeId" | "pricePerKilometer" | "description" | "fleetSize" | "website" | "email" | "phone" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -6057,14 +5991,52 @@ export namespace bus_lines {
             code?: string
             transporterId?: number
             serviceTypeId?: number
+            pricePerKilometer?: number
             description?: string | null
-            logoUrl?: string | null
-            primaryColor?: string | null
-            secondaryColor?: string | null
+            fleetSize?: number | null
+            website?: string | null
+            email?: string | null
+            phone?: string | null
             active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }
+        searchTerm?: string
+    }
+
+    export interface ListBusLinesResult {
+        data: BusLine[]
+    }
+
+    export interface PaginatedListBusLinesQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "code" | "transporterId" | "serviceTypeId" | "pricePerKilometer" | "description" | "fleetSize" | "website" | "email" | "phone" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            code?: string
+            transporterId?: number
+            serviceTypeId?: number
+            pricePerKilometer?: number
+            description?: string | null
+            fleetSize?: number | null
+            website?: string | null
+            email?: string | null
+            phone?: string | null
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListBusLinesResult {
+        pagination: shared.PaginationMeta
+        data: BusLine[]
     }
 }
 

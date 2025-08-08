@@ -10,7 +10,7 @@ import imsClient from '@/services/ims-client';
  */
 export default createCollectionQuery<
   bus_lines.BusLine,
-  bus_lines.PaginatedBusLines,
+  bus_lines.PaginatedListBusLinesResult,
   APIError
 >({
   queryKey: ['busLines'],

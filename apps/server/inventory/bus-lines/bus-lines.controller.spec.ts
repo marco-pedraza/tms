@@ -14,8 +14,6 @@ import {
   getBusLine,
   listBusLines,
   listBusLinesPaginated,
-  searchBusLines,
-  searchBusLinesPaginated,
   updateBusLine,
 } from './bus-lines.controller';
 
@@ -30,8 +28,11 @@ describe('Bus Lines Controller', () => {
     description: 'Test bus line description',
     transporterId: 0, // Will be populated in beforeAll
     serviceTypeId: 0, // Will be populated in beforeAll
-    primaryColor: '#FF0000',
-    secondaryColor: '#0000FF',
+    pricePerKilometer: 2,
+    fleetSize: 25,
+    website: 'https://testbusline.com',
+    email: 'info@testbusline.com',
+    phone: '+1-555-0123',
     active: true,
   };
 
@@ -117,8 +118,11 @@ describe('Bus Lines Controller', () => {
       expect(response.description).toBe(testBusLine.description);
       expect(response.transporterId).toBe(testBusLine.transporterId);
       expect(response.serviceTypeId).toBe(testBusLine.serviceTypeId);
-      expect(response.primaryColor).toBe(testBusLine.primaryColor);
-      expect(response.secondaryColor).toBe(testBusLine.secondaryColor);
+      expect(response.pricePerKilometer).toBe(testBusLine.pricePerKilometer);
+      expect(response.fleetSize).toBe(testBusLine.fleetSize);
+      expect(response.website).toBe(testBusLine.website);
+      expect(response.email).toBe(testBusLine.email);
+      expect(response.phone).toBe(testBusLine.phone);
       expect(response.active).toBe(testBusLine.active);
       expect(response.createdAt).toBeDefined();
     });
@@ -144,6 +148,13 @@ describe('Bus Lines Controller', () => {
       expect(busLineWithMinimalFields.serviceTypeId).toBe(serviceTypeId);
       // Should have default values for optional fields
       expect(busLineWithMinimalFields.active).toBe(true);
+      expect(busLineWithMinimalFields.pricePerKilometer).toBe(1); // Default value
+      // Optional fields should be null when not provided
+      expect(busLineWithMinimalFields.description).toBeNull();
+      expect(busLineWithMinimalFields.fleetSize).toBeNull();
+      expect(busLineWithMinimalFields.website).toBeNull();
+      expect(busLineWithMinimalFields.email).toBeNull();
+      expect(busLineWithMinimalFields.phone).toBeNull();
 
       // Clean up
       await deleteBusLine({ id: busLineWithMinimalFields.id });
@@ -160,19 +171,26 @@ describe('Bus Lines Controller', () => {
       expect(response.id).toBe(createdBusLineId);
       expect(response.name).toBe(testBusLine.name);
       expect(response.code).toBe(testBusLine.code);
+      expect(response.description).toBe(testBusLine.description);
       expect(response.transporterId).toBe(testBusLine.transporterId);
       expect(response.serviceTypeId).toBe(testBusLine.serviceTypeId);
+      expect(response.pricePerKilometer).toBe(testBusLine.pricePerKilometer);
+      expect(response.fleetSize).toBe(testBusLine.fleetSize);
+      expect(response.website).toBe(testBusLine.website);
+      expect(response.email).toBe(testBusLine.email);
+      expect(response.phone).toBe(testBusLine.phone);
+      expect(response.active).toBe(testBusLine.active);
     });
 
     test('should list all bus lines', async () => {
       const result = await listBusLines({});
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result.busLines)).toBe(true);
+      expect(Array.isArray(result.data)).toBe(true);
 
       // Verify our test bus line is in the list
       expect(
-        result.busLines.some((busLine) => busLine.id === createdBusLineId),
+        result.data.some((busLine) => busLine.id === createdBusLineId),
       ).toBe(true);
     });
 
@@ -183,8 +201,8 @@ describe('Bus Lines Controller', () => {
       });
 
       expect(result).toBeDefined();
-      expect(Array.isArray(result.busLines)).toBe(true);
-      expect(result.busLines.every((busLine) => busLine.active === true)).toBe(
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.every((busLine) => busLine.active === true)).toBe(
         true,
       );
     });
@@ -225,36 +243,29 @@ describe('Bus Lines Controller', () => {
     test('should update a bus line', async () => {
       const updatedName = 'Updated Test Bus Line';
       const updatedDescription = 'Updated test bus line description';
+      const updatedPricePerKm = 3;
 
       const response = await updateBusLine({
         id: createdBusLineId,
         name: updatedName,
         description: updatedDescription,
+        pricePerKilometer: updatedPricePerKm,
       });
 
       expect(response).toBeDefined();
       expect(response.id).toBe(createdBusLineId);
       expect(response.name).toBe(updatedName);
       expect(response.description).toBe(updatedDescription);
+      expect(response.pricePerKilometer).toBe(updatedPricePerKm);
       // Other fields should remain unchanged
       expect(response.code).toBe(testBusLine.code);
       expect(response.transporterId).toBe(testBusLine.transporterId);
       expect(response.serviceTypeId).toBe(testBusLine.serviceTypeId);
-    });
-
-    test('should update bus line colors', async () => {
-      const updatedPrimaryColor = '#00FF00';
-      const updatedSecondaryColor = '#FF00FF';
-
-      const response = await updateBusLine({
-        id: createdBusLineId,
-        primaryColor: updatedPrimaryColor,
-        secondaryColor: updatedSecondaryColor,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.primaryColor).toBe(updatedPrimaryColor);
-      expect(response.secondaryColor).toBe(updatedSecondaryColor);
+      expect(response.fleetSize).toBe(testBusLine.fleetSize);
+      expect(response.website).toBe(testBusLine.website);
+      expect(response.email).toBe(testBusLine.email);
+      expect(response.phone).toBe(testBusLine.phone);
+      expect(response.active).toBe(testBusLine.active);
     });
 
     test('should delete a bus line', async () => {
@@ -262,8 +273,14 @@ describe('Bus Lines Controller', () => {
       const busLineToDelete = await createBusLine({
         name: 'Bus Line To Delete',
         code: 'DEL-BL',
+        description: 'Bus line to be deleted',
         transporterId: transporterId,
         serviceTypeId: serviceTypeId,
+        pricePerKilometer: 2,
+        fleetSize: 10,
+        website: 'https://temporary.com',
+        email: 'temp@temporary.com',
+        phone: '+1-555-0000',
         active: true,
       });
 
@@ -290,6 +307,7 @@ describe('Bus Lines Controller', () => {
         createBusLine({
           name: 'Another Test Bus Line',
           code: testBusLine.code, // Using the same code as our main test bus line
+          description: 'Another description',
           transporterId: transporterId,
           serviceTypeId: serviceTypeId,
           active: true,
@@ -303,6 +321,7 @@ describe('Bus Lines Controller', () => {
         createBusLine({
           name: 'Invalid Transporter Bus Line',
           code: 'INV-TRNSP',
+          description: 'Invalid transporter test',
           transporterId: 9999, // Non-existent transporter ID
           serviceTypeId: serviceTypeId,
           active: true,
@@ -316,6 +335,7 @@ describe('Bus Lines Controller', () => {
         createBusLine({
           name: 'Invalid Service Type Bus Line',
           code: 'INV-SRVC',
+          description: 'Invalid service type test',
           transporterId: transporterId,
           serviceTypeId: 9999, // Non-existent service type ID
           active: true,
@@ -332,22 +352,40 @@ describe('Bus Lines Controller', () => {
         {
           name: 'Alpha Bus Line',
           code: 'ALPHA-BL',
+          description: 'Alpha bus line description',
           transporterId,
           serviceTypeId,
+          pricePerKilometer: 1,
+          fleetSize: 20,
+          website: 'https://alpha.com',
+          email: 'alpha@test.com',
+          phone: '+1-555-4444',
           active: true,
         },
         {
           name: 'Beta Bus Line',
           code: 'BETA-BL',
+          description: 'Beta bus line description',
           transporterId,
           serviceTypeId,
+          pricePerKilometer: 2,
+          fleetSize: 15,
+          website: 'https://beta.com',
+          email: 'beta@test.com',
+          phone: '+1-555-5555',
           active: false,
         },
         {
           name: 'Gamma Bus Line',
           code: 'GAMMA-BL',
+          description: 'Gamma bus line description',
           transporterId,
           serviceTypeId,
+          pricePerKilometer: 2,
+          fleetSize: 30,
+          website: 'https://gamma.com',
+          email: 'gamma@test.com',
+          phone: '+1-555-6666',
           active: true,
         },
       ];
@@ -374,7 +412,7 @@ describe('Bus Lines Controller', () => {
         orderBy: [{ field: 'name', direction: 'desc' }],
       });
 
-      const names = response.busLines.map((bl) => bl.name);
+      const names = response.data.map((bl) => bl.name);
 
       for (let i = 0; i < names.length - 1; i++) {
         expect(names[i] >= names[i + 1]).toBe(true);
@@ -386,14 +424,14 @@ describe('Bus Lines Controller', () => {
         filters: { active: true },
       });
 
-      expect(response.busLines.every((bl) => bl.active === true)).toBe(true);
+      expect(response.data.every((bl) => bl.active === true)).toBe(true);
 
       const activeTestBusLineIds = testBusLines
         .filter((bl) => bl.active)
         .map((bl) => bl.id);
 
       for (const id of activeTestBusLineIds) {
-        expect(response.busLines.some((bl) => bl.id === id)).toBe(true);
+        expect(response.data.some((bl) => bl.id === id)).toBe(true);
       }
     });
 
@@ -451,9 +489,7 @@ describe('Bus Lines Controller', () => {
           ],
         });
 
-        const activeBusLines = response.busLines.filter(
-          (bl) => bl.active === true,
-        );
+        const activeBusLines = response.data.filter((bl) => bl.active === true);
         const activeNames = activeBusLines.map((bl) => bl.name);
 
         for (let i = 0; i < activeNames.length - 1; i++) {
@@ -469,49 +505,6 @@ describe('Bus Lines Controller', () => {
           );
         }
       }
-    });
-  });
-
-  describe('search functionality', () => {
-    test('should search bus lines', async () => {
-      const searchableBusLine = await createBusLine({
-        name: 'Searchable Test Bus Line',
-        code: 'SEARCH-BL',
-        transporterId,
-        serviceTypeId,
-        active: true,
-      });
-
-      additionalBusLineIds.push(searchableBusLine.id);
-
-      try {
-        const response = await searchBusLines({ term: 'Searchable' });
-
-        expect(response.busLines).toBeDefined();
-        expect(Array.isArray(response.busLines)).toBe(true);
-        expect(
-          response.busLines.some((bl) => bl.id === searchableBusLine.id),
-        ).toBe(true);
-      } finally {
-        await deleteBusLine({ id: searchableBusLine.id });
-        additionalBusLineIds = additionalBusLineIds.filter(
-          (id) => id !== searchableBusLine.id,
-        );
-      }
-    });
-
-    test('should search bus lines with pagination', async () => {
-      const response = await searchBusLinesPaginated({
-        term: 'Test',
-        page: 1,
-        pageSize: 5,
-      });
-
-      expect(response.data).toBeDefined();
-      expect(Array.isArray(response.data)).toBe(true);
-      expect(response.pagination).toBeDefined();
-      expect(response.pagination.currentPage).toBe(1);
-      expect(response.pagination.pageSize).toBe(5);
     });
   });
 });

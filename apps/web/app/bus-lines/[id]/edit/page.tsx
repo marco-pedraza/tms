@@ -44,9 +44,10 @@ export default function EditBusLinePage() {
         defaultValues={{
           ...data,
           description: data.description || undefined,
-          logoUrl: data.logoUrl || undefined,
-          primaryColor: data.primaryColor || undefined,
-          secondaryColor: data.secondaryColor || undefined,
+          fleetSize: data.fleetSize || undefined,
+          website: data.website || undefined,
+          email: data.email || undefined,
+          phone: data.phone || undefined,
         }}
         onSubmit={handleSubmit}
         submitButtonText={tCommon('actions.update')}

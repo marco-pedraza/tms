@@ -1,14 +1,15 @@
 import { api } from 'encore.dev/api';
 import type {
   BusLine,
-  BusLines,
-  BusLinesQueryOptions,
   CreateBusLinePayload,
-  PaginatedBusLines,
-  PaginationParamsBusLines,
+  ListBusLinesQueryParams,
+  ListBusLinesResult,
+  PaginatedListBusLinesQueryParams,
+  PaginatedListBusLinesResult,
   UpdateBusLinePayload,
 } from './bus-lines.types';
 import { busLineRepository } from './bus-lines.repository';
+import { validateBusLine } from './bus-lines.domain';
 
 /**
  * Creates a new bus line.
@@ -17,8 +18,9 @@ import { busLineRepository } from './bus-lines.repository';
  * @throws {APIError} If the bus line creation fails
  */
 export const createBusLine = api(
-  { expose: true, method: 'POST', path: '/bus-lines' },
+  { expose: true, method: 'POST', path: '/bus-lines/create' },
   async (params: CreateBusLinePayload): Promise<BusLine> => {
+    await validateBusLine(params);
     return await busLineRepository.create(params);
   },
 );
@@ -39,28 +41,31 @@ export const getBusLine = api(
 
 /**
  * Retrieves all bus lines without pagination (useful for dropdowns).
- * @returns {Promise<BusLines>} An object containing an array of bus lines
+ * @param params - Query parameters including orderBy, filters, and searchTerm
+ * @returns {Promise<ListBusLinesResult>} Unified response with data property containing array of bus lines
  * @throws {APIError} If retrieval fails
  */
 export const listBusLines = api(
-  { expose: true, method: 'POST', path: '/get-bus-lines' },
-  async (params: BusLinesQueryOptions): Promise<BusLines> => {
+  { expose: true, method: 'POST', path: '/bus-lines/list/all' },
+  async (params: ListBusLinesQueryParams): Promise<ListBusLinesResult> => {
     const busLines = await busLineRepository.findAll(params);
     return {
-      busLines,
+      data: busLines,
     };
   },
 );
 
 /**
  * Retrieves bus lines with pagination (useful for tables).
- * @param params - Pagination parameters
- * @returns {Promise<PaginatedBusLines>} Paginated list of bus lines
+ * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+ * @returns {Promise<PaginatedListBusLinesResult>} Unified paginated response with data and pagination properties
  * @throws {APIError} If retrieval fails
  */
 export const listBusLinesPaginated = api(
-  { expose: true, method: 'POST', path: '/get-bus-lines/paginated' },
-  async (params: PaginationParamsBusLines): Promise<PaginatedBusLines> => {
+  { expose: true, method: 'POST', path: '/bus-lines/list' },
+  async (
+    params: PaginatedListBusLinesQueryParams,
+  ): Promise<PaginatedListBusLinesResult> => {
     return await busLineRepository.findAllPaginated(params);
   },
 );
@@ -73,11 +78,12 @@ export const listBusLinesPaginated = api(
  * @throws {APIError} If the bus line is not found or update fails
  */
 export const updateBusLine = api(
-  { expose: true, method: 'PUT', path: '/bus-lines/:id' },
+  { expose: true, method: 'PUT', path: '/bus-lines/:id/update' },
   async ({
     id,
     ...data
   }: UpdateBusLinePayload & { id: number }): Promise<BusLine> => {
+    await validateBusLine(data, id);
     return await busLineRepository.update(id, data);
   },
 );
@@ -90,48 +96,8 @@ export const updateBusLine = api(
  * @throws {APIError} If the bus line is not found or deletion fails
  */
 export const deleteBusLine = api(
-  { expose: true, method: 'DELETE', path: '/bus-lines/:id' },
+  { expose: true, method: 'DELETE', path: '/bus-lines/:id/delete' },
   async ({ id }: { id: number }): Promise<BusLine> => {
     return await busLineRepository.delete(id);
-  },
-);
-
-/**
- * Searches for bus lines by matching a search term against name and code.
- * @param params - Search parameters
- * @param params.term - The search term to match against bus line name and code
- * @returns {Promise<BusLines>} List of matching bus lines
- * @throws {APIError} If search fails or no searchable fields are configured
- */
-export const searchBusLines = api(
-  { expose: true, method: 'GET', path: '/bus-lines/search' },
-  async ({ term }: { term: string }): Promise<BusLines> => {
-    const busLines = await busLineRepository.search(term);
-    return {
-      busLines,
-    };
-  },
-);
-
-/**
- * Searches for bus lines with pagination by matching a search term against name and code.
- * @param params - Search and pagination parameters
- * @param params.term - The search term to match against bus line name and code
- * @param params.page - Page number for pagination (optional, default: 1)
- * @param params.pageSize - Number of items per page (optional, default: 10)
- * @param params.orderBy - Sorting criteria (optional)
- * @param params.filters - Additional filters to apply (optional)
- * @returns {Promise<PaginatedBusLines>} Paginated list of matching bus lines
- * @throws {APIError} If search fails or no searchable fields are configured
- */
-export const searchBusLinesPaginated = api(
-  { expose: true, method: 'POST', path: '/bus-lines/search/paginated' },
-  async ({
-    term,
-    ...params
-  }: PaginationParamsBusLines & {
-    term: string;
-  }): Promise<PaginatedBusLines> => {
-    return await busLineRepository.searchPaginated(term, params);
   },
 );

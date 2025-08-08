@@ -1,6 +1,5 @@
 'use client';
 
-/* eslint-disable @next/next/no-img-element */
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import BusLineSkeleton from '@/bus-lines/components/bus-line-skeleton';
@@ -99,44 +98,24 @@ export default function BusLinePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{tBusLines('sections.visualInfo')}</CardTitle>
+            <CardTitle>Información adicional</CardTitle>
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
-              <dt className="font-medium">{tBusLines('fields.logo')}</dt>
-              <dd>
-                <div className="w-32 h-16 bg-gray-100 flex items-center justify-center rounded border">
-                  <img
-                    src={busLine.logoUrl || '/placeholder.svg'}
-                    alt={`Logo de ${busLine.name}`}
-                    className="max-w-full max-h-full object-contain"
-                  />
-                </div>
-              </dd>
+              <dt className="font-medium">Precio por kilómetro</dt>
+              <dd>{busLine.pricePerKilometer}</dd>
 
-              <dt className="font-medium">
-                {tBusLines('fields.primaryColor')}
-              </dt>
-              <dd className="flex items-center gap-2">
-                <div
-                  className="w-6 h-6 rounded border"
-                  style={{ backgroundColor: busLine.primaryColor ?? undefined }}
-                ></div>
-                {busLine.primaryColor}
-              </dd>
+              <dt className="font-medium">Tamaño de flota</dt>
+              <dd>{busLine.fleetSize || '-'}</dd>
 
-              <dt className="font-medium">
-                {tBusLines('fields.secondaryColor')}
-              </dt>
-              <dd className="flex items-center gap-2">
-                <div
-                  className="w-6 h-6 rounded border"
-                  style={{
-                    backgroundColor: busLine.secondaryColor ?? undefined,
-                  }}
-                ></div>
-                {busLine.secondaryColor}
-              </dd>
+              <dt className="font-medium">{tCommon('fields.website')}</dt>
+              <dd>{busLine.website || '-'}</dd>
+
+              <dt className="font-medium">{tCommon('fields.email')}</dt>
+              <dd>{busLine.email || '-'}</dd>
+
+              <dt className="font-medium">{tCommon('fields.phone')}</dt>
+              <dd>{busLine.phone || '-'}</dd>
 
               <dt className="font-medium">{tCommon('fields.createdAt')}</dt>
               <dd>{new Date(busLine.createdAt ?? '').toLocaleString()}</dd>

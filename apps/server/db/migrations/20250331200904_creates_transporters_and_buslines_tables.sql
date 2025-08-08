@@ -1,17 +1,19 @@
 CREATE TABLE IF NOT EXISTS "bus_lines" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
-	"code" varchar(20) NOT NULL,
+	"code" text NOT NULL,
 	"transporter_id" integer NOT NULL,
 	"service_type_id" integer NOT NULL,
+	"price_per_km_multiplier" integer DEFAULT 1 NOT NULL,
 	"description" text,
-	"logo_url" text,
-	"primary_color" varchar(7),
-	"secondary_color" varchar(7),
+	"fleet_size" integer,
+	"website" text,
+	"email" text,
+	"phone" text,
 	"active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "bus_lines_code_unique" UNIQUE("code")
+	"deleted_at" timestamp
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "service_types" (
@@ -60,8 +62,10 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "bus_lines_name_index" ON "bus_lines" USING btree ("name");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "bus_lines_transporter_id_index" ON "bus_lines" USING btree ("transporter_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "bus_lines_service_type_id_index" ON "bus_lines" USING btree ("service_type_id");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "bus_lines_deleted_at_index" ON "bus_lines" USING btree ("deleted_at");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "bus_lines_name_index" ON "bus_lines" USING btree ("name") WHERE "bus_lines"."deleted_at" is null;--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "bus_lines_code_index" ON "bus_lines" USING btree ("code") WHERE "bus_lines"."deleted_at" is null;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "transporters_name_index" ON "transporters" USING btree ("name");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "transporters_headquarter_city_id_index" ON "transporters" USING btree ("headquarter_city_id");

@@ -25,11 +25,12 @@ export default function useQueryBusLine({
     queryFn: () => client.inventory.getBusLine(busLineId),
     initialData: () =>
       queryClient
-        .getQueryData<bus_lines.PaginatedBusLines>(['busLines'])
+        .getQueryData<bus_lines.PaginatedListBusLinesResult>(['busLines'])
         ?.data.find((busLine) => busLine.id === busLineId),
     initialDataUpdatedAt: () =>
-      queryClient.getQueryState<bus_lines.PaginatedBusLines>(['busLines'])
-        ?.dataUpdatedAt,
+      queryClient.getQueryState<bus_lines.PaginatedListBusLinesResult>([
+        'busLines',
+      ])?.dataUpdatedAt,
     enabled,
   });
 }

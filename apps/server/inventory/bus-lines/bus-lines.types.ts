@@ -1,5 +1,10 @@
 import { MatchesRegexp, Min, MinLen } from 'encore.dev/validate';
-import { PaginatedResult, PaginationParams } from '../../shared/types';
+import {
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '../../shared/types';
 
 /**
  * Base interface representing a bus line entity
@@ -20,17 +25,23 @@ export interface BusLine {
   /** ID of the service type of this bus line */
   serviceTypeId: number;
 
+  /** Multiplier for price per kilometer */
+  pricePerKilometer: number;
+
   /** Description of the bus line */
   description: string | null;
 
-  /** URL to the bus line's logo */
-  logoUrl: string | null;
+  /** Number of vehicles in the fleet */
+  fleetSize: number | null;
 
-  /** Primary color of the bus line (hex code) */
-  primaryColor: string | null;
+  /** Website */
+  website: string | null;
 
-  /** Secondary color of the bus line (hex code) */
-  secondaryColor: string | null;
+  /** Email */
+  email: string | null;
+
+  /** Phone */
+  phone: string | null;
 
   /** Whether the bus line is currently active in the system */
   active: boolean;
@@ -71,26 +82,36 @@ export interface CreateBusLinePayload {
   serviceTypeId: number & Min<1>;
 
   /**
+   * Multiplier for price per kilometer
+   * Must be a positive number
+   * @default 1
+   */
+  pricePerKilometer?: number & Min<1>;
+
+  /**
    * Description of the bus line
    */
   description?: string;
 
   /**
-   * URL to the bus line's logo
+   * Number of vehicles in the fleet
    */
-  logoUrl?: string;
+  fleetSize?: number & Min<1>;
 
   /**
-   * Primary color of the bus line (hex code)
-   * Must be a valid hex color code
+   * Website
    */
-  primaryColor?: string & MatchesRegexp<'^#[0-9A-Fa-f]{6}$'>;
+  website?: string;
 
   /**
-   * Secondary color of the bus line (hex code)
-   * Must be a valid hex color code
+   * Email
    */
-  secondaryColor?: string & MatchesRegexp<'^#[0-9A-Fa-f]{6}$'>;
+  email?: string;
+
+  /**
+   * Phone
+   */
+  phone?: string;
 
   /**
    * Whether the bus line is active
@@ -128,26 +149,35 @@ export interface UpdateBusLinePayload {
   serviceTypeId?: number & Min<1>;
 
   /**
+   * Multiplier for price per kilometer
+   * Must be a positive number
+   */
+  pricePerKilometer?: number & Min<1>;
+
+  /**
    * Description of the bus line
    */
   description?: string;
 
   /**
-   * URL to the bus line's logo
+   * Number of vehicles in the fleet
    */
-  logoUrl?: string;
+  fleetSize?: number & Min<1>;
 
   /**
-   * Primary color of the bus line (hex code)
-   * Must be a valid hex color code
+   * Website
    */
-  primaryColor?: string & MatchesRegexp<'^#[0-9A-Fa-f]{6}$'>;
+  website?: string;
 
   /**
-   * Secondary color of the bus line (hex code)
-   * Must be a valid hex color code
+   * Email
    */
-  secondaryColor?: string & MatchesRegexp<'^#[0-9A-Fa-f]{6}$'>;
+  email?: string;
+
+  /**
+   * Phone
+   */
+  phone?: string;
 
   /**
    * Whether the bus line is active
@@ -156,29 +186,22 @@ export interface UpdateBusLinePayload {
 }
 
 /**
- * Response type for the list bus lines endpoint (non-paginated)
+ * Unified list query parameters for bus lines (non-paginated)
  */
-export interface BusLines {
-  /** List of bus line entities */
-  busLines: BusLine[];
-}
+export type ListBusLinesQueryParams = ListQueryParams<BusLine>;
 
 /**
- * Query options for filtering and ordering bus lines
+ * Unified list result for bus lines (non-paginated)
  */
-export interface BusLinesQueryOptions {
-  orderBy?: { field: keyof BusLine; direction: 'asc' | 'desc' }[];
-  filters?: Partial<BusLine>;
-}
+export type ListBusLinesResult = ListQueryResult<BusLine>;
 
 /**
- * Paginated response type for the list bus lines endpoint
+ * Unified paginated list query parameters for bus lines
  */
-export type PaginatedBusLines = PaginatedResult<BusLine>;
+export type PaginatedListBusLinesQueryParams =
+  PaginatedListQueryParams<BusLine>;
 
 /**
- * Pagination parameters with bus lines query options
+ * Unified paginated list result for bus lines
  */
-export interface PaginationParamsBusLines
-  extends PaginationParams,
-    BusLinesQueryOptions {}
+export type PaginatedListBusLinesResult = PaginatedListQueryResult<BusLine>;

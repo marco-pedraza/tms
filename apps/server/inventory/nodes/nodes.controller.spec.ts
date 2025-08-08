@@ -1386,6 +1386,8 @@ describe('Nodes Controller', () => {
         name: createUniqueName('Test Amenity for Node', testSuiteId),
         category: 'convenience',
         amenityType: 'installation',
+        active: true,
+        deletedAt: null,
       });
 
       await installationUseCases.assignAmenities(

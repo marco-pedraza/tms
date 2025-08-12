@@ -243,6 +243,37 @@ export default function NodeDetailsPage() {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>{tNodes('details.customAttributes')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {node.installation?.properties &&
+            node.installation.properties.length > 0 ? (
+              <div className="grid grid-cols-[1fr_2fr] gap-4">
+                {node.installation.properties.map((property) => (
+                  <Fragment key={property.schemaId}>
+                    <dt className="font-medium">{property.name}:</dt>
+                    {property.type === 'boolean' ? (
+                      <dd>
+                        {property.value
+                          ? tCommon('status.yes')
+                          : tCommon('status.no')}
+                      </dd>
+                    ) : (
+                      <dd>{property.value ?? '-'}</dd>
+                    )}
+                  </Fragment>
+                ))}
+              </div>
+            ) : (
+              <span className="text-muted-foreground">
+                {tNodes('details.noCustomAttributesDefined')}
+              </span>
+            )}
+          </CardContent>
+        </Card>
+
         {node.installation && (
           <Card>
             <CardHeader>

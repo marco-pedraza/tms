@@ -770,7 +770,9 @@
       "description": "Detalles del nodo",
       "amenitiesTitle": "Amenidades de la Instalación",
       "noAmenitiesAssigned": "No hay amenidades asignadas a esta instalación",
-      "noOperatingHoursDefined": "No se han definido horarios de operación para esta instalación"
+      "noOperatingHoursDefined": "No se han definido horarios de operación para esta instalación",
+      "customAttributes": "Atributos Específicos",
+      "noCustomAttributesDefined": "No hay atributos específicos definidos para esta instalación"
     },
     "errors": {
       "notFound": {

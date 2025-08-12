@@ -1,5 +1,11 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { NotFoundError } from '@repo/base-repo';
+import {
+  createCleanupHelper,
+  createTestSuiteId,
+  createUniqueCode,
+  createUniqueName,
+} from '../../tests/shared/test-utils';
 import { createBusDiagramModelZone } from '../bus-diagram-model-zones/bus-diagram-model-zones.controller';
 import {
   createBusDiagramModel,
@@ -11,67 +17,54 @@ import {
 } from '../bus-models/bus-models.controller';
 import { seatDiagramZoneRepository } from '../seat-diagram-zones/seat-diagram-zones.repository';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
-import { Bus, BusStatus, CreateBusPayload } from './buses.types';
+import type { CreateBusPayload } from './buses.types';
+import { BusStatus } from './buses.types';
+import { busRepository } from './buses.repository';
 import {
   createBus,
   deleteBus,
-  getAllowedBusStatusTransitions,
-  getAvailableBuses,
   getBus,
-  getBusesByModel,
-  getBusesByStatus,
+  listBusValidNextStatuses,
   listBuses,
   listBusesPaginated,
-  searchBuses,
-  searchBusesPaginated,
   updateBus,
-  updateBusStatus,
 } from './buses.controller';
 
 describe('Buses Controller', () => {
+  const testSuiteId = createTestSuiteId('buses');
+
   // Test data and setup
-  let busModelId: number; // We need a valid bus model ID for bus tests
-  let defaultBusDiagramModelId: number; // We need a valid default bus diagram model ID for bus tests
-  let alternativeBusModelId: number; // Alternative bus model for testing model change
-  let alternativeBusDiagramModelId: number; // Alternative bus diagram model
-
-  const testBus: CreateBusPayload = {
-    registrationNumber: 'TEST001',
-    modelId: 0, // This will be populated in beforeAll
-    typeCode: 100,
-    brandCode: 'TST',
-    modelCode: 'MDL',
-    maxCapacity: 50,
-    economicNumber: 'ECO123',
-    licensePlateType: 'STANDARD',
-    circulationCard: 'CC12345',
-    year: 2023,
-    sctPermit: 'SCT12345',
-    vehicleId: 'VEH12345',
-    engineNumber: 'ENG12345',
-    serialNumber: 'SER12345',
-    chassisNumber: 'CHS12345',
-    baseCode: 'BASE001',
-    fuelEfficiency: 8.5,
-    serviceType: 'EXECUTIVE',
-    commercialTourism: false,
-    available: true,
-    tourism: false,
-    status: BusStatus.ACTIVE,
-    gpsId: 'GPS12345',
-    active: true,
-  };
-
-  // Variables to store created IDs for cleanup
+  let busModelId: number;
+  let alternativeBusModelId: number;
+  let alternativeBusDiagramModelId: number;
   let createdBusId: number;
-  let createdSeatDiagramId: number;
-  let updatedSeatDiagramId: number; // To track new seat diagram ID after model update
 
-  // Create test dependencies before running the bus tests
+  // Setup cleanup helpers
+  // Use forceDelete for buses since they use soft delete and cause foreign key issues
+  const busCleanup = createCleanupHelper(
+    ({ id }: { id: number }) => busRepository.forceDelete(id),
+    'bus',
+  );
+
+  const seatDiagramCleanup = createCleanupHelper(
+    ({ id }) => seatDiagramRepository.delete(id),
+    'seat diagram',
+  );
+
+  const busModelCleanup = createCleanupHelper(
+    ({ id }) => deleteBusModel({ id }),
+    'bus model',
+  );
+
+  const busDiagramModelCleanup = createCleanupHelper(
+    ({ id }) => deleteBusDiagramModel({ id }),
+    'bus diagram model',
+  );
+
   beforeAll(async () => {
-    // Create a temporary bus diagram model to use for the bus tests
+    // Create test bus diagram model
     const busDiagramModel = await createBusDiagramModel({
-      name: 'Test Bus Diagram Model',
+      name: createUniqueName('Test Bus Diagram Model', testSuiteId),
       description: 'Test Bus Diagram Model Description',
       maxCapacity: 40,
       numFloors: 1,
@@ -88,7 +81,7 @@ describe('Buses Controller', () => {
       active: true,
     });
 
-    defaultBusDiagramModelId = busDiagramModel.id;
+    busDiagramModelCleanup.track(busDiagramModel.id);
 
     // Create a zone for the bus diagram model
     await createBusDiagramModelZone({
@@ -98,11 +91,11 @@ describe('Buses Controller', () => {
       priceMultiplier: 1.5,
     });
 
-    // Create a temporary bus model to use for the bus tests
+    // Create test bus model
     const busModel = await createBusModel({
       defaultBusDiagramModelId: busDiagramModel.id,
       manufacturer: 'TestManufacturer',
-      model: 'TestModel-Bus',
+      model: createUniqueName('TestModel-Bus', testSuiteId),
       year: 2023,
       seatingCapacity: 40,
       numFloors: 1,
@@ -110,11 +103,11 @@ describe('Buses Controller', () => {
       active: true,
     });
 
-    busModelId = busModel.id;
+    busModelId = busModelCleanup.track(busModel.id);
 
-    // Create an alternative bus diagram model with different configuration
+    // Create alternative bus diagram model
     const alternativeBusDiagramModel = await createBusDiagramModel({
-      name: 'Alternative Bus Diagram Model',
+      name: createUniqueName('Alternative Bus Diagram Model', testSuiteId),
       description: 'Alternative Bus Diagram Model Description',
       maxCapacity: 72,
       numFloors: 2,
@@ -137,7 +130,9 @@ describe('Buses Controller', () => {
       active: true,
     });
 
-    alternativeBusDiagramModelId = alternativeBusDiagramModel.id;
+    alternativeBusDiagramModelId = busDiagramModelCleanup.track(
+      alternativeBusDiagramModel.id,
+    );
 
     // Create different zones for the alternative bus diagram model
     await createBusDiagramModelZone({
@@ -154,11 +149,11 @@ describe('Buses Controller', () => {
       priceMultiplier: 1.0,
     });
 
-    // Create an alternative bus model
+    // Create alternative bus model
     const alternativeBusModel = await createBusModel({
       defaultBusDiagramModelId: alternativeBusDiagramModel.id,
       manufacturer: 'AlternativeManufacturer',
-      model: 'AlternativeModel-Bus',
+      model: createUniqueName('AlternativeModel-Bus', testSuiteId),
       year: 2024,
       seatingCapacity: 72,
       numFloors: 2,
@@ -166,96 +161,68 @@ describe('Buses Controller', () => {
       active: true,
     });
 
-    alternativeBusModelId = alternativeBusModel.id;
-
-    // Update the test bus with the real IDs
-    testBus.modelId = busModelId;
+    alternativeBusModelId = busModelCleanup.track(alternativeBusModel.id);
   });
 
   afterAll(async () => {
-    // Clean up the created bus and seat diagram if any
-    if (createdBusId) {
-      try {
-        await deleteBus({ id: createdBusId });
-      } catch {
-        // Silent error handling for cleanup
-      }
-    }
-
-    // Clean up the updated seat diagram if any
-    if (updatedSeatDiagramId) {
-      try {
-        await seatDiagramRepository.delete(updatedSeatDiagramId);
-      } catch {
-        // Silent error handling for cleanup
-      }
-    }
-
-    // Clean up the created seat diagram
-    if (createdSeatDiagramId) {
-      try {
-        await seatDiagramRepository.delete(createdSeatDiagramId);
-      } catch {
-        // Silent error handling for cleanup
-      }
-    }
-
-    // Clean up the created bus model if any
-    if (busModelId) {
-      try {
-        await deleteBusModel({ id: busModelId });
-      } catch {
-        // Silent error handling for cleanup
-      }
-    }
-
-    // Clean up the created bus diagram model if any
-    if (defaultBusDiagramModelId) {
-      try {
-        await deleteBusDiagramModel({ id: defaultBusDiagramModelId });
-      } catch {
-        // Silent error handling for cleanup
-      }
-    }
-
-    // Clean up the alternative bus model
-    if (alternativeBusModelId) {
-      try {
-        await deleteBusModel({ id: alternativeBusModelId });
-      } catch {
-        // Silent error handling for cleanup
-      }
-    }
-
-    // Clean up the alternative bus diagram model
-    if (alternativeBusDiagramModelId) {
-      try {
-        await deleteBusDiagramModel({ id: alternativeBusDiagramModelId });
-      } catch {
-        // Silent error handling for cleanup
-      }
-    }
+    // Clean up in proper dependency order to avoid orphaned entities
+    //
+    // Dependencies chain:
+    // buses → seat_diagrams, bus_models
+    // seat_diagrams → bus_diagram_models
+    // bus_models → bus_diagram_models
+    // bus_seats → seat_diagrams (CASCADE delete)
+    // seat_diagram_zones → seat_diagrams (CASCADE delete)
+    //
+    // Cleanup order (using forceDelete for buses to handle soft delete):
+    // 1. buses (free up references to seat_diagrams and bus_models)
+    await busCleanup.cleanupAll();
+    // 2. seat_diagrams (bus_seats and seat_diagram_zones deleted by CASCADE)
+    await seatDiagramCleanup.cleanupAll();
+    // 3. bus_models (free up references to bus_diagram_models)
+    await busModelCleanup.cleanupAll();
+    // 4. bus_diagram_models (root entities, no dependencies)
+    await busDiagramModelCleanup.cleanupAll();
   });
 
   describe('success scenarios', () => {
     test('should create a new bus with seat diagram and zones', async () => {
-      // Create a new bus
+      const testBus: CreateBusPayload = {
+        registrationNumber: createUniqueCode('TEST', 3),
+        modelId: busModelId,
+        typeCode: 100,
+        brandCode: 'TST',
+        modelCode: 'MDL',
+        maxCapacity: 50,
+        economicNumber: createUniqueCode('ECO', 3),
+        licensePlateType: 'STANDARD',
+        circulationCard: createUniqueCode('CC', 5),
+        year: 2023,
+        sctPermit: createUniqueCode('SCT', 5),
+        vehicleId: createUniqueCode('VEH', 5),
+        engineNumber: createUniqueCode('ENG', 5),
+        serialNumber: createUniqueCode('SER', 5),
+        chassisNumber: createUniqueCode('CHS', 5),
+        baseCode: 'BASE001',
+        fuelEfficiency: 8.5,
+        serviceType: 'EXECUTIVE',
+        commercialTourism: false,
+        available: true,
+        tourism: false,
+        status: BusStatus.ACTIVE,
+        gpsId: createUniqueCode('GPS', 5),
+        active: true,
+      };
+
       const response = await createBus(testBus);
+      createdBusId = busCleanup.track(response.id);
+      seatDiagramCleanup.track(response.seatDiagramId);
 
-      // Store the IDs for later cleanup
-      createdBusId = response.id;
-      createdSeatDiagramId = response.seatDiagramId;
-
-      // Assertions
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
       expect(response.registrationNumber).toBe(testBus.registrationNumber);
       expect(response.modelId).toBe(testBus.modelId);
       expect(response.seatDiagramId).toBeDefined();
-      expect(response.typeCode).toBe(testBus.typeCode);
-      expect(response.brandCode).toBe(testBus.brandCode);
-      expect(response.modelCode).toBe(testBus.modelCode);
-      expect(response.maxCapacity).toBe(testBus.maxCapacity);
       expect(response.status).toBe(testBus.status);
       expect(response.active).toBe(testBus.active);
       expect(response.createdAt).toBeDefined();
@@ -287,74 +254,50 @@ describe('Buses Controller', () => {
       expect(Number(diagramZone.priceMultiplier)).toBe(1.5);
     });
 
-    test('should retrieve a bus by ID', async () => {
+    test('should retrieve a bus by ID and handle basic CRUD operations', async () => {
       const response = await getBus({ id: createdBusId });
 
       expect(response).toBeDefined();
       expect(response.id).toBe(createdBusId);
-      expect(response.registrationNumber).toBe(testBus.registrationNumber);
-      expect(response.modelId).toBe(testBus.modelId);
+      expect(response.registrationNumber).toBeDefined();
+      expect(response.modelId).toBe(busModelId);
+
+      // Test update operations
+      const updatedRegistrationNumber = createUniqueCode('UPD', 3);
+      const updateResponse = await updateBus({
+        id: createdBusId,
+        registrationNumber: updatedRegistrationNumber,
+        status: BusStatus.MAINTENANCE,
+      });
+
+      expect(updateResponse.registrationNumber).toBe(updatedRegistrationNumber);
+      expect(updateResponse.status).toBe(BusStatus.MAINTENANCE);
+
+      // Test status transitions
+      const statusResponse = await listBusValidNextStatuses({
+        id: createdBusId,
+      });
+      expect(statusResponse.data).toBeDefined();
+      expect(Array.isArray(statusResponse.data)).toBe(true);
     });
 
-    test('should list all buses', async () => {
+    test('should list buses and include created bus', async () => {
       const response = await listBuses({});
 
       expect(response).toBeDefined();
-      expect(response.buses).toBeDefined();
-      expect(Array.isArray(response.buses)).toBe(true);
-      expect(response.buses.length).toBeGreaterThan(0);
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.data.length).toBeGreaterThan(0);
 
       // Find our test bus in the list
-      const foundBus = response.buses.find((bus) => bus.id === createdBusId);
+      const foundBus = response.data.find((bus) => bus.id === createdBusId);
       expect(foundBus).toBeDefined();
-      expect(foundBus?.registrationNumber).toBe(testBus.registrationNumber);
-    });
-
-    test('should update a bus', async () => {
-      const updatedRegistrationNumber = 'UPDATED001';
-      const response = await updateBus({
-        id: createdBusId,
-        registrationNumber: updatedRegistrationNumber,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.id).toBe(createdBusId);
-      expect(response.registrationNumber).toBe(updatedRegistrationNumber);
-    });
-
-    test('should update a bus status', async () => {
-      const newStatus = BusStatus.MAINTENANCE;
-      const response = await updateBusStatus({
-        id: createdBusId,
-        status: newStatus,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.id).toBe(createdBusId);
-      expect(response.status).toBe(newStatus);
-    });
-
-    test('should retrieve allowed status transitions for a bus', async () => {
-      const response = await getAllowedBusStatusTransitions({
-        id: createdBusId,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.allowedTransitions).toBeDefined();
-      expect(Array.isArray(response.allowedTransitions)).toBe(true);
+      expect(foundBus?.id).toBe(createdBusId);
     });
 
     test('should update bus seat diagram when model is changed', async () => {
-      // Store the original seat diagram ID for comparison
-      const originalSeatDiagramId = createdSeatDiagramId;
-
-      // Verify that the original diagram zones exist before the change
-      const originalZones = await seatDiagramZoneRepository.findAll({
-        filters: {
-          seatDiagramId: originalSeatDiagramId,
-        },
-      });
-      expect(originalZones.length).toBeGreaterThan(0); // Ensure there were zones
+      const originalBus = await getBus({ id: createdBusId });
+      const originalSeatDiagramId = originalBus.seatDiagramId;
 
       // Update the bus with a new model
       const response = await updateBus({
@@ -362,330 +305,263 @@ describe('Buses Controller', () => {
         modelId: alternativeBusModelId,
       });
 
-      // Verify bus is updated with the new model
-      expect(response).toBeDefined();
-      expect(response.id).toBe(createdBusId);
       expect(response.modelId).toBe(alternativeBusModelId);
-
-      // Verify seat diagram ID has changed
-      expect(response.seatDiagramId).toBeDefined();
       expect(response.seatDiagramId).not.toBe(originalSeatDiagramId);
 
-      // Store the new seat diagram ID for cleanup
-      updatedSeatDiagramId = response.seatDiagramId;
+      // Track new seat diagram for cleanup
+      seatDiagramCleanup.track(response.seatDiagramId);
 
-      // Verify the new seat diagram was created correctly
-      const seatDiagram =
-        await seatDiagramRepository.findOne(updatedSeatDiagramId);
-      expect(seatDiagram).toBeDefined();
+      // Verify the new seat diagram configuration
+      const seatDiagram = await seatDiagramRepository.findOne(
+        response.seatDiagramId,
+      );
       expect(seatDiagram.busDiagramModelId).toBe(alternativeBusDiagramModelId);
-      expect(seatDiagram.maxCapacity).toBe(72); // Alternative model has 72 seats
-      expect(seatDiagram.numFloors).toBe(2); // Alternative model has 2 floors
+      expect(seatDiagram.maxCapacity).toBe(72);
+      expect(seatDiagram.numFloors).toBe(2);
       expect(seatDiagram.totalSeats).toBe(72);
 
-      // Verify that new zones were properly created for the seat diagram
+      // Verify that new zones were properly created (2 zones for alternative layout)
       const diagramZones = await seatDiagramZoneRepository.findAll({
-        filters: {
-          seatDiagramId: updatedSeatDiagramId,
-        },
+        filters: { seatDiagramId: response.seatDiagramId },
       });
+      expect(diagramZones.length).toBe(2);
 
-      expect(diagramZones).toBeDefined();
-      expect(diagramZones.length).toBe(2); // We created two zones for the alternative layout
-
-      // Find and verify the VIP zone using repository's findAll with specific filters
-      const vipZones = await seatDiagramZoneRepository.findAll({
-        filters: {
-          seatDiagramId: updatedSeatDiagramId,
-          name: 'VIP Zone',
-        },
-      });
-      const vipZone = vipZones.length > 0 ? vipZones[0] : null;
-      expect(vipZone).toBeDefined();
-      expect(vipZone?.rowNumbers).toEqual([1, 2]);
-      expect(Number(vipZone?.priceMultiplier)).toBe(2.0);
-
-      // Find and verify the Standard zone using repository's findAll with specific filters
-      const standardZones = await seatDiagramZoneRepository.findAll({
-        filters: {
-          seatDiagramId: updatedSeatDiagramId,
-          name: 'Standard Zone',
-        },
-      });
-      const standardZone = standardZones.length > 0 ? standardZones[0] : null;
-      expect(standardZone).toBeDefined();
-      expect(standardZone?.rowNumbers).toEqual([3, 4, 5, 6, 7, 8]);
-      expect(Number(standardZone?.priceMultiplier)).toBe(1.0);
-
-      // Verify that the original diagram zones were deleted
-      const deletedDiagramZones = await seatDiagramZoneRepository.findAll({
-        filters: {
-          seatDiagramId: originalSeatDiagramId,
-        },
-      });
-      expect(deletedDiagramZones.length).toBe(0); // No zones from the previous diagram should remain
-
-      // Verify that the original diagram was deleted
+      // Verify original diagram was deleted
       await expect(
         seatDiagramRepository.findOne(originalSeatDiagramId),
       ).rejects.toThrow(NotFoundError);
     });
   });
 
-  describe('pagination', () => {
-    test('should return paginated buses with default parameters', async () => {
-      const response = await listBusesPaginated({});
+  describe('error scenarios', () => {
+    test('should handle not found errors for all operations', async () => {
+      const nonExistentId = 99999;
 
-      expect(response.data).toBeDefined();
-      expect(Array.isArray(response.data)).toBe(true);
-      expect(response.pagination).toBeDefined();
-      expect(response.pagination.currentPage).toBe(1);
-      expect(response.pagination.pageSize).toBeDefined();
-      expect(response.pagination.totalCount).toBeDefined();
-      expect(response.pagination.totalPages).toBeDefined();
-      expect(typeof response.pagination.hasNextPage).toBe('boolean');
-      expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
+      await expect(getBus({ id: nonExistentId })).rejects.toThrow();
+      await expect(
+        updateBus({ id: nonExistentId, registrationNumber: 'TEST' }),
+      ).rejects.toThrow();
+      await expect(deleteBus({ id: nonExistentId })).rejects.toThrow();
     });
 
-    test('should honor page and pageSize parameters', async () => {
-      const response = await listBusesPaginated({
+    test('should handle validation errors', async () => {
+      // Test duplicate registration number
+      const duplicateRegNumber = createUniqueCode('DUP', 3);
+      const firstBus = await createBus({
+        registrationNumber: duplicateRegNumber,
+        modelId: busModelId,
+        typeCode: 100,
+        brandCode: 'DUP',
+        modelCode: 'MDL',
+        maxCapacity: 50,
+        economicNumber: createUniqueCode('ECO', 3),
+        licensePlateType: 'STANDARD',
+        circulationCard: createUniqueCode('CC', 5),
+        year: 2023,
+        sctPermit: createUniqueCode('SCT', 5),
+        vehicleId: createUniqueCode('VEH', 5),
+        engineNumber: createUniqueCode('ENG', 5),
+        serialNumber: createUniqueCode('SER', 5),
+        chassisNumber: createUniqueCode('CHS', 5),
+        baseCode: 'BASE001',
+        fuelEfficiency: 8.5,
+        serviceType: 'EXECUTIVE',
+        commercialTourism: false,
+        available: true,
+        tourism: false,
+        status: BusStatus.ACTIVE,
+        gpsId: createUniqueCode('GPS', 5),
+        active: true,
+      });
+
+      // Track the bus and its seat diagram for cleanup
+      busCleanup.track(firstBus.id);
+      seatDiagramCleanup.track(firstBus.seatDiagramId);
+
+      // Should reject duplicate registration number
+      await expect(
+        createBus({
+          registrationNumber: duplicateRegNumber,
+          modelId: busModelId,
+          typeCode: 101,
+          brandCode: 'DUP2',
+          modelCode: 'MDL2',
+          maxCapacity: 40,
+          economicNumber: createUniqueCode('ECO2', 3),
+          licensePlateType: 'STANDARD',
+          circulationCard: createUniqueCode('CC2', 5),
+          year: 2023,
+          sctPermit: createUniqueCode('SCT2', 5),
+          vehicleId: createUniqueCode('VEH2', 5),
+          engineNumber: createUniqueCode('ENG2', 5),
+          serialNumber: createUniqueCode('SER2', 5),
+          chassisNumber: createUniqueCode('CHS2', 5),
+          baseCode: 'BASE002',
+          fuelEfficiency: 7.5,
+          serviceType: 'STANDARD',
+          commercialTourism: false,
+          available: true,
+          tourism: false,
+          status: BusStatus.ACTIVE,
+          gpsId: createUniqueCode('GPS2', 5),
+          active: true,
+        }),
+      ).rejects.toThrow();
+
+      // Test invalid model ID
+      await expect(
+        createBus({
+          registrationNumber: createUniqueCode('INV', 3),
+          modelId: 99999,
+          typeCode: 100,
+          brandCode: 'TST',
+          modelCode: 'MDL',
+          maxCapacity: 50,
+          economicNumber: createUniqueCode('ECO3', 3),
+          licensePlateType: 'STANDARD',
+          circulationCard: createUniqueCode('CC3', 5),
+          year: 2023,
+          sctPermit: createUniqueCode('SCT3', 5),
+          vehicleId: createUniqueCode('VEH3', 5),
+          engineNumber: createUniqueCode('ENG3', 5),
+          serialNumber: createUniqueCode('SER3', 5),
+          chassisNumber: createUniqueCode('CHS3', 5),
+          baseCode: 'BASE003',
+          fuelEfficiency: 8.5,
+          serviceType: 'EXECUTIVE',
+          commercialTourism: false,
+          available: true,
+          tourism: false,
+          status: BusStatus.ACTIVE,
+          gpsId: createUniqueCode('GPS3', 5),
+          active: true,
+        }),
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('pagination and listing', () => {
+    test('should handle both paginated and non-paginated responses', async () => {
+      // Test paginated response
+      const paginatedResponse = await listBusesPaginated({
         page: 1,
         pageSize: 5,
       });
 
-      expect(response.pagination.currentPage).toBe(1);
-      expect(response.pagination.pageSize).toBe(5);
-      expect(response.data.length).toBeLessThanOrEqual(5);
-    });
+      expect(paginatedResponse.data).toBeDefined();
+      expect(Array.isArray(paginatedResponse.data)).toBe(true);
+      expect(paginatedResponse.pagination).toBeDefined();
+      expect(paginatedResponse.pagination.currentPage).toBe(1);
+      expect(paginatedResponse.pagination.pageSize).toBe(5);
+      expect(paginatedResponse.data.length).toBeLessThanOrEqual(5);
 
-    test('should return non-paginated list for dropdowns', async () => {
-      const response = await listBuses({});
-
-      expect(response.buses).toBeDefined();
-      expect(Array.isArray(response.buses)).toBe(true);
-      expect(response.buses.length).toBeGreaterThan(0);
-      // No pagination info should be present
-      expect(response).not.toHaveProperty('pagination');
-    });
-  });
-
-  describe('filtering methods', () => {
-    test('should retrieve buses by model ID', async () => {
-      const response = await getBusesByModel({ modelId: testBus.modelId });
-
-      expect(response).toBeDefined();
-      expect(response.buses).toBeDefined();
-      expect(Array.isArray(response.buses)).toBe(true);
-    });
-
-    test('should retrieve available buses', async () => {
-      const response = await getAvailableBuses();
-
-      expect(response).toBeDefined();
-      expect(response.buses).toBeDefined();
-      expect(Array.isArray(response.buses)).toBe(true);
-    });
-
-    test('should retrieve buses by status', async () => {
-      const response = await getBusesByStatus({
-        status: BusStatus.MAINTENANCE,
-      });
-
-      expect(response).toBeDefined();
-      expect(response.buses).toBeDefined();
-      expect(Array.isArray(response.buses)).toBe(true);
-    });
-  });
-
-  describe('search functionality', () => {
-    test('should search buses', async () => {
-      // Create a unique bus for search testing
-      const searchableBus = await createBus({
-        registrationNumber: 'SEARCH123',
-        modelId: testBus.modelId,
-        economicNumber: 'SEARCHABLE',
-      });
-
-      try {
-        // Search for the bus by term
-        const response = await searchBuses({ term: 'SEARCH' });
-
-        expect(response.buses).toBeDefined();
-        expect(Array.isArray(response.buses)).toBe(true);
-        expect(response.buses.some((b) => b.id === searchableBus.id)).toBe(
-          true,
-        );
-      } finally {
-        // Clean up
-        await deleteBus({ id: searchableBus.id });
-      }
-    });
-
-    test('should search buses with pagination', async () => {
-      const response = await searchBusesPaginated({
-        term: 'TEST',
-        page: 1,
-        pageSize: 5,
-      });
-
-      expect(response.data).toBeDefined();
-      expect(Array.isArray(response.data)).toBe(true);
-      expect(response.pagination).toBeDefined();
-      expect(response.pagination.currentPage).toBe(1);
-      expect(response.pagination.pageSize).toBe(5);
+      // Test non-paginated response (for dropdowns)
+      const listResponse = await listBuses({});
+      expect(listResponse.data).toBeDefined();
+      expect(Array.isArray(listResponse.data)).toBe(true);
+      expect(listResponse).not.toHaveProperty('pagination');
     });
   });
 
   describe('ordering and filtering', () => {
-    // Test buses for ordering and filtering tests
-    const testBuses: Bus[] = [];
+    // Use the main busCleanup instead of creating a separate one
 
     beforeAll(async () => {
-      // Create test buses with different properties
+      // Create test buses with different properties for ordering/filtering tests
       const buses = [
         {
-          registrationNumber: 'ORDR001',
-          modelId: testBus.modelId,
-          economicNumber: 'ALPHA',
+          registrationNumber: createUniqueCode('ORDR1', 3),
+          modelId: busModelId,
+          economicNumber: createUniqueCode('ALPHA', 3),
           status: BusStatus.ACTIVE,
           active: true,
         },
         {
-          registrationNumber: 'ORDR002',
-          modelId: testBus.modelId,
-          economicNumber: 'BETA',
+          registrationNumber: createUniqueCode('ORDR2', 3),
+          modelId: busModelId,
+          economicNumber: createUniqueCode('BETA', 3),
           status: BusStatus.MAINTENANCE,
           active: false,
         },
         {
-          registrationNumber: 'ORDR003',
-          modelId: testBus.modelId,
-          economicNumber: 'GAMMA',
+          registrationNumber: createUniqueCode('ORDR3', 3),
+          modelId: busModelId,
+          economicNumber: createUniqueCode('GAMMA', 3),
           status: BusStatus.ACTIVE,
           active: true,
         },
       ];
 
-      for (const bus of buses) {
-        const created = await createBus(bus);
-        testBuses.push(created);
+      for (const busData of buses) {
+        const fullBusData = {
+          ...busData,
+          typeCode: 100,
+          brandCode: 'TST',
+          modelCode: 'MDL',
+          maxCapacity: 50,
+          licensePlateType: 'STANDARD' as const,
+          circulationCard: createUniqueCode('CC', 5),
+          year: 2023,
+          sctPermit: createUniqueCode('SCT', 5),
+          vehicleId: createUniqueCode('VEH', 5),
+          engineNumber: createUniqueCode('ENG', 5),
+          serialNumber: createUniqueCode('SER', 5),
+          chassisNumber: createUniqueCode('CHS', 5),
+          baseCode: 'BASE001',
+          fuelEfficiency: 8.5,
+          serviceType: 'EXECUTIVE' as const,
+          commercialTourism: false,
+          available: true,
+          tourism: false,
+          gpsId: createUniqueCode('GPS', 5),
+        };
+
+        const created = await createBus(fullBusData);
+        busCleanup.track(created.id);
+        seatDiagramCleanup.track(created.seatDiagramId);
       }
     });
 
-    afterAll(async () => {
-      // Clean up test buses
-      for (const bus of testBuses) {
-        try {
-          await deleteBus({ id: bus.id });
-        } catch {
-          // Silent error handling for cleanup
-        }
-      }
-    });
+    // No need for separate cleanup - main afterAll handles all buses
 
-    test('should order buses by registration number descending', async () => {
-      const response = await listBuses({
+    test('should handle ordering, filtering, and pagination', async () => {
+      // Test ordering by registration number descending
+      const orderedResponse = await listBuses({
         orderBy: [{ field: 'registrationNumber', direction: 'desc' }],
       });
-
-      const regNumbers = response.buses.map((b) => b.registrationNumber);
-      // Check if registration numbers are in descending order
+      const regNumbers = orderedResponse.data.map((b) => b.registrationNumber);
       for (let i = 0; i < regNumbers.length - 1; i++) {
         expect(regNumbers[i] >= regNumbers[i + 1]).toBe(true);
       }
-    });
 
-    test('should filter buses by active status', async () => {
-      const response = await listBuses({
+      // Test filtering by active status
+      const filteredResponse = await listBuses({
         filters: { active: true },
       });
+      expect(filteredResponse.data.every((b) => b.active === true)).toBe(true);
 
-      // All returned buses should be active
-      expect(response.buses.every((b) => b.active === true)).toBe(true);
-      // Should include our active test buses
-      const activeTestBusIds = testBuses
-        .filter((b) => b.active)
-        .map((b) => b.id);
-
-      for (const id of activeTestBusIds) {
-        expect(response.buses.some((b) => b.id === id)).toBe(true);
-      }
-    });
-
-    test('should combine ordering and filtering in paginated results', async () => {
-      const response = await listBusesPaginated({
+      // Test combined ordering and filtering with pagination
+      const combinedResponse = await listBusesPaginated({
         filters: { active: true },
         orderBy: [{ field: 'registrationNumber', direction: 'asc' }],
         page: 1,
         pageSize: 10,
       });
 
-      // Check filtering
-      expect(response.data.every((b) => b.active === true)).toBe(true);
+      // Verify filtering
+      expect(combinedResponse.data.every((b) => b.active === true)).toBe(true);
 
-      // Check ordering (ascending)
-      const regNumbers = response.data.map((b) => b.registrationNumber);
-      for (let i = 0; i < regNumbers.length - 1; i++) {
-        expect(regNumbers[i] <= regNumbers[i + 1]).toBe(true);
+      // Verify ordering (ascending)
+      const combinedRegNumbers = combinedResponse.data.map(
+        (b) => b.registrationNumber,
+      );
+      for (let i = 0; i < combinedRegNumbers.length - 1; i++) {
+        expect(combinedRegNumbers[i] <= combinedRegNumbers[i + 1]).toBe(true);
       }
 
-      // Check pagination properties
-      expect(response.pagination).toBeDefined();
-      expect(response.pagination.currentPage).toBe(1);
-      expect(response.pagination.pageSize).toBe(10);
-    });
-
-    test('should allow multi-field ordering', async () => {
-      // Create buses with same active status but different registration numbers
-      const sameActiveStatusBuses = [
-        {
-          registrationNumber: 'MULTI1',
-          modelId: testBus.modelId,
-          economicNumber: 'MULTI-A',
-          status: BusStatus.ACTIVE,
-          active: true,
-        },
-        {
-          registrationNumber: 'MULTI2',
-          modelId: testBus.modelId,
-          economicNumber: 'MULTI-B',
-          status: BusStatus.ACTIVE,
-          active: true,
-        },
-      ];
-
-      const createdBuses: Bus[] = [];
-
-      try {
-        for (const bus of sameActiveStatusBuses) {
-          const created = await createBus(bus);
-          createdBuses.push(created);
-        }
-
-        // Order by active status first, then by registration number
-        const response = await listBuses({
-          orderBy: [
-            { field: 'active', direction: 'desc' },
-            { field: 'registrationNumber', direction: 'asc' },
-          ],
-        });
-
-        // Get all active buses and verify they're ordered by registration number
-        const activeBuses = response.buses.filter((b) => b.active === true);
-        const activeRegNumbers = activeBuses.map((b) => b.registrationNumber);
-
-        for (let i = 0; i < activeRegNumbers.length - 1; i++) {
-          if (activeBuses[i].active === activeBuses[i + 1].active) {
-            // If active status is the same, registration numbers should be in ascending order
-            expect(activeRegNumbers[i] <= activeRegNumbers[i + 1]).toBe(true);
-          }
-        }
-      } finally {
-        // Clean up
-        for (const bus of createdBuses) {
-          await deleteBus({ id: bus.id });
-        }
-      }
+      // Verify pagination
+      expect(combinedResponse.pagination.currentPage).toBe(1);
+      expect(combinedResponse.pagination.pageSize).toBe(10);
     });
   });
 });

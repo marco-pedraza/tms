@@ -147,17 +147,13 @@ export namespace inventory {
             this.deleteState = this.deleteState.bind(this)
             this.deleteTransporter = this.deleteTransporter.bind(this)
             this.findPopulationByAssignedCity = this.findPopulationByAssignedCity.bind(this)
-            this.getAllowedBusStatusTransitions = this.getAllowedBusStatusTransitions.bind(this)
             this.getAmenity = this.getAmenity.bind(this)
-            this.getAvailableBuses = this.getAvailableBuses.bind(this)
             this.getBus = this.getBus.bind(this)
             this.getBusDiagramModel = this.getBusDiagramModel.bind(this)
             this.getBusDiagramModelSeats = this.getBusDiagramModelSeats.bind(this)
             this.getBusDiagramModelZone = this.getBusDiagramModelZone.bind(this)
             this.getBusLine = this.getBusLine.bind(this)
             this.getBusModel = this.getBusModel.bind(this)
-            this.getBusesByModel = this.getBusesByModel.bind(this)
-            this.getBusesByStatus = this.getBusesByStatus.bind(this)
             this.getCity = this.getCity.bind(this)
             this.getCountry = this.getCountry.bind(this)
             this.getDriver = this.getDriver.bind(this)
@@ -190,6 +186,7 @@ export namespace inventory {
             this.listBusLinesPaginated = this.listBusLinesPaginated.bind(this)
             this.listBusModels = this.listBusModels.bind(this)
             this.listBusModelsPaginated = this.listBusModelsPaginated.bind(this)
+            this.listBusValidNextStatuses = this.listBusValidNextStatuses.bind(this)
             this.listBuses = this.listBuses.bind(this)
             this.listBusesPaginated = this.listBusesPaginated.bind(this)
             this.listCities = this.listCities.bind(this)
@@ -230,8 +227,6 @@ export namespace inventory {
             this.listZonesByDiagramModelPaginated = this.listZonesByDiagramModelPaginated.bind(this)
             this.listZonesByDiagramPaginated = this.listZonesByDiagramPaginated.bind(this)
             this.regenerateSeats = this.regenerateSeats.bind(this)
-            this.searchBuses = this.searchBuses.bind(this)
-            this.searchBusesPaginated = this.searchBusesPaginated.bind(this)
             this.searchRoutes = this.searchRoutes.bind(this)
             this.searchRoutesPaginated = this.searchRoutesPaginated.bind(this)
             this.searchServiceTypes = this.searchServiceTypes.bind(this)
@@ -244,7 +239,6 @@ export namespace inventory {
             this.updateBusDiagramModelZone = this.updateBusDiagramModelZone.bind(this)
             this.updateBusLine = this.updateBusLine.bind(this)
             this.updateBusModel = this.updateBusModel.bind(this)
-            this.updateBusStatus = this.updateBusStatus.bind(this)
             this.updateCity = this.updateCity.bind(this)
             this.updateCompoundRouteSegments = this.updateCompoundRouteSegments.bind(this)
             this.updateCountry = this.updateCountry.bind(this)
@@ -403,7 +397,7 @@ export namespace inventory {
          */
         public async createBus(params: buses.CreateBusPayload): Promise<buses.Bus> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/buses`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("POST", `/buses/create`, JSON.stringify(params))
             return await resp.json() as buses.Bus
         }
 
@@ -716,7 +710,7 @@ export namespace inventory {
          */
         public async deleteBus(id: number): Promise<buses.Bus> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/buses/${encodeURIComponent(id)}`)
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/buses/${encodeURIComponent(id)}/delete`)
             return await resp.json() as buses.Bus
         }
 
@@ -1000,23 +994,6 @@ export namespace inventory {
         }
 
         /**
-         * Gets all allowed status transitions for a bus.
-         * @param params - Object containing the bus ID
-         * @param params.id - The ID of the bus
-         * @returns {Promise<{ allowedTransitions: BusStatus[] }>} An object containing allowed transitions
-         * @throws {APIError} If retrieval fails
-         */
-        public async getAllowedBusStatusTransitions(id: number): Promise<{
-    allowedTransitions: buses.BusStatus[]
-}> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/buses/${encodeURIComponent(id)}/allowed-status-transitions`)
-            return await resp.json() as {
-    allowedTransitions: buses.BusStatus[]
-}
-        }
-
-        /**
          * Retrieves an amenity by its ID.
          * @param params - Object containing the amenity ID
          * @param params.id - The ID of the amenity to retrieve
@@ -1027,17 +1004,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/amenities/${encodeURIComponent(id)}`)
             return await resp.json() as amenities.Amenity
-        }
-
-        /**
-         * Retrieves buses that are available for use.
-         * @returns {Promise<Buses>} An object containing an array of available buses
-         * @throws {APIError} If retrieval fails
-         */
-        public async getAvailableBuses(): Promise<buses.Buses> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/buses/available`)
-            return await resp.json() as buses.Buses
         }
 
         /**
@@ -1117,32 +1083,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/bus-models/${encodeURIComponent(id)}`)
             return await resp.json() as bus_models.BusModel
-        }
-
-        /**
-         * Retrieves buses by model ID.
-         * @param params - Object containing the model ID
-         * @param params.modelId - The ID of the bus model
-         * @returns {Promise<Buses>} An object containing an array of buses
-         * @throws {APIError} If retrieval fails
-         */
-        public async getBusesByModel(modelId: number): Promise<buses.Buses> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/buses/by-model/${encodeURIComponent(modelId)}`)
-            return await resp.json() as buses.Buses
-        }
-
-        /**
-         * Retrieves buses by status.
-         * @param params - Object containing the status
-         * @param params.status - The status to filter by
-         * @returns {Promise<Buses>} An object containing an array of buses
-         * @throws {APIError} If retrieval fails
-         */
-        public async getBusesByStatus(status: string): Promise<buses.Buses> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/buses/by-status/${encodeURIComponent(status)}`)
-            return await resp.json() as buses.Buses
         }
 
         /**
@@ -1555,27 +1495,40 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves all buses without pagination (useful for dropdowns).
-         * @param params - Query options for ordering and filtering
-         * @returns {Promise<Buses>} An object containing an array of buses
+         * Gets all valid next statuses for a bus.
+         * @param params - Object containing the bus ID
+         * @param params.id - The ID of the bus
+         * @returns {Promise<ListBusStatusesResult>} An object containing allowed transitions
          * @throws {APIError} If retrieval fails
          */
-        public async listBuses(params: buses.BusesQueryOptions): Promise<buses.Buses> {
+        public async listBusValidNextStatuses(id: number): Promise<buses.ListBusStatusesResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-buses`, JSON.stringify(params))
-            return await resp.json() as buses.Buses
+            const resp = await this.baseClient.callTypedAPI("GET", `/buses/${encodeURIComponent(id)}/valid-next-statuses`)
+            return await resp.json() as buses.ListBusStatusesResult
+        }
+
+        /**
+         * Retrieves all buses without pagination (useful for dropdowns).
+         * @param params - Query options for ordering and filtering
+         * @returns {Promise<ListBusesResult>} An object containing an array of buses
+         * @throws {APIError} If retrieval fails
+         */
+        public async listBuses(params: buses.ListBusesQueryParams): Promise<buses.ListBusesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/buses/list/all`, JSON.stringify(params))
+            return await resp.json() as buses.ListBusesResult
         }
 
         /**
          * Retrieves buses with pagination (useful for tables).
          * @param params - Pagination parameters with query options
-         * @returns {Promise<PaginatedBuses>} Paginated list of buses
+         * @returns {Promise<PaginatedListBusesResult>} Paginated list of buses
          * @throws {APIError} If retrieval fails
          */
-        public async listBusesPaginated(params: buses.PaginationParamsBuses): Promise<buses.PaginatedBuses> {
+        public async listBusesPaginated(params: buses.PaginatedListBusesQueryParams): Promise<buses.PaginatedListBusesResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-buses/paginated`, JSON.stringify(params))
-            return await resp.json() as buses.PaginatedBuses
+            const resp = await this.baseClient.callTypedAPI("POST", `/buses/list`, JSON.stringify(params))
+            return await resp.json() as buses.PaginatedListBusesResult
         }
 
         /**
@@ -2084,89 +2037,6 @@ export namespace inventory {
         }
 
         /**
-         * Searches for buses by matching a search term against registration number, economic number, and vehicle ID.
-         * @param params - Search parameters
-         * @param params.term - The search term to match
-         * @returns {Promise<Buses>} List of matching buses
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchBuses(params: {
-    term: string
-}): Promise<buses.Buses> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                term: params.term,
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/buses/search`, undefined, {query})
-            return await resp.json() as buses.Buses
-        }
-
-        /**
-         * Searches for buses with pagination by matching a search term.
-         * @param params - Search and pagination parameters
-         * @param params.term - The search term to match
-         * @param params.page - Page number for pagination (optional, default: 1)
-         * @param params.pageSize - Number of items per page (optional, default: 10)
-         * @param params.orderBy - Sorting criteria (optional)
-         * @param params.filters - Additional filters to apply (optional)
-         * @returns {Promise<PaginatedBuses>} Paginated list of matching buses
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchBusesPaginated(params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "registrationNumber" | "modelId" | "seatDiagramId" | "typeCode" | "brandCode" | "modelCode" | "maxCapacity" | "purchaseDate" | "economicNumber" | "licensePlateType" | "circulationCard" | "year" | "sctPermit" | "vehicleId" | "grossVehicleWeight" | "engineNumber" | "serialNumber" | "chassisNumber" | "sapKey" | "baseCode" | "erpClientNumber" | "costCenter" | "fuelEfficiency" | "alternateCompany" | "serviceType" | "commercialTourism" | "available" | "tourism" | "status" | "lastMaintenanceDate" | "nextMaintenanceDate" | "gpsId" | "active" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        registrationNumber?: string
-        modelId?: number
-        seatDiagramId?: number
-        typeCode?: number | null
-        brandCode?: string | null
-        modelCode?: string | null
-        maxCapacity?: number | null
-        purchaseDate?: string | null
-        economicNumber?: string | null
-        licensePlateType?: string | null
-        circulationCard?: string | null
-        year?: number | null
-        sctPermit?: string | null
-        vehicleId?: string | null
-        grossVehicleWeight?: number | null
-        engineNumber?: string | null
-        serialNumber?: string | null
-        chassisNumber?: string | null
-        sapKey?: string | null
-        baseCode?: string | null
-        erpClientNumber?: string | null
-        costCenter?: string | null
-        fuelEfficiency?: number | null
-        alternateCompany?: string | null
-        serviceType?: string | null
-        commercialTourism?: boolean | null
-        available?: boolean | null
-        tourism?: boolean | null
-        status?: buses.BusStatus
-        lastMaintenanceDate?: string | null
-        nextMaintenanceDate?: string | null
-        gpsId?: string | null
-        active?: boolean
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-    term: string
-}): Promise<buses.PaginatedBuses> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/buses/search/paginated`, JSON.stringify(params))
-            return await resp.json() as buses.PaginatedBuses
-        }
-
-        /**
          * Searches for routes by matching a search term against name and description.
          * @param params - Search parameters
          * @param params.term - The search term to match against route name and description
@@ -2542,7 +2412,7 @@ export namespace inventory {
     active?: boolean
 }): Promise<buses.Bus> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/buses/${encodeURIComponent(id)}`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("PUT", `/buses/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as buses.Bus
         }
 
@@ -2774,22 +2644,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/bus-models/${encodeURIComponent(id)}`, JSON.stringify(params))
             return await resp.json() as bus_models.BusModel
-        }
-
-        /**
-         * Updates a bus status.
-         * @param params - Object containing the bus ID and status
-         * @param params.id - The ID of the bus
-         * @param params.status - The new status
-         * @returns {Promise<Bus>} The updated bus
-         * @throws {APIError} If the status update fails
-         */
-        public async updateBusStatus(id: number, params: {
-    status: string
-}): Promise<buses.Bus> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/buses/${encodeURIComponent(id)}/status`, JSON.stringify(params))
-            return await resp.json() as buses.Bus
         }
 
         /**
@@ -7072,61 +6926,14 @@ export namespace buses {
          * Timestamp when the bus was last updated
          */
         updatedAt: string | string | null
+
+        /**
+         * Timestamp when the bus was soft deleted
+         */
+        deletedAt?: string | string | null
     }
 
     export type BusStatus = "ACTIVE" | "MAINTENANCE" | "REPAIR" | "OUT_OF_SERVICE" | "RESERVED" | "IN_TRANSIT" | "RETIRED"
-
-    export interface Buses {
-        /**
-         * List of buses
-         */
-        buses: Bus[]
-    }
-
-    export interface BusesQueryOptions {
-        orderBy?: {
-            field: "id" | "registrationNumber" | "modelId" | "seatDiagramId" | "typeCode" | "brandCode" | "modelCode" | "maxCapacity" | "purchaseDate" | "economicNumber" | "licensePlateType" | "circulationCard" | "year" | "sctPermit" | "vehicleId" | "grossVehicleWeight" | "engineNumber" | "serialNumber" | "chassisNumber" | "sapKey" | "baseCode" | "erpClientNumber" | "costCenter" | "fuelEfficiency" | "alternateCompany" | "serviceType" | "commercialTourism" | "available" | "tourism" | "status" | "lastMaintenanceDate" | "nextMaintenanceDate" | "gpsId" | "active" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            registrationNumber?: string
-            modelId?: number
-            seatDiagramId?: number
-            typeCode?: number | null
-            brandCode?: string | null
-            modelCode?: string | null
-            maxCapacity?: number | null
-            purchaseDate?: string | null
-            economicNumber?: string | null
-            licensePlateType?: string | null
-            circulationCard?: string | null
-            year?: number | null
-            sctPermit?: string | null
-            vehicleId?: string | null
-            grossVehicleWeight?: number | null
-            engineNumber?: string | null
-            serialNumber?: string | null
-            chassisNumber?: string | null
-            sapKey?: string | null
-            baseCode?: string | null
-            erpClientNumber?: string | null
-            costCenter?: string | null
-            fuelEfficiency?: number | null
-            alternateCompany?: string | null
-            serviceType?: string | null
-            commercialTourism?: boolean | null
-            available?: boolean | null
-            tourism?: boolean | null
-            status?: BusStatus
-            lastMaintenanceDate?: string | null
-            nextMaintenanceDate?: string | null
-            gpsId?: string | null
-            active?: boolean
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
-    }
 
     export interface CreateBusPayload {
         /**
@@ -7303,16 +7110,13 @@ export namespace buses {
         active?: boolean
     }
 
-    export interface PaginatedBuses {
-        pagination: shared.PaginationMeta
-        data: Bus[]
+    export interface ListBusStatusesResult {
+        data: BusStatus[]
     }
 
-    export interface PaginationParamsBuses {
-        page?: number
-        pageSize?: number
+    export interface ListBusesQueryParams {
         orderBy?: {
-            field: "id" | "registrationNumber" | "modelId" | "seatDiagramId" | "typeCode" | "brandCode" | "modelCode" | "maxCapacity" | "purchaseDate" | "economicNumber" | "licensePlateType" | "circulationCard" | "year" | "sctPermit" | "vehicleId" | "grossVehicleWeight" | "engineNumber" | "serialNumber" | "chassisNumber" | "sapKey" | "baseCode" | "erpClientNumber" | "costCenter" | "fuelEfficiency" | "alternateCompany" | "serviceType" | "commercialTourism" | "available" | "tourism" | "status" | "lastMaintenanceDate" | "nextMaintenanceDate" | "gpsId" | "active" | "createdAt" | "updatedAt"
+            field: "id" | "registrationNumber" | "modelId" | "seatDiagramId" | "typeCode" | "brandCode" | "modelCode" | "maxCapacity" | "purchaseDate" | "economicNumber" | "licensePlateType" | "circulationCard" | "year" | "sctPermit" | "vehicleId" | "grossVehicleWeight" | "engineNumber" | "serialNumber" | "chassisNumber" | "sapKey" | "baseCode" | "erpClientNumber" | "costCenter" | "fuelEfficiency" | "alternateCompany" | "serviceType" | "commercialTourism" | "available" | "tourism" | "status" | "lastMaintenanceDate" | "nextMaintenanceDate" | "gpsId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -7352,7 +7156,67 @@ export namespace buses {
             active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
+            deletedAt?: string | string | null
         }
+        searchTerm?: string
+    }
+
+    export interface ListBusesResult {
+        data: Bus[]
+    }
+
+    export interface PaginatedListBusesQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "registrationNumber" | "modelId" | "seatDiagramId" | "typeCode" | "brandCode" | "modelCode" | "maxCapacity" | "purchaseDate" | "economicNumber" | "licensePlateType" | "circulationCard" | "year" | "sctPermit" | "vehicleId" | "grossVehicleWeight" | "engineNumber" | "serialNumber" | "chassisNumber" | "sapKey" | "baseCode" | "erpClientNumber" | "costCenter" | "fuelEfficiency" | "alternateCompany" | "serviceType" | "commercialTourism" | "available" | "tourism" | "status" | "lastMaintenanceDate" | "nextMaintenanceDate" | "gpsId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            registrationNumber?: string
+            modelId?: number
+            seatDiagramId?: number
+            typeCode?: number | null
+            brandCode?: string | null
+            modelCode?: string | null
+            maxCapacity?: number | null
+            purchaseDate?: string | null
+            economicNumber?: string | null
+            licensePlateType?: string | null
+            circulationCard?: string | null
+            year?: number | null
+            sctPermit?: string | null
+            vehicleId?: string | null
+            grossVehicleWeight?: number | null
+            engineNumber?: string | null
+            serialNumber?: string | null
+            chassisNumber?: string | null
+            sapKey?: string | null
+            baseCode?: string | null
+            erpClientNumber?: string | null
+            costCenter?: string | null
+            fuelEfficiency?: number | null
+            alternateCompany?: string | null
+            serviceType?: string | null
+            commercialTourism?: boolean | null
+            available?: boolean | null
+            tourism?: boolean | null
+            status?: BusStatus
+            lastMaintenanceDate?: string | null
+            nextMaintenanceDate?: string | null
+            gpsId?: string | null
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+            deletedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListBusesResult {
+        pagination: shared.PaginationMeta
+        data: Bus[]
     }
 }
 

@@ -1,5 +1,10 @@
 import { MatchesRegexp, MinLen } from 'encore.dev/validate';
-import { PaginatedResult, PaginationParams } from '../../shared/types';
+import {
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '../../shared/types';
 
 /**
  * Enum for bus operational status
@@ -125,6 +130,9 @@ export interface Bus {
 
   /** Timestamp when the bus was last updated */
   updatedAt: Date | string | null;
+
+  /** Timestamp when the bus was soft deleted */
+  deletedAt?: Date | string | null;
 }
 
 /**
@@ -472,30 +480,10 @@ export interface UpdateBusPayload {
   active?: boolean;
 }
 
-/**
- * Response containing a list of buses
- */
-export interface Buses {
-  /** List of buses */
-  buses: Bus[];
-}
+export type ListBusesQueryParams = ListQueryParams<Bus>;
+export type ListBusesResult = ListQueryResult<Bus>;
 
-/**
- * Paginated list of buses
- */
-export type PaginatedBuses = PaginatedResult<Bus>;
+export type PaginatedListBusesQueryParams = PaginatedListQueryParams<Bus>;
+export type PaginatedListBusesResult = PaginatedListQueryResult<Bus>;
 
-/**
- * Query options for buses listing
- */
-export interface BusesQueryOptions {
-  orderBy?: { field: keyof Bus; direction: 'asc' | 'desc' }[];
-  filters?: Partial<Bus>;
-}
-
-/**
- * Paginated parameters with query options for buses
- */
-export interface PaginationParamsBuses
-  extends PaginationParams,
-    BusesQueryOptions {}
+export type ListBusStatusesResult = ListQueryResult<BusStatus>;

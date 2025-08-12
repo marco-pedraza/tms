@@ -8,8 +8,10 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { isNull } from 'drizzle-orm';
 import { busModels } from '../bus-models/bus-models.schema';
 import { seatDiagrams } from '../seat-diagrams/seat-diagrams.schema';
 import { BusStatus } from './buses.types';
@@ -23,7 +25,7 @@ export const buses = pgTable(
   'buses',
   {
     id: serial('id').primaryKey(),
-    registrationNumber: text('registration_number').notNull().unique(), // License plate (Placas)
+    registrationNumber: text('registration_number').notNull(), // License plate (Placas)
     modelId: integer('model_id')
       .notNull()
       .references(() => busModels.id),
@@ -62,6 +64,7 @@ export const buses = pgTable(
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => [
     index().on(table.modelId),
@@ -71,6 +74,8 @@ export const buses = pgTable(
     index().on(table.serialNumber),
     index().on(table.status),
     index().on(table.nextMaintenanceDate),
+    index().on(table.deletedAt),
+    uniqueIndex().on(table.registrationNumber).where(isNull(table.deletedAt)),
   ],
 );
 

@@ -1,15 +1,16 @@
 import { api } from 'encore.dev/api';
 import {
   Bus,
-  BusStatus,
-  Buses,
-  BusesQueryOptions,
   CreateBusPayload,
-  PaginatedBuses,
-  PaginationParamsBuses,
+  ListBusStatusesResult,
+  ListBusesQueryParams,
+  ListBusesResult,
+  PaginatedListBusesQueryParams,
+  PaginatedListBusesResult,
   UpdateBusPayload,
 } from './buses.types';
 import { busRepository } from './buses.repository';
+import { validateBus } from './buses.domain';
 import {
   createBusWithSeatDiagram,
   updateBusWithSeatDiagram,
@@ -22,8 +23,9 @@ import {
  * @throws {APIError} If the bus creation fails
  */
 export const createBus = api(
-  { method: 'POST', path: '/buses', expose: true },
+  { method: 'POST', path: '/buses/create', expose: true },
   async (params: CreateBusPayload): Promise<Bus> => {
+    await validateBus(params);
     return await createBusWithSeatDiagram(params);
   },
 );
@@ -45,26 +47,31 @@ export const getBus = api(
 /**
  * Retrieves all buses without pagination (useful for dropdowns).
  * @param params - Query options for ordering and filtering
- * @returns {Promise<Buses>} An object containing an array of buses
+ * @returns {Promise<ListBusesResult>} An object containing an array of buses
  * @throws {APIError} If retrieval fails
  */
 export const listBuses = api(
-  { method: 'POST', path: '/get-buses', expose: true },
-  async (params?: BusesQueryOptions): Promise<Buses> => {
-    return await busRepository.findAll(params || {});
+  { method: 'POST', path: '/buses/list/all', expose: true },
+  async (params: ListBusesQueryParams): Promise<ListBusesResult> => {
+    const buses = await busRepository.findAll(params);
+    return {
+      data: buses,
+    };
   },
 );
 
 /**
  * Retrieves buses with pagination (useful for tables).
  * @param params - Pagination parameters with query options
- * @returns {Promise<PaginatedBuses>} Paginated list of buses
+ * @returns {Promise<PaginatedListBusesResult>} Paginated list of buses
  * @throws {APIError} If retrieval fails
  */
 export const listBusesPaginated = api(
-  { method: 'POST', path: '/get-buses/paginated', expose: true },
-  async (params?: PaginationParamsBuses): Promise<PaginatedBuses> => {
-    return await busRepository.findAllPaginated(params || {});
+  { method: 'POST', path: '/buses/list', expose: true },
+  async (
+    params: PaginatedListBusesQueryParams,
+  ): Promise<PaginatedListBusesResult> => {
+    return await busRepository.findAllPaginated(params);
   },
 );
 
@@ -77,8 +84,9 @@ export const listBusesPaginated = api(
  * @throws {APIError} If the bus is not found or update fails
  */
 export const updateBus = api(
-  { method: 'PUT', path: '/buses/:id', expose: true },
+  { method: 'PUT', path: '/buses/:id/update', expose: true },
   async ({ id, ...data }: UpdateBusPayload & { id: number }): Promise<Bus> => {
+    await validateBus(data, id);
     const bus = await busRepository.findOne(id);
     return await updateBusWithSeatDiagram(bus, data);
   },
@@ -92,127 +100,27 @@ export const updateBus = api(
  * @throws {APIError} If the bus is not found or deletion fails
  */
 export const deleteBus = api(
-  { method: 'DELETE', path: '/buses/:id', expose: true },
+  { method: 'DELETE', path: '/buses/:id/delete', expose: true },
   async ({ id }: { id: number }): Promise<Bus> => {
     return await busRepository.delete(id);
   },
 );
 
 /**
- * Retrieves buses by model ID.
- * @param params - Object containing the model ID
- * @param params.modelId - The ID of the bus model
- * @returns {Promise<Buses>} An object containing an array of buses
- * @throws {APIError} If retrieval fails
- */
-export const getBusesByModel = api(
-  { method: 'GET', path: '/buses/by-model/:modelId', expose: true },
-  async ({ modelId }: { modelId: number }): Promise<Buses> => {
-    return await busRepository.findByModelId(modelId);
-  },
-);
-
-/**
- * Retrieves buses that are available for use.
- * @returns {Promise<Buses>} An object containing an array of available buses
- * @throws {APIError} If retrieval fails
- */
-export const getAvailableBuses = api(
-  { method: 'GET', path: '/buses/available', expose: true },
-  async (): Promise<Buses> => {
-    return await busRepository.findAvailable();
-  },
-);
-
-/**
- * Retrieves buses by status.
- * @param params - Object containing the status
- * @param params.status - The status to filter by
- * @returns {Promise<Buses>} An object containing an array of buses
- * @throws {APIError} If retrieval fails
- */
-export const getBusesByStatus = api(
-  { method: 'GET', path: '/buses/by-status/:status', expose: true },
-  async ({ status }: { status: string }): Promise<Buses> => {
-    return await busRepository.findAllByStatus(status as BusStatus);
-  },
-);
-
-/**
- * Updates a bus status.
- * @param params - Object containing the bus ID and status
- * @param params.id - The ID of the bus
- * @param params.status - The new status
- * @returns {Promise<Bus>} The updated bus
- * @throws {APIError} If the status update fails
- */
-export const updateBusStatus = api(
-  { method: 'PUT', path: '/buses/:id/status', expose: true },
-  async ({ id, status }: { id: number; status: string }): Promise<Bus> => {
-    return await busRepository.updateStatus(id, status as BusStatus);
-  },
-);
-
-/**
- * Gets all allowed status transitions for a bus.
+ * Gets all valid next statuses for a bus.
  * @param params - Object containing the bus ID
  * @param params.id - The ID of the bus
- * @returns {Promise<{ allowedTransitions: BusStatus[] }>} An object containing allowed transitions
+ * @returns {Promise<ListBusStatusesResult>} An object containing allowed transitions
  * @throws {APIError} If retrieval fails
  */
-export const getAllowedBusStatusTransitions = api(
+export const listBusValidNextStatuses = api(
   {
     method: 'GET',
-    path: '/buses/:id/allowed-status-transitions',
+    path: '/buses/:id/valid-next-statuses',
     expose: true,
   },
-  async ({
-    id,
-  }: {
-    id: number;
-  }): Promise<{ allowedTransitions: BusStatus[] }> => {
-    const allowedTransitions =
-      await busRepository.getAllowedStatusTransitions(id);
-    return { allowedTransitions };
-  },
-);
-
-/**
- * Searches for buses by matching a search term against registration number, economic number, and vehicle ID.
- * @param params - Search parameters
- * @param params.term - The search term to match
- * @returns {Promise<Buses>} List of matching buses
- * @throws {APIError} If search fails or no searchable fields are configured
- */
-export const searchBuses = api(
-  { method: 'GET', path: '/buses/search', expose: true },
-  async ({ term }: { term: string }): Promise<Buses> => {
-    const buses = await busRepository.search(term);
-    return {
-      buses,
-    };
-  },
-);
-
-/**
- * Searches for buses with pagination by matching a search term.
- * @param params - Search and pagination parameters
- * @param params.term - The search term to match
- * @param params.page - Page number for pagination (optional, default: 1)
- * @param params.pageSize - Number of items per page (optional, default: 10)
- * @param params.orderBy - Sorting criteria (optional)
- * @param params.filters - Additional filters to apply (optional)
- * @returns {Promise<PaginatedBuses>} Paginated list of matching buses
- * @throws {APIError} If search fails or no searchable fields are configured
- */
-export const searchBusesPaginated = api(
-  { method: 'POST', path: '/buses/search/paginated', expose: true },
-  async ({
-    term,
-    ...params
-  }: PaginationParamsBuses & {
-    term: string;
-  }): Promise<PaginatedBuses> => {
-    return await busRepository.searchPaginated(term, params);
+  async ({ id }: { id: number }): Promise<ListBusStatusesResult> => {
+    const statuses = await busRepository.getAllowedStatusTransitions(id);
+    return { data: statuses };
   },
 );

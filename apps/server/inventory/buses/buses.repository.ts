@@ -1,17 +1,8 @@
-import { and, eq } from 'drizzle-orm';
 import { createBaseRepository } from '@repo/base-repo';
 import { StateTransition, createBaseStateMachine } from '@repo/state-machine';
 import { db } from '../db-service';
 import { buses } from './buses.schema';
-import type {
-  Bus,
-  Buses,
-  BusesQueryOptions,
-  CreateBusPayload,
-  PaginatedBuses,
-  PaginationParamsBuses,
-  UpdateBusPayload,
-} from './buses.types';
+import type { Bus, CreateBusPayload, UpdateBusPayload } from './buses.types';
 import { BusStatus } from './buses.types';
 
 // Define the state transitions for buses
@@ -85,16 +76,8 @@ export const createBusRepository = () => {
       buses.engineNumber,
       buses.serialNumber,
     ],
+    softDeleteEnabled: true,
   });
-
-  /**
-   * Creates a new bus
-   * @param data - The bus data to create
-   * @returns {Promise<Bus>} The created bus
-   */
-  const create = async (data: CreateBusPayload): Promise<Bus> => {
-    return await baseRepository.create(data);
-  };
 
   /**
    * Updates a bus
@@ -108,88 +91,7 @@ export const createBusRepository = () => {
       const bus = await baseRepository.findOne(id);
       busStateMachine.validateTransition(bus.status, data.status);
     }
-
     return await baseRepository.update(id, data);
-  };
-
-  /**
-   * Retrieves all buses with pagination
-   * @param params - Pagination parameters
-   * @returns {Promise<PaginatedBuses>} Paginated list of buses
-   */
-  const findAllPaginated = async (
-    params: PaginationParamsBuses = {},
-  ): Promise<PaginatedBuses> => {
-    return await baseRepository.findAllPaginated(params);
-  };
-
-  /**
-   * Retrieves all buses
-   * @param options - Query options for ordering and filtering
-   * @returns {Promise<Buses>} Object containing array of buses
-   */
-  const findAll = async (options: BusesQueryOptions = {}): Promise<Buses> => {
-    const busList = await baseRepository.findAll(options);
-    return {
-      buses: busList,
-    };
-  };
-
-  /**
-   * Finds buses by model ID
-   * @param modelId - The ID of the bus model
-   * @param options - Query options for ordering and filtering
-   * @returns {Promise<Buses>} Object containing array of buses
-   */
-  const findByModelId = async (modelId: number): Promise<Buses> => {
-    const busList = await baseRepository.findAllBy(buses.modelId, modelId);
-    return {
-      buses: busList,
-    };
-  };
-
-  /**
-   * Finds available buses
-   * @param options - Query options for ordering and filtering
-   * @returns {Promise<Buses>} Object containing array of available buses
-   */
-  const findAvailable = async (): Promise<Buses> => {
-    const busList = await db
-      .select()
-      .from(buses)
-      .where(and(eq(buses.available, true), eq(buses.active, true)));
-
-    return {
-      buses: busList,
-    };
-  };
-
-  /**
-   * Finds buses by status
-   * @param status - The status to filter by
-   * @param options - Query options for ordering and filtering
-   * @returns {Promise<Buses>} Object containing array of buses with the specified status
-   */
-  const findAllByStatus = async (status: BusStatus): Promise<Buses> => {
-    const busList = await baseRepository.findAllBy(buses.status, status);
-    return {
-      buses: busList,
-    };
-  };
-
-  /**
-   * Updates a bus status
-   * @param id - The ID of the bus
-   * @param status - The new status
-   * @returns {Promise<Bus>} The updated bus
-   * @throws {ValidationError} If the status transition is not allowed
-   */
-  const updateStatus = async (id: number, status: BusStatus): Promise<Bus> => {
-    const bus = await baseRepository.findOne(id);
-
-    busStateMachine.validateTransition(bus.status, status);
-
-    return await baseRepository.update(id, { status });
   };
 
   /**
@@ -206,14 +108,7 @@ export const createBusRepository = () => {
 
   return {
     ...baseRepository,
-    create,
     update,
-    findAll,
-    findAllPaginated,
-    findByModelId,
-    findAvailable,
-    findAllByStatus,
-    updateStatus,
     getAllowedStatusTransitions,
   };
 };

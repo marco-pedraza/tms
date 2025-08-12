@@ -115,11 +115,8 @@ export const createBusWithSeatDiagram = async (
       for (const seatModel of busSeatModels) {
         await txBusSeatRepo.create({
           seatDiagramId: seatDiagram.id,
-          seatNumber: seatModel.seatNumber,
           floorNumber: seatModel.floorNumber,
-          seatType: seatModel.seatType,
           amenities: seatModel.amenities,
-          reclinementAngle: seatModel.reclinementAngle,
           position: seatModel.position,
           meta: seatModel.meta,
           active: seatModel.active,
@@ -185,11 +182,8 @@ const replaceSeatDiagramInTransaction = async (
       for (const seatModel of busSeatModels) {
         await txBusSeatRepo.create({
           seatDiagramId: seatDiagram.id,
-          seatNumber: seatModel.seatNumber,
           floorNumber: seatModel.floorNumber,
-          seatType: seatModel.seatType,
           amenities: seatModel.amenities,
-          reclinementAngle: seatModel.reclinementAngle,
           position: seatModel.position,
           meta: seatModel.meta,
           active: seatModel.active,

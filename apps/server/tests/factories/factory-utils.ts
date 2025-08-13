@@ -44,27 +44,35 @@ export function getFactoryDb<T extends NodePgDatabase<any>>(database: T): any {
  * @param sequence - Optional sequence number from factory for additional uniqueness
  * @returns A unique numeric ID within PostgreSQL integer range (max 2,147,483,647)
  */
+// Generate a random base ID range for this test session
+// This ensures different test runs use completely different ID ranges
+const RANDOM_BASE = Math.floor(Math.random() * 1000000000) + 100000000; // 100M to 1.1B range
+
 export function generateId(sequence?: number): number {
-  // Get current timestamp and use only last 4 digits to keep it smaller
+  // Get current timestamp for temporal uniqueness
   const timestamp = Date.now();
-  const timestampPart = timestamp % 10000; // Last 4 digits (0-9999)
+  const timestampPart = timestamp % 100000; // Last 5 digits
 
-  // Generate a random number between 10-99 (2 digits)
-  const randomPart = Math.floor(Math.random() * 90) + 10;
+  // Add microsecond precision
+  const microTime = Math.floor(performance.now() * 1000) % 10000;
 
-  // Use sequence if provided (including 0), otherwise generate random sequence (up to 99)
+  // Generate random component
+  const randomPart = Math.floor(Math.random() * 10000);
+
+  // Use sequence if provided, otherwise random
   const sequencePart =
-    sequence !== undefined ? sequence % 100 : Math.floor(Math.random() * 100);
+    sequence !== undefined ? sequence % 1000 : Math.floor(Math.random() * 1000);
 
-  // Combine parts more conservatively: timestamp(4) + random(2) + sequence(2) = max 8 digits
-  // This ensures we stay well under PostgreSQL's int4 max (2,147,483,647)
-  const combined = timestampPart * 10000 + randomPart * 100 + sequencePart;
+  // Simple combination with the random base
+  const combined =
+    RANDOM_BASE +
+    (timestampPart % 50000) + // Keep it bounded
+    (microTime % 10000) +
+    (randomPart % 10000) +
+    (sequencePart % 1000);
 
-  // The combined value should now always be under the PostgreSQL limit
-  // Max possible: 9999 * 10000 + 99 * 100 + 99 = 99,999,999 (well under 2.1B)
-
-  // Ensure the result is always positive and at least 1
-  return Math.max(combined, 1);
+  // Ensure we stay under PostgreSQL int4 max (2,147,483,647)
+  return Math.min(combined, 2000000000);
 }
 
 /**
@@ -98,6 +106,9 @@ export function generateAlphabeticName(
   return `${baseName} ${suffix}`;
 }
 
+// Global counter to ensure uniqueness across all calls
+let globalCounter = Math.floor(Math.random() * 100000); // Start with random counter
+
 /**
  * Generates a unique alphabetic code using random letters with timestamp for uniqueness
  * @param length - Length of the code (default 6 characters for better uniqueness)
@@ -110,34 +121,52 @@ export function generateAlphabeticCode(
 ): string {
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-  // For short codes (like country codes), include timestamp to ensure uniqueness
+  // For short codes (like country/state codes), use session-based randomness
   if (length <= 3) {
     const timestamp = Date.now();
-    const timestampSuffix = timestamp.toString().slice(-3); // Last 3 digits
+    const timestampSuffix = timestamp.toString().slice(-4);
 
-    // Convert timestamp digits to letters for alphabetic codes
-    const timestampLetters = timestampSuffix
-      .split('')
-      .map((digit) => letters[parseInt(digit) % 26])
-      .join('');
+    // Add microsecond-level randomness using performance.now()
+    const microTime = Math.floor(performance.now() * 10000);
 
-    // Generate remaining random characters
-    const remainingLength = Math.max(0, length - timestampLetters.length);
-    let randomPart = '';
+    // Increment global counter for guaranteed uniqueness within session
+    globalCounter = (globalCounter + 1) % 100000;
 
-    for (let i = 0; i < remainingLength; i++) {
-      const randomIndex = Math.floor(Math.random() * letters.length);
-      randomPart += letters[randomIndex];
+    // Use the same random base concept but for letters
+    // This ensures different test sessions use different letter ranges
+    const sessionRandomOffset = RANDOM_BASE % 100000; // Reuse the numeric random base
+
+    // Combine all sources of randomness
+    const combinedSeed =
+      parseInt(timestampSuffix) +
+      microTime +
+      globalCounter +
+      sessionRandomOffset +
+      Math.floor(Math.random() * 10000);
+
+    // Convert to letters for alphabetic codes
+    let code = '';
+    let seedValue = combinedSeed;
+
+    for (let i = 0; i < length; i++) {
+      // Use different parts of the seed for each character position
+      const charIndex = (seedValue + i * 997) % letters.length; // 997 is a prime number for better distribution
+      code += letters[charIndex];
+      seedValue = Math.floor(seedValue / 26) + charIndex * 37; // Shift for next iteration
     }
 
-    const code = (randomPart + timestampLetters).substring(0, length);
     return prefix ? `${prefix}${code}` : code;
   }
 
-  // For longer codes, use the original random approach
+  // For longer codes, use improved random approach with better distribution
   let code = '';
+  const baseTime = Date.now();
+
   for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * letters.length);
+    // Mix timestamp, index, and random for better distribution
+    const seedValue =
+      (baseTime + i * 37 + Math.random() * 1000) % letters.length;
+    const randomIndex = Math.floor(seedValue);
     code += letters[randomIndex];
   }
 

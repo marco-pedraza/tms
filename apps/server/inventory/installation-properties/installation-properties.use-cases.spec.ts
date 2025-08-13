@@ -2,7 +2,12 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { FieldValidationError } from '@repo/base-repo';
 import { cityFactory, populationFactory } from '../../tests/factories';
 import { getFactoryDb } from '../../tests/factories/factory-utils';
-import { createCleanupHelper } from '../../tests/shared/test-utils';
+import {
+  createCleanupHelper,
+  createTestSuiteId,
+  createUniqueCode,
+  createUniqueName,
+} from '../../tests/shared/test-utils';
 import { cityRepository } from '../cities/cities.repository';
 import { db } from '../db-service';
 import { createInstallationSchema } from '../installation-schemas/installation-schemas.controller';
@@ -22,11 +27,15 @@ import { installationPropertyUseCases } from './installation-properties.use-case
 
 describe('Installation Properties Use Cases', () => {
   const factoryDb = getFactoryDb(db);
+  const testSuiteId = createTestSuiteId('installation-properties');
 
   // Test data with unique code to avoid conflicts in suite runs
   const testInstallationType = {
-    name: 'Test Installation Type for Properties',
-    code: `TIT${Date.now().toString().slice(-6)}`,
+    name: createUniqueName(
+      'Test Installation Type for Properties',
+      testSuiteId,
+    ),
+    code: createUniqueCode('TIT', 6),
     description: 'Test installation type for property validation testing',
   };
 
@@ -65,7 +74,7 @@ describe('Installation Properties Use Cases', () => {
   beforeAll(async () => {
     // Create test city and population for node creation
     const testCity = await cityFactory(factoryDb).create({
-      name: 'Test City for Properties',
+      name: createUniqueName('Test City for Properties', testSuiteId),
       latitude: 19.4326,
       longitude: -99.1332,
       timezone: 'America/Mexico_City',
@@ -73,16 +82,19 @@ describe('Installation Properties Use Cases', () => {
     testCityId = testCity.id;
 
     const testPopulation = await populationFactory(factoryDb).create({
-      code: 'TPOP',
-      description: 'Test population for properties',
+      code: createUniqueCode('TPOP', 4),
+      description: createUniqueName(
+        'Test population for properties',
+        testSuiteId,
+      ),
       active: true,
     });
     testPopulationId = testPopulation.id;
 
     // Create test node for installation
     const nodeData = {
-      code: 'TN001',
-      name: 'Test Node for Properties',
+      code: createUniqueCode('TN', 4),
+      name: createUniqueName('Test Node for Properties', testSuiteId),
       latitude: 19.4326,
       longitude: -99.1332,
       radius: 1000,
@@ -99,8 +111,8 @@ describe('Installation Properties Use Cases', () => {
     // Create test installation
     const installationData = {
       nodeId: testNodeId,
-      name: 'Test Installation for Properties',
-      address: 'Test Installation Address',
+      name: createUniqueName('Test Installation for Properties', testSuiteId),
+      address: createUniqueName('Test Installation Address', testSuiteId),
       description: 'Test installation for property testing',
       installationTypeId: null,
     };

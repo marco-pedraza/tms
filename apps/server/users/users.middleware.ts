@@ -2,7 +2,7 @@ import { MiddlewareRequest, middleware } from 'encore.dev/api';
 import log from 'encore.dev/log';
 import { APICallMeta } from 'encore.dev';
 import { getAuthData } from '~encore/auth';
-import { errors } from '../shared/errors';
+import { errors } from '@/shared/errors';
 import { auditsRepository } from './audits/audits.repository';
 import { userPermissionsRepository } from './user-permissions/user-permissions.repository';
 

@@ -1,9 +1,9 @@
 import { fakerES_MX as faker } from '@faker-js/faker';
 import { eq } from 'drizzle-orm';
-import { db } from '../../../inventory/db-service';
-import { EventType } from '../../../inventory/event-types/event-types.types';
-import { Node } from '../../../inventory/nodes/nodes.types';
-import { eventTypeFactory, nodeEventFactory } from '../../../tests/factories';
+import { db } from '@/inventory/db-service';
+import type { EventType } from '@/inventory/locations/event-types/event-types.types';
+import type { Node } from '@/inventory/locations/nodes/nodes.types';
+import { eventTypeFactory, nodeEventFactory } from '@/factories';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FactoryDb = any;

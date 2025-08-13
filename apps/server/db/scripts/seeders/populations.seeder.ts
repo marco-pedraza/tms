@@ -1,12 +1,12 @@
 import { fakerES_MX as faker } from '@faker-js/faker';
-import { City } from '../../../inventory/cities/cities.types';
-import { db } from '../../../inventory/db-service';
-import { Installation } from '../../../inventory/installations/installations.types';
-import { Node } from '../../../inventory/nodes/nodes.types';
-import { populationCities } from '../../../inventory/populations/populations.schema';
-import { Population } from '../../../inventory/populations/populations.types';
-import { State } from '../../../inventory/states/states.types';
-import { nodeFactory, populationFactory } from '../../../tests/factories';
+import { db } from '@/inventory/db-service';
+import type { City } from '@/inventory/locations/cities/cities.types';
+import type { Installation } from '@/inventory/locations/installations/installations.types';
+import type { Node } from '@/inventory/locations/nodes/nodes.types';
+import { populationCities } from '@/inventory/locations/populations/populations.schema';
+import type { Population } from '@/inventory/locations/populations/populations.types';
+import type { State } from '@/inventory/locations/states/states.types';
+import { nodeFactory, populationFactory } from '@/factories';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FactoryDb = any;

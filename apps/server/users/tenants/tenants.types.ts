@@ -1,4 +1,4 @@
-import { PaginatedResult, PaginationParams } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '@/shared/types';
 
 /**
  * Represents a tenant entity

@@ -1,16 +1,16 @@
 import { fakerES_MX as faker } from '@faker-js/faker';
-import { EventType } from '../../../inventory/event-types/event-types.types';
-import { InstallationProperty } from '../../../inventory/installation-properties/installation-properties.types';
-import { InstallationSchema } from '../../../inventory/installation-schemas/installation-schemas.types';
-import { InstallationType } from '../../../inventory/installation-types/installation-types.types';
-import { Installation } from '../../../inventory/installations/installations.types';
+import type { EventType } from '@/inventory/locations/event-types/event-types.types';
+import type { InstallationProperty } from '@/inventory/locations/installation-properties/installation-properties.types';
+import type { InstallationSchema } from '@/inventory/locations/installation-schemas/installation-schemas.types';
+import type { InstallationType } from '@/inventory/locations/installation-types/installation-types.types';
+import type { Installation } from '@/inventory/locations/installations/installations.types';
 import {
   eventTypeInstallationTypeFactory,
   installationFactory,
   installationPropertyFactory,
   installationSchemaFactory,
   installationTypeFactory,
-} from '../../../tests/factories';
+} from '@/tests/factories';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FactoryDb = any;

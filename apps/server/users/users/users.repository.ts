@@ -1,6 +1,6 @@
 import { secret } from 'encore.dev/config';
 import { createBaseRepository } from '@repo/base-repo';
-import { hashPassword, omitPasswordHash } from '../../shared/auth-utils';
+import { hashPassword, omitPasswordHash } from '@/shared/auth-utils';
 import { db } from '../db-service';
 import { users } from './users.schema';
 import type {

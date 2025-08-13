@@ -1,6 +1,6 @@
 import { secret } from 'encore.dev/config';
-import { comparePasswords, hashPassword } from '../../shared/auth-utils';
-import { errors } from '../../shared/errors';
+import { comparePasswords, hashPassword } from '@/shared/auth-utils';
+import { errors } from '@/shared/errors';
 import type {
   ChangePasswordPayload,
   SafeUser,

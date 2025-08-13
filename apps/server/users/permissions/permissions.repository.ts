@@ -1,5 +1,5 @@
 import { createBaseRepository } from '@repo/base-repo';
-import { errors } from '../../shared/errors';
+import { errors } from '@/shared/errors';
 import { db } from '../db-service';
 import { permissions } from './permissions.schema';
 import type {

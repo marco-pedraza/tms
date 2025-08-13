@@ -3,8 +3,8 @@ import { createBaseRepository } from '@repo/base-repo';
 import {
   getRelatedEntities,
   updateManyToManyRelation,
-} from '../../shared/db-utils';
-import { errors } from '../../shared/errors';
+} from '@/shared/db-utils';
+import { errors } from '@/shared/errors';
 import { db } from '../db-service';
 import { permissionRepository } from '../permissions/permissions.repository';
 import { permissions } from '../permissions/permissions.schema';

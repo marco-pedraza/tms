@@ -1,14 +1,10 @@
 import { fakerES_MX as faker } from '@faker-js/faker';
-import { City } from '../../../inventory/cities/cities.types';
-import { Country } from '../../../inventory/countries/countries.types';
-import { State } from '../../../inventory/states/states.types';
-import { AVAILABLE_TIMEZONES } from '../../../inventory/timezones/timezones.constants';
-import { createSlug } from '../../../shared/utils';
-import {
-  cityFactory,
-  countryFactory,
-  stateFactory,
-} from '../../../tests/factories';
+import { createSlug } from '@/shared/utils';
+import type { City } from '@/inventory/locations/cities/cities.types';
+import type { Country } from '@/inventory/locations/countries/countries.types';
+import type { State } from '@/inventory/locations/states/states.types';
+import { AVAILABLE_TIMEZONES } from '@/inventory/locations/timezones/timezones.constants';
+import { cityFactory, countryFactory, stateFactory } from '@/factories';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FactoryDb = any;

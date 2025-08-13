@@ -1,8 +1,8 @@
 import { faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
+import { createSlug } from '@/shared/utils';
 import { schema } from '../../db';
-import { AVAILABLE_TIMEZONES } from '../../inventory/timezones/timezones.constants';
-import { createSlug } from '../../shared/utils';
+import { AVAILABLE_TIMEZONES } from '../../inventory/locations/timezones/timezones.constants';
 import {
   extractTablesFromSchema,
   generateAlphabeticName,

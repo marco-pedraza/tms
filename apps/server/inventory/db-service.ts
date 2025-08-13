@@ -1,4 +1,4 @@
-import { DB, initDrizzle } from '../db/database';
+import { DB, initDrizzle } from '@/db/database';
 
 /**
  * Initialized DB instance for the inventory service

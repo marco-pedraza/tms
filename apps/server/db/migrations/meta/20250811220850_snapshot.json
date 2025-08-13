@@ -1,6 +1,6 @@
 {
-  "id": "d5cb4a1c-e369-4459-8058-a25a78cc7afc",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "da367d0d-6b85-435d-bdbe-e63a685e9aae",
+  "prevId": "d5cb4a1c-e369-4459-8058-a25a78cc7afc",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -525,7 +525,7 @@
         },
         "price_per_km_multiplier": {
           "name": "price_per_km_multiplier",
-          "type": "integer",
+          "type": "real",
           "primaryKey": false,
           "notNull": true,
           "default": 1
@@ -624,6 +624,21 @@
           "columns": [
             {
               "expression": "deleted_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bus_lines_active_index": {
+          "name": "bus_lines_active_index",
+          "columns": [
+            {
+              "expression": "active",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

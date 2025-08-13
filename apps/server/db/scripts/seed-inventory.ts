@@ -1,7 +1,7 @@
-import { countryRepository } from '../../inventory/countries/countries.repository';
-import { Country } from '../../inventory/countries/countries.types';
-import { db } from '../../inventory/db-service';
-import { getFactoryDb } from '../../tests/factories/factory-utils';
+import { db } from '@/inventory/db-service';
+import { countryRepository } from '@/inventory/locations/countries/countries.repository';
+import { Country } from '@/inventory/locations/countries/countries.types';
+import { getFactoryDb } from '@/tests/factories/factory-utils';
 import {
   seedAmenities,
   seedInstallationAmenities,

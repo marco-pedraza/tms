@@ -1,15 +1,21 @@
-export { countries } from '../inventory/countries/countries.schema';
-export { states, statesRelations } from '../inventory/states/states.schema';
-export { cities, citiesRelations } from '../inventory/cities/cities.schema';
+export { countries } from '@/inventory/locations/countries/countries.schema';
+export {
+  states,
+  statesRelations,
+} from '@/inventory/locations/states/states.schema';
+export {
+  cities,
+  citiesRelations,
+} from '@/inventory/locations/cities/cities.schema';
 export {
   transporters,
   transportersRelations,
-} from '../inventory/transporters/transporters.schema';
-export { serviceTypes } from '../inventory/service-types/service-types.schema';
+} from '@/inventory/operators/transporters/transporters.schema';
+export { serviceTypes } from '@/inventory/operators/service-types/service-types.schema';
 export {
   busLines,
   busLinesRelations,
-} from '../inventory/bus-lines/bus-lines.schema';
+} from '@/inventory/operators/bus-lines/bus-lines.schema';
 export { users, userRelations } from '../users/users/users.schema';
 export { departments } from '../users/departments/departments.schema';
 export { tenants } from '../users/tenants/tenants.schema';
@@ -28,62 +34,71 @@ export {
 } from '../users/user-permissions/user-permissions.schema';
 export { refreshTokens } from '../users/auth/auth.schema';
 export { audits, auditRelations } from '../users/audits/audits.schema';
-export { drivers, driversRelations } from '../inventory/drivers/drivers.schema';
+export {
+  drivers,
+  driversRelations,
+} from '@/inventory/fleet/drivers/drivers.schema';
 export {
   busDiagramModels,
   busDiagramModelsRelations,
-} from '../inventory/bus-diagram-models/bus-diagram-models.schema';
+} from '@/inventory/fleet/bus-diagram-models/bus-diagram-models.schema';
 export {
   seatDiagrams,
   seatDiagramsRelations,
-} from '../inventory/seat-diagrams/seat-diagrams.schema';
+} from '@/inventory/fleet/seat-diagrams/seat-diagrams.schema';
 export {
   busDiagramModelZones,
   busDiagramModelZonesRelations,
-} from '../inventory/bus-diagram-model-zones/bus-diagram-model-zones.schema';
+} from '@/inventory/fleet/bus-diagram-model-zones/bus-diagram-model-zones.schema';
 export {
   seatDiagramZones,
   seatDiagramZonesRelations,
-} from '../inventory/seat-diagram-zones/seat-diagram-zones.schema';
+} from '@/inventory/fleet/seat-diagram-zones/seat-diagram-zones.schema';
 export {
   busModels,
   busModelsRelations,
-} from '../inventory/bus-models/bus-models.schema';
+} from '@/inventory/fleet/bus-models/bus-models.schema';
 export {
   busSeats,
   busSeatsRelations,
-} from '../inventory/bus-seats/bus-seats.schema';
+} from '@/inventory/fleet/bus-seats/bus-seats.schema';
 export {
   busSeatModels,
   busSeatModelsRelations,
-} from '../inventory/bus-seat-models/bus-seat-models.schema';
-export { buses, busesRelations } from '../inventory/buses/buses.schema';
-export { pathways } from '../inventory/pathways/pathways.schema';
-export { routes, routesRelations } from '../inventory/routes/routes.schema';
+} from '@/inventory/fleet/bus-seat-models/bus-seat-models.schema';
+export { buses, busesRelations } from '@/inventory/fleet/buses/buses.schema';
+export { pathways } from '@/inventory/routing/pathways/pathways.schema';
+export {
+  routes,
+  routesRelations,
+} from '@/inventory/routing/routes/routes.schema';
 export {
   routeSegments,
   routeSegmentsRelations,
-} from '../inventory/route-segment/route-segment.schema';
+} from '@/inventory/routing/route-segment/route-segment.schema';
 export {
   populations,
   populationsRelations,
   populationCities,
   populationCitiesRelations,
-} from '../inventory/populations/populations.schema';
-export { installations } from '../inventory/installations/installations.schema';
-export { nodes, nodesRelations } from '../inventory/nodes/nodes.schema';
+} from '@/inventory/locations/populations/populations.schema';
+export { installations } from '@/inventory/locations/installations/installations.schema';
+export {
+  nodes,
+  nodesRelations,
+} from '@/inventory/locations/nodes/nodes.schema';
 export {
   installationTypes,
   installationTypesRelations,
-} from '../inventory/installation-types/installation-types.schema';
+} from '@/inventory/locations/installation-types/installation-types.schema';
 export {
   installationSchemas,
   installationSchemasRelations,
-} from '../inventory/installation-schemas/installation-schemas.schema';
+} from '@/inventory/locations/installation-schemas/installation-schemas.schema';
 export {
   installationProperties,
   installationPropertiesRelations,
-} from '../inventory/installation-properties/installation-properties.schemas';
+} from '@/inventory/locations/installation-properties/installation-properties.schemas';
 export {
   eventTypes,
   eventTypesRelations,
@@ -91,15 +106,15 @@ export {
   eventTypeInstallationTypesRelations,
   nodeEvents,
   nodeEventsRelations,
-} from '../inventory/event-types/event-types.schema';
+} from '@/inventory/locations/event-types/event-types.schema';
 export {
   labels,
   labelNodes,
   labelNodesRelations,
-} from '../inventory/labels/labels.schema';
+} from '@/inventory/locations/labels/labels.schema';
 export {
   amenities,
   amenitiesRelations,
   installationAmenities,
   installationAmenitiesRelations,
-} from '../inventory/amenities/amenities.schema';
+} from '@/inventory/shared-entities/amenities/amenities.schema';

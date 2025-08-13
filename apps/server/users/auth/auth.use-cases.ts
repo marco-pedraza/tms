@@ -4,8 +4,8 @@ import {
   generateAccessToken,
   generateRefreshToken,
   verifyToken,
-} from '../../shared/auth-utils';
-import { errors } from '../../shared/errors';
+} from '@/shared/auth-utils';
+import { errors } from '@/shared/errors';
 import { userRepository } from '../users/users.repository';
 import { SafeUser } from '../users/users.types';
 import type {

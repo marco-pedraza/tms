@@ -1,9 +1,9 @@
-import { omitPasswordHash } from '../../shared/auth-utils';
+import { omitPasswordHash } from '@/shared/auth-utils';
 import {
   getRelatedEntities,
   updateManyToManyRelation,
-} from '../../shared/db-utils';
-import { errors } from '../../shared/errors';
+} from '@/shared/db-utils';
+import { errors } from '@/shared/errors';
 import { db } from '../db-service';
 import { permissionRepository } from '../permissions/permissions.repository';
 import { permissions } from '../permissions/permissions.schema';

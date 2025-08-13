@@ -1,13 +1,13 @@
 import { fakerES_MX as faker } from '@faker-js/faker';
-import { amenitiesRepository } from '../../../inventory/amenities/amenities.repository';
+import type { Installation } from '@/inventory/locations/installations/installations.types';
+import { installationUseCases } from '@/inventory/locations/installations/installations.use-cases';
+import { amenitiesRepository } from '@/inventory/shared-entities/amenities/amenities.repository';
+import type { Amenity } from '@/inventory/shared-entities/amenities/amenities.types';
 import {
-  Amenity,
   AmenityCategory,
   AmenityType,
-} from '../../../inventory/amenities/amenities.types';
-import { Installation } from '../../../inventory/installations/installations.types';
-import { installationUseCases } from '../../../inventory/installations/installations.use-cases';
-import { amenityFactory } from '../../../tests/factories';
+} from '@/inventory/shared-entities/amenities/amenities.types';
+import { amenityFactory } from '@/tests/factories';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FactoryDb = any;

@@ -1,5 +1,5 @@
 import { MatchesRegexp, MinLen } from 'encore.dev/validate';
-import { PaginatedResult, PaginationParams } from '../../shared/types';
+import { PaginatedResult, PaginationParams } from '@/shared/types';
 
 /**
  * Base interface representing a permission entity

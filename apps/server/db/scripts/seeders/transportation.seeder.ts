@@ -1,11 +1,11 @@
 import { faker } from '@faker-js/faker';
-import type { BusLine } from '../../../inventory/bus-lines/bus-lines.types';
-import type { BusModel } from '../../../inventory/bus-models/bus-models.types';
-import type { Bus } from '../../../inventory/buses/buses.types';
-import type { City } from '../../../inventory/cities/cities.types';
-import type { Driver } from '../../../inventory/drivers/drivers.types';
-import type { ServiceType } from '../../../inventory/service-types/service-types.types';
-import type { Transporter } from '../../../inventory/transporters/transporters.types';
+import type { BusModel } from '@/inventory/fleet/bus-models/bus-models.types';
+import type { Bus } from '@/inventory/fleet/buses/buses.types';
+import type { Driver } from '@/inventory/fleet/drivers/drivers.types';
+import type { City } from '@/inventory/locations/cities/cities.types';
+import type { BusLine } from '@/inventory/operators/bus-lines/bus-lines.types';
+import type { ServiceType } from '@/inventory/operators/service-types/service-types.types';
+import type { Transporter } from '@/inventory/operators/transporters/transporters.types';
 import {
   busFactory,
   busLineFactory,
@@ -14,8 +14,8 @@ import {
   seatDiagramFactory,
   serviceTypeFactory,
   transporterFactory,
-} from '../../../tests/factories';
-import { getFactoryDb } from '../../../tests/factories/factory-utils';
+} from '@/factories';
+import { getFactoryDb } from '@/factories/factory-utils';
 
 /**
  * Seeds service types for transportation

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { createBaseRepository } from '@repo/base-repo';
-import { errors } from '../../shared/errors';
+import { errors } from '@/shared/errors';
 import { db } from '../db-service';
 import { User } from '../users/users.types';
 import { refreshTokens } from './auth.schema';

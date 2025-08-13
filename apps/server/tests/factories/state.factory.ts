@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
+import { createSlug } from '@/shared/utils';
 import { schema } from '../../db';
-import { createSlug } from '../../shared/utils';
 import { countryFactory } from './country.factory';
 import {
   extractTablesFromSchema,

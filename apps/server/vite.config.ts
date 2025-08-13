@@ -68,6 +68,10 @@ export default defineConfig({
     alias: {
       '~encore': path.resolve(__dirname, './encore.gen'),
       '@/db': path.resolve(__dirname, './db'),
+      '@/inventory': path.resolve(__dirname, './inventory'),
+      '@/shared': path.resolve(__dirname, './shared'),
+      '@/factories': path.resolve(__dirname, './tests/factories'),
+      '@/tests': path.resolve(__dirname, './tests'),
     },
   },
 });

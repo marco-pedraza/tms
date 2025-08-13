@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
-import { schema } from '../../db';
 import {
   AmenityCategory,
   AmenityType,
-} from '../../inventory/amenities/amenities.types';
+} from '@/inventory/shared-entities/amenities/amenities.types';
+import { schema } from '../../db';
 import {
   extractTablesFromSchema,
   generateAlphabeticName,

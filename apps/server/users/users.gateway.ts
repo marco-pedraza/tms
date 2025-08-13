@@ -1,6 +1,6 @@
 import { Gateway, Header } from 'encore.dev/api';
 import { authHandler } from 'encore.dev/auth';
-import { errors } from '../shared/errors';
+import { errors } from '@/shared/errors';
 import { authUseCases } from './auth/auth.use-cases';
 
 interface AuthParams {

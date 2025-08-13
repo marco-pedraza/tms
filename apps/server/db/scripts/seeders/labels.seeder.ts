@@ -1,8 +1,8 @@
-import { db } from '../../../inventory/db-service';
-import { labelNodes } from '../../../inventory/labels/labels.schema';
-import { Label } from '../../../inventory/labels/labels.types';
-import { Node } from '../../../inventory/nodes/nodes.types';
-import { labelFactory } from '../../../tests/factories';
+import { db } from '@/inventory/db-service';
+import { labelNodes } from '@/inventory/locations/labels/labels.schema';
+import type { Label } from '@/inventory/locations/labels/labels.types';
+import type { Node } from '@/inventory/locations/nodes/nodes.types';
+import { labelFactory } from '@/factories';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FactoryDb = any;

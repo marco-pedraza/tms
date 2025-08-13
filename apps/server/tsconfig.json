@@ -8,7 +8,18 @@
     "types": ["node"],
     "paths": {
       "~encore/*": ["./encore.gen/*"],
-      "@/db": ["./db"]
+      "@/db": ["./db"],
+      "@/db/*": ["./db/*"],
+      "@/inventory": ["./inventory"],
+      "@/inventory/*": ["./inventory/*"],
+      "@/shared": ["./shared"],
+      "@/shared/*": ["./shared/*"],
+      "@/users": ["./users"],
+      "@/users/*": ["./users/*"],
+      "@/factories": ["./tests/factories"],
+      "@/factories/*": ["./tests/factories/*"],
+      "@/tests": ["./tests"],
+      "@/tests/*": ["./tests/*"]
     },
 
     /* Workspace Settings */

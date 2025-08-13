@@ -1,7 +1,7 @@
+import { schema } from '@/db';
 import { fakerES_MX as faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
-import { schema } from '../../db';
-import { BusStatus } from '../../inventory/buses/buses.types';
+import { BusStatus } from '@/inventory/fleet/buses/buses.types';
 import { extractTablesFromSchema, generateId } from './factory-utils';
 
 export const busFactory = defineFactory({

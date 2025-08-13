@@ -1,22 +1,41 @@
 import { z } from 'zod';
+import { UseValidationsTranslationsResult } from '@/types/translations';
 
 /**
  * Common validation schemas for use across the application
  */
 
-// Name validation - for resources that require a human-readable name
-export const nameSchema = z
-  .string()
-  .min(1)
-  .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/);
-
-// Uppercase code validation with configurable length
-export const codeSchema = (minLength = 2, maxLength = 2) =>
-  z
+// Name validation with translations
+export function nameSchema(tValidations: UseValidationsTranslationsResult) {
+  return z
     .string()
-    .min(minLength)
+    .trim()
+    .min(1, { message: tValidations('required') })
+    .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
+      message: tValidations('name.letters'),
+    });
+}
+
+// Uppercase code validation with configurable length and translations
+export function codeSchema(
+  tValidations: UseValidationsTranslationsResult,
+  minLength = 2,
+  maxLength = 2,
+) {
+  const useExactLengthMessage = minLength === maxLength;
+
+  return z
+    .string()
+    .min(minLength, {
+      message: useExactLengthMessage
+        ? tValidations('code.length', { length: minLength })
+        : tValidations('code.length-range', { min: minLength, max: maxLength }),
+    })
     .max(maxLength)
-    .regex(/^[A-Z]+$/);
+    .regex(/^[A-Z]+$/, {
+      message: tValidations('code.uppercase'),
+    });
+}
 
 export const phoneSchema = z
   .string()

@@ -59,7 +59,7 @@ export default function TransporterBusLinesTable() {
     transporterId,
     enabled: isValidId,
   });
-  const { deleteBusLine } = useBusLineMutations();
+  const { delete: deleteBusLine } = useBusLineMutations();
   const [deleteId, setDeleteId] = useState<number>();
 
   const onConfirmDelete = () => {

@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS "bus_lines" (
 	"code" text NOT NULL,
 	"transporter_id" integer NOT NULL,
 	"service_type_id" integer NOT NULL,
-	"price_per_km_multiplier" integer DEFAULT 1 NOT NULL,
+	"price_per_km_multiplier" real DEFAULT 1 NOT NULL,
 	"description" text,
 	"fleet_size" integer,
 	"website" text,
@@ -65,6 +65,7 @@ END $$;
 CREATE INDEX IF NOT EXISTS "bus_lines_transporter_id_index" ON "bus_lines" USING btree ("transporter_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "bus_lines_service_type_id_index" ON "bus_lines" USING btree ("service_type_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "bus_lines_deleted_at_index" ON "bus_lines" USING btree ("deleted_at");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "bus_lines_active_index" ON "bus_lines" USING btree ("active");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "bus_lines_name_index" ON "bus_lines" USING btree ("name") WHERE "bus_lines"."deleted_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "bus_lines_code_index" ON "bus_lines" USING btree ("code") WHERE "bus_lines"."deleted_at" is null;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "transporters_name_index" ON "transporters" USING btree ("name");--> statement-breakpoint

@@ -42,7 +42,10 @@ export default function EditServiceTypePage() {
         backLabel={tServiceTypes('actions.backToList')}
       />
       <ServiceTypeForm
-        defaultValues={serviceType}
+        defaultValues={{
+          ...serviceType,
+          description: serviceType.description ?? '',
+        }}
         onSubmit={handleSubmit}
         submitButtonText={tCommon('actions.update')}
       />

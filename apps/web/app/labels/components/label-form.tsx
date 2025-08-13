@@ -6,6 +6,7 @@ import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
+import { nameSchema } from '@/schemas/common';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
@@ -13,14 +14,8 @@ const createLabelFormSchema = (
   tValidations: UseValidationsTranslationsResult,
 ) =>
   z.object({
-    name: z
-      .string()
-      .trim()
-      .min(1, { message: tValidations('required') })
-      .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
-        message: tValidations('name.letters'),
-      }),
-    description: z.string().optional(),
+    name: nameSchema(tValidations),
+    description: z.string().trim().optional(),
     color: z
       .string()
       .trim()

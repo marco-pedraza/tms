@@ -1,40 +1,72 @@
-import { useForm } from '@tanstack/react-form';
-import { Loader2 } from 'lucide-react';
+'use client';
+
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
+import useQueryAllServiceTypes from '@/app/service-types/hooks/use-query-all-service-types';
+import useQueryAllTransporters from '@/app/transporters/hooks/use-query-all-transporters';
+import Form from '@/components/form/form';
+import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { nameSchema } from '@/schemas/common';
-import { codeSchema } from '@/schemas/common';
-import useQueryAllServiceTypes from '@/service-types/hooks/use-query-all-service-types';
-import useQueryAllTransporters from '@/transporters/hooks/use-query-all-transporters';
+import NumberInput from '@/components/form/number-input';
+import SelectInput from '@/components/form/select-input';
+import useForm from '@/hooks/use-form';
+import { codeSchema, nameSchema } from '@/schemas/common';
+import { UseValidationsTranslationsResult } from '@/types/translations';
+import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
-const busLineSchema = z.object({
-  name: nameSchema,
-  code: codeSchema(1, 20),
-  description: z.string().optional(),
-  transporterId: z.number().nonnegative(),
-  serviceTypeId: z.number().nonnegative(),
-  pricePerKilometer: z.number().positive(),
-  fleetSize: z.number().positive().optional(),
-  website: z.string().url().optional(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
-  active: z.boolean(),
-});
+const createBusLineFormSchema = (
+  tValidations: UseValidationsTranslationsResult,
+) =>
+  z.object({
+    name: nameSchema(tValidations),
+    code: codeSchema(tValidations, 1, 20),
+    description: z.string().trim().optional(),
+    transporterId: z
+      .string()
+      .min(1, { message: tValidations('required') })
+      .transform((val) => parseInt(val)),
+    serviceTypeId: z
+      .string()
+      .min(1, { message: tValidations('required') })
+      .transform((val) => parseInt(val)),
+    pricePerKilometer: z.coerce
+      .number()
+      .positive({ message: tValidations('positive') }),
+    fleetSize: z
+      .union([
+        z.coerce.number().positive({ message: tValidations('positive') }),
+        z.literal(''),
+      ])
+      .transform((val) => (val === '' ? null : val))
+      .optional(),
+    website: z
+      .union([
+        z.string().url({ message: tValidations('url.invalid') }),
+        z.literal(''),
+      ])
+      .optional(),
+    email: z
+      .union([
+        z.string().email({ message: tValidations('email.invalid') }),
+        z.literal(''),
+      ])
+      .optional(),
+    phone: z
+      .string()
+      .trim()
+      .transform((val) => val.replace(/[^\d+]/g, ''))
+      .refine((val) => val.length === 0 || /^\+[1-9]\d{1,14}$/.test(val), {
+        message: tValidations('phone.invalid'),
+      })
+      .optional(),
+    active: z.boolean(),
+  });
 
-export type BusLineFormValues = z.infer<typeof busLineSchema>;
+export type BusLineFormValues = z.output<
+  ReturnType<typeof createBusLineFormSchema>
+>;
+
+type BusLineFormRawValues = z.input<ReturnType<typeof createBusLineFormSchema>>;
 
 interface BusLineFormProps {
   defaultValues?: BusLineFormValues;
@@ -45,261 +77,187 @@ interface BusLineFormProps {
 export default function BusLineForm({
   defaultValues,
   onSubmit,
-  submitButtonText,
 }: BusLineFormProps) {
   const tCommon = useTranslations('common');
   const tBusLines = useTranslations('busLines');
+  const tValidations = useTranslations('validations');
+  const schema = createBusLineFormSchema(tValidations);
   const { data: transporters } = useQueryAllTransporters();
   const { data: serviceTypes } = useQueryAllServiceTypes();
+
+  const rawDefaultValues: BusLineFormRawValues | undefined = defaultValues
+    ? {
+        ...defaultValues,
+        transporterId: String(defaultValues.transporterId),
+        serviceTypeId: String(defaultValues.serviceTypeId),
+        fleetSize: defaultValues.fleetSize ?? '',
+      }
+    : undefined;
+
   const form = useForm({
-    defaultValues: defaultValues ?? {
+    defaultValues: rawDefaultValues ?? {
       name: '',
       code: '',
       description: '',
-      transporterId: -1,
-      serviceTypeId: -1,
-      pricePerKilometer: 1.0,
-      fleetSize: undefined,
+      transporterId: '',
+      serviceTypeId: '',
+      pricePerKilometer: '1.0',
+      fleetSize: '',
       website: '',
       email: '',
       phone: '',
       active: true,
     },
     validators: {
-      onChange: busLineSchema,
+      onChange: schema,
     },
-    onSubmit: (values) => {
-      onSubmit(values.value);
+    onSubmit: async ({ value }) => {
+      try {
+        const parsed = schema.safeParse(value);
+        if (parsed.success) {
+          await onSubmit(parsed.data);
+        }
+      } catch (error: unknown) {
+        injectTranslatedErrorsToForm({
+          // @ts-expect-error - form param is not typed correctly.
+          form,
+          entity: 'busLine',
+          error,
+          tValidations,
+        });
+      }
     },
   });
 
+  const transporterItems = (transporters?.transporters ?? []).map((t) => ({
+    id: String(t.id),
+    name: t.name,
+  }));
+  const serviceTypeItems = (serviceTypes?.serviceTypes ?? []).map((s) => ({
+    id: String(s.id),
+    name: s.name,
+  }));
+
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        form.handleSubmit();
-      }}
-    >
+    <Form onSubmit={form.handleSubmit}>
       <FormLayout title={tBusLines('form.title')}>
-        <form.Field name="name">
+        <form.AppField name="name">
           {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="name">{tCommon('fields.name')}</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder={tBusLines('form.placeholders.name')}
-                required
-              />
-            </div>
+            <field.TextInput
+              label={tCommon('fields.name')}
+              placeholder={tBusLines('form.placeholders.name')}
+              isRequired
+            />
           )}
-        </form.Field>
+        </form.AppField>
 
-        <form.Field name="code">
+        <form.AppField name="code">
           {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="code">{tCommon('fields.code')}</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder={tBusLines('form.placeholders.code')}
-                required
-                maxLength={10}
-              />
-              <p className="text-sm text-muted-foreground">
-                {tBusLines('form.placeholders.code')}
-              </p>
-            </div>
+            <field.TextInput
+              label={tCommon('fields.code')}
+              placeholder={tBusLines('form.placeholders.code')}
+              isRequired
+            />
           )}
-        </form.Field>
+        </form.AppField>
 
-        <form.Field name="description">
+        <form.AppField name="description">
           {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="description">
-                {tCommon('fields.description')}
-              </Label>
-              <Textarea
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder={tBusLines('form.placeholders.description')}
-                rows={3}
-              />
-            </div>
+            <field.TextAreaInput
+              label={tCommon('fields.description')}
+              placeholder={tBusLines('form.placeholders.description')}
+            />
           )}
-        </form.Field>
+        </form.AppField>
 
-        <form.Field name="transporterId">
+        <form.AppField name="transporterId">
+          {() => (
+            <SelectInput
+              label={tCommon('fields.transporter')}
+              placeholder={tBusLines('form.placeholders.transporter')}
+              items={transporterItems}
+              isRequired
+            />
+          )}
+        </form.AppField>
+
+        <form.AppField name="serviceTypeId">
+          {() => (
+            <SelectInput
+              label={tCommon('fields.serviceType')}
+              placeholder={tBusLines('form.placeholders.serviceType')}
+              items={serviceTypeItems}
+              isRequired
+            />
+          )}
+        </form.AppField>
+
+        <form.AppField name="pricePerKilometer">
+          {() => (
+            <NumberInput
+              label={tBusLines('fields.pricePerKilometer')}
+              step={0.01}
+              min={1}
+              allowDecimals={true}
+              isRequired
+            />
+          )}
+        </form.AppField>
+
+        <form.AppField name="fleetSize">
+          {() => (
+            <NumberInput
+              label={tBusLines('fields.fleetSize')}
+              placeholder={tBusLines('form.placeholders.fleetSize')}
+              allowDecimals={false}
+              min={1}
+            />
+          )}
+        </form.AppField>
+
+        <form.AppField name="website">
           {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="transporter_id">
-                {tCommon('fields.transporter')}
-              </Label>
-              <Select
-                onValueChange={(value: string) =>
-                  field.handleChange(Number(value))
-                }
-                value={field.state.value ?? ''}
-              >
-                <SelectTrigger id={field.name}>
-                  <SelectValue placeholder={tCommon('fields.transporter')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {transporters?.transporters?.map((transporter) => (
-                    <SelectItem key={transporter.id} value={transporter.id}>
-                      {transporter.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <field.TextInput
+              type="url"
+              label={tCommon('fields.website')}
+              placeholder={tBusLines('form.placeholders.website')}
+            />
           )}
-        </form.Field>
+        </form.AppField>
 
-        <form.Field name="serviceTypeId">
+        <form.AppField name="email">
           {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="service_type">
-                {tCommon('fields.serviceType')}
-              </Label>
-              <Select
-                onValueChange={(value: string) =>
-                  field.handleChange(Number(value))
-                }
-                value={field.state.value ?? ''}
-              >
-                <SelectTrigger id={field.name}>
-                  <SelectValue placeholder={tCommon('fields.serviceType')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {serviceTypes?.serviceTypes?.map((type) => (
-                    <SelectItem key={type.id} value={type.name}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <field.TextInput
+              type="email"
+              label={tCommon('fields.email')}
+              placeholder={tBusLines('form.placeholders.email')}
+            />
           )}
-        </form.Field>
+        </form.AppField>
 
-        <form.Field name="pricePerKilometer">
+        <form.AppField name="phone">
           {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="price_per_kilometer">Precio por kilómetro</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                type="number"
-                step="0.01"
-                min="0"
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(Number(e.target.value))}
-                placeholder="1.0"
-              />
-            </div>
+            <field.TextInput
+              label={tCommon('fields.phone')}
+              placeholder={tBusLines('form.placeholders.phone')}
+            />
           )}
-        </form.Field>
+        </form.AppField>
 
-        <form.Field name="fleetSize">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="fleet_size">Tamaño de flota</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                type="number"
-                min="1"
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(Number(e.target.value))}
-                placeholder="Número de vehículos"
-              />
-            </div>
-          )}
-        </form.Field>
+        <form.AppField name="active">
+          {(field) => <field.SwitchInput label={tCommon('fields.active')} />}
+        </form.AppField>
 
-        <form.Field name="website">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="website">{tCommon('fields.website')}</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                type="url"
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder="https://ejemplo.com"
-              />
-            </div>
-          )}
-        </form.Field>
-
-        <form.Field name="email">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="email">{tCommon('fields.email')}</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                type="email"
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder="contacto@ejemplo.com"
-              />
-            </div>
-          )}
-        </form.Field>
-
-        <form.Field name="phone">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="phone">{tCommon('fields.phone')}</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder="+52 55 1234 5678"
-              />
-            </div>
-          )}
-        </form.Field>
-
-        <form.Field name="active">
-          {(field) => (
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="active"
-                checked={field.state.value ?? false}
-                onCheckedChange={(checked: boolean) =>
-                  field.handleChange(checked)
-                }
-              />
-              <Label htmlFor="active">{tCommon('fields.active')}</Label>
-            </div>
-          )}
-        </form.Field>
-
-        <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting]}
-        >
-          {([canSubmit, isSubmitting]: [boolean, boolean]) => (
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="submit" disabled={!canSubmit || isSubmitting}>
-                {isSubmitting && <Loader2 className="animate-spin" />}
-                {submitButtonText ?? tCommon('actions.create')}
-              </Button>
-            </div>
-          )}
-        </form.Subscribe>
+        <FormFooter>
+          <form.AppForm>
+            <form.SubmitButton>
+              {defaultValues
+                ? tCommon('actions.update')
+                : tCommon('actions.create')}
+            </form.SubmitButton>
+          </form.AppForm>
+        </FormFooter>
       </FormLayout>
-    </form>
+    </Form>
   );
 }

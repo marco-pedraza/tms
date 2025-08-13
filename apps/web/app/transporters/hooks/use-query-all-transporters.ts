@@ -8,6 +8,9 @@ export default function useQueryAllTransporters(): UseQueryResult<
 > {
   return useQuery<transporters.Transporters, APIError>({
     queryKey: ['allTransporters'],
-    queryFn: () => imsClient.inventory.listTransporters({}),
+    queryFn: () =>
+      imsClient.inventory.listTransporters({
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      }),
   });
 }

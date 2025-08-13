@@ -2,9 +2,9 @@
 
 import { useTranslations } from 'next-intl';
 import BusLineNotFound from '@/bus-lines/components/bus-line-not-found';
-import useBusLineDetailsParams from '@/bus-lines/hooks/use-bus-line-details-params';
 import useQueryBusLine from '@/bus-lines/hooks/use-query-bus-line';
 import LoadError from '@/components/load-error';
+import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import routes from '@/services/routes';
 
 export default function BusLineLayout({
@@ -13,9 +13,9 @@ export default function BusLineLayout({
   children: React.ReactNode;
 }) {
   const tBusLines = useTranslations('busLines');
-  const { busLineId, isValidId } = useBusLineDetailsParams();
+  const { itemId: busLineId, isValidId } = useCollectionItemDetailsParams();
   const { status, error } = useQueryBusLine({
-    busLineId,
+    itemId: busLineId,
     enabled: isValidId,
   });
   const isBusLineNotFound = !isValidId || error?.code === 'not_found';

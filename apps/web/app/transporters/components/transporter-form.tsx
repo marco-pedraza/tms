@@ -17,22 +17,26 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { codeSchema, nameSchema, phoneSchema } from '@/schemas/common';
+import { UseValidationsTranslationsResult } from '@/types/translations';
 import hasFieldErrors from '@/utils/has-field-errors';
 
-const transporterSchema = z.object({
-  name: nameSchema,
-  code: codeSchema(1, 10),
-  headquarterCityId: z.number().nonnegative().optional(),
-  active: z.boolean(),
-  description: z.string().optional(),
-  website: z.string().url().optional(),
-  email: z.string().email().optional(),
-  phone: phoneSchema,
-  logoUrl: z.string().url().optional(),
-  licenseNumber: z.string().optional(),
-});
+const transporterSchema = (tValidations: UseValidationsTranslationsResult) =>
+  z.object({
+    name: nameSchema(tValidations),
+    code: codeSchema(tValidations, 1, 10),
+    headquarterCityId: z.number().nonnegative().optional(),
+    active: z.boolean(),
+    description: z.string().optional(),
+    website: z.string().url().optional(),
+    email: z.string().email().optional(),
+    phone: phoneSchema,
+    logoUrl: z.string().url().optional(),
+    licenseNumber: z.string().optional(),
+  });
 
-export type TransporterFormValues = z.infer<typeof transporterSchema>;
+export type TransporterFormValues = z.infer<
+  ReturnType<typeof transporterSchema>
+>;
 
 interface TransporterFormProps {
   defaultValues?: TransporterFormValues;
@@ -47,6 +51,7 @@ export default function TransporterForm({
 }: TransporterFormProps) {
   const tTransporters = useTranslations('transporters');
   const tCommon = useTranslations('common');
+  const tValidations = useTranslations('validations');
   const { data: cities } = useQueryAllCities();
 
   const form = useForm({
@@ -58,7 +63,7 @@ export default function TransporterForm({
       active: true,
     },
     validators: {
-      onChange: transporterSchema,
+      onChange: transporterSchema(tValidations),
     },
     onSubmit: (values) => {
       onSubmit(values.value);

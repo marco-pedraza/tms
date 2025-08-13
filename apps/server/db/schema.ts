@@ -6,7 +6,10 @@ export {
   transportersRelations,
 } from '../inventory/transporters/transporters.schema';
 export { serviceTypes } from '../inventory/service-types/service-types.schema';
-export { busLines } from '../inventory/bus-lines/bus-lines.schema';
+export {
+  busLines,
+  busLinesRelations,
+} from '../inventory/bus-lines/bus-lines.schema';
 export { users, userRelations } from '../users/users/users.schema';
 export { departments } from '../users/departments/departments.schema';
 export { tenants } from '../users/tenants/tenants.schema';

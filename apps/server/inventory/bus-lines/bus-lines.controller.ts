@@ -1,6 +1,7 @@
 import { api } from 'encore.dev/api';
 import type {
   BusLine,
+  BusLineWithTransporterAndServiceType,
   CreateBusLinePayload,
   ListBusLinesQueryParams,
   ListBusLinesResult,
@@ -29,13 +30,17 @@ export const createBusLine = api(
  * Retrieves a bus line by its ID.
  * @param params - Object containing the bus line ID
  * @param params.id - The ID of the bus line to retrieve
- * @returns {Promise<BusLine>} The found bus line
+ * @returns {Promise<BusLineWithTransporterAndServiceType>} The found bus line with relations
  * @throws {APIError} If the bus line is not found or retrieval fails
  */
 export const getBusLine = api(
   { expose: true, method: 'GET', path: '/bus-lines/:id' },
-  async ({ id }: { id: number }): Promise<BusLine> => {
-    return await busLineRepository.findOne(id);
+  async ({
+    id,
+  }: {
+    id: number;
+  }): Promise<BusLineWithTransporterAndServiceType> => {
+    return await busLineRepository.findOneWithRelations(id);
   },
 );
 
@@ -66,7 +71,13 @@ export const listBusLinesPaginated = api(
   async (
     params: PaginatedListBusLinesQueryParams,
   ): Promise<PaginatedListBusLinesResult> => {
-    return await busLineRepository.findAllPaginated(params);
+    const result = await busLineRepository.findAllPaginated(params);
+
+    return await busLineRepository.appendRelations(
+      result.data,
+      result.pagination,
+      params,
+    );
   },
 );
 

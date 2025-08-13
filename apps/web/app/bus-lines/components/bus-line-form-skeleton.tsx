@@ -1,91 +1,129 @@
 import { ArrowLeft } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function BusLineFormSkeleton() {
+  const tBusLines = useTranslations('busLines');
+  const tCommon = useTranslations('common');
+
   return (
-    <div className="max-w-full min-h-screen bg-gray-50 p-4">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-2">
-        <ArrowLeft className="h-5 w-5 text-gray-500" />
-        <div className="h-7 w-64 bg-gray-200 rounded-md animate-pulse" />
+    <div className="container mx-auto p-4 max-w-3xl">
+      {/* Header with back button and title */}
+      <div className="flex items-center mb-6">
+        <Button variant="ghost" size="icon" className="mr-2">
+          <ArrowLeft className="h-4 w-4" />
+          <span className="sr-only">{tCommon('actions.backToList')}</span>
+        </Button>
+        <div>
+          <Skeleton className="h-8 w-40 mb-1" />
+          <Skeleton className="h-5 w-32" />
+        </div>
       </div>
-      <div className="h-5 w-72 bg-gray-200 rounded-md animate-pulse mb-6" />
 
-      {/* Main Card */}
-      <div className="bg-white rounded-lg p-6 shadow-sm">
-        {/* Card Title */}
-        <div className="h-8 w-64 bg-gray-200 rounded-md animate-pulse mb-8" />
+      {/* Edit Form Card */}
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold mb-6">
+          {tBusLines('details.description')}
+        </h2>
 
-        {/* Form Fields */}
         <div className="space-y-6">
           {/* Name Field */}
           <div className="space-y-2">
-            <div className="h-5 w-24 bg-gray-200 rounded-md animate-pulse" />
-            <div className="h-10 w-full bg-gray-100 rounded-md animate-pulse" />
+            <Label className="text-sm font-medium">
+              {tCommon('fields.name')}
+            </Label>
+            <Skeleton className="h-10 w-full rounded-md" />
           </div>
 
           {/* Code Field */}
           <div className="space-y-2">
-            <div className="h-5 w-20 bg-gray-200 rounded-md animate-pulse" />
-            <div className="h-10 w-full bg-gray-100 rounded-md animate-pulse" />
-            <div className="h-4 w-64 bg-gray-100 rounded-md animate-pulse" />
+            <Label className="text-sm font-medium">
+              {tCommon('fields.code')}
+            </Label>
+            <Skeleton className="h-10 w-full rounded-md" />
           </div>
 
           {/* Description Field */}
           <div className="space-y-2">
-            <div className="h-5 w-32 bg-gray-200 rounded-md animate-pulse" />
-            <div className="h-24 w-full bg-gray-100 rounded-md animate-pulse" />
+            <Label className="text-sm font-medium">
+              {tCommon('fields.description')}
+            </Label>
+            <Skeleton className="h-10 w-full rounded-md" />
           </div>
 
-          {/* Transport Group Field */}
+          {/* Transporter Field */}
           <div className="space-y-2">
-            <div className="h-5 w-48 bg-gray-200 rounded-md animate-pulse" />
-            <div className="h-10 w-full bg-gray-100 rounded-md animate-pulse" />
+            <Label className="text-sm font-medium">
+              {tCommon('fields.transporter')}
+            </Label>
+            <Skeleton className="h-10 w-full rounded-md" />
           </div>
 
           {/* Service Type Field */}
           <div className="space-y-2">
-            <div className="h-5 w-36 bg-gray-200 rounded-md animate-pulse" />
-            <div className="h-10 w-full bg-gray-100 rounded-md animate-pulse" />
+            <Label className="text-sm font-medium">
+              {tCommon('fields.serviceType')}
+            </Label>
+            <Skeleton className="h-10 w-full rounded-md" />
           </div>
 
-          {/* Logo URL Field */}
+          {/* Price per Kilometer */}
           <div className="space-y-2">
-            <div className="h-5 w-28 bg-gray-200 rounded-md animate-pulse" />
-            <div className="h-10 w-full bg-gray-100 rounded-md animate-pulse" />
-            <div className="h-4 w-72 bg-gray-100 rounded-md animate-pulse" />
+            <Label className="text-sm font-medium">
+              {tBusLines('fields.pricePerKilometer')}
+            </Label>
+            <Skeleton className="h-10 w-full rounded-md" />
           </div>
 
-          {/* Color Fields */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <div className="h-5 w-32 bg-gray-200 rounded-md animate-pulse" />
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 bg-gray-300 rounded-md animate-pulse" />
-                <div className="h-10 flex-1 bg-gray-100 rounded-md animate-pulse" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-5 w-36 bg-gray-200 rounded-md animate-pulse" />
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 bg-gray-300 rounded-md animate-pulse" />
-                <div className="h-10 flex-1 bg-gray-100 rounded-md animate-pulse" />
-              </div>
-            </div>
+          {/* Fleet Size */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              {tBusLines('fields.fleetSize')}
+            </Label>
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+
+          {/* Website */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              {tCommon('fields.website')}
+            </Label>
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+
+          {/* Email */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              {tCommon('fields.email')}
+            </Label>
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+
+          {/* Phone */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              {tCommon('fields.phone')}
+            </Label>
+            <Skeleton className="h-10 w-full rounded-md" />
           </div>
 
           {/* Active Toggle */}
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-12 bg-gray-200 rounded-full animate-pulse" />
-            <div className="h-5 w-16 bg-gray-200 rounded-md animate-pulse" />
+          <div className="flex items-center space-x-2 pt-2">
+            <Label className="text-sm font-medium">
+              {tCommon('fields.active')}
+            </Label>
+            <Skeleton className="h-5 w-10 rounded-full" />
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-end mt-8">
+            <Skeleton className="h-10 w-32 rounded-md" />
           </div>
         </div>
-
-        {/* Buttons */}
-        <div className="flex justify-end gap-4 mt-8">
-          <div className="h-10 w-28 bg-gray-200 rounded-md animate-pulse" />
-          <div className="h-10 w-48 bg-gray-300 rounded-md animate-pulse" />
-        </div>
-      </div>
+      </Card>
     </div>
   );
 }

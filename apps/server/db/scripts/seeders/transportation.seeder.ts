@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker';
 import type { BusLine } from '../../../inventory/bus-lines/bus-lines.types';
 import type { BusModel } from '../../../inventory/bus-models/bus-models.types';
 import type { Bus } from '../../../inventory/buses/buses.types';
@@ -132,8 +133,8 @@ export async function seedBusLines(
 
       const lines = (await busLineFactory(db).create([
         {
-          name: `${transporter.name} ${serviceType?.name} Line ${i + 1}`,
-          code: `${transporter.code}-${serviceType?.name.substring(0, 3).toUpperCase()}-${i + 1}`,
+          name: `${transporter.name} ${serviceType?.name} Line ${faker.string.alpha({ length: 4, casing: 'upper' })}`,
+          code: `${serviceType?.name.substring(0, 3).toUpperCase()}${faker.string.alpha({ length: 5, casing: 'upper' })}`,
           transporterId: transporter.id,
           serviceTypeId: serviceType?.id,
           active: true,

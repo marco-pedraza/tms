@@ -3,7 +3,11 @@ import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
 import { busLineFactory } from './bus-line.factory';
 import { busFactory } from './buses.factory';
-import { extractTablesFromSchema, generateId } from './factory-utils';
+import {
+  extractTablesFromSchema,
+  generateE164Phone,
+  generateId,
+} from './factory-utils';
 import { transporterFactory } from './transporters.factory';
 
 export const driverFactory = defineFactory({
@@ -53,7 +57,7 @@ export const driverFactory = defineFactory({
       addressCity: faker.location.city(),
       addressState: faker.location.state(),
       postalCode: faker.location.zipCode('#####'),
-      phoneNumber: faker.phone.number({ style: 'international' }),
+      phoneNumber: generateE164Phone('52', 10),
       email: faker.internet.email(),
       driverType: faker.helpers.arrayElement(driverTypes),
       position: faker.helpers.arrayElement(positions),

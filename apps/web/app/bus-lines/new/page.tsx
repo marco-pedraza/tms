@@ -8,8 +8,7 @@ import routes from '@/services/routes';
 
 export default function NewBusLinePage() {
   const t = useTranslations('busLines');
-  const tCommon = useTranslations('common');
-  const { createBusLine } = useBusLineMutations();
+  const { create } = useBusLineMutations();
 
   return (
     <div>
@@ -18,10 +17,7 @@ export default function NewBusLinePage() {
         backHref={routes.busLines.index}
         backLabel={t('actions.backToList')}
       />
-      <BusLineForm
-        onSubmit={createBusLine.mutateWithToast}
-        submitButtonText={tCommon('actions.create')}
-      />
+      <BusLineForm onSubmit={create.mutateWithToast} />
     </div>
   );
 }

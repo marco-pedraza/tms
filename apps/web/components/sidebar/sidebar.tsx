@@ -3,18 +3,20 @@
 import type React from 'react';
 import Link from 'next/link';
 import {
-  // Briefcase,
+  Briefcase,
   Building,
   Building2,
+  Bus,
   Calendar,
-  //Bus,
+  Flag,
   Globe,
-  Map,
+  Map as MapIcon,
   MapPin,
   Package,
   Settings,
   Star,
   Tag,
+  Users,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import routes from '@/services/routes';
@@ -50,7 +52,7 @@ export default function Sidebar() {
           />
           <SidebarLink
             href={routes.states.index}
-            icon={Map}
+            icon={MapIcon}
             label={tSidebar('inventory.localities.states')}
           />
           <SidebarLink
@@ -90,21 +92,28 @@ export default function Sidebar() {
           />
         </SidebarSection>
 
-        {/* <SidebarLink
-          href={routes.transporters.index}
-          icon={Briefcase}
-          label={tSidebar('inventory.transporters')}
-        /> */}
-        {/* <SidebarLink
-          href={routes.serviceTypes.index}
-          icon={Briefcase}
-          label={tSidebar('inventory.serviceTypes')}
-        /> */}
-        {/* <SidebarLink
-          href={routes.busLines.index}
-          icon={Bus}
-          label={tSidebar('inventory.busLines')}
-        /> */}
+        <SidebarSection
+          title={tSidebar('inventory.operators.title')}
+          icon={<Users className="h-4 w-4" />}
+          defaultOpen={true}
+        >
+          <SidebarLink
+            href={routes.transporters.index}
+            icon={Briefcase}
+            label={tSidebar('inventory.operators.transporters')}
+          />
+          <SidebarLink
+            href={routes.serviceTypes.index}
+            icon={Flag}
+            label={tSidebar('inventory.operators.serviceTypes')}
+          />
+          <SidebarLink
+            href={routes.busLines.index}
+            icon={Bus}
+            label={tSidebar('inventory.operators.busLines')}
+          />
+        </SidebarSection>
+
         {/* <SidebarLink
           href={routes.drivers.index}
           icon={Users}

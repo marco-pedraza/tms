@@ -8,6 +8,9 @@ export default function useQueryAllServiceTypes(): UseQueryResult<
 > {
   return useQuery<service_types.ServiceTypes, APIError>({
     queryKey: ['allServiceTypes'],
-    queryFn: () => imsClient.inventory.listServiceTypes({}),
+    queryFn: () =>
+      imsClient.inventory.listServiceTypes({
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      }),
   });
 }

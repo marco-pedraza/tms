@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { bus_lines } from '@repo/ims-client';
 import useQueryAllServiceTypes from '@/app/service-types/hooks/use-query-all-service-types';
@@ -11,6 +10,7 @@ import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
 import { FilterConfig } from '@/components/data-table/data-table-header';
 import IsActiveBadge from '@/components/is-active-badge';
+import useDeleteDialog from '@/hooks/use-delete-dialog';
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
@@ -27,7 +27,7 @@ interface BusLinesColumnsFactoryProps {
 function busLinesColumnsFactory({
   tCommon,
   tBusLines,
-}: BusLinesColumnsFactoryProps): DataTableColumnDef<bus_lines.BusLine>[] {
+}: BusLinesColumnsFactoryProps): DataTableColumnDef<bus_lines.BusLineWithTransporterAndServiceType>[] {
   return [
     {
       accessorKey: 'name',
@@ -40,12 +40,14 @@ function busLinesColumnsFactory({
       sortable: true,
     },
     {
-      accessorKey: 'transporterId',
+      accessorKey: 'transporter.name',
       header: tBusLines('fields.transporter'),
+      cell: ({ getValue }) => String(getValue() ?? ''),
     },
     {
-      accessorKey: 'serviceTypeId',
+      accessorKey: 'serviceType.name',
       header: tBusLines('fields.serviceType'),
+      cell: ({ getValue }) => String(getValue() ?? ''),
     },
     {
       accessorKey: 'active',
@@ -85,8 +87,9 @@ export default function BusLinesTable() {
     setPaginationUrlState,
     setSortingUrlState,
   });
-  const { deleteBusLine } = useBusLineMutations();
-  const [deleteId, setDeleteId] = useState<number>();
+  const { delete: deleteBusLine } = useBusLineMutations();
+  const { deleteId, setDeleteId, onConfirmDelete, onCancelDelete } =
+    useDeleteDialog({ onConfirm: deleteBusLine.mutateWithToast });
   const { data: transporters } = useQueryAllTransporters();
   const { data: serviceTypes } = useQueryAllServiceTypes();
 
@@ -118,12 +121,6 @@ export default function BusLinesTable() {
       ],
     },
   ];
-
-  const onConfirmDelete = () => {
-    if (!deleteId) return;
-    deleteBusLine.mutateWithToast(deleteId);
-    setDeleteId(undefined);
-  };
 
   const columns = busLinesColumnsFactory({
     tCommon,
@@ -157,7 +154,7 @@ export default function BusLinesTable() {
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}
-        onOpenChange={() => setDeleteId(undefined)}
+        onOpenChange={onCancelDelete}
         onConfirm={onConfirmDelete}
       />
     </>

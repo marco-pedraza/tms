@@ -11,14 +11,20 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { nameSchema } from '@/schemas/common';
+import { UseValidationsTranslationsResult } from '@/types/translations';
 
-const serviceTypeFormSchema = z.object({
-  name: nameSchema,
-  description: z.string().optional(),
-  active: z.boolean().default(true),
-});
+const serviceTypeFormSchema = (
+  tValidations: UseValidationsTranslationsResult,
+) =>
+  z.object({
+    name: nameSchema(tValidations),
+    description: z.string().optional(),
+    active: z.boolean().default(true),
+  });
 
-export type ServiceTypeFormValues = z.infer<typeof serviceTypeFormSchema>;
+export type ServiceTypeFormValues = z.infer<
+  ReturnType<typeof serviceTypeFormSchema>
+>;
 
 interface ServiceTypeFormProps {
   onSubmit: (values: ServiceTypeFormValues) => Promise<unknown>;
@@ -33,7 +39,7 @@ export default function ServiceTypeForm({
 }: ServiceTypeFormProps) {
   const tServiceTypes = useTranslations('serviceTypes');
   const tCommon = useTranslations('common');
-
+  const tValidations = useTranslations('validations');
   const form = useForm({
     defaultValues: defaultValues ?? {
       name: '',
@@ -41,7 +47,7 @@ export default function ServiceTypeForm({
       active: true,
     },
     validators: {
-      onChange: serviceTypeFormSchema,
+      onChange: serviceTypeFormSchema(tValidations),
     },
     onSubmit: async (submission) => {
       await onSubmit(submission.value as ServiceTypeFormValues);

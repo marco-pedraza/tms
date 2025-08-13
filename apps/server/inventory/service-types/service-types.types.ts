@@ -10,7 +10,7 @@ export interface ServiceType {
   /** Name of the service type */
   name: string;
   /** Description of what this service type represents */
-  description: string;
+  description: string | null;
   /** Whether this service type is currently active */
   active: boolean;
   /** Timestamp when this service type was created */

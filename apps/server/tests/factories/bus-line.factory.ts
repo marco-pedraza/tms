@@ -5,6 +5,7 @@ import {
   extractTablesFromSchema,
   generateAlphabeticCode,
   generateAlphabeticName,
+  generateE164Phone,
   generateId,
 } from './factory-utils';
 
@@ -18,11 +19,24 @@ export const busLineFactory = defineFactory({
       id,
       name: generateAlphabeticName('Bus Line'),
       code: generateAlphabeticCode(6, 'BL'),
-      pricePerKilometer: faker.number.int({ min: 1, max: 10 }),
-      fleetSize: faker.number.int({ min: 1, max: 100 }),
-      website: faker.internet.url(),
-      email: faker.internet.email(),
-      phone: faker.phone.number(),
+      pricePerKilometer: faker.number.float({
+        min: 1.0,
+        max: 100.0,
+        fractionDigits: 2,
+      }),
+      fleetSize: faker.helpers.maybe(
+        () => faker.number.int({ min: 10, max: 1000 }),
+        { probability: 0.5 },
+      ),
+      website: faker.helpers.maybe(() => faker.internet.url(), {
+        probability: 0.5,
+      }),
+      email: faker.helpers.maybe(() => faker.internet.email(), {
+        probability: 0.5,
+      }),
+      phone: faker.helpers.maybe(() => generateE164Phone('52', 10), {
+        probability: 0.5,
+      }),
       active: faker.helpers.arrayElement([true, true, true, false]), // 75% active
       deletedAt: faker.helpers.maybe(() => faker.date.recent({ days: 30 }), {
         probability: 0.1,

@@ -107,17 +107,10 @@ const createBaseNodeFormSchema = (
     contactPhone: z
       .string()
       .trim()
-      .refine(
-        (val) => {
-          if (val.length === 0) {
-            return true;
-          }
-          return val.match(/^\+[1-9][\d\s()-]{1,20}$/);
-        },
-        {
-          message: tValidations('phone.invalid'),
-        },
-      )
+      .transform((val) => val.replace(/[^\d+]/g, ''))
+      .refine((val) => val.length === 0 || /^\+[1-9]\d{1,14}$/.test(val), {
+        message: tValidations('phone.invalid'),
+      })
       .transform((val) => (val.length === 0 ? null : val))
       .nullable(),
     contactEmail: z

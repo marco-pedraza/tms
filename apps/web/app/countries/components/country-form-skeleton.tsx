@@ -51,10 +51,10 @@ export default function CountryFormSkeleton() {
 
           {/* Active Toggle */}
           <div className="flex items-center space-x-2 pt-2">
-            <Skeleton className="h-5 w-10 rounded-full" />
             <Label className="text-sm font-medium">
               {tCommon('fields.active')}
             </Label>
+            <Skeleton className="h-5 w-10 rounded-full" />
           </div>
 
           {/* Update Button */}

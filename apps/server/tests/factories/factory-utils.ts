@@ -1,4 +1,5 @@
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
+import { faker } from '@faker-js/faker';
 import { Table } from 'drizzle-orm';
 
 // We need to extract partial schemas because relations are not supported in the factory
@@ -181,4 +182,26 @@ export function generateAlphabeticCode(
  */
 export function createUniqueName(prefix: string, uniqueId: string): string {
   return `${prefix} ${uniqueId}`;
+}
+
+/**
+ * Generates a phone number in E.164 format: +<countryCode><digits>
+ * Ensures only numeric digits after the plus sign.
+ *
+ * @param countryCode - Numeric country code without the plus sign (e.g., '52' for Mexico)
+ * @param nationalNumberLength - Number of digits for the national number part
+ * @returns Phone number string in E.164 format
+ */
+export function generateE164Phone(
+  countryCode: string,
+  nationalNumberLength: number = 10,
+): string {
+  // First digit 1-9 to avoid leading zero
+  const first = faker.number.int({ min: 1, max: 9 }).toString();
+  const rest = Array.from(
+    { length: Math.max(nationalNumberLength - 1, 0) },
+    () => faker.number.int({ min: 0, max: 9 }).toString(),
+  ).join('');
+  const digits = `${first}${rest}`;
+  return `+${countryCode}${digits}`;
 }

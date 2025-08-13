@@ -4,6 +4,7 @@ import { schema } from '../../db';
 import {
   extractTablesFromSchema,
   generateAlphabeticName,
+  generateE164Phone,
   generateId,
 } from './factory-utils';
 
@@ -92,7 +93,7 @@ export const installationFactory = defineFactory({
       description: faker.helpers.maybe(() => faker.lorem.sentence(), {
         probability: 0.7,
       }),
-      contactPhone: faker.helpers.maybe(() => faker.phone.number(), {
+      contactPhone: faker.helpers.maybe(() => generateE164Phone('52', 10), {
         probability: 0.6,
       }),
       contactEmail: faker.helpers.maybe(() => faker.internet.email(), {

@@ -1063,13 +1063,13 @@ export namespace inventory {
          * Retrieves a bus line by its ID.
          * @param params - Object containing the bus line ID
          * @param params.id - The ID of the bus line to retrieve
-         * @returns {Promise<BusLine>} The found bus line
+         * @returns {Promise<BusLineWithTransporterAndServiceType>} The found bus line with relations
          * @throws {APIError} If the bus line is not found or retrieval fails
          */
-        public async getBusLine(id: number): Promise<bus_lines.BusLine> {
+        public async getBusLine(id: number): Promise<bus_lines.BusLineWithTransporterAndServiceType> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/bus-lines/${encodeURIComponent(id)}`)
-            return await resp.json() as bus_lines.BusLine
+            return await resp.json() as bus_lines.BusLineWithTransporterAndServiceType
         }
 
         /**
@@ -2551,7 +2551,7 @@ export namespace inventory {
     /**
      * Number of vehicles in the fleet
      */
-    fleetSize?: number
+    fleetSize?: number | null
 
     /**
      * Website
@@ -5770,6 +5770,80 @@ export namespace bus_lines {
         updatedAt: string | string | null
     }
 
+    export interface BusLineWithTransporterAndServiceType {
+        transporter: transporters.Transporter
+        serviceType: service_types.ServiceType
+        /**
+         * Unique identifier for the bus line
+         */
+        id: number
+
+        /**
+         * Name of the bus line
+         */
+        name: string
+
+        /**
+         * Unique business code for the bus line
+         */
+        code: string
+
+        /**
+         * ID of the transporter that operates this bus line
+         */
+        transporterId: number
+
+        /**
+         * ID of the service type of this bus line
+         */
+        serviceTypeId: number
+
+        /**
+         * Multiplier for price per kilometer
+         */
+        pricePerKilometer: number
+
+        /**
+         * Description of the bus line
+         */
+        description: string | null
+
+        /**
+         * Number of vehicles in the fleet
+         */
+        fleetSize: number | null
+
+        /**
+         * Website
+         */
+        website: string | null
+
+        /**
+         * Email
+         */
+        email: string | null
+
+        /**
+         * Phone
+         */
+        phone: string | null
+
+        /**
+         * Whether the bus line is currently active in the system
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the bus line record was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the bus line record was last updated
+         */
+        updatedAt: string | string | null
+    }
+
     export interface CreateBusLinePayload {
         /**
          * The name of the bus line
@@ -5810,7 +5884,7 @@ export namespace bus_lines {
         /**
          * Number of vehicles in the fleet
          */
-        fleetSize?: number
+        fleetSize?: number | null
 
         /**
          * Website
@@ -5890,7 +5964,7 @@ export namespace bus_lines {
 
     export interface PaginatedListBusLinesResult {
         pagination: shared.PaginationMeta
-        data: BusLine[]
+        data: BusLineWithTransporterAndServiceType[]
     }
 }
 
@@ -10823,7 +10897,7 @@ export namespace service_types {
         filters?: {
             id?: number
             name?: string
-            description?: string
+            description?: string | null
             active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
@@ -10845,7 +10919,7 @@ export namespace service_types {
         /**
          * Description of what this service type represents
          */
-        description: string
+        description: string | null
 
         /**
          * Whether this service type is currently active
@@ -10875,7 +10949,7 @@ export namespace service_types {
         filters?: {
             id?: number
             name?: string
-            description?: string
+            description?: string | null
             active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null

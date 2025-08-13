@@ -5,6 +5,8 @@ import {
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '../../shared/types';
+import { ServiceType } from '../service-types/service-types.types';
+import { Transporter } from '../transporters/transporters.types';
 
 /**
  * Base interface representing a bus line entity
@@ -53,6 +55,11 @@ export interface BusLine {
   updatedAt: Date | string | null;
 }
 
+export interface BusLineWithTransporterAndServiceType extends BusLine {
+  transporter: Transporter;
+  serviceType: ServiceType;
+}
+
 /**
  * Input for creating a new bus line
  */
@@ -96,7 +103,7 @@ export interface CreateBusLinePayload {
   /**
    * Number of vehicles in the fleet
    */
-  fleetSize?: number & Min<1>;
+  fleetSize?: (number & Min<1>) | null;
 
   /**
    * Website
@@ -162,7 +169,7 @@ export interface UpdateBusLinePayload {
   /**
    * Number of vehicles in the fleet
    */
-  fleetSize?: number & Min<1>;
+  fleetSize?: (number & Min<1>) | null;
 
   /**
    * Website
@@ -204,4 +211,5 @@ export type PaginatedListBusLinesQueryParams =
 /**
  * Unified paginated list result for bus lines
  */
-export type PaginatedListBusLinesResult = PaginatedListQueryResult<BusLine>;
+export type PaginatedListBusLinesResult =
+  PaginatedListQueryResult<BusLineWithTransporterAndServiceType>;

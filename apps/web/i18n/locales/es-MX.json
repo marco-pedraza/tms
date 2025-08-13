@@ -114,6 +114,7 @@
     "mustBeNumber": "El valor debe ser un número.",
     "mustBeDate": "El valor debe ser una fecha válida.",
     "greaterThanOrEquals": "El valor debe ser mayor o igual a {value}.",
+    "positive": "El valor debe ser un número positivo.",
     "name": {
       "letters": "El nombre debe contener solo letras y espacios."
     },
@@ -160,7 +161,8 @@
       "installationType": "Tipo de Instalación",
       "event": "Evento",
       "label": "Etiqueta",
-      "amenity": "Amenidad"
+      "amenity": "Amenidad",
+      "busLine": "Línea de Autobús"
     },
     "fields": {
       "name": "Nombre",
@@ -184,15 +186,18 @@
         "events": "Eventos",
         "labels": "Etiquetas"
       },
-      "transporters": "Transportistas",
-      "serviceTypes": "Tipos de Servicio",
-      "busLines": "Líneas de Autobus",
+      "operators": {
+        "title": "Operadores",
+        "transporters": "Grupos de Transporte",
+        "serviceTypes": "Tipos de Servicio",
+        "busLines": "Líneas de Autobús"
+      },
       "routes": "Rutas",
       "pathways": "Trayectos",
       "pathwayServices": "Servicios de Trayecto",
       "services": "Servicios",
       "drivers": "Conductores",
-      "busModels": "Modelos de Autobus",
+      "busModels": "Modelos de Autobús",
       "buses": "Autobuses"
     },
     "planning": {
@@ -443,7 +448,7 @@
       "headquarterCity": "Ciudad Sede"
     },
     "sections": {
-      "busLines": "Líneas de Autobus"
+      "busLines": "Líneas de Autobús"
     },
     "form": {
       "title": "Información del transportista",
@@ -528,60 +533,62 @@
     }
   },
   "busLines": {
-    "title": "Líneas de Autobus",
-    "description": "Administra información de líneas de autobus para el Sistema de Inventario de Autobuses",
+    "title": "Líneas de Autobús",
+    "description": "Administra información de líneas de autobús para el Sistema de Inventario de Autobuses",
     "actions": {
-      "create": "Crear Línea de Autobus",
-      "update": "Actualizar Línea de Autobus",
-      "backToList": "Volver a líneas de autobus"
-    },
-    "fields": {
-      "transporter": "Grupo de Transporte",
-      "serviceType": "Tipo de Servicio",
-      "logo": "Logo",
-      "primaryColor": "Color Primario",
-      "secondaryColor": "Color Secundario"
-    },
-    "sections": {
-      "visualInfo": "Información Visual"
+      "create": "Crear Línea de Autobús",
+      "update": "Actualizar Línea de Autobús",
+      "backToList": "Volver a líneas de autobús"
     },
     "form": {
-      "title": "Información de la línea de autobus",
+      "title": "Información de la línea de autobús",
       "placeholders": {
-        "name": "Ej: Línea 1",
+        "name": "Ej: Línea Norte",
+        "code": "Ej: LN",
         "description": "Ej: Línea que conecta Ciudad de México con Guadalajara",
-        "code": "Ej: L1",
-        "logo": "URL o selecciona un archivo de imagen"
+        "transporter": "Selecciona un transportista",
+        "serviceType": "Selecciona un tipo de servicio",
+        "pricePerKilometer": "Ej: 10",
+        "fleetSize": "Ej: 10",
+        "website": "Ej: https://autobusesdemexico.com",
+        "email": "Ej: info@autobusesdemexico.com",
+        "phone": "Ej: +52 (33) 1234-5678"
       }
     },
-    "edit": {
-      "title": "Editar Línea de Autobus"
-    },
     "details": {
-      "description": "Detalles de la línea de autobus"
+      "description": "Detalles de la línea de autobús"
+    },
+    "edit": {
+      "title": "Editar Línea de Autobús"
     },
     "errors": {
       "notFound": {
-        "title": "Línea de autobus no encontrada",
-        "description": "No pudimos encontrar la línea de autobus que buscas. Es posible que haya sido eliminada o que no exista."
+        "title": "Línea de autobús no encontrada",
+        "description": "No pudimos encontrar la línea de autobús que buscas. Es posible que haya sido eliminada o que no exista."
       }
     },
     "messages": {
       "create": {
-        "loading": "Creando línea de autobus...",
-        "success": "Línea de autobus creada correctamente",
-        "error": "No pudimos crear la línea de autobus"
+        "loading": "Creando línea de autobús...",
+        "success": "Línea de autobús creada correctamente",
+        "error": "No pudimos crear la línea de autobús"
       },
       "update": {
-        "loading": "Actualizando línea de autobus...",
-        "success": "Línea de autobus actualizada correctamente",
-        "error": "No pudimos actualizar la línea de autobus"
+        "loading": "Actualizando línea de autobús...",
+        "success": "Línea de autobús actualizada correctamente",
+        "error": "No pudimos actualizar la línea de autobús"
       },
       "delete": {
-        "loading": "Eliminando línea de autobus...",
-        "success": "Línea de autobus eliminada correctamente",
-        "error": "No pudimos eliminar la línea de autobus"
+        "loading": "Eliminando línea de autobús...",
+        "success": "Línea de autobús eliminada correctamente",
+        "error": "No pudimos eliminar la línea de autobús"
       }
+    },
+    "fields": {
+      "transporter": "Grupo de Transporte",
+      "serviceType": "Tipo de Servicio",
+      "pricePerKilometer": "Precio por kilómetro",
+      "fleetSize": "Tamaño de flota"
     }
   },
   "drivers": {
@@ -599,7 +606,7 @@
       "driverStatus": "Estado del Conductor",
       "assignedBus": "Autobús Asignado",
       "transporter": "Transportista",
-      "busLine": "Línea de Autobus"
+      "busLine": "Línea de Autobús"
     },
     "messages": {
       "create": {
@@ -748,7 +755,7 @@
         "emptyCityList": "Selecciona una población con ciudades asignadas",
         "installationType": "Selecciona un tipo de instalación",
         "address": "Ej: Av. Central #123, Col. Centro",
-        "contactPhone": "Ej: (33) 1234-5678",
+        "contactPhone": "Ej: +52 (33) 1234-5678",
         "contactEmail": "Ej: info@autobusesdemexico.com",
         "website": "Ej: https://autobusesdemexico.com",
         "description": "Ej: Nodo central de autobuses",

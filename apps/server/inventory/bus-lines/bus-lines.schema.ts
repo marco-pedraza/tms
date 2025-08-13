@@ -3,12 +3,13 @@ import {
   index,
   integer,
   pgTable,
+  real,
   serial,
   text,
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { isNull } from 'drizzle-orm';
+import { isNull, relations } from 'drizzle-orm';
 import { serviceTypes } from '../service-types/service-types.schema';
 import { transporters } from '../transporters/transporters.schema';
 
@@ -27,7 +28,7 @@ export const busLines = pgTable(
     serviceTypeId: integer('service_type_id')
       .notNull()
       .references(() => serviceTypes.id),
-    pricePerKilometer: integer('price_per_km_multiplier').notNull().default(1),
+    pricePerKilometer: real('price_per_km_multiplier').notNull().default(1.0),
     description: text('description'),
     fleetSize: integer('fleet_size'),
     website: text('website'),
@@ -42,7 +43,22 @@ export const busLines = pgTable(
     index().on(table.transporterId),
     index().on(table.serviceTypeId),
     index().on(table.deletedAt),
+    index().on(table.active),
     uniqueIndex().on(table.name).where(isNull(table.deletedAt)),
     uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
   ],
 );
+
+/**
+ * Relations for the bus_lines table
+ */
+export const busLinesRelations = relations(busLines, ({ one }) => ({
+  transporter: one(transporters, {
+    fields: [busLines.transporterId],
+    references: [transporters.id],
+  }),
+  serviceType: one(serviceTypes, {
+    fields: [busLines.serviceTypeId],
+    references: [serviceTypes.id],
+  }),
+}));

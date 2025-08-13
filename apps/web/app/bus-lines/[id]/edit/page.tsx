@@ -5,24 +5,26 @@ import BusLineForm, {
   BusLineFormValues,
 } from '@/bus-lines/components/bus-line-form';
 import BusLineFormSkeleton from '@/bus-lines/components/bus-line-form-skeleton';
-import useBusLineDetailsParams from '@/bus-lines/hooks/use-bus-line-details-params';
 import useBusLineMutations from '@/bus-lines/hooks/use-bus-line-mutations';
 import useQueryBusLine from '@/bus-lines/hooks/use-query-bus-line';
 import PageHeader from '@/components/page-header';
+import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import routes from '@/services/routes';
 
 export default function EditBusLinePage() {
   const tBusLines = useTranslations('busLines');
-  const tCommon = useTranslations('common');
-  const { busLineId, isValidId } = useBusLineDetailsParams();
+  const { itemId: busLineId, isValidId } = useCollectionItemDetailsParams();
   const { data, isLoading } = useQueryBusLine({
-    busLineId,
+    itemId: busLineId,
     enabled: isValidId,
   });
-  const { updateBusLine } = useBusLineMutations();
+  const { update: updateBusLine } = useBusLineMutations();
 
   const handleSubmit = (values: BusLineFormValues) => {
-    return updateBusLine.mutateWithToast({ id: busLineId, values });
+    const apiValues = {
+      ...values,
+    };
+    return updateBusLine.mutateWithToast({ id: busLineId, values: apiValues });
   };
 
   if (isLoading) {
@@ -43,14 +45,13 @@ export default function EditBusLinePage() {
       <BusLineForm
         defaultValues={{
           ...data,
-          description: data.description || undefined,
-          fleetSize: data.fleetSize || undefined,
-          website: data.website || undefined,
-          email: data.email || undefined,
-          phone: data.phone || undefined,
+          description: data.description ?? '',
+          fleetSize: data.fleetSize ?? null,
+          website: data.website ?? '',
+          email: data.email ?? '',
+          phone: data.phone ?? '',
         }}
         onSubmit={handleSubmit}
-        submitButtonText={tCommon('actions.update')}
       />
     </div>
   );

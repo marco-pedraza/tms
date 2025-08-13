@@ -11,6 +11,7 @@ import {
   busLineFactory,
   busModelFactory,
   driverFactory,
+  seatDiagramFactory,
   serviceTypeFactory,
   transporterFactory,
 } from '../../../tests/factories';
@@ -207,10 +208,28 @@ export async function seedBuses(
 
       if (!busModel) continue;
 
+      // Create a seat diagram for this bus
+      const seatDiagram = await seatDiagramFactory(db).create({
+        busDiagramModelId: busModel.defaultBusDiagramModelId,
+        name: `Seat Diagram for Bus ${i + 1}`,
+        maxCapacity: busModel.seatingCapacity,
+        numFloors: busModel.numFloors,
+        seatsPerFloor: [
+          {
+            rows: Math.ceil(busModel.seatingCapacity / 4),
+            seatsPerRow: 4,
+          },
+        ],
+        totalSeats: busModel.seatingCapacity,
+        isFactoryDefault: false,
+        active: true,
+      });
+
       const transporterBuses = (await busFactory(db).create([
         {
-          busModelId: busModel.id,
+          modelId: busModel.id,
           transporterId: transporter.id,
+          seatDiagramId: seatDiagram.id,
           active: true,
         },
       ])) as Bus[];

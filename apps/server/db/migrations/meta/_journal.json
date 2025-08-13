@@ -246,6 +246,13 @@
       "when": 1754678815767,
       "tag": "20250808184655_add_soft_delete_to_buses",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1754950130492,
+      "tag": "20250811220850_update-bus-model-properties",
+      "breakpoints": true
     }
   ]
 }

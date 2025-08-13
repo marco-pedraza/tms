@@ -54,9 +54,8 @@ export const createBusWithSeatDiagram = async (
     throw new NotFoundError('Bus model not found');
   }
 
-  // Use provided bus diagram model or fallback to bus model's default
-  const busDiagramModelId =
-    data.busDiagramModelId ?? busModel.defaultBusDiagramModelId;
+  // Use the bus model's default diagram model
+  const busDiagramModelId = busModel.defaultBusDiagramModelId;
   const busDiagramModel =
     await busDiagramModelRepository.findOne(busDiagramModelId);
   if (!busDiagramModel) {

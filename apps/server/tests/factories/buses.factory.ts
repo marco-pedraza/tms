@@ -2,73 +2,61 @@ import { fakerES_MX as faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
 import { BusStatus } from '../../inventory/buses/buses.types';
-import { busModelFactory } from './bus-models.factory';
 import { extractTablesFromSchema, generateId } from './factory-utils';
-import { seatDiagramFactory } from './seat-diagrams.factory';
 
 export const busFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'buses',
-  resolver: ({ sequence, use }) => {
+  resolver: ({ sequence }) => {
     const id = generateId(sequence);
     const statuses = Object.values(BusStatus);
-    const serviceTypes = ['regular', 'executive', 'premium', 'luxury'];
-    const baseCodes = ['CDMX', 'GDL', 'MTY', 'CUN', 'OAX'];
     const licensePlateTypes = ['federal', 'state', 'tourist', 'standard'];
 
     return {
       id,
-      registrationNumber: `TEST${String(id).padStart(3, '0')}`,
-      modelId: () =>
-        use(busModelFactory)
-          .create()
-          .then((model) => model.id),
-      seatDiagramId: () =>
-        use(seatDiagramFactory)
-          .create()
-          .then((diagram) => diagram.id),
-      typeCode: (sequence % 5) + 100, // Similar to tests (typeCode: 100)
-      brandCode: faker.helpers.arrayElement(['TST', 'BRD', 'MRC', 'VLV']),
-      modelCode:
-        faker.helpers.arrayElement(['MDL', 'MOD', 'BUS', 'TYP']) + sequence,
-      maxCapacity: faker.number.int({ min: 40, max: 60 }),
-      purchaseDate: faker.date.past({ years: 5 }),
       economicNumber: `ECO${faker.string.numeric(3)}`,
+      registrationNumber: `TEST${String(id).padStart(3, '0')}`,
       licensePlateType: faker.helpers.arrayElement(licensePlateTypes),
+      licensePlateNumber: `PL${faker.string.numeric(5)}`,
       circulationCard: `CC${faker.string.numeric(5)}`,
-      year: faker.date
-        .between({ from: new Date(2018, 0, 1), to: new Date(2024, 0, 1) })
-        .getFullYear(),
-      sctPermit: `SCT${faker.string.numeric(5)}`,
-      vehicleId: `VEH${faker.string.alphanumeric(5).toUpperCase()}`,
-      grossVehicleWeight: faker.number.int({ min: 15000, max: 20000 }),
-      engineNumber: `ENG${faker.string.alphanumeric(5).toUpperCase()}`,
-      serialNumber: `SER${faker.string.alphanumeric(5).toUpperCase()}`,
-      chassisNumber: `CHS${faker.string.alphanumeric(5).toUpperCase()}`,
-      sapKey: `SAP${faker.string.alphanumeric(5).toUpperCase()}`,
-      baseCode: faker.helpers.arrayElement(baseCodes),
-      erpClientNumber: `ERP${faker.string.alphanumeric(5).toUpperCase()}`,
-      costCenter: `CC-${faker.number.int({ min: 1, max: 20 })}`,
-      fuelEfficiency: faker.number.float({
-        min: 2.5,
-        max: 9.5,
-        fractionDigits: 1,
-      }),
-      alternateCompany: faker.helpers.maybe(() => faker.company.name(), {
-        probability: 0.3,
-      }),
-      serviceType: faker.helpers.arrayElement(serviceTypes),
-      commercialTourism:
+      availableForTurismOnly:
         faker.helpers.maybe(() => true, { probability: 0.25 }) ?? false,
-      available: faker.helpers.maybe(() => true, { probability: 0.9 }) ?? false,
-      tourism: faker.helpers.maybe(() => true, { probability: 0.2 }) ?? false,
       status: faker.helpers.arrayElement(statuses),
-      lastMaintenanceDate: faker.date.recent({ days: 90 }),
-      nextMaintenanceDate: faker.date.soon({ days: 90 }),
+      transporterId: null, // Will be set by the seeder
+      alternateTransporterId: null, // Optional field
+      busLineId: null, // Optional field
+      baseId: null, // Optional field
+      purchaseDate: faker.date.past({ years: 5 }),
+      expirationDate: faker.date.future({ years: 10 }),
+      erpClientNumber: `ERP${faker.string.alphanumeric(5).toUpperCase()}`,
+      modelId: null, // Will be set by the seeder
+      vehicleId: `VEH${faker.string.alphanumeric(5).toUpperCase()}`,
+      serialNumber: `SER${faker.string.alphanumeric(5).toUpperCase()}`,
+      engineNumber: `ENG${faker.string.alphanumeric(5).toUpperCase()}`,
+      chassisNumber: `CHS${faker.string.alphanumeric(5).toUpperCase()}`,
+      grossVehicleWeight: faker.number
+        .int({ min: 15000, max: 20000 })
+        .toString(),
+      sctPermit: `SCT${faker.string.numeric(5)}`,
+      currentKilometer: faker.number
+        .int({ min: 10000, max: 500000 })
+        .toString(),
       gpsId: `GPS${faker.string.alphanumeric(5).toUpperCase()}`,
-      active: true,
+      lastMaintenanceDate: faker.helpers.maybe(
+        () => faker.date.past({ years: 1 }),
+        { probability: 0.8 },
+      ),
+      nextMaintenanceDate: faker.helpers.maybe(
+        () => faker.date.future({ years: 1 }),
+        { probability: 0.6 },
+      ),
+      seatDiagramId: null, // Will be set by the seeder
+      active: faker.helpers.maybe(() => true, { probability: 0.9 }) ?? true,
       createdAt: new Date(),
       updatedAt: new Date(),
+      deletedAt: faker.helpers.maybe(() => faker.date.recent({ days: 30 }), {
+        probability: 0.1,
+      }),
     };
   },
 });

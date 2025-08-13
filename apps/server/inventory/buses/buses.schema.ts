@@ -12,8 +12,11 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { isNull } from 'drizzle-orm';
+import { busLines } from '../bus-lines/bus-lines.schema';
 import { busModels } from '../bus-models/bus-models.schema';
+import { nodes } from '../nodes/nodes.schema';
 import { seatDiagrams } from '../seat-diagrams/seat-diagrams.schema';
+import { transporters } from '../transporters/transporters.schema';
 import { BusStatus } from './buses.types';
 
 /**
@@ -24,58 +27,63 @@ import { BusStatus } from './buses.types';
 export const buses = pgTable(
   'buses',
   {
+    // Basic information
     id: serial('id').primaryKey(),
+    economicNumber: text('economic_number').notNull(), // Economic number (Número Económico)
     registrationNumber: text('registration_number').notNull(), // License plate (Placas)
+    licensePlateType: text('license_plate_type').notNull(), // Type of license plate (Tipo Placas)
+    licensePlateNumber: text('license_plate_number').notNull(), // Plate number (Número de Placa)
+    circulationCard: text('circulation_card'), // Circulation card (Tarj. Circulación)
+    availableForTurismOnly: boolean('available_for_turism_only').default(false), // Available for turism service type only (Disponible solo para turismo)
+    status: text('status').notNull().default(BusStatus.ACTIVE), // Operational status
+    transporterId: integer('transporter_id').references(() => transporters.id), // Transporter (Empresa)
+    alternateTransporterId: integer('alternate_transporter_id').references(
+      () => transporters.id,
+    ), // Alternate transporter (Empresa Alterna)
+    busLineId: integer('bus_line_id').references(() => busLines.id), // Bus line (Línea)
+    baseId: integer('base_id').references(() => nodes.id), // Base/station (Base)
+    // Model and manufacturer information
+    purchaseDate: date('purchase_date').notNull(), // Date of purchase (Ingreso)
+    expirationDate: date('expiration_date').notNull(), // Date of purchase (Ingreso)
+    erpClientNumber: text('erp_client_number'), // ERP client number (No. Cliente ERP)
     modelId: integer('model_id')
       .notNull()
-      .references(() => busModels.id),
+      .references(() => busModels.id), // Model (Modelo)
+    // Technical information
+    vehicleId: text('vehicle_id'), // Vehicle ID (Conf. Vehicular)
+    serialNumber: text('serial_number').notNull(), // Serial number (Número de Serie)
+    engineNumber: text('engine_number'), // Engine number (Número de Motor)
+    chassisNumber: text('chassis_number').notNull(), // Chassis number (Número de Chasis)
+    grossVehicleWeight: numeric('gross_vehicle_weight').notNull(), // Gross vehicle weight (Peso Bruto Vehicular)
+    sctPermit: text('sct_permit'), // SCT permit (Permiso SCT)
+    // Maintenance information
+    currentKilometer: numeric('current_kilometer'), // Current kilometer (Kilometraje Actual)
+    gpsId: text('gps_id'), // GPS identifier
+    lastMaintenanceDate: date('last_maintenance_date'), // Last maintenance date
+    nextMaintenanceDate: date('next_maintenance_date'), // Next scheduled maintenance date
+    // Seat diagram
     seatDiagramId: integer('seat_diagram_id')
       .notNull()
       .references(() => seatDiagrams.id),
-    typeCode: integer('type_code'), // Bus type code (Tipo)
-    brandCode: text('brand_code'), // Brand code (Marca)
-    modelCode: text('model_code'), // Model code (Modelo)
-    maxCapacity: integer('max_capacity'), // Maximum capacity (Cupo Máximo)
-    purchaseDate: date('purchase_date'), // Date of purchase (Ingreso)
-    economicNumber: text('economic_number'), // Economic number (Número Económico)
-    licensePlateType: text('license_plate_type'), // Type of license plate (Tipo Placas)
-    circulationCard: text('circulation_card'), // Circulation card (Tarj. Circulación)
-    year: integer('year'), // Year of manufacture (Año)
-    sctPermit: text('sct_permit'), // SCT permit (Permiso SCT)
-    vehicleId: text('vehicle_id'), // Vehicle ID (Conf. Vehicular)
-    grossVehicleWeight: numeric('gross_vehicle_weight'), // Gross vehicle weight (Peso Bruto Vehicular)
-    engineNumber: text('engine_number'), // Engine number (Número de Motor)
-    serialNumber: text('serial_number'), // Serial number (Número de Serie)
-    chassisNumber: text('chassis_number'), // Chassis number (Número de Chasis)
-    sapKey: text('sap_key'), // SAP key (Clave Sap)
-    baseCode: text('base_code'), // Base/station code (Base)
-    erpClientNumber: text('erp_client_number'), // ERP client number (No. Cliente ERP)
-    costCenter: text('cost_center'), // Cost center (Centro de Costo Alt)
-    fuelEfficiency: numeric('fuel_efficiency'), // Fuel efficiency (Rendimiento por Litro)
-    alternateCompany: text('alternate_company'), // Alternate company (Empresa Alterna)
-    serviceType: text('service_type'), // Service type (Tipo de Servicio)
-    commercialTourism: boolean('commercial_tourism').default(false), // Commercial tourism module
-    available: boolean('available').default(true), // Available (Disponible)
-    tourism: boolean('tourism').default(false), // Tourism usage (Turismo)
-    status: text('status').notNull().default(BusStatus.ACTIVE), // Current operational status
-    lastMaintenanceDate: date('last_maintenance_date'), // Last maintenance date
-    nextMaintenanceDate: date('next_maintenance_date'), // Next scheduled maintenance date
-    gpsId: text('gps_id'), // GPS identifier
-    active: boolean('active').notNull().default(true),
+    // System information
+    active: boolean('active').notNull().default(true), // System status
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
     deletedAt: timestamp('deleted_at'),
   },
   (table) => [
+    index().on(table.status),
     index().on(table.modelId),
     index().on(table.seatDiagramId),
+    index().on(table.busLineId),
+    index().on(table.baseId),
     index().on(table.economicNumber),
     index().on(table.engineNumber),
-    index().on(table.serialNumber),
-    index().on(table.status),
     index().on(table.nextMaintenanceDate),
+    index().on(table.serialNumber),
     index().on(table.deletedAt),
     uniqueIndex().on(table.registrationNumber).where(isNull(table.deletedAt)),
+    uniqueIndex().on(table.licensePlateNumber).where(isNull(table.deletedAt)),
   ],
 );
 
@@ -90,5 +98,21 @@ export const busesRelations = relations(buses, ({ one }) => ({
   seatDiagram: one(seatDiagrams, {
     fields: [buses.seatDiagramId],
     references: [seatDiagrams.id],
+  }),
+  transporter: one(transporters, {
+    fields: [buses.transporterId],
+    references: [transporters.id],
+  }),
+  alternateTransporter: one(transporters, {
+    fields: [buses.alternateTransporterId],
+    references: [transporters.id],
+  }),
+  busLine: one(busLines, {
+    fields: [buses.busLineId],
+    references: [busLines.id],
+  }),
+  base: one(nodes, {
+    fields: [buses.baseId],
+    references: [nodes.id],
   }),
 }));

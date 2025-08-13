@@ -21,7 +21,7 @@ export async function validateBusUniqueness(
   const collector = validator || new FieldErrorCollector();
 
   // Early return if no validation needed
-  if (!payload.registrationNumber) {
+  if (!payload.registrationNumber && !payload.licensePlateNumber) {
     return collector;
   }
 
@@ -30,6 +30,10 @@ export async function validateBusUniqueness(
     {
       field: buses.registrationNumber,
       value: payload.registrationNumber,
+    },
+    {
+      field: buses.licensePlateNumber,
+      value: payload.licensePlateNumber,
     },
   ];
 

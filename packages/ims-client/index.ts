@@ -2249,165 +2249,50 @@ export namespace inventory {
          * @throws {APIError} If the bus is not found or update fails
          */
         public async updateBus(id: number, params: {
-    /**
-     * Registration number / license plate
-     * Must have at least 1 character
-     */
+    economicNumber?: string
     registrationNumber?: string
-
+    licensePlateType?: string
+    licensePlateNumber?: string
+    circulationCard?: string
+    availableForTurismOnly?: boolean
+    status?: buses.BusStatus
+    transporterId?: number | null
+    alternateTransporterId?: number | null
+    busLineId?: number | null
+    baseId?: number | null
     /**
-     * ID of the bus model
-     * Must be a positive number
-     */
-    modelId?: number
-
-    /**
-     * Bus type code
-     */
-    typeCode?: number
-
-    /**
-     * Brand code
-     */
-    brandCode?: string
-
-    /**
-     * Model code
-     */
-    modelCode?: string
-
-    /**
-     * Maximum passenger capacity
-     */
-    maxCapacity?: number
-
-    /**
-     * Date of purchase
+     * Model and manufacturer information
      */
     purchaseDate?: string
 
+    expirationDate?: string
+    erpClientNumber?: string | null
+    modelId?: number
     /**
-     * Economic number
+     * Technical information
      */
-    economicNumber?: string
+    vehicleId?: string | null
 
-    /**
-     * Type of license plate
-     */
-    licensePlateType?: string
-
-    /**
-     * Circulation card
-     */
-    circulationCard?: string
-
-    /**
-     * Year of manufacture
-     */
-    year?: number
-
-    /**
-     * SCT permit
-     */
-    sctPermit?: string
-
-    /**
-     * Vehicle ID
-     */
-    vehicleId?: string
-
-    /**
-     * Gross vehicle weight
-     */
-    grossVehicleWeight?: number
-
-    /**
-     * Engine number
-     */
-    engineNumber?: string
-
-    /**
-     * Serial number
-     */
     serialNumber?: string
-
-    /**
-     * Chassis number
-     */
+    engineNumber?: string | null
     chassisNumber?: string
-
+    grossVehicleWeight?: number
+    sctPermit?: string | null
     /**
-     * SAP key
+     * Maintenance information
      */
-    sapKey?: string
+    currentKilometer?: number | null
 
+    gpsId?: string | null
+    lastMaintenanceDate?: string | null
+    nextMaintenanceDate?: string | null
     /**
-     * Base/station code
+     * Seat Diagram
      */
-    baseCode?: string
+    seatDiagramId?: number
 
     /**
-     * ERP client number
-     */
-    erpClientNumber?: string
-
-    /**
-     * Cost center
-     */
-    costCenter?: string
-
-    /**
-     * Fuel efficiency (km/liter)
-     */
-    fuelEfficiency?: number
-
-    /**
-     * Alternate company
-     */
-    alternateCompany?: string
-
-    /**
-     * Service type
-     */
-    serviceType?: string
-
-    /**
-     * Commercial tourism module flag
-     */
-    commercialTourism?: boolean
-
-    /**
-     * Available for use flag
-     */
-    available?: boolean
-
-    /**
-     * Tourism usage flag
-     */
-    tourism?: boolean
-
-    /**
-     * Current operational status
-     */
-    status?: buses.BusStatus
-
-    /**
-     * Last maintenance date
-     */
-    lastMaintenanceDate?: string
-
-    /**
-     * Next scheduled maintenance date
-     */
-    nextMaintenanceDate?: string
-
-    /**
-     * GPS identifier
-     */
-    gpsId?: string
-
-    /**
-     * Whether the bus is active
+     * System information
      */
     active?: boolean
 }): Promise<buses.Bus> {
@@ -6822,366 +6707,111 @@ export namespace bus_seats {
 export namespace buses {
     export interface Bus {
         /**
-         * Unique identifier for the bus
+         * Basic information
          */
         id: number
 
-        /**
-         * Registration number / license plate
-         */
+        economicNumber: string
         registrationNumber: string
-
+        licensePlateType: string
+        licensePlateNumber: string
+        circulationCard: string | null
+        availableForTurismOnly: boolean
+        status: BusStatus
+        transporterId?: number | null
+        alternateTransporterId?: number | null
+        busLineId?: number | null
+        baseId?: number | null
         /**
-         * ID of the bus model
+         * Model and manufacturer information
          */
-        modelId: number
+        purchaseDate: string
 
+        expirationDate: string
+        erpClientNumber?: string | null
+        modelId: number
         /**
-         * ID of the seat diagram
+         * Technical information
+         */
+        vehicleId?: string | null
+
+        serialNumber: string
+        engineNumber?: string | null
+        chassisNumber: string
+        grossVehicleWeight: number
+        sctPermit?: string | null
+        /**
+         * Maintenance information
+         */
+        currentKilometer?: number | null
+
+        gpsId?: string | null
+        lastMaintenanceDate?: string | null
+        nextMaintenanceDate?: string | null
+        /**
+         * Seat Diagram
          */
         seatDiagramId: number
 
         /**
-         * Bus type code
-         */
-        typeCode?: number | null
-
-        /**
-         * Brand code
-         */
-        brandCode?: string | null
-
-        /**
-         * Model code
-         */
-        modelCode?: string | null
-
-        /**
-         * Maximum passenger capacity
-         */
-        maxCapacity?: number | null
-
-        /**
-         * Date of purchase
-         */
-        purchaseDate?: string | null
-
-        /**
-         * Economic number
-         */
-        economicNumber?: string | null
-
-        /**
-         * Type of license plate
-         */
-        licensePlateType?: string | null
-
-        /**
-         * Circulation card
-         */
-        circulationCard?: string | null
-
-        /**
-         * Year of manufacture
-         */
-        year?: number | null
-
-        /**
-         * SCT permit
-         */
-        sctPermit?: string | null
-
-        /**
-         * Vehicle ID
-         */
-        vehicleId?: string | null
-
-        /**
-         * Gross vehicle weight
-         */
-        grossVehicleWeight?: number | null
-
-        /**
-         * Engine number
-         */
-        engineNumber?: string | null
-
-        /**
-         * Serial number
-         */
-        serialNumber?: string | null
-
-        /**
-         * Chassis number
-         */
-        chassisNumber?: string | null
-
-        /**
-         * SAP key
-         */
-        sapKey?: string | null
-
-        /**
-         * Base/station code
-         */
-        baseCode?: string | null
-
-        /**
-         * ERP client number
-         */
-        erpClientNumber?: string | null
-
-        /**
-         * Cost center
-         */
-        costCenter?: string | null
-
-        /**
-         * Fuel efficiency (km/liter)
-         */
-        fuelEfficiency?: number | null
-
-        /**
-         * Alternate company
-         */
-        alternateCompany?: string | null
-
-        /**
-         * Service type
-         */
-        serviceType?: string | null
-
-        /**
-         * Commercial tourism module flag
-         */
-        commercialTourism?: boolean | null
-
-        /**
-         * Available for use flag
-         */
-        available?: boolean | null
-
-        /**
-         * Tourism usage flag
-         */
-        tourism?: boolean | null
-
-        /**
-         * Current operational status
-         */
-        status: BusStatus
-
-        /**
-         * Last maintenance date
-         */
-        lastMaintenanceDate?: string | null
-
-        /**
-         * Next scheduled maintenance date
-         */
-        nextMaintenanceDate?: string | null
-
-        /**
-         * GPS identifier
-         */
-        gpsId?: string | null
-
-        /**
-         * Whether the bus is active
+         * System information
          */
         active: boolean
 
-        /**
-         * Timestamp when the bus was created
-         */
         createdAt: string | string | null
-
-        /**
-         * Timestamp when the bus was last updated
-         */
         updatedAt: string | string | null
-
-        /**
-         * Timestamp when the bus was soft deleted
-         */
         deletedAt?: string | string | null
     }
 
     export type BusStatus = "ACTIVE" | "MAINTENANCE" | "REPAIR" | "OUT_OF_SERVICE" | "RESERVED" | "IN_TRANSIT" | "RETIRED"
 
     export interface CreateBusPayload {
-        /**
-         * Registration number / license plate
-         * Must have at least 1 character
-         */
+        economicNumber: string
         registrationNumber: string
-
+        licensePlateType: string
+        licensePlateNumber: string
+        circulationCard: string
+        availableForTurismOnly: boolean
+        status: BusStatus
+        transporterId?: number | null
+        alternateTransporterId?: number | null
+        busLineId?: number | null
+        baseId?: number | null
         /**
-         * ID of the bus model
-         * Must be a positive number
+         * Model and manufacturer information
          */
+        purchaseDate: string
+
+        expirationDate: string
+        erpClientNumber?: string | null
         modelId: number
+        /**
+         * Technical information
+         */
+        vehicleId?: string | null
+
+        serialNumber: string
+        engineNumber?: string | null
+        chassisNumber: string
+        grossVehicleWeight: number
+        sctPermit?: string | null
+        /**
+         * Maintenance information
+         */
+        currentKilometer?: number | null
+
+        gpsId?: string | null
+        lastMaintenanceDate?: string | null
+        nextMaintenanceDate?: string | null
+        /**
+         * Seat Diagram
+         */
+        seatDiagramId: number
 
         /**
-         * ID of the bus diagram model
-         * Must be a positive number
+         * System information
          */
-        busDiagramModelId?: number
-
-        /**
-         * Bus type code
-         */
-        typeCode?: number
-
-        /**
-         * Brand code
-         */
-        brandCode?: string
-
-        /**
-         * Model code
-         */
-        modelCode?: string
-
-        /**
-         * Maximum passenger capacity
-         */
-        maxCapacity?: number
-
-        /**
-         * Date of purchase
-         */
-        purchaseDate?: string | null
-
-        /**
-         * Economic number
-         */
-        economicNumber?: string
-
-        /**
-         * Type of license plate
-         */
-        licensePlateType?: string
-
-        /**
-         * Circulation card
-         */
-        circulationCard?: string
-
-        /**
-         * Year of manufacture
-         */
-        year?: number
-
-        /**
-         * SCT permit
-         */
-        sctPermit?: string
-
-        /**
-         * Vehicle ID
-         */
-        vehicleId?: string
-
-        /**
-         * Gross vehicle weight
-         */
-        grossVehicleWeight?: number
-
-        /**
-         * Engine number
-         */
-        engineNumber?: string
-
-        /**
-         * Serial number
-         */
-        serialNumber?: string
-
-        /**
-         * Chassis number
-         */
-        chassisNumber?: string
-
-        /**
-         * SAP key
-         */
-        sapKey?: string
-
-        /**
-         * Base/station code
-         */
-        baseCode?: string
-
-        /**
-         * ERP client number
-         */
-        erpClientNumber?: string
-
-        /**
-         * Cost center
-         */
-        costCenter?: string
-
-        /**
-         * Fuel efficiency (km/liter)
-         */
-        fuelEfficiency?: number
-
-        /**
-         * Alternate company
-         */
-        alternateCompany?: string
-
-        /**
-         * Service type
-         */
-        serviceType?: string
-
-        /**
-         * Commercial tourism module flag
-         * @default false
-         */
-        commercialTourism?: boolean
-
-        /**
-         * Available for use flag
-         * @default true
-         */
-        available?: boolean
-
-        /**
-         * Tourism usage flag
-         * @default false
-         */
-        tourism?: boolean
-
-        /**
-         * Current operational status
-         * @default BusStatus.ACTIVE
-         */
-        status?: BusStatus
-
-        /**
-         * Last maintenance date
-         */
-        lastMaintenanceDate?: string
-
-        /**
-         * Next scheduled maintenance date
-         */
-        nextMaintenanceDate?: string
-
-        /**
-         * GPS identifier
-         */
-        gpsId?: string
-
-        /**
-         * Whether the bus is active
-         * @default true
-         */
-        active?: boolean
+        active: boolean
     }
 
     export interface ListBusStatusesResult {
@@ -7190,43 +6820,37 @@ export namespace buses {
 
     export interface ListBusesQueryParams {
         orderBy?: {
-            field: "id" | "registrationNumber" | "modelId" | "seatDiagramId" | "typeCode" | "brandCode" | "modelCode" | "maxCapacity" | "purchaseDate" | "economicNumber" | "licensePlateType" | "circulationCard" | "year" | "sctPermit" | "vehicleId" | "grossVehicleWeight" | "engineNumber" | "serialNumber" | "chassisNumber" | "sapKey" | "baseCode" | "erpClientNumber" | "costCenter" | "fuelEfficiency" | "alternateCompany" | "serviceType" | "commercialTourism" | "available" | "tourism" | "status" | "lastMaintenanceDate" | "nextMaintenanceDate" | "gpsId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            field: "id" | "economicNumber" | "registrationNumber" | "licensePlateType" | "licensePlateNumber" | "circulationCard" | "availableForTurismOnly" | "status" | "transporterId" | "alternateTransporterId" | "busLineId" | "baseId" | "purchaseDate" | "expirationDate" | "erpClientNumber" | "modelId" | "vehicleId" | "serialNumber" | "engineNumber" | "chassisNumber" | "grossVehicleWeight" | "sctPermit" | "currentKilometer" | "gpsId" | "lastMaintenanceDate" | "nextMaintenanceDate" | "seatDiagramId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
+            economicNumber?: string
             registrationNumber?: string
-            modelId?: number
-            seatDiagramId?: number
-            typeCode?: number | null
-            brandCode?: string | null
-            modelCode?: string | null
-            maxCapacity?: number | null
-            purchaseDate?: string | null
-            economicNumber?: string | null
-            licensePlateType?: string | null
+            licensePlateType?: string
+            licensePlateNumber?: string
             circulationCard?: string | null
-            year?: number | null
-            sctPermit?: string | null
-            vehicleId?: string | null
-            grossVehicleWeight?: number | null
-            engineNumber?: string | null
-            serialNumber?: string | null
-            chassisNumber?: string | null
-            sapKey?: string | null
-            baseCode?: string | null
-            erpClientNumber?: string | null
-            costCenter?: string | null
-            fuelEfficiency?: number | null
-            alternateCompany?: string | null
-            serviceType?: string | null
-            commercialTourism?: boolean | null
-            available?: boolean | null
-            tourism?: boolean | null
+            availableForTurismOnly?: boolean
             status?: BusStatus
+            transporterId?: number | null
+            alternateTransporterId?: number | null
+            busLineId?: number | null
+            baseId?: number | null
+            purchaseDate?: string
+            expirationDate?: string
+            erpClientNumber?: string | null
+            modelId?: number
+            vehicleId?: string | null
+            serialNumber?: string
+            engineNumber?: string | null
+            chassisNumber?: string
+            grossVehicleWeight?: number
+            sctPermit?: string | null
+            currentKilometer?: number | null
+            gpsId?: string | null
             lastMaintenanceDate?: string | null
             nextMaintenanceDate?: string | null
-            gpsId?: string | null
+            seatDiagramId?: number
             active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
@@ -7243,43 +6867,37 @@ export namespace buses {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "registrationNumber" | "modelId" | "seatDiagramId" | "typeCode" | "brandCode" | "modelCode" | "maxCapacity" | "purchaseDate" | "economicNumber" | "licensePlateType" | "circulationCard" | "year" | "sctPermit" | "vehicleId" | "grossVehicleWeight" | "engineNumber" | "serialNumber" | "chassisNumber" | "sapKey" | "baseCode" | "erpClientNumber" | "costCenter" | "fuelEfficiency" | "alternateCompany" | "serviceType" | "commercialTourism" | "available" | "tourism" | "status" | "lastMaintenanceDate" | "nextMaintenanceDate" | "gpsId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            field: "id" | "economicNumber" | "registrationNumber" | "licensePlateType" | "licensePlateNumber" | "circulationCard" | "availableForTurismOnly" | "status" | "transporterId" | "alternateTransporterId" | "busLineId" | "baseId" | "purchaseDate" | "expirationDate" | "erpClientNumber" | "modelId" | "vehicleId" | "serialNumber" | "engineNumber" | "chassisNumber" | "grossVehicleWeight" | "sctPermit" | "currentKilometer" | "gpsId" | "lastMaintenanceDate" | "nextMaintenanceDate" | "seatDiagramId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
+            economicNumber?: string
             registrationNumber?: string
-            modelId?: number
-            seatDiagramId?: number
-            typeCode?: number | null
-            brandCode?: string | null
-            modelCode?: string | null
-            maxCapacity?: number | null
-            purchaseDate?: string | null
-            economicNumber?: string | null
-            licensePlateType?: string | null
+            licensePlateType?: string
+            licensePlateNumber?: string
             circulationCard?: string | null
-            year?: number | null
-            sctPermit?: string | null
-            vehicleId?: string | null
-            grossVehicleWeight?: number | null
-            engineNumber?: string | null
-            serialNumber?: string | null
-            chassisNumber?: string | null
-            sapKey?: string | null
-            baseCode?: string | null
-            erpClientNumber?: string | null
-            costCenter?: string | null
-            fuelEfficiency?: number | null
-            alternateCompany?: string | null
-            serviceType?: string | null
-            commercialTourism?: boolean | null
-            available?: boolean | null
-            tourism?: boolean | null
+            availableForTurismOnly?: boolean
             status?: BusStatus
+            transporterId?: number | null
+            alternateTransporterId?: number | null
+            busLineId?: number | null
+            baseId?: number | null
+            purchaseDate?: string
+            expirationDate?: string
+            erpClientNumber?: string | null
+            modelId?: number
+            vehicleId?: string | null
+            serialNumber?: string
+            engineNumber?: string | null
+            chassisNumber?: string
+            grossVehicleWeight?: number
+            sctPermit?: string | null
+            currentKilometer?: number | null
+            gpsId?: string | null
             lastMaintenanceDate?: string | null
             nextMaintenanceDate?: string | null
-            gpsId?: string | null
+            seatDiagramId?: number
             active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null

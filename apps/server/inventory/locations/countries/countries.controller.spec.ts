@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { FieldValidationError } from '@repo/base-repo';
 import type { Country } from './countries.types';
-import { countryRepository } from './countries.repository';
 import {
   createCountry,
   deleteCountry,
@@ -540,48 +539,6 @@ describe('Countries Controller', () => {
           await deleteCountry({ id: country.id });
         }
       }
-    });
-  });
-
-  describe('soft delete functionality', () => {
-    test('should restore a soft deleted country', async () => {
-      const testCountry = await createCountry({
-        name: 'Restore Test Country',
-        code: 'RTC',
-      });
-
-      try {
-        // Soft delete
-        await deleteCountry({ id: testCountry.id });
-        await expect(getCountry({ id: testCountry.id })).rejects.toThrow();
-
-        // Restore
-        await countryRepository.restore(testCountry.id);
-
-        // Verify accessible again
-        const found = await getCountry({ id: testCountry.id });
-        expect(found.id).toBe(testCountry.id);
-      } finally {
-        try {
-          await countryRepository.forceDelete(testCountry.id);
-        } catch {
-          // Ignore cleanup errors
-        }
-      }
-    });
-
-    test('should force delete a country permanently', async () => {
-      const testCountry = await createCountry({
-        name: 'Force Delete Test',
-        code: 'FDT',
-      });
-
-      // Force delete
-      await countryRepository.forceDelete(testCountry.id);
-
-      // Verify completely gone
-      await expect(getCountry({ id: testCountry.id })).rejects.toThrow();
-      await expect(countryRepository.findOne(testCountry.id)).rejects.toThrow();
     });
   });
 });

@@ -229,7 +229,6 @@ export namespace inventory {
             this.regenerateSeats = this.regenerateSeats.bind(this)
             this.searchRoutes = this.searchRoutes.bind(this)
             this.searchRoutesPaginated = this.searchRoutesPaginated.bind(this)
-            this.searchServiceTypes = this.searchServiceTypes.bind(this)
             this.searchTransporters = this.searchTransporters.bind(this)
             this.searchTransportersPaginated = this.searchTransportersPaginated.bind(this)
             this.syncInstallationSchemas = this.syncInstallationSchemas.bind(this)
@@ -663,7 +662,7 @@ export namespace inventory {
          */
         public async createServiceType(params: service_types.CreateServiceTypePayload): Promise<service_types.ServiceType> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/service-types`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("POST", `/service-types/create`, JSON.stringify(params))
             return await resp.json() as service_types.ServiceType
         }
 
@@ -954,7 +953,7 @@ export namespace inventory {
          */
         public async deleteServiceType(id: number): Promise<service_types.ServiceType> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/service-types/${encodeURIComponent(id)}`)
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/service-types/${encodeURIComponent(id)}/delete`)
             return await resp.json() as service_types.ServiceType
         }
 
@@ -1832,10 +1831,10 @@ export namespace inventory {
          * @param params - Query options for filtering and sorting
          * @returns List of service types
          */
-        public async listServiceTypes(params: service_types.ServiceTypesQueryOptions): Promise<service_types.ServiceTypes> {
+        public async listServiceTypes(params: service_types.ListServiceTypesQueryParams): Promise<service_types.ListServiceTypesResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-service-types`, JSON.stringify(params))
-            return await resp.json() as service_types.ServiceTypes
+            const resp = await this.baseClient.callTypedAPI("POST", `/service-types/list/all`, JSON.stringify(params))
+            return await resp.json() as service_types.ListServiceTypesResult
         }
 
         /**
@@ -1843,10 +1842,10 @@ export namespace inventory {
          * @param params - Pagination and query parameters
          * @returns Paginated list of service types
          */
-        public async listServiceTypesPaginated(params: service_types.PaginationParamsServiceTypes): Promise<service_types.PaginatedServiceTypes> {
+        public async listServiceTypesPaginated(params: service_types.PaginatedListServiceTypesQueryParams): Promise<service_types.PaginatedListServiceTypesResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-service-types/paginated`, JSON.stringify(params))
-            return await resp.json() as service_types.PaginatedServiceTypes
+            const resp = await this.baseClient.callTypedAPI("POST", `/service-types/list`, JSON.stringify(params))
+            return await resp.json() as service_types.PaginatedListServiceTypesResult
         }
 
         /**
@@ -2095,24 +2094,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/routes/search/paginated`, JSON.stringify(params))
             return await resp.json() as routes.PaginatedRoutes
-        }
-
-        /**
-         * Searches for service types by matching a search term against name.
-         * @param params - Search parameters
-         * @returns List of matching service types
-         */
-        public async searchServiceTypes(params: {
-    term: string
-}): Promise<service_types.ServiceTypes> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                term: params.term,
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/service-types/search`, undefined, {query})
-            return await resp.json() as service_types.ServiceTypes
         }
 
         /**
@@ -3340,6 +3321,18 @@ export namespace inventory {
     name?: string
 
     /**
+     * Unique business code for the service type
+     * Must have at least 1 non-whitespace character
+     */
+    code?: string
+
+    /**
+     * Category for the service type
+     * Must be one of the allowed categories
+     */
+    category?: service_types.ServiceTypeCategory
+
+    /**
      * Description of the service type
      */
     description?: string
@@ -3350,7 +3343,7 @@ export namespace inventory {
     active?: boolean
 }): Promise<service_types.ServiceType> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/service-types/${encodeURIComponent(id)}`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("PUT", `/service-types/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as service_types.ServiceType
         }
 
@@ -10489,6 +10482,18 @@ export namespace service_types {
         name: string
 
         /**
+         * Unique business code for the service type
+         * Must have at least 1 non-whitespace character
+         */
+        code: string
+
+        /**
+         * Category for the service type
+         * Must be one of the allowed categories
+         */
+        category: ServiceTypeCategory
+
+        /**
          * Description of the service type (optional)
          */
         description?: string
@@ -10500,27 +10505,51 @@ export namespace service_types {
         active?: boolean
     }
 
-    export interface PaginatedServiceTypes {
-        pagination: shared.PaginationMeta
-        data: ServiceType[]
-    }
-
-    export interface PaginationParamsServiceTypes {
-        page?: number
-        pageSize?: number
+    export interface ListServiceTypesQueryParams {
         orderBy?: {
-            field: "id" | "name" | "description" | "active" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "code" | "category" | "description" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
             name?: string
+            code?: string
+            category?: ServiceTypeCategory
             description?: string | null
             active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }
         searchTerm?: string
+    }
+
+    export interface ListServiceTypesResult {
+        data: ServiceType[]
+    }
+
+    export interface PaginatedListServiceTypesQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "code" | "category" | "description" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            code?: string
+            category?: ServiceTypeCategory
+            description?: string | null
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListServiceTypesResult {
+        pagination: shared.PaginationMeta
+        data: ServiceType[]
     }
 
     export interface ServiceType {
@@ -10533,6 +10562,16 @@ export namespace service_types {
          * Name of the service type
          */
         name: string
+
+        /**
+         * Unique code for the service type
+         */
+        code: string
+
+        /**
+         * Category this service type belongs to
+         */
+        category: ServiceTypeCategory
 
         /**
          * Description of what this service type represents
@@ -10555,25 +10594,7 @@ export namespace service_types {
         updatedAt: string | string | null
     }
 
-    export interface ServiceTypes {
-        serviceTypes: ServiceType[]
-    }
-
-    export interface ServiceTypesQueryOptions {
-        orderBy?: {
-            field: "id" | "name" | "description" | "active" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            name?: string
-            description?: string | null
-            active?: boolean
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
-        searchTerm?: string
-    }
+    export type ServiceTypeCategory = "regular" | "express" | "luxury" | "economic"
 }
 
 export namespace shared {

@@ -1,14 +1,15 @@
 import { api } from 'encore.dev/api';
 import type {
   CreateServiceTypePayload,
-  PaginatedServiceTypes,
-  PaginationParamsServiceTypes,
+  ListServiceTypesQueryParams,
+  ListServiceTypesResult,
+  PaginatedListServiceTypesQueryParams,
+  PaginatedListServiceTypesResult,
   ServiceType,
-  ServiceTypes,
-  ServiceTypesQueryOptions,
   UpdateServiceTypePayload,
 } from './service-types.types';
 import { serviceTypeRepository } from './service-types.repository';
+import { validateServiceType } from './service-types.domain';
 
 /**
  * Creates a new service type.
@@ -16,12 +17,9 @@ import { serviceTypeRepository } from './service-types.repository';
  * @returns The newly created service type
  */
 export const createServiceType = api(
-  {
-    expose: true,
-    method: 'POST',
-    path: '/service-types',
-  },
+  { expose: true, method: 'POST', path: '/service-types/create' },
   async (payload: CreateServiceTypePayload): Promise<ServiceType> => {
+    await validateServiceType(payload);
     return await serviceTypeRepository.create(payload);
   },
 );
@@ -48,14 +46,12 @@ export const getServiceType = api(
  * @returns List of service types
  */
 export const listServiceTypes = api(
-  {
-    expose: true,
-    method: 'POST',
-    path: '/get-service-types',
-  },
-  async (params: ServiceTypesQueryOptions): Promise<ServiceTypes> => {
+  { expose: true, method: 'POST', path: '/service-types/list/all' },
+  async (
+    params: ListServiceTypesQueryParams,
+  ): Promise<ListServiceTypesResult> => {
     const serviceTypes = await serviceTypeRepository.findAll(params);
-    return { serviceTypes };
+    return { data: serviceTypes };
   },
 );
 
@@ -65,20 +61,10 @@ export const listServiceTypes = api(
  * @returns Paginated list of service types
  */
 export const listServiceTypesPaginated = api(
-  {
-    expose: true,
-    method: 'POST',
-    path: '/get-service-types/paginated',
-  },
+  { expose: true, method: 'POST', path: '/service-types/list' },
   async (
-    params: PaginationParamsServiceTypes,
-  ): Promise<PaginatedServiceTypes> => {
-    if (params.searchTerm) {
-      return await serviceTypeRepository.searchPaginated(
-        params.searchTerm,
-        params,
-      );
-    }
+    params: PaginatedListServiceTypesQueryParams,
+  ): Promise<PaginatedListServiceTypesResult> => {
     return await serviceTypeRepository.findAllPaginated(params);
   },
 );
@@ -89,16 +75,13 @@ export const listServiceTypesPaginated = api(
  * @returns The updated service type
  */
 export const updateServiceType = api(
-  {
-    expose: true,
-    method: 'PUT',
-    path: '/service-types/:id',
-  },
+  { expose: true, method: 'PUT', path: '/service-types/:id/update' },
   async ({
     id,
-    ...payload
+    ...data
   }: { id: number } & UpdateServiceTypePayload): Promise<ServiceType> => {
-    return await serviceTypeRepository.update(id, payload);
+    await validateServiceType(data, id);
+    return await serviceTypeRepository.update(id, data);
   },
 );
 
@@ -108,29 +91,8 @@ export const updateServiceType = api(
  * @returns The deleted service type
  */
 export const deleteServiceType = api(
-  {
-    expose: true,
-    method: 'DELETE',
-    path: '/service-types/:id',
-  },
+  { expose: true, method: 'DELETE', path: '/service-types/:id/delete' },
   async ({ id }: { id: number }): Promise<ServiceType> => {
     return await serviceTypeRepository.delete(id);
-  },
-);
-
-/**
- * Searches for service types by matching a search term against name.
- * @param params - Search parameters
- * @returns List of matching service types
- */
-export const searchServiceTypes = api(
-  {
-    expose: true,
-    method: 'GET',
-    path: '/service-types/search',
-  },
-  async ({ term }: { term: string }): Promise<ServiceTypes> => {
-    const serviceTypes = await serviceTypeRepository.search(term);
-    return { serviceTypes };
   },
 );

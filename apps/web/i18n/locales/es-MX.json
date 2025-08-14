@@ -162,7 +162,8 @@
       "event": "Evento",
       "label": "Etiqueta",
       "amenity": "Amenidad",
-      "busLine": "Línea de Autobús"
+      "busLine": "Línea de Autobús",
+      "serviceType": "Tipo de Servicio"
     },
     "fields": {
       "name": "Nombre",
@@ -492,14 +493,24 @@
     },
     "fields": {
       "name": "Nombre",
+      "code": "Código",
+      "category": "Categoría",
       "description": "Descripción",
       "active": "Activo"
+    },
+    "categories": {
+      "regular": "Regular",
+      "express": "Exprés",
+      "luxury": "Lujo",
+      "economic": "Económico"
     },
     "form": {
       "title": "Información del tipo de servicio",
       "placeholders": {
-        "name": "Ej: Servicio de Transporte",
-        "description": "Ej: Transporte de pasajeros y carga"
+        "name": "Ej: Primera",
+        "code": "Ej: PRIM",
+        "description": "Ej: Servicio de transporte de primera clase",
+        "category": "Selecciona una categoría"
       }
     },
     "edit": {

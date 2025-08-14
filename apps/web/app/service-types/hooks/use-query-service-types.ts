@@ -10,9 +10,9 @@ import imsClient from '@/services/ims-client';
  */
 export default createCollectionQuery<
   service_types.ServiceType,
-  service_types.PaginatedServiceTypes,
+  service_types.PaginatedListServiceTypesResult,
   APIError
 >({
-  queryKey: ['serviceTypes'],
+  queryKey: ['service-types'],
   queryFn: (params) => imsClient.inventory.listServiceTypesPaginated(params),
 });

@@ -2,8 +2,6 @@
 
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
-import useQueryAllServiceTypes from '@/app/service-types/hooks/use-query-all-service-types';
-import useQueryAllTransporters from '@/app/transporters/hooks/use-query-all-transporters';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
@@ -11,6 +9,8 @@ import NumberInput from '@/components/form/number-input';
 import SelectInput from '@/components/form/select-input';
 import useForm from '@/hooks/use-form';
 import { codeSchema, nameSchema } from '@/schemas/common';
+import useQueryAllServiceTypes from '@/service-types/hooks/use-query-all-service-types';
+import useQueryAllTransporters from '@/transporters/hooks/use-query-all-transporters';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
@@ -133,7 +133,7 @@ export default function BusLineForm({
     id: String(t.id),
     name: t.name,
   }));
-  const serviceTypeItems = (serviceTypes?.serviceTypes ?? []).map((s) => ({
+  const serviceTypeItems = (serviceTypes?.data ?? []).map((s) => ({
     id: String(s.id),
     name: s.name,
   }));

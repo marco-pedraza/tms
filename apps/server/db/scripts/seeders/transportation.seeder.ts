@@ -5,6 +5,7 @@ import type { Driver } from '@/inventory/fleet/drivers/drivers.types';
 import type { City } from '@/inventory/locations/cities/cities.types';
 import type { BusLine } from '@/inventory/operators/bus-lines/bus-lines.types';
 import type { ServiceType } from '@/inventory/operators/service-types/service-types.types';
+import { ServiceTypeCategory } from '@/inventory/operators/service-types/service-types.types';
 import type { Transporter } from '@/inventory/operators/transporters/transporters.types';
 import {
   busFactory,
@@ -25,24 +26,36 @@ export async function seedServiceTypes(
 ): Promise<ServiceType[]> {
   const serviceTypes = (await serviceTypeFactory(db).create([
     {
-      name: 'Executive',
+      name: 'Lujo',
+      code: 'LUX',
+      category: ServiceTypeCategory.LUXURY,
       description: 'Premium service with enhanced comfort and amenities',
       active: true,
+      deletedAt: null,
     },
     {
-      name: 'Primera Plus',
+      name: 'Primera Clase',
+      code: 'PRIM',
+      category: ServiceTypeCategory.LUXURY,
       description: 'First class service with comfortable seating',
       active: true,
+      deletedAt: null,
     },
     {
-      name: 'Economica',
+      name: 'Económico',
+      code: 'ECO',
+      category: ServiceTypeCategory.ECONOMIC,
       description: 'Standard economic service',
       active: true,
+      deletedAt: null,
     },
     {
-      name: 'Turista',
+      name: 'Estándar',
+      code: 'STD',
+      category: ServiceTypeCategory.REGULAR,
       description: 'Tourist class service',
       active: true,
+      deletedAt: null,
     },
   ])) as ServiceType[];
 

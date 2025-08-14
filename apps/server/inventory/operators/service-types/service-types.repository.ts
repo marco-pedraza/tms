@@ -18,7 +18,8 @@ export function createServiceTypeRepository() {
     UpdateServiceTypePayload,
     typeof serviceTypes
   >(db, serviceTypes, 'Service Type', {
-    searchableFields: [serviceTypes.name],
+    searchableFields: [serviceTypes.name, serviceTypes.code],
+    softDeleteEnabled: true,
   });
 
   return baseRepository;

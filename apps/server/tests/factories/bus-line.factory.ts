@@ -19,6 +19,9 @@ export const busLineFactory = defineFactory({
       id,
       name: generateAlphabeticName('Bus Line'),
       code: generateAlphabeticCode(6, 'BL'),
+      description: faker.helpers.maybe(() => faker.lorem.sentence(), {
+        probability: 0.7,
+      }),
       pricePerKilometer: faker.number.float({
         min: 1.0,
         max: 100.0,

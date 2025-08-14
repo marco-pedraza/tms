@@ -1,5 +1,21 @@
-import { MinLen } from 'encore.dev/validate';
-import { PaginatedResult, PaginationParams } from '@/shared/types';
+import { MatchesRegexp, MinLen } from 'encore.dev/validate';
+import type {
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '@/shared/types';
+
+/**
+ * Enum for service type categories
+ * Defines the allowed categories for service types
+ */
+export enum ServiceTypeCategory {
+  REGULAR = 'regular',
+  EXPRESS = 'express',
+  LUXURY = 'luxury',
+  ECONOMIC = 'economic',
+}
 
 /**
  * ServiceType from database
@@ -7,23 +23,27 @@ import { PaginatedResult, PaginationParams } from '@/shared/types';
 export interface ServiceType {
   /** Unique identifier for the service type */
   id: number;
+
   /** Name of the service type */
   name: string;
+
+  /** Unique code for the service type */
+  code: string;
+
+  /** Category this service type belongs to */
+  category: ServiceTypeCategory;
+
   /** Description of what this service type represents */
   description: string | null;
+
   /** Whether this service type is currently active */
   active: boolean;
+
   /** Timestamp when this service type was created */
   createdAt: Date | string | null;
+
   /** Timestamp when this service type was last updated */
   updatedAt: Date | string | null;
-}
-
-/**
- * ServiceTypes list response type for Encore API compatibility
- */
-export interface ServiceTypes {
-  serviceTypes: ServiceType[];
 }
 
 /**
@@ -34,7 +54,19 @@ export interface CreateServiceTypePayload {
    * Name of the service type
    * Must have at least 1 non-whitespace character
    */
-  name: string & MinLen<1>;
+  name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Unique business code for the service type
+   * Must have at least 1 non-whitespace character
+   */
+  code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Category for the service type
+   * Must be one of the allowed categories
+   */
+  category: ServiceTypeCategory;
 
   /**
    * Description of the service type (optional)
@@ -56,7 +88,19 @@ export interface UpdateServiceTypePayload {
    * Name of the service type
    * Must have at least 1 non-whitespace character
    */
-  name?: string & MinLen<1>;
+  name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Unique business code for the service type
+   * Must have at least 1 non-whitespace character
+   */
+  code?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Category for the service type
+   * Must be one of the allowed categories
+   */
+  category?: ServiceTypeCategory;
 
   /**
    * Description of the service type
@@ -69,23 +113,16 @@ export interface UpdateServiceTypePayload {
   active?: boolean;
 }
 
-/**
- * Query options for filtering service types
- */
-export interface ServiceTypesQueryOptions {
-  orderBy?: { field: keyof ServiceType; direction: 'asc' | 'desc' }[];
-  filters?: Partial<ServiceType>;
-  searchTerm?: string;
-}
+/** Non-paginated list query params for service types */
+export type ListServiceTypesQueryParams = ListQueryParams<ServiceType>;
 
-/**
- * Paginated ServiceTypes response type
- */
-export type PaginatedServiceTypes = PaginatedResult<ServiceType>;
+/** Non-paginated list result for service types */
+export type ListServiceTypesResult = ListQueryResult<ServiceType>;
 
-/**
- * Pagination parameters for service types with query options
- */
-export interface PaginationParamsServiceTypes
-  extends PaginationParams,
-    ServiceTypesQueryOptions {}
+/** Paginated list query params for service types */
+export type PaginatedListServiceTypesQueryParams =
+  PaginatedListQueryParams<ServiceType>;
+
+/** Paginated list result for service types */
+export type PaginatedListServiceTypesResult =
+  PaginatedListQueryResult<ServiceType>;

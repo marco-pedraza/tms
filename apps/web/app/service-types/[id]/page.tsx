@@ -4,24 +4,24 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import IsActiveBadge from '@/components/is-active-badge';
 import PageHeader from '@/components/page-header';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import ServiceTypeSkeleton from '@/service-types/components/service-type-skeleton';
-import useQueryServiceType from '@/service-types/hooks/use-query-service-type';
-import useServiceTypeDetailsParams from '@/service-types/hooks/use-service-type-details-params';
-import useServiceTypeMutations from '@/service-types/hooks/use-service-type-mutations';
+import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import routes from '@/services/routes';
+import ServiceTypeSkeleton from '../components/service-type-skeleton';
+import useQueryServiceType from '../hooks/use-query-service-type';
+import useServiceTypeMutations from '../hooks/use-service-type-mutations';
 
-export default function ServiceTypePage() {
+export default function ServiceTypeDetailsPage() {
   const tServiceTypes = useTranslations('serviceTypes');
   const tCommon = useTranslations('common');
-  const { serviceTypeId, isValidId } = useServiceTypeDetailsParams();
+  const { itemId: serviceTypeId, isValidId } = useCollectionItemDetailsParams();
   const { data: serviceType, isLoading } = useQueryServiceType({
-    serviceTypeId,
+    itemId: serviceTypeId,
     enabled: isValidId,
   });
-  const { deleteServiceType } = useServiceTypeMutations();
+  const { delete: deleteServiceType } = useServiceTypeMutations();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleDelete = () => {
@@ -47,10 +47,9 @@ export default function ServiceTypePage() {
         title={serviceType.name}
         description={tServiceTypes('details.description')}
         backHref={routes.serviceTypes.index}
-        backLabel={tServiceTypes('actions.backToList')}
       />
 
-      <div className="mb-6 flex justify-end">
+      <div className="flex justify-end mb-6">
         <ActionButtons
           editHref={routes.serviceTypes.getEditRoute(serviceType.id.toString())}
           onDelete={handleDelete}
@@ -59,80 +58,59 @@ export default function ServiceTypePage() {
         />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{tCommon('sections.basicInfo')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">
-                {tServiceTypes('fields.name')}
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900">{serviceType.name}</dd>
-            </div>
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">
-                {tServiceTypes('fields.active')}
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                {serviceType.active ? (
-                  <Badge
-                    variant="outline"
-                    className="bg-green-100 text-green-800"
-                  >
-                    {tCommon('status.active')}
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="bg-red-100 text-red-800">
-                    {tCommon('status.inactive')}
-                  </Badge>
-                )}
-              </dd>
-            </div>
-            <div className="sm:col-span-2">
-              <dt className="text-sm font-medium text-gray-500">
-                {tServiceTypes('fields.description')}
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                {serviceType.description || '-'}
-              </dd>
-            </div>
-          </dl>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>{tCommon('sections.basicInfo')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-[1fr_2fr] gap-4">
+              <dt className="font-medium">{tCommon('fields.name')}:</dt>
+              <dd>{serviceType.name}</dd>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>{tCommon('sections.systemInfo')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">
-                {tCommon('fields.id')}
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900">{serviceType.id}</dd>
-            </div>
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">
-                {tCommon('fields.createdAt')}
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                {new Date(serviceType.createdAt ?? '').toLocaleString()}
+              <dt className="font-medium">{tCommon('fields.code')}:</dt>
+              <dd>{serviceType.code}</dd>
+
+              <dt className="font-medium">{tCommon('fields.category')}:</dt>
+              <dd>{tServiceTypes(`categories.${serviceType.category}`)}</dd>
+
+              <dt className="font-medium">{tCommon('fields.description')}:</dt>
+              <dd>{serviceType.description}</dd>
+
+              <dt className="font-medium">{tCommon('fields.status')}:</dt>
+              <dd>
+                <IsActiveBadge isActive={serviceType.active} />
               </dd>
-            </div>
-            <div className="sm:col-span-1">
-              <dt className="text-sm font-medium text-gray-500">
-                {tCommon('fields.updatedAt')}
-              </dt>
-              <dd className="mt-1 text-sm text-gray-900">
-                {new Date(serviceType.updatedAt ?? '').toLocaleString()}
+            </dl>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{tCommon('sections.systemInfo')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-[1fr_2fr] gap-4">
+              <dt className="font-medium">{tCommon('fields.id')}:</dt>
+              <dd>{serviceType.id}</dd>
+
+              <dt className="font-medium">{tCommon('fields.createdAt')}:</dt>
+              <dd>
+                {serviceType.createdAt
+                  ? new Date(serviceType.createdAt).toLocaleString()
+                  : '-'}
               </dd>
-            </div>
-          </dl>
-        </CardContent>
-      </Card>
+
+              <dt className="font-medium">{tCommon('fields.updatedAt')}:</dt>
+              <dd>
+                {serviceType.updatedAt
+                  ? new Date(serviceType.updatedAt).toLocaleString()
+                  : '-'}
+              </dd>
+            </dl>
+          </CardContent>
+        </Card>
+      </div>
 
       <ConfirmDeleteDialog
         isOpen={isDeleteDialogOpen}

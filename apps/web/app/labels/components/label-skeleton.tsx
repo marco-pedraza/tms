@@ -65,6 +65,11 @@ export default function LabelSkeleton() {
               <div className="font-medium">{tCommon('fields.usageCount')}:</div>
               <Skeleton className="h-6 w-20 rounded-full" />
             </div>
+
+            <div className="flex justify-between items-start">
+              <div className="font-medium">{tCommon('fields.status')}:</div>
+              <Skeleton className="h-6 w-20 rounded-full" />
+            </div>
           </div>
         </Card>
 

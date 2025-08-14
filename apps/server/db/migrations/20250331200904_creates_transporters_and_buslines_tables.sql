@@ -19,11 +19,13 @@ CREATE TABLE IF NOT EXISTS "bus_lines" (
 CREATE TABLE IF NOT EXISTS "service_types" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" varchar(100) NOT NULL,
-	"description" varchar(500),
+	"code" varchar(20) NOT NULL,
+	"category" varchar(100) NOT NULL,
+	"description" text,
 	"active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "service_types_name_unique" UNIQUE("name")
+	"deleted_at" timestamp
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "transporters" (
@@ -68,5 +70,8 @@ CREATE INDEX IF NOT EXISTS "bus_lines_deleted_at_index" ON "bus_lines" USING btr
 CREATE INDEX IF NOT EXISTS "bus_lines_active_index" ON "bus_lines" USING btree ("active");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "bus_lines_name_index" ON "bus_lines" USING btree ("name") WHERE "bus_lines"."deleted_at" is null;--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "bus_lines_code_index" ON "bus_lines" USING btree ("code") WHERE "bus_lines"."deleted_at" is null;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "service_types_deleted_at_index" ON "service_types" USING btree ("deleted_at");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "service_types_name_index" ON "service_types" USING btree ("name") WHERE "service_types"."deleted_at" is null;--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "service_types_code_index" ON "service_types" USING btree ("code") WHERE "service_types"."deleted_at" is null;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "transporters_name_index" ON "transporters" USING btree ("name");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "transporters_headquarter_city_id_index" ON "transporters" USING btree ("headquarter_city_id");

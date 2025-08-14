@@ -7,8 +7,8 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function BusLineFormSkeleton() {
-  const tBusLines = useTranslations('busLines');
+export default function ServiceTypeFormSkeleton() {
+  const t = useTranslations('serviceTypes');
   const tCommon = useTranslations('common');
 
   return (
@@ -28,7 +28,7 @@ export default function BusLineFormSkeleton() {
       {/* Edit Form Card */}
       <Card className="p-6">
         <h2 className="text-lg font-semibold mb-6">
-          {tBusLines('details.description')}
+          {t('details.description')}
         </h2>
 
         <div className="space-y-6">
@@ -48,66 +48,18 @@ export default function BusLineFormSkeleton() {
             <Skeleton className="h-10 w-full rounded-md" />
           </div>
 
+          {/* Category Field */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">
+              {tCommon('fields.category')}
+            </Label>
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+
           {/* Description Field */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">
               {tCommon('fields.description')}
-            </Label>
-            <Skeleton className="h-10 w-full rounded-md" />
-          </div>
-
-          {/* Transporter Field */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              {tCommon('fields.transporter')}
-            </Label>
-            <Skeleton className="h-10 w-full rounded-md" />
-          </div>
-
-          {/* Service Type Field */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              {tCommon('fields.serviceType')}
-            </Label>
-            <Skeleton className="h-10 w-full rounded-md" />
-          </div>
-
-          {/* Price per Kilometer */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              {tBusLines('fields.pricePerKilometer')}
-            </Label>
-            <Skeleton className="h-10 w-full rounded-md" />
-          </div>
-
-          {/* Fleet Size */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              {tBusLines('fields.fleetSize')}
-            </Label>
-            <Skeleton className="h-10 w-full rounded-md" />
-          </div>
-
-          {/* Website */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              {tCommon('fields.website')}
-            </Label>
-            <Skeleton className="h-10 w-full rounded-md" />
-          </div>
-
-          {/* Email */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              {tCommon('fields.email')}
-            </Label>
-            <Skeleton className="h-10 w-full rounded-md" />
-          </div>
-
-          {/* Phone */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              {tCommon('fields.phone')}
             </Label>
             <Skeleton className="h-10 w-full rounded-md" />
           </div>
@@ -120,7 +72,7 @@ export default function BusLineFormSkeleton() {
             <Skeleton className="h-5 w-10 rounded-full" />
           </div>
 
-          {/* Submit Button */}
+          {/* Update Button */}
           <div className="flex justify-end mt-8">
             <Skeleton className="h-10 w-32 rounded-md" />
           </div>

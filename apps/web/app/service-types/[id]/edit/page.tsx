@@ -2,52 +2,53 @@
 
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
+import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
+import routes from '@/services/routes';
 import ServiceTypeForm, {
   ServiceTypeFormValues,
-} from '@/service-types/components/service-type-form';
-import ServiceTypeSkeleton from '@/service-types/components/service-type-skeleton';
-import useQueryServiceType from '@/service-types/hooks/use-query-service-type';
-import useServiceTypeDetailsParams from '@/service-types/hooks/use-service-type-details-params';
-import useServiceTypeMutations from '@/service-types/hooks/use-service-type-mutations';
-import routes from '@/services/routes';
+} from '../../components/service-type-form';
+import ServiceTypeFormSkeleton from '../../components/service-type-form-skeleton';
+import useQueryServiceType from '../../hooks/use-query-service-type';
+import useServiceTypeMutations from '../../hooks/use-service-type-mutations';
 
 export default function EditServiceTypePage() {
-  const tServiceTypes = useTranslations('serviceTypes');
-  const tCommon = useTranslations('common');
-  const { serviceTypeId, isValidId } = useServiceTypeDetailsParams();
-  const { data: serviceType, isLoading } = useQueryServiceType({
-    serviceTypeId,
+  const t = useTranslations('serviceTypes');
+  const { itemId: serviceTypeId, isValidId } = useCollectionItemDetailsParams();
+  const { data, isLoading } = useQueryServiceType({
+    itemId: serviceTypeId,
     enabled: isValidId,
   });
-  const { updateServiceType } = useServiceTypeMutations();
+  const { update } = useServiceTypeMutations();
 
   const handleSubmit = async (values: ServiceTypeFormValues) => {
-    await updateServiceType.mutateWithToast({ id: serviceTypeId, values });
+    const apiValues = {
+      ...values,
+      description: values.description ?? '',
+    };
+    await update.mutateWithToast({ id: serviceTypeId, values: apiValues });
   };
 
   if (isLoading) {
-    return <ServiceTypeSkeleton />;
+    return <ServiceTypeFormSkeleton />;
   }
 
-  if (!serviceType) {
+  if (!data) {
     return null;
   }
 
   return (
     <div>
       <PageHeader
-        title={tServiceTypes('edit.title')}
-        description={`${serviceType.name}`}
-        backHref={routes.serviceTypes.getDetailsRoute(serviceTypeId.toString())}
-        backLabel={tServiceTypes('actions.backToList')}
+        title={t('edit.title')}
+        description={`${data.name}`}
+        backHref={routes.serviceTypes.index}
       />
       <ServiceTypeForm
         defaultValues={{
-          ...serviceType,
-          description: serviceType.description ?? '',
+          ...data,
+          description: data.description ?? '',
         }}
         onSubmit={handleSubmit}
-        submitButtonText={tCommon('actions.update')}
       />
     </div>
   );

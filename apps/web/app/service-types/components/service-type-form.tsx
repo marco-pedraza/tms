@@ -1,136 +1,136 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
-import { Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
+import type { service_types } from '@repo/ims-client';
+import Form from '@/components/form/form';
+import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { nameSchema } from '@/schemas/common';
-import { UseValidationsTranslationsResult } from '@/types/translations';
+import useForm from '@/hooks/use-form';
+import { codeSchema, nameSchema } from '@/schemas/common';
+import type { UseValidationsTranslationsResult } from '@/types/translations';
+import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
-const serviceTypeFormSchema = (
+const createServiceTypeFormSchema = (
   tValidations: UseValidationsTranslationsResult,
 ) =>
   z.object({
     name: nameSchema(tValidations),
-    description: z.string().optional(),
-    active: z.boolean().default(true),
+    code: codeSchema(tValidations, 2, 20),
+    category: z.custom<service_types.ServiceTypeCategory>(
+      (val) => typeof val === 'string' && val.length > 0,
+      { message: tValidations('required') },
+    ),
+    description: z.string().trim().optional(),
+    active: z.boolean(),
   });
 
-export type ServiceTypeFormValues = z.infer<
-  ReturnType<typeof serviceTypeFormSchema>
+export type ServiceTypeFormValues = z.output<
+  ReturnType<typeof createServiceTypeFormSchema>
 >;
 
-interface ServiceTypeFormProps {
+interface Props {
+  defaultValues?: ServiceTypeFormValues;
   onSubmit: (values: ServiceTypeFormValues) => Promise<unknown>;
-  defaultValues?: Partial<ServiceTypeFormValues>;
-  submitButtonText?: string;
 }
 
-export default function ServiceTypeForm({
-  onSubmit,
-  defaultValues,
-  submitButtonText = 'Submit',
-}: ServiceTypeFormProps) {
+export default function ServiceTypeForm({ defaultValues, onSubmit }: Props) {
   const tServiceTypes = useTranslations('serviceTypes');
   const tCommon = useTranslations('common');
   const tValidations = useTranslations('validations');
+  const serviceTypeFormSchema = createServiceTypeFormSchema(tValidations);
   const form = useForm({
     defaultValues: defaultValues ?? {
       name: '',
-      description: '',
+      code: '',
+      category: '',
+      description: undefined,
       active: true,
     },
     validators: {
-      onChange: serviceTypeFormSchema(tValidations),
+      onChange: serviceTypeFormSchema,
     },
-    onSubmit: async (submission) => {
-      await onSubmit(submission.value as ServiceTypeFormValues);
+    onSubmit: async ({ value }) => {
+      try {
+        const parsed = serviceTypeFormSchema.safeParse(value);
+        if (parsed.success) {
+          await onSubmit(parsed.data);
+        }
+      } catch (error: unknown) {
+        injectTranslatedErrorsToForm({
+          // @ts-expect-error - form param is not typed correctly.
+          form,
+          entity: 'serviceType',
+          error,
+          tValidations,
+          tCommon,
+        });
+      }
     },
   });
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        form.handleSubmit();
-      }}
-    >
+    <Form onSubmit={form.handleSubmit}>
       <FormLayout title={tServiceTypes('form.title')}>
-        <form.Field name="name">
+        <form.AppField name="name">
           {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor={field.name}>{tCommon('fields.name')}</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder={tServiceTypes('form.placeholders.name')}
-                aria-invalid={!!field.state.meta.errors.length}
-              />
-            </div>
+            <field.TextInput
+              label={tCommon('fields.name')}
+              placeholder={tServiceTypes('form.placeholders.name')}
+              isRequired
+            />
           )}
-        </form.Field>
+        </form.AppField>
 
-        <form.Field name="description">
+        <form.AppField name="code">
           {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor={field.name}>
-                {tCommon('fields.description')}
-              </Label>
-              <Textarea
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder={tServiceTypes('form.placeholders.description')}
-                aria-invalid={!!field.state.meta.errors.length}
-              />
-            </div>
+            <field.TextInput
+              label={tCommon('fields.code')}
+              placeholder={tServiceTypes('form.placeholders.code')}
+              isRequired
+            />
           )}
-        </form.Field>
+        </form.AppField>
 
-        <form.Field name="active">
+        <form.AppField name="category">
           {(field) => (
-            <div className="flex items-center space-x-2">
-              <Switch
-                id={field.name}
-                name={field.name}
-                checked={field.state.value}
-                onCheckedChange={(checked: boolean) =>
-                  field.handleChange(checked)
-                }
-                aria-invalid={!!field.state.meta.errors.length}
-              />
-              <Label htmlFor={field.name} className="cursor-pointer">
-                {tCommon('fields.active')}
-              </Label>
-            </div>
+            <field.SelectInput
+              label={tCommon('fields.category')}
+              placeholder={tServiceTypes('form.placeholders.category')}
+              isRequired
+              items={[
+                { id: 'regular', name: tServiceTypes('categories.regular') },
+                { id: 'express', name: tServiceTypes('categories.express') },
+                { id: 'luxury', name: tServiceTypes('categories.luxury') },
+                { id: 'economic', name: tServiceTypes('categories.economic') },
+              ]}
+            />
           )}
-        </form.Field>
+        </form.AppField>
 
-        <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting] as const}
-        >
-          {([canSubmit, isSubmitting]: [boolean, boolean]) => (
-            <div className="flex justify-end pt-4">
-              <Button type="submit" disabled={!canSubmit || isSubmitting}>
-                {isSubmitting && <Loader2 className=" animate-spin" />}
-                {submitButtonText ?? tCommon('actions.save')}
-              </Button>
-            </div>
+        <form.AppField name="description">
+          {(field) => (
+            <field.TextAreaInput
+              label={tCommon('fields.description')}
+              placeholder={tServiceTypes('form.placeholders.description')}
+            />
           )}
-        </form.Subscribe>
+        </form.AppField>
+
+        <form.AppField name="active">
+          {(field) => <field.SwitchInput label={tCommon('fields.active')} />}
+        </form.AppField>
+
+        <FormFooter>
+          <form.AppForm>
+            <form.SubmitButton>
+              {defaultValues
+                ? tServiceTypes('actions.update')
+                : tServiceTypes('actions.create')}
+            </form.SubmitButton>
+          </form.AppForm>
+        </FormFooter>
       </FormLayout>
-    </form>
+    </Form>
   );
 }

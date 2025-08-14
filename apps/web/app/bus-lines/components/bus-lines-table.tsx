@@ -51,7 +51,7 @@ function busLinesColumnsFactory({
     },
     {
       accessorKey: 'active',
-      header: tCommon('fields.active'),
+      header: tCommon('fields.status'),
       sortable: true,
       cell: ({ row }) => {
         const active = row.original.active;
@@ -107,13 +107,13 @@ export default function BusLinesTable() {
       name: tBusLines('fields.serviceType'),
       key: 'serviceTypeId',
       options:
-        serviceTypes?.serviceTypes.map((serviceType) => ({
+        serviceTypes?.data.map((serviceType) => ({
           label: serviceType.name,
           value: serviceType.id,
         })) ?? [],
     },
     {
-      name: tCommon('fields.active'),
+      name: tCommon('fields.status'),
       key: 'active',
       options: [
         { label: tCommon('status.active'), value: true },

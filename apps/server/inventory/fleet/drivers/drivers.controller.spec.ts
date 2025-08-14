@@ -10,6 +10,7 @@ import { createBusWithSeatDiagram } from '@/inventory/fleet/buses/buses.use-case
 import { seatDiagramRepository } from '@/inventory/fleet/seat-diagrams/seat-diagrams.repository';
 import { busLineRepository } from '@/inventory/operators/bus-lines/bus-lines.repository';
 import { serviceTypeRepository } from '@/inventory/operators/service-types/service-types.repository';
+import { ServiceTypeCategory } from '@/inventory/operators/service-types/service-types.types';
 import { transporterRepository } from '@/inventory/operators/transporters/transporters.repository';
 import {
   Driver,
@@ -76,6 +77,8 @@ describe.skip('Drivers Controller', () => {
       // Create test service type
       const testServiceType = await serviceTypeRepository.create({
         name: 'Test Service Type',
+        code: 'TSTSTD',
+        category: ServiceTypeCategory.REGULAR,
         description: 'Test service type for driver relations',
         active: true,
       });

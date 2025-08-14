@@ -26,6 +26,7 @@ export function codeSchema(
 
   return z
     .string()
+    .trim()
     .min(minLength, {
       message: useExactLengthMessage
         ? tValidations('code.length', { length: minLength })

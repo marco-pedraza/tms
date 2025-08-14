@@ -1,46 +1,40 @@
-import { afterAll, describe, expect, test } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { FieldValidationError } from '@repo/base-repo';
+import { createCleanupHelper } from '@/tests/shared/test-utils';
+import type { ServiceType } from './service-types.types';
+import { ServiceTypeCategory } from './service-types.types';
+import { serviceTypeRepository } from './service-types.repository';
 import {
   createServiceType,
   deleteServiceType,
   getServiceType,
   listServiceTypes,
   listServiceTypesPaginated,
-  searchServiceTypes,
   updateServiceType,
 } from './service-types.controller';
 
 describe('Service Types Controller', () => {
-  // Test data
+  // Test data (use timestamp to ensure unique codes)
+  const ts = Date.now().toString().slice(-6);
   const testServiceType = {
     name: 'Test Service Type',
+    code: `TST${ts}`,
+    category: ServiceTypeCategory.REGULAR,
     description: 'A service type for testing',
     active: true,
-  };
+  } as const;
 
+  // Cleanup helper for service types (hard delete to avoid FK issues)
+  const serviceTypeCleanup = createCleanupHelper(
+    ({ id }) => serviceTypeRepository.forceDelete(id),
+    'service type',
+  );
   // Variable to store created IDs for cleanup
   let createdServiceTypeId: number;
-  // Array to track additional service types created in tests
-  const additionalServiceTypeIds: number[] = [];
 
   // Clean up after all tests
   afterAll(async () => {
-    // Clean up any additional service types created during tests
-    for (const id of additionalServiceTypeIds) {
-      try {
-        await deleteServiceType({ id });
-      } catch (error) {
-        console.log(`Error cleaning up additional service type ${id}:`, error);
-      }
-    }
-
-    // Clean up the main created service type if any
-    if (createdServiceTypeId) {
-      try {
-        await deleteServiceType({ id: createdServiceTypeId });
-      } catch (error) {
-        console.log('Error cleaning up test service type:', error);
-      }
-    }
+    await serviceTypeCleanup.cleanupAll();
   });
 
   describe('success scenarios', () => {
@@ -49,12 +43,14 @@ describe('Service Types Controller', () => {
       const response = await createServiceType(testServiceType);
 
       // Store the ID for later cleanup
-      createdServiceTypeId = response.id;
+      createdServiceTypeId = serviceTypeCleanup.track(response.id);
 
       // Assertions
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
       expect(response.name).toBe(testServiceType.name);
+      expect(response.code).toBe(testServiceType.code);
+      expect(response.category).toBe(ServiceTypeCategory.REGULAR);
       expect(response.description).toBe(testServiceType.description);
       expect(response.active).toBe(testServiceType.active);
       expect(response.createdAt).toBeDefined();
@@ -66,6 +62,8 @@ describe('Service Types Controller', () => {
       expect(response).toBeDefined();
       expect(response.id).toBe(createdServiceTypeId);
       expect(response.name).toBe(testServiceType.name);
+      expect(response.code).toBe(testServiceType.code);
+      expect(response.category).toBe(ServiceTypeCategory.REGULAR);
       expect(response.description).toBe(testServiceType.description);
       expect(response.active).toBe(testServiceType.active);
     });
@@ -74,12 +72,12 @@ describe('Service Types Controller', () => {
       const response = await listServiceTypes({});
 
       expect(response).toBeDefined();
-      expect(response.serviceTypes).toBeDefined();
-      expect(Array.isArray(response.serviceTypes)).toBe(true);
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
 
       // We should at least find our test service type
       expect(
-        response.serviceTypes.some(
+        response.data.some(
           (serviceType) => serviceType.id === createdServiceTypeId,
         ),
       ).toBe(true);
@@ -92,11 +90,11 @@ describe('Service Types Controller', () => {
       });
 
       expect(response).toBeDefined();
-      expect(response.serviceTypes).toBeDefined();
-      expect(Array.isArray(response.serviceTypes)).toBe(true);
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
 
       // All returned service types should be active
-      response.serviceTypes.forEach((serviceType) => {
+      response.data.forEach((serviceType) => {
         expect(serviceType.active).toBe(true);
       });
     });
@@ -182,30 +180,11 @@ describe('Service Types Controller', () => {
       );
     });
 
-    test('should search service types by name', async () => {
-      const response = await searchServiceTypes({ term: 'Test Service' });
-
-      expect(response).toBeDefined();
-      expect(response.serviceTypes).toBeDefined();
-      expect(Array.isArray(response.serviceTypes)).toBe(true);
-
-      // Should find our test service type
-      expect(
-        response.serviceTypes.some(
-          (serviceType) => serviceType.id === createdServiceTypeId,
-        ),
-      ).toBe(true);
-    });
-
-    test('should return empty results for non-matching search', async () => {
-      const response = await searchServiceTypes({
-        term: 'NonExistentTerm12345',
-      });
-
-      expect(response).toBeDefined();
-      expect(response.serviceTypes).toBeDefined();
-      expect(Array.isArray(response.serviceTypes)).toBe(true);
-      expect(response.serviceTypes.length).toBe(0);
+    test('should search service types using searchTerm in list endpoint', async () => {
+      const resp = await listServiceTypes({ searchTerm: 'Test Service' });
+      expect(resp.data).toBeDefined();
+      expect(Array.isArray(resp.data)).toBe(true);
+      expect(resp.data.some((st) => st.id === createdServiceTypeId)).toBe(true);
     });
 
     test('should update a service type', async () => {
@@ -236,11 +215,15 @@ describe('Service Types Controller', () => {
 
     test('should delete a service type', async () => {
       // Create a service type specifically for deletion test
+      const ts2 = Date.now().toString().slice(-6);
       const serviceTypeToDelete = await createServiceType({
         name: 'Service Type To Delete',
+        code: `DEL${ts2}`,
+        category: ServiceTypeCategory.REGULAR,
         description: 'This will be deleted',
         active: true,
       });
+      serviceTypeCleanup.track(serviceTypeToDelete.id);
 
       // Delete should not throw an error
       await expect(
@@ -255,33 +238,138 @@ describe('Service Types Controller', () => {
   });
 
   describe('error scenarios', () => {
-    // NOTE: We are not testing the validation errors because it's handled by Encore rust runtime and they are not thrown in the controller
-
     test('should handle not found errors', async () => {
       await expect(getServiceType({ id: 9999 })).rejects.toThrow();
     });
 
-    test('should handle duplicate names', async () => {
-      // First, create a service type with a specific name for this test
-      const nameForDuplicateTest = 'Unique Name For Duplicate Test';
-
-      const serviceTypeWithUniqueName = await createServiceType({
-        name: nameForDuplicateTest,
-        description: 'Testing duplicate name handling',
+    test('should handle duplicate field validation errors (name)', async () => {
+      // Create a service type to conflict against
+      const ts3 = Date.now().toString().slice(-6);
+      const st1 = await createServiceType({
+        name: 'Duplicate Name Source',
+        code: `SRC${ts3}`,
+        category: ServiceTypeCategory.REGULAR,
         active: true,
       });
+      serviceTypeCleanup.track(st1.id);
 
-      // Add to cleanup list
-      additionalServiceTypeIds.push(serviceTypeWithUniqueName.id);
-
-      // Now try to create another service type with the same name
+      // Try to create another with same name but different code
       await expect(
         createServiceType({
-          name: nameForDuplicateTest, // Same name as the service type we just created
-          description: 'Another description',
+          name: st1.name,
+          code: `OTH${ts3}`,
+          category: ServiceTypeCategory.REGULAR,
           active: true,
         }),
       ).rejects.toThrow();
+    });
+
+    test('should throw detailed field validation error for duplicate code', async () => {
+      const ts4 = Date.now().toString().slice(-6);
+      const base = await createServiceType({
+        name: 'Base For Code Dup',
+        code: `DUP${ts4}`,
+        category: ServiceTypeCategory.REGULAR,
+        active: true,
+      });
+      serviceTypeCleanup.track(base.id);
+
+      let validationError: FieldValidationError | undefined;
+      try {
+        await createServiceType({
+          name: 'Another Name',
+          code: base.code,
+          category: ServiceTypeCategory.REGULAR,
+          active: true,
+        });
+      } catch (error) {
+        validationError = error as FieldValidationError;
+      }
+
+      expect(validationError).toBeDefined();
+      const typed = validationError as FieldValidationError;
+      expect(typed.name).toBe('FieldValidationError');
+      expect(Array.isArray(typed.fieldErrors)).toBe(true);
+      const codeErr = typed.fieldErrors.find((e) => e.field === 'code');
+      expect(codeErr?.code).toBe('DUPLICATE');
+      expect(codeErr?.value).toBe(base.code);
+    });
+  });
+
+  describe('pagination', () => {
+    test('should return paginated service types with default parameters', async () => {
+      const response = await listServiceTypesPaginated({});
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(typeof response.pagination.pageSize).toBe('number');
+    });
+
+    test('should honor page and pageSize parameters', async () => {
+      const response = await listServiceTypesPaginated({
+        page: 1,
+        pageSize: 5,
+      });
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
+      expect(response.data.length).toBeLessThanOrEqual(5);
+    });
+  });
+
+  describe('ordering and filtering', () => {
+    const testServiceTypes: ServiceType[] = [];
+
+    beforeAll(async () => {
+      const tsBase = Date.now().toString().slice(-6);
+      const items = [
+        { name: 'Alpha ST', code: `A${tsBase}`, active: true },
+        { name: 'Beta ST', code: `B${tsBase}`, active: false },
+        { name: 'Gamma ST', code: `G${tsBase}`, active: true },
+      ];
+
+      for (const it of items) {
+        const created = await createServiceType({
+          name: it.name,
+          code: it.code,
+          category: ServiceTypeCategory.REGULAR,
+          active: it.active,
+        });
+        testServiceTypes.push(created);
+      }
+    });
+
+    afterAll(async () => {
+      for (const st of testServiceTypes) {
+        try {
+          await deleteServiceType({ id: st.id });
+        } catch (error) {
+          console.log(`Error cleaning up test service type ${st.id}:`, error);
+        }
+      }
+    });
+
+    test('should order service types by name descending', async () => {
+      const response = await listServiceTypes({
+        orderBy: [{ field: 'name', direction: 'desc' }],
+      });
+
+      const names = response.data.map((s) => s.name);
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] >= names[i + 1]).toBe(true);
+      }
+    });
+
+    test('should filter service types by active status', async () => {
+      const response = await listServiceTypes({ filters: { active: true } });
+      expect(response.data.every((s) => s.active === true)).toBe(true);
+      const activeIds = testServiceTypes
+        .filter((s) => s.active)
+        .map((s) => s.id);
+      for (const id of activeIds) {
+        expect(response.data.some((s) => s.id === id)).toBe(true);
+      }
     });
   });
 });

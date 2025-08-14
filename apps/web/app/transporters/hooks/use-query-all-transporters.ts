@@ -3,10 +3,10 @@ import type { APIError, transporters } from '@repo/ims-client';
 import imsClient from '@/services/ims-client';
 
 export default function useQueryAllTransporters(): UseQueryResult<
-  transporters.Transporters,
+  transporters.ListTransportersResult,
   APIError
 > {
-  return useQuery<transporters.Transporters, APIError>({
+  return useQuery<transporters.ListTransportersResult, APIError>({
     queryKey: ['allTransporters'],
     queryFn: () =>
       imsClient.inventory.listTransporters({

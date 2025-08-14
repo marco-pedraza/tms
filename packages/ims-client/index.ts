@@ -229,8 +229,6 @@ export namespace inventory {
             this.regenerateSeats = this.regenerateSeats.bind(this)
             this.searchRoutes = this.searchRoutes.bind(this)
             this.searchRoutesPaginated = this.searchRoutesPaginated.bind(this)
-            this.searchTransporters = this.searchTransporters.bind(this)
-            this.searchTransportersPaginated = this.searchTransportersPaginated.bind(this)
             this.syncInstallationSchemas = this.syncInstallationSchemas.bind(this)
             this.updateAmenity = this.updateAmenity.bind(this)
             this.updateBus = this.updateBus.bind(this)
@@ -683,7 +681,7 @@ export namespace inventory {
          */
         public async createTransporter(params: transporters.CreateTransporterPayload): Promise<transporters.Transporter> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/transporters`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("POST", `/transporters/create`, JSON.stringify(params))
             return await resp.json() as transporters.Transporter
         }
 
@@ -975,7 +973,7 @@ export namespace inventory {
          */
         public async deleteTransporter(id: number): Promise<transporters.Transporter> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/transporters/${encodeURIComponent(id)}`)
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/transporters/${encodeURIComponent(id)}/delete`)
             return await resp.json() as transporters.Transporter
         }
 
@@ -1881,22 +1879,22 @@ export namespace inventory {
          * @returns {Promise<Transporters>} An object containing an array of transporters with city info
          * @throws {APIError} If retrieval fails
          */
-        public async listTransporters(params: transporters.TransportersQueryOptions): Promise<transporters.Transporters> {
+        public async listTransporters(params: transporters.ListTransportersQueryParams): Promise<transporters.ListTransportersResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-transporters`, JSON.stringify(params))
-            return await resp.json() as transporters.Transporters
+            const resp = await this.baseClient.callTypedAPI("POST", `/transporters/list/all`, JSON.stringify(params))
+            return await resp.json() as transporters.ListTransportersResult
         }
 
         /**
-         * Retrieves transporters with pagination (useful for tables).
+         * Retrieves transporters with pagination and includes headquarter city information.
          * @param params - Pagination parameters
-         * @returns {Promise<PaginatedTransportersWithCity>} Paginated list of transporters with city info
+         * @returns {Promise<PaginatedListTransportersResult>} Paginated list of transporters with city info
          * @throws {APIError} If retrieval fails
          */
-        public async listTransportersPaginated(params: transporters.PaginationParamsTransporters): Promise<transporters.PaginatedTransportersWithCity> {
+        public async listTransportersPaginated(params: transporters.PaginatedListTransportersQueryParams): Promise<transporters.PaginatedListTransportersResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-transporters/paginated`, JSON.stringify(params))
-            return await resp.json() as transporters.PaginatedTransportersWithCity
+            const resp = await this.baseClient.callTypedAPI("POST", `/transporters/list`, JSON.stringify(params))
+            return await resp.json() as transporters.PaginatedListTransportersResult
         }
 
         /**
@@ -2094,68 +2092,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/routes/search/paginated`, JSON.stringify(params))
             return await resp.json() as routes.PaginatedRoutes
-        }
-
-        /**
-         * Searches for transporters by matching a search term against name and code.
-         * @param params - Search parameters
-         * @param params.term - The search term to match against transporter name and code
-         * @returns {Promise<Transporters>} List of matching transporters with city info
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchTransporters(params: {
-    term: string
-}): Promise<transporters.Transporters> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                term: params.term,
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/transporters/search`, undefined, {query})
-            return await resp.json() as transporters.Transporters
-        }
-
-        /**
-         * Searches for transporters with pagination by matching a search term against name and code.
-         * @param params - Search and pagination parameters
-         * @param params.term - The search term to match against transporter name and code
-         * @param params.page - Page number for pagination (optional, default: 1)
-         * @param params.pageSize - Number of items per page (optional, default: 10)
-         * @param params.orderBy - Sorting criteria (optional)
-         * @param params.filters - Additional filters to apply (optional)
-         * @returns {Promise<PaginatedTransportersWithCity>} Paginated list of matching transporters with city info
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchTransportersPaginated(params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "name" | "code" | "description" | "website" | "email" | "phone" | "headquarterCityId" | "logoUrl" | "contactInfo" | "licenseNumber" | "active" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        name?: string
-        code?: string
-        description?: string | null
-        website?: string | null
-        email?: string | null
-        phone?: string | null
-        headquarterCityId?: number | null
-        logoUrl?: string | null
-        contactInfo?: string | null
-        licenseNumber?: string | null
-        active?: boolean
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-    searchTerm?: string
-    term: string
-}): Promise<transporters.PaginatedTransportersWithCity> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/transporters/search/paginated`, JSON.stringify(params))
-            return await resp.json() as transporters.PaginatedTransportersWithCity
         }
 
         /**
@@ -3405,6 +3341,16 @@ export namespace inventory {
     description?: string
 
     /**
+     * Legal name (Razón Social) of the company
+     */
+    legalName?: string
+
+    /**
+     * Physical address of the headquarter/company
+     */
+    address?: string
+
+    /**
      * Website URL of the transporter
      */
     website?: string
@@ -3446,7 +3392,7 @@ export namespace inventory {
     active?: boolean
 }): Promise<transporters.Transporter> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/transporters/${encodeURIComponent(id)}`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("PUT", `/transporters/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as transporters.Transporter
         }
     }
@@ -10898,6 +10844,16 @@ export namespace transporters {
         description?: string
 
         /**
+         * Legal name (Razón Social) of the company
+         */
+        legalName?: string
+
+        /**
+         * Physical address of the headquarter/company
+         */
+        address?: string
+
+        /**
          * Website URL of the transporter
          */
         website?: string
@@ -10940,22 +10896,17 @@ export namespace transporters {
         active?: boolean
     }
 
-    export interface PaginatedTransportersWithCity {
-        pagination: shared.PaginationMeta
-        data: TransporterWithCity[]
-    }
-
-    export interface PaginationParamsTransporters {
-        page?: number
-        pageSize?: number
+    export interface ListTransportersQueryParams {
         orderBy?: {
-            field: "id" | "name" | "code" | "description" | "website" | "email" | "phone" | "headquarterCityId" | "logoUrl" | "contactInfo" | "licenseNumber" | "active" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "code" | "legalName" | "address" | "description" | "website" | "email" | "phone" | "headquarterCityId" | "logoUrl" | "contactInfo" | "licenseNumber" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
             name?: string
             code?: string
+            legalName?: string | null
+            address?: string | null
             description?: string | null
             website?: string | null
             email?: string | null
@@ -10969,6 +10920,43 @@ export namespace transporters {
             updatedAt?: string | string | null
         }
         searchTerm?: string
+    }
+
+    export interface ListTransportersResult {
+        data: TransporterWithCity[]
+    }
+
+    export interface PaginatedListTransportersQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "code" | "legalName" | "address" | "description" | "website" | "email" | "phone" | "headquarterCityId" | "logoUrl" | "contactInfo" | "licenseNumber" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            code?: string
+            legalName?: string | null
+            address?: string | null
+            description?: string | null
+            website?: string | null
+            email?: string | null
+            phone?: string | null
+            headquarterCityId?: number | null
+            logoUrl?: string | null
+            contactInfo?: string | null
+            licenseNumber?: string | null
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListTransportersResult {
+        pagination: shared.PaginationMeta
+        data: TransporterWithCity[]
     }
 
     export interface Transporter {
@@ -10986,6 +10974,16 @@ export namespace transporters {
          * Unique business code for the transporter
          */
         code: string
+
+        /**
+         * Legal name (Razón Social) of the company
+         */
+        legalName: string | null
+
+        /**
+         * Physical address of the headquarter/company
+         */
+        address: string | null
 
         /**
          * Description of the transporter
@@ -11061,6 +11059,16 @@ export namespace transporters {
         code: string
 
         /**
+         * Legal name (Razón Social) of the company
+         */
+        legalName: string | null
+
+        /**
+         * Physical address of the headquarter/company
+         */
+        address: string | null
+
+        /**
          * Description of the transporter
          */
         description: string | null
@@ -11114,34 +11122,6 @@ export namespace transporters {
          * Timestamp when the transporter record was last updated
          */
         updatedAt: string | string | null
-    }
-
-    export interface Transporters {
-        transporters: Transporter[] | TransporterWithCity[]
-    }
-
-    export interface TransportersQueryOptions {
-        orderBy?: {
-            field: "id" | "name" | "code" | "description" | "website" | "email" | "phone" | "headquarterCityId" | "logoUrl" | "contactInfo" | "licenseNumber" | "active" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            name?: string
-            code?: string
-            description?: string | null
-            website?: string | null
-            email?: string | null
-            phone?: string | null
-            headquarterCityId?: number | null
-            logoUrl?: string | null
-            contactInfo?: string | null
-            licenseNumber?: string | null
-            active?: boolean
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
-        searchTerm?: string
     }
 }
 

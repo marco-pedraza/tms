@@ -1,4 +1,4 @@
-import { faker } from '@faker-js/faker';
+import { fakerES_MX as faker } from '@faker-js/faker';
 import type { BusModel } from '@/inventory/fleet/bus-models/bus-models.types';
 import type { Bus } from '@/inventory/fleet/buses/buses.types';
 import type { Driver } from '@/inventory/fleet/drivers/drivers.types';

@@ -10,13 +10,20 @@ import { installationUseCases } from '@/inventory/locations/installations/instal
 import { labelRepository } from '@/inventory/locations/labels/labels.repository';
 import { populationRepository } from '@/inventory/locations/populations/populations.repository';
 import {
+  createAmenity,
+  deleteAmenity,
+} from '@/inventory/shared-entities/amenities/amenities.controller';
+import {
+  AmenityCategory,
+  AmenityType,
+} from '@/inventory/shared-entities/amenities/amenities.types';
+import {
   createCleanupHelper,
   createTestSuiteId,
   createUniqueCode,
   createUniqueName,
 } from '@/tests/shared/test-utils';
 import {
-  amenityFactory,
   cityFactory,
   installationFactory,
   populationFactory,
@@ -1364,6 +1371,7 @@ describe('Nodes Controller', () => {
   describe('installation relations', () => {
     let testInstallationWithAmenitiesId: number;
     let testNodeWithInstallationId: number;
+    let testAmenityId: number;
 
     const installationCleanup = createCleanupHelper(
       ({ id }) => installationRepository.forceDelete(id),
@@ -1382,13 +1390,14 @@ describe('Nodes Controller', () => {
       );
 
       // Assign some amenities to test the relation loading
-      const testAmenity = await amenityFactory(factoryDb).create({
+      const testAmenity = await createAmenity({
         name: createUniqueName('Test Amenity for Node', testSuiteId),
-        category: 'convenience',
-        amenityType: 'installation',
+        category: AmenityCategory.SERVICES,
+        amenityType: AmenityType.INSTALLATION,
+        description: 'Test amenity for node relations',
         active: true,
-        deletedAt: null,
       });
+      testAmenityId = testAmenity.id;
 
       await installationUseCases.assignAmenities(
         testInstallationWithAmenitiesId,
@@ -1425,8 +1434,17 @@ describe('Nodes Controller', () => {
       // Clean up nodes second (they depend on installations)
       await nodeCleanup.cleanupAll();
 
-      // Clean up installations last
+      // Clean up installations third
       await installationCleanup.cleanupAll();
+
+      // Clean up amenity last
+      if (testAmenityId) {
+        try {
+          await deleteAmenity({ id: testAmenityId });
+        } catch (error) {
+          console.log('Error cleaning up test amenity:', error);
+        }
+      }
     });
 
     test('should include installation with amenities in getNode', async () => {

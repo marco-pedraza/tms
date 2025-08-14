@@ -1,5 +1,10 @@
 import { MatchesRegexp, Min, MinLen } from 'encore.dev/validate';
-import { PaginatedResult, PaginationParams } from '@/shared/types';
+import {
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '@/shared/types';
 import { City } from '@/inventory/locations/cities/cities.types';
 
 /**
@@ -14,6 +19,12 @@ export interface Transporter {
 
   /** Unique business code for the transporter */
   code: string;
+
+  /** Legal name (Razón Social) of the company */
+  legalName: string | null;
+
+  /** Physical address of the headquarter/company */
+  address: string | null;
 
   /** Description of the transporter */
   description: string | null;
@@ -76,6 +87,12 @@ export interface CreateTransporterPayload {
    * Description of the transporter
    */
   description?: string;
+
+  /** Legal name (Razón Social) of the company */
+  legalName?: string;
+
+  /** Physical address of the headquarter/company */
+  address?: string;
 
   /**
    * Website URL of the transporter
@@ -141,6 +158,12 @@ export interface UpdateTransporterPayload {
    */
   description?: string;
 
+  /** Legal name (Razón Social) of the company */
+  legalName?: string;
+
+  /** Physical address of the headquarter/company */
+  address?: string;
+
   /**
    * Website URL of the transporter
    */
@@ -186,20 +209,9 @@ export interface UpdateTransporterPayload {
 /**
  * Response type for the list transporters endpoint (non-paginated)
  */
-export interface Transporters {
-  transporters: Transporter[] | TransporterWithCity[];
-}
-
-export interface TransportersQueryOptions {
-  orderBy?: { field: keyof Transporter; direction: 'asc' | 'desc' }[];
-  filters?: Partial<Transporter>;
-  searchTerm?: string;
-}
-
-export type PaginatedTransporters = PaginatedResult<Transporter>;
-export type PaginatedTransportersWithCity =
-  PaginatedResult<TransporterWithCity>;
-
-export interface PaginationParamsTransporters
-  extends PaginationParams,
-    TransportersQueryOptions {}
+export type ListTransportersQueryParams = ListQueryParams<Transporter>;
+export type ListTransportersResult = ListQueryResult<TransporterWithCity>;
+export type PaginatedListTransportersQueryParams =
+  PaginatedListQueryParams<Transporter>;
+export type PaginatedListTransportersResult =
+  PaginatedListQueryResult<TransporterWithCity>;

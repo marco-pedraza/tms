@@ -98,7 +98,7 @@ export default function BusLinesTable() {
       name: tBusLines('fields.transporter'),
       key: 'transporterId',
       options:
-        transporters?.transporters.map((transporter) => ({
+        transporters?.data.map((transporter) => ({
           label: transporter.name,
           value: transporter.id,
         })) ?? [],

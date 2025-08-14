@@ -1,17 +1,15 @@
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
 import { eventTypeFactory } from './event-types.factory';
-import { extractTablesFromSchema, generateId } from './factory-utils';
+import { extractTablesFromSchema } from './factory-utils';
 import { installationTypeFactory } from './installation-types.factory';
 
 export const eventTypeInstallationTypeFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'eventTypeInstallationTypes',
-  resolver: ({ sequence, use }) => {
-    const id = generateId(sequence);
-
+  resolver: ({ use }) => {
     return {
-      id,
+      // Remove manual ID generation - let PostgreSQL bigserial handle it
       eventTypeId: () =>
         use(eventTypeFactory)
           .create()

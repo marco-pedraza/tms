@@ -1,16 +1,14 @@
 import { faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
 import { schema } from '../../db';
-import { extractTablesFromSchema, generateId } from './factory-utils';
+import { extractTablesFromSchema } from './factory-utils';
 
 export const nodeEventFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'nodeEvents',
   resolver: () => {
-    const id = generateId();
-
     return {
-      id,
+      // Remove manual ID generation - let PostgreSQL bigserial handle it
       nodeId: null, // Will be provided by the seeder or test
       eventTypeId: null, // Will be provided by the seeder or test
       customTime: faker.helpers.maybe(

@@ -18,8 +18,6 @@ import {
   getTransporter,
   listTransporters,
   listTransportersPaginated,
-  searchTransporters,
-  searchTransportersPaginated,
   updateTransporter,
 } from './transporters.controller';
 
@@ -154,9 +152,11 @@ describe('Transporters Controller', () => {
     test('should list all transporters (non-paginated)', async () => {
       const result = await listTransporters({});
       expect(result).toBeDefined();
-      expect(Array.isArray(result.transporters)).toBe(true);
+      expect(Array.isArray(result.data)).toBe(true);
       expect(
-        result.transporters.some((t) => t.id === createdTransporterId),
+        result.data.some(
+          (t: TransporterWithCity) => t.id === createdTransporterId,
+        ),
       ).toBe(true);
       expect(result).not.toHaveProperty('pagination');
     });
@@ -172,7 +172,11 @@ describe('Transporters Controller', () => {
       expect(typeof result.pagination.totalPages).toBe('number');
       expect(typeof result.pagination.hasNextPage).toBe('boolean');
       expect(typeof result.pagination.hasPreviousPage).toBe('boolean');
-      expect(result.data.some((t) => t.id === createdTransporterId)).toBe(true);
+      expect(
+        result.data.some(
+          (t: TransporterWithCity) => t.id === createdTransporterId,
+        ),
+      ).toBe(true);
       expect(result.pagination.currentPage).toBe(1);
       expect(result.pagination.pageSize).toBe(10);
       expect(result.pagination.totalCount).toBeGreaterThanOrEqual(1);
@@ -246,10 +250,10 @@ describe('Transporters Controller', () => {
     test('should retrieve transporters with headquarter cities using listTransporters', async () => {
       const response = await listTransporters({});
       expect(response).toBeDefined();
-      expect(response.transporters).toBeDefined();
-      expect(response.transporters.length).toBeGreaterThan(0);
-      const foundTransporter = response.transporters.find(
-        (t) => t.id === createdTransporterId,
+      expect(response.data).toBeDefined();
+      expect(response.data.length).toBeGreaterThan(0);
+      const foundTransporter = response.data.find(
+        (t: TransporterWithCity) => t.id === createdTransporterId,
       );
       expect(foundTransporter).toBeDefined();
       if (foundTransporter) {
@@ -272,7 +276,7 @@ describe('Transporters Controller', () => {
       expect(paginatedResponse.pagination).toBeDefined();
       expect(paginatedResponse.data.length).toBeGreaterThan(0);
       const foundTransporter = paginatedResponse.data.find(
-        (t) => t.id === createdTransporterId,
+        (t: TransporterWithCity) => t.id === createdTransporterId,
       );
       expect(foundTransporter).toBeDefined();
       if (foundTransporter) {
@@ -283,65 +287,10 @@ describe('Transporters Controller', () => {
         );
       }
     });
-
-    test('should retrieve transporters with headquarter cities when using search functionality', async () => {
-      // Get paginated search results with city data
-      const searchResponse = await searchTransportersPaginated({
-        term: 'Test',
-        page: 1,
-        pageSize: 10,
-      });
-
-      // Verify the search results
-      expect(searchResponse).toBeDefined();
-      expect(searchResponse.data).toBeDefined();
-      expect(searchResponse.pagination).toBeDefined();
-
-      // Find our test transporter and assert it exists in search results
-      const foundTransporter = searchResponse.data.find(
-        (t) => t.id === createdTransporterId,
-      );
-
-      // Only proceed with assertions if our transporter was found in search results
-      if (foundTransporter) {
-        // Verify headquarter city data is loaded for the transporter
-        expect(foundTransporter.headquarterCity).toBeDefined();
-        expect(foundTransporter.headquarterCity?.id).toBe(cityId);
-        expect(foundTransporter.headquarterCity?.name).toBe(
-          'Test City for Transporters',
-        );
-      }
-    });
-
-    test('should retrieve transporters with headquarter cities using non-paginated search', async () => {
-      // Get non-paginated search results with city data
-      const response = await searchTransporters({ term: 'Test' });
-
-      // Verify the search results
-      expect(response).toBeDefined();
-      expect(response.transporters).toBeDefined();
-      expect(Array.isArray(response.transporters)).toBe(true);
-
-      // Find our test transporter in the results
-      const foundTransporter = response.transporters.find(
-        (t) => t.id === createdTransporterId,
-      );
-
-      // If our test transporter was found, verify city data
-      if (foundTransporter) {
-        // Type assertion since we know this is a TransporterWithCity
-        const transporterWithCity = foundTransporter as TransporterWithCity;
-        expect(transporterWithCity.headquarterCity).toBeDefined();
-        expect(transporterWithCity.headquarterCity?.id).toBe(cityId);
-        expect(transporterWithCity.headquarterCity?.name).toBe(
-          'Test City for Transporters',
-        );
-      }
-    });
   });
 
   describe('error scenarios', () => {
-    test('should handle not found errors', async () => {
+    test('should handle non-existent transporter', async () => {
       await expect(getTransporter({ id: 9999 })).rejects.toThrow();
     });
 
@@ -391,11 +340,11 @@ describe('Transporters Controller', () => {
       }
     });
 
-    test('should order transporters by name descending', async () => {
+    test('should order transporters by name in descending order', async () => {
       const response = await listTransporters({
         orderBy: [{ field: 'name', direction: 'desc' }],
       });
-      const names = response.transporters.map((t) => t.name);
+      const names = response.data.map((t: TransporterWithCity) => t.name);
       for (let i = 0; i < names.length - 1; i++) {
         expect(names[i] >= names[i + 1]).toBe(true);
       }
@@ -403,12 +352,16 @@ describe('Transporters Controller', () => {
 
     test('should filter transporters by active status', async () => {
       const response = await listTransporters({ filters: { active: true } });
-      expect(response.transporters.every((t) => t.active === true)).toBe(true);
+      expect(response.data.every((t: TransporterWithCity) => t.active)).toBe(
+        true,
+      );
     });
 
     test('should filter transporters by code', async () => {
       const response = await listTransporters({ filters: { code: 'ALPHA' } });
-      expect(response.transporters.every((t) => t.code === 'ALPHA')).toBe(true);
+      expect(
+        response.data.every((t: TransporterWithCity) => t.code === 'ALPHA'),
+      ).toBe(true);
     });
 
     test('should combine ordering and filtering in paginated results', async () => {
@@ -418,51 +371,16 @@ describe('Transporters Controller', () => {
         page: 1,
         pageSize: 10,
       });
-      expect(response.data.every((t) => t.active === true)).toBe(true);
-      const names = response.data.map((t) => t.name);
+      expect(response.data.every((t: TransporterWithCity) => t.active)).toBe(
+        true,
+      );
+      const names = response.data.map((t: TransporterWithCity) => t.name);
       for (let i = 0; i < names.length - 1; i++) {
         expect(names[i] <= names[i + 1]).toBe(true);
       }
       expect(response.pagination).toBeDefined();
       expect(response.pagination.currentPage).toBe(1);
       expect(response.pagination.pageSize).toBe(10);
-    });
-  });
-
-  describe('search functionality', () => {
-    test('should search transporters', async () => {
-      const searchableTransporter = await createTransporter({
-        name: 'Searchable Test Transporter',
-        code: 'SEARCH',
-        active: true,
-      });
-      additionalTransporterIds.push(searchableTransporter.id);
-      try {
-        const response = await searchTransporters({ term: 'Searchable' });
-        expect(response.transporters).toBeDefined();
-        expect(Array.isArray(response.transporters)).toBe(true);
-        expect(
-          response.transporters.some((t) => t.id === searchableTransporter.id),
-        ).toBe(true);
-      } finally {
-        await deleteTransporter({ id: searchableTransporter.id });
-        additionalTransporterIds = additionalTransporterIds.filter(
-          (id) => id !== searchableTransporter.id,
-        );
-      }
-    });
-
-    test('should search transporters with pagination', async () => {
-      const response = await searchTransportersPaginated({
-        term: 'Test',
-        page: 1,
-        pageSize: 5,
-      });
-      expect(response.data).toBeDefined();
-      expect(Array.isArray(response.data)).toBe(true);
-      expect(response.pagination).toBeDefined();
-      expect(response.pagination.currentPage).toBe(1);
-      expect(response.pagination.pageSize).toBe(5);
     });
   });
 });

@@ -129,7 +129,7 @@ export default function BusLineForm({
     },
   });
 
-  const transporterItems = (transporters?.transporters ?? []).map((t) => ({
+  const transporterItems = (transporters?.data ?? []).map((t) => ({
     id: String(t.id),
     name: t.name,
   }));

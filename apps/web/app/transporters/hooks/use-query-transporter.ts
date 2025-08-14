@@ -28,12 +28,12 @@ export default function useQueryTransporter({
     queryFn: () => client.inventory.getTransporter(transporterId),
     initialData: () =>
       queryClient
-        .getQueryData<transporters.PaginatedTransportersWithCity>([
+        .getQueryData<transporters.PaginatedListTransportersResult>([
           'transporters',
         ])
         ?.data.find((transporter) => transporter.id === transporterId),
     initialDataUpdatedAt: () =>
-      queryClient.getQueryState<transporters.PaginatedTransportersWithCity>([
+      queryClient.getQueryState<transporters.PaginatedListTransportersResult>([
         'transporters',
       ])?.dataUpdatedAt,
     enabled,

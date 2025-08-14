@@ -10,7 +10,7 @@ import imsClient from '@/services/ims-client';
  */
 export default createCollectionQuery<
   transporters.Transporter,
-  transporters.PaginatedTransportersWithCity,
+  transporters.PaginatedListTransportersResult,
   APIError
 >({
   queryKey: ['transporters'],

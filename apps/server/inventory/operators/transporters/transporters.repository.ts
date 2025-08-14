@@ -1,14 +1,15 @@
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
+import { PaginationMeta } from '@/shared/types';
 import { transporters } from './transporters.schema';
 import type {
   CreateTransporterPayload,
-  PaginatedTransportersWithCity,
-  PaginationParamsTransporters,
+  ListTransportersQueryParams,
+  PaginatedListTransportersQueryParams,
+  PaginatedListTransportersResult,
   Transporter,
   TransporterWithCity,
-  TransportersQueryOptions,
   UpdateTransporterPayload,
 } from './transporters.types';
 
@@ -24,6 +25,7 @@ export const createTransporterRepository = () => {
     typeof transporters
   >(db, transporters, 'Transporter', {
     searchableFields: [transporters.name, transporters.code],
+    softDeleteEnabled: true,
   });
 
   /**
@@ -33,7 +35,7 @@ export const createTransporterRepository = () => {
    */
   async function findOneWithCity(id: number): Promise<TransporterWithCity> {
     const transporter = await db.query.transporters.findFirst({
-      where: eq(transporters.id, id),
+      where: and(eq(transporters.id, id), isNull(transporters.deletedAt)),
       with: { headquarterCity: true },
     });
 
@@ -50,102 +52,66 @@ export const createTransporterRepository = () => {
    * @returns List of transporters with their associated headquarter cities
    */
   async function findAllWithCity(
-    params: TransportersQueryOptions,
+    params: ListTransportersQueryParams,
   ): Promise<TransporterWithCity[]> {
     const { baseWhere, baseOrderBy } =
       baseRepository.buildQueryExpressions(params);
 
     return await db.query.transporters.findMany({
       with: { headquarterCity: true },
-      where: baseWhere,
+      where: baseWhere
+        ? and(baseWhere, isNull(transporters.deletedAt))
+        : isNull(transporters.deletedAt),
       orderBy: baseOrderBy,
     });
   }
 
   /**
-   * Lists transporters with pagination and their associated headquarter cities
-   * @param params - Pagination parameters
-   * @returns Paginated list of transporters with their headquarter cities
+   * Appends relations (headquarter city) to transporters
+   *
+   * This function takes a list of transporters and enriches them with related headquarter city information.
+   * It's designed to be used after getting paginated results from the base repository.
+   *
+   * @param transportersResult - Array of transporters to append relations to
+   * @param pagination - Pagination metadata
+   * @param params - Query parameters for ordering
+   * @returns Transporters with relations and pagination metadata
    */
-  async function listPaginated(
-    params: PaginationParamsTransporters = {},
-  ): Promise<PaginatedTransportersWithCity> {
-    const { data, pagination } = await baseRepository.findAllPaginated(params);
-
-    if (data.length === 0) {
-      return { data: [], pagination };
+  const appendRelations = async (
+    transportersResult: Transporter[],
+    pagination: PaginationMeta,
+    params: PaginatedListTransportersQueryParams,
+  ): Promise<PaginatedListTransportersResult> => {
+    // Return early if no transporters to process
+    if (transportersResult.length === 0) {
+      return {
+        data: [],
+        pagination,
+      };
     }
 
     const { baseOrderBy } = baseRepository.buildQueryExpressions(params);
-    const ids = data.map((transporter) => transporter.id);
+    const ids = transportersResult.map((transporter) => transporter.id);
 
-    const transportersWithCity = await db.query.transporters.findMany({
-      where: inArray(transporters.id, ids),
+    const transportersWithRelations = await db.query.transporters.findMany({
+      where: and(inArray(transporters.id, ids), isNull(transporters.deletedAt)),
       orderBy: baseOrderBy,
-      with: { headquarterCity: true },
+      with: {
+        headquarterCity: true,
+      },
     });
 
-    return { data: transportersWithCity, pagination };
-  }
-
-  /**
-   * Searches for transporters and includes their headquarter city
-   * @param term - Search term
-   * @returns List of matching transporters with headquarter city information
-   */
-  async function searchWithCity(term: string): Promise<TransporterWithCity[]> {
-    const results = await baseRepository.search(term);
-
-    if (results.length === 0) {
-      return [];
-    }
-
-    const ids = results.map((transporter) => transporter.id);
-
-    return await db.query.transporters.findMany({
-      where: inArray(transporters.id, ids),
-      with: { headquarterCity: true },
-    });
-  }
-
-  /**
-   * Searches for transporters with pagination and includes their headquarter city
-   * @param term - Search term
-   * @param params - Pagination parameters
-   * @returns Paginated search results with headquarter city information
-   */
-  async function searchPaginatedWithCity(
-    term: string,
-    params: PaginationParamsTransporters = {},
-  ): Promise<PaginatedTransportersWithCity> {
-    const { data, pagination } = await baseRepository.searchPaginated(
-      term,
-      params,
-    );
-
-    if (data.length === 0) {
-      return { data: [], pagination };
-    }
-
-    const { baseOrderBy } = baseRepository.buildQueryExpressions(params);
-    const ids = data.map((transporter) => transporter.id);
-
-    const transportersWithCity = await db.query.transporters.findMany({
-      where: inArray(transporters.id, ids),
-      orderBy: baseOrderBy,
-      with: { headquarterCity: true },
-    });
-
-    return { data: transportersWithCity, pagination };
-  }
+    return {
+      data: transportersWithRelations,
+      pagination,
+    };
+  };
 
   return {
     ...baseRepository,
     findOneWithCity,
     findAllWithCity,
-    findAllPaginated: listPaginated,
-    search: searchWithCity,
-    searchPaginated: searchPaginatedWithCity,
+    appendRelations,
   };
 };
 

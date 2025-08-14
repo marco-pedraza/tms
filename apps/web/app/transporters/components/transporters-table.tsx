@@ -26,7 +26,7 @@ interface TransportersColumnsFactoryProps {
 function transportersColumnsFactory({
   tCommon,
   tTransporters,
-}: TransportersColumnsFactoryProps): DataTableColumnDef<transporters.Transporter>[] {
+}: TransportersColumnsFactoryProps): DataTableColumnDef<transporters.TransporterWithCity>[] {
   return [
     {
       accessorKey: 'name',

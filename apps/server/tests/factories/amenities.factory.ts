@@ -8,19 +8,17 @@ import { schema } from '../../db';
 import {
   extractTablesFromSchema,
   generateAlphabeticName,
-  generateId,
 } from './factory-utils';
 
 export const amenityFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'amenities',
   resolver: () => {
-    const id = generateId();
     const amenityType = faker.helpers.arrayElement(Object.values(AmenityType));
     const category = faker.helpers.arrayElement(Object.values(AmenityCategory));
 
     return {
-      id,
+      // Remove manual ID generation - let PostgreSQL bigserial handle it
       name: generateAlphabeticName(
         `${category.charAt(0).toUpperCase() + category.slice(1)} Amenity`,
       ),

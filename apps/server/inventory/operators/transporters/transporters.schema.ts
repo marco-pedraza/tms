@@ -6,9 +6,10 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
   varchar,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { isNull, relations } from 'drizzle-orm';
 import { cities } from '@/inventory/locations/cities/cities.schema';
 
 /**
@@ -19,7 +20,9 @@ export const transporters = pgTable(
   {
     id: serial('id').primaryKey(),
     name: text('name').notNull(),
-    code: varchar('code', { length: 10 }).notNull().unique(),
+    code: varchar('code', { length: 20 }).notNull(),
+    legalName: text('legal_name'),
+    address: text('address'),
     description: text('description'),
     website: text('website'),
     email: text('email'),
@@ -33,8 +36,15 @@ export const transporters = pgTable(
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at'),
   },
-  (table) => [index().on(table.name), index().on(table.headquarterCityId)],
+  (table) => [
+    index().on(table.headquarterCityId),
+    index().on(table.deletedAt),
+    index().on(table.active).where(isNull(table.deletedAt)),
+    uniqueIndex().on(table.name).where(isNull(table.deletedAt)),
+    uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
+  ],
 );
 
 /**

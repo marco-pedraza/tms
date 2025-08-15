@@ -8,11 +8,12 @@ import {
 
 /**
  * Enum for amenity types
- * Defines the two supported amenity types in the system
+ * Defines the supported amenity types in the system
  */
 export enum AmenityType {
   BUS = 'bus',
   INSTALLATION = 'installation',
+  SERVICE_TYPE = 'service_type',
 }
 
 /**
@@ -81,7 +82,7 @@ export interface CreateAmenityPayload {
 
   /**
    * Type of amenity within the category
-   * Must be either 'bus' or 'installation'
+   * Must be one of: 'bus', 'installation', 'service_type'
    */
   amenityType: AmenityType;
 
@@ -120,7 +121,7 @@ export interface UpdateAmenityPayload {
 
   /**
    * Type of amenity within the category
-   * Must be either 'bus' or 'installation'
+   * Must be one of: 'bus', 'installation', 'service_type'
    */
   amenityType?: AmenityType;
 

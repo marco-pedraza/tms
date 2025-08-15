@@ -5,10 +5,10 @@ import { db } from '@/inventory/db-service';
 import { amenities } from './amenities.schema';
 import type {
   Amenity,
-  AmenityType,
   CreateAmenityPayload,
   UpdateAmenityPayload,
 } from './amenities.types';
+import { AmenityType } from './amenities.types';
 
 /**
  * Creates a repository for managing amenity entities
@@ -68,6 +68,10 @@ export function createAmenityRepository() {
   return {
     ...baseRepository,
     validateInstallationAmenityIds: validateAmenityIds,
+    validateServiceTypeAmenityIds: (
+      amenityIds: number[],
+      tx?: TransactionalDB,
+    ) => validateAmenityIds(amenityIds, AmenityType.SERVICE_TYPE, tx),
   };
 }
 

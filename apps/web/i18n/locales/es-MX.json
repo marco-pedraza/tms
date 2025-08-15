@@ -513,7 +513,9 @@
       "code": "Código",
       "category": "Categoría",
       "description": "Descripción",
-      "active": "Activo"
+      "active": "Activo",
+      "amenities": "Amenidades",
+      "selectedAmenities": "Amenidades seleccionadas ({count})"
     },
     "categories": {
       "regular": "Regular",
@@ -527,14 +529,18 @@
         "name": "Ej: Primera",
         "code": "Ej: PRIM",
         "description": "Ej: Servicio de transporte de primera clase",
-        "category": "Selecciona una categoría"
+        "category": "Selecciona una categoría",
+        "amenities": "Selecciona amenidades para este tipo de servicio",
+        "emptyAmenitiesList": "No hay amenidades disponibles"
       }
     },
     "edit": {
       "title": "Editar Tipo de Servicio"
     },
     "details": {
-      "description": "Detalles del tipo de servicio"
+      "description": "Detalles del tipo de servicio",
+      "amenitiesTitle": "Amenidades",
+      "noAmenitiesAssigned": "No hay amenidades asignadas"
     },
     "errors": {
       "notFound": {
@@ -557,6 +563,11 @@
         "loading": "Eliminando tipo de servicio...",
         "success": "Tipo de servicio eliminado correctamente",
         "error": "No pudimos eliminar el tipo de servicio"
+      },
+      "assignAmenities": {
+        "loading": "Asignando amenidades...",
+        "success": "Amenidades asignadas correctamente",
+        "error": "No pudimos asignar las amenidades"
       }
     }
   },

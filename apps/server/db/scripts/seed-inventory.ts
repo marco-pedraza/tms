@@ -5,6 +5,7 @@ import { getFactoryDb } from '@/tests/factories/factory-utils';
 import {
   seedAmenities,
   seedInstallationAmenities,
+  seedServiceTypeAmenities,
 } from './seeders/amenities.seeder';
 import { seedEventTypes } from './seeders/events.seeder';
 import {
@@ -148,8 +149,9 @@ export async function seedInventory(): Promise<void> {
     console.log('🎯 Seeding amenities...');
     await seedAmenities(factoryDb);
 
-    // Assign amenities to installations
+    // Assign amenities to installations and service types
     await seedInstallationAmenities(installations);
+    await seedServiceTypeAmenities(serviceTypes);
     console.log('✅ Amenities seeding completed\n');
 
     console.log('🎉 Inventory seeding completed successfully!');

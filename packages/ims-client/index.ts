@@ -95,6 +95,7 @@ export namespace inventory {
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
             this.assignAmenitiesToInstallation = this.assignAmenitiesToInstallation.bind(this)
+            this.assignAmenitiesToServiceType = this.assignAmenitiesToServiceType.bind(this)
             this.assignCitiesToPopulation = this.assignCitiesToPopulation.bind(this)
             this.assignCityToPopulation = this.assignCityToPopulation.bind(this)
             this.assignEventTypesToInstallationType = this.assignEventTypesToInstallationType.bind(this)
@@ -278,6 +279,21 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/installations/${encodeURIComponent(id)}/amenities/assign`, JSON.stringify(params))
             return await resp.json() as installations.InstallationWithDetails
+        }
+
+        /**
+         * Assigns amenities to a service type (destructive operation).
+         * Replaces existing amenity assignments for the service type.
+         */
+        public async assignAmenitiesToServiceType(id: number, params: {
+    /**
+     * Amenity IDs to assign to the service type (replaces existing)
+     */
+    amenityIds: number[]
+}): Promise<service_types.ServiceType> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/service-types/${encodeURIComponent(id)}/amenities/assign`, JSON.stringify(params))
+            return await resp.json() as service_types.ServiceType
         }
 
         /**
@@ -1324,14 +1340,14 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves a service type by its ID.
+         * Retrieves a service type by its ID with assigned amenities.
          * @param params - Object containing the service type ID
-         * @returns The requested service type
+         * @returns The requested service type with amenities
          */
-        public async getServiceType(id: number): Promise<service_types.ServiceType> {
+        public async getServiceType(id: number): Promise<service_types.ServiceTypeWithAmenities> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/service-types/${encodeURIComponent(id)}`)
-            return await resp.json() as service_types.ServiceType
+            return await resp.json() as service_types.ServiceTypeWithAmenities
         }
 
         /**
@@ -2133,7 +2149,7 @@ export namespace inventory {
 
     /**
      * Type of amenity within the category
-     * Must be either 'bus' or 'installation'
+     * Must be one of: 'bus', 'installation', 'service_type'
      */
     amenityType?: amenities.AmenityType
 
@@ -5120,7 +5136,7 @@ export namespace amenities {
 
     export type AmenityCategory = "basic" | "comfort" | "technology" | "security" | "accessibility" | "services"
 
-    export type AmenityType = "bus" | "installation"
+    export type AmenityType = "bus" | "installation" | "service_type"
 
     export interface CreateAmenityPayload {
         /**
@@ -5137,7 +5153,7 @@ export namespace amenities {
 
         /**
          * Type of amenity within the category
-         * Must be either 'bus' or 'installation'
+         * Must be one of: 'bus', 'installation', 'service_type'
          */
         amenityType: AmenityType
 
@@ -10605,6 +10621,53 @@ export namespace service_types {
     }
 
     export type ServiceTypeCategory = "regular" | "express" | "luxury" | "economic"
+
+    export interface ServiceTypeWithAmenities {
+        /**
+         * Amenities assigned to this service type
+         */
+        amenities: amenities.Amenity[]
+
+        /**
+         * Unique identifier for the service type
+         */
+        id: number
+
+        /**
+         * Name of the service type
+         */
+        name: string
+
+        /**
+         * Unique code for the service type
+         */
+        code: string
+
+        /**
+         * Category this service type belongs to
+         */
+        category: ServiceTypeCategory
+
+        /**
+         * Description of what this service type represents
+         */
+        description: string | null
+
+        /**
+         * Whether this service type is currently active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when this service type was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when this service type was last updated
+         */
+        updatedAt: string | string | null
+    }
 }
 
 export namespace shared {

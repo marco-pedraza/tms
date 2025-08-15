@@ -1,5 +1,5 @@
 {
-  "id": "d8f52af4-28d8-4952-a860-15519ffb8b28",
+  "id": "1baee831-a210-43bf-bc58-8b3fae665bf7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -5239,6 +5239,115 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.service_type_amenities": {
+      "name": "service_type_amenities",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "service_type_id": {
+          "name": "service_type_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amenity_id": {
+          "name": "amenity_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "service_type_amenities_amenity_id_index": {
+          "name": "service_type_amenities_amenity_id_index",
+          "columns": [
+            {
+              "expression": "amenity_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "service_type_amenities_service_type_id_amenity_id_index": {
+          "name": "service_type_amenities_service_type_id_amenity_id_index",
+          "columns": [
+            {
+              "expression": "service_type_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "amenity_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "service_type_amenities_service_type_id_service_types_id_fk": {
+          "name": "service_type_amenities_service_type_id_service_types_id_fk",
+          "tableFrom": "service_type_amenities",
+          "tableTo": "service_types",
+          "columnsFrom": [
+            "service_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "service_type_amenities_amenity_id_amenities_id_fk": {
+          "name": "service_type_amenities_amenity_id_amenities_id_fk",
+          "tableFrom": "service_type_amenities",
+          "tableTo": "amenities",
+          "columnsFrom": [
+            "amenity_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.service_types": {
       "name": "service_types",
       "schema": "",
@@ -5598,9 +5707,21 @@
         },
         "code": {
           "name": "code",
-          "type": "varchar(10)",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true
+        },
+        "legal_name": {
+          "name": "legal_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "description": {
           "name": "description",
@@ -5670,24 +5791,15 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
-        "transporters_name_index": {
-          "name": "transporters_name_index",
-          "columns": [
-            {
-              "expression": "name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "transporters_headquarter_city_id_index": {
           "name": "transporters_headquarter_city_id_index",
           "columns": [
@@ -5699,6 +5811,69 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "transporters_deleted_at_index": {
+          "name": "transporters_deleted_at_index",
+          "columns": [
+            {
+              "expression": "deleted_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "transporters_active_index": {
+          "name": "transporters_active_index",
+          "columns": [
+            {
+              "expression": "active",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"transporters\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "transporters_name_index": {
+          "name": "transporters_name_index",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"transporters\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "transporters_code_index": {
+          "name": "transporters_code_index",
+          "columns": [
+            {
+              "expression": "code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"transporters\".\"deleted_at\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -5720,15 +5895,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "transporters_code_unique": {
-          "name": "transporters_code_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "code"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

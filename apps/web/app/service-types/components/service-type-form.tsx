@@ -2,14 +2,16 @@
 
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
-import type { service_types } from '@repo/ims-client';
+import type { amenities, service_types } from '@repo/ims-client';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
+import AmenityCard from '@/components/ui/amenity-card';
 import useForm from '@/hooks/use-form';
 import { codeSchema, nameSchema } from '@/schemas/common';
 import type { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
+import useQueryServiceTypeAmenities from '../hooks/use-query-service-type-amenities';
 
 const createServiceTypeFormSchema = (
   tValidations: UseValidationsTranslationsResult,
@@ -23,6 +25,7 @@ const createServiceTypeFormSchema = (
     ),
     description: z.string().trim().optional(),
     active: z.boolean(),
+    amenityIds: z.array(z.number()),
   });
 
 export type ServiceTypeFormValues = z.output<
@@ -46,6 +49,7 @@ export default function ServiceTypeForm({ defaultValues, onSubmit }: Props) {
       category: '',
       description: undefined,
       active: true,
+      amenityIds: [],
     },
     validators: {
       onChange: serviceTypeFormSchema,
@@ -68,6 +72,9 @@ export default function ServiceTypeForm({ defaultValues, onSubmit }: Props) {
       }
     },
   });
+
+  // Query amenities for service_type
+  const { data: amenities } = useQueryServiceTypeAmenities();
 
   return (
     <Form onSubmit={form.handleSubmit}>
@@ -105,6 +112,46 @@ export default function ServiceTypeForm({ defaultValues, onSubmit }: Props) {
                 { id: 'economic', name: tServiceTypes('categories.economic') },
               ]}
             />
+          )}
+        </form.AppField>
+
+        <form.AppField name="amenityIds">
+          {(field) => (
+            <div className="space-y-4">
+              <field.MultiSelectInput
+                label={tServiceTypes('fields.amenities')}
+                placeholder={tServiceTypes('form.placeholders.amenities')}
+                items={
+                  amenities?.data.map((amenity: amenities.Amenity) => ({
+                    id: amenity.id.toString(),
+                    name: amenity.name,
+                  })) ?? []
+                }
+                emptyOptionsLabel={tServiceTypes(
+                  'form.placeholders.emptyAmenitiesList',
+                )}
+              />
+
+              {field.state.value && field.state.value.length > 0 && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-foreground">
+                    {tServiceTypes('fields.selectedAmenities', {
+                      count: field.state.value.length,
+                    })}
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {field.state.value.map((amenityId: number) => {
+                      const amenity = amenities?.data.find(
+                        (a) => a.id === amenityId,
+                      );
+                      return amenity ? (
+                        <AmenityCard key={amenity.id} amenity={amenity} />
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </form.AppField>
 

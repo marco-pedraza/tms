@@ -9,6 +9,7 @@ import ServiceTypeForm, {
 } from '../../components/service-type-form';
 import ServiceTypeFormSkeleton from '../../components/service-type-form-skeleton';
 import useQueryServiceType from '../../hooks/use-query-service-type';
+import useServiceTypeAmenityMutations from '../../hooks/use-service-type-amenity-mutations';
 import useServiceTypeMutations from '../../hooks/use-service-type-mutations';
 
 export default function EditServiceTypePage() {
@@ -19,13 +20,23 @@ export default function EditServiceTypePage() {
     enabled: isValidId,
   });
   const { update } = useServiceTypeMutations();
+  const { assignAmenities } = useServiceTypeAmenityMutations();
 
   const handleSubmit = async (values: ServiceTypeFormValues) => {
+    const { amenityIds = [], ...updatePayload } = values;
     const apiValues = {
-      ...values,
-      description: values.description ?? '',
+      ...updatePayload,
+      description: updatePayload.description ?? '',
     };
+
+    // Update service type
     await update.mutateWithToast({ id: serviceTypeId, values: apiValues });
+
+    // Update amenities assignment
+    await assignAmenities.mutateWithToast(
+      { id: serviceTypeId, amenityIds },
+      { standalone: false },
+    );
   };
 
   if (isLoading) {
@@ -47,6 +58,7 @@ export default function EditServiceTypePage() {
         defaultValues={{
           ...data,
           description: data.description ?? '',
+          amenityIds: data.amenities?.map((a) => a.id) ?? [],
         }}
         onSubmit={handleSubmit}
       />

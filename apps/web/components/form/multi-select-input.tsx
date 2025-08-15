@@ -69,7 +69,7 @@ export default function MultiSelectInput({
             <div className="flex items-center gap-2 flex-1 text-left">
               {selectedItems.length > 0 && (
                 <div className="flex items-center gap-1 flex-wrap">
-                  {selectedItems.slice(0, 3).map((item) => (
+                  {selectedItems.slice(0, 3).map((item, index, arr) => (
                     <div key={item.id} className="flex items-center gap-1">
                       {item.color && (
                         <div
@@ -77,7 +77,10 @@ export default function MultiSelectInput({
                           style={{ backgroundColor: item.color }}
                         />
                       )}
-                      <span className="text-sm">{item.name}</span>
+                      <span className="text-sm">
+                        {item.name}
+                        {!item.color && index < arr.length - 1 && ', '}
+                      </span>
                     </div>
                   ))}
                   {selectedItems.length > 3 && (

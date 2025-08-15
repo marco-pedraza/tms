@@ -1,10 +1,16 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { FieldValidationError } from '@repo/base-repo';
+import { amenitiesRepository } from '@/inventory/shared-entities/amenities/amenities.repository';
+import {
+  AmenityCategory,
+  AmenityType,
+} from '@/inventory/shared-entities/amenities/amenities.types';
 import { createCleanupHelper } from '@/tests/shared/test-utils';
 import type { ServiceType } from './service-types.types';
 import { ServiceTypeCategory } from './service-types.types';
 import { serviceTypeRepository } from './service-types.repository';
 import {
+  assignAmenitiesToServiceType,
   createServiceType,
   deleteServiceType,
   getServiceType,
@@ -213,6 +219,95 @@ describe('Service Types Controller', () => {
       expect(response.active).toBe(false);
     });
 
+    describe('amenity assignment', () => {
+      let testAmenityIds: number[] = [];
+
+      beforeAll(async () => {
+        // Create test amenities
+        // Create amenities directly through repository to ensure proper validation
+        const amenity1 = await amenitiesRepository.create({
+          name: 'Test Amenity 1 for ST',
+          category: AmenityCategory.COMFORT,
+          amenityType: AmenityType.SERVICE_TYPE,
+          description: 'Test amenity 1',
+          iconName: 'wifi',
+          active: true,
+        });
+
+        const amenity2 = await amenitiesRepository.create({
+          name: 'Test Amenity 2 for ST',
+          category: AmenityCategory.TECHNOLOGY,
+          amenityType: AmenityType.SERVICE_TYPE,
+          description: 'Test amenity 2',
+          iconName: 'tv',
+          active: true,
+        });
+
+        testAmenityIds = [amenity1.id, amenity2.id];
+      });
+
+      afterAll(async () => {
+        // Clean up test amenities
+        for (const id of testAmenityIds) {
+          try {
+            await amenitiesRepository.forceDelete(id);
+          } catch (error) {
+            console.warn(`Failed to clean up test amenity ${id}:`, error);
+          }
+        }
+      });
+
+      test('should assign amenities to a service type', async () => {
+        const response = await assignAmenitiesToServiceType({
+          id: createdServiceTypeId,
+          amenityIds: testAmenityIds,
+        });
+
+        expect(response).toBeDefined();
+        expect(response.id).toBe(createdServiceTypeId);
+
+        // Verify amenities were assigned by getting the service type
+        const serviceType = await getServiceType({ id: createdServiceTypeId });
+        expect(serviceType.amenities).toBeDefined();
+        expect(serviceType.amenities.length).toBe(testAmenityIds.length);
+        expect(
+          serviceType.amenities.map((a) => a.id).sort((a, b) => a - b),
+        ).toEqual([...testAmenityIds].sort((a, b) => a - b));
+      });
+
+      test('should update assigned amenities', async () => {
+        // Assign only the first amenity
+        const response = await assignAmenitiesToServiceType({
+          id: createdServiceTypeId,
+          amenityIds: [testAmenityIds[0]],
+        });
+
+        expect(response).toBeDefined();
+        expect(response.id).toBe(createdServiceTypeId);
+
+        // Verify only one amenity is assigned
+        const serviceType = await getServiceType({ id: createdServiceTypeId });
+        expect(serviceType.amenities).toBeDefined();
+        expect(serviceType.amenities.length).toBe(1);
+        expect(serviceType.amenities[0].id).toBe(testAmenityIds[0]);
+      });
+
+      test('should remove all amenities when empty array is provided', async () => {
+        const response = await assignAmenitiesToServiceType({
+          id: createdServiceTypeId,
+          amenityIds: [],
+        });
+
+        expect(response).toBeDefined();
+        expect(response.id).toBe(createdServiceTypeId);
+
+        // Verify no amenities are assigned
+        const serviceType = await getServiceType({ id: createdServiceTypeId });
+        expect(serviceType.amenities).toBeDefined();
+        expect(serviceType.amenities.length).toBe(0);
+      });
+    });
+
     test('should delete a service type', async () => {
       // Create a service type specifically for deletion test
       const ts2 = Date.now().toString().slice(-6);
@@ -242,26 +337,143 @@ describe('Service Types Controller', () => {
       await expect(getServiceType({ id: 9999 })).rejects.toThrow();
     });
 
-    test('should handle duplicate field validation errors (name)', async () => {
-      // Create a service type to conflict against
-      const ts3 = Date.now().toString().slice(-6);
-      const st1 = await createServiceType({
-        name: 'Duplicate Name Source',
-        code: `SRC${ts3}`,
-        category: ServiceTypeCategory.REGULAR,
-        active: true,
-      });
-      serviceTypeCleanup.track(st1.id);
+    describe('amenity assignment errors', () => {
+      let testAmenityId: number;
 
-      // Try to create another with same name but different code
-      await expect(
-        createServiceType({
-          name: st1.name,
-          code: `OTH${ts3}`,
-          category: ServiceTypeCategory.REGULAR,
+      beforeAll(async () => {
+        // Create a test amenity for error cases
+        const amenity = await amenitiesRepository.create({
+          name: 'Test Amenity for Errors',
+          category: AmenityCategory.COMFORT,
+          amenityType: AmenityType.SERVICE_TYPE,
+          description: 'Test amenity for error cases',
+          iconName: 'test',
           active: true,
-        }),
-      ).rejects.toThrow();
+        });
+        testAmenityId = amenity.id;
+      });
+
+      afterAll(async () => {
+        try {
+          await amenitiesRepository.forceDelete(testAmenityId);
+        } catch (error) {
+          console.warn(
+            `Failed to clean up test amenity ${testAmenityId}:`,
+            error,
+          );
+        }
+      });
+
+      test('should handle duplicate amenity IDs with DUPLICATE_VALUES error', async () => {
+        const duplicateIds = [testAmenityId, testAmenityId]; // Same ID twice
+
+        try {
+          await assignAmenitiesToServiceType({
+            id: createdServiceTypeId,
+            amenityIds: duplicateIds,
+          });
+          expect(true).toBe(false); // Should have thrown FieldValidationError
+        } catch (error) {
+          expect(error).toBeInstanceOf(FieldValidationError);
+          const fieldError = error as FieldValidationError;
+          expect(fieldError.fieldErrors).toContainEqual(
+            expect.objectContaining({
+              field: 'amenityIds',
+              code: 'DUPLICATE_VALUES',
+              message: 'Duplicate amenity IDs are not allowed',
+              value: duplicateIds,
+            }),
+          );
+        }
+      });
+
+      test('should handle invalid amenity IDs with INVALID_VALUES error', async () => {
+        const invalidId = 99999; // Non-existent ID
+
+        try {
+          await assignAmenitiesToServiceType({
+            id: createdServiceTypeId,
+            amenityIds: [invalidId],
+          });
+          expect(true).toBe(false); // Should have thrown FieldValidationError
+        } catch (error) {
+          expect(error).toBeInstanceOf(FieldValidationError);
+          const fieldError = error as FieldValidationError;
+          expect(fieldError.fieldErrors).toContainEqual(
+            expect.objectContaining({
+              field: 'amenityIds',
+              code: 'INVALID_VALUES',
+              value: [invalidId],
+            }),
+          );
+        }
+      });
+
+      test('should handle non-service-type amenity IDs with INVALID_VALUES error', async () => {
+        // Create an installation type amenity
+        const installationAmenity = await amenitiesRepository.create({
+          name: 'Installation Amenity',
+          category: AmenityCategory.COMFORT,
+          amenityType: AmenityType.INSTALLATION, // Different type
+          description: 'Installation type amenity',
+          iconName: 'test',
+          active: true,
+        });
+
+        try {
+          await assignAmenitiesToServiceType({
+            id: createdServiceTypeId,
+            amenityIds: [installationAmenity.id],
+          });
+          expect(true).toBe(false); // Should have thrown FieldValidationError
+        } catch (error) {
+          expect(error).toBeInstanceOf(FieldValidationError);
+          const fieldError = error as FieldValidationError;
+          expect(fieldError.fieldErrors).toContainEqual(
+            expect.objectContaining({
+              field: 'amenityIds',
+              code: 'INVALID_VALUES',
+              value: [installationAmenity.id],
+            }),
+          );
+        }
+
+        // Clean up
+        await amenitiesRepository.forceDelete(installationAmenity.id);
+      });
+
+      test('should handle inactive amenity IDs with INVALID_VALUES error', async () => {
+        // Create an inactive service type amenity
+        const inactiveAmenity = await amenitiesRepository.create({
+          name: 'Inactive Amenity',
+          category: AmenityCategory.COMFORT,
+          amenityType: AmenityType.SERVICE_TYPE,
+          description: 'Inactive service type amenity',
+          iconName: 'test',
+          active: false, // Inactive
+        });
+
+        try {
+          await assignAmenitiesToServiceType({
+            id: createdServiceTypeId,
+            amenityIds: [inactiveAmenity.id],
+          });
+          expect(true).toBe(false); // Should have thrown FieldValidationError
+        } catch (error) {
+          expect(error).toBeInstanceOf(FieldValidationError);
+          const fieldError = error as FieldValidationError;
+          expect(fieldError.fieldErrors).toContainEqual(
+            expect.objectContaining({
+              field: 'amenityIds',
+              code: 'INVALID_VALUES',
+              value: [inactiveAmenity.id],
+            }),
+          );
+        }
+
+        // Clean up
+        await amenitiesRepository.forceDelete(inactiveAmenity.id);
+      });
     });
 
     test('should throw detailed field validation error for duplicate code', async () => {

@@ -9,8 +9,8 @@ import imsClient from '@/services/ims-client';
  * It handles query setup, caching, and error handling.
  */
 export default createCollectionItemQuery<
-  service_types.ServiceType,
-  service_types.PaginatedListServiceTypesResult,
+  service_types.ServiceTypeWithAmenities,
+  { data: service_types.ServiceTypeWithAmenities[] },
   APIError
 >({
   collectionQueryKey: ['service-types'],

@@ -117,4 +117,6 @@ export {
   amenitiesRelations,
   installationAmenities,
   installationAmenitiesRelations,
+  serviceTypeAmenities,
+  serviceTypeAmenitiesRelations,
 } from '@/inventory/shared-entities/amenities/amenities.schema';

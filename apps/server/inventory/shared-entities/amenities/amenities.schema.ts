@@ -11,6 +11,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { isNull, relations } from 'drizzle-orm';
 import { installations } from '@/inventory/locations/installations/installations.schema';
+import { serviceTypes } from '@/inventory/operators/service-types/service-types.schema';
 
 export const amenities = pgTable(
   'amenities',
@@ -54,6 +55,25 @@ export const installationAmenities = pgTable(
   ],
 );
 
+export const serviceTypeAmenities = pgTable(
+  'service_type_amenities',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    serviceTypeId: integer('service_type_id')
+      .notNull()
+      .references(() => serviceTypes.id),
+    amenityId: integer('amenity_id')
+      .notNull()
+      .references(() => amenities.id),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => [
+    index().on(table.amenityId),
+    uniqueIndex().on(table.serviceTypeId, table.amenityId),
+  ],
+);
+
 export const amenitiesRelations = relations(amenities, ({ many }) => ({
   installationAmenities: many(installationAmenities),
 }));
@@ -67,6 +87,20 @@ export const installationAmenitiesRelations = relations(
     }),
     amenity: one(amenities, {
       fields: [installationAmenities.amenityId],
+      references: [amenities.id],
+    }),
+  }),
+);
+
+export const serviceTypeAmenitiesRelations = relations(
+  serviceTypeAmenities,
+  ({ one }) => ({
+    serviceType: one(serviceTypes, {
+      fields: [serviceTypeAmenities.serviceTypeId],
+      references: [serviceTypes.id],
+    }),
+    amenity: one(amenities, {
+      fields: [serviceTypeAmenities.amenityId],
       references: [amenities.id],
     }),
   }),

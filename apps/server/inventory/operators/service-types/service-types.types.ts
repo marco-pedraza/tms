@@ -5,6 +5,7 @@ import type {
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '@/shared/types';
+import type { Amenity } from '@/inventory/shared-entities/amenities/amenities.types';
 
 /**
  * Enum for service type categories
@@ -44,6 +45,14 @@ export interface ServiceType {
 
   /** Timestamp when this service type was last updated */
   updatedAt: Date | string | null;
+}
+
+/**
+ * ServiceType with assigned amenities
+ */
+export interface ServiceTypeWithAmenities extends ServiceType {
+  /** Amenities assigned to this service type */
+  amenities: Amenity[];
 }
 
 /**
@@ -126,3 +135,9 @@ export type PaginatedListServiceTypesQueryParams =
 /** Paginated list result for service types */
 export type PaginatedListServiceTypesResult =
   PaginatedListQueryResult<ServiceType>;
+
+/** Payload to assign amenities to a service type */
+export interface AssignAmenitiesToServiceTypePayload {
+  /** Amenity IDs to assign to the service type (replaces existing) */
+  amenityIds: number[];
+}

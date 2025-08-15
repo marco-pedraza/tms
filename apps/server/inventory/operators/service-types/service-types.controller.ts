@@ -6,10 +6,13 @@ import type {
   PaginatedListServiceTypesQueryParams,
   PaginatedListServiceTypesResult,
   ServiceType,
+  ServiceTypeWithAmenities,
   UpdateServiceTypePayload,
 } from './service-types.types';
+import type { AssignAmenitiesToServiceTypePayload } from './service-types.types';
 import { serviceTypeRepository } from './service-types.repository';
 import { validateServiceType } from './service-types.domain';
+import { serviceTypeUseCases } from './service-types.use-cases';
 
 /**
  * Creates a new service type.
@@ -25,9 +28,9 @@ export const createServiceType = api(
 );
 
 /**
- * Retrieves a service type by its ID.
+ * Retrieves a service type by its ID with assigned amenities.
  * @param params - Object containing the service type ID
- * @returns The requested service type
+ * @returns The requested service type with amenities
  */
 export const getServiceType = api(
   {
@@ -35,8 +38,8 @@ export const getServiceType = api(
     method: 'GET',
     path: '/service-types/:id',
   },
-  async ({ id }: { id: number }): Promise<ServiceType> => {
-    return await serviceTypeRepository.findOne(id);
+  async ({ id }: { id: number }): Promise<ServiceTypeWithAmenities> => {
+    return await serviceTypeUseCases.findOneWithAmenities(id);
   },
 );
 
@@ -94,5 +97,25 @@ export const deleteServiceType = api(
   { expose: true, method: 'DELETE', path: '/service-types/:id/delete' },
   async ({ id }: { id: number }): Promise<ServiceType> => {
     return await serviceTypeRepository.delete(id);
+  },
+);
+
+/**
+ * Assigns amenities to a service type (destructive operation).
+ * Replaces existing amenity assignments for the service type.
+ */
+export const assignAmenitiesToServiceType = api(
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/service-types/:id/amenities/assign',
+  },
+  async ({
+    id,
+    amenityIds,
+  }: {
+    id: number;
+  } & AssignAmenitiesToServiceTypePayload): Promise<ServiceType> => {
+    return await serviceTypeUseCases.assignAmenities(id, amenityIds);
   },
 );

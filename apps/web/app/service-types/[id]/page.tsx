@@ -6,6 +6,7 @@ import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import IsActiveBadge from '@/components/is-active-badge';
 import PageHeader from '@/components/page-header';
+import AmenityCard from '@/components/ui/amenity-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import routes from '@/services/routes';
@@ -73,6 +74,21 @@ export default function ServiceTypeDetailsPage() {
 
               <dt className="font-medium">{tCommon('fields.category')}:</dt>
               <dd>{tServiceTypes(`categories.${serviceType.category}`)}</dd>
+
+              <dt className="col-span-2 font-medium mb-2">
+                {tServiceTypes('fields.amenities')}:
+              </dt>
+              {serviceType.amenities?.length > 0 ? (
+                <dd className="col-span-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {serviceType.amenities.map((amenity) => (
+                      <AmenityCard key={amenity.id} amenity={amenity} />
+                    ))}
+                  </div>
+                </dd>
+              ) : (
+                <dd className="col-span-2">-</dd>
+              )}
 
               <dt className="font-medium">{tCommon('fields.description')}:</dt>
               <dd>{serviceType.description}</dd>

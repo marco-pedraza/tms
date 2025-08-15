@@ -33,7 +33,9 @@ export const buses = pgTable(
     licensePlateType: text('license_plate_type').notNull(), // Type of license plate (Tipo Placas)
     licensePlateNumber: text('license_plate_number').notNull(), // Plate number (Número de Placa)
     circulationCard: text('circulation_card'), // Circulation card (Tarj. Circulación)
-    availableForTurismOnly: boolean('available_for_turism_only').default(false), // Available for turism service type only (Disponible solo para turismo)
+    availableForTourismOnly: boolean('available_for_tourism_only').default(
+      false,
+    ), // Available for turism service type only (Disponible solo para turismo)
     status: text('status').notNull().default(BusStatus.ACTIVE), // Operational status
     transporterId: integer('transporter_id').references(() => transporters.id), // Transporter (Empresa)
     alternateTransporterId: integer('alternate_transporter_id').references(

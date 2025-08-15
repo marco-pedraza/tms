@@ -24,9 +24,6 @@ export enum BusStatus {
   RETIRED = 'RETIRED',
 }
 
-/**
- * Base interface representing a bus entity
- */
 export interface Bus {
   // Basic information
   id: number;
@@ -35,43 +32,52 @@ export interface Bus {
   licensePlateType: string;
   licensePlateNumber: string;
   circulationCard: string | null;
-  availableForTurismOnly: boolean;
+  availableForTourismOnly: boolean | null;
   status: BusStatus;
-  transporterId?: number | null;
-  alternateTransporterId?: number | null;
-  busLineId?: number | null;
-  baseId?: number | null;
+  transporterId: number | null;
+  alternateTransporterId: number | null;
+  busLineId: number | null;
+  baseId: number | null;
   // Model and manufacturer information
   purchaseDate: Date;
   expirationDate: Date;
-  erpClientNumber?: string | null;
+  erpClientNumber: string | null;
   modelId: number;
   // Technical information
-  vehicleId?: string | null;
+  vehicleId: string | null;
   serialNumber: string;
-  engineNumber?: string | null;
+  engineNumber: string | null;
   chassisNumber: string;
   grossVehicleWeight: number;
-  sctPermit?: string | null;
+  sctPermit: string | null;
   // Maintenance information
-  currentKilometer?: number | null;
-  gpsId?: string | null;
-  lastMaintenanceDate?: Date | null;
-  nextMaintenanceDate?: Date | null;
+  currentKilometer: number | null;
+  gpsId: string | null;
+  lastMaintenanceDate: Date | null;
+  nextMaintenanceDate: Date | null;
   // Seat Diagram
   seatDiagramId: number;
   // System information
   active: boolean;
-  createdAt: Date | string | null;
-  updatedAt: Date | string | null;
-  deletedAt?: Date | string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  deletedAt: Date | string | null;
+}
+
+export interface ExtendedBusData extends Bus {
+  manufacturer: string;
+  model: string;
+  year: number;
+  seatingCapacity: number;
+  numFloors: number;
+  engineType?: string | null;
 }
 
 /**
  * Extended bus interface with all relationships
  */
 export interface BusWithRelations extends Bus {
-  model: BusModel;
+  busModel: BusModel;
   seatDiagram: SeatDiagram;
   transporter?: Transporter | null;
   alternateTransporter?: Transporter | null;

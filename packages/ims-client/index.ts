@@ -1007,13 +1007,13 @@ export namespace inventory {
          * Retrieves a bus by its ID.
          * @param params - Object containing the bus ID
          * @param params.id - The ID of the bus to retrieve
-         * @returns {Promise<Bus>} The found bus
+         * @returns {Promise<ExtendedBusData>} The found bus
          * @throws {APIError} If the bus is not found or retrieval fails
          */
-        public async getBus(id: number): Promise<buses.Bus> {
+        public async getBus(id: number): Promise<buses.ExtendedBusData> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/buses/${encodeURIComponent(id)}`)
-            return await resp.json() as buses.Bus
+            return await resp.json() as buses.ExtendedBusData
         }
 
         /**
@@ -6655,38 +6655,38 @@ export namespace buses {
         licensePlateType: string
         licensePlateNumber: string
         circulationCard: string | null
-        availableForTurismOnly: boolean
+        availableForTourismOnly: boolean | null
         status: BusStatus
-        transporterId?: number | null
-        alternateTransporterId?: number | null
-        busLineId?: number | null
-        baseId?: number | null
+        transporterId: number | null
+        alternateTransporterId: number | null
+        busLineId: number | null
+        baseId: number | null
         /**
          * Model and manufacturer information
          */
         purchaseDate: string
 
         expirationDate: string
-        erpClientNumber?: string | null
+        erpClientNumber: string | null
         modelId: number
         /**
          * Technical information
          */
-        vehicleId?: string | null
+        vehicleId: string | null
 
         serialNumber: string
-        engineNumber?: string | null
+        engineNumber: string | null
         chassisNumber: string
         grossVehicleWeight: number
-        sctPermit?: string | null
+        sctPermit: string | null
         /**
          * Maintenance information
          */
-        currentKilometer?: number | null
+        currentKilometer: number | null
 
-        gpsId?: string | null
-        lastMaintenanceDate?: string | null
-        nextMaintenanceDate?: string | null
+        gpsId: string | null
+        lastMaintenanceDate: string | null
+        nextMaintenanceDate: string | null
         /**
          * Seat Diagram
          */
@@ -6697,9 +6697,9 @@ export namespace buses {
          */
         active: boolean
 
-        createdAt: string | string | null
-        updatedAt: string | string | null
-        deletedAt?: string | string | null
+        createdAt: string | string
+        updatedAt: string | string
+        deletedAt: string | string | null
     }
 
     export type BusStatus = "ACTIVE" | "MAINTENANCE" | "REPAIR" | "OUT_OF_SERVICE" | "RESERVED" | "IN_TRANSIT" | "RETIRED"
@@ -6753,13 +6753,77 @@ export namespace buses {
         active: boolean
     }
 
+    export interface ExtendedBusData {
+        manufacturer: string
+        model: string
+        year: number
+        seatingCapacity: number
+        numFloors: number
+        engineType?: string | null
+        /**
+         * Basic information
+         */
+        id: number
+
+        economicNumber: string
+        registrationNumber: string
+        licensePlateType: string
+        licensePlateNumber: string
+        circulationCard: string | null
+        availableForTourismOnly: boolean | null
+        status: BusStatus
+        transporterId: number | null
+        alternateTransporterId: number | null
+        busLineId: number | null
+        baseId: number | null
+        /**
+         * Model and manufacturer information
+         */
+        purchaseDate: string
+
+        expirationDate: string
+        erpClientNumber: string | null
+        modelId: number
+        /**
+         * Technical information
+         */
+        vehicleId: string | null
+
+        serialNumber: string
+        engineNumber: string | null
+        chassisNumber: string
+        grossVehicleWeight: number
+        sctPermit: string | null
+        /**
+         * Maintenance information
+         */
+        currentKilometer: number | null
+
+        gpsId: string | null
+        lastMaintenanceDate: string | null
+        nextMaintenanceDate: string | null
+        /**
+         * Seat Diagram
+         */
+        seatDiagramId: number
+
+        /**
+         * System information
+         */
+        active: boolean
+
+        createdAt: string | string
+        updatedAt: string | string
+        deletedAt: string | string | null
+    }
+
     export interface ListBusStatusesResult {
         data: BusStatus[]
     }
 
     export interface ListBusesQueryParams {
         orderBy?: {
-            field: "id" | "economicNumber" | "registrationNumber" | "licensePlateType" | "licensePlateNumber" | "circulationCard" | "availableForTurismOnly" | "status" | "transporterId" | "alternateTransporterId" | "busLineId" | "baseId" | "purchaseDate" | "expirationDate" | "erpClientNumber" | "modelId" | "vehicleId" | "serialNumber" | "engineNumber" | "chassisNumber" | "grossVehicleWeight" | "sctPermit" | "currentKilometer" | "gpsId" | "lastMaintenanceDate" | "nextMaintenanceDate" | "seatDiagramId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            field: "id" | "economicNumber" | "registrationNumber" | "licensePlateType" | "licensePlateNumber" | "circulationCard" | "availableForTourismOnly" | "status" | "transporterId" | "alternateTransporterId" | "busLineId" | "baseId" | "purchaseDate" | "expirationDate" | "erpClientNumber" | "modelId" | "vehicleId" | "serialNumber" | "engineNumber" | "chassisNumber" | "grossVehicleWeight" | "sctPermit" | "currentKilometer" | "gpsId" | "lastMaintenanceDate" | "nextMaintenanceDate" | "seatDiagramId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -6769,7 +6833,7 @@ export namespace buses {
             licensePlateType?: string
             licensePlateNumber?: string
             circulationCard?: string | null
-            availableForTurismOnly?: boolean
+            availableForTourismOnly?: boolean | null
             status?: BusStatus
             transporterId?: number | null
             alternateTransporterId?: number | null
@@ -6791,8 +6855,8 @@ export namespace buses {
             nextMaintenanceDate?: string | null
             seatDiagramId?: number
             active?: boolean
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
+            createdAt?: string | string
+            updatedAt?: string | string
             deletedAt?: string | string | null
         }
         searchTerm?: string
@@ -6806,7 +6870,7 @@ export namespace buses {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "economicNumber" | "registrationNumber" | "licensePlateType" | "licensePlateNumber" | "circulationCard" | "availableForTurismOnly" | "status" | "transporterId" | "alternateTransporterId" | "busLineId" | "baseId" | "purchaseDate" | "expirationDate" | "erpClientNumber" | "modelId" | "vehicleId" | "serialNumber" | "engineNumber" | "chassisNumber" | "grossVehicleWeight" | "sctPermit" | "currentKilometer" | "gpsId" | "lastMaintenanceDate" | "nextMaintenanceDate" | "seatDiagramId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            field: "id" | "economicNumber" | "registrationNumber" | "licensePlateType" | "licensePlateNumber" | "circulationCard" | "availableForTourismOnly" | "status" | "transporterId" | "alternateTransporterId" | "busLineId" | "baseId" | "purchaseDate" | "expirationDate" | "erpClientNumber" | "modelId" | "vehicleId" | "serialNumber" | "engineNumber" | "chassisNumber" | "grossVehicleWeight" | "sctPermit" | "currentKilometer" | "gpsId" | "lastMaintenanceDate" | "nextMaintenanceDate" | "seatDiagramId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -6816,7 +6880,7 @@ export namespace buses {
             licensePlateType?: string
             licensePlateNumber?: string
             circulationCard?: string | null
-            availableForTurismOnly?: boolean
+            availableForTourismOnly?: boolean | null
             status?: BusStatus
             transporterId?: number | null
             alternateTransporterId?: number | null
@@ -6838,8 +6902,8 @@ export namespace buses {
             nextMaintenanceDate?: string | null
             seatDiagramId?: number
             active?: boolean
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
+            createdAt?: string | string
+            updatedAt?: string | string
             deletedAt?: string | string | null
         }
         searchTerm?: string

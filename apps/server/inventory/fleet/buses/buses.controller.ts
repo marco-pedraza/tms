@@ -1,7 +1,9 @@
 import { api } from 'encore.dev/api';
+import { busModelRepository } from '../bus-models/bus-models.repository';
 import type {
   Bus,
   CreateBusPayload,
+  ExtendedBusData,
   ListBusStatusesResult,
   ListBusesQueryParams,
   ListBusesResult,
@@ -34,13 +36,18 @@ export const createBus = api(
  * Retrieves a bus by its ID.
  * @param params - Object containing the bus ID
  * @param params.id - The ID of the bus to retrieve
- * @returns {Promise<Bus>} The found bus
+ * @returns {Promise<ExtendedBusData>} The found bus
  * @throws {APIError} If the bus is not found or retrieval fails
  */
 export const getBus = api(
   { method: 'GET', path: '/buses/:id', expose: true },
-  async ({ id }: { id: number }): Promise<Bus> => {
-    return await busRepository.findOne(id);
+  async ({ id }: { id: number }): Promise<ExtendedBusData> => {
+    const bus = await busRepository.findOne(id);
+    const busModel = await busModelRepository.findOne(bus.modelId);
+    return {
+      ...busModel,
+      ...bus,
+    };
   },
 );
 

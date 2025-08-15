@@ -3,25 +3,28 @@
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
 import routes from '@/services/routes';
-import TransporterForm from '@/transporters/components/transporter-form';
+import TransporterForm, {
+  TransporterFormOutputValues,
+} from '@/transporters/components/transporter-form';
 import useTransporterMutations from '@/transporters/hooks/use-transporter-mutations';
 
 export default function NewTransporterPage() {
-  const t = useTranslations('transporters');
+  const { create: createTransporter } = useTransporterMutations();
   const tCommon = useTranslations('common');
-  const { createTransporter } = useTransporterMutations();
+  const tTransporters = useTranslations('transporters');
+
+  const onSubmit = async (values: TransporterFormOutputValues) => {
+    return await createTransporter.mutateWithToast(values);
+  };
 
   return (
     <div>
       <PageHeader
-        title={t('actions.create')}
+        title={tCommon('actions.create')}
         backHref={routes.transporters.index}
-        backLabel={t('actions.backToList')}
+        backLabel={tTransporters('actions.backToList')}
       />
-      <TransporterForm
-        onSubmit={createTransporter.mutateWithToast}
-        submitButtonText={tCommon('actions.create')}
-      />
+      <TransporterForm onSubmit={onSubmit} />
     </div>
   );
 }

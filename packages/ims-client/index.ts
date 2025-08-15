@@ -3338,53 +3338,53 @@ export namespace inventory {
     /**
      * Description of the transporter
      */
-    description?: string
+    description?: string | null
 
     /**
      * Legal name (Razón Social) of the company
      */
-    legalName?: string
+    legalName?: string | null
 
     /**
      * Physical address of the headquarter/company
      */
-    address?: string
+    address?: string | null
 
     /**
      * Website URL of the transporter
      */
-    website?: string
+    website?: string | null
 
     /**
      * Contact email of the transporter
      */
-    email?: string
+    email?: string | null
 
     /**
      * Contact phone number of the transporter
      */
-    phone?: string
+    phone?: string | null
 
     /**
      * ID of the city where the transporter is headquartered
      * Must be a positive number
      */
-    headquarterCityId?: number
+    headquarterCityId?: number | null
 
     /**
      * URL to the transporter's logo
      */
-    logoUrl?: string
+    logoUrl?: string | null
 
     /**
      * Additional contact information
      */
-    contactInfo?: string
+    contactInfo?: string | null
 
     /**
      * Regulatory license number
      */
-    licenseNumber?: string
+    licenseNumber?: string | null
 
     /**
      * Whether the transporter is active
@@ -10905,53 +10905,53 @@ export namespace transporters {
         /**
          * Description of the transporter
          */
-        description?: string
+        description?: string | null
 
         /**
          * Legal name (Razón Social) of the company
          */
-        legalName?: string
+        legalName?: string | null
 
         /**
          * Physical address of the headquarter/company
          */
-        address?: string
+        address?: string | null
 
         /**
          * Website URL of the transporter
          */
-        website?: string
+        website?: string | null
 
         /**
          * Contact email of the transporter
          */
-        email?: string
+        email?: string | null
 
         /**
          * Contact phone number of the transporter
          */
-        phone?: string
+        phone?: string | null
 
         /**
          * ID of the city where the transporter is headquartered
          * Must be a positive number
          */
-        headquarterCityId?: number
+        headquarterCityId?: number | null
 
         /**
          * URL to the transporter's logo
          */
-        logoUrl?: string
+        logoUrl?: string | null
 
         /**
          * Additional contact information
          */
-        contactInfo?: string
+        contactInfo?: string | null
 
         /**
          * Regulatory license number
          */
-        licenseNumber?: string
+        licenseNumber?: string | null
 
         /**
          * Whether the transporter is active

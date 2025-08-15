@@ -1,95 +1,97 @@
-import { useState } from 'react';
+'use client';
+
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { bus_lines } from '@repo/ims-client';
-import useBusLineMutations from '@/bus-lines/hooks/use-bus-line-mutations';
-import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
 import IsActiveBadge from '@/components/is-active-badge';
+import { Button } from '@/components/ui/button';
 import routes from '@/services/routes';
 import useQueryTransporterBusLines from '@/transporters/hooks/use-query-transporter-bus-lines';
-import useTransporterDetailsParams from '@/transporters/hooks/use-transporter-details-params';
 import {
   UseBusLinesTranslationsResult,
   UseCommonTranslationsResult,
 } from '@/types/translations';
 
-interface TransporterBusLinesColumnsFactoryProps {
+interface TransporterBusLinesTableProps {
+  transporterId: number;
+}
+
+interface BusLinesColumnsFactoryProps {
   tCommon: UseCommonTranslationsResult;
   tBusLines: UseBusLinesTranslationsResult;
 }
 
-function transporterBusLinesColumnsFactory({
+function busLinesColumnsFactory({
   tCommon,
-  tBusLines,
-}: TransporterBusLinesColumnsFactoryProps): DataTableColumnDef<bus_lines.BusLine>[] {
+}: BusLinesColumnsFactoryProps): DataTableColumnDef<bus_lines.BusLine>[] {
   return [
     {
       accessorKey: 'name',
       header: tCommon('fields.name'),
+      sortable: false,
     },
     {
       accessorKey: 'code',
       header: tCommon('fields.code'),
+      sortable: false,
     },
-    {
-      accessorKey: 'serviceTypeId',
-      header: tBusLines('fields.serviceType'),
-    },
+
     {
       accessorKey: 'active',
-      header: tCommon('fields.active'),
+      header: tCommon('fields.status'),
+      sortable: false,
       cell: ({ row }) => {
-        const active = row.original.active;
+        const active = row.getValue('active') as boolean;
         return <IsActiveBadge isActive={active} />;
+      },
+    },
+    {
+      id: 'actions',
+      header: tCommon('fields.actions'),
+      sortable: false,
+      cell: ({ row }) => {
+        const busLine = row.original;
+        return (
+          <div className="flex justify-center">
+            <Link href={routes.busLines.getDetailsRoute(busLine.id.toString())}>
+              <Button variant="ghost" size="sm">
+                {tCommon('actions.view')}
+              </Button>
+            </Link>
+          </div>
+        );
       },
     },
   ];
 }
 
-export default function TransporterBusLinesTable() {
+export default function TransporterBusLinesTable({
+  transporterId,
+}: TransporterBusLinesTableProps) {
   const tCommon = useTranslations('common');
   const tBusLines = useTranslations('busLines');
-  const { transporterId, isValidId } = useTransporterDetailsParams();
-  const {
-    data: busLines,
-    isLoading,
-    error,
-    refetch,
-  } = useQueryTransporterBusLines({
+
+  const { data, isLoading, error, refetch } = useQueryTransporterBusLines({
     transporterId,
-    enabled: isValidId,
+    active: true, // Only show active bus lines by default
   });
-  const { delete: deleteBusLine } = useBusLineMutations();
-  const [deleteId, setDeleteId] = useState<number>();
 
-  const onConfirmDelete = () => {
-    if (!deleteId) return;
-    deleteBusLine.mutateWithToast(deleteId);
-    setDeleteId(undefined);
-  };
-
-  const columns = transporterBusLinesColumnsFactory({
-    tCommon,
-    tBusLines,
-  });
+  const columns = busLinesColumnsFactory({ tCommon, tBusLines });
 
   return (
-    <>
-      <DataTable
-        data={busLines ?? []}
-        columns={columns}
-        isLoading={isLoading}
-        hasError={!!error}
-        onRetry={refetch}
-        addHref={routes.busLines.new}
-        onDelete={setDeleteId}
-        routes={routes.busLines}
-      />
-      <ConfirmDeleteDialog
-        isOpen={!!deleteId}
-        onOpenChange={() => setDeleteId(undefined)}
-        onConfirm={onConfirmDelete}
-      />
-    </>
+    <DataTable<bus_lines.BusLine>
+      data={data?.data ?? []}
+      columns={columns}
+      isLoading={isLoading}
+      hasError={!!error}
+      onRetry={refetch}
+      addHref={`${routes.busLines.new}?transporterId=${transporterId}`}
+      routes={routes.busLines}
+      displayActionsColumn={false}
+      onDelete={() => {
+        // We don't need to delete at this point
+      }}
+    />
   );
 }

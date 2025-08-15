@@ -1,16 +1,31 @@
-import { UseQueryResult, useQuery } from '@tanstack/react-query';
+import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import type { APIError, transporters } from '@repo/ims-client';
 import imsClient from '@/services/ims-client';
 
-export default function useQueryAllTransporters(): UseQueryResult<
+interface UseQueryAllTransportersParams {
+  enabled?: boolean;
+  searchTerm?: string;
+  active?: boolean;
+}
+
+/**
+ * Hook to fetch all transporters without pagination (useful for dropdowns)
+ */
+export default function useQueryAllTransporters({
+  enabled = true,
+  searchTerm,
+  active = true,
+}: UseQueryAllTransportersParams = {}): UseQueryResult<
   transporters.ListTransportersResult,
   APIError
 > {
-  return useQuery<transporters.ListTransportersResult, APIError>({
-    queryKey: ['allTransporters'],
+  return useQuery({
+    queryKey: ['transporters', 'all', { searchTerm, active }],
     queryFn: () =>
       imsClient.inventory.listTransporters({
-        orderBy: [{ field: 'name', direction: 'asc' }],
+        searchTerm,
+        filters: active !== undefined ? { active } : undefined,
       }),
+    enabled,
   });
 }

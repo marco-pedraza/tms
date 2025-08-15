@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { transporters } from '@repo/ims-client';
-import useQueryAllCities from '@/app/cities/hooks/use-query-all-cities';
+import useQueryAllCities from '@/cities/hooks/use-query-all-cities';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
 import { FilterConfig } from '@/components/data-table/data-table-header';
 import IsActiveBadge from '@/components/is-active-badge';
+import useDeleteDialog from '@/hooks/use-delete-dialog';
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
@@ -39,30 +39,19 @@ function transportersColumnsFactory({
       sortable: true,
     },
     {
-      accessorKey: 'licenseNumber',
-      header: tTransporters('fields.licenseNumber'),
+      id: 'headquarterCity',
+      accessorKey: 'headquarterCity.name',
+      header: tTransporters('fields.headquarterCity'),
+      sortable: false,
     },
     {
       accessorKey: 'active',
-      header: tCommon('fields.active'),
+      header: tCommon('fields.status'),
+      sortable: true,
       cell: ({ row }) => {
         const active = row.original.active;
         return <IsActiveBadge isActive={active} />;
       },
-    },
-    {
-      id: 'headquarterCityId',
-      accessorKey: 'headquarterCity.name',
-      header: tTransporters('fields.headquarterCity'),
-      sortable: true,
-    },
-    {
-      accessorKey: 'email',
-      header: tCommon('fields.email'),
-    },
-    {
-      accessorKey: 'phone',
-      header: tCommon('fields.phone'),
     },
   ];
 }
@@ -94,18 +83,13 @@ export default function TransportersTable() {
     setSortingUrlState,
   });
   const { data: cities } = useQueryAllCities();
-  const { deleteTransporter } = useTransporterMutations();
-  const [deleteId, setDeleteId] = useState<number>();
+  const { delete: deleteTransporter } = useTransporterMutations();
+  const { deleteId, setDeleteId, onConfirmDelete, onCancelDelete } =
+    useDeleteDialog({
+      onConfirm: deleteTransporter.mutateWithToast,
+    });
 
   const filtersConfig: FilterConfig[] = [
-    {
-      name: tCommon('fields.active'),
-      key: 'active',
-      options: [
-        { label: tCommon('status.active'), value: true },
-        { label: tCommon('status.inactive'), value: false },
-      ],
-    },
     {
       name: tTransporters('fields.headquarterCity'),
       key: 'headquarterCityId',
@@ -115,13 +99,21 @@ export default function TransportersTable() {
           value: city.id,
         })) ?? [],
     },
+    {
+      name: tCommon('fields.status'),
+      key: 'active',
+      options: [
+        {
+          label: tCommon('status.active'),
+          value: true,
+        },
+        {
+          label: tCommon('status.inactive'),
+          value: false,
+        },
+      ],
+    },
   ];
-
-  const onConfirmDelete = () => {
-    if (!deleteId) return;
-    deleteTransporter.mutateWithToast(deleteId);
-    setDeleteId(undefined);
-  };
 
   const columns = transportersColumnsFactory({
     tCommon,
@@ -155,7 +147,7 @@ export default function TransportersTable() {
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}
-        onOpenChange={() => setDeleteId(undefined)}
+        onOpenChange={onCancelDelete}
         onConfirm={onConfirmDelete}
       />
     </>

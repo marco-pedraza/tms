@@ -1,277 +1,299 @@
-import { useForm } from '@tanstack/react-form';
-import { Loader2 } from 'lucide-react';
+'use client';
+
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import useQueryAllCities from '@/cities/hooks/use-query-all-cities';
+import Form from '@/components/form/form';
+import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { codeSchema, nameSchema, phoneSchema } from '@/schemas/common';
+import useForm from '@/hooks/use-form';
 import { UseValidationsTranslationsResult } from '@/types/translations';
-import hasFieldErrors from '@/utils/has-field-errors';
+import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
-const transporterSchema = (tValidations: UseValidationsTranslationsResult) =>
+const createTransporterFormSchema = (
+  tValidations: UseValidationsTranslationsResult,
+) =>
   z.object({
-    name: nameSchema(tValidations),
-    code: codeSchema(tValidations, 1, 10),
-    headquarterCityId: z.number().nonnegative().optional(),
+    name: z
+      .string()
+      .trim()
+      .min(1, { message: tValidations('required') })
+      .regex(/.*\S.*/, {
+        message: tValidations('name.nonWhitespace'),
+      }),
+    code: z
+      .string()
+      .trim()
+      .min(1, { message: tValidations('required') })
+      .regex(/^[A-Z0-9-]{1,10}$/, {
+        message: tValidations('code.transporterFormat'),
+      }),
+    description: z.string(),
+    legalName: z.string(),
+    address: z.string(),
+    website: z.union([
+      z.string().url({ message: tValidations('url.invalid') }),
+      z.literal(''),
+    ]),
+    email: z.union([
+      z.string().email({ message: tValidations('email.invalid') }),
+      z.literal(''),
+    ]),
+    phone: z
+      .string()
+      .trim()
+      .transform((val) => val.replace(/[^\d+]/g, ''))
+      .refine((val) => val.length === 0 || /^\+[1-9]\d{1,14}$/.test(val), {
+        message: tValidations('phone.invalid'),
+      })
+      .transform((val) => (val.length === 0 ? null : val))
+      .nullable(),
+    headquarterCityId: z
+      .string()
+      .transform((val) => (val === '' ? undefined : parseInt(val)))
+      .optional(),
+    logoUrl: z.union([
+      z.string().url({ message: tValidations('url.invalid') }),
+      z.literal(''),
+    ]),
+    contactInfo: z.string(),
+    licenseNumber: z.string(),
     active: z.boolean(),
-    description: z.string().optional(),
-    website: z.string().url().optional(),
-    email: z.string().email().optional(),
-    phone: phoneSchema,
-    logoUrl: z.string().url().optional(),
-    licenseNumber: z.string().optional(),
   });
 
-export type TransporterFormValues = z.infer<
-  ReturnType<typeof transporterSchema>
+export type TransporterFormOutputValues = z.output<
+  ReturnType<typeof createTransporterFormSchema>
 >;
+type TransporterFormRawValues = z.input<
+  ReturnType<typeof createTransporterFormSchema>
+>;
+
+export type TransporterFormValues = Omit<
+  TransporterFormOutputValues,
+  'headquarterCityId'
+> & {
+  headquarterCityId: number | undefined;
+};
 
 interface TransporterFormProps {
   defaultValues?: TransporterFormValues;
-  onSubmit: (values: TransporterFormValues) => Promise<unknown>;
-  submitButtonText?: string;
+  onSubmit: (values: TransporterFormOutputValues) => Promise<unknown>;
 }
 
 export default function TransporterForm({
   defaultValues,
   onSubmit,
-  submitButtonText,
 }: TransporterFormProps) {
-  const tTransporters = useTranslations('transporters');
   const tCommon = useTranslations('common');
+  const tTransporters = useTranslations('transporters');
   const tValidations = useTranslations('validations');
-  const { data: cities } = useQueryAllCities();
+
+  const transporterSchema = createTransporterFormSchema(tValidations);
+
+  const rawDefaultValues: TransporterFormRawValues | undefined = defaultValues
+    ? {
+        ...defaultValues,
+        headquarterCityId: defaultValues.headquarterCityId?.toString() ?? '',
+        description: defaultValues.description ?? '',
+        legalName: defaultValues.legalName ?? '',
+        address: defaultValues.address ?? '',
+        website: defaultValues.website ?? '',
+        email: defaultValues.email ?? '',
+        phone: defaultValues.phone ?? '',
+        logoUrl: defaultValues.logoUrl ?? '',
+        contactInfo: defaultValues.contactInfo ?? '',
+        licenseNumber: defaultValues.licenseNumber ?? '',
+      }
+    : undefined;
 
   const form = useForm({
-    defaultValues: defaultValues ?? {
+    defaultValues: rawDefaultValues ?? {
       name: '',
       code: '',
       description: '',
+      legalName: '',
+      address: '',
+      website: '',
+      email: '',
+      phone: '',
+      headquarterCityId: '',
+      logoUrl: '',
+      contactInfo: '',
       licenseNumber: '',
       active: true,
     },
     validators: {
-      onChange: transporterSchema(tValidations),
+      onChange: transporterSchema,
+      onSubmit: transporterSchema,
     },
-    onSubmit: (values) => {
-      onSubmit(values.value);
+    onSubmit: async ({ value }) => {
+      try {
+        const parsed = transporterSchema.safeParse(value);
+        if (parsed.success) {
+          await onSubmit(parsed.data);
+        }
+      } catch (error: unknown) {
+        injectTranslatedErrorsToForm({
+          // @ts-expect-error - form param is not typed correctly.
+          form,
+          entity: 'transporter',
+          error,
+          tValidations,
+          tCommon,
+        });
+      }
     },
   });
 
+  const { data: cities } = useQueryAllCities();
+
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        form.handleSubmit();
-      }}
-    >
-      <FormLayout title={tTransporters('form.title')}>
-        <form.Field name="name">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="name">{tCommon('fields.name')}</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
+    <Form onSubmit={form.handleSubmit}>
+      <div className="space-y-6">
+        <FormLayout title={tCommon('sections.basicInfo')}>
+          <form.AppField name="name">
+            {(field) => (
+              <field.TextInput
+                label={tCommon('fields.name')}
                 placeholder={tTransporters('form.placeholders.name')}
-                aria-invalid={hasFieldErrors(field)}
+                isRequired
               />
-            </div>
-          )}
-        </form.Field>
+            )}
+          </form.AppField>
 
-        <form.Field name="code">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="code">{tCommon('fields.code')}</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
+          <form.AppField name="code">
+            {(field) => (
+              <field.TextInput
+                label={tCommon('fields.code')}
                 placeholder={tTransporters('form.placeholders.code')}
-                aria-invalid={hasFieldErrors(field)}
+                isRequired
                 maxLength={10}
+                description={tTransporters('form.codeHelp')}
               />
-            </div>
-          )}
-        </form.Field>
+            )}
+          </form.AppField>
 
-        <form.Field name="description">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="description">
-                {tCommon('fields.description')}
-              </Label>
-              <Textarea
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
+          <form.AppField name="description">
+            {(field) => (
+              <field.TextAreaInput
+                label={tCommon('fields.description')}
                 placeholder={tTransporters('form.placeholders.description')}
-                aria-invalid={hasFieldErrors(field)}
               />
-            </div>
-          )}
-        </form.Field>
+            )}
+          </form.AppField>
 
-        <form.Field name="website">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="website">{tCommon('fields.website')}</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder={tTransporters('form.placeholders.website')}
-                aria-invalid={hasFieldErrors(field)}
+          <form.AppField name="active">
+            {(field) => <field.SwitchInput label={tCommon('fields.active')} />}
+          </form.AppField>
+        </FormLayout>
+
+        <FormLayout title={tTransporters('sections.companyInfo')}>
+          <form.AppField name="legalName">
+            {(field) => (
+              <field.TextInput
+                label={tTransporters('fields.legalName')}
+                placeholder={tTransporters('form.placeholders.legalName')}
               />
-            </div>
-          )}
-        </form.Field>
+            )}
+          </form.AppField>
 
-        <form.Field name="email">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="email">{tCommon('fields.email')}</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder={tTransporters('form.placeholders.email')}
-                aria-invalid={hasFieldErrors(field)}
-              />
-            </div>
-          )}
-        </form.Field>
-
-        <form.Field name="phone">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="phone">{tCommon('fields.phone')}</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder={tTransporters('form.placeholders.phone')}
-                aria-invalid={hasFieldErrors(field)}
-              />
-            </div>
-          )}
-        </form.Field>
-
-        <form.Field name="headquarterCityId">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="headquarterCityId">
-                {tTransporters('fields.headquarterCity')}
-              </Label>
-              <Select
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onValueChange={(value: string) =>
-                  field.handleChange(parseInt(value, 10))
-                }
-              >
-                <SelectTrigger aria-invalid={hasFieldErrors(field)}>
-                  <SelectValue
-                    placeholder={tTransporters('fields.headquarterCity')}
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {cities?.data.map((city) => (
-                    <SelectItem key={city.id} value={city.id}>
-                      {city.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </form.Field>
-
-        <form.Field name="logoUrl">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="logoUrl">{tCommon('fields.logoUrl')}</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder={tTransporters('form.placeholders.logoUrl')}
-                aria-invalid={hasFieldErrors(field)}
-              />
-            </div>
-          )}
-        </form.Field>
-
-        <form.Field name="licenseNumber">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="licenseNumber">
-                {tTransporters('fields.licenseNumber')}
-              </Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                value={field.state.value ?? ''}
-                onChange={(e) => field.handleChange(e.target.value)}
+          <form.AppField name="licenseNumber">
+            {(field) => (
+              <field.TextInput
+                label={tTransporters('fields.licenseNumber')}
                 placeholder={tTransporters('form.placeholders.licenseNumber')}
-                aria-invalid={hasFieldErrors(field)}
               />
-            </div>
-          )}
-        </form.Field>
+            )}
+          </form.AppField>
 
-        <form.Field name="active">
-          {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor="active">{tCommon('fields.active')}</Label>
-              <Switch
-                id={field.name}
-                name={field.name}
-                checked={field.state.value}
-                onCheckedChange={(checked: boolean) =>
-                  field.handleChange(checked)
+          <form.AppField name="headquarterCityId">
+            {(field) => (
+              <field.SelectInput
+                label={tTransporters('fields.headquarterCity')}
+                placeholder={tTransporters('form.placeholders.headquarterCity')}
+                emptyOptionsLabel={tTransporters('form.emptyCitiesOptions')}
+                items={
+                  cities?.data.map((city) => ({
+                    id: city.id.toString(),
+                    name: city.name,
+                  })) ?? []
                 }
               />
-            </div>
-          )}
-        </form.Field>
+            )}
+          </form.AppField>
 
-        <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting]}
-        >
-          {([canSubmit, isSubmitting]: [boolean, boolean]) => (
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="submit" disabled={!canSubmit || isSubmitting}>
-                {isSubmitting && <Loader2 className="animate-spin" />}
-                {submitButtonText ?? tCommon('actions.create')}
-              </Button>
-            </div>
-          )}
-        </form.Subscribe>
-      </FormLayout>
-    </form>
+          <form.AppField name="address">
+            {(field) => (
+              <field.TextAreaInput
+                label={tTransporters('fields.address')}
+                placeholder={tTransporters('form.placeholders.address')}
+              />
+            )}
+          </form.AppField>
+
+          <form.AppField name="logoUrl">
+            {(field) => (
+              <field.TextInput
+                label={tTransporters('fields.logoUrl')}
+                placeholder={tTransporters('form.placeholders.logoUrl')}
+                description={tTransporters('form.logoUrlHelp')}
+              />
+            )}
+          </form.AppField>
+        </FormLayout>
+
+        <FormLayout title={tTransporters('sections.contactInfo')}>
+          <form.AppField name="email">
+            {(field) => (
+              <field.TextInput
+                label={tCommon('fields.email')}
+                placeholder={tTransporters('form.placeholders.email')}
+                inputMode="email"
+              />
+            )}
+          </form.AppField>
+
+          <form.AppField name="phone">
+            {(field) => (
+              <field.TextInput
+                label={tCommon('fields.phone')}
+                placeholder={tTransporters('form.placeholders.phone')}
+                inputMode="tel"
+              />
+            )}
+          </form.AppField>
+
+          <form.AppField name="website">
+            {(field) => (
+              <field.TextInput
+                label={tCommon('fields.website')}
+                placeholder={tTransporters('form.placeholders.website')}
+                inputMode="url"
+              />
+            )}
+          </form.AppField>
+
+          <form.AppField name="contactInfo">
+            {(field) => (
+              <field.TextAreaInput
+                label={tTransporters('fields.contactInfo')}
+                placeholder={tTransporters('form.placeholders.contactInfo')}
+                description={tTransporters('form.contactInfoHelp')}
+              />
+            )}
+          </form.AppField>
+        </FormLayout>
+      </div>
+
+      <FormFooter>
+        <form.AppForm>
+          <form.SubmitButton>
+            {defaultValues
+              ? tTransporters('actions.update')
+              : tTransporters('actions.create')}
+          </form.SubmitButton>
+        </form.AppForm>
+      </FormFooter>
+    </Form>
   );
 }

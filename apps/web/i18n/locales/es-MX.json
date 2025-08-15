@@ -116,13 +116,15 @@
     "greaterThanOrEquals": "El valor debe ser mayor o igual a {value}.",
     "positive": "El valor debe ser un número positivo.",
     "name": {
-      "letters": "El nombre debe contener solo letras y espacios."
+      "letters": "El nombre debe contener solo letras y espacios.",
+      "nonWhitespace": "El nombre no puede contener solo espacios en blanco."
     },
     "code": {
       "length": "El código debe contener {length} carácteres.",
       "length-range": "El código debe contener entre {min} y {max} carácteres.",
       "uppercase": "El código debe contener solo letras mayúsculas.",
-      "alphanumeric": "El código debe contener solo letras mayúsculas, números y guiones."
+      "alphanumeric": "El código debe contener solo letras mayúsculas, números y guiones.",
+      "transporterFormat": "El código debe contener solo letras mayúsculas, números y guiones (máximo 10 caracteres)."
     },
     "latitude": {
       "range": "La latitud debe ser un número entre -90 y 90."
@@ -162,6 +164,7 @@
       "event": "Evento",
       "label": "Etiqueta",
       "amenity": "Amenidad",
+      "transporter": "Transportista",
       "busLine": "Línea de Autobús",
       "serviceType": "Tipo de Servicio"
     },
@@ -446,10 +449,16 @@
     },
     "fields": {
       "licenseNumber": "Número de Licencia",
-      "headquarterCity": "Ciudad Sede"
+      "headquarterCity": "Sede",
+      "legalName": "Razón Social",
+      "address": "Dirección",
+      "contactInfo": "Información de Contacto",
+      "logoUrl": "URL del Logo"
     },
     "sections": {
-      "busLines": "Líneas de Autobús"
+      "busLines": "Líneas de Autobús",
+      "companyInfo": "Información de la Empresa",
+      "contactInfo": "Información de Contacto"
     },
     "form": {
       "title": "Información del transportista",
@@ -462,8 +471,16 @@
         "phone": "Ej: (33) 1234-5678",
         "licenseNumber": "Ej: 1234567890",
         "headquarterCity": "Selecciona una ciudad",
-        "logoUrl": "Ej: https://autobusesdemexico.com/logo.png"
-      }
+        "logoUrl": "Ej: https://autobusesdemexico.com/logo.png",
+        "legalName": "Ej: Autobuses de México S.A. de C.V.",
+        "address": "Ej: Av. Central #123, Col. Centro",
+        "contactInfo": "Ej: Información adicional de contacto",
+        "emptyCityList": "No hay ciudades disponibles"
+      },
+      "codeHelp": "Usa un código de 1-10 caracteres con letras mayúsculas, números y guiones",
+      "logoUrlHelp": "URL válida de la imagen del logo de la empresa",
+      "contactInfoHelp": "Información adicional de contacto como horarios de atención o datos relevantes",
+      "emptyCitiesOptions": "No hay ciudades disponibles"
     },
     "messages": {
       "create": {
@@ -546,6 +563,12 @@
   "busLines": {
     "title": "Líneas de Autobús",
     "description": "Administra información de líneas de autobús para el Sistema de Inventario de Autobuses",
+    "fields": {
+      "transporter": "Transportista",
+      "serviceType": "Tipo de Servicio",
+      "pricePerKilometer": "Precio por Kilómetro",
+      "fleetSize": "Tamaño de Flota"
+    },
     "actions": {
       "create": "Crear Línea de Autobús",
       "update": "Actualizar Línea de Autobús",
@@ -595,11 +618,9 @@
         "error": "No pudimos eliminar la línea de autobús"
       }
     },
-    "fields": {
-      "transporter": "Grupo de Transporte",
-      "serviceType": "Tipo de Servicio",
-      "pricePerKilometer": "Precio por kilómetro",
-      "fleetSize": "Tamaño de flota"
+    "emptyState": {
+      "title": "No hay líneas de autobús",
+      "description": "Este transportista aún no tiene líneas de autobús asignadas."
     }
   },
   "drivers": {

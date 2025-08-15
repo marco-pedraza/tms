@@ -1,29 +1,41 @@
-import { UseQueryResult, useQuery } from '@tanstack/react-query';
-import { APIError, bus_lines } from '@repo/ims-client';
+import { type UseQueryResult, useQuery } from '@tanstack/react-query';
+import type { APIError, bus_lines } from '@repo/ims-client';
 import imsClient from '@/services/ims-client';
 
-interface UseQueryTransporterBusLinesProps {
+interface UseQueryTransporterBusLinesParams {
   transporterId: number;
   enabled?: boolean;
+  searchTerm?: string;
+  active?: boolean;
 }
 
+/**
+ * Hook to fetch all bus lines for a specific transporter without pagination
+ */
 export default function useQueryTransporterBusLines({
   transporterId,
   enabled = true,
-}: UseQueryTransporterBusLinesProps): UseQueryResult<
-  bus_lines.BusLine[],
+  searchTerm,
+  active,
+}: UseQueryTransporterBusLinesParams): UseQueryResult<
+  bus_lines.ListBusLinesResult,
   APIError
 > {
   return useQuery({
-    enabled,
-    queryKey: ['transporters', transporterId, 'bus-lines'],
-    queryFn: async () => {
-      const response = await imsClient.inventory.listBusLines({
+    queryKey: [
+      'busLines',
+      'transporter',
+      transporterId,
+      { searchTerm, active },
+    ],
+    queryFn: () =>
+      imsClient.inventory.listBusLines({
+        searchTerm,
         filters: {
           transporterId,
+          ...(active !== undefined ? { active } : {}),
         },
-      });
-      return response.data;
-    },
+      }),
+    enabled: enabled && !!transporterId,
   });
 }

@@ -2,27 +2,28 @@
 
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
+import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import routes from '@/services/routes';
-import TransporterForm, {
-  TransporterFormValues,
-} from '@/transporters/components/transporter-form';
+import { TransporterFormOutputValues } from '@/transporters/components/transporter-form';
+import TransporterForm from '@/transporters/components/transporter-form';
 import TransporterFormSkeleton from '@/transporters/components/transporter-form-skeleton';
 import useQueryTransporter from '@/transporters/hooks/use-query-transporter';
-import useTransporterDetailsParams from '@/transporters/hooks/use-transporter-details-params';
 import useTransporterMutations from '@/transporters/hooks/use-transporter-mutations';
 
 export default function EditTransporterPage() {
-  const tTransporters = useTranslations('transporters');
   const tCommon = useTranslations('common');
-  const { transporterId, isValidId } = useTransporterDetailsParams();
+  const { itemId: transporterId, isValidId } = useCollectionItemDetailsParams();
   const { data, isLoading } = useQueryTransporter({
-    transporterId,
+    itemId: transporterId,
     enabled: isValidId,
   });
-  const { updateTransporter } = useTransporterMutations();
+  const { update: updateTransporter } = useTransporterMutations();
 
-  const handleSubmit = (values: TransporterFormValues) => {
-    return updateTransporter.mutateWithToast({ id: transporterId, values });
+  const handleSubmit = async (values: TransporterFormOutputValues) => {
+    return await updateTransporter.mutateWithToast({
+      id: transporterId,
+      values,
+    });
   };
 
   if (isLoading) {
@@ -36,23 +37,25 @@ export default function EditTransporterPage() {
   return (
     <div>
       <PageHeader
-        title={tTransporters('details.description')}
-        description={`${data?.name} (${data?.code})`}
+        title={tCommon('actions.edit')}
+        description={data.name}
         backHref={routes.transporters.index}
       />
       <TransporterForm
         defaultValues={{
           ...data,
+          description: data.description || '',
+          legalName: data.legalName || '',
+          address: data.address || '',
+          website: data.website || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          logoUrl: data.logoUrl || '',
+          contactInfo: data.contactInfo || '',
+          licenseNumber: data.licenseNumber || '',
           headquarterCityId: data.headquarterCityId || undefined,
-          description: data.description || undefined,
-          website: data.website || undefined,
-          email: data.email || undefined,
-          phone: data.phone || undefined,
-          licenseNumber: data.licenseNumber || undefined,
-          logoUrl: data.logoUrl || undefined,
         }}
         onSubmit={handleSubmit}
-        submitButtonText={tCommon('actions.update')}
       />
     </div>
   );

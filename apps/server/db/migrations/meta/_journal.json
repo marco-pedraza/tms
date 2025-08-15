@@ -257,6 +257,13 @@
     {
       "idx": 36,
       "version": "7",
+      "when": 1755042698434,
+      "tag": "20250813170118_add_columns_to_bus_models",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
       "when": 1755112063370,
       "tag": "20250813190743_fix_typo_at_bus_schema",
       "breakpoints": true

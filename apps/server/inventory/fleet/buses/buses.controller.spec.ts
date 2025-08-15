@@ -5,10 +5,8 @@ import {
   createBusDiagramModel,
   deleteBusDiagramModel,
 } from '@/inventory/fleet/bus-diagram-models/bus-diagram-models.controller';
-import {
-  createBusModel,
-  deleteBusModel,
-} from '@/inventory/fleet/bus-models/bus-models.controller';
+import { createBusModel } from '@/inventory/fleet/bus-models/bus-models.controller';
+import { busModelRepository } from '@/inventory/fleet/bus-models/bus-models.repository';
 import { seatDiagramZoneRepository } from '@/inventory/fleet/seat-diagram-zones/seat-diagram-zones.repository';
 import { seatDiagramRepository } from '@/inventory/fleet/seat-diagrams/seat-diagrams.repository';
 import {
@@ -52,7 +50,7 @@ describe('Buses Controller', () => {
   );
 
   const busModelCleanup = createCleanupHelper(
-    ({ id }) => deleteBusModel({ id }),
+    ({ id }) => busModelRepository.forceDelete(id),
     'bus model',
   );
 

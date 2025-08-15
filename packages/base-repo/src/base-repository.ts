@@ -30,6 +30,7 @@ import type {
   PaginationParams,
   RepositoryConfig,
   Filters,
+  FieldConfig,
 } from './types';
 import { PgColumn } from 'drizzle-orm/pg-core';
 
@@ -674,6 +675,39 @@ export const createBaseRepository = <
   };
 
   /**
+   * Retrieves a single entity by one or multiple field values
+   * @param {FieldConfig<TTable>[] | FieldConfig<TTable>} fields - Field or fields to apply to the query
+   * @returns {Promise<T | null>} The entity if found, null otherwise
+   */
+  const findOneBy = async (
+    fields: FieldConfig<TTable> | FieldConfig<TTable>[],
+  ): Promise<T | null> => {
+    try {
+      let query = db.select().from(table).limit(1);
+      query = applySoftDeleteFilter(query, table, isSoftDeleteEnabled);
+
+      if (Array.isArray(fields)) {
+        const filters = fields.reduce<Record<string, unknown>>(
+          (acc, { field, value }: FieldConfig<TTable>) => {
+            acc[field.name] = value;
+            return acc;
+          },
+          {},
+        );
+        query = applySimpleFilters(query, table, filters);
+      } else {
+        const filters = { [fields.field.name]: fields.value };
+        query = applySimpleFilters(query, table, filters);
+      }
+
+      const [entity] = await query;
+      return entity ? (entity as T) : null;
+    } catch (error) {
+      throw handlePostgresError(error, entityName, 'findOneBy');
+    }
+  };
+
+  /**
    * Checks if an entity exists with a specific field value
    * @template K - The type of the field key
    * @template V - The type of the field value
@@ -1124,6 +1158,7 @@ export const createBaseRepository = <
 
   const repository: BaseRepository<T, CreateT, UpdateT, TTable> = {
     findOne,
+    findOneBy,
     findAll,
     findAllBy,
     findAllPaginated,

@@ -1,5 +1,10 @@
 import { MatchesRegexp, MinLen } from 'encore.dev/validate';
-import { PaginatedResult } from '@/shared/types';
+import {
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '@/shared/types';
 
 /**
  * Base interface representing a bus model entity
@@ -22,6 +27,15 @@ export interface BusModel {
 
   /** Total seating capacity */
   seatingCapacity: number;
+
+  /** Trunk capacity */
+  trunkCapacity?: number;
+
+  /** Fuel efficiency */
+  fuelEfficiency?: number;
+
+  /** Max capacity */
+  maxCapacity?: number;
 
   /** Number of floors/decks in the bus */
   numFloors: number;
@@ -78,6 +92,24 @@ export interface CreateBusModelPayload {
    * Must be a positive number
    */
   seatingCapacity: number;
+
+  /**
+   * Trunk capacity
+   * Must be a positive number
+   */
+  trunkCapacity?: number;
+
+  /**
+   * Fuel efficiency
+   * Must be a positive number
+   */
+  fuelEfficiency?: number;
+
+  /**
+   * Max capacity
+   * Must be a positive number
+   */
+  maxCapacity?: number;
 
   /**
    * Number of floors/decks in the bus
@@ -142,6 +174,24 @@ export interface UpdateBusModelPayload {
   seatingCapacity?: number;
 
   /**
+   * Trunk capacity
+   * Must be a positive number
+   */
+  trunkCapacity?: number;
+
+  /**
+   * Fuel efficiency
+   * Must be a positive number
+   */
+  fuelEfficiency?: number;
+
+  /**
+   * Max capacity
+   * Must be a positive number
+   */
+  maxCapacity?: number;
+
+  /**
    * Number of floors/decks in the bus
    */
   numFloors?: number;
@@ -171,11 +221,26 @@ export interface UpdateBusModelPayload {
  * Response containing a list of bus models
  */
 export interface BusModels {
-  /** List of bus models */
   busModels: BusModel[];
 }
 
 /**
- * Paginated bus models result
+ * Response containing a list of bus models query params
  */
-export type PaginatedBusModels = PaginatedResult<BusModel>;
+export type ListBusModelsQueryParams = ListQueryParams<BusModel>;
+
+/**
+ * Response containing a list of bus models
+ */
+export type ListBusModelsResult = ListQueryResult<BusModel>;
+
+/**
+ * Paginated list of bus models query params
+ */
+export type PaginatedListBusModelsQueryParams =
+  PaginatedListQueryParams<BusModel>;
+
+/**
+ * Paginated list of bus models
+ */
+export type PaginatedListBusModelsResult = PaginatedListQueryResult<BusModel>;

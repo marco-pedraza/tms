@@ -153,6 +153,14 @@ export type UniqueFieldConfig<TTable extends TableWithId> = {
 };
 
 /**
+ * Field/value pair used to build WHERE clauses (e.g., for findOneBy).
+ * Multiple pairs are combined with AND semantics by repository methods.
+ */
+export interface FieldConfig<TTable> {
+  readonly field: TableColumn<TTable>;
+  readonly value: unknown;
+}
+/**
  * Interface representing the base repository
  * @template T - The entity type
  * @template CreateT - The type for creating a new entity
@@ -166,6 +174,9 @@ export interface BaseRepository<
   TTable extends TableWithId,
 > {
   findOne(id: number): Promise<T>;
+  findOneBy(
+    fields: FieldConfig<TTable> | FieldConfig<TTable>[],
+  ): Promise<T | null>;
   findAll(options?: QueryOptions<T, TTable>): Promise<T[]>;
   findAllBy(
     field: PgColumn,

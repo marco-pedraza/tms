@@ -475,7 +475,7 @@ export namespace inventory {
          */
         public async createBusModel(params: bus_models.CreateBusModelPayload): Promise<bus_models.BusModel> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/bus-models`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("POST", `/bus-models/create`, JSON.stringify(params))
             return await resp.json() as bus_models.BusModel
         }
 
@@ -776,7 +776,7 @@ export namespace inventory {
          */
         public async deleteBusModel(id: number): Promise<bus_models.BusModel> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/bus-models/${encodeURIComponent(id)}`)
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/bus-models/${encodeURIComponent(id)}/delete`)
             return await resp.json() as bus_models.BusModel
         }
 
@@ -1483,10 +1483,10 @@ export namespace inventory {
          * @returns {Promise<BusModels>} An object containing an array of bus models
          * @throws {APIError} If retrieval fails
          */
-        public async listBusModels(): Promise<bus_models.BusModels> {
+        public async listBusModels(params: bus_models.ListBusModelsQueryParams): Promise<bus_models.ListBusModelsResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/bus-models`)
-            return await resp.json() as bus_models.BusModels
+            const resp = await this.baseClient.callTypedAPI("POST", `/bus-models/list/all`, JSON.stringify(params))
+            return await resp.json() as bus_models.ListBusModelsResult
         }
 
         /**
@@ -1495,16 +1495,10 @@ export namespace inventory {
          * @returns {Promise<PaginatedBusModels>} Paginated list of bus models
          * @throws {APIError} If retrieval fails
          */
-        public async listBusModelsPaginated(params: shared.PaginationParams): Promise<bus_models.PaginatedBusModels> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:     params.page === undefined ? undefined : String(params.page),
-                pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
-            })
-
+        public async listBusModelsPaginated(params: bus_models.PaginatedListBusModelsQueryParams): Promise<bus_models.PaginatedListBusModelsResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/bus-models/paginated`, undefined, {query})
-            return await resp.json() as bus_models.PaginatedBusModels
+            const resp = await this.baseClient.callTypedAPI("POST", `/bus-models/list`, JSON.stringify(params))
+            return await resp.json() as bus_models.PaginatedListBusModelsResult
         }
 
         /**
@@ -2435,6 +2429,24 @@ export namespace inventory {
     seatingCapacity?: number
 
     /**
+     * Trunk capacity
+     * Must be a positive number
+     */
+    trunkCapacity?: number
+
+    /**
+     * Fuel efficiency
+     * Must be a positive number
+     */
+    fuelEfficiency?: number
+
+    /**
+     * Max capacity
+     * Must be a positive number
+     */
+    maxCapacity?: number
+
+    /**
      * Number of floors/decks in the bus
      */
     numFloors?: number
@@ -2460,7 +2472,7 @@ export namespace inventory {
     active?: boolean
 }): Promise<bus_models.BusModel> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/bus-models/${encodeURIComponent(id)}`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("PUT", `/bus-models/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as bus_models.BusModel
         }
 
@@ -5841,6 +5853,21 @@ export namespace bus_models {
         seatingCapacity: number
 
         /**
+         * Trunk capacity
+         */
+        trunkCapacity?: number
+
+        /**
+         * Fuel efficiency
+         */
+        fuelEfficiency?: number
+
+        /**
+         * Max capacity
+         */
+        maxCapacity?: number
+
+        /**
          * Number of floors/decks in the bus
          */
         numFloors: number
@@ -5876,13 +5903,6 @@ export namespace bus_models {
         updatedAt: string | string | null
     }
 
-    export interface BusModels {
-        /**
-         * List of bus models
-         */
-        busModels: BusModel[]
-    }
-
     export interface CreateBusModelPayload {
         /**
          * Default bus diagram model ID
@@ -5915,6 +5935,24 @@ export namespace bus_models {
         seatingCapacity: number
 
         /**
+         * Trunk capacity
+         * Must be a positive number
+         */
+        trunkCapacity?: number
+
+        /**
+         * Fuel efficiency
+         * Must be a positive number
+         */
+        fuelEfficiency?: number
+
+        /**
+         * Max capacity
+         * Must be a positive number
+         */
+        maxCapacity?: number
+
+        /**
          * Number of floors/decks in the bus
          * @default 1
          */
@@ -5943,7 +5981,65 @@ export namespace bus_models {
         active?: boolean
     }
 
-    export interface PaginatedBusModels {
+    export interface ListBusModelsQueryParams {
+        orderBy?: {
+            field: "id" | "defaultBusDiagramModelId" | "manufacturer" | "model" | "year" | "seatingCapacity" | "trunkCapacity" | "fuelEfficiency" | "maxCapacity" | "numFloors" | "amenities" | "engineType" | "distributionType" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            defaultBusDiagramModelId?: number
+            manufacturer?: string
+            model?: string
+            year?: number
+            seatingCapacity?: number
+            trunkCapacity?: number
+            fuelEfficiency?: number
+            maxCapacity?: number
+            numFloors?: number
+            amenities?: string[]
+            engineType?: string
+            distributionType?: string
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListBusModelsResult {
+        data: BusModel[]
+    }
+
+    export interface PaginatedListBusModelsQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "defaultBusDiagramModelId" | "manufacturer" | "model" | "year" | "seatingCapacity" | "trunkCapacity" | "fuelEfficiency" | "maxCapacity" | "numFloors" | "amenities" | "engineType" | "distributionType" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            defaultBusDiagramModelId?: number
+            manufacturer?: string
+            model?: string
+            year?: number
+            seatingCapacity?: number
+            trunkCapacity?: number
+            fuelEfficiency?: number
+            maxCapacity?: number
+            numFloors?: number
+            amenities?: string[]
+            engineType?: string
+            distributionType?: string
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListBusModelsResult {
         pagination: shared.PaginationMeta
         data: BusModel[]
     }
@@ -10723,11 +10819,6 @@ export namespace shared {
          * Whether there is a previous page available
          */
         hasPreviousPage: boolean
-    }
-
-    export interface PaginationParams {
-        page?: number
-        pageSize?: number
     }
 
     export interface PaginationParams {

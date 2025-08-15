@@ -1,13 +1,15 @@
 import { api } from 'encore.dev/api';
-import { PaginationParams } from '@/shared/types';
-import {
+import type {
   BusModel,
-  BusModels,
   CreateBusModelPayload,
-  PaginatedBusModels,
+  ListBusModelsQueryParams,
+  ListBusModelsResult,
+  PaginatedListBusModelsQueryParams,
+  PaginatedListBusModelsResult,
   UpdateBusModelPayload,
 } from './bus-models.types';
 import { busModelRepository } from './bus-models.repository';
+import { busModelDomain } from './bus-models.domain';
 
 /**
  * Creates a new bus model.
@@ -16,8 +18,9 @@ import { busModelRepository } from './bus-models.repository';
  * @throws {APIError} If the bus model creation fails
  */
 export const createBusModel = api(
-  { method: 'POST', path: '/bus-models', expose: true },
+  { method: 'POST', path: '/bus-models/create', expose: true },
   async (params: CreateBusModelPayload): Promise<BusModel> => {
+    await busModelDomain.validateBusModel(params);
     return await busModelRepository.create(params);
   },
 );
@@ -42,9 +45,12 @@ export const getBusModel = api(
  * @throws {APIError} If retrieval fails
  */
 export const listBusModels = api(
-  { method: 'GET', path: '/bus-models', expose: true },
-  async (): Promise<BusModels> => {
-    return await busModelRepository.findAll();
+  { method: 'POST', path: '/bus-models/list/all', expose: true },
+  async (params: ListBusModelsQueryParams): Promise<ListBusModelsResult> => {
+    const busModels = await busModelRepository.findAll(params);
+    return {
+      data: busModels,
+    };
   },
 );
 
@@ -55,8 +61,10 @@ export const listBusModels = api(
  * @throws {APIError} If retrieval fails
  */
 export const listBusModelsPaginated = api(
-  { method: 'GET', path: '/bus-models/paginated', expose: true },
-  async (params: PaginationParams): Promise<PaginatedBusModels> => {
+  { method: 'POST', path: '/bus-models/list', expose: true },
+  async (
+    params: PaginatedListBusModelsQueryParams,
+  ): Promise<PaginatedListBusModelsResult> => {
     return await busModelRepository.findAllPaginated(params);
   },
 );
@@ -70,11 +78,12 @@ export const listBusModelsPaginated = api(
  * @throws {APIError} If the bus model is not found or update fails
  */
 export const updateBusModel = api(
-  { method: 'PUT', path: '/bus-models/:id', expose: true },
+  { method: 'PUT', path: '/bus-models/:id/update', expose: true },
   async ({
     id,
     ...data
   }: UpdateBusModelPayload & { id: number }): Promise<BusModel> => {
+    await busModelDomain.validateBusModel(data, id);
     return await busModelRepository.update(id, data);
   },
 );
@@ -87,7 +96,7 @@ export const updateBusModel = api(
  * @throws {APIError} If the bus model is not found or deletion fails
  */
 export const deleteBusModel = api(
-  { method: 'DELETE', path: '/bus-models/:id', expose: true },
+  { method: 'DELETE', path: '/bus-models/:id/delete', expose: true },
   async ({ id }: { id: number }): Promise<BusModel> => {
     return await busModelRepository.delete(id);
   },

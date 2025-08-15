@@ -7,8 +7,9 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { isNull, relations } from 'drizzle-orm';
 import { busDiagramModels } from '@/inventory/fleet/bus-diagram-models/bus-diagram-models.schema';
 import { buses } from '@/inventory/fleet/buses/buses.schema';
 
@@ -26,6 +27,9 @@ export const busModels = pgTable(
     model: text('model').notNull(),
     year: integer('year').notNull(),
     seatingCapacity: integer('seating_capacity').notNull(),
+    trunkCapacity: integer('trunk_capacity'),
+    fuelEfficiency: integer('fuel_efficiency'),
+    maxCapacity: integer('max_capacity'),
     numFloors: integer('num_floors').notNull().default(1),
     amenities: jsonb('amenities').default([]),
     engineType: text('engine_type'),
@@ -33,11 +37,16 @@ export const busModels = pgTable(
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => [
     index().on(table.defaultBusDiagramModelId),
     index().on(table.manufacturer),
     index().on(table.model),
+    index('bus_models_deleted_at_index').on(table.deletedAt),
+    uniqueIndex('bus_models_manufacturer_model_year_index')
+      .on(table.manufacturer, table.model, table.year)
+      .where(isNull(table.deletedAt)),
   ],
 );
 

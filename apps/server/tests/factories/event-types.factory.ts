@@ -3,14 +3,17 @@ import { schema } from '../../db';
 import {
   extractTablesFromSchema,
   generateAlphabeticName,
+  generateId,
 } from './factory-utils';
 
 export const eventTypeFactory = defineFactory({
   schema: extractTablesFromSchema(schema),
   table: 'eventTypes',
   resolver: () => {
+    const id = generateId();
+
     return {
-      // Remove manual ID generation - let PostgreSQL bigserial handle it
+      id,
       name: generateAlphabeticName('Event Type'),
       active: true,
     };

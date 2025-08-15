@@ -290,10 +290,10 @@ export namespace inventory {
      * Amenity IDs to assign to the service type (replaces existing)
      */
     amenityIds: number[]
-}): Promise<service_types.ServiceType> {
+}): Promise<service_types.ServiceTypeWithAmenities> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/service-types/${encodeURIComponent(id)}/amenities/assign`, JSON.stringify(params))
-            return await resp.json() as service_types.ServiceType
+            return await resp.json() as service_types.ServiceTypeWithAmenities
         }
 
         /**

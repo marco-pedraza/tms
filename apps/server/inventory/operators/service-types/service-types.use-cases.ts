@@ -6,10 +6,7 @@ import {
   AmenityType,
 } from '@/inventory/shared-entities/amenities/amenities.types';
 import { serviceTypeAmenityRepository } from '@/inventory/shared-entities/amenities/service-type-amenities.repository';
-import type {
-  ServiceType,
-  ServiceTypeWithAmenities,
-} from './service-types.types';
+import type { ServiceTypeWithAmenities } from './service-types.types';
 import { serviceTypeRepository } from './service-types.repository';
 
 /**
@@ -45,7 +42,7 @@ export function createServiceTypeUseCases() {
   async function assignAmenities(
     serviceTypeId: number,
     amenityIds: number[],
-  ): Promise<ServiceType> {
+  ): Promise<ServiceTypeWithAmenities> {
     // Validate service type exists
     await serviceTypeRepository.findOne(serviceTypeId);
 
@@ -61,12 +58,12 @@ export function createServiceTypeUseCases() {
     await executeAmenityAssignment(serviceTypeId, amenityIds);
 
     // Return updated service type
-    return await serviceTypeRepository.findOne(serviceTypeId);
+    return await findOneWithAmenities(serviceTypeId);
   }
 
   async function clearAllAmenities(
     serviceTypeId: number,
-  ): Promise<ServiceType> {
+  ): Promise<ServiceTypeWithAmenities> {
     await db.transaction(async (tx) => {
       await serviceTypeAmenityRepository.clearServiceTypeAmenities(
         serviceTypeId,
@@ -74,7 +71,7 @@ export function createServiceTypeUseCases() {
       );
     });
 
-    return await serviceTypeRepository.findOne(serviceTypeId);
+    return await findOneWithAmenities(serviceTypeId);
   }
 
   async function validateAmenityAssignments(

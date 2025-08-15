@@ -115,7 +115,7 @@ export const assignAmenitiesToServiceType = api(
     amenityIds,
   }: {
     id: number;
-  } & AssignAmenitiesToServiceTypePayload): Promise<ServiceType> => {
+  } & AssignAmenitiesToServiceTypePayload): Promise<ServiceTypeWithAmenities> => {
     return await serviceTypeUseCases.assignAmenities(id, amenityIds);
   },
 );

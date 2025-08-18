@@ -64,6 +64,15 @@ import {
 } from './query-utils';
 
 /**
+ * Convert a string from snake_case to camelCase
+ * @param str - The string to convert
+ * @returns The camelCase version of the string
+ */
+function toCamelCase(str: string): string {
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+/**
  * Creates a base repository with CRUD operations for a database entity
  * @template T - The type of the entity
  * @template CreateT - The type for creating a new entity
@@ -808,15 +817,16 @@ export const createBaseRepository = <
 
       const conflicts = [];
       for (const f of fields) {
-        // Compare values case-insensitively for strings
-        const existingValue = existing[f.field.name];
+        // Convert field name from snake_case to camelCase for object property access
+        const camelCaseFieldName = toCamelCase(f.field.name);
+        const existingValue = existing[camelCaseFieldName];
         const isConflict =
+          // Compare values case-insensitively for strings
           typeof f.value === 'string' && typeof existingValue === 'string'
             ? f.value.toLowerCase() === existingValue.toLowerCase()
             : f.value === existingValue;
-
         if (isConflict) {
-          conflicts.push({ field: f.field.name, value: f.value });
+          conflicts.push({ field: camelCaseFieldName, value: f.value });
         }
       }
 

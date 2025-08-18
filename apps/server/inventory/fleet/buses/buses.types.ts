@@ -24,15 +24,21 @@ export enum BusStatus {
   RETIRED = 'RETIRED',
 }
 
+export enum BusLicensePlateType {
+  NATIONAL = 'NATIONAL',
+  INTERNATIONAL = 'INTERNATIONAL',
+  TOURISM = 'TOURISM',
+}
+
 export interface Bus {
   // Basic information
   id: number;
   economicNumber: string;
   registrationNumber: string;
-  licensePlateType: string;
+  licensePlateType: BusLicensePlateType;
   licensePlateNumber: string;
   circulationCard: string | null;
-  availableForTourismOnly: boolean | null;
+  availableForTourismOnly: boolean;
   status: BusStatus;
   transporterId: number | null;
   alternateTransporterId: number | null;
@@ -88,18 +94,18 @@ export interface BusWithRelations extends Bus {
 export interface CreateBusPayload {
   economicNumber: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
   registrationNumber: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-  licensePlateType: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  licensePlateType: BusLicensePlateType;
   licensePlateNumber: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-  circulationCard: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-  availableForTurismOnly: boolean;
+  circulationCard: (string & MinLen<1> & MatchesRegexp<'.*\\S.*'>) | null;
+  availableForTourismOnly: boolean;
   status: BusStatus;
   transporterId?: number | null;
   alternateTransporterId?: number | null;
   busLineId?: number | null;
   baseId?: number | null;
   // Model and manufacturer information
-  purchaseDate: Date;
-  expirationDate: Date;
+  purchaseDate: Date | string;
+  expirationDate: Date | string;
   erpClientNumber?: string | null;
   modelId: number;
   // Technical information
@@ -112,8 +118,8 @@ export interface CreateBusPayload {
   // Maintenance information
   currentKilometer?: number | null;
   gpsId?: string | null;
-  lastMaintenanceDate?: Date | null;
-  nextMaintenanceDate?: Date | null;
+  lastMaintenanceDate?: Date | string | null;
+  nextMaintenanceDate?: Date | string | null;
   // Seat Diagram
   seatDiagramId: number;
   // System information
@@ -123,18 +129,18 @@ export interface CreateBusPayload {
 export interface UpdateBusPayload {
   economicNumber?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
   registrationNumber?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-  licensePlateType?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  licensePlateType?: BusLicensePlateType;
   licensePlateNumber?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-  circulationCard?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-  availableForTurismOnly?: boolean;
+  circulationCard?: (string & MinLen<1> & MatchesRegexp<'.*\\S.*'>) | null;
+  availableForTourismOnly?: boolean;
   status?: BusStatus;
   transporterId?: number | null;
   alternateTransporterId?: number | null;
   busLineId?: number | null;
   baseId?: number | null;
   // Model and manufacturer information
-  purchaseDate?: Date;
-  expirationDate?: Date;
+  purchaseDate?: Date | string | null;
+  expirationDate?: Date | string | null;
   erpClientNumber?: string | null;
   modelId?: number;
   // Technical information
@@ -147,8 +153,8 @@ export interface UpdateBusPayload {
   // Maintenance information
   currentKilometer?: number | null;
   gpsId?: string | null;
-  lastMaintenanceDate?: Date | null;
-  nextMaintenanceDate?: Date | null;
+  lastMaintenanceDate?: Date | string | null;
+  nextMaintenanceDate?: Date | string | null;
   // Seat Diagram
   seatDiagramId?: number;
   // System information

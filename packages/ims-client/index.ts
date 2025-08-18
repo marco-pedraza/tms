@@ -2178,10 +2178,10 @@ export namespace inventory {
         public async updateBus(id: number, params: {
     economicNumber?: string
     registrationNumber?: string
-    licensePlateType?: string
+    licensePlateType?: buses.BusLicensePlateType
     licensePlateNumber?: string
-    circulationCard?: string
-    availableForTurismOnly?: boolean
+    circulationCard?: string | null
+    availableForTourismOnly?: boolean
     status?: buses.BusStatus
     transporterId?: number | null
     alternateTransporterId?: number | null
@@ -2190,9 +2190,9 @@ export namespace inventory {
     /**
      * Model and manufacturer information
      */
-    purchaseDate?: string
+    purchaseDate?: string | string | null
 
-    expirationDate?: string
+    expirationDate?: string | string | null
     erpClientNumber?: string | null
     modelId?: number
     /**
@@ -2211,8 +2211,8 @@ export namespace inventory {
     currentKilometer?: number | null
 
     gpsId?: string | null
-    lastMaintenanceDate?: string | null
-    nextMaintenanceDate?: string | null
+    lastMaintenanceDate?: string | string | null
+    nextMaintenanceDate?: string | string | null
     /**
      * Seat Diagram
      */
@@ -6764,10 +6764,10 @@ export namespace buses {
 
         economicNumber: string
         registrationNumber: string
-        licensePlateType: string
+        licensePlateType: BusLicensePlateType
         licensePlateNumber: string
         circulationCard: string | null
-        availableForTourismOnly: boolean | null
+        availableForTourismOnly: boolean
         status: BusStatus
         transporterId: number | null
         alternateTransporterId: number | null
@@ -6814,15 +6814,17 @@ export namespace buses {
         deletedAt: string | string | null
     }
 
+    export type BusLicensePlateType = "NATIONAL" | "INTERNATIONAL" | "TOURISM"
+
     export type BusStatus = "ACTIVE" | "MAINTENANCE" | "REPAIR" | "OUT_OF_SERVICE" | "RESERVED" | "IN_TRANSIT" | "RETIRED"
 
     export interface CreateBusPayload {
         economicNumber: string
         registrationNumber: string
-        licensePlateType: string
+        licensePlateType: BusLicensePlateType
         licensePlateNumber: string
-        circulationCard: string
-        availableForTurismOnly: boolean
+        circulationCard: string | null
+        availableForTourismOnly: boolean
         status: BusStatus
         transporterId?: number | null
         alternateTransporterId?: number | null
@@ -6831,9 +6833,9 @@ export namespace buses {
         /**
          * Model and manufacturer information
          */
-        purchaseDate: string
+        purchaseDate: string | string
 
-        expirationDate: string
+        expirationDate: string | string
         erpClientNumber?: string | null
         modelId: number
         /**
@@ -6852,8 +6854,8 @@ export namespace buses {
         currentKilometer?: number | null
 
         gpsId?: string | null
-        lastMaintenanceDate?: string | null
-        nextMaintenanceDate?: string | null
+        lastMaintenanceDate?: string | string | null
+        nextMaintenanceDate?: string | string | null
         /**
          * Seat Diagram
          */
@@ -6879,10 +6881,10 @@ export namespace buses {
 
         economicNumber: string
         registrationNumber: string
-        licensePlateType: string
+        licensePlateType: BusLicensePlateType
         licensePlateNumber: string
         circulationCard: string | null
-        availableForTourismOnly: boolean | null
+        availableForTourismOnly: boolean
         status: BusStatus
         transporterId: number | null
         alternateTransporterId: number | null
@@ -6942,10 +6944,10 @@ export namespace buses {
             id?: number
             economicNumber?: string
             registrationNumber?: string
-            licensePlateType?: string
+            licensePlateType?: BusLicensePlateType
             licensePlateNumber?: string
             circulationCard?: string | null
-            availableForTourismOnly?: boolean | null
+            availableForTourismOnly?: boolean
             status?: BusStatus
             transporterId?: number | null
             alternateTransporterId?: number | null
@@ -6989,10 +6991,10 @@ export namespace buses {
             id?: number
             economicNumber?: string
             registrationNumber?: string
-            licensePlateType?: string
+            licensePlateType?: BusLicensePlateType
             licensePlateNumber?: string
             circulationCard?: string | null
-            availableForTourismOnly?: boolean | null
+            availableForTourismOnly?: boolean
             status?: BusStatus
             transporterId?: number | null
             alternateTransporterId?: number | null

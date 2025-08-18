@@ -6,6 +6,9 @@ export type NamespaceTranslationKey = keyof Messages;
 export type KnownServerErrors = keyof Messages['validations']['server'];
 export type KnownServerEntities = keyof Messages['validations']['entities'];
 export type KnownServerFields = keyof Messages['validations']['fields'];
+export type KnownBusStatuses = keyof Messages['buses']['status'];
+export type KnownBusLicensePlateTypes =
+  keyof Messages['buses']['licensePlateTypes'];
 
 export type UseCommonTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'common'>
@@ -42,4 +45,7 @@ export type UseTransportersTranslationsResult = ReturnType<
 >;
 export type UseAmenitiesTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'amenities'>
+>;
+export type UseBusesTranslationsResult = ReturnType<
+  typeof createTranslator<Messages, 'buses'>
 >;

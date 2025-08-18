@@ -10,6 +10,7 @@ const busStatusTransitions: StateTransition<BusStatus>[] = [
   {
     from: BusStatus.ACTIVE,
     to: [
+      BusStatus.ACTIVE,
       BusStatus.MAINTENANCE,
       BusStatus.REPAIR,
       BusStatus.OUT_OF_SERVICE,
@@ -21,6 +22,7 @@ const busStatusTransitions: StateTransition<BusStatus>[] = [
   {
     from: BusStatus.MAINTENANCE,
     to: [
+      BusStatus.MAINTENANCE,
       BusStatus.ACTIVE,
       BusStatus.REPAIR,
       BusStatus.OUT_OF_SERVICE,
@@ -30,6 +32,7 @@ const busStatusTransitions: StateTransition<BusStatus>[] = [
   {
     from: BusStatus.REPAIR,
     to: [
+      BusStatus.REPAIR,
       BusStatus.ACTIVE,
       BusStatus.MAINTENANCE,
       BusStatus.OUT_OF_SERVICE,
@@ -39,6 +42,7 @@ const busStatusTransitions: StateTransition<BusStatus>[] = [
   {
     from: BusStatus.OUT_OF_SERVICE,
     to: [
+      BusStatus.OUT_OF_SERVICE,
       BusStatus.ACTIVE,
       BusStatus.MAINTENANCE,
       BusStatus.REPAIR,
@@ -47,13 +51,26 @@ const busStatusTransitions: StateTransition<BusStatus>[] = [
   },
   {
     from: BusStatus.RESERVED,
-    to: [BusStatus.ACTIVE, BusStatus.IN_TRANSIT, BusStatus.MAINTENANCE],
+    to: [
+      BusStatus.RESERVED,
+      BusStatus.ACTIVE,
+      BusStatus.IN_TRANSIT,
+      BusStatus.MAINTENANCE,
+    ],
   },
   {
     from: BusStatus.IN_TRANSIT,
-    to: [BusStatus.ACTIVE, BusStatus.MAINTENANCE, BusStatus.REPAIR],
+    to: [
+      BusStatus.IN_TRANSIT,
+      BusStatus.ACTIVE,
+      BusStatus.MAINTENANCE,
+      BusStatus.REPAIR,
+    ],
   },
-  { from: BusStatus.RETIRED, to: [BusStatus.OUT_OF_SERVICE] },
+  {
+    from: BusStatus.RETIRED,
+    to: [BusStatus.RETIRED, BusStatus.OUT_OF_SERVICE],
+  },
 ];
 
 // Create the bus state machine

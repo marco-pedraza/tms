@@ -1,0 +1,264 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
+import BusSkeleton from '@/buses/components/bus-skeleton';
+import BusStatusBadge from '@/buses/components/bus-status-badge';
+import useBusMutations from '@/buses/hooks/use-bus-mutations';
+import useQueryBus from '@/buses/hooks/use-query-bus';
+import ActionButtons from '@/components/action-buttons';
+import AffirmationBadge from '@/components/affirmation-badge';
+import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import PageHeader from '@/components/page-header';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
+import useDeleteDialog from '@/hooks/use-delete-dialog';
+import routes from '@/services/routes';
+import busLicensePlateTypesTranslationKeys from '../translations/bus-license-plate-types-translations-keys';
+
+export default function BusDetailsPage() {
+  const tBuses = useTranslations('buses');
+  const tCommon = useTranslations('common');
+  const { itemId: busId, isValidId } = useCollectionItemDetailsParams();
+  const { data: bus, isLoading } = useQueryBus({
+    busId,
+    enabled: isValidId,
+  });
+  const { delete: deleteBus } = useBusMutations();
+  const { deleteId, setDeleteId, onConfirmDelete, onCancelDelete } =
+    useDeleteDialog({
+      onConfirm: deleteBus.mutateWithToast,
+    });
+
+  const onDelete = () => {
+    if (!bus) return;
+    setDeleteId(bus.id);
+  };
+
+  if (isLoading) {
+    return <BusSkeleton />;
+  }
+
+  if (!bus) {
+    return null;
+  }
+
+  return (
+    <div>
+      <PageHeader
+        title={bus.registrationNumber}
+        description={tBuses('details.description')}
+        backHref={routes.buses.index}
+      />
+
+      <div className="flex justify-end mb-6">
+        <ActionButtons
+          editHref={routes.buses.getEditRoute(bus.id.toString())}
+          onDelete={onDelete}
+          editLabel={tCommon('actions.edit')}
+          deleteLabel={tCommon('actions.delete')}
+        />
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>{tBuses('sections.basicInfo')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-[1fr_2fr] gap-4">
+              <dt className="font-medium">
+                {tBuses('fields.economicNumber')}:
+              </dt>
+              <dd>{bus.economicNumber || '-'}</dd>
+
+              <dt className="font-medium">
+                {tBuses('fields.registrationNumber')}:
+              </dt>
+              <dd>{bus.registrationNumber}</dd>
+
+              <dt className="font-medium">
+                {tBuses('fields.licensePlateType')}:
+              </dt>
+              <dd>
+                {tBuses(
+                  `licensePlateTypes.${busLicensePlateTypesTranslationKeys[bus.licensePlateType]}`,
+                ) || '-'}
+              </dd>
+
+              <dt className="font-medium">
+                {tBuses('fields.licensePlateNumber')}:
+              </dt>
+              <dd>{bus.licensePlateNumber || '-'}</dd>
+
+              <dt className="font-medium">
+                {tBuses('fields.circulationCard')}:
+              </dt>
+              <dd>{bus.circulationCard || '-'}</dd>
+
+              <dt className="font-medium">{tBuses('fields.status')}:</dt>
+              <dd>
+                <BusStatusBadge status={bus.status} />
+              </dd>
+
+              <dt className="font-medium">
+                {tBuses('fields.availableForTourismOnly')}:
+              </dt>
+              <dd>
+                <AffirmationBadge value={bus.availableForTourismOnly} />
+              </dd>
+            </dl>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{tCommon('sections.systemInfo')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-[1fr_2fr] gap-4">
+              <dt className="font-medium">{tCommon('fields.status')}:</dt>
+              <dd>
+                {bus.active ? (
+                  <Badge variant="outline" className="bg-green-100">
+                    {tCommon('status.active')}
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="bg-red-100">
+                    {tCommon('status.inactive')}
+                  </Badge>
+                )}
+              </dd>
+
+              <dt className="font-medium">{tCommon('fields.id')}:</dt>
+              <dd>{bus.id}</dd>
+
+              <dt className="font-medium">{tCommon('fields.createdAt')}:</dt>
+              <dd>
+                {bus.createdAt ? new Date(bus.createdAt).toLocaleString() : '-'}
+              </dd>
+
+              <dt className="font-medium">{tCommon('fields.updatedAt')}:</dt>
+              <dd>
+                {bus.updatedAt ? new Date(bus.updatedAt).toLocaleString() : '-'}
+              </dd>
+            </dl>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>{tBuses('sections.modelInfo')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid grid-cols-[1fr_2fr] gap-4 md:grid-cols-[1fr_2fr_1fr_2fr]">
+            <dt className="font-medium">{tBuses('fields.manufacturer')}:</dt>
+            <dd>{bus.manufacturer || '-'}</dd>
+
+            <dt className="font-medium">{tBuses('fields.model')}:</dt>
+            <dd>{bus.model || '-'}</dd>
+
+            <dt className="font-medium">{tBuses('fields.year')}:</dt>
+            <dd>{bus.year || '-'}</dd>
+
+            <dt className="font-medium">{tBuses('fields.seatingCapacity')}:</dt>
+            <dd>{bus.seatingCapacity || '-'}</dd>
+
+            <dt className="font-medium">{tBuses('fields.numFloors')}:</dt>
+            <dd>{bus.numFloors || '-'}</dd>
+
+            <dt className="font-medium">{tBuses('fields.engineType')}:</dt>
+            <dd>{bus.engineType || '-'}</dd>
+
+            <dt className="font-medium">{tBuses('fields.purchaseDate')}:</dt>
+            <dd>
+              {bus.purchaseDate
+                ? new Date(bus.purchaseDate).toLocaleDateString()
+                : '-'}
+            </dd>
+
+            <dt className="font-medium">{tBuses('fields.expirationDate')}:</dt>
+            <dd>
+              {bus.expirationDate
+                ? new Date(bus.expirationDate).toLocaleDateString()
+                : '-'}
+            </dd>
+
+            <dt className="font-medium">{tBuses('fields.erpClientNumber')}:</dt>
+            <dd>{bus.erpClientNumber || '-'}</dd>
+          </dl>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>{tBuses('sections.technicalInfo')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid grid-cols-[1fr_2fr] gap-4 md:grid-cols-[1fr_2fr_1fr_2fr]">
+            <dt className="font-medium">{tBuses('fields.vehicleId')}:</dt>
+            <dd>{bus.vehicleId || '-'}</dd>
+
+            <dt className="font-medium">{tBuses('fields.serialNumber')}:</dt>
+            <dd>{bus.serialNumber || '-'}</dd>
+
+            <dt className="font-medium">{tBuses('fields.engineNumber')}:</dt>
+            <dd>{bus.engineNumber || '-'}</dd>
+
+            <dt className="font-medium">{tBuses('fields.chassisNumber')}:</dt>
+            <dd>{bus.chassisNumber || '-'}</dd>
+
+            <dt className="font-medium">
+              {tBuses('fields.grossVehicleWeight')}:
+            </dt>
+            <dd>{bus.grossVehicleWeight || '-'}</dd>
+
+            <dt className="font-medium">{tBuses('fields.sctPermit')}:</dt>
+            <dd>{bus.sctPermit || '-'}</dd>
+          </dl>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>{tBuses('sections.maintenanceInfo')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid grid-cols-[1fr_2fr] gap-4 md:grid-cols-[1fr_2fr_1fr_2fr]">
+            <dt className="font-medium">
+              {tBuses('fields.currentKilometer')}:
+            </dt>
+            <dd>{bus.currentKilometer || '-'}</dd>
+
+            <dt className="font-medium">{tBuses('fields.gpsId')}:</dt>
+            <dd>{bus.gpsId || '-'}</dd>
+            <dt className="font-medium">
+              {tBuses('fields.lastMaintenanceDate')}:
+            </dt>
+            <dd>
+              {bus.lastMaintenanceDate
+                ? new Date(bus.lastMaintenanceDate).toLocaleDateString()
+                : '-'}
+            </dd>
+
+            <dt className="font-medium">
+              {tBuses('fields.nextMaintenanceDate')}:
+            </dt>
+            <dd>
+              {bus.nextMaintenanceDate
+                ? new Date(bus.nextMaintenanceDate).toLocaleDateString()
+                : '-'}
+            </dd>
+          </dl>
+        </CardContent>
+      </Card>
+
+      <ConfirmDeleteDialog
+        isOpen={!!deleteId}
+        onOpenChange={onCancelDelete}
+        onConfirm={onConfirmDelete}
+      />
+    </div>
+  );
+}

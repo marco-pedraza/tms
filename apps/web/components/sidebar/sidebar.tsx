@@ -43,7 +43,6 @@ export default function Sidebar() {
         <SidebarSection
           title={tSidebar('inventory.localities.title')}
           icon={<MapPin className="h-4 w-4" />}
-          defaultOpen={true}
         >
           <SidebarLink
             href={routes.countries.index}
@@ -95,7 +94,6 @@ export default function Sidebar() {
         <SidebarSection
           title={tSidebar('inventory.operators.title')}
           icon={<Users className="h-4 w-4" />}
-          defaultOpen={true}
         >
           <SidebarLink
             href={routes.transporters.index}
@@ -144,12 +142,17 @@ export default function Sidebar() {
           href={routes.busModels.index}
           icon={Bus}
           label={tSidebar('inventory.busModels')}
-        />
-        <SidebarLink
-          href={routes.buses.index}
-          icon={Bus}
-          label={tSidebar('inventory.buses')}
         /> */}
+        <SidebarSection
+          title={tSidebar('inventory.fleet.title')}
+          icon={<Bus className="h-4 w-4" />}
+        >
+          <SidebarLink
+            href={routes.buses.index}
+            icon={Bus}
+            label={tSidebar('inventory.fleet.buses')}
+          />
+        </SidebarSection>
       </SidebarSection>
 
       {/* <SidebarSection

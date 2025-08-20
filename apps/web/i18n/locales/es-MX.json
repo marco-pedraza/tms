@@ -118,6 +118,7 @@
     "mustBeNumber": "El valor debe ser un número.",
     "mustBeDate": "El valor debe ser una fecha válida.",
     "greaterThanOrEquals": "El valor debe ser mayor o igual a {value}.",
+    "greaterThan": "El valor debe ser mayor a {value}.",
     "positive": "El valor debe ser un número positivo.",
     "name": {
       "letters": "El nombre debe contener solo letras y espacios.",
@@ -170,6 +171,7 @@
       "amenity": "Amenidad",
       "transporter": "Transportista",
       "busLine": "Línea de Autobús",
+      "busModel": "Modelo de Autobús",
       "bus": "Autobús",
       "serviceType": "Tipo de Servicio"
     },
@@ -203,9 +205,13 @@
         "serviceTypes": "Tipos de Servicio",
         "busLines": "Líneas de Autobús"
       },
+      "transporters": "Transportistas",
+      "serviceTypes": "Tipos de Servicio",
+      "busLines": "Líneas de Autobus",
       "fleet": {
         "title": "Flota",
-        "buses": "Autobuses"
+        "buses": "Autobuses",
+        "busModels": "Modelos de Autobus"
       },
       "routes": "Rutas",
       "pathways": "Trayectos",
@@ -1146,6 +1152,89 @@
         "loading": "Eliminando amenidad...",
         "success": "Amenidad eliminada correctamente",
         "error": "No pudimos eliminar la amenidad"
+      }
+    }
+  },
+  "busModels": {
+    "title": "Modelos de Autobuses",
+    "description": "Administra información de modelos de autobuses para el Sistema de Inventario",
+    "actions": {
+      "create": "Crear Modelo de Autobús",
+      "update": "Actualizar Modelo de Autobús",
+      "backToList": "Volver a modelos de autobuses"
+    },
+    "fields": {
+      "description": "Descripción",
+      "manufacturer": "Fabricante",
+      "model": "Modelo",
+      "year": "Año",
+      "seatingCapacity": "Capacidad de Asientos",
+      "trunkCapacity": "Capacidad de Maletero",
+      "fuelEfficiency": "Rendimiento de Combustible",
+      "maxCapacity": "Capacidad Máxima",
+      "numFloors": "Número de Pisos",
+      "amenities": "Amenidades",
+      "engineType": "Tipo de Motor",
+      "distributionType": "Tipo de Distribución"
+    },
+    "filters": {
+      "active": "Activo"
+    },
+    "form": {
+      "title": "Información del modelo de autobús",
+      "placeholders": {
+        "manufacturer": "Ej: Mercedes-Benz",
+        "model": "Ej: Sprinter",
+        "year": "Ej: 2024",
+        "seatingCapacity": "Ej: 20",
+        "trunkCapacity": "Ej: 10",
+        "fuelEfficiency": "Ej: 10",
+        "maxCapacity": "Ej: 30",
+        "numFloors": "Ej: 1",
+        "amenities": "Ej: Wi-Fi, TV, Aire Acondicionado"
+      }
+    },
+    "details": {
+      "description": "Detalles del modelo de autobús",
+      "seatingCapacity": "Capacidad de asientos del autobús",
+      "trunkCapacity": "Capacidad de maletero del autobús",
+      "fuelEfficiency": "Rendimiento de combustible del autobús",
+      "maxCapacity": "Capacidad máxima de pasajeros del autobús",
+      "numFloors": "Número de pisos del autobús",
+      "amenities": "Amenidades del autobús",
+      "engineType": "Tipo de motor del autobús",
+      "distributionType": "Tipo de distribución del autobús",
+      "active": "Indica si el modelo de autobús está activo en el sistema"
+    },
+    "edit": {
+      "title": "Editar Modelo de Autobús"
+    },
+    "sections": {
+      "info": "Información",
+      "amenities": "Amenidades",
+      "diagram": "Diagrama de Asientos"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Modelo de autobús no encontrado",
+        "description": "No pudimos encontrar el modelo de autobús que buscas. Es posible que haya sido eliminado o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando modelo de autobús...",
+        "success": "Modelo de autobús creado correctamente",
+        "error": "No pudimos crear el modelo de autobús"
+      },
+      "update": {
+        "loading": "Actualizando modelo de autobús...",
+        "success": "Modelo de autobús actualizado correctamente",
+        "error": "No pudimos actualizar el modelo de autobús"
+      },
+      "delete": {
+        "loading": "Eliminando modelo de autobús...",
+        "success": "Modelo de autobús eliminado correctamente",
+        "error": "No pudimos eliminar el modelo de autobús"
       }
     }
   },

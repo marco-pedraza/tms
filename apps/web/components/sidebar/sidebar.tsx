@@ -16,6 +16,7 @@ import {
   Settings,
   Star,
   Tag,
+  Truck,
   Users,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -113,6 +114,21 @@ export default function Sidebar() {
         </SidebarSection>
 
         {/* <SidebarLink
+          href={routes.transporters.index}
+          icon={Briefcase}
+          label={tSidebar('inventory.transporters')}
+        /> */}
+        {/* <SidebarLink
+          href={routes.serviceTypes.index}
+          icon={Briefcase}
+          label={tSidebar('inventory.serviceTypes')}
+        /> */}
+        {/* <SidebarLink
+          href={routes.busLines.index}
+          icon={Bus}
+          label={tSidebar('inventory.busLines')}
+        /> */}
+        {/* <SidebarLink
           href={routes.drivers.index}
           icon={Users}
           label={tSidebar('inventory.drivers')}
@@ -151,6 +167,11 @@ export default function Sidebar() {
             href={routes.buses.index}
             icon={Bus}
             label={tSidebar('inventory.fleet.buses')}
+          />
+          <SidebarLink
+            href={routes.busModels.index}
+            icon={Truck}
+            label={tSidebar('inventory.fleet.busModels')}
           />
         </SidebarSection>
       </SidebarSection>

@@ -347,10 +347,12 @@ export default function BusForm({
                 label={tBuses('fields.model')}
                 placeholder={tBuses('form.placeholders.model')}
                 items={
-                  busModels?.busModels.map((model) => ({
-                    id: model.id.toString(),
-                    name: model.model,
-                  })) || []
+                  busModels?.data.map(
+                    (model: { id: number; model: string }) => ({
+                      id: model.id.toString(),
+                      name: model.model,
+                    }),
+                  ) || []
                 }
                 isRequired
               />

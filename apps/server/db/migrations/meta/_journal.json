@@ -262,17 +262,24 @@
       "breakpoints": true
     },
     {
-      "idx": 36,
+      "idx": 37,
       "version": "7",
       "when": 1755112063370,
       "tag": "20250813190743_fix_typo_at_bus_schema",
       "breakpoints": true
     },
     {
-      "idx": 37,
+      "idx": 38,
       "version": "7",
       "when": 1755200000730,
       "tag": "20250814193320_updates_transportes_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1755551334155,
+      "tag": "20250818210854_remove_distribution_type_from_bus_models",
       "breakpoints": true
     }
   ]

@@ -215,15 +215,17 @@ describe('Bus Diagram Models Controller', () => {
       expect(getResponse.maxCapacity).toBe(testBusDiagramModel.maxCapacity);
 
       // Test list all models
-      const listResponse = await listBusDiagramModels();
+      const listResponse = await listBusDiagramModels({
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
 
       expect(listResponse).toBeDefined();
-      expect(listResponse.busDiagramModels).toBeDefined();
-      expect(Array.isArray(listResponse.busDiagramModels)).toBe(true);
-      expect(listResponse.busDiagramModels.length).toBeGreaterThan(0);
+      expect(listResponse.data).toBeDefined();
+      expect(Array.isArray(listResponse.data)).toBe(true);
+      expect(listResponse.data.length).toBeGreaterThan(0);
 
       // Find our test model in the list
-      const foundModel = listResponse.busDiagramModels.find(
+      const foundModel = listResponse.data.find(
         (model) => model.id === createdBusDiagramModelId,
       );
       expect(foundModel).toBeDefined();
@@ -1311,8 +1313,10 @@ describe('Bus Diagram Models Controller', () => {
 
     test('should rollback diagram model creation if seat models creation fails', async () => {
       // Get initial count of diagram models
-      const initialDiagramModels = await listBusDiagramModels();
-      const initialCount = initialDiagramModels.busDiagramModels.length;
+      const initialDiagramModels = await listBusDiagramModels({
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
+      const initialCount = initialDiagramModels.data.length;
 
       // Mock the seat model use case to fail using vi.spyOn
       vi.spyOn(
@@ -1333,8 +1337,10 @@ describe('Bus Diagram Models Controller', () => {
       }
 
       // Verify that no new diagram model was created (transaction was rolled back)
-      const finalDiagramModels = await listBusDiagramModels();
-      expect(finalDiagramModels.busDiagramModels).toHaveLength(initialCount);
+      const finalDiagramModels = await listBusDiagramModels({
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
+      expect(finalDiagramModels.data).toHaveLength(initialCount);
     });
 
     // NOTE: We are not testing validation errors because they're handled by Encore's rust runtime
@@ -1368,11 +1374,13 @@ describe('Bus Diagram Models Controller', () => {
       expect(customPageResponse.data.length).toBeLessThanOrEqual(5);
 
       // Test non-paginated list (for dropdowns)
-      const nonPaginatedResponse = await listBusDiagramModels();
+      const nonPaginatedResponse = await listBusDiagramModels({
+        orderBy: [{ field: 'name', direction: 'asc' }],
+      });
 
-      expect(nonPaginatedResponse.busDiagramModels).toBeDefined();
-      expect(Array.isArray(nonPaginatedResponse.busDiagramModels)).toBe(true);
-      expect(nonPaginatedResponse.busDiagramModels.length).toBeGreaterThan(0);
+      expect(nonPaginatedResponse.data).toBeDefined();
+      expect(Array.isArray(nonPaginatedResponse.data)).toBe(true);
+      expect(nonPaginatedResponse.data.length).toBeGreaterThan(0);
       // No pagination info should be present
       expect(nonPaginatedResponse).not.toHaveProperty('pagination');
     });

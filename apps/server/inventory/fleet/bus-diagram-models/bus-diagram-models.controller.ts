@@ -8,8 +8,9 @@ import { BusSeatModels } from '@/inventory/fleet/bus-seat-models/bus-seat-models
 import { busSeatModelUseCases } from '@/inventory/fleet/bus-seat-models/bus-seat-models.use-cases';
 import {
   BusDiagramModel,
-  BusDiagramModels,
   CreateBusDiagramModelPayload,
+  ListBusDiagramModelsQueryParams,
+  ListBusDiagramModelsResult,
   PaginatedBusDiagramModels,
   RegenerateSeatsResponse,
   UpdateBusDiagramModelPayload,
@@ -46,16 +47,17 @@ export const getBusDiagramModel = api(
 
 /**
  * Retrieves all bus diagram models without pagination (useful for dropdowns).
- * @returns {Promise<BusDiagramModels>} List of all bus diagram models
+ * @returns {Promise<ListBusDiagramModelsResult>} An object with a data array of bus diagram models
  * @throws {APIError} If retrieval fails
  */
 export const listBusDiagramModels = api(
-  { expose: true, method: 'POST', path: '/get-bus-diagram-models' },
-  async (): Promise<BusDiagramModels> => {
-    const { busDiagramModels: models } =
-      await busDiagramModelRepository.findAll();
+  { method: 'POST', path: '/bus-diagram-models/list/all', expose: true },
+  async (
+    params: ListBusDiagramModelsQueryParams,
+  ): Promise<ListBusDiagramModelsResult> => {
+    const busDiagramModels = await busDiagramModelRepository.findAll(params);
     return {
-      busDiagramModels: models,
+      data: busDiagramModels,
     };
   },
 );

@@ -1,0 +1,1 @@
+ALTER TABLE "bus_models" DROP COLUMN IF EXISTS "distribution_type";

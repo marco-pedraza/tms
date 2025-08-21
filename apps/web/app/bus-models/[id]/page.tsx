@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import BusModelSkeleton from '@/bus-models/components/bus-model-skeleton';
 import useBusModelMutations from '@/bus-models/hooks/use-bus-model-mutations';
 import useQueryBusModel from '@/bus-models/hooks/use-query-bus-model';
+import busEngineTypeTranslationKeys from '@/bus-models/translations/bus-engine-type-translation-keys';
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
@@ -124,7 +125,13 @@ export default function BusModelDetailsPage() {
                     <dt className="font-medium">
                       {tBusModels('fields.engineType')}:
                     </dt>
-                    <dd>{busModel.engineType || '-'}</dd>
+                    <dd>
+                      {busModel.engineType
+                        ? tBusModels(
+                            `engineTypes.${busEngineTypeTranslationKeys[busModel.engineType]}`,
+                          )
+                        : '-'}
+                    </dd>
 
                     <dt className="font-medium">{tCommon('fields.status')}:</dt>
                     <dd>
@@ -155,14 +162,18 @@ export default function BusModelDetailsPage() {
                       {tCommon('fields.createdAt')}:
                     </dt>
                     <dd>
-                      {new Date(busModel.createdAt ?? '').toLocaleString()}
+                      {busModel.createdAt
+                        ? new Date(busModel.createdAt).toLocaleString()
+                        : '-'}
                     </dd>
 
                     <dt className="font-medium">
                       {tCommon('fields.updatedAt')}:
                     </dt>
                     <dd>
-                      {new Date(busModel.updatedAt ?? '').toLocaleString()}
+                      {busModel.updatedAt
+                        ? new Date(busModel.updatedAt).toLocaleString()
+                        : '-'}
                     </dd>
                   </dl>
                 </CardContent>

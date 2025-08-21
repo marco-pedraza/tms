@@ -3,7 +3,6 @@ import { db } from '@/inventory/db-service';
 import { busDiagramModels } from './bus-diagram-models.schema';
 import {
   BusDiagramModel,
-  BusDiagramModels,
   CreateBusDiagramModelPayload,
   UpdateBusDiagramModelPayload,
 } from './bus-diagram-models.types';
@@ -22,18 +21,8 @@ export const createBusDiagramModelRepository = () => {
     searchableFields: [busDiagramModels.name],
   });
 
-  async function findAll(): Promise<BusDiagramModels> {
-    const busDiagramModelsList = await baseRepository.findAll({
-      orderBy: [{ field: 'name', direction: 'asc' }],
-    });
-    return {
-      busDiagramModels: busDiagramModelsList,
-    };
-  }
-
   return {
     ...baseRepository,
-    findAll,
   };
 };
 

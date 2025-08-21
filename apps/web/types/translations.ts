@@ -9,6 +9,7 @@ export type KnownServerFields = keyof Messages['validations']['fields'];
 export type KnownBusStatuses = keyof Messages['buses']['status'];
 export type KnownBusLicensePlateTypes =
   keyof Messages['buses']['licensePlateTypes'];
+export type KnownBusEngineTypes = keyof Messages['busModels']['engineTypes'];
 
 export type UseCommonTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'common'>

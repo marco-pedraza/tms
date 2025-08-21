@@ -1,5 +1,6 @@
 import { fakerES_MX as faker } from '@faker-js/faker';
 import { defineFactory } from '@praha/drizzle-factory';
+import { EngineType } from '@/inventory/fleet/bus-models/bus-models.types';
 import { schema } from '../../db';
 import { busDiagramModelFactory } from './bus-diagram-models.factory';
 import { extractTablesFromSchema, generateId } from './factory-utils';
@@ -15,17 +16,6 @@ export const busModelFactory = defineFactory({
       'Irizar',
       'Marcopolo',
       'Scania',
-    ];
-    const engineTypes = ['Diesel', 'Electric', 'Hybrid', 'Natural Gas'];
-    const distributionTypes = [
-      'Intercity',
-      'Regional',
-      'Charter',
-      'Suburban',
-      'Tourist',
-      'Executive',
-      'Premium',
-      'VIP',
     ];
 
     const possibleAmenities = [
@@ -59,9 +49,8 @@ export const busModelFactory = defineFactory({
         possibleAmenities,
         faker.number.int({ min: 2, max: 6 }),
       ),
-      engineType: faker.helpers.arrayElement(engineTypes),
-      distributionType: faker.helpers.arrayElement(distributionTypes),
-      active: faker.helpers.maybe(() => false, { probability: 0.1 }) || true,
+      engineType: faker.helpers.arrayElement(Object.values(EngineType)),
+      active: faker.helpers.maybe(() => false, { probability: 0.1 }) ?? true,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

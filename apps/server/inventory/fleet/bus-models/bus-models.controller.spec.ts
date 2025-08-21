@@ -8,7 +8,7 @@ import {
   createTestSuiteId,
   createUniqueName,
 } from '@/tests/shared/test-utils';
-import { BusModel } from './bus-models.types';
+import { BusModel, EngineType } from './bus-models.types';
 import { busModelRepository } from './bus-models.repository';
 import {
   createBusModel,
@@ -34,8 +34,7 @@ describe('Bus Models Controller', () => {
     maxCapacity: number;
     numFloors: number;
     amenities: string[];
-    engineType: string;
-    distributionType: string;
+    engineType: EngineType;
     active: boolean;
   };
 
@@ -94,8 +93,7 @@ describe('Bus Models Controller', () => {
       maxCapacity: 40,
       numFloors: 1,
       amenities: ['WiFi', 'USB Charging', 'Air Conditioning'],
-      engineType: 'Diesel',
-      distributionType: 'Intercity',
+      engineType: EngineType.DIESEL,
       active: true,
     };
   });
@@ -131,7 +129,6 @@ describe('Bus Models Controller', () => {
       expect(response.numFloors).toBe(testBusModelData.numFloors);
       expect(response.amenities).toEqual(testBusModelData.amenities);
       expect(response.engineType).toBe(testBusModelData.engineType);
-      expect(response.distributionType).toBe(testBusModelData.distributionType);
       expect(response.active).toBe(testBusModelData.active);
       expect(response.createdAt).toBeDefined();
       expect(response.updatedAt).toBeDefined();
@@ -159,7 +156,7 @@ describe('Bus Models Controller', () => {
           'Air Conditioning',
           'Entertainment System',
         ],
-        engineType: 'Electric',
+        engineType: EngineType.ELECTRIC,
       };
 
       const response = await updateBusModel({
@@ -198,8 +195,7 @@ describe('Bus Models Controller', () => {
         maxCapacity: 40,
         numFloors: 1,
         amenities: [],
-        engineType: 'Diesel',
-        distributionType: 'Intercity',
+        engineType: EngineType.DIESEL,
         active: true,
       });
 
@@ -244,8 +240,7 @@ describe('Bus Models Controller', () => {
         maxCapacity: 40,
         numFloors: 1,
         amenities: [],
-        engineType: 'Diesel',
-        distributionType: 'Intercity',
+        engineType: EngineType.DIESEL,
         active: true,
       });
 
@@ -263,8 +258,7 @@ describe('Bus Models Controller', () => {
             maxCapacity: 35,
             numFloors: 1,
             amenities: [],
-            engineType: 'Electric',
-            distributionType: 'City',
+            engineType: EngineType.ELECTRIC,
             active: true,
           }),
         ).rejects.toThrow();
@@ -296,8 +290,7 @@ describe('Bus Models Controller', () => {
         maxCapacity: 40,
         numFloors: 1,
         amenities: [],
-        engineType: 'Diesel',
-        distributionType: 'Intercity',
+        engineType: EngineType.DIESEL,
         active: true,
       });
 
@@ -313,8 +306,7 @@ describe('Bus Models Controller', () => {
         maxCapacity: 35,
         numFloors: 1,
         amenities: [],
-        engineType: 'Electric',
-        distributionType: 'City',
+        engineType: EngineType.ELECTRIC,
         active: true,
       });
 
@@ -381,8 +373,7 @@ describe('Bus Models Controller', () => {
         maxCapacity: 40,
         numFloors: 1,
         amenities: [],
-        engineType: 'Diesel',
-        distributionType: 'Intercity',
+        engineType: EngineType.DIESEL,
         active: true,
       });
 
@@ -397,8 +388,7 @@ describe('Bus Models Controller', () => {
         maxCapacity: 40,
         numFloors: 1,
         amenities: [],
-        engineType: 'Diesel',
-        distributionType: 'Intercity',
+        engineType: EngineType.DIESEL,
         active: true,
       });
 
@@ -454,8 +444,7 @@ describe('Bus Models Controller', () => {
         maxCapacity: 40,
         numFloors: 1,
         amenities: ['WiFi', 'USB Charging', 'Air Conditioning'],
-        engineType: 'Diesel',
-        distributionType: 'Intercity',
+        engineType: EngineType.DIESEL,
         active: true,
       });
 
@@ -501,8 +490,7 @@ describe('Bus Models Controller', () => {
         maxCapacity: 40,
         numFloors: 1,
         amenities: ['WiFi', 'USB Charging', 'Air Conditioning'],
-        engineType: 'Diesel',
-        distributionType: 'Intercity',
+        engineType: EngineType.DIESEL,
         active: true,
       });
 
@@ -517,8 +505,7 @@ describe('Bus Models Controller', () => {
         maxCapacity: 40,
         numFloors: 1,
         amenities: ['WiFi', 'USB Charging', 'Air Conditioning'],
-        engineType: 'Diesel',
-        distributionType: 'Intercity',
+        engineType: EngineType.DIESEL,
         active: false,
       });
 
@@ -574,8 +561,7 @@ describe('Bus Models Controller', () => {
           maxCapacity: 40,
           numFloors: 1,
           amenities: [],
-          engineType: 'Diesel',
-          distributionType: 'Intercity',
+          engineType: EngineType.DIESEL,
           active: true,
         },
         {
@@ -588,8 +574,7 @@ describe('Bus Models Controller', () => {
           maxCapacity: 40,
           numFloors: 1,
           amenities: [],
-          engineType: 'Diesel',
-          distributionType: 'Intercity',
+          engineType: EngineType.DIESEL,
           active: false,
         },
         {
@@ -602,8 +587,7 @@ describe('Bus Models Controller', () => {
           maxCapacity: 40,
           numFloors: 1,
           amenities: [],
-          engineType: 'Diesel',
-          distributionType: 'Intercity',
+          engineType: EngineType.DIESEL,
           active: true,
         },
       ];
@@ -696,8 +680,7 @@ describe('Bus Models Controller', () => {
           maxCapacity: 40,
           numFloors: 1,
           amenities: [],
-          engineType: 'Diesel',
-          distributionType: 'Intercity',
+          engineType: EngineType.DIESEL,
           active: true,
         },
         {
@@ -710,8 +693,7 @@ describe('Bus Models Controller', () => {
           maxCapacity: 40,
           numFloors: 1,
           amenities: [],
-          engineType: 'Diesel',
-          distributionType: 'Intercity',
+          engineType: EngineType.DIESEL,
           active: true,
         },
       ];
@@ -769,8 +751,7 @@ describe('Bus Models Controller', () => {
         maxCapacity: 40,
         numFloors: 1,
         amenities: [],
-        engineType: 'Diesel',
-        distributionType: 'Intercity',
+        engineType: EngineType.DIESEL,
         active: true,
       });
 
@@ -798,8 +779,7 @@ describe('Bus Models Controller', () => {
         maxCapacity: 40,
         numFloors: 1,
         amenities: [],
-        engineType: 'Diesel',
-        distributionType: 'Intercity',
+        engineType: EngineType.DIESEL,
         active: true,
       });
 

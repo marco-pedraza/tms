@@ -21,7 +21,10 @@ export default function EditBusModelPage() {
   const { update: updateBusModel } = useBusModelMutations();
 
   const handleSubmit = (values: BusModelFormValues) =>
-    updateBusModel.mutateWithToast({ id: busModelId, values });
+    updateBusModel.mutateWithToast({
+      id: busModelId,
+      values,
+    });
 
   if (isLoading) {
     return <BusModelFormSkeleton />;
@@ -38,16 +41,7 @@ export default function EditBusModelPage() {
         description={`${data?.manufacturer} (${data?.model})`}
         backHref={routes.busModels.index}
       />
-      <BusModelForm
-        defaultValues={{
-          ...data,
-          trunkCapacity: data.trunkCapacity ?? 0,
-          fuelEfficiency: data.fuelEfficiency ?? 0,
-          maxCapacity: data.maxCapacity ?? 0,
-          engineType: data.engineType ?? '',
-        }}
-        onSubmit={handleSubmit}
-      />
+      <BusModelForm defaultValues={data} onSubmit={handleSubmit} />
     </div>
   );
 }

@@ -1433,13 +1433,13 @@ export namespace inventory {
 
         /**
          * Retrieves all bus diagram models without pagination (useful for dropdowns).
-         * @returns {Promise<BusDiagramModels>} List of all bus diagram models
+         * @returns {Promise<ListBusDiagramModelsResult>} An object with a data array of bus diagram models
          * @throws {APIError} If retrieval fails
          */
-        public async listBusDiagramModels(): Promise<bus_diagram_models.BusDiagramModels> {
+        public async listBusDiagramModels(params: bus_diagram_models.ListBusDiagramModelsQueryParams): Promise<bus_diagram_models.ListBusDiagramModelsResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-bus-diagram-models`)
-            return await resp.json() as bus_diagram_models.BusDiagramModels
+            const resp = await this.baseClient.callTypedAPI("POST", `/bus-diagram-models/list/all`, JSON.stringify(params))
+            return await resp.json() as bus_diagram_models.ListBusDiagramModelsResult
         }
 
         /**
@@ -2402,7 +2402,7 @@ export namespace inventory {
     /**
      * Default bus diagram model ID
      */
-    defaultBusDiagramModelId?: number
+    defaultBusDiagramModelId?: number | null
 
     /**
      * Manufacturer of the bus
@@ -2431,20 +2431,23 @@ export namespace inventory {
     /**
      * Trunk capacity
      * Must be a positive number
+     * Optional trunk capacity in liters (null if not specified)
      */
-    trunkCapacity?: number
+    trunkCapacity?: number | null
 
     /**
      * Fuel efficiency
      * Must be a positive number
+     * Optional fuel efficiency in liters per kilometers (null if not specified)
      */
-    fuelEfficiency?: number
+    fuelEfficiency?: number | null
 
     /**
      * Max capacity
      * Must be a positive number
+     * Optional max capacity in liters (null if not specified)
      */
-    maxCapacity?: number
+    maxCapacity?: number | null
 
     /**
      * Number of floors/decks in the bus
@@ -2459,12 +2462,7 @@ export namespace inventory {
     /**
      * Type of engine (e.g., diesel, electric)
      */
-    engineType?: string
-
-    /**
-     * Distribution type of the bus model
-     */
-    distributionType?: string
+    engineType?: bus_models.EngineType
 
     /**
      * Whether the bus model is active
@@ -5460,13 +5458,6 @@ export namespace bus_diagram_models {
         updatedAt: string | string | null
     }
 
-    export interface BusDiagramModels {
-        /**
-         * List of bus diagram models
-         */
-        busDiagramModels: BusDiagramModel[]
-    }
-
     export interface CreateBusDiagramModelPayload {
         /**
          * Name of the bus diagram model
@@ -5512,6 +5503,31 @@ export namespace bus_diagram_models {
          * @default true
          */
         active?: boolean
+    }
+
+    export interface ListBusDiagramModelsQueryParams {
+        orderBy?: {
+            field: "id" | "name" | "description" | "maxCapacity" | "numFloors" | "seatsPerFloor" | "totalSeats" | "isFactoryDefault" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            description?: string | null
+            maxCapacity?: number
+            numFloors?: number
+            seatsPerFloor?: shared.FloorSeats[]
+            totalSeats?: number
+            isFactoryDefault?: boolean
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListBusDiagramModelsResult {
+        data: BusDiagramModel[]
     }
 
     export interface PaginatedBusDiagramModels {
@@ -5855,17 +5871,17 @@ export namespace bus_models {
         /**
          * Trunk capacity
          */
-        trunkCapacity?: number
+        trunkCapacity: number | null
 
         /**
          * Fuel efficiency
          */
-        fuelEfficiency?: number
+        fuelEfficiency: number | null
 
         /**
          * Max capacity
          */
-        maxCapacity?: number
+        maxCapacity: number | null
 
         /**
          * Number of floors/decks in the bus
@@ -5880,12 +5896,7 @@ export namespace bus_models {
         /**
          * Type of engine (e.g., diesel, electric)
          */
-        engineType?: string
-
-        /**
-         * Distribution type of the bus model
-         */
-        distributionType?: string
+        engineType: EngineType
 
         /**
          * Whether the bus model is active
@@ -5908,7 +5919,7 @@ export namespace bus_models {
          * Default bus diagram model ID
          * Must be a positive number
          */
-        defaultBusDiagramModelId: number
+        defaultBusDiagramModelId: number | null
 
         /**
          * Manufacturer of the bus
@@ -5937,26 +5948,29 @@ export namespace bus_models {
         /**
          * Trunk capacity
          * Must be a positive number
+         * Optional trunk capacity in kilograms (null if not specified)
          */
-        trunkCapacity?: number
+        trunkCapacity?: number | null
 
         /**
          * Fuel efficiency
          * Must be a positive number
+         * Optional fuel efficiency in km/L (null if not specified)
          */
-        fuelEfficiency?: number
+        fuelEfficiency?: number | null
 
         /**
          * Max capacity
          * Must be a positive number
+         * Optional max capacity in passengers (null if not specified)
          */
-        maxCapacity?: number
+        maxCapacity?: number | null
 
         /**
          * Number of floors/decks in the bus
          * @default 1
          */
-        numFloors?: number
+        numFloors: number
 
         /**
          * Available amenities
@@ -5967,12 +5981,7 @@ export namespace bus_models {
         /**
          * Type of engine (e.g., diesel, electric)
          */
-        engineType?: string
-
-        /**
-         * Distribution type of the bus model
-         */
-        distributionType?: string
+        engineType: EngineType
 
         /**
          * Whether the bus model is active
@@ -5981,9 +5990,11 @@ export namespace bus_models {
         active?: boolean
     }
 
+    export type EngineType = "DIESEL" | "ELECTRIC" | "HYBRID" | "GASOLINE" | "NATURAL_GAS" | "LPG" | "OTHER"
+
     export interface ListBusModelsQueryParams {
         orderBy?: {
-            field: "id" | "defaultBusDiagramModelId" | "manufacturer" | "model" | "year" | "seatingCapacity" | "trunkCapacity" | "fuelEfficiency" | "maxCapacity" | "numFloors" | "amenities" | "engineType" | "distributionType" | "active" | "createdAt" | "updatedAt"
+            field: "id" | "defaultBusDiagramModelId" | "manufacturer" | "model" | "year" | "seatingCapacity" | "trunkCapacity" | "fuelEfficiency" | "maxCapacity" | "numFloors" | "amenities" | "engineType" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -5993,13 +6004,12 @@ export namespace bus_models {
             model?: string
             year?: number
             seatingCapacity?: number
-            trunkCapacity?: number
-            fuelEfficiency?: number
-            maxCapacity?: number
+            trunkCapacity?: number | null
+            fuelEfficiency?: number | null
+            maxCapacity?: number | null
             numFloors?: number
             amenities?: string[]
-            engineType?: string
-            distributionType?: string
+            engineType?: EngineType
             active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
@@ -6015,7 +6025,7 @@ export namespace bus_models {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "defaultBusDiagramModelId" | "manufacturer" | "model" | "year" | "seatingCapacity" | "trunkCapacity" | "fuelEfficiency" | "maxCapacity" | "numFloors" | "amenities" | "engineType" | "distributionType" | "active" | "createdAt" | "updatedAt"
+            field: "id" | "defaultBusDiagramModelId" | "manufacturer" | "model" | "year" | "seatingCapacity" | "trunkCapacity" | "fuelEfficiency" | "maxCapacity" | "numFloors" | "amenities" | "engineType" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -6025,13 +6035,12 @@ export namespace bus_models {
             model?: string
             year?: number
             seatingCapacity?: number
-            trunkCapacity?: number
-            fuelEfficiency?: number
-            maxCapacity?: number
+            trunkCapacity?: number | null
+            fuelEfficiency?: number | null
+            maxCapacity?: number | null
             numFloors?: number
             amenities?: string[]
-            engineType?: string
-            distributionType?: string
+            engineType?: EngineType
             active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null

@@ -7,6 +7,19 @@ import {
 } from '@/shared/types';
 
 /**
+ * Enum for bus engine type
+ */
+export enum EngineType {
+  DIESEL = 'DIESEL',
+  ELECTRIC = 'ELECTRIC',
+  HYBRID = 'HYBRID',
+  GASOLINE = 'GASOLINE',
+  NATURAL_GAS = 'NATURAL_GAS',
+  LPG = 'LPG',
+  OTHER = 'OTHER',
+}
+
+/**
  * Base interface representing a bus model entity
  */
 export interface BusModel {
@@ -29,13 +42,13 @@ export interface BusModel {
   seatingCapacity: number;
 
   /** Trunk capacity */
-  trunkCapacity?: number;
+  trunkCapacity: number | null;
 
   /** Fuel efficiency */
-  fuelEfficiency?: number;
+  fuelEfficiency: number | null;
 
   /** Max capacity */
-  maxCapacity?: number;
+  maxCapacity: number | null;
 
   /** Number of floors/decks in the bus */
   numFloors: number;
@@ -44,10 +57,7 @@ export interface BusModel {
   amenities: string[];
 
   /** Type of engine (e.g., diesel, electric) */
-  engineType?: string;
-
-  /** Distribution type of the bus model */
-  distributionType?: string;
+  engineType: EngineType;
 
   /** Whether the bus model is active */
   active: boolean;
@@ -67,7 +77,7 @@ export interface CreateBusModelPayload {
    * Default bus diagram model ID
    * Must be a positive number
    */
-  defaultBusDiagramModelId: number;
+  defaultBusDiagramModelId: number | null;
 
   /**
    * Manufacturer of the bus
@@ -96,26 +106,29 @@ export interface CreateBusModelPayload {
   /**
    * Trunk capacity
    * Must be a positive number
+   * Optional trunk capacity in kilograms (null if not specified)
    */
-  trunkCapacity?: number;
+  trunkCapacity?: number | null;
 
   /**
    * Fuel efficiency
    * Must be a positive number
+   * Optional fuel efficiency in km/L (null if not specified)
    */
-  fuelEfficiency?: number;
+  fuelEfficiency?: number | null;
 
   /**
    * Max capacity
    * Must be a positive number
+   * Optional max capacity in passengers (null if not specified)
    */
-  maxCapacity?: number;
+  maxCapacity?: number | null;
 
   /**
    * Number of floors/decks in the bus
    * @default 1
    */
-  numFloors?: number;
+  numFloors: number;
 
   /**
    * Available amenities
@@ -126,12 +139,7 @@ export interface CreateBusModelPayload {
   /**
    * Type of engine (e.g., diesel, electric)
    */
-  engineType?: string;
-
-  /**
-   * Distribution type of the bus model
-   */
-  distributionType?: string;
+  engineType: EngineType;
 
   /**
    * Whether the bus model is active
@@ -147,7 +155,7 @@ export interface UpdateBusModelPayload {
   /**
    * Default bus diagram model ID
    */
-  defaultBusDiagramModelId?: number;
+  defaultBusDiagramModelId?: number | null;
 
   /**
    * Manufacturer of the bus
@@ -176,20 +184,23 @@ export interface UpdateBusModelPayload {
   /**
    * Trunk capacity
    * Must be a positive number
+   * Optional trunk capacity in liters (null if not specified)
    */
-  trunkCapacity?: number;
+  trunkCapacity?: number | null;
 
   /**
    * Fuel efficiency
    * Must be a positive number
+   * Optional fuel efficiency in liters per kilometers (null if not specified)
    */
-  fuelEfficiency?: number;
+  fuelEfficiency?: number | null;
 
   /**
    * Max capacity
    * Must be a positive number
+   * Optional max capacity in liters (null if not specified)
    */
-  maxCapacity?: number;
+  maxCapacity?: number | null;
 
   /**
    * Number of floors/decks in the bus
@@ -204,12 +215,7 @@ export interface UpdateBusModelPayload {
   /**
    * Type of engine (e.g., diesel, electric)
    */
-  engineType?: string;
-
-  /**
-   * Distribution type of the bus model
-   */
-  distributionType?: string;
+  engineType?: EngineType;
 
   /**
    * Whether the bus model is active

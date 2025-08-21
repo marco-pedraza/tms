@@ -12,12 +12,7 @@ export default function NewBusModelPage() {
   const { create: createBusModel } = useBusModelMutations();
 
   const handleSubmit = (values: BusModelFormValues) =>
-    createBusModel.mutateWithToast({
-      ...values,
-      year: values.year ?? new Date().getFullYear(),
-      defaultBusDiagramModelId: 1,
-      seatingCapacity: values.seatingCapacity ?? 0,
-    });
+    createBusModel.mutateWithToast(values);
 
   return (
     <div>

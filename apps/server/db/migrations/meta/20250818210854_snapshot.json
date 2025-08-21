@@ -1,5 +1,5 @@
 {
-  "id": "fa86273c-17bd-4095-8e4d-6cae9a1e1ada",
+  "id": "90676a20-37d5-474d-85cb-7265c5753075",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -798,12 +798,6 @@
         },
         "engine_type": {
           "name": "engine_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "distribution_type": {
-          "name": "distribution_type",
           "type": "text",
           "primaryKey": false,
           "notNull": false

@@ -1,5 +1,10 @@
 import { MatchesRegexp, MinLen } from 'encore.dev/validate';
-import { FloorSeats, PaginatedResult } from '@/shared/types';
+import {
+  FloorSeats,
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedResult,
+} from '@/shared/types';
 
 /**
  * Represents a bus diagram model (template) in the database
@@ -144,6 +149,16 @@ export interface BusDiagramModels {
   /** List of bus diagram models */
   busDiagramModels: BusDiagramModel[];
 }
+
+/**
+ * Response containing a list of bus models query params
+ */
+export type ListBusDiagramModelsQueryParams = ListQueryParams<BusDiagramModel>;
+
+/**
+ * Response containing a list of bus models
+ */
+export type ListBusDiagramModelsResult = ListQueryResult<BusDiagramModel>;
 
 /**
  * Paginated result of bus diagram models

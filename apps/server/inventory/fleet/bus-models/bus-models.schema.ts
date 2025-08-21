@@ -33,7 +33,6 @@ export const busModels = pgTable(
     numFloors: integer('num_floors').notNull().default(1),
     amenities: jsonb('amenities').default([]),
     engineType: text('engine_type'),
-    distributionType: text('distribution_type'),
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),

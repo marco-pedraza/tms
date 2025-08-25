@@ -7,8 +7,9 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { isNull, relations } from 'drizzle-orm';
 import { busSeatModels } from '@/inventory/fleet/bus-seat-models/bus-seat-models.schema';
 import { seatDiagrams } from '@/inventory/fleet/seat-diagrams/seat-diagrams.schema';
 
@@ -29,8 +30,12 @@ export const busDiagramModels = pgTable(
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at'),
   },
-  (table) => [index().on(table.name)],
+  (table) => [
+    index().on(table.deletedAt),
+    uniqueIndex().on(table.name).where(isNull(table.deletedAt)),
+  ],
 );
 
 /**

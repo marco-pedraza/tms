@@ -151,7 +151,6 @@ export namespace inventory {
             this.getAmenity = this.getAmenity.bind(this)
             this.getBus = this.getBus.bind(this)
             this.getBusDiagramModel = this.getBusDiagramModel.bind(this)
-            this.getBusDiagramModelSeats = this.getBusDiagramModelSeats.bind(this)
             this.getBusDiagramModelZone = this.getBusDiagramModelZone.bind(this)
             this.getBusLine = this.getBusLine.bind(this)
             this.getBusModel = this.getBusModel.bind(this)
@@ -181,6 +180,7 @@ export namespace inventory {
             this.listAmenities = this.listAmenities.bind(this)
             this.listAmenitiesPaginated = this.listAmenitiesPaginated.bind(this)
             this.listAvailableCities = this.listAvailableCities.bind(this)
+            this.listBusDiagramModelSeats = this.listBusDiagramModelSeats.bind(this)
             this.listBusDiagramModels = this.listBusDiagramModels.bind(this)
             this.listBusDiagramModelsPaginated = this.listBusDiagramModelsPaginated.bind(this)
             this.listBusLines = this.listBusLines.bind(this)
@@ -422,7 +422,7 @@ export namespace inventory {
          */
         public async createBusDiagramModel(params: bus_diagram_models.CreateBusDiagramModelPayload): Promise<bus_diagram_models.BusDiagramModel> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/bus-diagram-models`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("POST", `/bus-diagram-models/create`, JSON.stringify(params))
             return await resp.json() as bus_diagram_models.BusDiagramModel
         }
 
@@ -736,7 +736,7 @@ export namespace inventory {
          */
         public async deleteBusDiagramModel(id: number): Promise<bus_diagram_models.BusDiagramModel> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/bus-diagram-models/${encodeURIComponent(id)}`)
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/bus-diagram-models/${encodeURIComponent(id)}/delete`)
             return await resp.json() as bus_diagram_models.BusDiagramModel
         }
 
@@ -1043,19 +1043,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/bus-diagram-models/${encodeURIComponent(id)}`)
             return await resp.json() as bus_diagram_models.BusDiagramModel
-        }
-
-        /**
-         * Retrieves all seat models for a specific bus diagram model.
-         * @param params - Object containing the bus diagram model ID
-         * @param params.id - The ID of the bus diagram model to get seats for
-         * @returns {Promise<BusSeatModels>} Object containing array of seat models
-         * @throws {APIError} If retrieval fails or the bus diagram model doesn't exist
-         */
-        public async getBusDiagramModelSeats(id: number): Promise<bus_seat_models.BusSeatModels> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/bus-diagram-models/${encodeURIComponent(id)}/seats`)
-            return await resp.json() as bus_seat_models.BusSeatModels
         }
 
         /**
@@ -1432,6 +1419,19 @@ export namespace inventory {
         }
 
         /**
+         * Retrieves all seat models for a specific bus diagram model.
+         * @param params - Object containing the bus diagram model ID
+         * @param params.id - The ID of the bus diagram model to get seats for
+         * @returns {Promise<ListBusSeatModelsResult>} Object containing array of seat models
+         * @throws {APIError} If retrieval fails or the bus diagram model doesn't exist
+         */
+        public async listBusDiagramModelSeats(id: number): Promise<bus_seat_models.ListBusSeatModelsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/bus-diagram-models/${encodeURIComponent(id)}/seats/list`)
+            return await resp.json() as bus_seat_models.ListBusSeatModelsResult
+        }
+
+        /**
          * Retrieves all bus diagram models without pagination (useful for dropdowns).
          * @returns {Promise<ListBusDiagramModelsResult>} An object with a data array of bus diagram models
          * @throws {APIError} If retrieval fails
@@ -1444,14 +1444,14 @@ export namespace inventory {
 
         /**
          * Retrieves bus diagram models with pagination (useful for tables).
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedBusDiagramModels>} Paginated list of bus diagram models
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListBusDiagramModelsResult>} Unified paginated response with data and pagination properties
          * @throws {APIError} If retrieval fails
          */
-        public async listBusDiagramModelsPaginated(params: shared.PaginationParams): Promise<bus_diagram_models.PaginatedBusDiagramModels> {
+        public async listBusDiagramModelsPaginated(params: bus_diagram_models.PaginatedListBusDiagramModelsQueryParams): Promise<bus_diagram_models.PaginatedListBusDiagramModelsResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-bus-diagram-models/paginated`, JSON.stringify(params))
-            return await resp.json() as bus_diagram_models.PaginatedBusDiagramModels
+            const resp = await this.baseClient.callTypedAPI("POST", `/bus-diagram-models/list`, JSON.stringify(params))
+            return await resp.json() as bus_diagram_models.PaginatedListBusDiagramModelsResult
         }
 
         /**
@@ -2039,7 +2039,7 @@ export namespace inventory {
          */
         public async regenerateSeats(id: number): Promise<bus_diagram_models.RegenerateSeatsResponse> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/bus-diagram-models/${encodeURIComponent(id)}/regenerate-seats`)
+            const resp = await this.baseClient.callTypedAPI("POST", `/bus-diagram-models/${encodeURIComponent(id)}/seats/regenerate`)
             return await resp.json() as bus_diagram_models.RegenerateSeatsResponse
         }
 
@@ -2283,7 +2283,7 @@ export namespace inventory {
     regenerateSeats?: boolean
 }): Promise<bus_diagram_models.BusDiagramModel> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PATCH", `/bus-diagram-models/${encodeURIComponent(id)}`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("PUT", `/bus-diagram-models/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as bus_diagram_models.BusDiagramModel
         }
 
@@ -3162,7 +3162,7 @@ export namespace inventory {
     seats: bus_seat_models.SeatConfigurationInput[]
 }): Promise<bus_seat_models.UpdatedSeatConfiguration> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/bus-diagram-models/${encodeURIComponent(id)}/update-seats`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("PUT", `/bus-diagram-models/${encodeURIComponent(id)}/seats/update`, JSON.stringify(params))
             return await resp.json() as bus_seat_models.UpdatedSeatConfiguration
         }
 
@@ -5530,7 +5530,30 @@ export namespace bus_diagram_models {
         data: BusDiagramModel[]
     }
 
-    export interface PaginatedBusDiagramModels {
+    export interface PaginatedListBusDiagramModelsQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "description" | "maxCapacity" | "numFloors" | "seatsPerFloor" | "totalSeats" | "isFactoryDefault" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            description?: string | null
+            maxCapacity?: number
+            numFloors?: number
+            seatsPerFloor?: shared.FloorSeats[]
+            totalSeats?: number
+            isFactoryDefault?: boolean
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListBusDiagramModelsResult {
         pagination: shared.PaginationMeta
         data: BusDiagramModel[]
     }
@@ -6109,13 +6132,6 @@ export namespace bus_seat_models {
 
     export type BusSeatModel = SeatBusSeatModel | HallwayBusSeatModel | BathroomBusSeatModel | EmptyBusSeatModel | StairsBusSeatModel
 
-    export interface BusSeatModels {
-        /**
-         * List of bus seat models
-         */
-        busSeatModels: BusSeatModel[]
-    }
-
     export interface EmptyBusSeatModel {
         /**
          * Type of space
@@ -6218,6 +6234,10 @@ export namespace bus_seat_models {
          * Timestamp when the space model was last updated
          */
         updatedAt: string | string | null
+    }
+
+    export interface ListBusSeatModelsResult {
+        data: BusSeatModel[]
     }
 
     export interface SeatBusSeatModel {
@@ -10830,11 +10850,6 @@ export namespace shared {
          * Whether there is a previous page available
          */
         hasPreviousPage: boolean
-    }
-
-    export interface PaginationParams {
-        page?: number
-        pageSize?: number
     }
 
     export interface PaginationParams {

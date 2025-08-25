@@ -8,7 +8,7 @@ import {
 } from '@/inventory/fleet/bus-seat-models/bus-seat-models.domain';
 import { busSeatModelRepository } from '@/inventory/fleet/bus-seat-models/bus-seat-models.repository';
 import type { BusSeatModel } from '@/inventory/fleet/bus-seat-models/bus-seat-models.types';
-import type { BusSeatModels } from '@/inventory/fleet/bus-seat-models/bus-seat-models.types';
+import type { ListBusSeatModelsResult } from '@/inventory/fleet/bus-seat-models/bus-seat-models.types';
 import { busSeatModelUseCases } from '@/inventory/fleet/bus-seat-models/bus-seat-models.use-cases';
 import { busSeatRepository } from '@/inventory/fleet/bus-seats/bus-seats.repository';
 import type { busSeats } from '@/inventory/fleet/bus-seats/bus-seats.schema';
@@ -38,6 +38,7 @@ import type {
   SeatDiagramSyncSummary,
 } from './bus-diagram-models.types';
 import { busDiagramModelRepository } from './bus-diagram-models.repository';
+import { validateBusDiagramModel } from './bus-diagram-models.domain';
 
 /**
  * Creates use cases for bus diagram models
@@ -54,6 +55,9 @@ export function createBusDiagramModelUseCases() {
   async function createBusDiagramModelWithSeats(
     params: CreateBusDiagramModelPayload,
   ): Promise<BusDiagramModel> {
+    // Validate the diagram model data before creation
+    await validateBusDiagramModel(params);
+
     // Use transaction to ensure atomicity between diagram model and seat models creation
     return await busDiagramModelRepository
       .transaction(async (txRepo, tx) => {
@@ -398,13 +402,13 @@ export function createBusDiagramModelUseCases() {
    * This operation coordinates multiple repositories and applies business rules
    * such as filtering only active seats and proper ordering.
    * @param diagramModelId - The ID of the bus diagram model to get seats for
-   * @returns {Promise<BusSeatModels>} Object containing array of seat models
+   * @returns {Promise<ListBusSeatModelsResult>} Object containing array of seat models
    * @throws {NotFoundError} If the bus diagram model doesn't exist
    * @throws {ValidationError} If retrieval fails
    */
   async function getBusDiagramModelSeats(
     diagramModelId: number,
-  ): Promise<BusSeatModels> {
+  ): Promise<ListBusSeatModelsResult> {
     // Verify the diagram model exists first
     await busDiagramModelRepository.findOne(diagramModelId);
 
@@ -415,7 +419,7 @@ export function createBusDiagramModelUseCases() {
       );
 
     return {
-      busSeatModels: seatModels,
+      data: seatModels,
     };
   }
 

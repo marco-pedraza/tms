@@ -1,21 +1,22 @@
 import { api } from 'encore.dev/api';
-import { PaginationParams } from '@/shared/types';
 import {
   UpdateSeatConfigurationPayload,
   UpdatedSeatConfiguration,
 } from '@/inventory/fleet/bus-seat-models/bus-seat-models.types';
-import { BusSeatModels } from '@/inventory/fleet/bus-seat-models/bus-seat-models.types';
+import { ListBusSeatModelsResult } from '@/inventory/fleet/bus-seat-models/bus-seat-models.types';
 import { busSeatModelUseCases } from '@/inventory/fleet/bus-seat-models/bus-seat-models.use-cases';
 import {
   BusDiagramModel,
   CreateBusDiagramModelPayload,
   ListBusDiagramModelsQueryParams,
   ListBusDiagramModelsResult,
-  PaginatedBusDiagramModels,
+  PaginatedListBusDiagramModelsQueryParams,
+  PaginatedListBusDiagramModelsResult,
   RegenerateSeatsResponse,
   UpdateBusDiagramModelPayload,
 } from './bus-diagram-models.types';
 import { busDiagramModelRepository } from './bus-diagram-models.repository';
+import { validateBusDiagramModel } from './bus-diagram-models.domain';
 import { busDiagramModelUseCases } from './bus-diagram-models.use-cases';
 
 /**
@@ -25,8 +26,9 @@ import { busDiagramModelUseCases } from './bus-diagram-models.use-cases';
  * @throws {APIError} If creation fails or validation fails
  */
 export const createBusDiagramModel = api(
-  { expose: true, method: 'POST', path: '/bus-diagram-models' },
+  { expose: true, method: 'POST', path: '/bus-diagram-models/create' },
   async (params: CreateBusDiagramModelPayload): Promise<BusDiagramModel> => {
+    await validateBusDiagramModel(params);
     return await busDiagramModelUseCases.createBusDiagramModelWithSeats(params);
   },
 );
@@ -64,13 +66,15 @@ export const listBusDiagramModels = api(
 
 /**
  * Retrieves bus diagram models with pagination (useful for tables).
- * @param params - Pagination parameters
- * @returns {Promise<PaginatedBusDiagramModels>} Paginated list of bus diagram models
+ * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+ * @returns {Promise<PaginatedListBusDiagramModelsResult>} Unified paginated response with data and pagination properties
  * @throws {APIError} If retrieval fails
  */
 export const listBusDiagramModelsPaginated = api(
-  { expose: true, method: 'POST', path: '/get-bus-diagram-models/paginated' },
-  async (params: PaginationParams): Promise<PaginatedBusDiagramModels> => {
+  { expose: true, method: 'POST', path: '/bus-diagram-models/list' },
+  async (
+    params: PaginatedListBusDiagramModelsQueryParams,
+  ): Promise<PaginatedListBusDiagramModelsResult> => {
     return await busDiagramModelRepository.findAllPaginated(params);
   },
 );
@@ -84,7 +88,7 @@ export const listBusDiagramModelsPaginated = api(
  * @throws {APIError} If update fails, validation fails, or the bus diagram model doesn't exist
  */
 export const updateBusDiagramModel = api(
-  { expose: true, method: 'PATCH', path: '/bus-diagram-models/:id' },
+  { expose: true, method: 'PUT', path: '/bus-diagram-models/:id/update' },
   async ({
     id,
     regenerateSeats = false,
@@ -93,6 +97,8 @@ export const updateBusDiagramModel = api(
     id: number;
     regenerateSeats?: boolean;
   }): Promise<BusDiagramModel> => {
+    await validateBusDiagramModel(data, id);
+
     // Update the bus diagram model and optionally regenerate seats
     if (regenerateSeats) {
       // Regenerate seat models with the updated diagram model data in a single transaction
@@ -113,7 +119,7 @@ export const updateBusDiagramModel = api(
  * @throws {APIError} If deletion fails or the bus diagram model doesn't exist
  */
 export const deleteBusDiagramModel = api(
-  { expose: true, method: 'DELETE', path: '/bus-diagram-models/:id' },
+  { expose: true, method: 'DELETE', path: '/bus-diagram-models/:id/delete' },
   async ({ id }: { id: number }): Promise<BusDiagramModel> => {
     return await busDiagramModelRepository.delete(id);
   },
@@ -128,7 +134,7 @@ export const deleteBusDiagramModel = api(
  * @throws {APIError} If the update fails, validation fails, or the bus diagram model doesn't exist
  */
 export const updateSeatConfiguration = api(
-  { expose: true, method: 'PUT', path: '/bus-diagram-models/:id/update-seats' },
+  { expose: true, method: 'PUT', path: '/bus-diagram-models/:id/seats/update' },
   async ({
     id,
     seats,
@@ -143,12 +149,12 @@ export const updateSeatConfiguration = api(
  * Retrieves all seat models for a specific bus diagram model.
  * @param params - Object containing the bus diagram model ID
  * @param params.id - The ID of the bus diagram model to get seats for
- * @returns {Promise<BusSeatModels>} Object containing array of seat models
+ * @returns {Promise<ListBusSeatModelsResult>} Object containing array of seat models
  * @throws {APIError} If retrieval fails or the bus diagram model doesn't exist
  */
-export const getBusDiagramModelSeats = api(
-  { expose: true, method: 'GET', path: '/bus-diagram-models/:id/seats' },
-  async ({ id }: { id: number }): Promise<BusSeatModels> => {
+export const listBusDiagramModelSeats = api(
+  { expose: true, method: 'GET', path: '/bus-diagram-models/:id/seats/list' },
+  async ({ id }: { id: number }): Promise<ListBusSeatModelsResult> => {
     return await busDiagramModelUseCases.getBusDiagramModelSeats(id);
   },
 );
@@ -166,7 +172,7 @@ export const regenerateSeats = api(
   {
     expose: true,
     method: 'POST',
-    path: '/bus-diagram-models/:id/regenerate-seats',
+    path: '/bus-diagram-models/:id/seats/regenerate',
   },
   async ({ id }: { id: number }): Promise<RegenerateSeatsResponse> => {
     return await busDiagramModelUseCases.regenerateSeats(id);

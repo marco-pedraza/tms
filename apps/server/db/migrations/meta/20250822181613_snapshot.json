@@ -1,6 +1,6 @@
 {
-  "id": "90676a20-37d5-474d-85cb-7265c5753075",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "535ec66e-d062-4916-8267-8f50d6cb89b0",
+  "prevId": "dccb14f8-1ec6-427e-86bc-00119ffe247f",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -471,9 +471,30 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
+        "bus_diagram_models_deleted_at_index": {
+          "name": "bus_diagram_models_deleted_at_index",
+          "columns": [
+            {
+              "expression": "deleted_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "bus_diagram_models_name_index": {
           "name": "bus_diagram_models_name_index",
           "columns": [
@@ -484,7 +505,8 @@
               "nulls": "last"
             }
           ],
-          "isUnique": false,
+          "isUnique": true,
+          "where": "\"bus_diagram_models\".\"deleted_at\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}

@@ -281,6 +281,20 @@
       "when": 1755551334155,
       "tag": "20250818210854_remove_distribution_type_from_bus_models",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1755712551310,
+      "tag": "20250820175551_add_soft_delete_to_bus_diagram_models",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1755886573518,
+      "tag": "20250822181613_remove_redundant_index_for_bus_diagram_models",
+      "breakpoints": true
     }
   ]
 }

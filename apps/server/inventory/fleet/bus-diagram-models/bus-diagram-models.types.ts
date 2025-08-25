@@ -3,7 +3,8 @@ import {
   FloorSeats,
   ListQueryParams,
   ListQueryResult,
-  PaginatedResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
 } from '@/shared/types';
 
 /**
@@ -143,29 +144,6 @@ export interface UpdateBusDiagramModelPayload {
 }
 
 /**
- * Response containing a list of bus diagram models
- */
-export interface BusDiagramModels {
-  /** List of bus diagram models */
-  busDiagramModels: BusDiagramModel[];
-}
-
-/**
- * Response containing a list of bus models query params
- */
-export type ListBusDiagramModelsQueryParams = ListQueryParams<BusDiagramModel>;
-
-/**
- * Response containing a list of bus models
- */
-export type ListBusDiagramModelsResult = ListQueryResult<BusDiagramModel>;
-
-/**
- * Paginated result of bus diagram models
- */
-export type PaginatedBusDiagramModels = PaginatedResult<BusDiagramModel>;
-
-/**
  * Response for seat diagram synchronization summary
  */
 export interface SeatDiagramSyncSummary {
@@ -189,3 +167,25 @@ export interface RegenerateSeatsResponse {
   /** Array of sync summaries, one for each diagram that was synced */
   summaries: SeatDiagramSyncSummary[];
 }
+
+/**
+ * Query parameters for listing bus diagram models without pagination
+ */
+export type ListBusDiagramModelsQueryParams = ListQueryParams<BusDiagramModel>;
+
+/**
+ * Response for listing bus diagram models without pagination
+ */
+export type ListBusDiagramModelsResult = ListQueryResult<BusDiagramModel>;
+
+/**
+ * Query parameters for listing bus diagram models with pagination
+ */
+export type PaginatedListBusDiagramModelsQueryParams =
+  PaginatedListQueryParams<BusDiagramModel>;
+
+/**
+ * Response for listing bus diagram models with pagination
+ */
+export type PaginatedListBusDiagramModelsResult =
+  PaginatedListQueryResult<BusDiagramModel>;

@@ -11,7 +11,7 @@ import {
  * Creates a repository for managing bus diagram model entities
  * @returns {Object} An object containing bus diagram model-specific operations and base CRUD operations
  */
-export const createBusDiagramModelRepository = () => {
+const createBusDiagramModelRepository = () => {
   const baseRepository = createBaseRepository<
     BusDiagramModel,
     CreateBusDiagramModelPayload,
@@ -19,11 +19,11 @@ export const createBusDiagramModelRepository = () => {
     typeof busDiagramModels
   >(db, busDiagramModels, 'Bus Diagram Model', {
     searchableFields: [busDiagramModels.name],
+    softDeleteEnabled: true,
+    checkDependenciesOnSoftDelete: false,
   });
 
-  return {
-    ...baseRepository,
-  };
+  return baseRepository;
 };
 
 // Export the bus diagram model repository instance

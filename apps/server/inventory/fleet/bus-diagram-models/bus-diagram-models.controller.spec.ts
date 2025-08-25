@@ -25,7 +25,7 @@ import {
   createBusDiagramModel,
   deleteBusDiagramModel,
   getBusDiagramModel,
-  getBusDiagramModelSeats,
+  listBusDiagramModelSeats,
   listBusDiagramModels,
   listBusDiagramModelsPaginated,
   regenerateSeats,
@@ -68,7 +68,10 @@ describe('Bus Diagram Models Controller', () => {
   let additionalModelId: number | undefined;
 
   // Helper functions to reduce code duplication
-  const createSimpleTestModel = async (name: string, numRows = 2) => {
+  const createSimpleTestModel = async (
+    name: string,
+    numRows = 2,
+  ): Promise<BusDiagramModel> => {
     return await createBusDiagramModel({
       name,
       description: 'Test model for validation',
@@ -248,32 +251,32 @@ describe('Bus Diagram Models Controller', () => {
 
     test('should retrieve seat models for a bus diagram model', async () => {
       // Get the seat models for the created diagram model
-      const seatsResponse = await getBusDiagramModelSeats({
+      const seatsResponse = await listBusDiagramModelSeats({
         id: createdBusDiagramModelId,
       });
 
       // Verify the response structure
       expect(seatsResponse).toBeDefined();
-      expect(seatsResponse.busSeatModels).toBeDefined();
-      expect(Array.isArray(seatsResponse.busSeatModels)).toBe(true);
+      expect(seatsResponse.data).toBeDefined();
+      expect(Array.isArray(seatsResponse.data)).toBe(true);
 
       // Verify we have the expected number of seats (40 seats from the test model)
-      expect(seatsResponse.busSeatModels).toHaveLength(40);
+      expect(seatsResponse.data).toHaveLength(40);
 
       // Verify all returned models are active (only active seats should be returned)
-      const allSeatsActive = seatsResponse.busSeatModels.every(
+      const allSeatsActive = seatsResponse.data.every(
         (seat) => seat.active === true,
       );
       expect(allSeatsActive).toBe(true);
 
       // Verify all seats belong to the correct diagram model
-      const allSeatsForCorrectModel = seatsResponse.busSeatModels.every(
+      const allSeatsForCorrectModel = seatsResponse.data.every(
         (seat) => seat.busDiagramModelId === createdBusDiagramModelId,
       );
       expect(allSeatsForCorrectModel).toBe(true);
 
       // Verify seats are ordered by seatNumber (ascending)
-      const seatNumbers = seatsResponse.busSeatModels
+      const seatNumbers = seatsResponse.data
         .filter(isSeatModel) // Filter to only seat space types
         .map((seat) => parseInt(seat.seatNumber || '0'))
         .filter((num) => !isNaN(num)) // Filter out any non-numeric seat numbers
@@ -284,7 +287,7 @@ describe('Bus Diagram Models Controller', () => {
       }
 
       // Verify seat properties structure
-      const firstSeat = seatsResponse.busSeatModels[0];
+      const firstSeat = seatsResponse.data[0];
       expect(firstSeat.id).toBeDefined();
       expect(firstSeat.busDiagramModelId).toBe(createdBusDiagramModelId);
       expect(firstSeat.floorNumber).toBeDefined();
@@ -389,11 +392,18 @@ describe('Bus Diagram Models Controller', () => {
       );
       expect(seatsWithRow5).toHaveLength(4); // 4 seats in row 5
 
-      // Clean up the test model
+      // Clean up the test model - first delete seat models to avoid dependency errors
+      const cleanupSeatModels = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        initialModel.id,
+      );
+      for (const seatModel of cleanupSeatModels) {
+        await busSeatModelRepository.delete(seatModel.id);
+      }
       await deleteBusDiagramModel({ id: initialModel.id });
     });
 
-    test('should delete a bus diagram model', async () => {
+    test('should soft delete a bus diagram model', async () => {
       // Create a model specifically for deletion test
       const modelToDelete = await createBusDiagramModel({
         name: 'Model To Delete',
@@ -414,12 +424,14 @@ describe('Bus Diagram Models Controller', () => {
 
       additionalModelId = modelToDelete.id;
 
-      // Delete should not throw an error
-      await expect(
-        deleteBusDiagramModel({ id: additionalModelId }),
-      ).resolves.not.toThrow();
+      // Soft delete should work even with dependencies (seat models)
+      const deletedModel = await deleteBusDiagramModel({
+        id: additionalModelId,
+      });
+      expect(deletedModel).toBeDefined();
+      expect(deletedModel.id).toBe(additionalModelId);
 
-      // Attempt to get should throw a not found error
+      // Attempt to get should throw a not found error (soft deleted records are filtered out)
       await expect(
         getBusDiagramModel({ id: additionalModelId }),
       ).rejects.toThrow();
@@ -570,7 +582,14 @@ describe('Bus Diagram Models Controller', () => {
       const updatedModel = await getBusDiagramModel({ id: initialModel.id });
       expect(updatedModel.totalSeats).toBe(4);
 
-      // Clean up
+      // Clean up - first delete seat models to avoid dependency errors
+      const cleanupSeatModels = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        initialModel.id,
+      );
+      for (const seatModel of cleanupSeatModels) {
+        await busSeatModelRepository.delete(seatModel.id);
+      }
       await deleteBusDiagramModel({ id: initialModel.id });
     });
 
@@ -670,7 +689,14 @@ describe('Bus Diagram Models Controller', () => {
       expect(newPremiumSeat?.seatType).toBe(SeatType.PREMIUM);
       expect(newPremiumSeat?.position).toEqual({ x: 3, y: 4 });
 
-      // Clean up
+      // Clean up - first delete seat models to avoid dependency errors
+      const testModelSeatModels = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        testModel.id,
+      );
+      for (const seatModel of testModelSeatModels) {
+        await busSeatModelRepository.delete(seatModel.id);
+      }
       await deleteBusDiagramModel({ id: testModel.id });
     });
 
@@ -762,7 +788,23 @@ describe('Bus Diagram Models Controller', () => {
       expect(aisleLastRowSeat).toBeDefined();
       expect(aisleLastRowSeat?.position.x).toBe(2); // Aisle position in last row
 
-      // Clean up both models
+      // Clean up both models - first delete seat models to avoid dependency errors
+      const emptyConfigSeatModels = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        emptyConfigModel.id,
+      );
+      for (const seatModel of emptyConfigSeatModels) {
+        await busSeatModelRepository.delete(seatModel.id);
+      }
+
+      const aisleConfigSeatModels = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        aisleConfigModel.id,
+      );
+      for (const seatModel of aisleConfigSeatModels) {
+        await busSeatModelRepository.delete(seatModel.id);
+      }
+
       await deleteBusDiagramModel({ id: emptyConfigModel.id });
       await deleteBusDiagramModel({ id: aisleConfigModel.id });
     });
@@ -1170,6 +1212,38 @@ describe('Bus Diagram Models Controller', () => {
       await seatDiagramRepository.delete(childDiagram2A.id);
       await seatDiagramRepository.delete(childDiagram2B.id);
 
+      // Delete zones before deleting parent models
+      const zones1 = await busDiagramModelZoneRepository.findAll({
+        filters: { busDiagramModelId: parentModel1.id },
+      });
+      for (const zone of zones1) {
+        await busDiagramModelZoneRepository.delete(zone.id);
+      }
+
+      const zones2 = await busDiagramModelZoneRepository.findAll({
+        filters: { busDiagramModelId: parentModel2.id },
+      });
+      for (const zone of zones2) {
+        await busDiagramModelZoneRepository.delete(zone.id);
+      }
+
+      // Delete seat models before deleting parent models
+      const seatModels1 = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        parentModel1.id,
+      );
+      for (const seatModel of seatModels1) {
+        await busSeatModelRepository.delete(seatModel.id);
+      }
+
+      const seatModels2 = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        parentModel2.id,
+      );
+      for (const seatModel of seatModels2) {
+        await busSeatModelRepository.delete(seatModel.id);
+      }
+
       // Then delete parent diagram models
       await deleteBusDiagramModel({ id: parentModel1.id });
       await deleteBusDiagramModel({ id: parentModel2.id });
@@ -1307,7 +1381,14 @@ describe('Bus Diagram Models Controller', () => {
         'Invalid column number -1 for floor 1. Must be between 0 and 4',
       );
 
-      // Clean up
+      // Clean up - first delete seat models to avoid dependency errors
+      const validationTestSeatModels = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        testModel.id,
+      );
+      for (const seatModel of validationTestSeatModels) {
+        await busSeatModelRepository.delete(seatModel.id);
+      }
       await deleteBusDiagramModel({ id: testModel.id });
     });
 

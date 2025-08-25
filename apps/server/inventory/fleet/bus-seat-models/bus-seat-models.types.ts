@@ -1,6 +1,6 @@
 import { MatchesRegexp, MinLen } from 'encore.dev/validate';
 import {
-  PaginatedResult,
+  ListQueryResult,
   SeatPosition,
   SeatType,
   SpaceType,
@@ -227,19 +227,6 @@ export interface UpdateBusSeatModelPayload {
 }
 
 /**
- * Response containing a list of bus seat models
- */
-export interface BusSeatModels {
-  /** List of bus seat models */
-  busSeatModels: BusSeatModel[];
-}
-
-/**
- * Paginated list of bus seat models
- */
-export type PaginatedBusSeatModels = PaginatedResult<BusSeatModel>;
-
-/**
  * Input for updating space configuration of a template layout in batch
  */
 export interface UpdateSeatConfigurationPayload {
@@ -315,3 +302,5 @@ export interface UpdatedSeatConfiguration {
   /** Total number of active seats (SEAT space types only) */
   totalActiveSeats: number;
 }
+
+export type ListBusSeatModelsResult = ListQueryResult<BusSeatModel>;

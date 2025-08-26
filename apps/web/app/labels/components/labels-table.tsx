@@ -54,7 +54,7 @@ function labelsColumnsFactory({
       sortable: false,
       cell: ({ row }) => {
         const description = row.original.description;
-        return <div className="font-medium">{description}</div>;
+        return <div>{description}</div>;
       },
     },
     {
@@ -85,7 +85,7 @@ function labelsColumnsFactory({
         const nodeText =
           count === 1 ? tLabels('nodeCount.nodo') : tLabels('nodeCount.nodos');
         return (
-          <div className="font-medium">
+          <div>
             {count} {nodeText}
           </div>
         );

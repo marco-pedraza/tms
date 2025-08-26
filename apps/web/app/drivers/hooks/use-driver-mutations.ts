@@ -4,7 +4,7 @@ import imsClient from '@/services/ims-client';
 import routes from '@/services/routes';
 
 export default createCollectionMutations<
-  drivers.Driver,
+  drivers.DriverWithRelations,
   drivers.CreateDriverPayload
 >({
   queryKey: ['drivers'],

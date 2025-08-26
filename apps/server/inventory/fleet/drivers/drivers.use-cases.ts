@@ -1,214 +1,98 @@
-import { ValidationError } from '@/shared/errors';
 import { busLineRepository } from '@/inventory/operators/bus-lines/bus-lines.repository';
-import { Driver } from './drivers.types';
+import type {
+  CreateDriverPayload,
+  DriverWithRelations,
+  UpdateDriverPayload,
+} from './drivers.types';
 import { driverRepository } from './drivers.repository';
 
 /**
  * Creates a use case module for driver operations that involve complex business logic
  * @returns {Object} An object containing driver-specific operations
  */
-export const createDriverUseCases = () => {
+export function createDriverUseCases() {
   /**
-   * Assigns a driver to a transporter with validation
-   * @param {number} id - The ID of the driver
-   * @param {number} transporterId - The ID of the transporter
-   * @returns {Promise<Driver>} The updated driver
-   * @throws {ValidationError} If the assignment fails
+   * Gets the transporter ID associated with a bus line
+   * @param busLineId - The ID of the bus line
+   * @returns {Promise<number>} The transporter ID associated with the bus line
+   * @throws {ValidationError} If the bus line is not found or invalid
    */
-  const assignToTransporter = async (
-    id: number,
-    transporterId: number,
-  ): Promise<Driver> => {
-    try {
-      // Validate driver exists
-      const driver = await driverRepository.findOne(id);
-
-      // Check if driver is already assigned to a transporter
-      if (driver.transporterId === transporterId) {
-        throw new ValidationError(
-          `Driver is already assigned to transporter with ID ${transporterId}`,
-        );
-      }
-
-      // Use repository update to assign driver to transporter
-      return await driverRepository.update(id, { transporterId });
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        throw error;
-      }
-      throw new ValidationError(
-        `Failed to assign driver to transporter: ${error.message}`,
-      );
-    }
-  };
-
-  /**
-   * Assigns a driver to a bus line with validation
-   * @param {number} id - The ID of the driver
-   * @param {number} busLineId - The ID of the bus line
-   * @returns {Promise<Driver>} The updated driver
-   * @throws {ValidationError} If the assignment fails
-   */
-  const assignToBusLine = async (
-    id: number,
+  const getTransporterIdFromBusLine = async (
     busLineId: number,
-  ): Promise<Driver> => {
-    try {
-      // Validate driver exists
-      const driver = await driverRepository.findOne(id);
+  ): Promise<number> => {
+    // Validate that the bus line exists and get its transporter
+    const busLineWithTransporter =
+      await busLineRepository.findOneWithRelations(busLineId);
 
-      // Fetch the bus line to validate
-      const busLine = await busLineRepository.findOne(busLineId);
-
-      // Validate driver is assigned to the same transporter as the bus line
-      if (
-        busLine.transporterId &&
-        driver.transporterId !== busLine.transporterId
-      ) {
-        throw new ValidationError(
-          `Driver must be assigned to transporter ID ${busLine.transporterId} before being assigned to this bus line`,
-        );
-      }
-
-      // Use repository update to assign driver to bus line
-      return await driverRepository.update(id, { busLineId });
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        throw error;
-      }
-      throw new ValidationError(
-        `Failed to assign driver to bus line: ${error.message}`,
-      );
-    }
+    return busLineWithTransporter.transporterId;
   };
 
   /**
-   * Removes a driver from a transporter
-   * @param {number} id - The ID of the driver
-   * @returns {Promise<Driver>} The updated driver
-   * @throws {ValidationError} If the removal fails
+   * Creates a new driver with automatic transporter assignment based on bus line
+   * @param data - The driver creation payload
+   * @returns {Promise<DriverWithRelations>} The created driver with transporter and bus line information
+   * @throws {ValidationError} If the bus line is not found or invalid
    */
-  const removeFromTransporter = async (id: number): Promise<Driver> => {
-    try {
-      // Validate driver exists
-      const driver = await driverRepository.findOne(id);
+  const createDriverWithTransporter = async (
+    data: CreateDriverPayload,
+  ): Promise<DriverWithRelations> => {
+    // Get the transporter ID from the bus line
+    const transporterId = await getTransporterIdFromBusLine(data.busLineId);
 
-      // Check if driver is assigned to a transporter
-      if (!driver.transporterId) {
-        throw new ValidationError(`Driver is not assigned to any transporter`);
-      }
+    // Create the driver with the obtained transporter ID
+    const driverData = {
+      ...data,
+      transporterId,
+    };
 
-      // If driver is assigned to a bus line, remove from bus line first
-      if (driver.busLineId) {
-        await driverRepository.update(id, { busLineId: null });
-      }
-
-      // Use repository update to remove driver from transporter
-      return await driverRepository.update(id, { transporterId: null });
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        throw error;
-      }
-      throw new ValidationError(
-        `Failed to remove driver from transporter: ${error.message}`,
-      );
+    if (!data.statusDate) {
+      driverData.statusDate = new Date();
     }
+
+    const driver = await driverRepository.create(driverData);
+
+    // Return the driver with relations
+    return await driverRepository.findOneWithRelations(driver.id);
   };
 
   /**
-   * Removes a driver from a bus line
-   * @param {number} id - The ID of the driver
-   * @returns {Promise<Driver>} The updated driver
-   * @throws {ValidationError} If the removal fails
+   * Updates a driver with automatic transporter assignment based on bus line (if bus line changes)
+   * @param id - The ID of the driver to update
+   * @param data - The driver update payload
+   * @returns {Promise<DriverWithRelations>} The updated driver with transporter and bus line information
+   * @throws {ValidationError} If the bus line is not found or invalid
    */
-  const removeFromBusLine = async (id: number): Promise<Driver> => {
-    try {
-      // Validate driver exists
-      const driver = await driverRepository.findOne(id);
+  const updateDriverWithTransporter = async (
+    id: number,
+    data: UpdateDriverPayload,
+  ): Promise<DriverWithRelations> => {
+    const updateData: UpdateDriverPayload & { transporterId?: number } = {
+      ...data,
+    };
 
-      // Check if driver is assigned to a bus line
-      if (!driver.busLineId) {
-        throw new ValidationError(`Driver is not assigned to any bus line`);
-      }
-
-      // Use repository update to remove driver from bus line
-      return await driverRepository.update(id, { busLineId: null });
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        throw error;
-      }
-      throw new ValidationError(
-        `Failed to remove driver from bus line: ${error.message}`,
-      );
+    // If bus line is being updated, get the new transporter ID
+    if (typeof data.busLineId === 'number') {
+      const transporterId = await getTransporterIdFromBusLine(data.busLineId);
+      updateData.transporterId = transporterId;
     }
-  };
 
-  /**
-   * Assigns a driver to a bus with validation
-   * @param {number} id - The ID of the driver
-   * @param {number} busId - The ID of the bus
-   * @returns {Promise<Driver>} The updated driver
-   * @throws {ValidationError} If the assignment fails
-   */
-  const assignToBus = async (id: number, busId: number): Promise<Driver> => {
-    try {
-      // Validate driver exists
-      const driver = await driverRepository.findOne(id);
-
-      // Check if driver is already assigned to a bus
-      if (driver.busId) {
-        throw new ValidationError(`Driver is already assigned to a bus`);
-      }
-
-      // Use repository update to assign driver to bus
-      return await driverRepository.assignToBus(id, busId);
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        throw error;
-      }
-      throw new ValidationError(
-        `Failed to assign driver to bus: ${error.message}`,
-      );
+    // If status is being updated, update the status date if not provided
+    if (data.status && !data.statusDate) {
+      updateData.statusDate = new Date();
     }
-  };
 
-  /**
-   * Removes a driver from a bus
-   * @param {number} id - The ID of the driver
-   * @returns {Promise<Driver>} The updated driver
-   * @throws {ValidationError} If the removal fails
-   */
-  const removeFromBus = async (id: number): Promise<Driver> => {
-    try {
-      // Validate driver exists
-      const driver = await driverRepository.findOne(id);
+    await driverRepository.update(id, updateData);
 
-      // Check if driver is assigned to a bus
-      if (!driver.busId) {
-        throw new ValidationError(`Driver is not assigned to any bus`);
-      }
-
-      // Use repository update to remove driver from bus
-      return await driverRepository.removeFromBus(id);
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        throw error;
-      }
-      throw new ValidationError(
-        `Failed to remove driver from bus: ${error.message}`,
-      );
-    }
+    // Return the updated driver with relations
+    return await driverRepository.findOneWithRelations(id);
   };
 
   return {
-    assignToTransporter,
-    assignToBusLine,
-    assignToBus,
-    removeFromTransporter,
-    removeFromBusLine,
-    removeFromBus,
+    getTransporterIdFromBusLine,
+    createDriverWithTransporter,
+    updateDriverWithTransporter,
   };
-};
+}
 
 // Export the use case instance
 export const driverUseCases = createDriverUseCases();

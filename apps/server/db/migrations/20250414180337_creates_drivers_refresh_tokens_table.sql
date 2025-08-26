@@ -1,42 +1,25 @@
 CREATE TABLE IF NOT EXISTS "drivers" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"driver_key" text NOT NULL,
-	"full_name" text NOT NULL,
-	"rfc" text NOT NULL,
-	"curp" text NOT NULL,
-	"imss" text,
-	"civil_status" text,
-	"dependents" integer,
-	"address_street" text,
-	"address_neighborhood" text,
-	"address_city" text,
-	"address_state" text,
-	"postal_code" text,
-	"phone_number" text NOT NULL,
-	"email" text NOT NULL,
-	"driver_type" text NOT NULL,
-	"position" text,
-	"office_code" text,
-	"office_location" text,
+	"payroll_key" text NOT NULL,
+	"first_name" text NOT NULL,
+	"last_name" text NOT NULL,
+	"address" text,
+	"phone" text,
+	"email" text,
 	"hire_date" date,
 	"status" text NOT NULL,
 	"status_date" date NOT NULL,
-	"federal_license" text,
-	"federal_license_expiry" date,
-	"state_license" text,
-	"state_license_expiry" date,
-	"credit_card" text,
-	"credit_card_expiry" date,
-	"company" text,
-	"transporter_id" integer,
-	"bus_line_id" integer,
-	"bus_id" integer,
-	"active" boolean DEFAULT true NOT NULL,
+	"license" text NOT NULL,
+	"license_expiry" date NOT NULL,
+	"transporter_id" integer NOT NULL,
+	"bus_line_id" integer NOT NULL,
+	"emergency_contact_name" text,
+	"emergency_contact_phone" text,
+	"emergency_contact_relationship" text,
 	"created_at" timestamp DEFAULT now(),
 	"updated_at" timestamp DEFAULT now(),
-	CONSTRAINT "drivers_driver_key_unique" UNIQUE("driver_key"),
-	CONSTRAINT "drivers_rfc_unique" UNIQUE("rfc"),
-	CONSTRAINT "drivers_curp_unique" UNIQUE("curp")
+	"deleted_at" timestamp
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "refresh_tokens" (
@@ -67,10 +50,14 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "drivers_full_name_index" ON "drivers" USING btree ("full_name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "drivers_first_name_index" ON "drivers" USING btree ("first_name");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "drivers_last_name_index" ON "drivers" USING btree ("last_name");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "drivers_email_index" ON "drivers" USING btree ("email");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "drivers_phone_number_index" ON "drivers" USING btree ("phone_number");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "drivers_phone_index" ON "drivers" USING btree ("phone");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "drivers_transporter_id_index" ON "drivers" USING btree ("transporter_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "drivers_bus_line_id_index" ON "drivers" USING btree ("bus_line_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "drivers_status_index" ON "drivers" USING btree ("status");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "drivers_deleted_at_index" ON "drivers" USING btree ("deleted_at");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "drivers_driver_key_index" ON "drivers" USING btree ("driver_key") WHERE "drivers"."deleted_at" is null;--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "drivers_payroll_key_index" ON "drivers" USING btree ("payroll_key") WHERE "drivers"."deleted_at" is null;--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "refresh_tokens_user_id_index" ON "refresh_tokens" USING btree ("user_id");

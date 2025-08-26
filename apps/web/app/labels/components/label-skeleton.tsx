@@ -1,7 +1,7 @@
 import { ArrowLeft, Pencil, Trash } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function LabelSkeleton() {
@@ -36,9 +36,7 @@ export default function LabelSkeleton() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Basic Information Card */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-6">
-            {tCommon('sections.basicInfo')}
-          </h2>
+          <CardTitle>{tCommon('sections.basicInfo')}</CardTitle>
 
           <div className="space-y-6">
             <div className="flex justify-between items-start">
@@ -75,9 +73,7 @@ export default function LabelSkeleton() {
 
         {/* System Information Card */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-6">
-            {tCommon('sections.systemInfo')}
-          </h2>
+          <CardTitle>{tCommon('sections.systemInfo')}</CardTitle>
 
           <div className="space-y-6">
             <div className="flex justify-between items-start">

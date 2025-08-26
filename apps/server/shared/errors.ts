@@ -198,6 +198,8 @@ export {
 export const STANDARD_ERROR_CODES = {
   // General uniqueness violation error (for any field)
   DUPLICATE: 'DUPLICATE',
+  // Invalid status error (for status field validations)
+  INVALID_STATUS: 'INVALID_STATUS',
 } as const;
 
 /**
@@ -216,5 +218,31 @@ export const standardFieldErrors = {
     code: STANDARD_ERROR_CODES.DUPLICATE,
     message: `A ${entityName.toLowerCase()} with the ${fieldName} "${value}" already exists`,
     value,
+  }),
+
+  /**
+   * Creates an invalid status error for status field validations
+   * @param entityName - Name of the entity (e.g., 'Driver', 'Order')
+   * @param currentStatus - Current status (for transitions)
+   * @param attemptedStatus - The invalid status attempted
+   * @param validStatuses - Array of valid statuses
+   * @param isInitial - Whether this is an initial status validation or transition
+   * @returns FieldError object with INVALID_STATUS code
+   */
+  invalidStatus: (
+    entityName: string,
+    currentStatus: string | null,
+    attemptedStatus: string,
+    validStatuses: string[],
+    isInitial = false,
+  ) => ({
+    field: 'status',
+    code: STANDARD_ERROR_CODES.INVALID_STATUS,
+    message: isInitial
+      ? `Invalid initial status "${attemptedStatus}" for ${entityName.toLowerCase()}. Valid initial statuses are: ${validStatuses.join(', ')}`
+      : `Invalid status transition from "${currentStatus}" to "${attemptedStatus}" for ${entityName.toLowerCase()}. Valid statuses from "${currentStatus}" are: ${validStatuses.join(', ')}`,
+    value: attemptedStatus,
+    currentValue: currentStatus,
+    validOptions: validStatuses,
   }),
 };

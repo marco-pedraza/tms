@@ -91,10 +91,10 @@ export async function seedInventory(): Promise<void> {
     console.log('🚌 Seeding transportation data...');
     const serviceTypes = await seedServiceTypes(factoryDb);
     const transporters = await seedTransporters(cities, factoryDb);
-    await seedBusLines(transporters, serviceTypes, factoryDb);
+    const busLines = await seedBusLines(transporters, serviceTypes, factoryDb);
     const busModels = await seedBusModels(factoryDb);
     await seedBuses(transporters, busModels, factoryDb);
-    await seedDrivers(transporters, factoryDb);
+    await seedDrivers(transporters, busLines, factoryDb);
     console.log('✅ Transportation seeding completed\n');
 
     // === INSTALLATION TYPES & EVENT TYPES ===

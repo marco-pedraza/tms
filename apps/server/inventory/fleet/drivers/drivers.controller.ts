@@ -1,48 +1,55 @@
 import { api } from 'encore.dev/api';
-import {
+import type {
   CreateDriverPayload,
-  Driver,
+  DriverWithRelations,
   ListDriversQueryParams,
   ListDriversResult,
-  ListStatusesResult,
   PaginatedListDriversQueryParams,
   PaginatedListDriversResult,
   UpdateDriverPayload,
 } from './drivers.types';
 import { driverRepository } from './drivers.repository';
+import { validateDriver } from './drivers.domain';
+import { driverUseCases } from './drivers.use-cases';
 
 /**
  * Creates a new driver.
+ * @param params - The driver data to create
+ * @returns {Promise<DriverWithRelations>} The created driver with transporter and bus line information
  * @throws {APIError} If the driver creation fails
  */
 export const createDriver = api(
-  { expose: true, method: 'POST', path: '/drivers' },
-  async (params: CreateDriverPayload): Promise<Driver> => {
-    return await driverRepository.create(params);
+  { expose: true, method: 'POST', path: '/drivers/create' },
+  async (params: CreateDriverPayload): Promise<DriverWithRelations> => {
+    await validateDriver(params);
+    return await driverUseCases.createDriverWithTransporter(params);
   },
 );
 
 /**
  * Retrieves a driver by its ID.
+ * @param params - Object containing the driver ID
+ * @param params.id - The ID of the driver to retrieve
+ * @returns {Promise<DriverWithRelations>} The found driver
  * @throws {APIError} If the driver is not found or retrieval fails
  */
 export const getDriver = api(
   { expose: true, method: 'GET', path: '/drivers/:id' },
-  async ({ id }: { id: number }): Promise<Driver> => {
-    return await driverRepository.findOne(id);
+  async ({ id }: { id: number }): Promise<DriverWithRelations> => {
+    return await driverRepository.findOneWithRelations(id);
   },
 );
 
 /**
  * Retrieves all drivers without pagination (useful for dropdowns).
+ * @param params - Query parameters including orderBy, filters, and searchTerm
+ * @returns {Promise<ListDriversResult>} Unified response with data property containing array of drivers
  * @throws {APIError} If retrieval fails
  */
 export const listDrivers = api(
-  { expose: true, method: 'POST', path: '/drivers/list' },
+  { expose: true, method: 'POST', path: '/drivers/list/all' },
   async (params: ListDriversQueryParams): Promise<ListDriversResult> => {
-    const drivers = params.searchTerm
-      ? await driverRepository.search(params.searchTerm)
-      : await driverRepository.findAll(params);
+    const drivers = await driverRepository.findAll(params);
     return {
       data: drivers,
     };
@@ -51,19 +58,20 @@ export const listDrivers = api(
 
 /**
  * Retrieves drivers with pagination (useful for tables).
+ * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+ * @returns {Promise<PaginatedListDriversResult>} Unified paginated response with data and pagination properties
  * @throws {APIError} If retrieval fails
  */
 export const listDriversPaginated = api(
-  { expose: true, method: 'POST', path: '/drivers/list/paginated' },
+  { expose: true, method: 'POST', path: '/drivers/list' },
   async (
     params: PaginatedListDriversQueryParams,
   ): Promise<PaginatedListDriversResult> => {
-    const drivers = params.searchTerm
-      ? await driverRepository.searchPaginated(params.searchTerm, params)
-      : await driverRepository.findAllPaginated(params);
+    const result = await driverRepository.findAllPaginated(params);
+
     return await driverRepository.appendRelations(
-      drivers.data,
-      drivers.pagination,
+      result.data,
+      result.pagination,
       params,
     );
   },
@@ -71,15 +79,19 @@ export const listDriversPaginated = api(
 
 /**
  * Updates an existing driver.
+ * @param params - Object containing the driver ID and update data
+ * @param params.id - The ID of the driver to update
+ * @returns {Promise<DriverWithRelations>} The updated driver with transporter and bus line information
  * @throws {APIError} If the driver is not found or update fails
  */
 export const updateDriver = api(
-  { expose: true, method: 'PUT', path: '/drivers/:id' },
+  { expose: true, method: 'PUT', path: '/drivers/:id/update' },
   async ({
     id,
     ...data
-  }: UpdateDriverPayload & { id: number }): Promise<Driver> => {
-    return await driverRepository.update(id, data);
+  }: UpdateDriverPayload & { id: number }): Promise<DriverWithRelations> => {
+    await validateDriver(data, id);
+    return await driverUseCases.updateDriverWithTransporter(id, data);
   },
 );
 
@@ -87,39 +99,14 @@ export const updateDriver = api(
  * Deletes a driver by its ID.
  * @param params - Object containing the driver ID
  * @param params.id - The ID of the driver to delete
- * @returns {Promise<Driver>} The deleted driver
+ * @returns {Promise<DriverWithRelations>} The deleted driver
  * @throws {APIError} If the driver is not found or deletion fails
  */
 export const deleteDriver = api(
-  { expose: true, method: 'DELETE', path: '/drivers/:id' },
-  async ({ id }: { id: number }): Promise<Driver> => {
-    return await driverRepository.delete(id);
-  },
-);
-
-/**
- * Gets all valid next statuses for a driver
- * @throws {APIError} If the driver is not found
- */
-export const listDriverValidNextStatuses = api(
-  { expose: true, method: 'GET', path: '/drivers/:id/valid-next-statuses' },
-  async ({ id }: { id: number }): Promise<ListStatusesResult> => {
-    const statuses = await driverRepository.getDriverValidNextStatuses(id);
-    return { data: statuses };
-  },
-);
-
-/**
- * Gets all valid initial statuses for a driver
- */
-export const listValidInitialStatuses = api(
-  {
-    expose: true,
-    method: 'GET',
-    path: '/drivers/valid-initial-statuses/list',
-  },
-  (): ListStatusesResult => {
-    const statuses = driverRepository.getValidInitialStatuses();
-    return { data: statuses };
+  { expose: true, method: 'DELETE', path: '/drivers/:id/delete' },
+  async ({ id }: { id: number }): Promise<DriverWithRelations> => {
+    const driver = await driverRepository.findOneWithRelations(id);
+    await driverRepository.delete(id);
+    return driver;
   },
 );

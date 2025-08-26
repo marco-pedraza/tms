@@ -260,18 +260,30 @@ export async function seedBuses(
  */
 export async function seedDrivers(
   transporters: Transporter[],
+  busLines: BusLine[],
   db: ReturnType<typeof getFactoryDb>,
 ): Promise<Driver[]> {
   const drivers: Driver[] = [];
 
   // Create drivers for each transporter
   for (const transporter of transporters) {
+    // Get bus lines for this transporter
+    const transporterBusLines = busLines.filter(
+      (busLine) => busLine.transporterId === transporter.id,
+    );
+
+    if (transporterBusLines.length === 0) {
+      continue;
+    }
+
     for (let i = 0; i < 4; i++) {
+      // Use a bus line from this transporter (cycling through available ones)
+      const busLine = transporterBusLines[i % transporterBusLines.length];
+
       const transporterDrivers = (await driverFactory(db).create([
         {
           transporterId: transporter.id,
-          busLineId: null, // Explicitly set to null to avoid auto-creation
-          busId: null, // Explicitly set to null to avoid auto-creation
+          busLineId: busLine.id, // Use existing bus line
           active: true,
         },
       ])) as Driver[];

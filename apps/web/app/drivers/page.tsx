@@ -3,12 +3,9 @@
 import { Suspense } from 'react';
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
-import DriversTable from '@/drivers/components/drivers-tables';
+import DriversTable from '@/drivers/components/drivers-table';
 import routes from '@/services/routes';
 
-/**
- * Main page component for managing drivers
- */
 export default function DriversPage() {
   const t = useTranslations('drivers');
 

@@ -20,6 +20,22 @@ enum BusLicensePlateType {
   TOURISM = 'TOURISM',
 }
 
+enum DriverStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  SUSPENDED = 'suspended',
+  ON_LEAVE = 'on_leave',
+  TERMINATED = 'terminated',
+  IN_TRAINING = 'in_training',
+  PROBATION = 'probation',
+}
+
+enum DriverInitialStatus {
+  ACTIVE = 'active',
+  IN_TRAINING = 'in_training',
+  PROBATION = 'probation',
+}
+
 enum EngineType {
   DIESEL = 'DIESEL',
   ELECTRIC = 'ELECTRIC',
@@ -32,14 +48,19 @@ enum EngineType {
 
 const busStatuses = Object.values(BusStatus);
 const busLicensePlateTypes = Object.values(BusLicensePlateType);
+const driverStatuses = Object.values(DriverStatus);
+const driverInitialStatuses = Object.values(DriverInitialStatus);
 const engineTypes = Object.values(EngineType);
 
 export {
   BusStatus,
   BusLicensePlateType,
-  EngineType,
+  DriverStatus,
   busStatuses,
   busLicensePlateTypes,
+  driverStatuses,
+  driverInitialStatuses,
+  EngineType,
   engineTypes,
 };
 export default client;

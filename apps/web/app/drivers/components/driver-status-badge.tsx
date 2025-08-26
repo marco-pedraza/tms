@@ -1,7 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { drivers } from '@repo/ims-client';
 import { Badge } from '@/components/ui/badge';
-import driverStatusTranslationKeys from '@/drivers/translations/driver-status-translation-keys';
 import { cn } from '@/utils/cn';
 
 type DriverStatusesDisplayConfig = {
@@ -42,8 +41,7 @@ export default function DriverStatusBadge({
   const tDrivers = useTranslations('drivers');
   return (
     <Badge variant="outline" className={cn(driverStatuses[status].color)}>
-      {/* @ts-expect-error - Need to improve typing for driverStatusTranslationKeys */}
-      {tDrivers(driverStatusTranslationKeys[status])}
+      {tDrivers(`status.${status}`)}
     </Badge>
   );
 }

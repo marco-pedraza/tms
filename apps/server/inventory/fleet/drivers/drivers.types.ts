@@ -1,4 +1,4 @@
-import { MatchesRegexp, MinLen } from 'encore.dev/validate';
+import { MatchesRegexp, Min, MinLen } from 'encore.dev/validate';
 import {
   ListQueryParams,
   ListQueryResult,
@@ -21,21 +21,6 @@ export enum DriverStatus {
   PROBATION = 'probation',
 }
 
-export enum DriverType {
-  STANDARD = 'standard',
-  SUBSTITUTE = 'substitute',
-  TEMPORARY = 'temporary',
-  TOURIST = 'tourist',
-}
-
-export enum DriverPosition {
-  DRIVER = 'driver',
-  SENIOR_DRIVER = 'senior_driver',
-  AUXILIARY_DRIVER = 'auxiliary_driver',
-  TOURIST_DRIVER = 'tourist_driver',
-  PREMIUM_DRIVER = 'premium_driver',
-}
-
 /**
  * Base interface representing a driver entity
  */
@@ -46,98 +31,50 @@ export interface Driver {
   /** Employee ID (Clave) */
   driverKey: string;
 
-  /** Full name of the driver */
-  fullName: string;
+  /** Payroll key (Clave Nómina) */
+  payrollKey: string;
 
-  /** Mexican tax ID (RFC) */
-  rfc: string;
+  /** First name of the driver */
+  firstName: string;
 
-  /** CURP Mexican national ID */
-  curp: string;
+  /** Last name of the driver */
+  lastName: string;
 
-  /** Social security number (IMSS) */
-  imss: string | null;
+  /** Address */
+  address: string | null;
 
-  /** Civil status (Estado Civil) */
-  civilStatus: string | null;
+  /** Phone number */
+  phone: string | null;
 
-  /** Number of dependents (Escolaridad) */
-  dependents: number | null;
+  /** Email address */
+  email: string | null;
 
-  /** Street address (Calle) */
-  addressStreet: string | null;
-
-  /** Neighborhood (Colonia) */
-  addressNeighborhood: string | null;
-
-  /** City (Ciudad) */
-  addressCity: string | null;
-
-  /** State (Estado) */
-  addressState: string | null;
-
-  /** Postal code (Código Postal) */
-  postalCode: string | null;
-
-  /** Phone number (Teléfono) */
-  phoneNumber: string;
-
-  /** Email address (E-Mail) */
-  email: string;
-
-  /** Type of operator (Tipo Operador) */
-  driverType: DriverType;
-
-  /** Position (Clave Puesto) */
-  position: DriverPosition | null;
-
-  /** Office code (Clave Oficina) */
-  officeCode: string | null;
-
-  /** Office location */
-  officeLocation: string | null;
-
-  /** Date of hiring (Fec. Ingreso) */
+  /** Date of hiring */
   hireDate: Date | string | null;
 
-  /** Current status (Estado Actual) */
+  /** Current status */
   status: DriverStatus;
 
-  /** Status date (Fecha Estado) */
-  statusDate: Date | string;
+  /** Status date */
+  statusDate: Date | string | null;
 
-  /** Federal license (Licencia Federal) */
-  federalLicense: string | null;
+  /** License */
+  license: string;
 
-  /** Federal license expiry (Fecha Lic. Fed) */
-  federalLicenseExpiry: Date | string | null;
-
-  /** State license (Licencia Estatal) */
-  stateLicense: string | null;
-
-  /** State license expiry (Fecha Lic. Est) */
-  stateLicenseExpiry: Date | string | null;
-
-  /** Credit card info (Tarjeta Crédito) */
-  creditCard: string | null;
-
-  /** Credit card expiry (Fecha T. Crédito) */
-  creditCardExpiry: Date | string | null;
-
-  /** Company (Empresa Alterna) */
-  company: string | null;
-
-  /** The transporter this driver is associated with */
-  transporterId: number | null;
+  /** License expiry */
+  licenseExpiry: Date | string | null;
 
   /** The bus line this driver is associated with */
-  busLineId: number | null;
+  busLineId: number;
 
-  /** The bus this driver is assigned to */
-  busId: number | null;
+  /** Emergency contact name */
+  emergencyContactName: string | null;
 
-  /** Whether the driver is currently active in the system */
-  active: boolean;
+  /** Emergency contact phone */
+  emergencyContactPhone: string | null;
+
+  /** Emergency contact relationship */
+  emergencyContactRelationship: string | null;
 
   /** Timestamp when the driver record was created */
   createdAt: Date | string | null;
@@ -157,171 +94,96 @@ export interface CreateDriverPayload {
   driverKey: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * Full name of the driver
+   * Payroll key (Clave Nómina)
+   */
+  payrollKey: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * First name of the driver
    * Must have at least 1 non-whitespace character
    */
-  fullName: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  firstName: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * Mexican tax ID (RFC)
+   * Last name of the driver
    * Must have at least 1 non-whitespace character
    */
-  rfc: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  lastName: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * CURP Mexican national ID
-   * Must have at least 1 non-whitespace character
+   * Address
    */
-  curp: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  address?: string | null;
 
   /**
-   * Social security number (IMSS)
+   * Phone number
    */
-  imss?: string;
+  phone?: string | null;
 
   /**
-   * Civil status (Estado Civil)
+   * Email address
    */
-  civilStatus?: string;
+  email?: string | null;
 
   /**
-   * Number of dependents (Escolaridad)
+   * Date of hiring
+   * Must be in YYYY-MM-DD format if provided or date object
    */
-  dependents?: number;
+  hireDate?:
+    | (string &
+        MatchesRegexp<'^(19|20)\\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$'>)
+    | Date
+    | null;
 
   /**
-   * Street address (Calle)
-   */
-  addressStreet?: string;
-
-  /**
-   * Neighborhood (Colonia)
-   */
-  addressNeighborhood?: string;
-
-  /**
-   * City (Ciudad)
-   */
-  addressCity?: string;
-
-  /**
-   * State (Estado)
-   */
-  addressState?: string;
-
-  /**
-   * Postal code (Código Postal)
-   */
-  postalCode?: string;
-
-  /**
-   * Phone number (Teléfono)
-   * Must have at least 1 non-whitespace character
-   */
-  phoneNumber: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-
-  /**
-   * Email address (E-Mail)
-   * Must be a valid email format
-   */
-  email: string;
-
-  /**
-   * Type of operator (Tipo Operador)
-   * Must have at least 1 non-whitespace character
-   */
-  driverType: DriverType;
-
-  /**
-   * Department (Departamento)
-   */
-  department?: string;
-
-  /**
-   * Position (Clave Puesto)
-   */
-  position?: DriverPosition;
-
-  /**
-   * Office code (Clave Oficina)
-   */
-  officeCode?: string;
-
-  /**
-   * Office location
-   */
-  officeLocation?: string;
-
-  /**
-   * Date of hiring (Fec. Ingreso)
-   */
-  hireDate?: Date;
-
-  /**
-   * Current status (Estado Actual)
+   * Current status
    */
   status: DriverStatus;
 
   /**
-   * Status date (Fecha Estado)
+   * Status date
+   * Must be in YYYY-MM-DD format if provided or date object
    */
-  statusDate: Date;
+  statusDate?:
+    | (string &
+        MatchesRegexp<'^(19|20)\\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$'>)
+    | Date
+    | null;
 
   /**
-   * Federal license (Licencia Federal)
+   * License
    */
-  federalLicense?: string;
+  license: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * Federal license expiry (Fecha Lic. Fed)
+   * License expiry
+   * Must be in YYYY-MM-DD format if provided or date object
    */
-  federalLicenseExpiry?: Date;
-
-  /**
-   * State license (Licencia Estatal)
-   */
-  stateLicense?: string;
-
-  /**
-   * State license expiry (Fecha Lic. Est)
-   */
-  stateLicenseExpiry?: Date;
-
-  /**
-   * Credit card info (Tarjeta Crédito)
-   */
-  creditCard?: string;
-
-  /**
-   * Credit card expiry (Fecha T. Crédito)
-   */
-  creditCardExpiry?: Date;
-
-  /**
-   * Company (Empresa Alterna)
-   */
-  company?: string;
-
-  /**
-   * Whether the driver is active
-   * @default true
-   */
-  active?: boolean;
-
-  /**
-   * The transporter this driver is associated with
-   */
-  transporterId?: number | null;
+  licenseExpiry:
+    | (string &
+        MatchesRegexp<'^(19|20)\\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$'>)
+    | Date;
 
   /**
    * The bus line this driver is associated with
+   * Must be a positive number
    */
-  busLineId?: number | null;
+  busLineId: number & Min<1>;
 
   /**
-   * The bus this driver is assigned to
+   * Emergency contact name
    */
-  busId?: number | null;
+  emergencyContactName?: string | null;
+
+  /**
+   * Emergency contact phone
+   */
+  emergencyContactPhone?: string | null;
+
+  /**
+   * Emergency contact relationship
+   */
+  emergencyContactRelationship?: string | null;
 }
 
 /**
@@ -335,170 +197,96 @@ export interface UpdateDriverPayload {
   driverKey?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * Full name of the driver
+   * Payroll key (Clave Nómina)
+   */
+  payrollKey?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * First name of the driver
    * Must have at least 1 non-whitespace character
    */
-  fullName?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  firstName?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * Mexican tax ID (RFC)
+   * Last name of the driver
    * Must have at least 1 non-whitespace character
    */
-  rfc?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  lastName?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * CURP Mexican national ID
-   * Must have at least 1 non-whitespace character
+   * Address
    */
-  curp?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  address?: string | null;
 
   /**
-   * Social security number (IMSS)
+   * Phone number
    */
-  imss?: string;
+  phone?: string | null;
 
   /**
-   * Civil status (Estado Civil)
+   * Email address
    */
-  civilStatus?: string;
+  email?: string | null;
 
   /**
-   * Number of dependents (Escolaridad)
+   * Date of hiring
+   * Must be in YYYY-MM-DD format if provided or date object
    */
-  dependents?: number;
+  hireDate?:
+    | (string &
+        MatchesRegexp<'^(19|20)\\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$'>)
+    | Date
+    | null;
 
   /**
-   * Street address (Calle)
-   */
-  addressStreet?: string;
-
-  /**
-   * Neighborhood (Colonia)
-   */
-  addressNeighborhood?: string;
-
-  /**
-   * City (Ciudad)
-   */
-  addressCity?: string;
-
-  /**
-   * State (Estado)
-   */
-  addressState?: string;
-
-  /**
-   * Postal code (Código Postal)
-   */
-  postalCode?: string;
-
-  /**
-   * Phone number (Teléfono)
-   * Must have at least 1 non-whitespace character
-   */
-  phoneNumber?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-
-  /**
-   * Email address (E-Mail)
-   * Must be a valid email format
-   */
-  email?: string;
-
-  /**
-   * Type of operator (Tipo Operador)
-   * Must have at least 1 non-whitespace character
-   */
-  driverType?: DriverType;
-
-  /**
-   * Department (Departamento)
-   */
-  department?: string;
-
-  /**
-   * Position (Clave Puesto)
-   */
-  position?: DriverPosition;
-
-  /**
-   * Office code (Clave Oficina)
-   */
-  officeCode?: string;
-
-  /**
-   * Office location
-   */
-  officeLocation?: string;
-
-  /**
-   * Date of hiring (Fec. Ingreso)
-   */
-  hireDate?: Date;
-
-  /**
-   * Current status (Estado Actual)
+   * Current status
    */
   status?: DriverStatus;
 
   /**
-   * Status date (Fecha Estado)
+   * Status date
+   * Must be in YYYY-MM-DD format if provided or date object
    */
-  statusDate?: Date;
+  statusDate?:
+    | (string &
+        MatchesRegexp<'^(19|20)\\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$'>)
+    | Date
+    | null;
 
   /**
-   * Federal license (Licencia Federal)
+   * License
    */
-  federalLicense?: string;
+  license?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * Federal license expiry (Fecha Lic. Fed)
+   * License expiry
+   * Must be in YYYY-MM-DD format if provided or date object
    */
-  federalLicenseExpiry?: Date;
-
-  /**
-   * State license (Licencia Estatal)
-   */
-  stateLicense?: string;
-
-  /**
-   * State license expiry (Fecha Lic. Est)
-   */
-  stateLicenseExpiry?: Date;
-
-  /**
-   * Credit card info (Tarjeta Crédito)
-   */
-  creditCard?: string;
-
-  /**
-   * Credit card expiry (Fecha T. Crédito)
-   */
-  creditCardExpiry?: Date;
-
-  /**
-   * Company (Empresa Alterna)
-   */
-  company?: string;
-
-  /**
-   * Whether the driver is active
-   */
-  active?: boolean;
-
-  /**
-   * The transporter this driver is associated with
-   */
-  transporterId?: number | null;
+  licenseExpiry?:
+    | (string &
+        MatchesRegexp<'^(19|20)\\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$'>)
+    | Date;
 
   /**
    * The bus line this driver is associated with
+   * Must be a positive number (if provided)
    */
-  busLineId?: number | null;
+  busLineId?: number & Min<1>;
 
   /**
-   * The bus this driver is assigned to
+   * Emergency contact name
    */
-  busId?: number | null;
+  emergencyContactName?: string | null;
+
+  /**
+   * Emergency contact phone
+   */
+  emergencyContactPhone?: string | null;
+
+  /**
+   * Emergency contact relationship
+   */
+  emergencyContactRelationship?: string | null;
 }
 
 export interface DriverWithRelations extends Driver {
@@ -512,5 +300,3 @@ export type ListDriversResult = ListQueryResult<Driver>;
 export type PaginatedListDriversQueryParams = PaginatedListQueryParams<Driver>;
 export type PaginatedListDriversResult =
   PaginatedListQueryResult<DriverWithRelations>;
-
-export type ListStatusesResult = ListQueryResult<DriverStatus>;

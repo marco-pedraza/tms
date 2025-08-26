@@ -39,12 +39,6 @@ CREATE TABLE IF NOT EXISTS "buses" (
 );
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "drivers" ADD CONSTRAINT "drivers_bus_id_buses_id_fk" FOREIGN KEY ("bus_id") REFERENCES "public"."buses"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
  ALTER TABLE "buses" ADD CONSTRAINT "buses_model_id_bus_models_id_fk" FOREIGN KEY ("model_id") REFERENCES "public"."bus_models"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
@@ -56,7 +50,6 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "drivers_bus_id_index" ON "drivers" USING btree ("bus_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "buses_model_id_index" ON "buses" USING btree ("model_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "buses_seat_diagram_id_index" ON "buses" USING btree ("seat_diagram_id");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "buses_economic_number_index" ON "buses" USING btree ("economic_number");--> statement-breakpoint

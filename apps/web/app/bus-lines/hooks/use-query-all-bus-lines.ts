@@ -16,6 +16,9 @@ export default function useQueryAllBusLines(): UseQueryResult<
             direction: 'asc',
           },
         ],
+        filters: {
+          active: true,
+        },
       }),
   });
 }

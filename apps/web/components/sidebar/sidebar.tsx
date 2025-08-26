@@ -114,27 +114,6 @@ export default function Sidebar() {
         </SidebarSection>
 
         {/* <SidebarLink
-          href={routes.transporters.index}
-          icon={Briefcase}
-          label={tSidebar('inventory.transporters')}
-        /> */}
-        {/* <SidebarLink
-          href={routes.serviceTypes.index}
-          icon={Briefcase}
-          label={tSidebar('inventory.serviceTypes')}
-        /> */}
-        {/* <SidebarLink
-          href={routes.busLines.index}
-          icon={Bus}
-          label={tSidebar('inventory.busLines')}
-        /> */}
-        {/* <SidebarLink
-          href={routes.drivers.index}
-          icon={Users}
-          label={tSidebar('inventory.drivers')}
-        /> */}
-
-        {/* <SidebarLink
           href={routes.routes.index}
           icon={Route}
           label={tSidebar('inventory.routes')}
@@ -172,6 +151,11 @@ export default function Sidebar() {
             href={routes.busModels.index}
             icon={Truck}
             label={tSidebar('inventory.fleet.busModels')}
+          />
+          <SidebarLink
+            href={routes.drivers.index}
+            icon={Users}
+            label={tSidebar('inventory.fleet.drivers')}
           />
         </SidebarSection>
       </SidebarSection>

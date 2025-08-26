@@ -83,6 +83,7 @@ export function getTranslatedValidationError({
       tValidations,
       tCommon,
     ),
+    invalid_status: tValidations('server.invalid_status'),
   };
   const errorCode = error.code.toLowerCase();
   const isKnownServerError = Object.keys(translatedValidationErrors).includes(

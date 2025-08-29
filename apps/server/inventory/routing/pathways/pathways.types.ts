@@ -1,5 +1,10 @@
 import { MatchesRegexp, Min, MinLen } from 'encore.dev/validate';
-import { PaginatedResult } from '@/shared/types';
+import {
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '@/shared/types';
 
 /**
  * Base interface representing a pathway entity
@@ -8,20 +13,32 @@ export interface Pathway {
   /** Unique identifier for the pathway */
   id: number;
 
+  /** ID of the origin node */
+  originNodeId: number;
+
+  /** ID of the destination node */
+  destinationNodeId: number;
+
+  /** ID of the origin city */
+  originCityId: number;
+
+  /** ID of the destination city */
+  destinationCityId: number;
+
   /** Name of the pathway */
   name: string;
 
-  /** Distance of the pathway */
-  distance: number;
+  /** Code of the pathway */
+  code: string;
 
-  /** Typical time to travel the pathway */
-  typicalTime: number;
+  /** Description of the pathway */
+  description: string | null;
 
-  /** Metadata about the pathway */
-  meta: Record<string, unknown>;
+  /** Whether the pathway is sellable */
+  isSellable: boolean;
 
-  /** Whether the pathway is a toll road */
-  tollRoad: boolean;
+  /** Whether the pathway is an empty trip */
+  isEmptyTrip: boolean;
 
   /** Whether the pathway is active */
   active: boolean;
@@ -31,6 +48,9 @@ export interface Pathway {
 
   /** Timestamp when the pathway was last updated */
   updatedAt: Date | string | null;
+
+  /** Timestamp when the pathway was deleted */
+  deletedAt: Date | string | null;
 }
 
 /**
@@ -38,67 +58,55 @@ export interface Pathway {
  */
 export interface CreatePathwayPayload {
   /**
+   * ID of the origin node
+   * Must be a positive number
+   */
+  originNodeId: number & Min<1>;
+
+  /**
+   * ID of the destination node
+   * Must be a positive number
+   */
+  destinationNodeId: number & Min<1>;
+
+  /**
+   * ID of the origin city
+   * Must be a positive number
+   */
+  originCityId: number & Min<1>;
+
+  /**
+   * ID of the destination city
+   * Must be a positive number
+   */
+  destinationCityId: number & Min<1>;
+
+  /**
    * Name of the pathway
    * Must have at least 1 character
    */
   name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * Distance of the pathway
-   * Must be a positive number
+   * Code of the pathway
+   * Must have at least 1 character
    */
-  distance: number & Min<1>;
+  code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * Typical time to travel the pathway
-   * Must be a positive number
+   * Description of the pathway
    */
-  typicalTime: number & Min<1>;
+  description?: string;
 
   /**
-   * Metadata about the pathway
+   * Whether the pathway is sellable
    */
-  meta: Record<string, string | number | boolean | null>;
+  isSellable?: boolean;
 
   /**
-   * Whether the pathway is a toll road
+   * Whether the pathway is an empty trip
    */
-  tollRoad: boolean;
-
-  /**
-   * Whether the pathway is active
-   */
-  active: boolean;
-}
-
-/**
- * Interface for updating a pathway
- */
-export interface UpdatePathwayPayload {
-  /**
-   * Name of the pathway
-   */
-  name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-
-  /**
-   * Distance of the pathway
-   */
-  distance?: number & Min<1>;
-
-  /**
-   * Typical time to travel the pathway
-   */
-  typicalTime?: number & Min<1>;
-
-  /**
-   * Metadata about the pathway
-   */
-  meta?: Record<string, string | number | boolean | null>;
-
-  /**
-   * Whether the pathway is a toll road
-   */
-  tollRoad?: boolean;
+  isEmptyTrip?: boolean;
 
   /**
    * Whether the pathway is active
@@ -107,13 +115,63 @@ export interface UpdatePathwayPayload {
 }
 
 /**
- * Interface for listing pathways
+ * Interface for updating a pathway
  */
-export interface Pathways {
-  pathways: Pathway[];
+export interface UpdatePathwayPayload {
+  /**
+   * ID of the origin node
+   */
+  originNodeId?: number & Min<1>;
+
+  /**
+   * ID of the destination node
+   */
+  destinationNodeId?: number & Min<1>;
+
+  /**
+   * ID of the origin city
+   */
+  originCityId?: number & Min<1>;
+
+  /**
+   * ID of the destination city
+   */
+  destinationCityId?: number & Min<1>;
+
+  /**
+   * Name of the pathway
+   */
+  name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Code of the pathway
+   */
+  code?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Description of the pathway
+   */
+  description?: string;
+
+  /**
+   * Whether the pathway is sellable
+   */
+  isSellable?: boolean;
+
+  /**
+   * Whether the pathway is an empty trip
+   */
+  isEmptyTrip?: boolean;
+
+  /**
+   * Whether the pathway is active
+   */
+  active?: boolean;
 }
 
-/**
- * Paginated response type for the list pathways endpoint
- */
-export type PaginatedPathways = PaginatedResult<Pathway>;
+export type ListPathwaysQueryParams = ListQueryParams<Pathway>;
+export type ListPathwaysResult = ListQueryResult<Pathway>;
+
+export type PaginatedListPathwaysQueryParams =
+  PaginatedListQueryParams<Pathway>;
+export type PaginatedListPathwaysResult = PaginatedListQueryResult<Pathway>;

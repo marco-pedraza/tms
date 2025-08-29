@@ -108,7 +108,6 @@ export namespace inventory {
             this.createBusLine = this.createBusLine.bind(this)
             this.createBusModel = this.createBusModel.bind(this)
             this.createCity = this.createCity.bind(this)
-            this.createCompoundRoute = this.createCompoundRoute.bind(this)
             this.createCountry = this.createCountry.bind(this)
             this.createDriver = this.createDriver.bind(this)
             this.createEventType = this.createEventType.bind(this)
@@ -117,9 +116,7 @@ export namespace inventory {
             this.createInstallationType = this.createInstallationType.bind(this)
             this.createLabel = this.createLabel.bind(this)
             this.createNode = this.createNode.bind(this)
-            this.createPathway = this.createPathway.bind(this)
             this.createPopulation = this.createPopulation.bind(this)
-            this.createRoute = this.createRoute.bind(this)
             this.createSeatDiagramZone = this.createSeatDiagramZone.bind(this)
             this.createServiceType = this.createServiceType.bind(this)
             this.createState = this.createState.bind(this)
@@ -139,9 +136,7 @@ export namespace inventory {
             this.deleteInstallationType = this.deleteInstallationType.bind(this)
             this.deleteLabel = this.deleteLabel.bind(this)
             this.deleteNode = this.deleteNode.bind(this)
-            this.deletePathway = this.deletePathway.bind(this)
             this.deletePopulation = this.deletePopulation.bind(this)
-            this.deleteRoute = this.deleteRoute.bind(this)
             this.deleteSeatDiagram = this.deleteSeatDiagram.bind(this)
             this.deleteSeatDiagramZone = this.deleteSeatDiagramZone.bind(this)
             this.deleteServiceType = this.deleteServiceType.bind(this)
@@ -165,11 +160,8 @@ export namespace inventory {
             this.getLabel = this.getLabel.bind(this)
             this.getLabelsMetrics = this.getLabelsMetrics.bind(this)
             this.getNode = this.getNode.bind(this)
-            this.getPathway = this.getPathway.bind(this)
             this.getPopulation = this.getPopulation.bind(this)
             this.getPopulationCities = this.getPopulationCities.bind(this)
-            this.getRoute = this.getRoute.bind(this)
-            this.getRouteWithFullDetails = this.getRouteWithFullDetails.bind(this)
             this.getSeatDiagram = this.getSeatDiagram.bind(this)
             this.getSeatDiagramSeats = this.getSeatDiagramSeats.bind(this)
             this.getSeatDiagramZone = this.getSeatDiagramZone.bind(this)
@@ -208,12 +200,8 @@ export namespace inventory {
             this.listLabelsPaginated = this.listLabelsPaginated.bind(this)
             this.listNodes = this.listNodes.bind(this)
             this.listNodesPaginated = this.listNodesPaginated.bind(this)
-            this.listPathways = this.listPathways.bind(this)
-            this.listPathwaysPaginated = this.listPathwaysPaginated.bind(this)
             this.listPopulations = this.listPopulations.bind(this)
             this.listPopulationsPaginated = this.listPopulationsPaginated.bind(this)
-            this.listRoutes = this.listRoutes.bind(this)
-            this.listRoutesPaginated = this.listRoutesPaginated.bind(this)
             this.listServiceTypes = this.listServiceTypes.bind(this)
             this.listServiceTypesPaginated = this.listServiceTypesPaginated.bind(this)
             this.listStates = this.listStates.bind(this)
@@ -226,8 +214,6 @@ export namespace inventory {
             this.listZonesByDiagramModelPaginated = this.listZonesByDiagramModelPaginated.bind(this)
             this.listZonesByDiagramPaginated = this.listZonesByDiagramPaginated.bind(this)
             this.regenerateSeats = this.regenerateSeats.bind(this)
-            this.searchRoutes = this.searchRoutes.bind(this)
-            this.searchRoutesPaginated = this.searchRoutesPaginated.bind(this)
             this.syncInstallationSchemas = this.syncInstallationSchemas.bind(this)
             this.updateAmenity = this.updateAmenity.bind(this)
             this.updateBus = this.updateBus.bind(this)
@@ -236,7 +222,6 @@ export namespace inventory {
             this.updateBusLine = this.updateBusLine.bind(this)
             this.updateBusModel = this.updateBusModel.bind(this)
             this.updateCity = this.updateCity.bind(this)
-            this.updateCompoundRouteSegments = this.updateCompoundRouteSegments.bind(this)
             this.updateCountry = this.updateCountry.bind(this)
             this.updateDriver = this.updateDriver.bind(this)
             this.updateEventType = this.updateEventType.bind(this)
@@ -246,7 +231,6 @@ export namespace inventory {
             this.updateInstallationType = this.updateInstallationType.bind(this)
             this.updateLabel = this.updateLabel.bind(this)
             this.updateNode = this.updateNode.bind(this)
-            this.updatePathway = this.updatePathway.bind(this)
             this.updatePopulation = this.updatePopulation.bind(this)
             this.updateSeatConfiguration = this.updateSeatConfiguration.bind(this)
             this.updateSeatDiagram = this.updateSeatDiagram.bind(this)
@@ -490,25 +474,6 @@ export namespace inventory {
         }
 
         /**
-         * Creates a new compound route by connecting multiple existing routes.
-         * @param params - Data for creating a compound route
-         * @param params.name - Name of the compound route
-         * @param params.description - Description of the compound route
-         * @param params.routeIds - Array of route IDs to connect in sequence
-         * @returns {Promise<RouteWithFullDetails>} The created compound route with full details
-         * @throws {APIError} If creation fails, routes don't exist, or connections are invalid
-         */
-        public async createCompoundRoute(params: {
-    name: string
-    description: string
-    routeIds: number[]
-}): Promise<routes.RouteWithFullDetails> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/routes/compound`, JSON.stringify(params))
-            return await resp.json() as routes.RouteWithFullDetails
-        }
-
-        /**
          * Creates a new country.
          * @param params - The country data to create
          * @returns {Promise<Country>} The created country
@@ -605,18 +570,6 @@ export namespace inventory {
         }
 
         /**
-         * Creates a new pathway
-         * @param params - The pathway data to create
-         * @returns {Promise<Pathway>} The created pathway
-         * @throws {APIError} If the pathway creation fails
-         */
-        public async createPathway(params: pathways.CreatePathwayPayload): Promise<pathways.Pathway> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/pathways`, JSON.stringify(params))
-            return await resp.json() as pathways.Pathway
-        }
-
-        /**
          * Creates a new population.
          * @param params - The population data to create
          * @returns {Promise<Population>} The created population
@@ -626,18 +579,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/populations/create`, JSON.stringify(params))
             return await resp.json() as populations.Population
-        }
-
-        /**
-         * Creates a new simple route with its related pathway.
-         * @param params - The data for creating the route and pathway
-         * @returns {Promise<Route>} The created route
-         * @throws {APIError} If creation fails
-         */
-        public async createRoute(params: routes.CreateSimpleRoutePayload): Promise<routes.Route> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/routes`, JSON.stringify(params))
-            return await resp.json() as routes.Route
         }
 
         /**
@@ -897,19 +838,6 @@ export namespace inventory {
         }
 
         /**
-         * Deletes a pathway by its ID.
-         * @param params - Object containing the pathway ID
-         * @param params.id - The ID of the pathway to delete
-         * @returns {Promise<Pathway>} The deleted pathway
-         * @throws {APIError} If the pathway is not found or deletion fails
-         */
-        public async deletePathway(id: number): Promise<pathways.Pathway> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/pathways/${encodeURIComponent(id)}`)
-            return await resp.json() as pathways.Pathway
-        }
-
-        /**
          * Deletes a population by its ID.
          * @param params - Object containing the population ID
          * @param params.id - The ID of the population to delete
@@ -920,19 +848,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/populations/${encodeURIComponent(id)}/delete`)
             return await resp.json() as populations.Population
-        }
-
-        /**
-         * Deletes a route by its ID.
-         * @param params - Object containing the route ID
-         * @param params.id - The ID of the route to delete
-         * @returns {Promise<Route>} The deleted route
-         * @throws {APIError} If the route is not found or deletion fails
-         */
-        public async deleteRoute(id: number): Promise<routes.Route> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/routes/${encodeURIComponent(id)}`)
-            return await resp.json() as routes.Route
         }
 
         /**
@@ -1225,19 +1140,6 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves a pathway by its ID
-         * @param params - Object containing the pathway ID
-         * @param params.id - The ID of the pathway to retrieve
-         * @returns {Promise<Pathway>} The found pathway
-         * @throws {APIError} If the pathway is not found
-         */
-        public async getPathway(id: number): Promise<pathways.Pathway> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/pathways/${encodeURIComponent(id)}`)
-            return await resp.json() as pathways.Pathway
-        }
-
-        /**
          * Retrieves a population by its ID with related cities information.
          * @param params - Object containing the population ID
          * @param params.id - The ID of the population to retrieve
@@ -1261,32 +1163,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/populations/${encodeURIComponent(id)}/cities`)
             return await resp.json() as cities.ListCitiesResult
-        }
-
-        /**
-         * Retrieves a route by its ID.
-         * @param params - Object containing the route ID
-         * @param params.id - The ID of the route to retrieve
-         * @returns {Promise<Route>} The found route
-         * @throws {APIError} If the route is not found or retrieval fails
-         */
-        public async getRoute(id: number): Promise<routes.Route> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/routes/${encodeURIComponent(id)}`)
-            return await resp.json() as routes.Route
-        }
-
-        /**
-         * Retrieves a route by its ID with all related details.
-         * @param params - Object containing the route ID
-         * @param params.id - The ID of the route to retrieve
-         * @returns {Promise<RouteWithFullDetails>} The found route with full details
-         * @throws {APIError} If the route is not found or retrieval fails
-         */
-        public async getRouteWithFullDetails(id: number): Promise<routes.RouteWithFullDetails> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/routes/${encodeURIComponent(id)}/details`)
-            return await resp.json() as routes.RouteWithFullDetails
         }
 
         /**
@@ -1756,35 +1632,6 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves all pathways
-         * @returns {Promise<Pathways>} All pathways
-         * @throws {APIError} If the operation fails
-         */
-        public async listPathways(): Promise<pathways.Pathways> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/pathways`)
-            return await resp.json() as pathways.Pathways
-        }
-
-        /**
-         * Retrieves all pathways with pagination
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedPathways>} Paginated pathways
-         * @throws {APIError} If the operation fails
-         */
-        public async listPathwaysPaginated(params: shared.PaginationParams): Promise<pathways.PaginatedPathways> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                page:     params.page === undefined ? undefined : String(params.page),
-                pageSize: params.pageSize === undefined ? undefined : String(params.pageSize),
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/pathways/paginated`, undefined, {query})
-            return await resp.json() as pathways.PaginatedPathways
-        }
-
-        /**
          * Retrieves all populations without pagination (useful for dropdowns).
          * @param params - Query parameters including orderBy, filters, and searchTerm
          * @returns {Promise<ListPopulationsResult>} Unified response with data property containing array of populations
@@ -1806,29 +1653,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/populations/list`, JSON.stringify(params))
             return await resp.json() as populations.PaginatedListPopulationsResult
-        }
-
-        /**
-         * Retrieves all routes without pagination (useful for dropdowns).
-         * @returns {Promise<Routes>} An object containing an array of routes
-         * @throws {APIError} If retrieval fails
-         */
-        public async listRoutes(params: routes.RoutesQueryOptions): Promise<routes.Routes> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-routes`, JSON.stringify(params))
-            return await resp.json() as routes.Routes
-        }
-
-        /**
-         * Retrieves routes with pagination (useful for tables).
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedRoutes>} Paginated list of routes
-         * @throws {APIError} If retrieval fails
-         */
-        public async listRoutesPaginated(params: routes.PaginationParamsRoutes): Promise<routes.PaginatedRoutes> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-routes/paginated`, JSON.stringify(params))
-            return await resp.json() as routes.PaginatedRoutes
         }
 
         /**
@@ -2029,67 +1853,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/bus-diagram-models/${encodeURIComponent(id)}/seats/regenerate`)
             return await resp.json() as bus_diagram_models.RegenerateSeatsResponse
-        }
-
-        /**
-         * Searches for routes by matching a search term against name and description.
-         * @param params - Search parameters
-         * @param params.term - The search term to match against route name and description
-         * @returns {Promise<Routes>} List of matching routes
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchRoutes(params: {
-    term: string
-}): Promise<routes.Routes> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                term: params.term,
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/routes/search`, undefined, {query})
-            return await resp.json() as routes.Routes
-        }
-
-        /**
-         * Searches for routes with pagination by matching a search term against name and description.
-         * @param params - Search and pagination parameters
-         * @param params.term - The search term to match against route name and description
-         * @param params.page - Page number for pagination (optional, default: 1)
-         * @param params.pageSize - Number of items per page (optional, default: 10)
-         * @param params.orderBy - Sorting criteria (optional)
-         * @param params.filters - Additional filters to apply (optional)
-         * @returns {Promise<PaginatedRoutes>} Paginated list of matching routes
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchRoutesPaginated(params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "name" | "description" | "originCityId" | "destinationCityId" | "pathwayId" | "distance" | "baseTime" | "isCompound" | "connectionCount" | "totalTravelTime" | "totalDistance" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        name?: string
-        description?: string | null
-        originCityId?: number
-        destinationCityId?: number
-        pathwayId?: number | null
-        distance?: number
-        baseTime?: number
-        isCompound?: boolean
-        connectionCount?: number
-        totalTravelTime?: number
-        totalDistance?: number
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-    term: string
-}): Promise<routes.PaginatedRoutes> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/routes/search/paginated`, JSON.stringify(params))
-            return await resp.json() as routes.PaginatedRoutes
         }
 
         /**
@@ -2508,22 +2271,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/cities/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as cities.City
-        }
-
-        /**
-         * Updates the segments of an existing compound route.
-         * @param params - Data for updating compound route segments
-         * @param params.compoundRouteId - ID of the compound route to update
-         * @param params.routeIds - Array of route IDs to connect in sequence
-         * @returns {Promise<RouteWithFullDetails>} The updated compound route with full details
-         * @throws {APIError} If update fails, routes don't exist, or connections are invalid
-         */
-        public async updateCompoundRouteSegments(compoundRouteId: number, params: {
-    routeIds: number[]
-}): Promise<routes.RouteWithFullDetails> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/routes/compound/${encodeURIComponent(compoundRouteId)}/segments`, JSON.stringify(params))
-            return await resp.json() as routes.RouteWithFullDetails
         }
 
         /**
@@ -2973,49 +2720,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/nodes/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as nodes.Node
-        }
-
-        /**
-         * Updates an existing pathway
-         * @param params - Object containing the pathway ID and update data
-         * @param params.id - The ID of the pathway to update
-         * @returns {Promise<Pathway>} The updated pathway
-         * @throws {APIError} If the pathway is not found or update fails
-         */
-        public async updatePathway(id: number, params: {
-    /**
-     * Name of the pathway
-     */
-    name?: string
-
-    /**
-     * Distance of the pathway
-     */
-    distance?: number
-
-    /**
-     * Typical time to travel the pathway
-     */
-    typicalTime?: number
-
-    /**
-     * Metadata about the pathway
-     */
-    meta?: { [key: string]: string | number | boolean | null }
-
-    /**
-     * Whether the pathway is a toll road
-     */
-    tollRoad?: boolean
-
-    /**
-     * Whether the pathway is active
-     */
-    active?: boolean
-}): Promise<pathways.Pathway> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/pathways/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as pathways.Pathway
         }
 
         /**
@@ -9268,99 +8972,6 @@ export namespace nodes {
     }
 }
 
-export namespace pathways {
-    export interface CreatePathwayPayload {
-        /**
-         * Name of the pathway
-         * Must have at least 1 character
-         */
-        name: string
-
-        /**
-         * Distance of the pathway
-         * Must be a positive number
-         */
-        distance: number
-
-        /**
-         * Typical time to travel the pathway
-         * Must be a positive number
-         */
-        typicalTime: number
-
-        /**
-         * Metadata about the pathway
-         */
-        meta: { [key: string]: string | number | boolean | null }
-
-        /**
-         * Whether the pathway is a toll road
-         */
-        tollRoad: boolean
-
-        /**
-         * Whether the pathway is active
-         */
-        active: boolean
-    }
-
-    export interface PaginatedPathways {
-        pagination: shared.PaginationMeta
-        data: Pathway[]
-    }
-
-    export interface Pathway {
-        /**
-         * Unique identifier for the pathway
-         */
-        id: number
-
-        /**
-         * Name of the pathway
-         */
-        name: string
-
-        /**
-         * Distance of the pathway
-         */
-        distance: number
-
-        /**
-         * Typical time to travel the pathway
-         */
-        typicalTime: number
-
-        /**
-         * Metadata about the pathway
-         */
-        meta: { [key: string]: any }
-
-        /**
-         * Whether the pathway is a toll road
-         */
-        tollRoad: boolean
-
-        /**
-         * Whether the pathway is active
-         */
-        active: boolean
-
-        /**
-         * Timestamp when the pathway was created
-         */
-        createdAt: string | string | null
-
-        /**
-         * Timestamp when the pathway was last updated
-         */
-        updatedAt: string | string | null
-    }
-
-    export interface Pathways {
-        pathways: Pathway[]
-    }
-}
-
 export namespace permission_groups {
     export interface CreatePermissionGroupPayload {
         /**
@@ -9858,274 +9469,6 @@ export namespace roles {
     }
 }
 
-export namespace route_segment {
-    export interface RouteSegment {
-        /**
-         * Unique identifier for the route segment
-         */
-        id: number
-
-        /**
-         * Reference to the parent route
-         */
-        parentRouteId: number
-
-        /**
-         * Reference to the segment route
-         */
-        segmentRouteId: number
-
-        /**
-         * Sequence order of this segment within the parent route
-         */
-        sequence: number
-
-        /**
-         * Whether this route segment is active
-         */
-        active: boolean
-    }
-}
-
-export namespace routes {
-    export interface CreateSimpleRoutePayload {
-        /**
-         * Whether this is a compound route
-         */
-        isCompound: false
-
-        name: string
-        description?: string
-        originCityId: number
-        destinationCityId: number
-        baseTime: number
-        connectionCount?: number
-        distance: number
-        typicalTime: number
-        meta: { [key: string]: string | number | boolean | null }
-        tollRoad: boolean
-        active: boolean
-        /**
-         * Custom name for the pathway (defaults to route name if not provided)
-         */
-        pathwayName?: string
-    }
-
-    export interface PaginatedRoutes {
-        pagination: shared.PaginationMeta
-        data: Route[]
-    }
-
-    export interface PaginationParamsRoutes {
-        page?: number
-        pageSize?: number
-        orderBy?: {
-            field: "id" | "name" | "description" | "originCityId" | "destinationCityId" | "pathwayId" | "distance" | "baseTime" | "isCompound" | "connectionCount" | "totalTravelTime" | "totalDistance" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            name?: string
-            description?: string | null
-            originCityId?: number
-            destinationCityId?: number
-            pathwayId?: number | null
-            distance?: number
-            baseTime?: number
-            isCompound?: boolean
-            connectionCount?: number
-            totalTravelTime?: number
-            totalDistance?: number
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
-    }
-
-    export interface Route {
-        /**
-         * Unique identifier for the route
-         */
-        id: number
-
-        /**
-         * Name of the route
-         */
-        name: string
-
-        /**
-         * Description of the route (optional)
-         */
-        description: string | null
-
-        /**
-         * Reference to the origin city
-         */
-        originCityId: number
-
-        /**
-         * Reference to the destination city
-         */
-        destinationCityId: number
-
-        /**
-         * Reference to the pathway used by this route
-         */
-        pathwayId: number | null
-
-        /**
-         * Total distance of the route in kilometers
-         */
-        distance: number
-
-        /**
-         * Base travel time in minutes without any stops/services
-         */
-        baseTime: number
-
-        /**
-         * Whether this is a compound route (has connections)
-         */
-        isCompound: boolean
-
-        /**
-         * Number of connections in this route
-         */
-        connectionCount: number
-
-        /**
-         * Total travel time including all stops/services in minutes
-         */
-        totalTravelTime: number
-
-        /**
-         * Total distance including any detours for services in kilometers
-         */
-        totalDistance: number
-
-        /**
-         * Timestamp when the route was created
-         */
-        createdAt: string | string | null
-
-        /**
-         * Timestamp when the route was last updated
-         */
-        updatedAt: string | string | null
-    }
-
-    export interface RouteWithFullDetails {
-        originCity: cities.City
-        destinationCity: cities.City
-        pathway: {
-            id: number
-            name: string
-            distance: number
-            typicalTime: number
-            tollRoad: boolean
-            active: boolean
-            createdAt: string | string | null
-            updatedAt: string | string | null
-        } | null
-        routeSegments: route_segment.RouteSegment[]
-        /**
-         * Unique identifier for the route
-         */
-        id: number
-
-        /**
-         * Name of the route
-         */
-        name: string
-
-        /**
-         * Description of the route (optional)
-         */
-        description: string | null
-
-        /**
-         * Reference to the origin city
-         */
-        originCityId: number
-
-        /**
-         * Reference to the destination city
-         */
-        destinationCityId: number
-
-        /**
-         * Reference to the pathway used by this route
-         */
-        pathwayId: number | null
-
-        /**
-         * Total distance of the route in kilometers
-         */
-        distance: number
-
-        /**
-         * Base travel time in minutes without any stops/services
-         */
-        baseTime: number
-
-        /**
-         * Whether this is a compound route (has connections)
-         */
-        isCompound: boolean
-
-        /**
-         * Number of connections in this route
-         */
-        connectionCount: number
-
-        /**
-         * Total travel time including all stops/services in minutes
-         */
-        totalTravelTime: number
-
-        /**
-         * Total distance including any detours for services in kilometers
-         */
-        totalDistance: number
-
-        /**
-         * Timestamp when the route was created
-         */
-        createdAt: string | string | null
-
-        /**
-         * Timestamp when the route was last updated
-         */
-        updatedAt: string | string | null
-    }
-
-    export interface Routes {
-        routes: Route[]
-    }
-
-    export interface RoutesQueryOptions {
-        orderBy?: {
-            field: "id" | "name" | "description" | "originCityId" | "destinationCityId" | "pathwayId" | "distance" | "baseTime" | "isCompound" | "connectionCount" | "totalTravelTime" | "totalDistance" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            name?: string
-            description?: string | null
-            originCityId?: number
-            destinationCityId?: number
-            pathwayId?: number | null
-            distance?: number
-            baseTime?: number
-            isCompound?: boolean
-            connectionCount?: number
-            totalTravelTime?: number
-            totalDistance?: number
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
-    }
-}
-
 export namespace seat_diagram_zones {
     export interface PaginatedSeatDiagramZones {
         pagination: shared.PaginationMeta
@@ -10470,11 +9813,6 @@ export namespace shared {
          * Whether there is a previous page available
          */
         hasPreviousPage: boolean
-    }
-
-    export interface PaginationParams {
-        page?: number
-        pageSize?: number
     }
 
     export interface SeatPosition {

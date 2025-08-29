@@ -7,17 +7,20 @@ import type {
   UpdatePathwayPayload,
 } from './pathways.types';
 
-export const createPathwayRepository = () => {
+export function createPathwayRepository() {
   const baseRepository = createBaseRepository<
     Pathway,
     CreatePathwayPayload,
     UpdatePathwayPayload,
     typeof pathways
-  >(db, pathways, 'Pathway');
+  >(db, pathways, 'Pathway', {
+    searchableFields: [pathways.name, pathways.code],
+    softDeleteEnabled: true,
+  });
 
   return {
     ...baseRepository,
   };
-};
+}
 
 export const pathwayRepository = createPathwayRepository();

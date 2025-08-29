@@ -285,12 +285,19 @@
     {
       "idx": 40,
       "version": "7",
+      "when": 1755710634483,
+      "tag": "20250820172354_updates_pathways_tables_and_removes_routes",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
       "when": 1755712551310,
       "tag": "20250820175551_add_soft_delete_to_bus_diagram_models",
       "breakpoints": true
     },
     {
-      "idx": 41,
+      "idx": 42,
       "version": "7",
       "when": 1755886573518,
       "tag": "20250822181613_remove_redundant_index_for_bus_diagram_models",

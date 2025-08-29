@@ -1,7 +1,7 @@
 import { ValidationError } from '@/shared/errors';
 import { FloorSeats, SeatType, SpaceType } from '@/shared/types';
 import { arraysEqual } from '@/shared/utils';
-import type { SeatDiagram } from '@/inventory/seat-diagrams/seat-diagrams.types';
+import type { SeatDiagram } from '@/inventory/fleet/seat-diagrams/seat-diagrams.types';
 import type {
   BusSeat,
   CreateBusSeatPayload,

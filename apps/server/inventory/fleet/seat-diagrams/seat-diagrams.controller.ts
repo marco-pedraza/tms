@@ -4,7 +4,7 @@ import {
   UpdateSeatConfigurationPayload,
   UpdatedSeatConfiguration,
 } from '@/inventory/fleet/bus-seats/bus-seats.types';
-import { BusSeats } from '@/inventory/fleet/bus-seats/bus-seats.types';
+import { ListSeatDiagramSeatsResult } from '@/inventory/fleet/bus-seats/bus-seats.types';
 import { busSeatUseCases } from '@/inventory/fleet/bus-seats/bus-seats.use-cases';
 import { SeatDiagram, UpdateSeatDiagramPayload } from './seat-diagrams.types';
 import { seatDiagramRepository } from './seat-diagrams.repository';
@@ -32,7 +32,7 @@ export const getSeatDiagram = api(
  * @throws {APIError} If update fails, validation fails, or the seat diagram doesn't exist
  */
 export const updateSeatDiagram = api(
-  { expose: true, method: 'PATCH', path: '/seat-diagrams/:id' },
+  { expose: true, method: 'PUT', path: '/seat-diagrams/:id/update' },
   async ({
     id,
     ...data
@@ -57,9 +57,31 @@ export const updateSeatDiagram = api(
  * @throws {APIError} If deletion fails or the seat diagram doesn't exist
  */
 export const deleteSeatDiagram = api(
-  { expose: true, method: 'DELETE', path: '/seat-diagrams/:id' },
+  { expose: true, method: 'DELETE', path: '/seat-diagrams/:id/delete' },
   async ({ id }: { id: number }): Promise<SeatDiagram> => {
     return await seatDiagramRepository.delete(id);
+  },
+);
+
+/**
+ * Retrieves all seats for a specific seat diagram.
+ * @param params - Object containing the seat diagram ID
+ * @param params.id - The ID of the seat diagram to get seats for
+ * @returns {Promise<ListSeatDiagramSeatsResult>} Object containing array of bus seats
+ * @throws {APIError} If retrieval fails or the seat diagram doesn't exist
+ */
+export const listSeatDiagramSeats = api(
+  { expose: true, method: 'GET', path: '/seat-diagrams/:id/seats/list' },
+  async ({ id }: { id: number }): Promise<ListSeatDiagramSeatsResult> => {
+    // Verify the seat diagram exists first
+    await seatDiagramRepository.findOne(id);
+
+    // Get all active bus seats for this seat diagram
+    const busSeats = await busSeatRepository.findActiveBySeatDiagramId(id);
+
+    return {
+      data: busSeats,
+    };
   },
 );
 
@@ -72,7 +94,7 @@ export const deleteSeatDiagram = api(
  * @throws {APIError} If the update fails, validation fails, or the seat diagram doesn't exist
  */
 export const updateSeatDiagramConfiguration = api(
-  { expose: true, method: 'PUT', path: '/seat-diagrams/:id/update-seats' },
+  { expose: true, method: 'PUT', path: '/seat-diagrams/:id/seats/update' },
   async ({
     id,
     seats,
@@ -80,27 +102,5 @@ export const updateSeatDiagramConfiguration = api(
     id: number;
   } & UpdateSeatConfigurationPayload): Promise<UpdatedSeatConfiguration> => {
     return await busSeatUseCases.batchUpdateSeatConfiguration(id, seats);
-  },
-);
-
-/**
- * Retrieves all seats for a specific seat diagram.
- * @param params - Object containing the seat diagram ID
- * @param params.id - The ID of the seat diagram to get seats for
- * @returns {Promise<BusSeats>} Object containing array of bus seats
- * @throws {APIError} If retrieval fails or the seat diagram doesn't exist
- */
-export const getSeatDiagramSeats = api(
-  { expose: true, method: 'GET', path: '/seat-diagrams/:id/seats' },
-  async ({ id }: { id: number }): Promise<BusSeats> => {
-    // Verify the seat diagram exists first
-    await seatDiagramRepository.findOne(id);
-
-    // Get all active bus seats for this seat diagram
-    const busSeats = await busSeatRepository.findActiveBySeatDiagramId(id);
-
-    return {
-      busSeats,
-    };
   },
 );

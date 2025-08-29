@@ -14,7 +14,7 @@ import { seatDiagramRepository } from './seat-diagrams.repository';
 import {
   deleteSeatDiagram,
   getSeatDiagram,
-  getSeatDiagramSeats,
+  listSeatDiagramSeats,
   updateSeatDiagram,
   updateSeatDiagramConfiguration,
 } from './seat-diagrams.controller';
@@ -196,32 +196,32 @@ describe('Seat Diagrams Controller', () => {
 
     test('should retrieve seats for a seat diagram', async () => {
       // Get the seats for the created diagram
-      const seatsResponse = await getSeatDiagramSeats({
+      const seatsResponse = await listSeatDiagramSeats({
         id: createdSeatDiagramId,
       });
 
       // Verify the response structure
       expect(seatsResponse).toBeDefined();
-      expect(seatsResponse.busSeats).toBeDefined();
-      expect(Array.isArray(seatsResponse.busSeats)).toBe(true);
+      expect(seatsResponse.data).toBeDefined();
+      expect(Array.isArray(seatsResponse.data)).toBe(true);
 
       // Verify we have the expected number of seats (8 seats from the test diagram with 2 rows)
-      expect(seatsResponse.busSeats).toHaveLength(8);
+      expect(seatsResponse.data).toHaveLength(8);
 
       // Verify all returned seats are active (only active seats should be returned)
-      const allSeatsActive = seatsResponse.busSeats.every(
+      const allSeatsActive = seatsResponse.data.every(
         (seat) => seat.active === true,
       );
       expect(allSeatsActive).toBe(true);
 
       // Verify all seats belong to the correct seat diagram
-      const allSeatsForCorrectDiagram = seatsResponse.busSeats.every(
+      const allSeatsForCorrectDiagram = seatsResponse.data.every(
         (seat) => seat.seatDiagramId === createdSeatDiagramId,
       );
       expect(allSeatsForCorrectDiagram).toBe(true);
 
       // Verify seats are ordered by seatNumber (ascending)
-      const seatNumbers = seatsResponse.busSeats
+      const seatNumbers = seatsResponse.data
         .filter(isSeatType) // Filter to only seat space types
         .map((seat) => parseInt(seat.seatNumber || '0'))
         .filter((num) => !isNaN(num)) // Filter out any non-numeric seat numbers
@@ -232,7 +232,7 @@ describe('Seat Diagrams Controller', () => {
       }
 
       // Verify seat properties structure
-      const firstSeat = seatsResponse.busSeats[0];
+      const firstSeat = seatsResponse.data[0];
       expect(firstSeat.id).toBeDefined();
       expect(firstSeat.seatDiagramId).toBe(createdSeatDiagramId);
       expect(firstSeat.floorNumber).toBeDefined();

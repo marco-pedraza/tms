@@ -163,7 +163,6 @@ export namespace inventory {
             this.getPopulation = this.getPopulation.bind(this)
             this.getPopulationCities = this.getPopulationCities.bind(this)
             this.getSeatDiagram = this.getSeatDiagram.bind(this)
-            this.getSeatDiagramSeats = this.getSeatDiagramSeats.bind(this)
             this.getSeatDiagramZone = this.getSeatDiagramZone.bind(this)
             this.getServiceType = this.getServiceType.bind(this)
             this.getState = this.getState.bind(this)
@@ -202,6 +201,7 @@ export namespace inventory {
             this.listNodesPaginated = this.listNodesPaginated.bind(this)
             this.listPopulations = this.listPopulations.bind(this)
             this.listPopulationsPaginated = this.listPopulationsPaginated.bind(this)
+            this.listSeatDiagramSeats = this.listSeatDiagramSeats.bind(this)
             this.listServiceTypes = this.listServiceTypes.bind(this)
             this.listServiceTypesPaginated = this.listServiceTypesPaginated.bind(this)
             this.listStates = this.listStates.bind(this)
@@ -859,7 +859,7 @@ export namespace inventory {
          */
         public async deleteSeatDiagram(id: number): Promise<seat_diagrams.SeatDiagram> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/seat-diagrams/${encodeURIComponent(id)}`)
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/seat-diagrams/${encodeURIComponent(id)}/delete`)
             return await resp.json() as seat_diagrams.SeatDiagram
         }
 
@@ -1176,19 +1176,6 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/seat-diagrams/${encodeURIComponent(id)}`)
             return await resp.json() as seat_diagrams.SeatDiagram
-        }
-
-        /**
-         * Retrieves all seats for a specific seat diagram.
-         * @param params - Object containing the seat diagram ID
-         * @param params.id - The ID of the seat diagram to get seats for
-         * @returns {Promise<BusSeats>} Object containing array of bus seats
-         * @throws {APIError} If retrieval fails or the seat diagram doesn't exist
-         */
-        public async getSeatDiagramSeats(id: number): Promise<bus_seats.BusSeats> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/seat-diagrams/${encodeURIComponent(id)}/seats`)
-            return await resp.json() as bus_seats.BusSeats
         }
 
         /**
@@ -1653,6 +1640,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/populations/list`, JSON.stringify(params))
             return await resp.json() as populations.PaginatedListPopulationsResult
+        }
+
+        /**
+         * Retrieves all seats for a specific seat diagram.
+         * @param params - Object containing the seat diagram ID
+         * @param params.id - The ID of the seat diagram to get seats for
+         * @returns {Promise<ListSeatDiagramSeatsResult>} Object containing array of bus seats
+         * @throws {APIError} If retrieval fails or the seat diagram doesn't exist
+         */
+        public async listSeatDiagramSeats(id: number): Promise<bus_seats.ListSeatDiagramSeatsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/seat-diagrams/${encodeURIComponent(id)}/seats/list`)
+            return await resp.json() as bus_seats.ListSeatDiagramSeatsResult
         }
 
         /**
@@ -2829,7 +2829,7 @@ export namespace inventory {
     active?: boolean
 }): Promise<seat_diagrams.SeatDiagram> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PATCH", `/seat-diagrams/${encodeURIComponent(id)}`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("PUT", `/seat-diagrams/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as seat_diagrams.SeatDiagram
         }
 
@@ -2848,7 +2848,7 @@ export namespace inventory {
     seats: bus_seats.SeatConfigurationInput[]
 }): Promise<bus_seats.UpdatedSeatConfiguration> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/seat-diagrams/${encodeURIComponent(id)}/update-seats`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("PUT", `/seat-diagrams/${encodeURIComponent(id)}/seats/update`, JSON.stringify(params))
             return await resp.json() as bus_seats.UpdatedSeatConfiguration
         }
 
@@ -6094,13 +6094,6 @@ export namespace bus_seats {
 
     export type BusSeat = SeatBusSeat | HallwayBusSeat | BathroomBusSeat | EmptyBusSeat | StairsBusSeat
 
-    export interface BusSeats {
-        /**
-         * List of bus seats
-         */
-        busSeats: BusSeat[]
-    }
-
     export interface EmptyBusSeat {
         /**
          * Type of space
@@ -6203,6 +6196,10 @@ export namespace bus_seats {
          * Timestamp when the space was last updated
          */
         updatedAt: string | string | null
+    }
+
+    export interface ListSeatDiagramSeatsResult {
+        data: BusSeat[]
     }
 
     export interface SeatBusSeat {

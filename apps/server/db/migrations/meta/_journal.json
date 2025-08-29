@@ -299,8 +299,29 @@
     {
       "idx": 42,
       "version": "7",
+      "when": 1755804281257,
+      "tag": "20250821192441_add_soft_delete_to_seat_diagrams",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1755878618081,
+      "tag": "20250822160338_remove_unique_name_for_seat_diagram",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
       "when": 1755886573518,
       "tag": "20250822181613_remove_redundant_index_for_bus_diagram_models",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1756170953717,
+      "tag": "20250826011553_remove_redundant_indexes_for_seat_diagrams",
       "breakpoints": true
     }
   ]

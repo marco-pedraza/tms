@@ -35,8 +35,13 @@ export const seatDiagrams = pgTable(
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at'), // Soft delete support
   },
-  (table) => [index().on(table.name), index().on(table.busDiagramModelId)],
+  (table) => [
+    index().on(table.deletedAt),
+    index().on(table.name),
+    index().on(table.busDiagramModelId),
+  ],
 );
 
 /**

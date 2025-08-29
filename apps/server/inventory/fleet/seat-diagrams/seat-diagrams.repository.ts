@@ -11,7 +11,7 @@ import {
  * Creates a repository for managing seat diagram entities
  * @returns {Object} An object containing seat diagram-specific operations and base CRUD operations
  */
-export function createSeatDiagramRepository() {
+export const createSeatDiagramRepository = () => {
   const baseRepository = createBaseRepository<
     SeatDiagram,
     CreateSeatDiagramPayload,
@@ -19,12 +19,12 @@ export function createSeatDiagramRepository() {
     typeof seatDiagrams
   >(db, seatDiagrams, 'Seat Diagram', {
     searchableFields: [seatDiagrams.name],
+    softDeleteEnabled: true,
+    checkDependenciesOnSoftDelete: false,
   });
 
-  return {
-    ...baseRepository,
-  };
-}
+  return baseRepository;
+};
 
 // Export the seat diagram repository instance
 export const seatDiagramRepository = createSeatDiagramRepository();

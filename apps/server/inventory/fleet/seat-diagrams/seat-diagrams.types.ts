@@ -1,5 +1,5 @@
 import { MatchesRegexp, MinLen } from 'encore.dev/validate';
-import { FloorSeats, PaginatedResult } from '@/shared/types';
+import { FloorSeats } from '@/shared/types';
 
 /**
  * Represents a seat diagram in the database
@@ -154,16 +154,3 @@ export interface UpdateSeatDiagramPayload {
    */
   active?: boolean;
 }
-
-/**
- * Response containing a list of seat diagrams
- */
-export interface SeatDiagrams {
-  /** List of seat diagrams */
-  seatDiagrams: SeatDiagram[];
-}
-
-/**
- * Paginated result of seat diagrams
- */
-export type PaginatedSeatDiagrams = PaginatedResult<SeatDiagram>;

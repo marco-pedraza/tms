@@ -70,18 +70,6 @@ export interface CreatePathwayPayload {
   destinationNodeId: number & Min<1>;
 
   /**
-   * ID of the origin city
-   * Must be a positive number
-   */
-  originCityId: number & Min<1>;
-
-  /**
-   * ID of the destination city
-   * Must be a positive number
-   */
-  destinationCityId: number & Min<1>;
-
-  /**
    * Name of the pathway
    * Must have at least 1 character
    */
@@ -127,16 +115,6 @@ export interface UpdatePathwayPayload {
    * ID of the destination node
    */
   destinationNodeId?: number & Min<1>;
-
-  /**
-   * ID of the origin city
-   */
-  originCityId?: number & Min<1>;
-
-  /**
-   * ID of the destination city
-   */
-  destinationCityId?: number & Min<1>;
 
   /**
    * Name of the pathway

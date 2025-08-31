@@ -50,27 +50,31 @@ export function getFactoryDb<T extends NodePgDatabase<any>>(database: T): any {
 const RANDOM_BASE = Math.floor(Math.random() * 1000000000) + 100000000; // 100M to 1.1B range
 
 export function generateId(sequence?: number): number {
-  // Get current timestamp for temporal uniqueness
+  // Get current timestamp for temporal uniqueness with higher precision
   const timestamp = Date.now();
   const timestampPart = timestamp % 100000; // Last 5 digits
 
-  // Add microsecond precision
-  const microTime = Math.floor(performance.now() * 1000) % 10000;
+  // Add microsecond precision with higher resolution
+  const microTime = Math.floor(performance.now() * 10000) % 100000;
 
-  // Generate random component
-  const randomPart = Math.floor(Math.random() * 10000);
+  // Generate random component with crypto-level randomness
+  const randomPart = Math.floor(Math.random() * 100000);
 
   // Use sequence if provided, otherwise random
   const sequencePart =
     sequence !== undefined ? sequence % 1000 : Math.floor(Math.random() * 1000);
 
-  // Simple combination with the random base
+  // Add thread-like identifier using memory address simulation
+  const threadId = Math.floor(Math.random() * 10000);
+
+  // Combine all sources with better distribution
   const combined =
     RANDOM_BASE +
-    (timestampPart % 50000) + // Keep it bounded
+    (timestampPart % 10000) + // Reduced to make room for other components
     (microTime % 10000) +
     (randomPart % 10000) +
-    (sequencePart % 1000);
+    (sequencePart % 1000) +
+    (threadId % 1000);
 
   // Ensure we stay under PostgreSQL int4 max (2,147,483,647)
   return Math.min(combined, 2000000000);

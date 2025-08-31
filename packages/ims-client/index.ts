@@ -94,6 +94,7 @@ export namespace inventory {
 
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
+            this.addOptionToPathway = this.addOptionToPathway.bind(this)
             this.assignAmenitiesToInstallation = this.assignAmenitiesToInstallation.bind(this)
             this.assignAmenitiesToServiceType = this.assignAmenitiesToServiceType.bind(this)
             this.assignCitiesToPopulation = this.assignCitiesToPopulation.bind(this)
@@ -116,6 +117,7 @@ export namespace inventory {
             this.createInstallationType = this.createInstallationType.bind(this)
             this.createLabel = this.createLabel.bind(this)
             this.createNode = this.createNode.bind(this)
+            this.createPathway = this.createPathway.bind(this)
             this.createPopulation = this.createPopulation.bind(this)
             this.createSeatDiagramZone = this.createSeatDiagramZone.bind(this)
             this.createServiceType = this.createServiceType.bind(this)
@@ -136,6 +138,7 @@ export namespace inventory {
             this.deleteInstallationType = this.deleteInstallationType.bind(this)
             this.deleteLabel = this.deleteLabel.bind(this)
             this.deleteNode = this.deleteNode.bind(this)
+            this.deletePathway = this.deletePathway.bind(this)
             this.deletePopulation = this.deletePopulation.bind(this)
             this.deleteSeatDiagram = this.deleteSeatDiagram.bind(this)
             this.deleteSeatDiagramZone = this.deleteSeatDiagramZone.bind(this)
@@ -160,6 +163,7 @@ export namespace inventory {
             this.getLabel = this.getLabel.bind(this)
             this.getLabelsMetrics = this.getLabelsMetrics.bind(this)
             this.getNode = this.getNode.bind(this)
+            this.getPathway = this.getPathway.bind(this)
             this.getPopulation = this.getPopulation.bind(this)
             this.getPopulationCities = this.getPopulationCities.bind(this)
             this.getSeatDiagram = this.getSeatDiagram.bind(this)
@@ -199,6 +203,8 @@ export namespace inventory {
             this.listLabelsPaginated = this.listLabelsPaginated.bind(this)
             this.listNodes = this.listNodes.bind(this)
             this.listNodesPaginated = this.listNodesPaginated.bind(this)
+            this.listPathways = this.listPathways.bind(this)
+            this.listPathwaysPaginated = this.listPathwaysPaginated.bind(this)
             this.listPopulations = this.listPopulations.bind(this)
             this.listPopulationsPaginated = this.listPopulationsPaginated.bind(this)
             this.listSeatDiagramSeats = this.listSeatDiagramSeats.bind(this)
@@ -214,6 +220,7 @@ export namespace inventory {
             this.listZonesByDiagramModelPaginated = this.listZonesByDiagramModelPaginated.bind(this)
             this.listZonesByDiagramPaginated = this.listZonesByDiagramPaginated.bind(this)
             this.regenerateSeats = this.regenerateSeats.bind(this)
+            this.removeOptionFromPathway = this.removeOptionFromPathway.bind(this)
             this.syncInstallationSchemas = this.syncInstallationSchemas.bind(this)
             this.updateAmenity = this.updateAmenity.bind(this)
             this.updateBus = this.updateBus.bind(this)
@@ -231,6 +238,8 @@ export namespace inventory {
             this.updateInstallationType = this.updateInstallationType.bind(this)
             this.updateLabel = this.updateLabel.bind(this)
             this.updateNode = this.updateNode.bind(this)
+            this.updatePathway = this.updatePathway.bind(this)
+            this.updatePathwayOption = this.updatePathwayOption.bind(this)
             this.updatePopulation = this.updatePopulation.bind(this)
             this.updateSeatConfiguration = this.updateSeatConfiguration.bind(this)
             this.updateSeatDiagram = this.updateSeatDiagram.bind(this)
@@ -239,6 +248,30 @@ export namespace inventory {
             this.updateServiceType = this.updateServiceType.bind(this)
             this.updateState = this.updateState.bind(this)
             this.updateTransporter = this.updateTransporter.bind(this)
+        }
+
+        /**
+         * Adds an option to a pathway.
+         * @param params - Object containing pathway ID and option data
+         * @returns {Promise<Pathway>} The updated pathway with the new option
+         * @throws {APIError} If the pathway is not found or operation fails
+         */
+        public async addOptionToPathway(pathwayId: number, params: {
+    optionData: {
+        name?: string
+        description?: string
+        distanceKm?: number
+        typicalTimeMin?: number
+        avgSpeedKmh?: number
+        isPassThrough?: boolean
+        passThroughTimeMin?: number
+        sequence?: number
+        active?: boolean
+    }
+}): Promise<pathways.Pathway> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/pathways/${encodeURIComponent(pathwayId)}/options/add`, JSON.stringify(params))
+            return await resp.json() as pathways.Pathway
         }
 
         /**
@@ -570,6 +603,18 @@ export namespace inventory {
         }
 
         /**
+         * Creates a new pathway.
+         * @param params - The pathway data to create
+         * @returns {Promise<Pathway>} The created pathway
+         * @throws {APIError} If the pathway creation fails
+         */
+        public async createPathway(params: pathways.CreatePathwayPayload): Promise<pathways.Pathway> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/pathways/create`, JSON.stringify(params))
+            return await resp.json() as pathways.Pathway
+        }
+
+        /**
          * Creates a new population.
          * @param params - The population data to create
          * @returns {Promise<Population>} The created population
@@ -835,6 +880,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/nodes/${encodeURIComponent(id)}/delete`)
             return await resp.json() as nodes.Node
+        }
+
+        /**
+         * Deletes a pathway by its ID.
+         * @param params - Object containing the pathway ID
+         * @param params.id - The ID of the pathway to delete
+         * @returns {Promise<Pathway>} The deleted pathway
+         * @throws {APIError} If the pathway is not found or deletion fails
+         */
+        public async deletePathway(id: number): Promise<pathways.Pathway> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/pathways/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as pathways.Pathway
         }
 
         /**
@@ -1137,6 +1195,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/nodes/${encodeURIComponent(id)}`)
             return await resp.json() as nodes.NodeWithRelations
+        }
+
+        /**
+         * Retrieves a pathway by its ID.
+         * @param params - Object containing the pathway ID
+         * @param params.id - The ID of the pathway to retrieve
+         * @returns {Promise<Pathway>} The found pathway
+         * @throws {APIError} If the pathway is not found or retrieval fails
+         */
+        public async getPathway(id: number): Promise<pathways.Pathway> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/pathways/${encodeURIComponent(id)}`)
+            return await resp.json() as pathways.Pathway
         }
 
         /**
@@ -1619,6 +1690,30 @@ export namespace inventory {
         }
 
         /**
+         * Retrieves all pathways without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListPathwaysResult>} Unified response with data property containing array of pathways
+         * @throws {APIError} If retrieval fails
+         */
+        public async listPathways(params: pathways.ListPathwaysQueryParams): Promise<pathways.ListPathwaysResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/pathways/list/all`, JSON.stringify(params))
+            return await resp.json() as pathways.ListPathwaysResult
+        }
+
+        /**
+         * Retrieves pathways with pagination.
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListPathwaysResult>} Unified paginated response with data and pagination properties
+         * @throws {APIError} If retrieval fails
+         */
+        public async listPathwaysPaginated(params: pathways.PaginatedListPathwaysQueryParams): Promise<pathways.PaginatedListPathwaysResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/pathways/list`, JSON.stringify(params))
+            return await resp.json() as pathways.PaginatedListPathwaysResult
+        }
+
+        /**
          * Retrieves all populations without pagination (useful for dropdowns).
          * @param params - Query parameters including orderBy, filters, and searchTerm
          * @returns {Promise<ListPopulationsResult>} Unified response with data property containing array of populations
@@ -1853,6 +1948,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/bus-diagram-models/${encodeURIComponent(id)}/seats/regenerate`)
             return await resp.json() as bus_diagram_models.RegenerateSeatsResponse
+        }
+
+        /**
+         * Removes an option from a pathway.
+         * @param params - Object containing pathway ID and option ID
+         * @returns {Promise<Pathway>} The updated pathway without the removed option
+         * @throws {APIError} If the pathway or option is not found, or operation fails
+         */
+        public async removeOptionFromPathway(pathwayId: number, optionId: number): Promise<pathways.Pathway> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/pathways/${encodeURIComponent(pathwayId)}/options/${encodeURIComponent(optionId)}/remove`)
+            return await resp.json() as pathways.Pathway
         }
 
         /**
@@ -2720,6 +2827,83 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/nodes/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as nodes.Node
+        }
+
+        /**
+         * Updates an existing pathway.
+         * @param params - Object containing the pathway ID and update data
+         * @param params.id - The ID of the pathway to update
+         * @returns {Promise<Pathway>} The updated pathway
+         * @throws {APIError} If the pathway is not found or update fails
+         */
+        public async updatePathway(id: number, params: {
+    /**
+     * ID of the origin node
+     */
+    originNodeId?: number
+
+    /**
+     * ID of the destination node
+     */
+    destinationNodeId?: number
+
+    /**
+     * Name of the pathway
+     */
+    name?: string
+
+    /**
+     * Code of the pathway
+     */
+    code?: string
+
+    /**
+     * Description of the pathway
+     */
+    description?: string
+
+    /**
+     * Whether the pathway is sellable
+     */
+    isSellable?: boolean
+
+    /**
+     * Whether the pathway is an empty trip
+     */
+    isEmptyTrip?: boolean
+
+    /**
+     * Whether the pathway is active
+     */
+    active?: boolean
+}): Promise<pathways.Pathway> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/pathways/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as pathways.Pathway
+        }
+
+        /**
+         * Updates an option within a pathway.
+         * @param params - Object containing pathway ID, option ID, and update data
+         * @returns {Promise<Pathway>} The updated pathway with the modified option
+         * @throws {APIError} If the pathway or option is not found, or operation fails
+         */
+        public async updatePathwayOption(pathwayId: number, optionId: number, params: {
+    optionData: {
+        name?: string
+        description?: string
+        distanceKm?: number
+        typicalTimeMin?: number
+        avgSpeedKmh?: number
+        isPassThrough?: boolean
+        passThroughTimeMin?: number
+        sequence?: number
+        active?: boolean
+    }
+}): Promise<pathways.Pathway> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/pathways/${encodeURIComponent(pathwayId)}/options/${encodeURIComponent(optionId)}/update`, JSON.stringify(params))
+            return await resp.json() as pathways.Pathway
         }
 
         /**
@@ -8966,6 +9150,185 @@ export namespace nodes {
     export interface PaginatedListNodesResult {
         pagination: shared.PaginationMeta
         data: NodeWithRelations[]
+    }
+}
+
+export namespace pathways {
+    export interface CreatePathwayPayload {
+        /**
+         * ID of the origin node
+         * Must be a positive number
+         */
+        originNodeId: number
+
+        /**
+         * ID of the destination node
+         * Must be a positive number
+         */
+        destinationNodeId: number
+
+        /**
+         * Name of the pathway
+         * Must have at least 1 character
+         */
+        name: string
+
+        /**
+         * Code of the pathway
+         * Must have at least 1 character
+         */
+        code: string
+
+        /**
+         * Description of the pathway
+         */
+        description?: string
+
+        /**
+         * Whether the pathway is sellable
+         */
+        isSellable?: boolean
+
+        /**
+         * Whether the pathway is an empty trip
+         */
+        isEmptyTrip?: boolean
+
+        /**
+         * Whether the pathway is active
+         */
+        active?: boolean
+    }
+
+    export interface ListPathwaysQueryParams {
+        orderBy?: {
+            field: "id" | "originNodeId" | "destinationNodeId" | "originCityId" | "destinationCityId" | "name" | "code" | "description" | "isSellable" | "isEmptyTrip" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            originNodeId?: number
+            destinationNodeId?: number
+            originCityId?: number
+            destinationCityId?: number
+            name?: string
+            code?: string
+            description?: string | null
+            isSellable?: boolean
+            isEmptyTrip?: boolean
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+            deletedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListPathwaysResult {
+        data: Pathway[]
+    }
+
+    export interface PaginatedListPathwaysQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "originNodeId" | "destinationNodeId" | "originCityId" | "destinationCityId" | "name" | "code" | "description" | "isSellable" | "isEmptyTrip" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            originNodeId?: number
+            destinationNodeId?: number
+            originCityId?: number
+            destinationCityId?: number
+            name?: string
+            code?: string
+            description?: string | null
+            isSellable?: boolean
+            isEmptyTrip?: boolean
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+            deletedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListPathwaysResult {
+        pagination: shared.PaginationMeta
+        data: Pathway[]
+    }
+
+    export interface Pathway {
+        /**
+         * Unique identifier for the pathway
+         */
+        id: number
+
+        /**
+         * ID of the origin node
+         */
+        originNodeId: number
+
+        /**
+         * ID of the destination node
+         */
+        destinationNodeId: number
+
+        /**
+         * ID of the origin city
+         */
+        originCityId: number
+
+        /**
+         * ID of the destination city
+         */
+        destinationCityId: number
+
+        /**
+         * Name of the pathway
+         */
+        name: string
+
+        /**
+         * Code of the pathway
+         */
+        code: string
+
+        /**
+         * Description of the pathway
+         */
+        description: string | null
+
+        /**
+         * Whether the pathway is sellable
+         */
+        isSellable: boolean
+
+        /**
+         * Whether the pathway is an empty trip
+         */
+        isEmptyTrip: boolean
+
+        /**
+         * Whether the pathway is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the pathway was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the pathway was last updated
+         */
+        updatedAt: string | string | null
+
+        /**
+         * Timestamp when the pathway was deleted
+         */
+        deletedAt: string | string | null
     }
 }
 

@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^9.7.0",
-    "@praha/drizzle-factory": "^1.0.2",
+    "@praha/drizzle-factory": "^1.2.0",
     "@repo/eslint-config": "*",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/node": "^20.5.7",

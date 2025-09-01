@@ -111,6 +111,7 @@ export namespace inventory {
             this.createCity = this.createCity.bind(this)
             this.createCountry = this.createCountry.bind(this)
             this.createDriver = this.createDriver.bind(this)
+            this.createDriverTimeOff = this.createDriverTimeOff.bind(this)
             this.createEventType = this.createEventType.bind(this)
             this.createInstallation = this.createInstallation.bind(this)
             this.createInstallationSchema = this.createInstallationSchema.bind(this)
@@ -132,6 +133,7 @@ export namespace inventory {
             this.deleteCity = this.deleteCity.bind(this)
             this.deleteCountry = this.deleteCountry.bind(this)
             this.deleteDriver = this.deleteDriver.bind(this)
+            this.deleteDriverTimeOff = this.deleteDriverTimeOff.bind(this)
             this.deleteEventType = this.deleteEventType.bind(this)
             this.deleteInstallation = this.deleteInstallation.bind(this)
             this.deleteInstallationSchema = this.deleteInstallationSchema.bind(this)
@@ -155,6 +157,7 @@ export namespace inventory {
             this.getCity = this.getCity.bind(this)
             this.getCountry = this.getCountry.bind(this)
             this.getDriver = this.getDriver.bind(this)
+            this.getDriverTimeOff = this.getDriverTimeOff.bind(this)
             this.getEventType = this.getEventType.bind(this)
             this.getInstallation = this.getInstallation.bind(this)
             this.getInstallationSchema = this.getInstallationSchema.bind(this)
@@ -189,6 +192,8 @@ export namespace inventory {
             this.listCitiesPaginated = this.listCitiesPaginated.bind(this)
             this.listCountries = this.listCountries.bind(this)
             this.listCountriesPaginated = this.listCountriesPaginated.bind(this)
+            this.listDriverTimeOffs = this.listDriverTimeOffs.bind(this)
+            this.listDriverTimeOffsPaginated = this.listDriverTimeOffsPaginated.bind(this)
             this.listDrivers = this.listDrivers.bind(this)
             this.listDriversPaginated = this.listDriversPaginated.bind(this)
             this.listEventTypes = this.listEventTypes.bind(this)
@@ -231,6 +236,7 @@ export namespace inventory {
             this.updateCity = this.updateCity.bind(this)
             this.updateCountry = this.updateCountry.bind(this)
             this.updateDriver = this.updateDriver.bind(this)
+            this.updateDriverTimeOff = this.updateDriverTimeOff.bind(this)
             this.updateEventType = this.updateEventType.bind(this)
             this.updateInstallation = this.updateInstallation.bind(this)
             this.updateInstallationProperties = this.updateInstallationProperties.bind(this)
@@ -531,6 +537,18 @@ export namespace inventory {
         }
 
         /**
+         * Creates a new time-off for a driver.
+         * @param params - The time-off data to create (includes driverId)
+         * @returns {Promise<DriverTimeOff>} The created time-off
+         * @throws {APIError} If the time-off creation fails
+         */
+        public async createDriverTimeOff(driverId: number, params: time_offs.CreateDriverTimeOffRepositoryPayload): Promise<time_offs.DriverTimeOff> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/drivers/${encodeURIComponent(driverId)}/time-offs/create`, JSON.stringify(params))
+            return await resp.json() as time_offs.DriverTimeOff
+        }
+
+        /**
          * Creates a new event type.
          * @param params - The event type data to create
          * @returns {Promise<EventType>} The created event type
@@ -803,6 +821,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/drivers/${encodeURIComponent(id)}/delete`)
             return await resp.json() as drivers.DriverWithRelations
+        }
+
+        /**
+         * Deletes a time-off by its ID for a specific driver (soft delete).
+         * @param params - Object containing the driver ID and time-off ID
+         * @returns {Promise<DriverTimeOff>} The deleted time-off
+         * @throws {APIError} If the time-off is not found or deletion fails
+         */
+        public async deleteDriverTimeOff(driverId: number, id: number): Promise<time_offs.DriverTimeOff> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/drivers/${encodeURIComponent(driverId)}/time-offs/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as time_offs.DriverTimeOff
         }
 
         /**
@@ -1095,6 +1125,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/drivers/${encodeURIComponent(id)}`)
             return await resp.json() as drivers.DriverWithRelations
+        }
+
+        /**
+         * Retrieves a time-off by its ID for a specific driver.
+         * @param params - Object containing the driver ID and time-off ID
+         * @returns {Promise<DriverTimeOff>} The found time-off
+         * @throws {APIError} If the time-off is not found or doesn't belong to the driver
+         */
+        public async getDriverTimeOff(driverId: number, id: number): Promise<time_offs.DriverTimeOff> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/drivers/${encodeURIComponent(driverId)}/time-offs/${encodeURIComponent(id)}`)
+            return await resp.json() as time_offs.DriverTimeOff
         }
 
         /**
@@ -1521,6 +1563,64 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/countries/list`, JSON.stringify(params))
             return await resp.json() as countries.PaginatedListCountriesResult
+        }
+
+        /**
+         * Retrieves all time-offs for a driver without pagination (useful for dropdowns).
+         * @param params - Driver ID and query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListDriverTimeOffsResult>} Unified response with data property containing array of time-offs
+         * @throws {APIError} If retrieval fails
+         */
+        public async listDriverTimeOffs(driverId: number, params: {
+    orderBy?: {
+        field: "id" | "driverId" | "startDate" | "endDate" | "type" | "reason" | "createdAt" | "updatedAt"
+        direction: "asc" | "desc"
+    }[]
+    filters?: {
+        id?: number
+        driverId?: number
+        startDate?: string | string
+        endDate?: string | string
+        type?: time_offs.TimeOffType
+        reason?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
+    }
+    searchTerm?: string
+}): Promise<time_offs.ListDriverTimeOffsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/drivers/${encodeURIComponent(driverId)}/time-offs/list/all`, JSON.stringify(params))
+            return await resp.json() as time_offs.ListDriverTimeOffsResult
+        }
+
+        /**
+         * Retrieves time-offs for a driver with pagination (useful for tables).
+         * @param params - Driver ID and pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListDriverTimeOffsResult>} Unified paginated response with data and pagination properties
+         * @throws {APIError} If retrieval fails
+         */
+        public async listDriverTimeOffsPaginated(driverId: number, params: {
+    page?: number
+    pageSize?: number
+    orderBy?: {
+        field: "id" | "driverId" | "startDate" | "endDate" | "type" | "reason" | "createdAt" | "updatedAt"
+        direction: "asc" | "desc"
+    }[]
+    filters?: {
+        id?: number
+        driverId?: number
+        startDate?: string | string
+        endDate?: string | string
+        type?: time_offs.TimeOffType
+        reason?: string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
+    }
+    searchTerm?: string
+}): Promise<time_offs.PaginatedListDriverTimeOffsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/drivers/${encodeURIComponent(driverId)}/time-offs/list`, JSON.stringify(params))
+            return await resp.json() as time_offs.PaginatedListDriverTimeOffsResult
         }
 
         /**
@@ -2508,6 +2608,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/drivers/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as drivers.DriverWithRelations
+        }
+
+        /**
+         * Updates an existing time-off for a driver.
+         * @param params - Object containing the time-off ID and update data (includes driverId)
+         * @returns {Promise<DriverTimeOff>} The updated time-off
+         * @throws {APIError} If the time-off is not found or update fails
+         */
+        public async updateDriverTimeOff(driverId: number, id: number, params: time_offs.UpdateDriverTimeOffRepositoryPayload): Promise<time_offs.DriverTimeOff> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/drivers/${encodeURIComponent(driverId)}/time-offs/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as time_offs.DriverTimeOff
         }
 
         /**
@@ -10367,6 +10479,105 @@ export namespace tenants {
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }
+    }
+}
+
+export namespace time_offs {
+    export interface CreateDriverTimeOffRepositoryPayload {
+        /**
+         * Start date of the time-off (inclusive)
+         */
+        startDate: string | string
+
+        /**
+         * End date of the time-off (inclusive)
+         */
+        endDate: string | string
+
+        /**
+         * Type of time-off
+         */
+        type: TimeOffType
+
+        /**
+         * Optional reason for the time-off
+         */
+        reason?: string | null
+    }
+
+    export interface DriverTimeOff {
+        /**
+         * Unique identifier for the time-off
+         */
+        id: number
+
+        /**
+         * ID of the driver this time-off belongs to
+         */
+        driverId: number
+
+        /**
+         * Start date of the time-off (inclusive)
+         */
+        startDate: string | string
+
+        /**
+         * End date of the time-off (inclusive)
+         */
+        endDate: string | string
+
+        /**
+         * Type of time-off
+         */
+        type: TimeOffType
+
+        /**
+         * Reason for the time-off
+         */
+        reason: string | null
+
+        /**
+         * Timestamp when the time-off record was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the time-off record was last updated
+         */
+        updatedAt: string | string | null
+    }
+
+    export interface ListDriverTimeOffsResult {
+        data: DriverTimeOff[]
+    }
+
+    export interface PaginatedListDriverTimeOffsResult {
+        pagination: shared.PaginationMeta
+        data: DriverTimeOff[]
+    }
+
+    export type TimeOffType = "VACATION" | "LEAVE" | "SICK_LEAVE" | "PERSONAL_DAY" | "OTHER"
+
+    export interface UpdateDriverTimeOffRepositoryPayload {
+        /**
+         * Start date of the time-off (inclusive)
+         */
+        startDate?: string | string
+
+        /**
+         * End date of the time-off (inclusive)
+         */
+        endDate?: string | string
+
+        /**
+         * Type of time-off
+         */
+        type?: TimeOffType
+
+        /**
+         * Optional reason for the time-off
+         */
+        reason?: string | null
     }
 }
 

@@ -7,10 +7,12 @@ import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DriverSkeleton from '@/drivers/components/driver-skeleton';
 import DriverStatusBadge from '@/drivers/components/driver-status-badge';
+import DriverTimeOffsView from '@/drivers/components/driver-time-offs-view';
 import useDriverMutations from '@/drivers/hooks/use-driver-mutations';
 import useQueryDriver from '@/drivers/hooks/use-query-driver';
 import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
+import { DriverStatus } from '@/services/ims-client';
 import routes from '@/services/routes';
 
 export default function DriverDetailsPage() {
@@ -77,7 +79,7 @@ export default function DriverDetailsPage() {
 
               <dt className="font-medium">{tCommon('fields.status')}:</dt>
               <dd>
-                <DriverStatusBadge status={driver.status} />
+                <DriverStatusBadge status={driver.status as DriverStatus} />
               </dd>
 
               <dt className="font-medium">{tDrivers('fields.statusDate')}:</dt>
@@ -171,6 +173,16 @@ export default function DriverDetailsPage() {
                   : '-'}
               </dd>
             </dl>
+          </CardContent>
+        </Card>
+
+        {/* Time-offs Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{tDrivers('sections.availability')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DriverTimeOffsView driverId={driver.id} showCreatedAt={true} />
           </CardContent>
         </Card>
       </div>

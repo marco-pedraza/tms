@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 interface LoadErrorProps {
   title?: string;
   description?: string;
-  backHref: string;
+  backHref?: string;
   retryLabel?: string;
   backLabel?: string;
+  onRetry?: () => void;
 }
 
 export default function LoadError({
@@ -17,11 +18,16 @@ export default function LoadError({
   backHref,
   backLabel = '',
   retryLabel = '',
+  onRetry,
 }: LoadErrorProps) {
   const tCommon = useTranslations('common');
 
-  const onRetry = () => {
-    window.location.reload();
+  const handleRetry = () => {
+    if (onRetry) {
+      onRetry();
+    } else {
+      window.location.reload();
+    }
   };
 
   return (
@@ -34,14 +40,16 @@ export default function LoadError({
         {description || tCommon('errors.noResourceFound')}
       </p>
       <div className="flex gap-2">
-        <Button size="sm" onClick={onRetry}>
+        <Button size="sm" onClick={handleRetry}>
           {retryLabel || tCommon('actions.retry')}
         </Button>
-        <Link href={backHref}>
-          <Button variant="outline" size="sm">
-            {backLabel || tCommon('actions.backToList')}
+        {backHref && (
+          <Button asChild variant="outline" size="sm">
+            <Link href={backHref}>
+              {backLabel || tCommon('actions.backToList')}
+            </Link>
           </Button>
-        </Link>
+        )}
       </div>
     </div>
   );

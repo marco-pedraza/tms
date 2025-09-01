@@ -2,6 +2,7 @@ import { fakerES_MX as faker } from '@faker-js/faker';
 import type { BusModel } from '@/inventory/fleet/bus-models/bus-models.types';
 import type { Bus } from '@/inventory/fleet/buses/buses.types';
 import type { Driver } from '@/inventory/fleet/drivers/drivers.types';
+import type { DriverTimeOff } from '@/inventory/fleet/drivers/time-offs/time-offs.types';
 import type { City } from '@/inventory/locations/cities/cities.types';
 import type { BusLine } from '@/inventory/operators/bus-lines/bus-lines.types';
 import type { ServiceType } from '@/inventory/operators/service-types/service-types.types';
@@ -14,6 +15,7 @@ import {
   driverFactory,
   seatDiagramFactory,
   serviceTypeFactory,
+  timeOffFactory,
   transporterFactory,
 } from '@/factories';
 import { getFactoryDb } from '@/factories/factory-utils';
@@ -294,4 +296,40 @@ export async function seedDrivers(
 
   console.log(`Seeded ${drivers.length} drivers`);
   return drivers;
+}
+
+/**
+ * Seeds time-offs for some drivers (not all drivers get time-offs)
+ */
+export async function seedDriverTimeOffs(
+  drivers: Driver[],
+  db: ReturnType<typeof getFactoryDb>,
+): Promise<DriverTimeOff[]> {
+  const timeOffs: DriverTimeOff[] = [];
+
+  // Only create time-offs for some drivers (approximately 60-70%)
+  const driversWithTimeOffs = drivers.filter(() =>
+    faker.helpers.maybe(() => true, { probability: 0.65 }),
+  );
+
+  for (const driver of driversWithTimeOffs) {
+    // Create 1 to 3 time-offs per driver
+    const numTimeOffs = faker.number.int({ min: 1, max: 2 });
+
+    for (let i = 0; i < numTimeOffs; i++) {
+      const newTimeOffs = (await timeOffFactory(db).create([
+        {
+          driverId: driver.id,
+          // The factory will generate appropriate dates and other fields
+        },
+      ])) as DriverTimeOff[];
+
+      timeOffs.push(...newTimeOffs);
+    }
+  }
+
+  console.log(
+    `Seeded ${timeOffs.length} time-offs for ${driversWithTimeOffs.length} drivers`,
+  );
+  return timeOffs;
 }

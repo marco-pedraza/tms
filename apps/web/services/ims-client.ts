@@ -46,21 +46,32 @@ enum EngineType {
   OTHER = 'OTHER',
 }
 
+enum TimeOffType {
+  VACATION = 'VACATION',
+  LEAVE = 'LEAVE',
+  SICK_LEAVE = 'SICK_LEAVE',
+  PERSONAL_DAY = 'PERSONAL_DAY',
+  OTHER = 'OTHER',
+}
+
 const busStatuses = Object.values(BusStatus);
 const busLicensePlateTypes = Object.values(BusLicensePlateType);
 const driverStatuses = Object.values(DriverStatus);
 const driverInitialStatuses = Object.values(DriverInitialStatus);
 const engineTypes = Object.values(EngineType);
+const timeOffTypes = Object.values(TimeOffType);
 
 export {
   BusStatus,
   BusLicensePlateType,
   DriverStatus,
+  TimeOffType,
   busStatuses,
   busLicensePlateTypes,
   driverStatuses,
   driverInitialStatuses,
   EngineType,
   engineTypes,
+  timeOffTypes,
 };
 export default client;

@@ -2,7 +2,8 @@
 
 import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
-import DriverForm, { DriverFormValues } from '@/drivers/components/driver-form';
+import DriverForm from '@/drivers/components/driver-form';
+import type { DriverFormValues } from '@/drivers/components/driver-form';
 import DriverFormSkeleton from '@/drivers/components/driver-form-skeleton';
 import useDriverMutations from '@/drivers/hooks/use-driver-mutations';
 import useQueryDriver from '@/drivers/hooks/use-query-driver';
@@ -19,7 +20,9 @@ export default function EditDriverPage() {
   const { update: updateDriver } = useDriverMutations();
 
   const handleSubmit = async (values: DriverFormValues) => {
-    await updateDriver.mutateWithToast({ id: driverId, values });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { timeOffs: _omit, ...driverData } = values;
+    await updateDriver.mutateWithToast({ id: driverId, values: driverData });
   };
 
   if (isLoading) {
@@ -37,6 +40,7 @@ export default function EditDriverPage() {
   };
 
   const defaultValues = {
+    id: driver.id,
     driverKey: driver.driverKey,
     payrollKey: driver.payrollKey,
     firstName: driver.firstName,
@@ -53,6 +57,7 @@ export default function EditDriverPage() {
     license: driver.license,
     licenseExpiry: formatDateForInput(driver.licenseExpiry),
     busLineId: driver.busLineId,
+    timeOffs: [],
   };
 
   return (

@@ -40,257 +40,250 @@
     {
       "idx": 5,
       "version": "7",
-      "when": 1743451692865,
-      "tag": "20250331200812_clear_darkhawk",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
       "when": 1743451744589,
       "tag": "20250331200904_creates_transporters_and_buslines_tables",
       "breakpoints": true
     },
     {
-      "idx": 7,
+      "idx": 6,
       "version": "7",
       "when": 1744653817301,
       "tag": "20250414180337_creates_drivers_refresh_tokens_table",
       "breakpoints": true
     },
     {
-      "idx": 8,
+      "idx": 7,
       "version": "7",
-      "when": 1744670622367,
-      "tag": "20250414224341_creates_seat_layout_table",
+      "when": 1744670621467,
+      "tag": "20250414224341_creates_bus_diagram_models_table",
       "breakpoints": true
     },
     {
-      "idx": 9,
+      "idx": 8,
       "version": "7",
       "when": 1744670622467,
       "tag": "20250414224342_create_seat_diagrams_table",
       "breakpoints": true
     },
     {
-      "idx": 10,
+      "idx": 9,
       "version": "7",
       "when": 1744670623467,
       "tag": "20250414224343_create_bus_models_tables",
       "breakpoints": true
     },
     {
-      "idx": 11,
+      "idx": 10,
       "version": "7",
       "when": 1744843137136,
       "tag": "20250416223857_create_bus_table",
       "breakpoints": true
     },
     {
-      "idx": 12,
+      "idx": 11,
       "version": "7",
       "when": 1745456437954,
       "tag": "20250424010037_creates_pathways_tables",
       "breakpoints": true
     },
     {
-      "idx": 13,
+      "idx": 12,
       "version": "7",
       "when": 1746653888109,
       "tag": "20250507213808_create_route_tables",
       "breakpoints": true
     },
     {
-      "idx": 14,
+      "idx": 13,
       "version": "7",
       "when": 1746738959194,
       "tag": "20250508211559_create_permission_groups_tables",
       "breakpoints": true
     },
     {
-      "idx": 15,
+      "idx": 14,
       "version": "7",
       "when": 1747262417861,
       "tag": "20250509170003_create_zones_tables",
       "breakpoints": true
     },
     {
-      "idx": 16,
+      "idx": 15,
       "version": "7",
       "when": 1747694417861,
       "tag": "20250514224017_create_audits_table",
       "breakpoints": true
     },
     {
-      "idx": 17,
+      "idx": 16,
       "version": "7",
       "when": 1748374314321,
       "tag": "20250527193154_create_bus_seat_models_table",
       "breakpoints": true
     },
     {
-      "idx": 18,
+      "idx": 17,
       "version": "7",
       "when": 1750374463967,
       "tag": "20250619230743_create_populations_tables",
       "breakpoints": true
     },
     {
-      "idx": 19,
+      "idx": 18,
       "version": "7",
       "when": 1750559963884,
-      "tag": "20250622023923_add_soft_delete_to_countries",
+      "tag": "20250623220603_add_soft_delete_to_countries",
       "breakpoints": true
     },
     {
-      "idx": 20,
+      "idx": 19,
       "version": "7",
       "when": 1750799801582,
       "tag": "20250624211641_creates_nodes_and_installations_tables",
       "breakpoints": true
     },
     {
-      "idx": 21,
+      "idx": 20,
       "version": "7",
       "when": 1750877743116,
       "tag": "20250625185543_add_softdelete_support_for_geographycal_tables",
       "breakpoints": true
     },
     {
-      "idx": 22,
+      "idx": 21,
       "version": "7",
       "when": 1751416297853,
       "tag": "20250702003137_create_installation_types_table",
       "breakpoints": true
     },
     {
-      "idx": 23,
+      "idx": 22,
       "version": "7",
       "when": 1751501299826,
       "tag": "20250703000819_create_installation_schema_tables",
       "breakpoints": true
     },
     {
-      "idx": 24,
+      "idx": 23,
       "version": "7",
       "when": 1751664235797,
       "tag": "20250704212355_add_state_scope_to_cities_unique_index",
       "breakpoints": true
     },
     {
-      "idx": 25,
+      "idx": 24,
       "version": "7",
       "when": 1751490301641,
       "tag": "20250702210501_add_contact_and_active_to_node_and_installations",
       "breakpoints": true
     },
     {
-      "idx": 26,
+      "idx": 25,
       "version": "7",
       "when": 1751932081909,
       "tag": "20250707234801_add_boarding_and_slug_fields_to_nodes",
       "breakpoints": true
     },
     {
-      "idx": 27,
+      "idx": 26,
       "version": "7",
       "when": 1751998663021,
       "tag": "20250708181743_create_event_types_tables",
       "breakpoints": true
     },
     {
-      "idx": 28,
+      "idx": 27,
       "version": "7",
       "when": 1752197299692,
       "tag": "20250711012819_add_code_and_active_to_installation_type",
       "breakpoints": true
     },
     {
-      "idx": 29,
+      "idx": 28,
       "version": "7",
       "when": 1752523374682,
       "tag": "20250714200254_deletes_unnecessary_fields_from_nodes",
       "breakpoints": true
     },
     {
-      "idx": 30,
+      "idx": 29,
       "version": "7",
       "when": 1753133130458,
       "tag": "20250721212530_create_labels_tables",
       "breakpoints": true
     },
     {
-      "idx": 31,
+      "idx": 30,
       "version": "7",
       "when": 1753219937047,
       "tag": "20250722213217_removes_label_from_installation_schemas",
       "breakpoints": true
     },
     {
-      "idx": 32,
+      "idx": 31,
       "version": "7",
       "when": 1753310247787,
       "tag": "20250723223727_creates_amenities_table",
       "breakpoints": true
     },
     {
-      "idx": 33,
+      "idx": 32,
       "version": "7",
       "when": 1753915456527,
       "tag": "20250730224416_add_operating_hours_to_installations",
       "breakpoints": true
     },
     {
-      "idx": 34,
+      "idx": 33,
       "version": "7",
       "when": 1754678815767,
       "tag": "20250808184655_add_soft_delete_to_buses",
       "breakpoints": true
     },
     {
-      "idx": 35,
+      "idx": 34,
       "version": "7",
       "when": 1754950130492,
       "tag": "20250811220850_update-bus-model-properties",
       "breakpoints": true
     },
     {
-      "idx": 36,
+      "idx": 35,
       "version": "7",
       "when": 1755042698434,
       "tag": "20250813170118_add_columns_to_bus_models",
       "breakpoints": true
     },
     {
-      "idx": 37,
+      "idx": 36,
       "version": "7",
       "when": 1755112063370,
       "tag": "20250813190743_fix_typo_at_bus_schema",
       "breakpoints": true
     },
     {
-      "idx": 38,
+      "idx": 37,
       "version": "7",
       "when": 1755200000730,
       "tag": "20250814193320_updates_transportes_table",
       "breakpoints": true
     },
     {
-      "idx": 39,
+      "idx": 38,
       "version": "7",
       "when": 1755551334155,
       "tag": "20250818210854_remove_distribution_type_from_bus_models",
       "breakpoints": true
     },
     {
-      "idx": 40,
+      "idx": 39,
       "version": "7",
       "when": 1755710634483,
       "tag": "20250820172354_updates_pathways_tables_and_removes_routes",
       "breakpoints": true
     },
     {
-      "idx": 41,
+      "idx": 40,
       "version": "7",
       "when": 1755712551310,
       "tag": "20250820175551_add_soft_delete_to_bus_diagram_models",

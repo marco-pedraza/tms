@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import {
   createCity,
   deleteCity,
@@ -11,6 +11,12 @@ import {
   createState,
   deleteState,
 } from '@/inventory/locations/states/states.controller';
+import {
+  createCleanupHelper,
+  createTestSuiteId,
+  createUniqueEntity,
+  safeCleanup,
+} from '@/tests/shared/test-utils';
 import type { Transporter, TransporterWithCity } from './transporters.types';
 import {
   createTransporter,
@@ -21,147 +27,207 @@ import {
   updateTransporter,
 } from './transporters.controller';
 
+/**
+ * Test data interface for consistent test setup
+ */
+interface TestData {
+  countryId: number;
+  stateId: number;
+  cityId: number;
+  suiteId: string;
+  transporterCleanup: ReturnType<typeof createCleanupHelper>;
+}
+
 describe('Transporters Controller', () => {
-  let countryId: number;
-  let stateId: number;
-  let cityId: number;
-  let createdTransporterId: number;
-  let additionalTransporterIds: number[] = [];
+  let testData: TestData;
 
-  const testTransporter = {
-    name: 'Test Transporter',
-    code: 'TST-TRNSP',
-    description: 'Test transporter description',
-    website: 'https://testtransporter.com',
-    email: 'contact@testtransporter.com',
-    phone: '+1234567890',
-    contactInfo: 'Additional contact information',
-    licenseNumber: 'LIC-12345',
-    active: true,
-  };
+  /**
+   * Creates fresh test data for each test to ensure isolation
+   */
+  async function createTestData(): Promise<TestData> {
+    const suiteId = createTestSuiteId('transporters');
 
-  beforeAll(async () => {
+    const countryEntity = createUniqueEntity({
+      baseName: 'Test Country',
+      baseCode: 'TC',
+      suiteId,
+    });
+
     const country = await createCountry({
-      name: 'Test Country for Transporters',
-      code: 'TCT',
+      name: countryEntity.name,
+      code: countryEntity.code || 'TC001',
       active: true,
     });
-    countryId = country.id;
+
+    const stateEntity = createUniqueEntity({
+      baseName: 'Test State',
+      baseCode: 'TS',
+      suiteId,
+    });
+
     const state = await createState({
-      name: 'Test State for Transporters',
-      code: 'TST',
-      countryId,
+      name: stateEntity.name,
+      code: stateEntity.code || 'TS001',
+      countryId: country.id,
       active: true,
     });
-    stateId = state.id;
+
+    const cityEntity = createUniqueEntity({
+      baseName: 'Test City',
+      suiteId,
+    });
+
     const city = await createCity({
-      name: 'Test City for Transporters',
-      stateId,
-      latitude: 19.4326,
-      longitude: -99.1332,
+      name: cityEntity.name,
+      stateId: state.id,
+      latitude: 19.4326 + Math.random() * 0.01, // Small variation to avoid conflicts
+      longitude: -99.1332 + Math.random() * 0.01,
       timezone: 'America/Mexico_City',
       active: true,
     });
-    cityId = city.id;
+
+    const transporterCleanup = createCleanupHelper(
+      deleteTransporter,
+      'transporter',
+    );
+
+    return {
+      countryId: country.id,
+      stateId: state.id,
+      cityId: city.id,
+      suiteId,
+      transporterCleanup,
+    };
+  }
+
+  /**
+   * Cleans up test data after each test
+   */
+  async function cleanupTestData(data: TestData): Promise<void> {
+    // Delete transporters first (they reference cities)
+    await data.transporterCleanup.cleanupAll();
+
+    // Delete geographic entities in reverse order using safe cleanup
+    await safeCleanup(
+      async () => {
+        await deleteCity({ id: data.cityId });
+      },
+      'city',
+      data.cityId,
+    );
+
+    await safeCleanup(
+      async () => {
+        await deleteState({ id: data.stateId });
+      },
+      'state',
+      data.stateId,
+    );
+
+    await safeCleanup(
+      async () => {
+        await deleteCountry({ id: data.countryId });
+      },
+      'country',
+      data.countryId,
+    );
+  }
+
+  /**
+   * Creates a test transporter with unique data
+   */
+  async function createTestTransporter(
+    data: TestData,
+    overrides: Partial<Parameters<typeof createTransporter>[0]> = {},
+  ): Promise<Transporter> {
+    const transporterEntity = createUniqueEntity({
+      baseName: 'Test Transporter',
+      baseCode: 'TST',
+      suiteId: data.suiteId,
+    });
+
+    const transporter = await createTransporter({
+      name: transporterEntity.name,
+      code: transporterEntity.code || 'TST001',
+      description: 'Test transporter description',
+      website: 'https://testtransporter.com',
+      email: 'contact@testtransporter.com',
+      phone: '+1234567890',
+      contactInfo: 'Additional contact information',
+      licenseNumber: `LIC-${Date.now()}`,
+      active: true,
+      ...overrides,
+    });
+
+    // Track for cleanup using the cleanup helper
+    data.transporterCleanup.track(transporter.id);
+    return transporter;
+  }
+
+  beforeEach(async () => {
+    testData = await createTestData();
   });
 
-  afterAll(async () => {
-    for (const id of additionalTransporterIds) {
-      try {
-        await deleteTransporter({ id });
-        // eslint-disable-next-line
-      } catch (error: any) {
-        if (
-          error?.name === 'NotFoundError' ||
-          (typeof error?.message === 'string' &&
-            error.message.toLowerCase().includes('not found'))
-        ) {
-          continue;
-        }
-
-        console.error(`Error deleting additional transporter ${id}:`, error);
-      }
-    }
-    if (createdTransporterId) {
-      try {
-        await deleteTransporter({ id: createdTransporterId });
-      } catch (error) {
-        console.error('Error deleting main test transporter:', error);
-      }
-    }
-    try {
-      await deleteCity({ id: cityId });
-    } catch (error) {
-      console.error('Error deleting city:', error);
-    }
-    try {
-      await deleteState({ id: stateId });
-    } catch (error) {
-      console.error('Error deleting state:', error);
-    }
-    try {
-      await deleteCountry({ id: countryId });
-    } catch (error) {
-      console.error('Error deleting country:', error);
-    }
+  afterEach(async () => {
+    await cleanupTestData(testData);
   });
 
   describe('success scenarios', () => {
     test('should create a new transporter', async () => {
-      const response = await createTransporter(testTransporter);
-      createdTransporterId = response.id;
+      const response = await createTestTransporter(testData);
+
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
-      expect(response.name).toBe(testTransporter.name);
-      expect(response.code).toBe(testTransporter.code);
-      expect(response.description).toBe(testTransporter.description);
-      expect(response.website).toBe(testTransporter.website);
-      expect(response.email).toBe(testTransporter.email);
-      expect(response.phone).toBe(testTransporter.phone);
-      expect(response.contactInfo).toBe(testTransporter.contactInfo);
-      expect(response.licenseNumber).toBe(testTransporter.licenseNumber);
-      expect(response.active).toBe(testTransporter.active);
+      expect(response.name).toContain('Test Transporter');
+      expect(response.code).toContain('TST');
+      expect(response.description).toBe('Test transporter description');
+      expect(response.website).toBe('https://testtransporter.com');
+      expect(response.email).toBe('contact@testtransporter.com');
+      expect(response.phone).toBe('+1234567890');
+      expect(response.contactInfo).toBe('Additional contact information');
+      expect(response.licenseNumber).toContain('LIC-');
+      expect(response.active).toBe(true);
       expect(response.createdAt).toBeDefined();
     });
 
     test('should create a transporter with headquarter city', async () => {
-      const transporterWithHeadquarter = await createTransporter({
-        name: 'Transporter With Headquarter',
-        code: 'TRN-HQ',
-        description: 'This transporter has a headquarter city',
-        headquarterCityId: cityId,
-        active: true,
+      const transporterWithHeadquarter = await createTestTransporter(testData, {
+        headquarterCityId: testData.cityId,
       });
-      additionalTransporterIds.push(transporterWithHeadquarter.id);
+
       expect(transporterWithHeadquarter).toBeDefined();
-      expect(transporterWithHeadquarter.headquarterCityId).toBe(cityId);
-      await deleteTransporter({ id: transporterWithHeadquarter.id });
-      additionalTransporterIds = additionalTransporterIds.filter(
-        (id) => id !== transporterWithHeadquarter.id,
+      expect(transporterWithHeadquarter.headquarterCityId).toBe(
+        testData.cityId,
       );
     });
 
     test('should retrieve a transporter by ID', async () => {
-      const response = await getTransporter({ id: createdTransporterId });
+      const createdTransporter = await createTestTransporter(testData);
+
+      const response = await getTransporter({ id: createdTransporter.id });
       expect(response).toBeDefined();
-      expect(response.id).toBe(createdTransporterId);
-      expect(response.name).toBe(testTransporter.name);
-      expect(response.code).toBe(testTransporter.code);
+      expect(response.id).toBe(createdTransporter.id);
+      expect(response.name).toBe(createdTransporter.name);
+      expect(response.code).toBe(createdTransporter.code);
     });
 
     test('should list all transporters (non-paginated)', async () => {
+      const createdTransporter = await createTestTransporter(testData);
+
       const result = await listTransporters({});
       expect(result).toBeDefined();
       expect(Array.isArray(result.data)).toBe(true);
       expect(
         result.data.some(
-          (t: TransporterWithCity) => t.id === createdTransporterId,
+          (t: TransporterWithCity) => t.id === createdTransporter.id,
         ),
       ).toBe(true);
       expect(result).not.toHaveProperty('pagination');
     });
 
     test('should retrieve paginated transporters', async () => {
+      const createdTransporter = await createTestTransporter(testData);
+
       const result = await listTransportersPaginated({ page: 1, pageSize: 10 });
       expect(result).toBeDefined();
       expect(Array.isArray(result.data)).toBe(true);
@@ -174,7 +240,7 @@ describe('Transporters Controller', () => {
       expect(typeof result.pagination.hasPreviousPage).toBe('boolean');
       expect(
         result.data.some(
-          (t: TransporterWithCity) => t.id === createdTransporterId,
+          (t: TransporterWithCity) => t.id === createdTransporter.id,
         ),
       ).toBe(true);
       expect(result.pagination.currentPage).toBe(1);
@@ -183,49 +249,52 @@ describe('Transporters Controller', () => {
     });
 
     test('pagination should respect pageSize parameter for transporters', async () => {
+      // Create a transporter to ensure we have at least one
+      await createTestTransporter(testData);
+
       const result = await listTransportersPaginated({ page: 1, pageSize: 1 });
       expect(result.data.length).toBeLessThanOrEqual(1);
       expect(result.pagination.pageSize).toBe(1);
     });
 
     test('should update a transporter', async () => {
+      const createdTransporter = await createTestTransporter(testData);
       const updatedName = 'Updated Test Transporter';
       const updatedPhone = '+9876543210';
+
       const response = await updateTransporter({
-        id: createdTransporterId,
+        id: createdTransporter.id,
         name: updatedName,
         phone: updatedPhone,
       });
+
       expect(response).toBeDefined();
-      expect(response.id).toBe(createdTransporterId);
+      expect(response.id).toBe(createdTransporter.id);
       expect(response.name).toBe(updatedName);
       expect(response.phone).toBe(updatedPhone);
-      expect(response.code).toBe(testTransporter.code);
-      expect(response.description).toBe(testTransporter.description);
+      expect(response.code).toBe(createdTransporter.code);
+      expect(response.description).toBe(createdTransporter.description);
     });
 
     test('should update transporter with headquarter city', async () => {
+      const createdTransporter = await createTestTransporter(testData);
+
       const response = await updateTransporter({
-        id: createdTransporterId,
-        headquarterCityId: cityId,
+        id: createdTransporter.id,
+        headquarterCityId: testData.cityId,
       });
+
       expect(response).toBeDefined();
-      expect(response.headquarterCityId).toBe(cityId);
+      expect(response.headquarterCityId).toBe(testData.cityId);
     });
 
     test('should delete a transporter', async () => {
-      const transporterToDelete = await createTransporter({
-        name: 'Transporter To Delete',
-        code: 'DEL-TRP',
-        active: true,
-      });
-      additionalTransporterIds.push(transporterToDelete.id);
+      const transporterToDelete = await createTestTransporter(testData);
+
       await expect(
         deleteTransporter({ id: transporterToDelete.id }),
       ).resolves.not.toThrow();
-      additionalTransporterIds = additionalTransporterIds.filter(
-        (id) => id !== transporterToDelete.id,
-      );
+
       await expect(
         getTransporter({ id: transporterToDelete.id }),
       ).rejects.toThrow();
@@ -234,57 +303,74 @@ describe('Transporters Controller', () => {
 
   describe('city association tests', () => {
     test('should retrieve a transporter with its associated headquarter city', async () => {
-      const transporterWithCity = await getTransporter({
-        id: createdTransporterId,
+      const createdTransporter = await createTestTransporter(testData, {
+        headquarterCityId: testData.cityId,
       });
+
+      const transporterWithCity = await getTransporter({
+        id: createdTransporter.id,
+      });
+
       expect(transporterWithCity).toBeDefined();
-      expect(transporterWithCity.id).toBe(createdTransporterId);
+      expect(transporterWithCity.id).toBe(createdTransporter.id);
       expect(transporterWithCity.headquarterCity).toBeDefined();
-      expect(transporterWithCity.headquarterCity?.id).toBe(cityId);
-      expect(transporterWithCity.headquarterCity?.name).toBe(
-        'Test City for Transporters',
+      expect(transporterWithCity.headquarterCity?.id).toBe(testData.cityId);
+      expect(transporterWithCity.headquarterCity?.name).toContain('Test City');
+      expect(transporterWithCity.headquarterCity?.stateId).toBe(
+        testData.stateId,
       );
-      expect(transporterWithCity.headquarterCity?.stateId).toBe(stateId);
     });
 
     test('should retrieve transporters with headquarter cities using listTransporters', async () => {
+      const createdTransporter = await createTestTransporter(testData, {
+        headquarterCityId: testData.cityId,
+      });
+
       const response = await listTransporters({});
       expect(response).toBeDefined();
       expect(response.data).toBeDefined();
       expect(response.data.length).toBeGreaterThan(0);
+
       const foundTransporter = response.data.find(
-        (t: TransporterWithCity) => t.id === createdTransporterId,
+        (t: TransporterWithCity) => t.id === createdTransporter.id,
       );
       expect(foundTransporter).toBeDefined();
+
       if (foundTransporter) {
         const transporterWithCity = foundTransporter as TransporterWithCity;
         expect(transporterWithCity.headquarterCity).toBeDefined();
-        expect(transporterWithCity.headquarterCity?.id).toBe(cityId);
-        expect(transporterWithCity.headquarterCity?.name).toBe(
-          'Test City for Transporters',
+        expect(transporterWithCity.headquarterCity?.id).toBe(testData.cityId);
+        expect(transporterWithCity.headquarterCity?.name).toContain(
+          'Test City',
         );
       }
     });
 
     test('should retrieve transporters with headquarter cities using listTransportersPaginated', async () => {
+      const createdTransporter = await createTestTransporter(testData, {
+        headquarterCityId: testData.cityId,
+      });
+
       const paginatedResponse = await listTransportersPaginated({
         page: 1,
         pageSize: 10,
+        searchTerm: createdTransporter.name, // Filter by the unique name to ensure it appears on page 1
       });
+
       expect(paginatedResponse).toBeDefined();
       expect(paginatedResponse.data).toBeDefined();
       expect(paginatedResponse.pagination).toBeDefined();
       expect(paginatedResponse.data.length).toBeGreaterThan(0);
+
       const foundTransporter = paginatedResponse.data.find(
-        (t: TransporterWithCity) => t.id === createdTransporterId,
+        (t: TransporterWithCity) => t.id === createdTransporter.id,
       );
       expect(foundTransporter).toBeDefined();
+
       if (foundTransporter) {
         expect(foundTransporter.headquarterCity).toBeDefined();
-        expect(foundTransporter.headquarterCity?.id).toBe(cityId);
-        expect(foundTransporter.headquarterCity?.name).toBe(
-          'Test City for Transporters',
-        );
+        expect(foundTransporter.headquarterCity?.id).toBe(testData.cityId);
+        expect(foundTransporter.headquarterCity?.name).toContain('Test City');
       }
     });
   });
@@ -295,10 +381,12 @@ describe('Transporters Controller', () => {
     });
 
     test('should handle duplicate errors', async () => {
+      const firstTransporter = await createTestTransporter(testData);
+
       await expect(
         createTransporter({
           name: 'Another Test Transporter',
-          code: testTransporter.code,
+          code: firstTransporter.code, // Use the same code to trigger duplicate error
           active: true,
         }),
       ).rejects.toThrow();
@@ -306,44 +394,49 @@ describe('Transporters Controller', () => {
 
     test('should handle invalid headquarter city ID', async () => {
       await expect(
-        createTransporter({
-          name: 'Invalid Headquarter Transporter',
-          code: 'INV-HDQT',
-          headquarterCityId: 9999,
-          active: true,
+        createTestTransporter(testData, {
+          headquarterCityId: 9999, // Invalid city ID
         }),
       ).rejects.toThrow();
     });
   });
 
   describe('pagination, ordering, and filtering', () => {
-    const testTransporters: Transporter[] = [];
-    beforeAll(async () => {
-      const transportersToCreate = [
-        { name: 'Alpha Transporter', code: 'ALPHA', active: true },
-        { name: 'Beta Transporter', code: 'BETA', active: false },
-        { name: 'Gamma Transporter', code: 'GAMMA', active: true },
-      ];
-      for (const t of transportersToCreate) {
-        const created = await createTransporter(t);
-        testTransporters.push(created);
-        additionalTransporterIds.push(created.id);
-      }
-    });
-    afterAll(async () => {
-      for (const t of testTransporters) {
-        try {
-          await deleteTransporter({ id: t.id });
-        } catch (error) {
-          console.error(`Error deleting test transporter ${t.id}:`, error);
-        }
-      }
-    });
-
     test('should order transporters by name in descending order', async () => {
+      // Create multiple transporters with predictable names for ordering test
+      const alphaEntity = createUniqueEntity({
+        baseName: 'Alpha Transporter',
+        baseCode: 'ALPHA',
+        suiteId: testData.suiteId,
+      });
+      const betaEntity = createUniqueEntity({
+        baseName: 'Beta Transporter',
+        baseCode: 'BETA',
+        suiteId: testData.suiteId,
+      });
+      const gammaEntity = createUniqueEntity({
+        baseName: 'Gamma Transporter',
+        baseCode: 'GAMMA',
+        suiteId: testData.suiteId,
+      });
+
+      await createTestTransporter(testData, {
+        name: alphaEntity.name,
+        code: alphaEntity.code || 'ALPHA001',
+      });
+      await createTestTransporter(testData, {
+        name: betaEntity.name,
+        code: betaEntity.code || 'BETA001',
+      });
+      await createTestTransporter(testData, {
+        name: gammaEntity.name,
+        code: gammaEntity.code || 'GAMMA001',
+      });
+
       const response = await listTransporters({
         orderBy: [{ field: 'name', direction: 'desc' }],
       });
+
       const names = response.data.map((t: TransporterWithCity) => t.name);
       for (let i = 0; i < names.length - 1; i++) {
         expect(names[i] >= names[i + 1]).toBe(true);
@@ -351,6 +444,29 @@ describe('Transporters Controller', () => {
     });
 
     test('should filter transporters by active status', async () => {
+      // Create both active and inactive transporters with unique names
+      const activeEntity = createUniqueEntity({
+        baseName: 'Active Transporter',
+        baseCode: 'ACTV',
+        suiteId: testData.suiteId,
+      });
+      const inactiveEntity = createUniqueEntity({
+        baseName: 'Inactive Transporter',
+        baseCode: 'INAC',
+        suiteId: testData.suiteId,
+      });
+
+      await createTestTransporter(testData, {
+        name: activeEntity.name,
+        code: activeEntity.code || 'ACTV001',
+        active: true,
+      });
+      await createTestTransporter(testData, {
+        name: inactiveEntity.name,
+        code: inactiveEntity.code || 'INAC001',
+        active: false,
+      });
+
       const response = await listTransporters({ filters: { active: true } });
       expect(response.data.every((t: TransporterWithCity) => t.active)).toBe(
         true,
@@ -358,26 +474,80 @@ describe('Transporters Controller', () => {
     });
 
     test('should filter transporters by code', async () => {
-      const response = await listTransporters({ filters: { code: 'ALPHA' } });
+      const specificCodeEntity = createUniqueEntity({
+        baseName: 'Specific Transporter',
+        baseCode: 'ALPHA',
+        suiteId: testData.suiteId,
+      });
+
+      await createTestTransporter(testData, {
+        name: specificCodeEntity.name,
+        code: specificCodeEntity.code || 'ALPHA001',
+      });
+      await createTestTransporter(testData); // Create another with different code
+
+      const expectedCode = specificCodeEntity.code || 'ALPHA001';
+      const response = await listTransporters({
+        filters: { code: expectedCode },
+      });
       expect(
-        response.data.every((t: TransporterWithCity) => t.code === 'ALPHA'),
+        response.data.every(
+          (t: TransporterWithCity) => t.code === expectedCode,
+        ),
       ).toBe(true);
+      expect(response.data.length).toBe(1);
     });
 
     test('should combine ordering and filtering in paginated results', async () => {
+      // Create multiple active transporters with predictable names
+      const alphaActiveEntity = createUniqueEntity({
+        baseName: 'Alpha Active Transporter',
+        baseCode: 'ALPA',
+        suiteId: testData.suiteId,
+      });
+      const betaActiveEntity = createUniqueEntity({
+        baseName: 'Beta Active Transporter',
+        baseCode: 'BETA',
+        suiteId: testData.suiteId,
+      });
+      const gammaInactiveEntity = createUniqueEntity({
+        baseName: 'Gamma Inactive Transporter',
+        baseCode: 'GAMA',
+        suiteId: testData.suiteId,
+      });
+
+      await createTestTransporter(testData, {
+        name: alphaActiveEntity.name,
+        code: alphaActiveEntity.code || 'ALPA001',
+        active: true,
+      });
+      await createTestTransporter(testData, {
+        name: betaActiveEntity.name,
+        code: betaActiveEntity.code || 'BETA001',
+        active: true,
+      });
+      await createTestTransporter(testData, {
+        name: gammaInactiveEntity.name,
+        code: gammaInactiveEntity.code || 'GAMA001',
+        active: false,
+      });
+
       const response = await listTransportersPaginated({
         filters: { active: true },
         orderBy: [{ field: 'name', direction: 'asc' }],
         page: 1,
         pageSize: 10,
       });
+
       expect(response.data.every((t: TransporterWithCity) => t.active)).toBe(
         true,
       );
+
       const names = response.data.map((t: TransporterWithCity) => t.name);
       for (let i = 0; i < names.length - 1; i++) {
         expect(names[i] <= names[i + 1]).toBe(true);
       }
+
       expect(response.pagination).toBeDefined();
       expect(response.pagination.currentPage).toBe(1);
       expect(response.pagination.pageSize).toBe(10);

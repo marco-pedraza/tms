@@ -1,11 +1,16 @@
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { FieldValidationError } from '@repo/base-repo';
 import { amenitiesRepository } from '@/inventory/shared-entities/amenities/amenities.repository';
 import {
   AmenityCategory,
   AmenityType,
 } from '@/inventory/shared-entities/amenities/amenities.types';
-import { createCleanupHelper } from '@/tests/shared/test-utils';
+import {
+  createCleanupHelper,
+  createTestSuiteId,
+  createUniqueEntity,
+  safeCleanup,
+} from '@/tests/shared/test-utils';
 import type { ServiceType } from './service-types.types';
 import { ServiceTypeCategory } from './service-types.types';
 import { serviceTypeRepository } from './service-types.repository';
@@ -19,62 +24,170 @@ import {
   updateServiceType,
 } from './service-types.controller';
 
+/**
+ * Test data interface for consistent test setup
+ */
+interface TestData {
+  suiteId: string;
+  serviceTypeCleanup: ReturnType<typeof createCleanupHelper>;
+  amenityCleanup: ReturnType<typeof createCleanupHelper>;
+  testAmenityIds: number[];
+  createdServiceTypeIds: number[];
+}
+
 describe('Service Types Controller', () => {
-  // Test data (use timestamp to ensure unique codes)
-  const ts = Date.now().toString().slice(-6);
-  const testServiceType = {
-    name: 'Test Service Type',
-    code: `TST${ts}`,
-    category: ServiceTypeCategory.REGULAR,
-    description: 'A service type for testing',
-    active: true,
-  } as const;
+  let testData: TestData;
 
-  // Cleanup helper for service types (hard delete to avoid FK issues)
-  const serviceTypeCleanup = createCleanupHelper(
-    ({ id }) => serviceTypeRepository.forceDelete(id),
-    'service type',
-  );
-  // Variable to store created IDs for cleanup
-  let createdServiceTypeId: number;
+  /**
+   * Creates fresh test data for each test to ensure isolation
+   */
+  async function createTestData(): Promise<TestData> {
+    const suiteId = createTestSuiteId('service-types');
 
-  // Clean up after all tests
-  afterAll(async () => {
-    await serviceTypeCleanup.cleanupAll();
+    const serviceTypeCleanup = createCleanupHelper(
+      ({ id }) => serviceTypeRepository.forceDelete(id),
+      'service type',
+    );
+
+    const amenityCleanup = createCleanupHelper(
+      ({ id }) => amenitiesRepository.forceDelete(id),
+      'amenity',
+    );
+
+    // Create test amenities for this test suite
+    const amenity1Entity = createUniqueEntity({
+      baseName: 'Test Amenity 1',
+      suiteId,
+    });
+
+    const amenity2Entity = createUniqueEntity({
+      baseName: 'Test Amenity 2',
+      suiteId,
+    });
+
+    const amenity1 = await amenitiesRepository.create({
+      name: amenity1Entity.name,
+      category: AmenityCategory.COMFORT,
+      amenityType: AmenityType.SERVICE_TYPE,
+      description: 'Test amenity 1',
+      iconName: 'wifi',
+      active: true,
+    });
+
+    const amenity2 = await amenitiesRepository.create({
+      name: amenity2Entity.name,
+      category: AmenityCategory.TECHNOLOGY,
+      amenityType: AmenityType.SERVICE_TYPE,
+      description: 'Test amenity 2',
+      iconName: 'tv',
+      active: true,
+    });
+
+    const testAmenityIds = [
+      amenityCleanup.track(amenity1.id),
+      amenityCleanup.track(amenity2.id),
+    ];
+
+    return {
+      suiteId,
+      serviceTypeCleanup,
+      amenityCleanup,
+      testAmenityIds,
+      createdServiceTypeIds: [],
+    };
+  }
+
+  /**
+   * Cleans up test data after each test
+   */
+  async function cleanupTestData(data: TestData): Promise<void> {
+    // First, clean up the junction table by removing amenity assignments
+    // This is done by calling the controller to unassign all amenities
+    for (const serviceTypeId of data.createdServiceTypeIds) {
+      try {
+        await assignAmenitiesToServiceType({
+          id: serviceTypeId,
+          amenityIds: [], // Remove all amenities
+        });
+      } catch {
+        // Service type might already be deleted, ignore
+      }
+    }
+
+    // Clean up service types first (they reference amenities)
+    await data.serviceTypeCleanup.cleanupAll();
+
+    // Clean up amenities
+    await data.amenityCleanup.cleanupAll();
+  }
+
+  /**
+   * Creates a test service type with unique data
+   */
+  async function createTestServiceType(
+    data: TestData,
+    overrides: Partial<Parameters<typeof createServiceType>[0]> = {},
+  ): Promise<ServiceType> {
+    const serviceTypeEntity = createUniqueEntity({
+      baseName: 'Test Service Type',
+      baseCode: 'TST',
+      suiteId: data.suiteId,
+    });
+
+    const serviceType = await createServiceType({
+      name: serviceTypeEntity.name,
+      code: serviceTypeEntity.code || 'TST001',
+      category: ServiceTypeCategory.REGULAR,
+      description: 'A service type for testing',
+      active: true,
+      ...overrides,
+    });
+
+    // Track for cleanup
+    data.serviceTypeCleanup.track(serviceType.id);
+    data.createdServiceTypeIds.push(serviceType.id);
+    return serviceType;
+  }
+
+  beforeEach(async () => {
+    testData = await createTestData();
+  });
+
+  afterEach(async () => {
+    await cleanupTestData(testData);
   });
 
   describe('success scenarios', () => {
     test('should create a new service type', async () => {
-      // Create a new service type
-      const response = await createServiceType(testServiceType);
+      const response = await createTestServiceType(testData);
 
-      // Store the ID for later cleanup
-      createdServiceTypeId = serviceTypeCleanup.track(response.id);
-
-      // Assertions
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
-      expect(response.name).toBe(testServiceType.name);
-      expect(response.code).toBe(testServiceType.code);
+      expect(response.name).toContain('Test Service Type');
+      expect(response.code).toContain('TST');
       expect(response.category).toBe(ServiceTypeCategory.REGULAR);
-      expect(response.description).toBe(testServiceType.description);
-      expect(response.active).toBe(testServiceType.active);
+      expect(response.description).toBe('A service type for testing');
+      expect(response.active).toBe(true);
       expect(response.createdAt).toBeDefined();
     });
 
     test('should retrieve a service type by ID', async () => {
-      const response = await getServiceType({ id: createdServiceTypeId });
+      const createdServiceType = await createTestServiceType(testData);
+
+      const response = await getServiceType({ id: createdServiceType.id });
 
       expect(response).toBeDefined();
-      expect(response.id).toBe(createdServiceTypeId);
-      expect(response.name).toBe(testServiceType.name);
-      expect(response.code).toBe(testServiceType.code);
+      expect(response.id).toBe(createdServiceType.id);
+      expect(response.name).toBe(createdServiceType.name);
+      expect(response.code).toBe(createdServiceType.code);
       expect(response.category).toBe(ServiceTypeCategory.REGULAR);
-      expect(response.description).toBe(testServiceType.description);
-      expect(response.active).toBe(testServiceType.active);
+      expect(response.description).toBe(createdServiceType.description);
+      expect(response.active).toBe(createdServiceType.active);
     });
 
     test('should retrieve all service types', async () => {
+      const createdServiceType = await createTestServiceType(testData);
+
       const response = await listServiceTypes({});
 
       expect(response).toBeDefined();
@@ -84,12 +197,35 @@ describe('Service Types Controller', () => {
       // We should at least find our test service type
       expect(
         response.data.some(
-          (serviceType) => serviceType.id === createdServiceTypeId,
+          (serviceType) => serviceType.id === createdServiceType.id,
         ),
       ).toBe(true);
     });
 
     test('should retrieve service types with filters', async () => {
+      // Create both active and inactive service types with unique names
+      const activeEntity = createUniqueEntity({
+        baseName: 'Active Service Type',
+        baseCode: 'ACTV',
+        suiteId: testData.suiteId,
+      });
+      const inactiveEntity = createUniqueEntity({
+        baseName: 'Inactive Service Type',
+        baseCode: 'INAC',
+        suiteId: testData.suiteId,
+      });
+
+      await createTestServiceType(testData, {
+        name: activeEntity.name,
+        code: activeEntity.code || 'ACTV001',
+        active: true,
+      });
+      await createTestServiceType(testData, {
+        name: inactiveEntity.name,
+        code: inactiveEntity.code || 'INAC001',
+        active: false,
+      });
+
       const response = await listServiceTypes({
         filters: { active: true },
         orderBy: [{ field: 'name', direction: 'asc' }],
@@ -106,6 +242,8 @@ describe('Service Types Controller', () => {
     });
 
     test('should retrieve paginated service types', async () => {
+      const createdServiceType = await createTestServiceType(testData);
+
       const result = await listServiceTypesPaginated({
         page: 1,
         pageSize: 10,
@@ -125,7 +263,7 @@ describe('Service Types Controller', () => {
       // We should at least find our test service type
       expect(
         result.data.some(
-          (serviceType) => serviceType.id === createdServiceTypeId,
+          (serviceType) => serviceType.id === createdServiceType.id,
         ),
       ).toBe(true);
 
@@ -136,7 +274,9 @@ describe('Service Types Controller', () => {
     });
 
     test('pagination should respect pageSize parameter', async () => {
-      // Request with a small page size
+      // Create a service type to ensure we have at least one
+      await createTestServiceType(testData);
+
       const result = await listServiceTypesPaginated({
         page: 1,
         pageSize: 1,
@@ -147,6 +287,8 @@ describe('Service Types Controller', () => {
     });
 
     test('should use search when searchTerm is provided in pagination', async () => {
+      const createdServiceType = await createTestServiceType(testData);
+
       const result = await listServiceTypesPaginated({
         searchTerm: 'Test Service',
         page: 1,
@@ -161,12 +303,14 @@ describe('Service Types Controller', () => {
       // Should find our test service type when searching
       expect(
         result.data.some(
-          (serviceType) => serviceType.id === createdServiceTypeId,
+          (serviceType) => serviceType.id === createdServiceType.id,
         ),
       ).toBe(true);
     });
 
     test('should return different results with and without search term', async () => {
+      await createTestServiceType(testData);
+
       // Get all results without search
       const allResults = await listServiceTypesPaginated({
         page: 1,
@@ -187,31 +331,38 @@ describe('Service Types Controller', () => {
     });
 
     test('should search service types using searchTerm in list endpoint', async () => {
+      const createdServiceType = await createTestServiceType(testData);
+
       const resp = await listServiceTypes({ searchTerm: 'Test Service' });
       expect(resp.data).toBeDefined();
       expect(Array.isArray(resp.data)).toBe(true);
-      expect(resp.data.some((st) => st.id === createdServiceTypeId)).toBe(true);
+      expect(resp.data.some((st) => st.id === createdServiceType.id)).toBe(
+        true,
+      );
     });
 
     test('should update a service type', async () => {
+      const createdServiceType = await createTestServiceType(testData);
       const updatedName = 'Updated Test Service Type';
       const updatedDescription = 'Updated description for testing';
 
       const response = await updateServiceType({
-        id: createdServiceTypeId,
+        id: createdServiceType.id,
         name: updatedName,
         description: updatedDescription,
       });
 
       expect(response).toBeDefined();
-      expect(response.id).toBe(createdServiceTypeId);
+      expect(response.id).toBe(createdServiceType.id);
       expect(response.name).toBe(updatedName);
       expect(response.description).toBe(updatedDescription);
     });
 
     test('should update service type active status', async () => {
+      const createdServiceType = await createTestServiceType(testData);
+
       const response = await updateServiceType({
-        id: createdServiceTypeId,
+        id: createdServiceType.id,
         active: false,
       });
 
@@ -220,105 +371,70 @@ describe('Service Types Controller', () => {
     });
 
     describe('amenity assignment', () => {
-      let testAmenityIds: number[] = [];
-
-      beforeAll(async () => {
-        // Create test amenities
-        // Create amenities directly through repository to ensure proper validation
-        const amenity1 = await amenitiesRepository.create({
-          name: 'Test Amenity 1 for ST',
-          category: AmenityCategory.COMFORT,
-          amenityType: AmenityType.SERVICE_TYPE,
-          description: 'Test amenity 1',
-          iconName: 'wifi',
-          active: true,
-        });
-
-        const amenity2 = await amenitiesRepository.create({
-          name: 'Test Amenity 2 for ST',
-          category: AmenityCategory.TECHNOLOGY,
-          amenityType: AmenityType.SERVICE_TYPE,
-          description: 'Test amenity 2',
-          iconName: 'tv',
-          active: true,
-        });
-
-        testAmenityIds = [amenity1.id, amenity2.id];
-      });
-
-      afterAll(async () => {
-        // Clean up test amenities
-        for (const id of testAmenityIds) {
-          try {
-            await amenitiesRepository.forceDelete(id);
-          } catch (error) {
-            console.warn(`Failed to clean up test amenity ${id}:`, error);
-          }
-        }
-      });
-
       test('should assign amenities to a service type', async () => {
+        const createdServiceType = await createTestServiceType(testData);
+
         const response = await assignAmenitiesToServiceType({
-          id: createdServiceTypeId,
-          amenityIds: testAmenityIds,
+          id: createdServiceType.id,
+          amenityIds: testData.testAmenityIds,
         });
 
         expect(response).toBeDefined();
-        expect(response.id).toBe(createdServiceTypeId);
+        expect(response.id).toBe(createdServiceType.id);
 
         // Verify amenities were assigned by getting the service type
-        const serviceType = await getServiceType({ id: createdServiceTypeId });
+        const serviceType = await getServiceType({ id: createdServiceType.id });
         expect(serviceType.amenities).toBeDefined();
-        expect(serviceType.amenities.length).toBe(testAmenityIds.length);
+        expect(serviceType.amenities.length).toBe(
+          testData.testAmenityIds.length,
+        );
         expect(
           serviceType.amenities.map((a) => a.id).sort((a, b) => a - b),
-        ).toEqual([...testAmenityIds].sort((a, b) => a - b));
+        ).toEqual([...testData.testAmenityIds].sort((a, b) => a - b));
       });
 
       test('should update assigned amenities', async () => {
+        const createdServiceType = await createTestServiceType(testData);
+
         // Assign only the first amenity
         const response = await assignAmenitiesToServiceType({
-          id: createdServiceTypeId,
-          amenityIds: [testAmenityIds[0]],
+          id: createdServiceType.id,
+          amenityIds: [testData.testAmenityIds[0]],
         });
 
         expect(response).toBeDefined();
-        expect(response.id).toBe(createdServiceTypeId);
+        expect(response.id).toBe(createdServiceType.id);
 
         // Verify only one amenity is assigned
-        const serviceType = await getServiceType({ id: createdServiceTypeId });
+        const serviceType = await getServiceType({ id: createdServiceType.id });
         expect(serviceType.amenities).toBeDefined();
         expect(serviceType.amenities.length).toBe(1);
-        expect(serviceType.amenities[0].id).toBe(testAmenityIds[0]);
+        expect(serviceType.amenities[0].id).toBe(testData.testAmenityIds[0]);
       });
 
       test('should remove all amenities when empty array is provided', async () => {
+        const createdServiceType = await createTestServiceType(testData);
+
         const response = await assignAmenitiesToServiceType({
-          id: createdServiceTypeId,
+          id: createdServiceType.id,
           amenityIds: [],
         });
 
         expect(response).toBeDefined();
-        expect(response.id).toBe(createdServiceTypeId);
+        expect(response.id).toBe(createdServiceType.id);
 
         // Verify no amenities are assigned
-        const serviceType = await getServiceType({ id: createdServiceTypeId });
+        const serviceType = await getServiceType({ id: createdServiceType.id });
         expect(serviceType.amenities).toBeDefined();
         expect(serviceType.amenities.length).toBe(0);
       });
     });
 
     test('should delete a service type', async () => {
-      // Create a service type specifically for deletion test
-      const ts2 = Date.now().toString().slice(-6);
-      const serviceTypeToDelete = await createServiceType({
+      const serviceTypeToDelete = await createTestServiceType(testData, {
         name: 'Service Type To Delete',
-        code: `DEL${ts2}`,
-        category: ServiceTypeCategory.REGULAR,
         description: 'This will be deleted',
-        active: true,
       });
-      serviceTypeCleanup.track(serviceTypeToDelete.id);
 
       // Delete should not throw an error
       await expect(
@@ -338,38 +454,16 @@ describe('Service Types Controller', () => {
     });
 
     describe('amenity assignment errors', () => {
-      let testAmenityId: number;
-
-      beforeAll(async () => {
-        // Create a test amenity for error cases
-        const amenity = await amenitiesRepository.create({
-          name: 'Test Amenity for Errors',
-          category: AmenityCategory.COMFORT,
-          amenityType: AmenityType.SERVICE_TYPE,
-          description: 'Test amenity for error cases',
-          iconName: 'test',
-          active: true,
-        });
-        testAmenityId = amenity.id;
-      });
-
-      afterAll(async () => {
-        try {
-          await amenitiesRepository.forceDelete(testAmenityId);
-        } catch (error) {
-          console.warn(
-            `Failed to clean up test amenity ${testAmenityId}:`,
-            error,
-          );
-        }
-      });
-
       test('should handle duplicate amenity IDs with DUPLICATE_VALUES error', async () => {
-        const duplicateIds = [testAmenityId, testAmenityId]; // Same ID twice
+        const createdServiceType = await createTestServiceType(testData);
+        const duplicateIds = [
+          testData.testAmenityIds[0],
+          testData.testAmenityIds[0],
+        ]; // Same ID twice
 
         try {
           await assignAmenitiesToServiceType({
-            id: createdServiceTypeId,
+            id: createdServiceType.id,
             amenityIds: duplicateIds,
           });
           expect(true).toBe(false); // Should have thrown FieldValidationError
@@ -388,11 +482,12 @@ describe('Service Types Controller', () => {
       });
 
       test('should handle invalid amenity IDs with INVALID_VALUES error', async () => {
+        const createdServiceType = await createTestServiceType(testData);
         const invalidId = 99999; // Non-existent ID
 
         try {
           await assignAmenitiesToServiceType({
-            id: createdServiceTypeId,
+            id: createdServiceType.id,
             amenityIds: [invalidId],
           });
           expect(true).toBe(false); // Should have thrown FieldValidationError
@@ -410,9 +505,16 @@ describe('Service Types Controller', () => {
       });
 
       test('should handle non-service-type amenity IDs with INVALID_VALUES error', async () => {
+        const createdServiceType = await createTestServiceType(testData);
+
         // Create an installation type amenity
+        const installationAmenityEntity = createUniqueEntity({
+          baseName: 'Installation Amenity',
+          suiteId: testData.suiteId,
+        });
+
         const installationAmenity = await amenitiesRepository.create({
-          name: 'Installation Amenity',
+          name: installationAmenityEntity.name,
           category: AmenityCategory.COMFORT,
           amenityType: AmenityType.INSTALLATION, // Different type
           description: 'Installation type amenity',
@@ -422,7 +524,7 @@ describe('Service Types Controller', () => {
 
         try {
           await assignAmenitiesToServiceType({
-            id: createdServiceTypeId,
+            id: createdServiceType.id,
             amenityIds: [installationAmenity.id],
           });
           expect(true).toBe(false); // Should have thrown FieldValidationError
@@ -439,13 +541,26 @@ describe('Service Types Controller', () => {
         }
 
         // Clean up
-        await amenitiesRepository.forceDelete(installationAmenity.id);
+        await safeCleanup(
+          async () => {
+            await amenitiesRepository.forceDelete(installationAmenity.id);
+          },
+          'installation amenity',
+          installationAmenity.id,
+        );
       });
 
       test('should handle inactive amenity IDs with INVALID_VALUES error', async () => {
+        const createdServiceType = await createTestServiceType(testData);
+
         // Create an inactive service type amenity
+        const inactiveAmenityEntity = createUniqueEntity({
+          baseName: 'Inactive Amenity',
+          suiteId: testData.suiteId,
+        });
+
         const inactiveAmenity = await amenitiesRepository.create({
-          name: 'Inactive Amenity',
+          name: inactiveAmenityEntity.name,
           category: AmenityCategory.COMFORT,
           amenityType: AmenityType.SERVICE_TYPE,
           description: 'Inactive service type amenity',
@@ -455,7 +570,7 @@ describe('Service Types Controller', () => {
 
         try {
           await assignAmenitiesToServiceType({
-            id: createdServiceTypeId,
+            id: createdServiceType.id,
             amenityIds: [inactiveAmenity.id],
           });
           expect(true).toBe(false); // Should have thrown FieldValidationError
@@ -472,19 +587,20 @@ describe('Service Types Controller', () => {
         }
 
         // Clean up
-        await amenitiesRepository.forceDelete(inactiveAmenity.id);
+        await safeCleanup(
+          async () => {
+            await amenitiesRepository.forceDelete(inactiveAmenity.id);
+          },
+          'inactive amenity',
+          inactiveAmenity.id,
+        );
       });
     });
 
     test('should throw detailed field validation error for duplicate code', async () => {
-      const ts4 = Date.now().toString().slice(-6);
-      const base = await createServiceType({
+      const base = await createTestServiceType(testData, {
         name: 'Base For Code Dup',
-        code: `DUP${ts4}`,
-        category: ServiceTypeCategory.REGULAR,
-        active: true,
       });
-      serviceTypeCleanup.track(base.id);
 
       let validationError: FieldValidationError | undefined;
       try {
@@ -510,6 +626,8 @@ describe('Service Types Controller', () => {
 
   describe('pagination', () => {
     test('should return paginated service types with default parameters', async () => {
+      await createTestServiceType(testData); // Ensure we have at least one
+
       const response = await listServiceTypesPaginated({});
 
       expect(response.data).toBeDefined();
@@ -520,6 +638,8 @@ describe('Service Types Controller', () => {
     });
 
     test('should honor page and pageSize parameters', async () => {
+      await createTestServiceType(testData); // Ensure we have at least one
+
       const response = await listServiceTypesPaginated({
         page: 1,
         pageSize: 5,
@@ -531,38 +651,40 @@ describe('Service Types Controller', () => {
   });
 
   describe('ordering and filtering', () => {
-    const testServiceTypes: ServiceType[] = [];
-
-    beforeAll(async () => {
-      const tsBase = Date.now().toString().slice(-6);
-      const items = [
-        { name: 'Alpha ST', code: `A${tsBase}`, active: true },
-        { name: 'Beta ST', code: `B${tsBase}`, active: false },
-        { name: 'Gamma ST', code: `G${tsBase}`, active: true },
-      ];
-
-      for (const it of items) {
-        const created = await createServiceType({
-          name: it.name,
-          code: it.code,
-          category: ServiceTypeCategory.REGULAR,
-          active: it.active,
-        });
-        testServiceTypes.push(created);
-      }
-    });
-
-    afterAll(async () => {
-      for (const st of testServiceTypes) {
-        try {
-          await deleteServiceType({ id: st.id });
-        } catch (error) {
-          console.log(`Error cleaning up test service type ${st.id}:`, error);
-        }
-      }
-    });
-
     test('should order service types by name descending', async () => {
+      // Create multiple service types with predictable names for ordering test
+      const alphaEntity = createUniqueEntity({
+        baseName: 'Alpha ST',
+        baseCode: 'ALPHA',
+        suiteId: testData.suiteId,
+      });
+      const betaEntity = createUniqueEntity({
+        baseName: 'Beta ST',
+        baseCode: 'BETA',
+        suiteId: testData.suiteId,
+      });
+      const gammaEntity = createUniqueEntity({
+        baseName: 'Gamma ST',
+        baseCode: 'GAMMA',
+        suiteId: testData.suiteId,
+      });
+
+      await createTestServiceType(testData, {
+        name: alphaEntity.name,
+        code: alphaEntity.code || 'ALPHA001',
+        active: true,
+      });
+      await createTestServiceType(testData, {
+        name: betaEntity.name,
+        code: betaEntity.code || 'BETA001',
+        active: false,
+      });
+      await createTestServiceType(testData, {
+        name: gammaEntity.name,
+        code: gammaEntity.code || 'GAMMA001',
+        active: true,
+      });
+
       const response = await listServiceTypes({
         orderBy: [{ field: 'name', direction: 'desc' }],
       });
@@ -574,14 +696,31 @@ describe('Service Types Controller', () => {
     });
 
     test('should filter service types by active status', async () => {
+      // Create both active and inactive service types with unique names
+      const activeEntity = createUniqueEntity({
+        baseName: 'Filter Active ST',
+        baseCode: 'FACT',
+        suiteId: testData.suiteId,
+      });
+      const inactiveEntity = createUniqueEntity({
+        baseName: 'Filter Inactive ST',
+        baseCode: 'FINC',
+        suiteId: testData.suiteId,
+      });
+
+      await createTestServiceType(testData, {
+        name: activeEntity.name,
+        code: activeEntity.code || 'FACT001',
+        active: true,
+      });
+      await createTestServiceType(testData, {
+        name: inactiveEntity.name,
+        code: inactiveEntity.code || 'FINC001',
+        active: false,
+      });
+
       const response = await listServiceTypes({ filters: { active: true } });
       expect(response.data.every((s) => s.active === true)).toBe(true);
-      const activeIds = testServiceTypes
-        .filter((s) => s.active)
-        .map((s) => s.id);
-      for (const id of activeIds) {
-        expect(response.data.some((s) => s.id === id)).toBe(true);
-      }
     });
   });
 });

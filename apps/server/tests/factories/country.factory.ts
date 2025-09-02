@@ -19,7 +19,7 @@ export const countryFactory = defineFactory({
     return {
       id,
       name,
-      code: generateAlphabeticCode(4),
+      code: generateAlphabeticCode(5, 'CO'),
       slug: createSlug(name),
       deletedAt: faker.helpers.maybe(() => faker.date.recent({ days: 30 }), {
         probability: 0.1,

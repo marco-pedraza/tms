@@ -20,7 +20,7 @@ export const stateFactory = defineFactory({
     return {
       id,
       name,
-      code: generateAlphabeticCode(4),
+      code: generateAlphabeticCode(4, 'ST'),
       slug: createSlug(name),
       countryId: () =>
         use(countryFactory)

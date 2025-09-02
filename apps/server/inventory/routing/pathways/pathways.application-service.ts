@@ -1,6 +1,7 @@
 import type { TransactionalDB } from '@repo/base-repo';
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
 import { pathwayOptionRepository } from '../pathway-options/pathway-options.repository';
+import type { PathwayOption } from '../pathway-options/pathway-options.types';
 import type {
   CreatePathwayPayload,
   Pathway,
@@ -36,8 +37,8 @@ export function createPathwayApplicationService() {
       ...pathwayOptionRepository.withTransaction(tx),
       findByPathwayId: (id: number) =>
         pathwayOptionRepository.findByPathwayId(id, tx),
-      delete: async (id: number): Promise<void> => {
-        await pathwayOptionRepository.withTransaction(tx).delete(id);
+      delete: async (id: number): Promise<PathwayOption | null> => {
+        return await pathwayOptionRepository.withTransaction(tx).delete(id);
       },
     };
     const txNodeRepo = nodeRepository.withTransaction(tx);

@@ -457,8 +457,22 @@ describe('Driver Time-offs Controller', () => {
       expect(timeOff).toBeDefined();
       expect(timeOff.id).toBeDefined();
       expect(timeOff.driverId).toBe(driver.id);
-      expect(timeOff.startDate).toBe(startDate.toISOString().split('T')[0]);
-      expect(timeOff.endDate).toBe(endDate.toISOString().split('T')[0]);
+      // Use local date conversion to avoid timezone issues
+      const expectedStartDate =
+        startDate.getFullYear() +
+        '-' +
+        String(startDate.getMonth() + 1).padStart(2, '0') +
+        '-' +
+        String(startDate.getDate()).padStart(2, '0');
+      const expectedEndDate =
+        endDate.getFullYear() +
+        '-' +
+        String(endDate.getMonth() + 1).padStart(2, '0') +
+        '-' +
+        String(endDate.getDate()).padStart(2, '0');
+
+      expect(timeOff.startDate).toBe(expectedStartDate);
+      expect(timeOff.endDate).toBe(expectedEndDate);
       expect(timeOff.type).toBe('VACATION');
       expect(timeOff.reason).toBe('Vacation with Date objects');
     });

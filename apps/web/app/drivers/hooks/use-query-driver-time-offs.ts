@@ -17,7 +17,7 @@ export default function useQueryDriverTimeOffs({
   enabled = true,
 }: UseQueryDriverTimeOffsParams) {
   return useQuery({
-    queryKey: ['drivers', driverId, 'timeOffs'],
+    queryKey: ['drivers', driverId, 'time-offs'],
     queryFn: () =>
       imsClient.inventory.listDriverTimeOffs(driverId, {
         orderBy: [{ field: 'id', direction: 'desc' }],

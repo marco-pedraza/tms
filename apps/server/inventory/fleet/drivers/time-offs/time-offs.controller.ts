@@ -109,8 +109,8 @@ export const listDriverTimeOffsPaginated = api(
   }): Promise<PaginatedListDriverTimeOffsResult> => {
     // Add driver filter to the params
     const filters = {
-      ...params.filters,
-      driverId: driverId,
+      ...(params.filters ?? {}),
+      driverId,
     };
 
     const updatedParams = {

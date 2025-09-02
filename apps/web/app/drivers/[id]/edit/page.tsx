@@ -21,7 +21,7 @@ export default function EditDriverPage() {
 
   const handleSubmit = async (values: DriverFormValues) => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { timeOffs: _omit, ...driverData } = values;
+    const { timeOffs: _omit, medicalChecks: _omit2, ...driverData } = values;
     await updateDriver.mutateWithToast({ id: driverId, values: driverData });
   };
 
@@ -58,6 +58,7 @@ export default function EditDriverPage() {
     licenseExpiry: formatDateForInput(driver.licenseExpiry),
     busLineId: driver.busLineId,
     timeOffs: [],
+    medicalChecks: [],
   };
 
   return (

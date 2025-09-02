@@ -24,7 +24,7 @@ export function validateTimeOffDateRange(
     const startDate = new Date(payload.startDate);
     const endDate = new Date(payload.endDate);
 
-    // First validate that start date is not after end date
+    // Validate that start date is not after end date
     if (startDate > endDate) {
       collector.addError(
         'startDate',

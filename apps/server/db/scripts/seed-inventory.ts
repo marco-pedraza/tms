@@ -26,6 +26,7 @@ import {
   seedBusLines,
   seedBusModels,
   seedBuses,
+  seedDriverMedicalChecks,
   seedDriverTimeOffs,
   seedDrivers,
   seedServiceTypes,
@@ -97,6 +98,7 @@ export async function seedInventory(): Promise<void> {
     await seedBuses(transporters, busModels, factoryDb);
     const drivers = await seedDrivers(transporters, busLines, factoryDb);
     await seedDriverTimeOffs(drivers, factoryDb);
+    await seedDriverMedicalChecks(drivers, factoryDb);
     console.log('✅ Transportation seeding completed\n');
 
     // === INSTALLATION TYPES & EVENT TYPES ===

@@ -1,75 +1,68 @@
 'use client';
 
-import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
+import type { medical_checks } from '@repo/ims-client';
 import LoadError from '@/components/load-error';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TimeOffType } from '@/services/ims-client';
-import useQueryDriverTimeOffs from '../hooks/use-query-driver-time-offs';
-import DriverTimeOffTypeBadge from './driver-time-off-type-badge';
-import DriverTimeOffsSkeleton from './driver-time-offs-skeleton';
+import useQueryDriverMedicalChecks from '../hooks/use-query-driver-medical-checks';
+import DriverMedicalCheckResultBadge from './driver-medical-check-result-badge';
+import DriverMedicalChecksSkeleton from './driver-medical-checks-skeleton';
 
-// API response type (matches actual DriverTimeOff)
-interface ApiTimeOffItem {
+// API response type (matches actual DriverMedicalCheck)
+interface ApiMedicalCheckItem {
   id?: number;
-  startDate: string;
-  endDate: string;
-  type: string;
-  reason?: string | null;
+  checkDate: string;
+  nextCheckDate: string;
+  daysUntilNextCheck: number;
+  result: string;
+  notes?: string | null;
   createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
-// Unified time-off interface that works for both API and local data
-export interface TimeOffItem {
+// Unified medical check interface that works for both API and local data
+export interface MedicalCheckItem {
   id?: number;
-  startDate: string;
-  endDate: string;
-  type: TimeOffType;
-  reason?: string | null; // Compatible with API response
+  checkDate: string;
+  nextCheckDate: string;
+  daysUntilNextCheck: number;
+  result: medical_checks.MedicalCheckResult;
+  notes?: string;
   createdAt?: string;
-  isNew?: boolean; // Flag to mark newly created time-offs for visual feedback
+  updatedAt?: string;
+  isNew?: boolean; // Flag to mark newly created medical checks for visual feedback
 }
 
-interface DriverTimeOffsViewProps {
+interface DriverMedicalChecksViewProps {
   // Data sources (provide one of these)
   driverId?: number; // If provided → use API data
-  timeOffs?: TimeOffItem[]; // If provided → use local data
-
-  // Functionality
-  onDelete?: (index: number) => void;
+  medicalChecks?: MedicalCheckItem[]; // If provided → use local data
 
   // Configuration options
   showHeader?: boolean;
   showCreatedAt?: boolean;
-  disabled?: boolean;
   className?: string;
 }
 
 /**
- * Unified component for displaying driver time-offs
- * Auto-detects mode: if driverId provided → API mode, if timeOffs provided → local mode
+ * Component for displaying driver medical checks (read-only)
+ * Auto-detects mode: if driverId provided → API mode, if medicalChecks provided → local mode
  */
-export default function DriverTimeOffsView({
+export default function DriverMedicalChecksView({
   driverId,
-  timeOffs: localTimeOffs,
-  onDelete,
+  medicalChecks: localMedicalChecks,
   showHeader = false,
   showCreatedAt = false,
-  disabled = false,
   className = '',
-}: DriverTimeOffsViewProps) {
-  const tTimeOffs = useTranslations('timeOffs');
+}: DriverMedicalChecksViewProps) {
+  const tMedicalChecks = useTranslations('medicalChecks');
   const tCommon = useTranslations('common');
-  const [deleteIndex, setDeleteIndex] = useState<number | undefined>();
 
-  // Auto-detect mode: API if driverId provided, local if timeOffs provided
-  const isApiMode = !!driverId && !localTimeOffs;
+  // Auto-detect mode: API if driverId provided, local if medicalChecks provided
+  const isApiMode = !!driverId && !localMedicalChecks;
 
   // API mode: use query hook
-  const apiQuery = useQueryDriverTimeOffs({
+  const apiQuery = useQueryDriverMedicalChecks({
     driverId: driverId ?? 0,
     enabled: isApiMode,
   });
@@ -78,16 +71,17 @@ export default function DriverTimeOffsView({
   const isLoading = isApiMode ? apiQuery.isLoading : false;
   const error = isApiMode ? apiQuery.error : null;
   const refetch = isApiMode ? apiQuery.refetch : undefined;
-  const timeOffs: TimeOffItem[] = isApiMode
+  const medicalChecks: MedicalCheckItem[] = isApiMode
     ? (apiQuery.data?.data || []).map(
-        (item: ApiTimeOffItem): TimeOffItem => ({
+        (item: ApiMedicalCheckItem): MedicalCheckItem => ({
           ...item,
-          type: item.type as TimeOffType,
-          reason: item.reason ?? undefined,
+          result: item.result as medical_checks.MedicalCheckResult,
+          notes: item.notes ?? undefined,
           createdAt: item.createdAt ?? undefined,
+          updatedAt: item.updatedAt ?? undefined,
         }),
       )
-    : (localTimeOffs ?? []);
+    : (localMedicalChecks ?? []);
 
   /**
    * Formats a date string to local date format
@@ -103,25 +97,17 @@ export default function DriverTimeOffsView({
   }
 
   /**
-   * Handles delete confirmation for local mode
+   * Renders a single medical check card
    */
-  function handleDeleteConfirm(): void {
-    if (deleteIndex !== undefined && onDelete) {
-      onDelete(deleteIndex);
-      setDeleteIndex(undefined);
-    }
-  }
-
-  /**
-   * Renders a single time-off card
-   */
-  function renderTimeOffCard(timeOff: TimeOffItem, index: number) {
-    const isNew = timeOff.isNew ?? false;
-    const showDeleteButton = !isApiMode && !disabled && onDelete;
+  function renderMedicalCheckCard(
+    medicalCheck: MedicalCheckItem,
+    index: number,
+  ) {
+    const isNew = medicalCheck.isNew ?? false;
 
     return (
       <div
-        key={timeOff.id ?? `new-${index}`}
+        key={medicalCheck.id ?? `new-${index}`}
         className={`p-4 rounded-lg border-l-4 bg-gradient-to-r ${
           isNew
             ? 'border-l-green-500 from-green-50 to-green-25'
@@ -131,63 +117,48 @@ export default function DriverTimeOffsView({
         <div className="flex items-start justify-between">
           <div className="flex-1 space-y-2">
             <div className="flex items-center gap-3">
-              <DriverTimeOffTypeBadge type={timeOff.type} />
+              <DriverMedicalCheckResultBadge result={medicalCheck.result} />
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-500 font-medium">
-                  {tTimeOffs('fields.startDate')}:
+                  {tMedicalChecks('fields.checkDate')}:
                 </span>
                 <div className="font-mono text-gray-900">
-                  {formatDate(timeOff.startDate)}
+                  {formatDate(medicalCheck.checkDate)}
                 </div>
               </div>
               <div>
                 <span className="text-gray-500 font-medium">
-                  {tTimeOffs('fields.endDate')}:
+                  {tMedicalChecks('fields.nextCheckDate')}:
                 </span>
                 <div className="font-mono text-gray-900">
-                  {formatDate(timeOff.endDate)}
+                  {formatDate(medicalCheck.nextCheckDate)}
                 </div>
               </div>
             </div>
 
-            {timeOff.reason && (
+            {medicalCheck.notes && (
               <div className="text-sm">
                 <span className="text-gray-500 font-medium">
-                  {tTimeOffs('fields.reason')}:
+                  {tMedicalChecks('fields.notes')}:
                 </span>
-                <div className="text-gray-700 mt-1">{timeOff.reason}</div>
+                <div className="text-gray-700 mt-1">{medicalCheck.notes}</div>
               </div>
             )}
 
-            {showCreatedAt && timeOff.createdAt && (
+            {showCreatedAt && medicalCheck.createdAt && (
               <div className="text-xs text-gray-500">
                 <span className="font-medium">
                   {tCommon('fields.createdAt')}:
                 </span>
                 <span className="ml-1">
-                  {new Date(timeOff.createdAt).toLocaleDateString()}
+                  {new Date(medicalCheck.createdAt).toLocaleDateString()}
                 </span>
               </div>
             )}
           </div>
-
-          {showDeleteButton && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setDeleteIndex(index);
-              }}
-              className="ml-4 h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span className="sr-only">{tCommon('actions.delete')}</span>
-            </Button>
-          )}
         </div>
       </div>
     );
@@ -202,12 +173,12 @@ export default function DriverTimeOffsView({
         <Card className="border-0 shadow-none p-0">
           <CardHeader className="px-0">
             <CardTitle className="text-sm">
-              {tTimeOffs('table.title')}
+              {tMedicalChecks('table.title')}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <p className="text-sm text-muted-foreground text-center py-4">
-              {tTimeOffs('table.empty')}
+              {tMedicalChecks('table.empty')}
             </p>
           </CardContent>
         </Card>
@@ -216,18 +187,20 @@ export default function DriverTimeOffsView({
 
     return (
       <div className="text-center py-8 text-muted-foreground">
-        <p>{tTimeOffs('table.empty')}</p>
+        <p>{tMedicalChecks('table.empty')}</p>
       </div>
     );
   }
 
   /**
-   * Renders the time-offs list
+   * Renders the medical checks list
    */
-  function renderTimeOffsList() {
+  function renderMedicalChecksList() {
     const content = (
       <div className="space-y-3">
-        {timeOffs.map((timeOff, index) => renderTimeOffCard(timeOff, index))}
+        {medicalChecks.map((medicalCheck, index) =>
+          renderMedicalCheckCard(medicalCheck, index),
+        )}
       </div>
     );
 
@@ -236,7 +209,7 @@ export default function DriverTimeOffsView({
         <Card className="border-0 shadow-none p-0">
           <CardHeader className="px-0">
             <CardTitle className="text-sm">
-              {tTimeOffs('table.title')} ({timeOffs.length})
+              {tMedicalChecks('table.title')} ({medicalChecks.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">{content}</CardContent>
@@ -249,14 +222,14 @@ export default function DriverTimeOffsView({
 
   // Handle loading state (API mode only)
   if (isLoading) {
-    return <DriverTimeOffsSkeleton />;
+    return <DriverMedicalChecksSkeleton />;
   }
 
   // Handle error state (API mode only)
   if (error) {
     return (
       <LoadError
-        description={tTimeOffs('messages.noTimeOffs')}
+        description={tMedicalChecks('messages.loadError')}
         onRetry={refetch}
         backHref=""
       />
@@ -264,25 +237,10 @@ export default function DriverTimeOffsView({
   }
 
   // Handle empty state
-  if (timeOffs.length === 0) {
+  if (medicalChecks.length === 0) {
     return renderEmptyState();
   }
 
   // Render main content
-  return (
-    <div className={className}>
-      {renderTimeOffsList()}
-
-      {/* Delete confirmation dialog (local mode only) */}
-      {!isApiMode && (
-        <ConfirmDeleteDialog
-          isOpen={deleteIndex !== undefined}
-          onOpenChange={(open) => {
-            if (!open) setDeleteIndex(undefined);
-          }}
-          onConfirm={handleDeleteConfirm}
-        />
-      )}
-    </div>
-  );
+  return <div className={className}>{renderMedicalChecksList()}</div>;
 }

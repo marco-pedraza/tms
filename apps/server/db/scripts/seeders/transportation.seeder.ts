@@ -2,6 +2,7 @@ import { fakerES_MX as faker } from '@faker-js/faker';
 import type { BusModel } from '@/inventory/fleet/bus-models/bus-models.types';
 import type { Bus } from '@/inventory/fleet/buses/buses.types';
 import type { Driver } from '@/inventory/fleet/drivers/drivers.types';
+import type { DriverMedicalCheck } from '@/inventory/fleet/drivers/medical-checks/medical-checks.types';
 import type { DriverTimeOff } from '@/inventory/fleet/drivers/time-offs/time-offs.types';
 import type { City } from '@/inventory/locations/cities/cities.types';
 import type { BusLine } from '@/inventory/operators/bus-lines/bus-lines.types';
@@ -13,6 +14,7 @@ import {
   busLineFactory,
   busModelFactory,
   driverFactory,
+  medicalCheckFactory,
   seatDiagramFactory,
   serviceTypeFactory,
   timeOffFactory,
@@ -332,4 +334,39 @@ export async function seedDriverTimeOffs(
     `Seeded ${timeOffs.length} time-offs for ${driversWithTimeOffs.length} drivers`,
   );
   return timeOffs;
+}
+/**
+ * Seeds medical checks for drivers (0 to 3 medical checks per driver)
+ */
+export async function seedDriverMedicalChecks(
+  drivers: Driver[],
+  db: ReturnType<typeof getFactoryDb>,
+): Promise<DriverMedicalCheck[]> {
+  const medicalChecks: DriverMedicalCheck[] = [];
+
+  // Only create medical checks for some drivers (approximately 60-70%)
+  const driversWithMedicalChecks = drivers.filter(() =>
+    faker.helpers.maybe(() => true, { probability: 0.65 }),
+  );
+
+  for (const driver of driversWithMedicalChecks) {
+    // Each driver can have 0 to 3 medical checks
+    const numMedicalChecks = faker.number.int({ min: 1, max: 3 });
+
+    for (let i = 0; i < numMedicalChecks; i++) {
+      const newMedicalChecks = (await medicalCheckFactory(db).create([
+        {
+          driverId: driver.id,
+          // The factory will generate appropriate dates and other fields
+        },
+      ])) as DriverMedicalCheck[];
+
+      medicalChecks.push(...newMedicalChecks);
+    }
+  }
+
+  console.log(
+    `Seeded ${medicalChecks.length} medical checks for ${driversWithMedicalChecks.length} drivers`,
+  );
+  return medicalChecks;
 }

@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import type { drivers } from '@repo/ims-client';
+import type { medical_checks } from '@repo/ims-client';
+import useDriverMedicalChecksMutations from '@/app/drivers/hooks/use-driver-medical-checks-mutations';
+import useDriverTimeOffsMutations from '@/app/drivers/hooks/use-driver-time-offs-mutations';
+import useQueryDriverMedicalChecks from '@/app/drivers/hooks/use-query-driver-medical-checks';
+import useQueryDriverTimeOffs from '@/app/drivers/hooks/use-query-driver-time-offs';
 import useQueryAllBusLines from '@/bus-lines/hooks/use-query-all-bus-lines';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
@@ -18,8 +23,10 @@ import {
 } from '@/services/ims-client';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
-import useDriverTimeOffsMutations from '../hooks/use-driver-time-offs-mutations';
-import useQueryDriverTimeOffs from '../hooks/use-query-driver-time-offs';
+import DriverMedicalCheckForm from './driver-medical-check-form';
+import DriverMedicalChecksView, {
+  MedicalCheckItem,
+} from './driver-medical-checks-view';
 import DriverTimeOffForm from './driver-time-off-form';
 import DriverTimeOffsView, { TimeOffItem } from './driver-time-offs-view';
 
@@ -93,6 +100,7 @@ const createDriverFormSchema = (
       .min(1, { message: tValidations('required') }),
     licenseExpiry: z.string().min(1, { message: tValidations('required') }),
     timeOffs: z.array(z.any()).default([]),
+    medicalChecks: z.array(z.any()).default([]),
   });
 
 export type DriverFormValues = z.output<
@@ -115,9 +123,10 @@ export default function DriverForm({
 
   const [activeTab, setActiveTab] = useState('basic');
 
-  // Get driver ID and mutations for immediate time-offs operations
+  // Get driver ID and mutations for immediate operations
   const driverId = defaultValues?.id;
   const timeOffsMutations = useDriverTimeOffsMutations(driverId || 0);
+  const medicalChecksMutations = useDriverMedicalChecksMutations(driverId || 0);
 
   const tValidations = useTranslations('validations');
   const isEditing = !!defaultValues;
@@ -130,8 +139,13 @@ export default function DriverForm({
       name: busLine.name,
     })) || [];
 
-  // Fetch time-offs
+  // Fetch time-offs and medical checks
   const { data: timeOffsData } = useQueryDriverTimeOffs({
+    driverId: driverId || 0,
+    enabled: isEditing && !!driverId,
+  });
+
+  const { data: medicalChecksData } = useQueryDriverMedicalChecks({
     driverId: driverId || 0,
     enabled: isEditing && !!driverId,
   });
@@ -150,12 +164,24 @@ export default function DriverForm({
         // Initialize time-offs from server data if editing
         timeOffs: (timeOffsData?.data || []).map((timeOff) => ({
           id: timeOff.id,
-          startDate: timeOff.startDate.toString(),
-          endDate: timeOff.endDate.toString(),
+          startDate: timeOff.startDate,
+          endDate: timeOff.endDate,
           type: timeOff.type as TimeOffType,
-          reason: timeOff.reason,
+          reason: timeOff.reason || '',
           isNew: false, // Existing data is not new
         })),
+        // Initialize medical checks from server data if editing
+        medicalChecks: (medicalChecksData?.data || []).map(
+          (medicalCheck: medical_checks.DriverMedicalCheck) => ({
+            id: medicalCheck.id,
+            checkDate: medicalCheck.checkDate,
+            nextCheckDate: medicalCheck.nextCheckDate,
+            daysUntilNextCheck: medicalCheck.daysUntilNextCheck,
+            result: medicalCheck.result,
+            notes: medicalCheck.notes || '',
+            isNew: false, // Existing data is not new
+          }),
+        ),
       }
     : undefined;
 
@@ -178,6 +204,7 @@ export default function DriverForm({
       license: '',
       licenseExpiry: '',
       timeOffs: [],
+      medicalChecks: [],
     },
     validators: {
       onChange: driverFormSchema,
@@ -186,9 +213,9 @@ export default function DriverForm({
       try {
         const parsed = driverFormSchema.safeParse(value);
         if (parsed.success) {
-          // Separate driver data from time-offs (exclude timeOffs from submission)
+          // Separate driver data from time-offs and medical checks (exclude them from submission)
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { timeOffs, ...driverData } = parsed.data;
+          const { timeOffs, medicalChecks, ...driverData } = parsed.data;
 
           // Update/create driver - time-offs are processed immediately
           await onSubmit(driverData as DriverFormValues);
@@ -209,18 +236,39 @@ export default function DriverForm({
   // Update form with time-offs data when it loads
   useEffect(() => {
     if (isEditing && timeOffsData?.data) {
-      const formattedTimeOffs: TimeOffItem[] = timeOffsData.data.map(
-        (timeOff) => ({
-          id: timeOff.id,
-          startDate: timeOff.startDate.toString(),
-          endDate: timeOff.endDate.toString(),
-          type: timeOff.type as TimeOffType,
-          reason: timeOff.reason,
-        }),
+      const formattedTimeOffs = timeOffsData.data.map((timeOff) => ({
+        id: timeOff.id,
+        startDate: timeOff.startDate,
+        endDate: timeOff.endDate,
+        type: timeOff.type as TimeOffType,
+        reason: timeOff.reason || '',
+      }));
+      form.setFieldValue(
+        'timeOffs',
+        formattedTimeOffs as unknown as TimeOffItem[],
       );
-      form.setFieldValue('timeOffs', formattedTimeOffs);
     }
   }, [timeOffsData, isEditing, form]);
+
+  // Update form with medical checks data when it loads
+  useEffect(() => {
+    if (isEditing && medicalChecksData?.data) {
+      const formattedMedicalChecks = medicalChecksData.data.map(
+        (medicalCheck: medical_checks.DriverMedicalCheck) => ({
+          id: medicalCheck.id,
+          checkDate: medicalCheck.checkDate,
+          nextCheckDate: medicalCheck.nextCheckDate,
+          daysUntilNextCheck: medicalCheck.daysUntilNextCheck,
+          result: medicalCheck.result,
+          notes: medicalCheck.notes || '',
+        }),
+      );
+      form.setFieldValue(
+        'medicalChecks',
+        formattedMedicalChecks as unknown as MedicalCheckItem[],
+      );
+    }
+  }, [medicalChecksData, isEditing, form]);
 
   return (
     <Form onSubmit={form.handleSubmit}>
@@ -231,6 +279,9 @@ export default function DriverForm({
           </TabsTrigger>
           <TabsTrigger value="availability">
             {tDrivers('sections.availability')}
+          </TabsTrigger>
+          <TabsTrigger value="medical">
+            {tDrivers('sections.medicalChecks')}
           </TabsTrigger>
         </TabsList>
 
@@ -488,6 +539,59 @@ export default function DriverForm({
                         })();
                       }}
                       disabled={!isEditing}
+                    />
+                  )}
+                </form.AppField>
+              )}
+            </div>
+          </FormLayout>
+        </TabsContent>
+
+        <TabsContent value="medical">
+          <FormLayout title={tDrivers('sections.medicalChecks')}>
+            <div className="space-y-6">
+              <DriverMedicalCheckForm
+                onAdd={async (medicalCheck) => {
+                  // Create immediately via API
+                  const createdMedicalCheck =
+                    await medicalChecksMutations.create.mutateWithToast(
+                      {
+                        checkDate: medicalCheck.checkDate,
+                        daysUntilNextCheck: medicalCheck.daysUntilNextCheck,
+                        result: medicalCheck.result,
+                        notes: medicalCheck.notes,
+                      },
+                      { standalone: false },
+                    );
+
+                  // Add to local state with API data
+                  const currentMedicalChecks =
+                    form.getFieldValue('medicalChecks') || [];
+                  const formattedMedicalCheck = {
+                    id: createdMedicalCheck.id,
+                    checkDate: createdMedicalCheck.checkDate,
+                    nextCheckDate: createdMedicalCheck.nextCheckDate,
+                    daysUntilNextCheck: createdMedicalCheck.daysUntilNextCheck,
+                    result: createdMedicalCheck.result,
+                    notes: createdMedicalCheck.notes || '',
+                    isNew: true, // Mark as new for visual feedback
+                  };
+                  form.setFieldValue('medicalChecks', [
+                    formattedMedicalCheck,
+                    ...currentMedicalChecks,
+                  ]);
+                }}
+                disabled={!isEditing}
+              />
+
+              {isEditing && (
+                <form.AppField name="medicalChecks">
+                  {(field) => (
+                    <DriverMedicalChecksView
+                      medicalChecks={
+                        (field.state.value as MedicalCheckItem[]) || []
+                      }
+                      showHeader={true}
                     />
                   )}
                 </form.AppField>

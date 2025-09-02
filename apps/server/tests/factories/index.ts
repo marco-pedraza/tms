@@ -13,6 +13,7 @@ export { installationPropertyFactory } from './installation-properties.factory';
 export { installationSchemaFactory } from './installation-schemas.factory';
 export { installationTypeFactory } from './installation-types.factory';
 export { labelFactory } from './labels.factory';
+export { medicalCheckFactory } from './medical-checks.factory';
 export { nodeEventFactory } from './node-events.factory';
 export { nodeFactory } from './node.factory';
 export { populationFactory } from './populations.factory';

@@ -111,6 +111,7 @@ export namespace inventory {
             this.createCity = this.createCity.bind(this)
             this.createCountry = this.createCountry.bind(this)
             this.createDriver = this.createDriver.bind(this)
+            this.createDriverMedicalCheck = this.createDriverMedicalCheck.bind(this)
             this.createDriverTimeOff = this.createDriverTimeOff.bind(this)
             this.createEventType = this.createEventType.bind(this)
             this.createInstallation = this.createInstallation.bind(this)
@@ -157,6 +158,7 @@ export namespace inventory {
             this.getCity = this.getCity.bind(this)
             this.getCountry = this.getCountry.bind(this)
             this.getDriver = this.getDriver.bind(this)
+            this.getDriverMedicalCheck = this.getDriverMedicalCheck.bind(this)
             this.getDriverTimeOff = this.getDriverTimeOff.bind(this)
             this.getEventType = this.getEventType.bind(this)
             this.getInstallation = this.getInstallation.bind(this)
@@ -192,6 +194,8 @@ export namespace inventory {
             this.listCitiesPaginated = this.listCitiesPaginated.bind(this)
             this.listCountries = this.listCountries.bind(this)
             this.listCountriesPaginated = this.listCountriesPaginated.bind(this)
+            this.listDriverMedicalChecks = this.listDriverMedicalChecks.bind(this)
+            this.listDriverMedicalChecksPaginated = this.listDriverMedicalChecksPaginated.bind(this)
             this.listDriverTimeOffs = this.listDriverTimeOffs.bind(this)
             this.listDriverTimeOffsPaginated = this.listDriverTimeOffsPaginated.bind(this)
             this.listDrivers = this.listDrivers.bind(this)
@@ -534,6 +538,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/drivers/create`, JSON.stringify(params))
             return await resp.json() as drivers.DriverWithRelations
+        }
+
+        /**
+         * Creates a new medical check for a driver (immutable).
+         * @param params - The medical check data to create (includes driverId)
+         * @returns {Promise<DriverMedicalCheck>} The created medical check
+         * @throws {APIError} If the medical check creation fails
+         */
+        public async createDriverMedicalCheck(driverId: number, params: medical_checks.CreateDriverMedicalCheckRepositoryPayload): Promise<medical_checks.DriverMedicalCheck> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/drivers/${encodeURIComponent(driverId)}/medical-checks/create`, JSON.stringify(params))
+            return await resp.json() as medical_checks.DriverMedicalCheck
         }
 
         /**
@@ -1128,6 +1144,18 @@ export namespace inventory {
         }
 
         /**
+         * Retrieves a medical check by its ID for a specific driver.
+         * @param params - Object containing the driver ID and medical check ID
+         * @returns {Promise<DriverMedicalCheck>} The found medical check
+         * @throws {APIError} If the medical check is not found or doesn't belong to the driver
+         */
+        public async getDriverMedicalCheck(driverId: number, id: number): Promise<medical_checks.DriverMedicalCheck> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/drivers/${encodeURIComponent(driverId)}/medical-checks/${encodeURIComponent(id)}`)
+            return await resp.json() as medical_checks.DriverMedicalCheck
+        }
+
+        /**
          * Retrieves a time-off by its ID for a specific driver.
          * @param params - Object containing the driver ID and time-off ID
          * @returns {Promise<DriverTimeOff>} The found time-off
@@ -1563,6 +1591,68 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/countries/list`, JSON.stringify(params))
             return await resp.json() as countries.PaginatedListCountriesResult
+        }
+
+        /**
+         * Retrieves all medical checks for a driver without pagination (useful for dropdowns).
+         * @param params - Driver ID and query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListDriverMedicalChecksResult>} Unified response with data property containing array of medical checks
+         * @throws {APIError} If retrieval fails
+         */
+        public async listDriverMedicalChecks(driverId: number, params: {
+    orderBy?: {
+        field: "id" | "driverId" | "checkDate" | "nextCheckDate" | "daysUntilNextCheck" | "source" | "notes" | "result" | "createdAt" | "updatedAt"
+        direction: "asc" | "desc"
+    }[]
+    filters?: {
+        id?: number
+        driverId?: number
+        checkDate?: string | string
+        nextCheckDate?: string | string
+        daysUntilNextCheck?: number
+        source?: medical_checks.MedicalCheckSource
+        notes?: string | null
+        result?: medical_checks.MedicalCheckResult
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
+    }
+    searchTerm?: string
+}): Promise<medical_checks.ListDriverMedicalChecksResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/drivers/${encodeURIComponent(driverId)}/medical-checks/list/all`, JSON.stringify(params))
+            return await resp.json() as medical_checks.ListDriverMedicalChecksResult
+        }
+
+        /**
+         * Retrieves medical checks for a driver with pagination (useful for tables).
+         * @param params - Driver ID and pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListDriverMedicalChecksResult>} Unified paginated response with data and pagination properties
+         * @throws {APIError} If retrieval fails
+         */
+        public async listDriverMedicalChecksPaginated(driverId: number, params: {
+    page?: number
+    pageSize?: number
+    orderBy?: {
+        field: "id" | "driverId" | "checkDate" | "nextCheckDate" | "daysUntilNextCheck" | "source" | "notes" | "result" | "createdAt" | "updatedAt"
+        direction: "asc" | "desc"
+    }[]
+    filters?: {
+        id?: number
+        driverId?: number
+        checkDate?: string | string
+        nextCheckDate?: string | string
+        daysUntilNextCheck?: number
+        source?: medical_checks.MedicalCheckSource
+        notes?: string | null
+        result?: medical_checks.MedicalCheckResult
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
+    }
+    searchTerm?: string
+}): Promise<medical_checks.PaginatedListDriverMedicalChecksResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/drivers/${encodeURIComponent(driverId)}/medical-checks/list`, JSON.stringify(params))
+            return await resp.json() as medical_checks.PaginatedListDriverMedicalChecksResult
         }
 
         /**
@@ -8925,6 +9015,95 @@ export namespace labels {
     export interface PaginatedListLabelsResult {
         pagination: shared.PaginationMeta
         data: LabelWithNodeCount[]
+    }
+}
+
+export namespace medical_checks {
+    export interface CreateDriverMedicalCheckRepositoryPayload {
+        /**
+         * Date when the medical check was performed
+         */
+        checkDate: string | string
+
+        /**
+         * Number of days until the next check is due
+         */
+        daysUntilNextCheck: number
+
+        /**
+         * Result of the medical check
+         */
+        result: MedicalCheckResult
+
+        /**
+         * Optional notes about the medical check
+         */
+        notes?: string | null
+    }
+
+    export interface DriverMedicalCheck {
+        /**
+         * Unique identifier for the medical check
+         */
+        id: number
+
+        /**
+         * ID of the driver this medical check belongs to
+         */
+        driverId: number
+
+        /**
+         * Date when the medical check was performed
+         */
+        checkDate: string | string
+
+        /**
+         * Date when the next medical check is due
+         */
+        nextCheckDate: string | string
+
+        /**
+         * Number of days until the next check is due
+         */
+        daysUntilNextCheck: number
+
+        /**
+         * Source or provider of the medical check
+         */
+        source: MedicalCheckSource
+
+        /**
+         * Optional notes about the medical check
+         */
+        notes: string | null
+
+        /**
+         * Result of the medical check
+         */
+        result: MedicalCheckResult
+
+        /**
+         * Timestamp when the medical check record was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the medical check record was last updated
+         */
+        updatedAt: string | string | null
+    }
+
+    export interface ListDriverMedicalChecksResult {
+        data: DriverMedicalCheck[]
+    }
+
+    export type MedicalCheckResult = "fit" | "limited" | "unfit"
+
+    export type MedicalCheckSource = "manual" | "api"
+
+    export interface PaginatedListDriverMedicalChecksResult {
+        pagination: shared.PaginationMeta
+        data: DriverMedicalCheck[]
     }
 }
 

@@ -43,6 +43,10 @@ export {
   driverTimeOffsRelations,
 } from '@/inventory/fleet/drivers/time-offs/time-offs.schema';
 export {
+  driverMedicalChecks,
+  driverMedicalChecksRelations,
+} from '@/inventory/fleet/drivers/medical-checks/medical-checks.schema';
+export {
   busDiagramModels,
   busDiagramModelsRelations,
 } from '@/inventory/fleet/bus-diagram-models/bus-diagram-models.schema';

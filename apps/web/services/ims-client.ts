@@ -54,18 +54,33 @@ enum TimeOffType {
   OTHER = 'OTHER',
 }
 
+enum MedicalCheckResult {
+  FIT = 'fit',
+  LIMITED = 'limited',
+  UNFIT = 'unfit',
+}
+
+enum MedicalCheckSource {
+  MANUAL = 'manual',
+  API = 'api',
+}
+
 const busStatuses = Object.values(BusStatus);
 const busLicensePlateTypes = Object.values(BusLicensePlateType);
 const driverStatuses = Object.values(DriverStatus);
 const driverInitialStatuses = Object.values(DriverInitialStatus);
 const engineTypes = Object.values(EngineType);
 const timeOffTypes = Object.values(TimeOffType);
+const medicalCheckResults = Object.values(MedicalCheckResult);
+const medicalCheckSources = Object.values(MedicalCheckSource);
 
 export {
   BusStatus,
   BusLicensePlateType,
   DriverStatus,
   TimeOffType,
+  MedicalCheckResult,
+  MedicalCheckSource,
   busStatuses,
   busLicensePlateTypes,
   driverStatuses,
@@ -73,5 +88,7 @@ export {
   EngineType,
   engineTypes,
   timeOffTypes,
+  medicalCheckResults,
+  medicalCheckSources,
 };
 export default client;

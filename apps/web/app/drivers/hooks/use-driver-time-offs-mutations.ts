@@ -13,7 +13,7 @@ export default function useDriverTimeOffsMutations(driverId: number) {
     time_offs.DriverTimeOff,
     time_offs.CreateDriverTimeOffRepositoryPayload
   >({
-    queryKey: ['drivers', driverId.toString(), 'timeOffs'],
+    queryKey: ['drivers', driverId.toString(), 'time-offs'],
     translationKey: 'timeOffs',
     createMutationFn: (payload) =>
       imsClient.inventory.createDriverTimeOff(driverId, payload),

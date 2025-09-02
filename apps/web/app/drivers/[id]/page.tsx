@@ -5,6 +5,7 @@ import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import DriverMedicalChecksView from '@/drivers/components/driver-medical-checks-view';
 import DriverSkeleton from '@/drivers/components/driver-skeleton';
 import DriverStatusBadge from '@/drivers/components/driver-status-badge';
 import DriverTimeOffsView from '@/drivers/components/driver-time-offs-view';
@@ -183,6 +184,19 @@ export default function DriverDetailsPage() {
           </CardHeader>
           <CardContent>
             <DriverTimeOffsView driverId={driver.id} showCreatedAt={true} />
+          </CardContent>
+        </Card>
+
+        {/* Medical Checks Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{tDrivers('sections.medicalChecks')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DriverMedicalChecksView
+              driverId={driver.id}
+              showCreatedAt={true}
+            />
           </CardContent>
         </Card>
       </div>

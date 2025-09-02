@@ -5,6 +5,7 @@ import {
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '@/shared/types';
+import { MedicalCheckResult } from '@/inventory/fleet/drivers/medical-checks/medical-checks.types';
 import { BusLine } from '@/inventory/operators/bus-lines/bus-lines.types';
 import { Transporter } from '@/inventory/operators/transporters/transporters.types';
 
@@ -300,3 +301,79 @@ export type ListDriversResult = ListQueryResult<Driver>;
 export type PaginatedListDriversQueryParams = PaginatedListQueryParams<Driver>;
 export type PaginatedListDriversResult =
   PaginatedListQueryResult<DriverWithRelations>;
+
+/**
+ * Query parameters for getting drivers availability with filtering and ordering support
+ */
+export interface ListDriversAvailabilityQueryParams
+  extends ListQueryParams<Driver> {
+  /**
+   * Start date for availability check
+   * Must be in YYYY-MM-DD format. If not provided, current date will be used.
+   */
+  startDate?:
+    | (string &
+        MatchesRegexp<'^(19|20)\\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$'>)
+    | null;
+
+  /**
+   * End date for availability check
+   * Must be in YYYY-MM-DD format. If not provided, current date will be used.
+   */
+  endDate?:
+    | (string &
+        MatchesRegexp<'^(19|20)\\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$'>)
+    | null;
+}
+
+/**
+ * Details about availability checks for a driver
+ */
+export interface DriverAvailabilityDetails {
+  /** Whether the driver has a valid status (active, probation, in_training) */
+  hasValidStatus: boolean;
+  /** Current driver status */
+  currentStatus: DriverStatus;
+  /** Whether the license is valid until the end date */
+  hasValidLicense: boolean;
+  /** License expiry date */
+  licenseExpiry: Date | string | null;
+  /** Whether the driver has a valid medical check */
+  hasValidMedicalCheck: boolean;
+  /** Whether the driver is not in a time-off period */
+  hasNoTimeOffConflict: boolean;
+  /** Details about the medical check */
+  medicalCheckDetails: {
+    /** Whether the driver has any medical check */
+    hasMedicalCheck: boolean;
+    /** Result of the most recent medical check */
+    latestResult: MedicalCheckResult | null;
+    /** Date of the most recent medical check */
+    latestCheckDate: Date | string | null;
+    /** Date when the next medical check is due */
+    nextCheckDate: Date | string | null;
+    /** Whether the medical check is still current (not expired) */
+    isCurrent: boolean;
+  };
+}
+
+/**
+ * Driver availability information
+ */
+export interface DriverAvailability extends Driver {
+  /** Availability status for the requested period */
+  isAvailable: boolean;
+  /** Detailed information about availability checks */
+  availabilityDetails: DriverAvailabilityDetails;
+}
+
+/**
+ * Response type for drivers availability
+ */
+export interface ListDriversAvailabilityResult
+  extends ListQueryResult<DriverAvailability> {
+  /** Start date used for availability check */
+  startDate: string;
+  /** End date used for availability check */
+  endDate: string;
+}

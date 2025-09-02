@@ -1,5 +1,9 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { FieldValidationError, NotFoundError } from '@repo/base-repo';
+import {
+  FieldValidationError,
+  NotFoundError,
+  ValidationError,
+} from '@repo/base-repo';
 import { busLineRepository } from '@/inventory/operators/bus-lines/bus-lines.repository';
 import { serviceTypeRepository } from '@/inventory/operators/service-types/service-types.repository';
 import { ServiceTypeCategory } from '@/inventory/operators/service-types/service-types.types';
@@ -7,15 +11,22 @@ import { transporterRepository } from '@/inventory/operators/transporters/transp
 import { createCleanupHelper } from '@/tests/shared/test-utils';
 import type { Driver } from './drivers.types';
 import { DriverStatus } from './drivers.types';
+import { MedicalCheckResult } from './medical-checks/medical-checks.types';
+import { TimeOffType } from './time-offs/time-offs.types';
 import { driverRepository } from './drivers.repository';
+import { driverMedicalCheckRepository } from './medical-checks/medical-checks.repository';
+import { driverTimeOffRepository } from './time-offs/time-offs.repository';
 import {
   createDriver,
   deleteDriver,
   getDriver,
   listDrivers,
+  listDriversAvailability,
   listDriversPaginated,
   updateDriver,
 } from './drivers.controller';
+import { createDriverMedicalCheck } from './medical-checks/medical-checks.controller';
+import { createDriverTimeOff } from './time-offs/time-offs.controller';
 
 describe('Drivers Controller', () => {
   // Test data and setup
@@ -56,6 +67,16 @@ describe('Drivers Controller', () => {
   const serviceTypeCleanup = createCleanupHelper(
     ({ id }) => serviceTypeRepository.forceDelete(id),
     'serviceType',
+  );
+
+  const medicalCheckCleanup = createCleanupHelper(
+    ({ id }) => driverMedicalCheckRepository.forceDelete(id),
+    'medicalCheck',
+  );
+
+  const timeOffCleanup = createCleanupHelper(
+    ({ id }) => driverTimeOffRepository.forceDelete(id),
+    'timeOff',
   );
 
   // Variable to store created IDs for cleanup
@@ -110,9 +131,15 @@ describe('Drivers Controller', () => {
   });
 
   afterAll(async () => {
-    // Then cleanup all tracked entities in dependency order
+    // Cleanup all tracked entities in dependency order
+    // Clean up medical checks and time-offs first (they reference drivers)
+    await medicalCheckCleanup.cleanupAll();
+    await timeOffCleanup.cleanupAll();
+    // Then clean up drivers (they reference bus lines)
     await driverCleanup.cleanupAll();
+    // Then clean up bus lines (they reference transporters and service types)
     await busLineCleanup.cleanupAll();
+    // Finally clean up transporters and service types
     await transporterCleanup.cleanupAll();
     await serviceTypeCleanup.cleanupAll();
   });
@@ -811,6 +838,508 @@ describe('Drivers Controller', () => {
           driverCleanup.track(driver.id);
         }
       }
+    });
+  });
+
+  describe('driver availability', () => {
+    // Helper function to generate dynamic dates for tests
+    const createTestDates = () => {
+      const today = new Date();
+      const recentDate = new Date(today);
+      recentDate.setDate(today.getDate() - 2); // 2 days ago
+      const queryStartDate = new Date(today);
+      queryStartDate.setDate(today.getDate() + 7); // Start 7 days from now
+      const queryEndDate = new Date(queryStartDate);
+      queryEndDate.setDate(queryStartDate.getDate() + 30); // End 30 days later
+
+      return {
+        recentCheckDate: recentDate.toISOString().split('T')[0],
+        queryStartDate: queryStartDate.toISOString().split('T')[0],
+        queryEndDate: queryEndDate.toISOString().split('T')[0],
+        timeOffStartOverlap: new Date(
+          queryStartDate.getTime() + 5 * 24 * 60 * 60 * 1000,
+        )
+          .toISOString()
+          .split('T')[0], // 5 days after query start
+        timeOffEndOverlap: new Date(
+          queryStartDate.getTime() + 10 * 24 * 60 * 60 * 1000,
+        )
+          .toISOString()
+          .split('T')[0], // 10 days after query start
+        timeOffStartNoOverlap: new Date(
+          queryEndDate.getTime() + 5 * 24 * 60 * 60 * 1000,
+        )
+          .toISOString()
+          .split('T')[0], // 5 days after query end
+        timeOffEndNoOverlap: new Date(
+          queryEndDate.getTime() + 10 * 24 * 60 * 60 * 1000,
+        )
+          .toISOString()
+          .split('T')[0], // 10 days after query end
+      };
+    };
+    test('should handle empty date ranges', async () => {
+      const response = await listDriversAvailability({});
+
+      expect(response).toBeDefined();
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+
+      // Verify availability details are correctly structured
+      for (const driver of response.data) {
+        expect(typeof driver.isAvailable).toBe('boolean');
+        if (driver.availabilityDetails) {
+          expect(typeof driver.availabilityDetails.hasValidStatus).toBe(
+            'boolean',
+          );
+          expect(typeof driver.availabilityDetails.hasValidLicense).toBe(
+            'boolean',
+          );
+          expect(typeof driver.availabilityDetails.hasValidMedicalCheck).toBe(
+            'boolean',
+          );
+          expect(typeof driver.availabilityDetails.hasNoTimeOffConflict).toBe(
+            'boolean',
+          );
+        }
+      }
+    });
+
+    test('should throw validation error when endDate is before startDate', async () => {
+      const params = {
+        startDate: '2024-12-31',
+        endDate: '2024-12-01', // End date before start date
+      };
+
+      let validationError: ValidationError | undefined;
+      try {
+        await listDriversAvailability(params);
+      } catch (error) {
+        validationError = error as ValidationError;
+      }
+
+      expect(validationError).toBeDefined();
+      expect(validationError?.name).toBe('ValidationError');
+      expect(validationError?.message).toContain(
+        'Start date must be before end date',
+      );
+    });
+
+    describe('availability calculations with medical checks and time-offs', () => {
+      let testDriverForAvailability: Driver;
+
+      beforeAll(async () => {
+        // Create a driver specifically for availability testing
+        testDriverForAvailability = await createDriver({
+          ...testDriver,
+          driverKey: 'DRV-AVAIL-001',
+          payrollKey: 'PAY-AVAIL-001',
+          email: 'availability.test@example.com',
+          status: DriverStatus.ACTIVE,
+          licenseExpiry: '2025-12-31', // Valid license
+        });
+        driverCleanup.track(testDriverForAvailability.id);
+      });
+
+      test('should be available when driver has valid status, license, medical check, and no time-offs', async () => {
+        const dates = createTestDates();
+
+        // Create a valid medical check (fit result) - recent check with future expiry
+        const medicalCheck = await createDriverMedicalCheck({
+          driverId: testDriverForAvailability.id,
+          checkDate: dates.recentCheckDate,
+          daysUntilNextCheck: 365,
+          result: MedicalCheckResult.FIT,
+          notes: 'Regular medical check - fit for duty',
+        });
+        medicalCheckCleanup.track(medicalCheck.id);
+
+        const params = {
+          startDate: dates.queryStartDate,
+          endDate: dates.queryEndDate,
+        };
+
+        const response = await listDriversAvailability(params);
+        const driver = response.data.find(
+          (d) => d.id === testDriverForAvailability.id,
+        );
+
+        expect(driver).toBeDefined();
+        expect(driver?.isAvailable).toBe(true);
+        expect(driver?.availabilityDetails?.hasValidStatus).toBe(true);
+        expect(driver?.availabilityDetails?.hasValidLicense).toBe(true);
+        expect(driver?.availabilityDetails?.hasValidMedicalCheck).toBe(true);
+        expect(driver?.availabilityDetails?.hasNoTimeOffConflict).toBe(true);
+        expect(
+          driver?.availabilityDetails?.medicalCheckDetails?.hasMedicalCheck,
+        ).toBe(true);
+        expect(
+          driver?.availabilityDetails?.medicalCheckDetails?.latestResult,
+        ).toBe(MedicalCheckResult.FIT);
+        expect(
+          driver?.availabilityDetails?.medicalCheckDetails?.isCurrent,
+        ).toBe(true);
+      });
+
+      test('should be unavailable when driver has unfit medical check', async () => {
+        // Create a separate driver for this test
+        const driverWithUnfitMedical = await createDriver({
+          ...testDriver,
+          driverKey: 'DRV-UNFIT-001',
+          payrollKey: 'PAY-UNFIT-001',
+          email: 'unfit.medical@example.com',
+          status: DriverStatus.ACTIVE,
+          licenseExpiry: '2025-12-31',
+        });
+        driverCleanup.track(driverWithUnfitMedical.id);
+
+        const dates = createTestDates();
+
+        // Create an unfit medical check (recent but unfit result)
+        const medicalCheck = await createDriverMedicalCheck({
+          driverId: driverWithUnfitMedical.id,
+          checkDate: dates.recentCheckDate,
+          daysUntilNextCheck: 365,
+          result: MedicalCheckResult.UNFIT,
+          notes: 'Medical check - unfit for duty',
+        });
+        medicalCheckCleanup.track(medicalCheck.id);
+
+        const params = {
+          startDate: dates.queryStartDate,
+          endDate: dates.queryEndDate,
+        };
+
+        const response = await listDriversAvailability(params);
+        const driver = response.data.find(
+          (d) => d.id === driverWithUnfitMedical.id,
+        );
+
+        expect(driver).toBeDefined();
+        expect(driver?.isAvailable).toBe(false);
+        expect(driver?.availabilityDetails?.hasValidMedicalCheck).toBe(false);
+        expect(
+          driver?.availabilityDetails?.medicalCheckDetails?.hasMedicalCheck,
+        ).toBe(true);
+        expect(
+          driver?.availabilityDetails?.medicalCheckDetails?.latestResult,
+        ).toBe(MedicalCheckResult.UNFIT);
+      });
+
+      test('should be available when driver has limited medical check result', async () => {
+        // Create a separate driver for this test
+        const driverWithLimitedMedical = await createDriver({
+          ...testDriver,
+          driverKey: 'DRV-LIMITED-001',
+          payrollKey: 'PAY-LIMITED-001',
+          email: 'limited.medical@example.com',
+          status: DriverStatus.ACTIVE,
+          licenseExpiry: '2025-12-31',
+        });
+        driverCleanup.track(driverWithLimitedMedical.id);
+
+        const dates = createTestDates();
+
+        // Create a limited medical check (should still be available)
+        const medicalCheck = await createDriverMedicalCheck({
+          driverId: driverWithLimitedMedical.id,
+          checkDate: dates.recentCheckDate,
+          daysUntilNextCheck: 365,
+          result: MedicalCheckResult.LIMITED,
+          notes: 'Medical check - limited but fit for duty',
+        });
+        medicalCheckCleanup.track(medicalCheck.id);
+
+        const params = {
+          startDate: dates.queryStartDate,
+          endDate: dates.queryEndDate,
+        };
+
+        const response = await listDriversAvailability(params);
+        const driver = response.data.find(
+          (d) => d.id === driverWithLimitedMedical.id,
+        );
+
+        expect(driver).toBeDefined();
+        expect(driver?.isAvailable).toBe(true);
+        expect(driver?.availabilityDetails?.hasValidMedicalCheck).toBe(true);
+        expect(
+          driver?.availabilityDetails?.medicalCheckDetails?.latestResult,
+        ).toBe(MedicalCheckResult.LIMITED);
+      });
+
+      test('should be unavailable when driver has time-off conflict', async () => {
+        // Create a separate driver for this test
+        const driverWithTimeOff = await createDriver({
+          ...testDriver,
+          driverKey: 'DRV-TIME-OFF-001',
+          payrollKey: 'PAY-TIME-OFF-001',
+          email: 'time.off@example.com',
+          status: DriverStatus.ACTIVE,
+          licenseExpiry: '2025-12-31',
+        });
+        driverCleanup.track(driverWithTimeOff.id);
+
+        const dates = createTestDates();
+
+        // Ensure driver has valid medical check
+        const medicalCheck = await createDriverMedicalCheck({
+          driverId: driverWithTimeOff.id,
+          checkDate: dates.recentCheckDate,
+          daysUntilNextCheck: 365,
+          result: MedicalCheckResult.FIT,
+          notes: 'Valid medical check',
+        });
+        medicalCheckCleanup.track(medicalCheck.id);
+
+        // Create a time-off that overlaps with the query period
+        const timeOff = await createDriverTimeOff({
+          driverId: driverWithTimeOff.id,
+          startDate: dates.timeOffStartOverlap,
+          endDate: dates.timeOffEndOverlap,
+          type: TimeOffType.VACATION,
+          reason: 'Annual vacation',
+        });
+        timeOffCleanup.track(timeOff.id);
+
+        const params = {
+          startDate: dates.queryStartDate,
+          endDate: dates.queryEndDate,
+        };
+
+        const response = await listDriversAvailability(params);
+        const driver = response.data.find((d) => d.id === driverWithTimeOff.id);
+
+        expect(driver).toBeDefined();
+        expect(driver?.isAvailable).toBe(false);
+        expect(driver?.availabilityDetails?.hasNoTimeOffConflict).toBe(false);
+        expect(driver?.availabilityDetails?.hasValidMedicalCheck).toBe(true);
+        expect(driver?.availabilityDetails?.hasValidStatus).toBe(true);
+        expect(driver?.availabilityDetails?.hasValidLicense).toBe(true);
+      });
+
+      test('should be available when time-off does not overlap with query period', async () => {
+        // Create a new driver specifically for this test to avoid interference from other tests
+        const driverForNonOverlapTest = await createDriver({
+          ...testDriver,
+          driverKey: 'DRV-NON-OVERLAP-001',
+          payrollKey: 'PAY-NON-OVERLAP-001',
+          email: 'non.overlap@example.com',
+          status: DriverStatus.ACTIVE,
+          licenseExpiry: '2025-12-31', // Valid license
+        });
+        driverCleanup.track(driverForNonOverlapTest.id);
+
+        const dates = createTestDates();
+
+        // Create valid medical check
+        const medicalCheck = await createDriverMedicalCheck({
+          driverId: driverForNonOverlapTest.id,
+          checkDate: dates.recentCheckDate,
+          daysUntilNextCheck: 365,
+          result: MedicalCheckResult.FIT,
+          notes: 'Valid medical check',
+        });
+        medicalCheckCleanup.track(medicalCheck.id);
+
+        // Create a time-off that does NOT overlap with the query period (after the query)
+        const timeOff = await createDriverTimeOff({
+          driverId: driverForNonOverlapTest.id,
+          startDate: dates.timeOffStartNoOverlap,
+          endDate: dates.timeOffEndNoOverlap,
+          type: TimeOffType.PERSONAL_DAY,
+          reason: 'Personal matters',
+        });
+        timeOffCleanup.track(timeOff.id);
+
+        const params = {
+          startDate: dates.queryStartDate,
+          endDate: dates.queryEndDate,
+        };
+
+        const response = await listDriversAvailability(params);
+        const driver = response.data.find(
+          (d) => d.id === driverForNonOverlapTest.id,
+        );
+
+        expect(driver).toBeDefined();
+        expect(driver?.isAvailable).toBe(true);
+        expect(driver?.availabilityDetails?.hasNoTimeOffConflict).toBe(true);
+        expect(driver?.availabilityDetails?.hasValidMedicalCheck).toBe(true);
+      });
+
+      test('should be unavailable when driver has no medical check', async () => {
+        // Create a driver without any medical checks
+        const driverWithoutMedical = await createDriver({
+          ...testDriver,
+          driverKey: 'DRV-NO-MED-001',
+          payrollKey: 'PAY-NO-MED-001',
+          email: 'no.medical@example.com',
+          status: DriverStatus.ACTIVE,
+          licenseExpiry: '2025-12-31',
+        });
+        driverCleanup.track(driverWithoutMedical.id);
+
+        const dates = createTestDates();
+        const params = {
+          startDate: dates.queryStartDate,
+          endDate: dates.queryEndDate,
+        };
+
+        const response = await listDriversAvailability(params);
+        const driver = response.data.find(
+          (d) => d.id === driverWithoutMedical.id,
+        );
+
+        expect(driver).toBeDefined();
+        expect(driver?.isAvailable).toBe(false);
+        expect(driver?.availabilityDetails?.hasValidMedicalCheck).toBe(false);
+        expect(
+          driver?.availabilityDetails?.medicalCheckDetails?.hasMedicalCheck,
+        ).toBe(false);
+        expect(
+          driver?.availabilityDetails?.medicalCheckDetails?.latestResult,
+        ).toBeNull();
+      });
+
+      test('should be unavailable when driver has expired license', async () => {
+        // Create a driver with expired license
+        const driverWithExpiredLicense = await createDriver({
+          ...testDriver,
+          driverKey: 'DRV-EXP-LIC-001',
+          payrollKey: 'PAY-EXP-LIC-001',
+          email: 'expired.license@example.com',
+          status: DriverStatus.ACTIVE,
+          licenseExpiry: '2024-06-01', // Expired license
+        });
+        driverCleanup.track(driverWithExpiredLicense.id);
+
+        const dates = createTestDates();
+
+        // Create valid medical check
+        const medicalCheck = await createDriverMedicalCheck({
+          driverId: driverWithExpiredLicense.id,
+          checkDate: dates.recentCheckDate,
+          daysUntilNextCheck: 365,
+          result: MedicalCheckResult.FIT,
+          notes: 'Valid medical check',
+        });
+        medicalCheckCleanup.track(medicalCheck.id);
+
+        const params = {
+          startDate: dates.queryStartDate,
+          endDate: dates.queryEndDate,
+        };
+
+        const response = await listDriversAvailability(params);
+        const driver = response.data.find(
+          (d) => d.id === driverWithExpiredLicense.id,
+        );
+
+        expect(driver).toBeDefined();
+        expect(driver?.isAvailable).toBe(false);
+        expect(driver?.availabilityDetails?.hasValidLicense).toBe(false);
+        expect(driver?.availabilityDetails?.hasValidMedicalCheck).toBe(true);
+        expect(driver?.availabilityDetails?.hasValidStatus).toBe(true);
+      });
+
+      test('should be unavailable when driver has expired medical check', async () => {
+        // Create a driver with expired medical check
+        const driverWithExpiredMedical = await createDriver({
+          ...testDriver,
+          driverKey: 'DRV-EXP-MED-001',
+          payrollKey: 'PAY-EXP-MED-001',
+          email: 'expired.medical@example.com',
+          status: DriverStatus.ACTIVE,
+          licenseExpiry: '2025-12-31',
+        });
+        driverCleanup.track(driverWithExpiredMedical.id);
+
+        // Create an expired medical check (nextCheckDate in the past)
+        const medicalCheck = await createDriverMedicalCheck({
+          driverId: driverWithExpiredMedical.id,
+          checkDate: '2024-01-01',
+          daysUntilNextCheck: 30, // Only 30 days validity, so expired by now
+          result: MedicalCheckResult.FIT,
+          notes: 'Expired medical check',
+        });
+        medicalCheckCleanup.track(medicalCheck.id);
+
+        const dates = createTestDates();
+        const params = {
+          startDate: dates.queryStartDate,
+          endDate: dates.queryEndDate,
+        };
+
+        const response = await listDriversAvailability(params);
+        const driver = response.data.find(
+          (d) => d.id === driverWithExpiredMedical.id,
+        );
+
+        expect(driver).toBeDefined();
+        expect(driver?.isAvailable).toBe(false);
+        expect(driver?.availabilityDetails?.hasValidMedicalCheck).toBe(false);
+        expect(
+          driver?.availabilityDetails?.medicalCheckDetails?.hasMedicalCheck,
+        ).toBe(true);
+        expect(
+          driver?.availabilityDetails?.medicalCheckDetails?.latestResult,
+        ).toBe(MedicalCheckResult.FIT);
+        expect(
+          driver?.availabilityDetails?.medicalCheckDetails?.isCurrent,
+        ).toBe(false);
+        expect(driver?.availabilityDetails?.hasValidStatus).toBe(true);
+        expect(driver?.availabilityDetails?.hasValidLicense).toBe(true);
+      });
+
+      test('should be unavailable when driver has invalid status', async () => {
+        // Create a driver with valid initial status, then update to invalid status
+        const driverWithInvalidStatus = await createDriver({
+          ...testDriver,
+          driverKey: 'DRV-INV-STATUS-001',
+          payrollKey: 'PAY-INV-STATUS-001',
+          email: 'invalid.status@example.com',
+          status: DriverStatus.ACTIVE, // Valid initial status
+          licenseExpiry: '2025-12-31',
+        });
+        driverCleanup.track(driverWithInvalidStatus.id);
+
+        // Update to an invalid status for availability (using repository to bypass validation)
+        await driverRepository.update(driverWithInvalidStatus.id, {
+          status: DriverStatus.SUSPENDED,
+        });
+
+        const dates = createTestDates();
+
+        // Create valid medical check
+        const medicalCheck = await createDriverMedicalCheck({
+          driverId: driverWithInvalidStatus.id,
+          checkDate: dates.recentCheckDate,
+          daysUntilNextCheck: 365,
+          result: MedicalCheckResult.FIT,
+          notes: 'Valid medical check',
+        });
+        medicalCheckCleanup.track(medicalCheck.id);
+
+        const params = {
+          startDate: dates.queryStartDate,
+          endDate: dates.queryEndDate,
+        };
+
+        const response = await listDriversAvailability(params);
+        const driver = response.data.find(
+          (d) => d.id === driverWithInvalidStatus.id,
+        );
+
+        expect(driver).toBeDefined();
+        expect(driver?.isAvailable).toBe(false);
+        expect(driver?.availabilityDetails?.hasValidStatus).toBe(false);
+        expect(driver?.availabilityDetails?.currentStatus).toBe(
+          DriverStatus.SUSPENDED,
+        );
+        expect(driver?.availabilityDetails?.hasValidMedicalCheck).toBe(true);
+        expect(driver?.availabilityDetails?.hasValidLicense).toBe(true);
+      });
     });
   });
 });

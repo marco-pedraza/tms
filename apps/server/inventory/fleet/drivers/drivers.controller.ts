@@ -2,6 +2,8 @@ import { api } from 'encore.dev/api';
 import type {
   CreateDriverPayload,
   DriverWithRelations,
+  ListDriversAvailabilityQueryParams,
+  ListDriversAvailabilityResult,
   ListDriversQueryParams,
   ListDriversResult,
   PaginatedListDriversQueryParams,
@@ -108,5 +110,20 @@ export const deleteDriver = api(
     const driver = await driverRepository.findOneWithRelations(id);
     await driverRepository.delete(id);
     return driver;
+  },
+);
+
+/**
+ * Retrieves the availability of drivers for a given date range with filtering and ordering support.
+ * @param params - Query parameters including startDate, endDate, orderBy, filters, and searchTerm
+ * @returns {Promise<GetDriversAvailabilityResult>} Unified response with data property containing array of drivers and their availability
+ * @throws {APIError} If retrieval fails
+ */
+export const listDriversAvailability = api(
+  { expose: true, method: 'POST', path: '/drivers/availability' },
+  async (
+    params: ListDriversAvailabilityQueryParams,
+  ): Promise<ListDriversAvailabilityResult> => {
+    return await driverUseCases.getDriversAvailability(params);
   },
 );

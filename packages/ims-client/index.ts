@@ -199,6 +199,7 @@ export namespace inventory {
             this.listDriverTimeOffs = this.listDriverTimeOffs.bind(this)
             this.listDriverTimeOffsPaginated = this.listDriverTimeOffsPaginated.bind(this)
             this.listDrivers = this.listDrivers.bind(this)
+            this.listDriversAvailability = this.listDriversAvailability.bind(this)
             this.listDriversPaginated = this.listDriversPaginated.bind(this)
             this.listEventTypes = this.listEventTypes.bind(this)
             this.listEventTypesPaginated = this.listEventTypesPaginated.bind(this)
@@ -1723,6 +1724,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/drivers/list/all`, JSON.stringify(params))
             return await resp.json() as drivers.ListDriversResult
+        }
+
+        /**
+         * Retrieves the availability of drivers for a given date range with filtering and ordering support.
+         * @param params - Query parameters including startDate, endDate, orderBy, filters, and searchTerm
+         * @returns {Promise<GetDriversAvailabilityResult>} Unified response with data property containing array of drivers and their availability
+         * @throws {APIError} If retrieval fails
+         */
+        public async listDriversAvailability(params: drivers.ListDriversAvailabilityQueryParams): Promise<drivers.ListDriversAvailabilityResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/drivers/availability`, JSON.stringify(params))
+            return await resp.json() as drivers.ListDriversAvailabilityResult
         }
 
         /**
@@ -7776,6 +7789,175 @@ export namespace drivers {
         updatedAt: string | string | null
     }
 
+    export interface DriverAvailability {
+        /**
+         * Availability status for the requested period
+         */
+        isAvailable: boolean
+
+        /**
+         * Detailed information about availability checks
+         */
+        availabilityDetails: DriverAvailabilityDetails
+
+        /**
+         * Unique identifier for the driver
+         */
+        id: number
+
+        /**
+         * Employee ID (Clave)
+         */
+        driverKey: string
+
+        /**
+         * Payroll key (Clave Nómina)
+         */
+        payrollKey: string
+
+        /**
+         * First name of the driver
+         */
+        firstName: string
+
+        /**
+         * Last name of the driver
+         */
+        lastName: string
+
+        /**
+         * Address
+         */
+        address: string | null
+
+        /**
+         * Phone number
+         */
+        phone: string | null
+
+        /**
+         * Email address
+         */
+        email: string | null
+
+        /**
+         * Date of hiring
+         */
+        hireDate: string | string | null
+
+        /**
+         * Current status
+         */
+        status: DriverStatus
+
+        /**
+         * Status date
+         */
+        statusDate: string | string | null
+
+        /**
+         * License
+         */
+        license: string
+
+        /**
+         * License expiry
+         */
+        licenseExpiry: string | string | null
+
+        /**
+         * The bus line this driver is associated with
+         */
+        busLineId: number
+
+        /**
+         * Emergency contact name
+         */
+        emergencyContactName: string | null
+
+        /**
+         * Emergency contact phone
+         */
+        emergencyContactPhone: string | null
+
+        /**
+         * Emergency contact relationship
+         */
+        emergencyContactRelationship: string | null
+
+        /**
+         * Timestamp when the driver record was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the driver record was last updated
+         */
+        updatedAt: string | string | null
+    }
+
+    export interface DriverAvailabilityDetails {
+        /**
+         * Whether the driver has a valid status (active, probation, in_training)
+         */
+        hasValidStatus: boolean
+
+        /**
+         * Current driver status
+         */
+        currentStatus: DriverStatus
+
+        /**
+         * Whether the license is valid until the end date
+         */
+        hasValidLicense: boolean
+
+        /**
+         * License expiry date
+         */
+        licenseExpiry: string | string | null
+
+        /**
+         * Whether the driver has a valid medical check
+         */
+        hasValidMedicalCheck: boolean
+
+        /**
+         * Whether the driver is not in a time-off period
+         */
+        hasNoTimeOffConflict: boolean
+
+        /**
+         * Details about the medical check
+         */
+        medicalCheckDetails: {
+            /**
+             * Whether the driver has any medical check
+             */
+            hasMedicalCheck: boolean
+
+            /**
+             * Result of the most recent medical check
+             */
+            latestResult: medical_checks.MedicalCheckResult | null
+
+            /**
+             * Date of the most recent medical check
+             */
+            latestCheckDate: string | string | null
+
+            /**
+             * Date when the next medical check is due
+             */
+            nextCheckDate: string | string | null
+
+            /**
+             * Whether the medical check is still current (not expired)
+             */
+            isCurrent: boolean
+        }
+    }
+
     export type DriverStatus = "active" | "inactive" | "suspended" | "on_leave" | "terminated" | "in_training" | "probation"
 
     export interface DriverWithRelations {
@@ -7875,6 +8057,61 @@ export namespace drivers {
          * Timestamp when the driver record was last updated
          */
         updatedAt: string | string | null
+    }
+
+    export interface ListDriversAvailabilityQueryParams {
+        /**
+         * Start date for availability check
+         * Must be in YYYY-MM-DD format. If not provided, current date will be used.
+         */
+        startDate?: string | null
+
+        /**
+         * End date for availability check
+         * Must be in YYYY-MM-DD format. If not provided, current date will be used.
+         */
+        endDate?: string | null
+
+        orderBy?: {
+            field: "id" | "driverKey" | "payrollKey" | "firstName" | "lastName" | "address" | "phone" | "email" | "hireDate" | "status" | "statusDate" | "license" | "licenseExpiry" | "busLineId" | "emergencyContactName" | "emergencyContactPhone" | "emergencyContactRelationship" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            driverKey?: string
+            payrollKey?: string
+            firstName?: string
+            lastName?: string
+            address?: string | null
+            phone?: string | null
+            email?: string | null
+            hireDate?: string | string | null
+            status?: DriverStatus
+            statusDate?: string | string | null
+            license?: string
+            licenseExpiry?: string | string | null
+            busLineId?: number
+            emergencyContactName?: string | null
+            emergencyContactPhone?: string | null
+            emergencyContactRelationship?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListDriversAvailabilityResult {
+        /**
+         * Start date used for availability check
+         */
+        startDate: string
+
+        /**
+         * End date used for availability check
+         */
+        endDate: string
+
+        data: DriverAvailability[]
     }
 
     export interface ListDriversQueryParams {

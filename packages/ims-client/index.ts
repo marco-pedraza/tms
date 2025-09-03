@@ -11055,9 +11055,9 @@ export namespace technologies {
         filters?: {
             id?: number
             name?: string
-            provider?: string | null
-            version?: string | null
-            description?: string | null
+            provider?: string
+            version?: string
+            description?: string
             active?: boolean
             createdAt?: string | string
             updatedAt?: string | string
@@ -11080,9 +11080,9 @@ export namespace technologies {
         filters?: {
             id?: number
             name?: string
-            provider?: string | null
-            version?: string | null
-            description?: string | null
+            provider?: string
+            version?: string
+            description?: string
             active?: boolean
             createdAt?: string | string
             updatedAt?: string | string
@@ -11110,17 +11110,17 @@ export namespace technologies {
         /**
          * Provider of the technology
          */
-        provider: string | null
+        provider?: string
 
         /**
          * Version of the technology
          */
-        version: string | null
+        version?: string
 
         /**
          * Optional description of the technology
          */
-        description: string | null
+        description?: string
 
         /**
          * Whether the technology is active/available

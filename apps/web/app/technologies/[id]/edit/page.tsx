@@ -41,7 +41,15 @@ export default function EditTechnologyPage() {
         description={`${data?.name} (${data?.provider})`}
         backHref={routes.technologies.index}
       />
-      <TechnologyForm defaultValues={data} onSubmit={handleSubmit} />
+      <TechnologyForm
+        defaultValues={{
+          ...data,
+          description: data.description ?? undefined,
+          provider: data.provider ?? undefined,
+          version: data.version ?? undefined,
+        }}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }

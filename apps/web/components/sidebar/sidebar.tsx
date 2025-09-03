@@ -11,6 +11,7 @@ import {
   Cpu,
   Flag,
   Globe,
+  LayoutGrid,
   Map as MapIcon,
   MapPin,
   Package,
@@ -152,6 +153,11 @@ export default function Sidebar() {
             href={routes.busModels.index}
             icon={Truck}
             label={tSidebar('inventory.fleet.busModels')}
+          />
+          <SidebarLink
+            href={routes.seatDiagrams.index}
+            icon={LayoutGrid}
+            label={tSidebar('inventory.fleet.seatDiagrams')}
           />
           <SidebarLink
             href={routes.drivers.index}

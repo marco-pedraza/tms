@@ -180,6 +180,7 @@
       "busModel": "Modelo de Autobús",
       "bus": "Autobús",
       "serviceType": "Tipo de Servicio",
+      "seatDiagram": "Diagrama de Asientos",
       "driver": "Conductor",
       "timeOff": "Período de Ausencia",
       "technology": "Tecnología"
@@ -221,6 +222,7 @@
       "fleet": {
         "title": "Flota",
         "buses": "Autobuses",
+        "seatDiagrams": "Diagramas de Asientos",
         "drivers": "Conductores",
         "busModels": "Modelos de Autobús",
         "technologies": "Tecnologías"
@@ -1580,6 +1582,74 @@
         "loading": "Eliminando tecnología...",
         "success": "Tecnología eliminada correctamente",
         "error": "No pudimos eliminar la tecnología"
+      }
+    }
+  },
+  "seatDiagrams": {
+    "title": "Diagramas de Asientos",
+    "description": "Administra plantillas de diagramas de asientos para autobuses",
+    "actions": {
+      "create": "Crear Diagrama de Asientos",
+      "update": "Actualizar Diagrama de Asientos",
+      "backToList": "Volver a diagramas de asientos"
+    },
+    "fields": {
+      "maxCapacity": "Capacidad Máxima",
+      "numFloors": "Número de Pisos",
+      "totalSeats": "Total de Asientos",
+      "isFactoryDefault": "Plantilla de Fábrica",
+      "seatsPerFloor": "Asientos por Piso",
+      "numRows": "Número de Filas",
+      "seatsLeft": "Asientos Izquierda",
+      "seatsRight": "Asientos Derecha",
+      "floors": "{count} {count, plural, one {piso} other {pisos}}",
+      "seats": "{count} {count, plural, one {asiento} other {asientos}}",
+      "passengers": "{count} {count, plural, one {pasajero} other {pasajeros}}",
+      "floor": "Piso {floorNumber}"
+    },
+    "form": {
+      "title": "Información del diagrama de asientos",
+      "placeholders": {
+        "name": "Ej: Diagrama Ejecutivo 2 Pisos",
+        "description": "Descripción opcional del diagrama",
+        "maxCapacity": "Ej: 45",
+        "numFloors": "Ej: 2",
+        "totalSeats": "Ej: 40"
+      },
+      "helpText": {
+        "isFactoryDefault": "Indica si este es un diagrama predeterminado de fábrica",
+        "maxCapacity": "Capacidad máxima de pasajeros del autobús",
+        "numFloors": "Número de pisos del autobús",
+        "totalSeats": "Número total de asientos disponibles"
+      }
+    },
+    "details": {
+      "description": "Detalles del diagrama de asientos"
+    },
+    "edit": {
+      "title": "Editar Diagrama de Asientos"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Diagrama de asientos no encontrado",
+        "description": "No pudimos encontrar el diagrama de asientos que buscas. Es posible que haya sido eliminado o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando diagrama de asientos...",
+        "success": "Diagrama de asientos creado correctamente",
+        "error": "No pudimos crear el diagrama de asientos"
+      },
+      "update": {
+        "loading": "Actualizando diagrama de asientos...",
+        "success": "Diagrama de asientos actualizado correctamente",
+        "error": "No pudimos actualizar el diagrama de asientos"
+      },
+      "delete": {
+        "loading": "Eliminando diagrama de asientos...",
+        "success": "Diagrama de asientos eliminado correctamente",
+        "error": "No pudimos eliminar el diagrama de asientos"
       }
     }
   }

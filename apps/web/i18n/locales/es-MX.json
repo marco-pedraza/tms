@@ -181,7 +181,8 @@
       "bus": "Autobús",
       "serviceType": "Tipo de Servicio",
       "driver": "Conductor",
-      "timeOff": "Período de Ausencia"
+      "timeOff": "Período de Ausencia",
+      "technology": "Tecnología"
     },
     "fields": {
       "name": "Nombre",
@@ -221,7 +222,8 @@
         "title": "Flota",
         "buses": "Autobuses",
         "drivers": "Conductores",
-        "busModels": "Modelos de Autobús"
+        "busModels": "Modelos de Autobús",
+        "technologies": "Tecnologías"
       },
       "routes": "Rutas",
       "pathways": "Trayectos",
@@ -1517,6 +1519,67 @@
         "loading": "Eliminando autobús...",
         "success": "Autobús eliminado correctamente",
         "error": "No pudimos eliminar el autobús"
+      }
+    }
+  },
+  "technologies": {
+    "title": "Tecnologías",
+    "description": "Administra información de tecnologías para el Sistema de Inventario",
+    "actions": {
+      "create": "Crear Tecnología",
+      "update": "Actualizar Tecnología",
+      "backToList": "Volver a tecnologías"
+    },
+    "fields": {
+      "description": "Descripción",
+      "name": "Nombre",
+      "version": "Versión",
+      "provider": "Proveedor"
+    },
+    "filters": {
+      "active": "Activo"
+    },
+    "form": {
+      "title": "Información de la tecnología",
+      "placeholders": {
+        "name": "Ej: Wi-Fi",
+        "provider": "Ej: Google",
+        "version": "Ej: 1.0.0",
+        "description": "Ej: Internet inalámbrico gratuito",
+        "emptyOptionsLabel": "No hay tecnologías disponibles"
+      }
+    },
+    "details": {
+      "description": "Detalles de la tecnología"
+    },
+    "edit": {
+      "title": "Editar Tecnología"
+    },
+    "sections": {
+      "info": "Información",
+      "technologies": "Tecnologías"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Tecnología no encontrada",
+        "description": "No pudimos encontrar la tecnología que buscas. Es posible que haya sido eliminada o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando tecnología...",
+        "success": "Tecnología creada correctamente",
+        "error": "No pudimos crear la tecnología"
+      },
+      "update": {
+        "loading": "Actualizando tecnología...",
+        "success": "Tecnología actualizada correctamente",
+        "error": "No pudimos actualizar la tecnología"
+      },
+      "delete": {
+        "loading": "Eliminando tecnología...",
+        "success": "Tecnología eliminada correctamente",
+        "error": "No pudimos eliminar la tecnología"
       }
     }
   }

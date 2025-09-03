@@ -56,3 +56,6 @@ export type UseBusesTranslationsResult = ReturnType<
 export type UseTimeOffsTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'timeOffs'>
 >;
+export type UseTechnologiesTranslationsResult = ReturnType<
+  typeof createTranslator<Messages, 'technologies'>
+>;

@@ -33,6 +33,7 @@ export interface Routes {
   labels: CrudRoute;
   events: CrudRoute;
   amenities: CrudRoute;
+  technologies: CrudRoute;
 }
 
 const routes: Routes = {
@@ -150,6 +151,12 @@ const routes: Routes = {
     new: '/amenities/new',
     getDetailsRoute: (id: string) => `/amenities/${id}`,
     getEditRoute: (id: string) => `/amenities/${id}/edit`,
+  },
+  technologies: {
+    index: '/technologies',
+    new: '/technologies/new',
+    getDetailsRoute: (id: string) => `/technologies/${id}`,
+    getEditRoute: (id: string) => `/technologies/${id}/edit`,
   },
 };
 

@@ -8,6 +8,7 @@ import {
   Building2,
   Bus,
   Calendar,
+  Cpu,
   Flag,
   Globe,
   Map as MapIcon,
@@ -156,6 +157,11 @@ export default function Sidebar() {
             href={routes.drivers.index}
             icon={Users}
             label={tSidebar('inventory.fleet.drivers')}
+          />
+          <SidebarLink
+            href={routes.technologies.index}
+            icon={Cpu}
+            label={tSidebar('inventory.fleet.technologies')}
           />
         </SidebarSection>
       </SidebarSection>

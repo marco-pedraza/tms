@@ -1524,7 +1524,7 @@
   },
   "technologies": {
     "title": "Tecnologías",
-    "description": "Administra información de tecnologías para el Sistema de Inventario",
+    "description": "Gestiona las tecnologías disponibles para los autobuses",
     "actions": {
       "create": "Crear Tecnología",
       "update": "Actualizar Tecnología",

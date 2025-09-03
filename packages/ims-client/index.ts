@@ -102,6 +102,7 @@ export namespace inventory {
             this.assignEventTypesToInstallationType = this.assignEventTypesToInstallationType.bind(this)
             this.assignEventsToNode = this.assignEventsToNode.bind(this)
             this.assignLabelsToNode = this.assignLabelsToNode.bind(this)
+            this.assignTechnologiesToBus = this.assignTechnologiesToBus.bind(this)
             this.createAmenity = this.createAmenity.bind(this)
             this.createBus = this.createBus.bind(this)
             this.createBusDiagramModel = this.createBusDiagramModel.bind(this)
@@ -124,6 +125,7 @@ export namespace inventory {
             this.createSeatDiagramZone = this.createSeatDiagramZone.bind(this)
             this.createServiceType = this.createServiceType.bind(this)
             this.createState = this.createState.bind(this)
+            this.createTechnology = this.createTechnology.bind(this)
             this.createTransporter = this.createTransporter.bind(this)
             this.deleteAmenity = this.deleteAmenity.bind(this)
             this.deleteBus = this.deleteBus.bind(this)
@@ -147,6 +149,7 @@ export namespace inventory {
             this.deleteSeatDiagramZone = this.deleteSeatDiagramZone.bind(this)
             this.deleteServiceType = this.deleteServiceType.bind(this)
             this.deleteState = this.deleteState.bind(this)
+            this.deleteTechnology = this.deleteTechnology.bind(this)
             this.deleteTransporter = this.deleteTransporter.bind(this)
             this.findPopulationByAssignedCity = this.findPopulationByAssignedCity.bind(this)
             this.getAmenity = this.getAmenity.bind(this)
@@ -175,6 +178,7 @@ export namespace inventory {
             this.getSeatDiagramZone = this.getSeatDiagramZone.bind(this)
             this.getServiceType = this.getServiceType.bind(this)
             this.getState = this.getState.bind(this)
+            this.getTechnology = this.getTechnology.bind(this)
             this.getTimezone = this.getTimezone.bind(this)
             this.getTransporter = this.getTransporter.bind(this)
             this.listAmenities = this.listAmenities.bind(this)
@@ -222,6 +226,8 @@ export namespace inventory {
             this.listServiceTypesPaginated = this.listServiceTypesPaginated.bind(this)
             this.listStates = this.listStates.bind(this)
             this.listStatesPaginated = this.listStatesPaginated.bind(this)
+            this.listTechnologies = this.listTechnologies.bind(this)
+            this.listTechnologiesPaginated = this.listTechnologiesPaginated.bind(this)
             this.listTimezones = this.listTimezones.bind(this)
             this.listTransporters = this.listTransporters.bind(this)
             this.listTransportersPaginated = this.listTransportersPaginated.bind(this)
@@ -258,6 +264,7 @@ export namespace inventory {
             this.updateSeatDiagramZone = this.updateSeatDiagramZone.bind(this)
             this.updateServiceType = this.updateServiceType.bind(this)
             this.updateState = this.updateState.bind(this)
+            this.updateTechnology = this.updateTechnology.bind(this)
             this.updateTransporter = this.updateTransporter.bind(this)
         }
 
@@ -414,6 +421,26 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/nodes/${encodeURIComponent(id)}/labels/assign`, JSON.stringify(params))
             return await resp.json() as nodes.NodeWithRelations
+        }
+
+        /**
+         * Assigns technologies to a bus.
+         * This is a destructive operation that replaces existing technologies.
+         * @param params - Object containing the bus ID and technologies to assign
+         * @param params.id - The ID of the bus to assign technologies to
+         * @param params.technologyIds - Array of technology IDs to assign to the bus
+         * @returns {Promise<BusWithRelations>} The updated bus with its relations and assigned technologies
+         * @throws {APIError} If the bus is not found, validation fails, or assignment fails
+         */
+        public async assignTechnologiesToBus(id: number, params: {
+    /**
+     * Array of technology IDs
+     */
+    technologyIds: number[]
+}): Promise<buses.BusWithRelations> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/buses/${encodeURIComponent(id)}/technologies/assign`, JSON.stringify(params))
+            return await resp.json() as buses.BusWithRelations
         }
 
         /**
@@ -711,6 +738,18 @@ export namespace inventory {
         }
 
         /**
+         * Creates a new technology.
+         * @param params - The technology data to create
+         * @returns {Promise<Technology>} The created technology
+         * @throws {APIError} If the technology creation fails
+         */
+        public async createTechnology(params: technologies.CreateTechnologyPayload): Promise<technologies.Technology> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/technologies/create`, JSON.stringify(params))
+            return await resp.json() as technologies.Technology
+        }
+
+        /**
          * Creates a new transporter.
          * @param params - The transporter data to create
          * @returns {Promise<Transporter>} The created transporter
@@ -998,6 +1037,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/states/${encodeURIComponent(id)}/delete`)
             return await resp.json() as states.State
+        }
+
+        /**
+         * Deletes a technology by its ID.
+         * @param params - Object containing the technology ID
+         * @param params.id - The ID of the technology to delete
+         * @returns {Promise<Technology>} The deleted technology
+         * @throws {APIError} If the technology is not found or deletion fails
+         */
+        public async deleteTechnology(id: number): Promise<technologies.Technology> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/technologies/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as technologies.Technology
         }
 
         /**
@@ -1352,6 +1404,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/states/${encodeURIComponent(id)}`)
             return await resp.json() as states.State
+        }
+
+        /**
+         * Retrieves a technology by its ID.
+         * @param params - Object containing the technology ID
+         * @param params.id - The ID of the technology to retrieve
+         * @returns {Promise<Technology>} The found technology
+         * @throws {APIError} If the technology is not found or retrieval fails
+         */
+        public async getTechnology(id: number): Promise<technologies.Technology> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/technologies/${encodeURIComponent(id)}`)
+            return await resp.json() as technologies.Technology
         }
 
         /**
@@ -1991,6 +2056,30 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/states/list`, JSON.stringify(params))
             return await resp.json() as states.PaginatedListStatesResult
+        }
+
+        /**
+         * Retrieves all technologies without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListTechnologiesResult>} Unified response with data property containing array of technologies
+         * @throws {APIError} If retrieval fails
+         */
+        public async listTechnologies(params: technologies.ListTechnologiesQueryParams): Promise<technologies.ListTechnologiesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/technologies/list/all`, JSON.stringify(params))
+            return await resp.json() as technologies.ListTechnologiesResult
+        }
+
+        /**
+         * Retrieves technologies with pagination (useful for tables).
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListTechnologiesResult>} Unified paginated response with data and pagination properties
+         * @throws {APIError} If retrieval fails
+         */
+        public async listTechnologiesPaginated(params: technologies.PaginatedListTechnologiesQueryParams): Promise<technologies.PaginatedListTechnologiesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/technologies/list`, JSON.stringify(params))
+            return await resp.json() as technologies.PaginatedListTechnologiesResult
         }
 
         /**
@@ -3348,6 +3437,45 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/states/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as states.State
+        }
+
+        /**
+         * Updates an existing technology.
+         * @param params - Object containing the technology ID and update data
+         * @param params.id - The ID of the technology to update
+         * @returns {Promise<Technology>} The updated technology
+         * @throws {APIError} If the technology is not found or update fails
+         */
+        public async updateTechnology(id: number, params: {
+    /**
+     * Name of the technology
+     * Must have at least 1 non-whitespace character
+     */
+    name?: string
+
+    /**
+     * Provider of the technology
+     */
+    provider?: string | null
+
+    /**
+     * Version of the technology
+     */
+    version?: string | null
+
+    /**
+     * Optional description of the technology
+     */
+    description?: string | null
+
+    /**
+     * Whether the technology is active/available
+     */
+    active?: boolean
+}): Promise<technologies.Technology> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/technologies/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as technologies.Technology
         }
 
         /**
@@ -6853,6 +6981,71 @@ export namespace buses {
 
     export type BusStatus = "ACTIVE" | "MAINTENANCE" | "REPAIR" | "OUT_OF_SERVICE" | "RESERVED" | "IN_TRANSIT" | "RETIRED"
 
+    export interface BusWithRelations {
+        busModel: bus_models.BusModel
+        seatDiagram: seat_diagrams.SeatDiagram
+        transporter?: transporters.Transporter | null
+        alternateTransporter?: transporters.Transporter | null
+        busLine?: bus_lines.BusLine | null
+        base?: nodes.Node | null
+        technologies: technologies.Technology[]
+        /**
+         * Basic information
+         */
+        id: number
+
+        economicNumber: string
+        registrationNumber: string
+        licensePlateType: BusLicensePlateType
+        licensePlateNumber: string
+        circulationCard: string | null
+        availableForTourismOnly: boolean
+        status: BusStatus
+        transporterId: number | null
+        alternateTransporterId: number | null
+        busLineId: number | null
+        baseId: number | null
+        /**
+         * Model and manufacturer information
+         */
+        purchaseDate: string
+
+        expirationDate: string
+        erpClientNumber: string | null
+        modelId: number
+        /**
+         * Technical information
+         */
+        vehicleId: string | null
+
+        serialNumber: string
+        engineNumber: string | null
+        chassisNumber: string
+        grossVehicleWeight: number
+        sctPermit: string | null
+        /**
+         * Maintenance information
+         */
+        currentKilometer: number | null
+
+        gpsId: string | null
+        lastMaintenanceDate: string | null
+        nextMaintenanceDate: string | null
+        /**
+         * Seat Diagram
+         */
+        seatDiagramId: number
+
+        /**
+         * System information
+         */
+        active: boolean
+
+        createdAt: string | string
+        updatedAt: string | string
+        deletedAt: string | string | null
+    }
+
     export interface CreateBusPayload {
         economicNumber: string
         registrationNumber: string
@@ -6904,11 +7097,12 @@ export namespace buses {
 
     export interface ExtendedBusData {
         manufacturer: string
-        model: string
+        busModel: string
         year: number
         seatingCapacity: number
         numFloors: number
         engineType?: string | null
+        technologies: technologies.Technology[]
         /**
          * Basic information
          */
@@ -10820,6 +11014,133 @@ export namespace states {
          * Timestamp when the state record was last updated
          */
         updatedAt: string | string | null
+    }
+}
+
+export namespace technologies {
+    export interface CreateTechnologyPayload {
+        /**
+         * Name of the technology
+         * Must have at least 1 non-whitespace character
+         */
+        name: string
+
+        /**
+         * Provider of the technology
+         */
+        provider?: string | null
+
+        /**
+         * Version of the technology
+         */
+        version?: string | null
+
+        /**
+         * Optional description of the technology
+         */
+        description?: string | null
+
+        /**
+         * Whether the technology is active/available
+         * @default true
+         */
+        active?: boolean
+    }
+
+    export interface ListTechnologiesQueryParams {
+        orderBy?: {
+            field: "id" | "name" | "provider" | "version" | "description" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            provider?: string | null
+            version?: string | null
+            description?: string | null
+            active?: boolean
+            createdAt?: string | string
+            updatedAt?: string | string
+            deletedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListTechnologiesResult {
+        data: Technology[]
+    }
+
+    export interface PaginatedListTechnologiesQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "provider" | "version" | "description" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            provider?: string | null
+            version?: string | null
+            description?: string | null
+            active?: boolean
+            createdAt?: string | string
+            updatedAt?: string | string
+            deletedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListTechnologiesResult {
+        pagination: shared.PaginationMeta
+        data: Technology[]
+    }
+
+    export interface Technology {
+        /**
+         * Unique identifier for the technology
+         */
+        id: number
+
+        /**
+         * Name of the technology
+         */
+        name: string
+
+        /**
+         * Provider of the technology
+         */
+        provider: string | null
+
+        /**
+         * Version of the technology
+         */
+        version: string | null
+
+        /**
+         * Optional description of the technology
+         */
+        description: string | null
+
+        /**
+         * Whether the technology is active/available
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the technology record was created
+         */
+        createdAt: string | string
+
+        /**
+         * Timestamp when the technology record was last updated
+         */
+        updatedAt: string | string
+
+        /**
+         * Timestamp when the technology was soft deleted
+         */
+        deletedAt: string | string | null
     }
 }
 

@@ -157,7 +157,7 @@ export default function BusDetailsPage() {
             <dd>{bus.manufacturer || '-'}</dd>
 
             <dt className="font-medium">{tBuses('fields.model')}:</dt>
-            <dd>{bus.model || '-'}</dd>
+            <dd>{bus.busModel || '-'}</dd>
 
             <dt className="font-medium">{tBuses('fields.year')}:</dt>
             <dd>{bus.year || '-'}</dd>

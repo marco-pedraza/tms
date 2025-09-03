@@ -7,8 +7,10 @@ import {
 } from '@/inventory/fleet/bus-diagram-models/bus-diagram-models.controller';
 import { createBusModel } from '@/inventory/fleet/bus-models/bus-models.controller';
 import { busModelRepository } from '@/inventory/fleet/bus-models/bus-models.repository';
+import { EngineType } from '@/inventory/fleet/bus-models/bus-models.types';
 import { seatDiagramZoneRepository } from '@/inventory/fleet/seat-diagram-zones/seat-diagram-zones.repository';
 import { seatDiagramRepository } from '@/inventory/fleet/seat-diagrams/seat-diagrams.repository';
+import { technologiesRepository } from '@/inventory/fleet/technologies/technologies.repository';
 import {
   createCleanupHelper,
   createTestSuiteId,
@@ -16,9 +18,10 @@ import {
   createUniqueName,
 } from '@/tests/shared/test-utils';
 import type { CreateBusPayload } from './buses.types';
-import { BusStatus } from './buses.types';
+import { BusLicensePlateType, BusStatus } from './buses.types';
 import { busRepository } from './buses.repository';
 import {
+  assignTechnologiesToBus,
   createBus,
   deleteBus,
   getBus,
@@ -57,6 +60,11 @@ describe('Buses Controller', () => {
   const busDiagramModelCleanup = createCleanupHelper(
     ({ id }) => deleteBusDiagramModel({ id }),
     'bus diagram model',
+  );
+
+  const technologyCleanup = createCleanupHelper(
+    ({ id }) => technologiesRepository.delete(id),
+    'technology',
   );
 
   beforeAll(async () => {
@@ -98,6 +106,7 @@ describe('Buses Controller', () => {
       seatingCapacity: 40,
       numFloors: 1,
       amenities: [],
+      engineType: EngineType.DIESEL,
       active: true,
     });
 
@@ -157,6 +166,7 @@ describe('Buses Controller', () => {
       numFloors: 2,
       amenities: ['WiFi', 'USB'],
       active: true,
+      engineType: EngineType.DIESEL,
     });
 
     alternativeBusModelId = busModelCleanup.track(alternativeBusModel.id);
@@ -181,6 +191,8 @@ describe('Buses Controller', () => {
     await busModelCleanup.cleanupAll();
     // 4. bus_diagram_models (root entities, no dependencies)
     await busDiagramModelCleanup.cleanupAll();
+    // 5. technologies (root entities, no dependencies)
+    await technologyCleanup.cleanupAll();
   });
 
   describe('success scenarios', () => {
@@ -189,10 +201,10 @@ describe('Buses Controller', () => {
         registrationNumber: createUniqueCode('TEST', 3),
         modelId: busModelId,
         economicNumber: createUniqueCode('ECO', 3),
-        licensePlateType: 'STANDARD',
+        licensePlateType: BusLicensePlateType.NATIONAL,
         licensePlateNumber: createUniqueCode('PL', 5),
         circulationCard: createUniqueCode('CC', 5),
-        availableForTurismOnly: false,
+        availableForTourismOnly: false,
         status: BusStatus.ACTIVE,
         purchaseDate: new Date(),
         expirationDate: new Date(),
@@ -325,6 +337,86 @@ describe('Buses Controller', () => {
         seatDiagramRepository.findOne(originalSeatDiagramId),
       ).rejects.toThrow(NotFoundError);
     });
+
+    test('should assign technologies to a bus', async () => {
+      // Create test technologies directly using repository
+      const technology1 = await technologiesRepository.create({
+        name: createUniqueName('Test Technology 1', testSuiteId),
+        description: 'First test technology',
+      });
+      technologyCleanup.track(technology1.id);
+
+      const technology2 = await technologiesRepository.create({
+        name: createUniqueName('Test Technology 2', testSuiteId),
+        description: 'Second test technology',
+      });
+      technologyCleanup.track(technology2.id);
+
+      // Assign technologies to the bus
+      const result = await assignTechnologiesToBus({
+        id: createdBusId,
+        technologyIds: [technology1.id, technology2.id],
+      });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(createdBusId);
+      expect(result.technologies).toHaveLength(2);
+      expect(result.technologies.map((t) => t.id)).toContain(technology1.id);
+      expect(result.technologies.map((t) => t.id)).toContain(technology2.id);
+    });
+
+    test('should include technologies in getBus response', async () => {
+      // Create and assign a technology
+      const technology5 = await technologiesRepository.create({
+        name: createUniqueName('Test Technology 5', testSuiteId),
+        description: 'Fifth test technology',
+      });
+      technologyCleanup.track(technology5.id);
+
+      await assignTechnologiesToBus({
+        id: createdBusId,
+        technologyIds: [technology5.id],
+      });
+
+      // Get the bus and verify technologies are included
+      const result = await getBus({ id: createdBusId });
+
+      expect(result).toBeDefined();
+      expect(result.technologies).toHaveLength(1);
+      expect(result.technologies[0].id).toBe(technology5.id);
+      expect(result.technologies[0].name).toBe(technology5.name);
+      expect(result.technologies[0].description).toBe(technology5.description);
+    });
+
+    test('should replace existing technologies when assigning new ones', async () => {
+      // Create another test technology
+      const technology3 = await technologiesRepository.create({
+        name: createUniqueName('Test Technology 3', testSuiteId),
+        description: 'Third test technology',
+      });
+      technologyCleanup.track(technology3.id);
+
+      // Assign only the new label (should replace previous ones)
+      const result = await assignTechnologiesToBus({
+        id: createdBusId,
+        technologyIds: [technology3.id],
+      });
+
+      expect(result).toBeDefined();
+      expect(result.technologies).toHaveLength(1);
+      expect(result.technologies[0].id).toBe(technology3.id);
+    });
+
+    test('should handle empty technology assignment', async () => {
+      // Assign empty array (should remove all technologies)
+      const result = await assignTechnologiesToBus({
+        id: createdBusId,
+        technologyIds: [],
+      });
+
+      expect(result).toBeDefined();
+      expect(result.technologies).toHaveLength(0);
+    });
   });
 
   describe('error scenarios', () => {
@@ -345,10 +437,10 @@ describe('Buses Controller', () => {
         registrationNumber: duplicateRegNumber,
         modelId: busModelId,
         economicNumber: createUniqueCode('ECO', 3),
-        licensePlateType: 'STANDARD',
+        licensePlateType: BusLicensePlateType.NATIONAL,
         licensePlateNumber: createUniqueCode('PL', 5),
         circulationCard: createUniqueCode('CC', 5),
-        availableForTurismOnly: false,
+        availableForTourismOnly: false,
         status: BusStatus.ACTIVE,
         purchaseDate: new Date(),
         expirationDate: new Date(),
@@ -374,10 +466,10 @@ describe('Buses Controller', () => {
           registrationNumber: duplicateRegNumber,
           modelId: busModelId,
           economicNumber: createUniqueCode('ECO2', 3),
-          licensePlateType: 'STANDARD',
+          licensePlateType: BusLicensePlateType.NATIONAL,
           licensePlateNumber: createUniqueCode('PL2', 5),
           circulationCard: createUniqueCode('CC2', 5),
-          availableForTurismOnly: false,
+          availableForTourismOnly: false,
           status: BusStatus.ACTIVE,
           purchaseDate: new Date(),
           expirationDate: new Date(),
@@ -400,10 +492,10 @@ describe('Buses Controller', () => {
           registrationNumber: createUniqueCode('INV', 3),
           modelId: 99999,
           economicNumber: createUniqueCode('ECO3', 3),
-          licensePlateType: 'STANDARD',
+          licensePlateType: BusLicensePlateType.NATIONAL,
           licensePlateNumber: createUniqueCode('PL3', 5),
           circulationCard: createUniqueCode('CC3', 5),
-          availableForTurismOnly: false,
+          availableForTourismOnly: false,
           status: BusStatus.ACTIVE,
           purchaseDate: new Date(),
           expirationDate: new Date(),
@@ -457,10 +549,10 @@ describe('Buses Controller', () => {
           economicNumber: createUniqueCode('ALPHA', 3),
           status: BusStatus.ACTIVE,
           active: true,
-          licensePlateType: 'STANDARD',
+          licensePlateType: BusLicensePlateType.NATIONAL,
           licensePlateNumber: createUniqueCode('PL1', 5),
           circulationCard: createUniqueCode('CC1', 5),
-          availableForTurismOnly: false,
+          availableForTourismOnly: false,
           purchaseDate: new Date(),
           expirationDate: new Date(),
         },
@@ -470,10 +562,10 @@ describe('Buses Controller', () => {
           economicNumber: createUniqueCode('BETA', 3),
           status: BusStatus.MAINTENANCE,
           active: false,
-          licensePlateType: 'STANDARD',
+          licensePlateType: BusLicensePlateType.NATIONAL,
           licensePlateNumber: createUniqueCode('PL2', 5),
           circulationCard: createUniqueCode('CC2', 5),
-          availableForTurismOnly: false,
+          availableForTourismOnly: false,
           purchaseDate: new Date(),
           expirationDate: new Date(),
         },
@@ -483,10 +575,10 @@ describe('Buses Controller', () => {
           economicNumber: createUniqueCode('GAMMA', 3),
           status: BusStatus.ACTIVE,
           active: true,
-          licensePlateType: 'STANDARD',
+          licensePlateType: BusLicensePlateType.NATIONAL,
           licensePlateNumber: createUniqueCode('PL3', 5),
           circulationCard: createUniqueCode('CC3', 5),
-          availableForTurismOnly: false,
+          availableForTourismOnly: false,
           purchaseDate: new Date(),
           expirationDate: new Date(),
         },

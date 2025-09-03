@@ -1,8 +1,18 @@
 import { createBaseRepository } from '@repo/base-repo';
 import { StateTransition, createBaseStateMachine } from '@repo/state-machine';
 import { db } from '@/inventory/db-service';
+import { NotFoundError } from '@/shared/errors';
+import { busModelRepository } from '../bus-models/bus-models.repository';
+import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
+import { technologiesRepository } from '../technologies/technologies.repository';
 import { buses } from './buses.schema';
-import type { Bus, CreateBusPayload, UpdateBusPayload } from './buses.types';
+import type {
+  Bus,
+  BusLicensePlateType,
+  BusWithRelations,
+  CreateBusPayload,
+  UpdateBusPayload,
+} from './buses.types';
 import { BusStatus } from './buses.types';
 
 // Define the state transitions for buses
@@ -80,7 +90,7 @@ const busStateMachine = createBaseStateMachine<BusStatus>(busStatusTransitions);
  * Creates a repository for managing bus entities
  * @returns {Object} An object containing bus-specific operations and base CRUD operations
  */
-export const createBusRepository = () => {
+export function createBusRepository() {
   const baseRepository = createBaseRepository<
     Bus,
     CreateBusPayload,
@@ -123,12 +133,62 @@ export const createBusRepository = () => {
     return busStateMachine.getPossibleNextStates(bus.status);
   };
 
+  /**
+   * Finds a single bus with its relations (model, seatDiagram, transporter, alternateTransporter, busLine, base, technologies)
+   * @param id - The ID of the bus to find
+   * @returns The bus with related information
+   * @throws {NotFoundError} If the bus is not found
+   */
+  async function findOneWithRelations(id: number): Promise<BusWithRelations> {
+    const bus = await db.query.buses.findFirst({
+      where: (buses, { eq, and, isNull }) =>
+        and(eq(buses.id, id), isNull(buses.deletedAt)),
+      with: {
+        transporter: true,
+        alternateTransporter: true,
+        busLine: true,
+        base: true,
+      },
+    });
+
+    if (!bus) {
+      throw new NotFoundError(`Bus with id ${id} not found`);
+    }
+    const busModel = await busModelRepository.findOne(bus.modelId);
+    const seatDiagram = await seatDiagramRepository.findOne(bus.seatDiagramId);
+    const technologies = await technologiesRepository.findByBusId(id);
+
+    return {
+      ...bus,
+      status: bus.status as BusStatus,
+      licensePlateType: bus.licensePlateType as BusLicensePlateType,
+      availableForTourismOnly: bus.availableForTourismOnly as boolean,
+      nextMaintenanceDate: bus.nextMaintenanceDate
+        ? new Date(bus.nextMaintenanceDate)
+        : null,
+      lastMaintenanceDate: bus.lastMaintenanceDate
+        ? new Date(bus.lastMaintenanceDate)
+        : null,
+      currentKilometer:
+        bus.currentKilometer !== null && bus.currentKilometer !== undefined
+          ? Number(bus.currentKilometer)
+          : null,
+      purchaseDate: new Date(bus.purchaseDate),
+      expirationDate: new Date(bus.expirationDate),
+      grossVehicleWeight: Number(bus.grossVehicleWeight),
+      busModel,
+      seatDiagram,
+      technologies,
+    };
+  }
+
   return {
     ...baseRepository,
     update,
     getAllowedStatusTransitions,
+    findOneWithRelations,
   };
-};
+}
 
 // Export the bus repository instance
 export const busRepository = createBusRepository();

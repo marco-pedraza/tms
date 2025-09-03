@@ -1,3 +1,5 @@
+import { busTechnologies } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { NotFoundError } from '@/shared/errors';
 import { busDiagramModelZoneRepository } from '@/inventory/fleet/bus-diagram-model-zones/bus-diagram-model-zones.repository';
 import type { BusDiagramModelZone } from '@/inventory/fleet/bus-diagram-model-zones/bus-diagram-model-zones.types';
@@ -10,7 +12,13 @@ import { seatDiagramZoneRepository } from '@/inventory/fleet/seat-diagram-zones/
 import type { CreateSeatDiagramZonePayload } from '@/inventory/fleet/seat-diagram-zones/seat-diagram-zones.types';
 import { seatDiagramRepository } from '@/inventory/fleet/seat-diagrams/seat-diagrams.repository';
 import type { CreateSeatDiagramPayload } from '@/inventory/fleet/seat-diagrams/seat-diagrams.types';
-import type { Bus, CreateBusPayload, UpdateBusPayload } from './buses.types';
+import type {
+  AssignTechnologiesToBusPayload,
+  Bus,
+  BusWithRelations,
+  CreateBusPayload,
+  UpdateBusPayload,
+} from './buses.types';
 import { busRepository } from './buses.repository';
 
 // Internal type for repository create method
@@ -276,3 +284,40 @@ export const updateBusWithSeatDiagram = async (
     busSeatModels,
   );
 };
+
+/**
+ * Assigns technologies to a bus with validation and atomicity
+ * This is a destructive operation that replaces existing technologies
+ * @param busId - The ID of the bus to assign technologies to
+ * @param payload - The assignment payload with technology IDs
+ * @returns The updated bus with its relations and assigned technologies
+ * @throws {ValidationError} If validation fails
+ */
+export async function assignTechnologiesToBus(
+  busId: number,
+  payload: AssignTechnologiesToBusPayload,
+): Promise<BusWithRelations> {
+  return await busRepository
+    .transaction(async (txRepo, tx) => {
+      // Remove duplicates from technologyIds
+      const uniqueTechnologyIds = [...new Set(payload.technologyIds)];
+
+      // Delete existing technology assignments
+      await tx.delete(busTechnologies).where(eq(busTechnologies.busId, busId));
+
+      // Insert new technology assignments if any
+      if (uniqueTechnologyIds.length > 0) {
+        const technologyAssignments = uniqueTechnologyIds.map(
+          (technologyId) => ({
+            busId,
+            technologyId,
+          }),
+        );
+
+        await tx.insert(busTechnologies).values(technologyAssignments);
+      }
+
+      return busId;
+    })
+    .then((busId) => busRepository.findOneWithRelations(busId));
+}

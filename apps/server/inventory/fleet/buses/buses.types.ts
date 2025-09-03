@@ -7,6 +7,7 @@ import {
 } from '@/shared/types';
 import type { BusModel } from '@/inventory/fleet/bus-models/bus-models.types';
 import type { SeatDiagram } from '@/inventory/fleet/seat-diagrams/seat-diagrams.types';
+import type { Technology } from '@/inventory/fleet/technologies/technologies.types';
 import type { Node } from '@/inventory/locations/nodes/nodes.types';
 import type { BusLine } from '@/inventory/operators/bus-lines/bus-lines.types';
 import type { Transporter } from '@/inventory/operators/transporters/transporters.types';
@@ -72,11 +73,12 @@ export interface Bus {
 
 export interface ExtendedBusData extends Bus {
   manufacturer: string;
-  model: string;
+  busModel: string;
   year: number;
   seatingCapacity: number;
   numFloors: number;
   engineType?: string | null;
+  technologies: Technology[];
 }
 
 /**
@@ -89,6 +91,7 @@ export interface BusWithRelations extends Bus {
   alternateTransporter?: Transporter | null;
   busLine?: BusLine | null;
   base?: Node | null;
+  technologies: Technology[];
 }
 
 export interface CreateBusPayload {
@@ -159,6 +162,14 @@ export interface UpdateBusPayload {
   seatDiagramId?: number;
   // System information
   active?: boolean;
+}
+
+/**
+ * Payload for assigning multiple technologies to a bus
+ */
+export interface AssignTechnologiesToBusPayload {
+  /** Array of technology IDs */
+  technologyIds: number[];
 }
 
 export type ListBusesQueryParams = ListQueryParams<Bus>;

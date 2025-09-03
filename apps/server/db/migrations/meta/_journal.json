@@ -330,6 +330,13 @@
       "when": 1756333314804,
       "tag": "20250827222154_create_driver_medical_checks",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1756861293144,
+      "tag": "20250903010133_create_technologies_table",
+      "breakpoints": true
     }
   ]
 }

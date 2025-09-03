@@ -92,7 +92,7 @@ export const buses = pgTable(
  * Relations for buses
  */
 export const busesRelations = relations(buses, ({ one }) => ({
-  model: one(busModels, {
+  busModel: one(busModels, {
     fields: [buses.modelId],
     references: [busModels.id],
   }),

@@ -1,6 +1,6 @@
 {
-  "id": "e4bad873-8513-4e57-b231-37f3b55ce61e",
-  "prevId": "b0a99176-b264-4f37-96e1-e8b6e3466c83",
+  "id": "e41c15b3-cdbb-4ba4-9c44-bedfec75456e",
+  "prevId": "e4bad873-8513-4e57-b231-37f3b55ce61e",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -278,8 +278,12 @@
           "name": "audits_user_id_users_id_fk",
           "tableFrom": "audits",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -377,8 +381,12 @@
           "name": "bus_diagram_model_zones_bus_diagram_model_id_bus_diagram_models_id_fk",
           "tableFrom": "bus_diagram_model_zones",
           "tableTo": "bus_diagram_models",
-          "columnsFrom": ["bus_diagram_model_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "bus_diagram_model_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -709,8 +717,12 @@
           "name": "bus_lines_transporter_id_transporters_id_fk",
           "tableFrom": "bus_lines",
           "tableTo": "transporters",
-          "columnsFrom": ["transporter_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "transporter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -718,8 +730,12 @@
           "name": "bus_lines_service_type_id_service_types_id_fk",
           "tableFrom": "bus_lines",
           "tableTo": "service_types",
-          "columnsFrom": ["service_type_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "service_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -931,8 +947,12 @@
           "name": "bus_models_default_bus_diagram_model_id_bus_diagram_models_id_fk",
           "tableFrom": "bus_models",
           "tableTo": "bus_diagram_models",
-          "columnsFrom": ["default_bus_diagram_model_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "default_bus_diagram_model_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1092,8 +1112,12 @@
           "name": "bus_seat_models_bus_diagram_model_id_bus_diagram_models_id_fk",
           "tableFrom": "bus_seat_models",
           "tableTo": "bus_diagram_models",
-          "columnsFrom": ["bus_diagram_model_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "bus_diagram_model_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1253,9 +1277,122 @@
           "name": "bus_seats_seat_diagram_id_seat_diagrams_id_fk",
           "tableFrom": "bus_seats",
           "tableTo": "seat_diagrams",
-          "columnsFrom": ["seat_diagram_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "seat_diagram_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.bus_technologies": {
+      "name": "bus_technologies",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "bus_id": {
+          "name": "bus_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "technology_id": {
+          "name": "technology_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "bus_technologies_technology_id_index": {
+          "name": "bus_technologies_technology_id_index",
+          "columns": [
+            {
+              "expression": "technology_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "bus_technologies_bus_id_technology_id_index": {
+          "name": "bus_technologies_bus_id_technology_id_index",
+          "columns": [
+            {
+              "expression": "bus_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "technology_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "bus_technologies_bus_id_buses_id_fk": {
+          "name": "bus_technologies_bus_id_buses_id_fk",
+          "tableFrom": "bus_technologies",
+          "tableTo": "buses",
+          "columnsFrom": [
+            "bus_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bus_technologies_technology_id_technologies_id_fk": {
+          "name": "bus_technologies_technology_id_technologies_id_fk",
+          "tableFrom": "bus_technologies",
+          "tableTo": "technologies",
+          "columnsFrom": [
+            "technology_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
@@ -1650,8 +1787,12 @@
           "name": "buses_transporter_id_transporters_id_fk",
           "tableFrom": "buses",
           "tableTo": "transporters",
-          "columnsFrom": ["transporter_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "transporter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1659,8 +1800,12 @@
           "name": "buses_alternate_transporter_id_transporters_id_fk",
           "tableFrom": "buses",
           "tableTo": "transporters",
-          "columnsFrom": ["alternate_transporter_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "alternate_transporter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1668,8 +1813,12 @@
           "name": "buses_bus_line_id_bus_lines_id_fk",
           "tableFrom": "buses",
           "tableTo": "bus_lines",
-          "columnsFrom": ["bus_line_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "bus_line_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1677,8 +1826,12 @@
           "name": "buses_base_id_nodes_id_fk",
           "tableFrom": "buses",
           "tableTo": "nodes",
-          "columnsFrom": ["base_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "base_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1686,8 +1839,12 @@
           "name": "buses_model_id_bus_models_id_fk",
           "tableFrom": "buses",
           "tableTo": "bus_models",
-          "columnsFrom": ["model_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "model_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1695,8 +1852,12 @@
           "name": "buses_seat_diagram_id_seat_diagrams_id_fk",
           "tableFrom": "buses",
           "tableTo": "seat_diagrams",
-          "columnsFrom": ["seat_diagram_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "seat_diagram_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1856,8 +2017,12 @@
           "name": "cities_state_id_states_id_fk",
           "tableFrom": "cities",
           "tableTo": "states",
-          "columnsFrom": ["state_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "state_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2073,8 +2238,12 @@
           "name": "departments_tenant_id_tenants_id_fk",
           "tableFrom": "departments",
           "tableTo": "tenants",
-          "columnsFrom": ["tenant_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "tenant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2267,8 +2436,12 @@
           "name": "driver_medical_checks_driver_id_drivers_id_fk",
           "tableFrom": "driver_medical_checks",
           "tableTo": "drivers",
-          "columnsFrom": ["driver_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "driver_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2434,8 +2607,12 @@
           "name": "driver_time_offs_driver_id_drivers_id_fk",
           "tableFrom": "driver_time_offs",
           "tableTo": "drivers",
-          "columnsFrom": ["driver_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "driver_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2738,8 +2915,12 @@
           "name": "drivers_transporter_id_transporters_id_fk",
           "tableFrom": "drivers",
           "tableTo": "transporters",
-          "columnsFrom": ["transporter_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "transporter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -2747,8 +2928,12 @@
           "name": "drivers_bus_line_id_bus_lines_id_fk",
           "tableFrom": "drivers",
           "tableTo": "bus_lines",
-          "columnsFrom": ["bus_line_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "bus_line_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -2854,8 +3039,12 @@
           "name": "event_type_installation_types_event_type_id_event_types_id_fk",
           "tableFrom": "event_type_installation_types",
           "tableTo": "event_types",
-          "columnsFrom": ["event_type_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "event_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2863,8 +3052,12 @@
           "name": "event_type_installation_types_installation_type_id_installation_types_id_fk",
           "tableFrom": "event_type_installation_types",
           "tableTo": "installation_types",
-          "columnsFrom": ["installation_type_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "installation_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3108,8 +3301,12 @@
           "name": "installation_amenities_installation_id_installations_id_fk",
           "tableFrom": "installation_amenities",
           "tableTo": "installations",
-          "columnsFrom": ["installation_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "installation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3117,8 +3314,12 @@
           "name": "installation_amenities_amenity_id_amenities_id_fk",
           "tableFrom": "installation_amenities",
           "tableTo": "amenities",
-          "columnsFrom": ["amenity_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "amenity_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3252,8 +3453,12 @@
           "name": "installation_properties_installation_id_installations_id_fk",
           "tableFrom": "installation_properties",
           "tableTo": "installations",
-          "columnsFrom": ["installation_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "installation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3261,8 +3466,12 @@
           "name": "installation_properties_installation_schema_id_installation_schemas_id_fk",
           "tableFrom": "installation_properties",
           "tableTo": "installation_schemas",
-          "columnsFrom": ["installation_schema_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "installation_schema_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3401,8 +3610,12 @@
           "name": "installation_schemas_installation_type_id_installation_types_id_fk",
           "tableFrom": "installation_schemas",
           "tableTo": "installation_types",
-          "columnsFrom": ["installation_type_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "installation_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3641,8 +3854,12 @@
           "name": "installations_installation_type_id_installation_types_id_fk",
           "tableFrom": "installations",
           "tableTo": "installation_types",
-          "columnsFrom": ["installation_type_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "installation_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3733,8 +3950,12 @@
           "name": "label_nodes_label_id_labels_id_fk",
           "tableFrom": "label_nodes",
           "tableTo": "labels",
-          "columnsFrom": ["label_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "label_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -3742,8 +3963,12 @@
           "name": "label_nodes_node_id_nodes_id_fk",
           "tableFrom": "label_nodes",
           "tableTo": "nodes",
-          "columnsFrom": ["node_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "node_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -3960,8 +4185,12 @@
           "name": "node_events_node_id_nodes_id_fk",
           "tableFrom": "node_events",
           "tableTo": "nodes",
-          "columnsFrom": ["node_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "node_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3969,8 +4198,12 @@
           "name": "node_events_event_type_id_event_types_id_fk",
           "tableFrom": "node_events",
           "tableTo": "event_types",
-          "columnsFrom": ["event_type_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "event_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4202,8 +4435,12 @@
           "name": "nodes_city_id_cities_id_fk",
           "tableFrom": "nodes",
           "tableTo": "cities",
-          "columnsFrom": ["city_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "city_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4211,8 +4448,12 @@
           "name": "nodes_population_id_populations_id_fk",
           "tableFrom": "nodes",
           "tableTo": "populations",
-          "columnsFrom": ["population_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "population_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4220,8 +4461,12 @@
           "name": "nodes_installation_id_installations_id_fk",
           "tableFrom": "nodes",
           "tableTo": "installations",
-          "columnsFrom": ["installation_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "installation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4382,8 +4627,12 @@
           "name": "pathway_option_tolls_pathway_option_id_pathway_options_id_fk",
           "tableFrom": "pathway_option_tolls",
           "tableTo": "pathway_options",
-          "columnsFrom": ["pathway_option_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "pathway_option_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4391,8 +4640,12 @@
           "name": "pathway_option_tolls_node_id_nodes_id_fk",
           "tableFrom": "pathway_option_tolls",
           "tableTo": "nodes",
-          "columnsFrom": ["node_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "node_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4552,8 +4805,12 @@
           "name": "pathway_options_pathway_id_pathways_id_fk",
           "tableFrom": "pathway_options",
           "tableTo": "pathways",
-          "columnsFrom": ["pathway_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "pathway_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4787,8 +5044,12 @@
           "name": "pathways_origin_node_id_nodes_id_fk",
           "tableFrom": "pathways",
           "tableTo": "nodes",
-          "columnsFrom": ["origin_node_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "origin_node_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4796,8 +5057,12 @@
           "name": "pathways_destination_node_id_nodes_id_fk",
           "tableFrom": "pathways",
           "tableTo": "nodes",
-          "columnsFrom": ["destination_node_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "destination_node_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4805,8 +5070,12 @@
           "name": "pathways_origin_city_id_cities_id_fk",
           "tableFrom": "pathways",
           "tableTo": "cities",
-          "columnsFrom": ["origin_city_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "origin_city_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -4814,8 +5083,12 @@
           "name": "pathways_destination_city_id_cities_id_fk",
           "tableFrom": "pathways",
           "tableTo": "cities",
-          "columnsFrom": ["destination_city_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "destination_city_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -4870,7 +5143,9 @@
         "permission_groups_name_unique": {
           "name": "permission_groups_name_unique",
           "nullsNotDistinct": false,
-          "columns": ["name"]
+          "columns": [
+            "name"
+          ]
         }
       },
       "policies": {},
@@ -4963,8 +5238,12 @@
           "name": "permissions_permission_group_id_permission_groups_id_fk",
           "tableFrom": "permissions",
           "tableTo": "permission_groups",
-          "columnsFrom": ["permission_group_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "permission_group_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -4974,7 +5253,9 @@
         "permissions_code_unique": {
           "name": "permissions_code_unique",
           "nullsNotDistinct": false,
-          "columns": ["code"]
+          "columns": [
+            "code"
+          ]
         }
       },
       "policies": {},
@@ -5040,8 +5321,12 @@
           "name": "population_cities_city_id_cities_id_fk",
           "tableFrom": "population_cities",
           "tableTo": "cities",
-          "columnsFrom": ["city_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "city_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5049,8 +5334,12 @@
           "name": "population_cities_population_id_populations_id_fk",
           "tableFrom": "population_cities",
           "tableTo": "populations",
-          "columnsFrom": ["population_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "population_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -5237,8 +5526,12 @@
           "name": "refresh_tokens_user_id_users_id_fk",
           "tableFrom": "refresh_tokens",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5248,7 +5541,9 @@
         "refresh_tokens_token_unique": {
           "name": "refresh_tokens_token_unique",
           "nullsNotDistinct": false,
-          "columns": ["token"]
+          "columns": [
+            "token"
+          ]
         }
       },
       "policies": {},
@@ -5313,8 +5608,12 @@
           "name": "role_permissions_role_id_roles_id_fk",
           "tableFrom": "role_permissions",
           "tableTo": "roles",
-          "columnsFrom": ["role_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -5322,8 +5621,12 @@
           "name": "role_permissions_permission_id_permissions_id_fk",
           "tableFrom": "role_permissions",
           "tableTo": "permissions",
-          "columnsFrom": ["permission_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "permission_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5405,8 +5708,12 @@
           "name": "roles_tenant_id_tenants_id_fk",
           "tableFrom": "roles",
           "tableTo": "tenants",
-          "columnsFrom": ["tenant_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "tenant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5504,8 +5811,12 @@
           "name": "seat_diagram_zones_seat_diagram_id_seat_diagrams_id_fk",
           "tableFrom": "seat_diagram_zones",
           "tableTo": "seat_diagrams",
-          "columnsFrom": ["seat_diagram_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "seat_diagram_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5663,8 +5974,12 @@
           "name": "seat_diagrams_bus_diagram_model_id_bus_diagram_models_id_fk",
           "tableFrom": "seat_diagrams",
           "tableTo": "bus_diagram_models",
-          "columnsFrom": ["bus_diagram_model_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "bus_diagram_model_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -5755,8 +6070,12 @@
           "name": "service_type_amenities_service_type_id_service_types_id_fk",
           "tableFrom": "service_type_amenities",
           "tableTo": "service_types",
-          "columnsFrom": ["service_type_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "service_type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -5764,8 +6083,12 @@
           "name": "service_type_amenities_amenity_id_amenities_id_fk",
           "tableFrom": "service_type_amenities",
           "tableTo": "amenities",
-          "columnsFrom": ["amenity_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "amenity_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -6019,12 +6342,163 @@
           "name": "states_country_id_countries_id_fk",
           "tableFrom": "states",
           "tableTo": "countries",
-          "columnsFrom": ["country_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "country_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.technologies": {
+      "name": "technologies",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "provider": {
+          "name": "provider",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version": {
+          "name": "version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "technologies_provider_index": {
+          "name": "technologies_provider_index",
+          "columns": [
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "technologies_version_index": {
+          "name": "technologies_version_index",
+          "columns": [
+            {
+              "expression": "version",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "technologies_active_index": {
+          "name": "technologies_active_index",
+          "columns": [
+            {
+              "expression": "active",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "technologies_deleted_at_index": {
+          "name": "technologies_deleted_at_index",
+          "columns": [
+            {
+              "expression": "deleted_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "technologies_name_index": {
+          "name": "technologies_name_index",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"technologies\".\"deleted_at\" is null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -6104,7 +6578,9 @@
         "tenants_code_unique": {
           "name": "tenants_code_unique",
           "nullsNotDistinct": false,
-          "columns": ["code"]
+          "columns": [
+            "code"
+          ]
         }
       },
       "policies": {},
@@ -6306,8 +6782,12 @@
           "name": "transporters_headquarter_city_id_cities_id_fk",
           "tableFrom": "transporters",
           "tableTo": "cities",
-          "columnsFrom": ["headquarter_city_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "headquarter_city_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -6391,8 +6871,12 @@
           "name": "user_permissions_user_id_users_id_fk",
           "tableFrom": "user_permissions",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6400,8 +6884,12 @@
           "name": "user_permissions_permission_id_permissions_id_fk",
           "tableFrom": "user_permissions",
           "tableTo": "permissions",
-          "columnsFrom": ["permission_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "permission_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -6485,8 +6973,12 @@
           "name": "user_roles_user_id_users_id_fk",
           "tableFrom": "user_roles",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -6494,8 +6986,12 @@
           "name": "user_roles_role_id_roles_id_fk",
           "tableFrom": "user_roles",
           "tableTo": "roles",
-          "columnsFrom": ["role_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -6690,8 +7186,12 @@
           "name": "users_tenant_id_tenants_id_fk",
           "tableFrom": "users",
           "tableTo": "tenants",
-          "columnsFrom": ["tenant_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "tenant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -6699,8 +7199,12 @@
           "name": "users_department_id_departments_id_fk",
           "tableFrom": "users",
           "tableTo": "departments",
-          "columnsFrom": ["department_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "department_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -6710,12 +7214,16 @@
         "users_username_unique": {
           "name": "users_username_unique",
           "nullsNotDistinct": false,
-          "columns": ["username"]
+          "columns": [
+            "username"
+          ]
         },
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": ["email"]
+          "columns": [
+            "email"
+          ]
         }
       },
       "policies": {},

@@ -1,5 +1,6 @@
 import { api } from 'encore.dev/api';
 import { busModelRepository } from '../bus-models/bus-models.repository';
+import { technologiesRepository } from '../technologies/technologies.repository';
 import type {
   Bus,
   CreateBusPayload,
@@ -11,9 +12,14 @@ import type {
   PaginatedListBusesResult,
   UpdateBusPayload,
 } from './buses.types';
-import { busRepository } from './buses.repository';
-import { validateBus } from './buses.domain';
 import {
+  AssignTechnologiesToBusPayload,
+  BusWithRelations,
+} from './buses.types';
+import { busRepository } from './buses.repository';
+import { validateBus, validateTechnologyAssignment } from './buses.domain';
+import {
+  assignTechnologiesToBus as assignTechnologiesToBusUseCase,
   createBusWithSeatDiagram,
   updateBusWithSeatDiagram,
 } from './buses.use-cases';
@@ -44,9 +50,11 @@ export const getBus = api(
   async ({ id }: { id: number }): Promise<ExtendedBusData> => {
     const bus = await busRepository.findOne(id);
     const busModel = await busModelRepository.findOne(bus.modelId);
+    const technologies = await technologiesRepository.findByBusId(bus.id);
     return {
       ...busModel,
       ...bus,
+      technologies,
     };
   },
 );
@@ -129,5 +137,29 @@ export const listBusValidNextStatuses = api(
   async ({ id }: { id: number }): Promise<ListBusStatusesResult> => {
     const statuses = await busRepository.getAllowedStatusTransitions(id);
     return { data: statuses };
+  },
+);
+
+/**
+ * Assigns technologies to a bus.
+ * This is a destructive operation that replaces existing technologies.
+ * @param params - Object containing the bus ID and technologies to assign
+ * @param params.id - The ID of the bus to assign technologies to
+ * @param params.technologyIds - Array of technology IDs to assign to the bus
+ * @returns {Promise<BusWithRelations>} The updated bus with its relations and assigned technologies
+ * @throws {APIError} If the bus is not found, validation fails, or assignment fails
+ */
+export const assignTechnologiesToBus = api(
+  { expose: true, method: 'POST', path: '/buses/:id/technologies/assign' },
+  async ({
+    id,
+    technologyIds,
+  }: AssignTechnologiesToBusPayload & {
+    id: number;
+  }): Promise<BusWithRelations> => {
+    await validateTechnologyAssignment(id, { technologyIds });
+    return await assignTechnologiesToBusUseCase(id, {
+      technologyIds,
+    });
   },
 );

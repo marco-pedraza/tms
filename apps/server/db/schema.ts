@@ -132,3 +132,9 @@ export {
   serviceTypeAmenities,
   serviceTypeAmenitiesRelations,
 } from '@/inventory/shared-entities/amenities/amenities.schema';
+
+export {
+  technologies,
+  busTechnologies,
+  busTechnologiesRelations,
+} from '@/inventory/fleet/technologies/technologies.schema';

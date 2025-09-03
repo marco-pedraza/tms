@@ -46,6 +46,22 @@ enum EngineType {
   OTHER = 'OTHER',
 }
 
+export enum SeatType {
+  REGULAR = 'regular',
+  PREMIUM = 'premium',
+  VIP = 'vip',
+  BUSINESS = 'business',
+  EXECUTIVE = 'executive',
+}
+
+export enum SpaceType {
+  SEAT = 'seat',
+  HALLWAY = 'hallway',
+  BATHROOM = 'bathroom',
+  EMPTY = 'empty',
+  STAIRS = 'stairs',
+}
+
 enum TimeOffType {
   VACATION = 'VACATION',
   LEAVE = 'LEAVE',
@@ -70,6 +86,11 @@ const busLicensePlateTypes = Object.values(BusLicensePlateType);
 const driverStatuses = Object.values(DriverStatus);
 const driverInitialStatuses = Object.values(DriverInitialStatus);
 const engineTypes = Object.values(EngineType);
+const seatTypes = Object.values(SeatType);
+const spaceTypes = Object.values(SpaceType);
+const spaceTypesWithoutSeat = spaceTypes.filter(
+  (type) => type !== SpaceType.SEAT,
+);
 const timeOffTypes = Object.values(TimeOffType);
 const medicalCheckResults = Object.values(MedicalCheckResult);
 const medicalCheckSources = Object.values(MedicalCheckSource);
@@ -87,6 +108,9 @@ export {
   driverInitialStatuses,
   EngineType,
   engineTypes,
+  seatTypes,
+  spaceTypes,
+  spaceTypesWithoutSeat,
   timeOffTypes,
   medicalCheckResults,
   medicalCheckSources,

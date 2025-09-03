@@ -481,7 +481,7 @@ export function validateSeatPositionLimits(
     }
 
     // Validate row number (position.y)
-    if (position.y < 1 || position.y > floorConfig.numRows) {
+    if (position.y < 0 || position.y > floorConfig.numRows - 1) {
       throw new ValidationError(
         BUS_SEAT_MODEL_VALIDATION_ERRORS.INVALID_ROW_NUMBER(
           position.y,

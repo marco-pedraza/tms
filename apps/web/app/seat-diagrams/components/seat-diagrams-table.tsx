@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl';
 import type { bus_diagram_models } from '@repo/ims-client';
-import AffirmationBadge from '@/components/affirmation-badge';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
 import IsActiveBadge from '@/components/is-active-badge';
@@ -32,15 +31,6 @@ const seatDiagramsColumnsFactory = ({
       header: tCommon('fields.name'),
       sortable: true,
       cell: ({ row }) => <div className="font-medium">{row.original.name}</div>,
-    },
-    {
-      accessorKey: 'description',
-      header: tCommon('fields.description'),
-      sortable: true,
-      cell: ({ row }) => {
-        const description = row.original.description;
-        return description || '-';
-      },
     },
     {
       accessorKey: 'maxCapacity',
@@ -85,15 +75,6 @@ const seatDiagramsColumnsFactory = ({
             })}
           </span>
         );
-      },
-    },
-    {
-      accessorKey: 'isFactoryDefault',
-      header: tSeatDiagrams('fields.isFactoryDefault'),
-      sortable: true,
-      cell: ({ row }) => {
-        const isFactoryDefault = row.original.isFactoryDefault;
-        return <AffirmationBadge value={isFactoryDefault} />;
       },
     },
     {

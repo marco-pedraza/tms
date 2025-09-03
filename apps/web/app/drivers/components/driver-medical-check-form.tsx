@@ -73,6 +73,7 @@ const createMedicalCheckFormSchema = (
       .string()
       .min(1, { message: tValidations('required') })
       .pipe(
+        // @ts-expect-error - zod enum is not typed correctly.
         z.enum(
           medicalCheckResults as [
             medical_checks.MedicalCheckResult,

@@ -41,7 +41,8 @@ const createAmenityFormSchema = (
             val as amenities.AmenityCategory,
           ),
         { message: tValidations('required') },
-      ),
+      )
+      .transform((val) => val as amenities.AmenityCategory),
     description: z.string().optional(),
     iconName: z.string().optional(),
     active: z.boolean().default(true),

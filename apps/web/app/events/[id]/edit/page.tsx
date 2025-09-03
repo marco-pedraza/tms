@@ -21,7 +21,10 @@ export default function EditEventPage() {
   const handleSubmit = (values: EventFormValues) => {
     return updateEvent.mutateWithToast({
       id: EventId,
-      values,
+      values: {
+        ...values,
+        description: values.description ?? undefined,
+      },
     });
   };
 
@@ -43,7 +46,7 @@ export default function EditEventPage() {
       <EventForm
         defaultValues={{
           ...data,
-          description: data.description ?? undefined,
+          description: data.description ?? '',
         }}
         onSubmit={handleSubmit}
       />

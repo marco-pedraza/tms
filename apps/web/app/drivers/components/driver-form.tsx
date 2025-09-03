@@ -81,6 +81,7 @@ const createDriverFormSchema = (
       .string()
       .min(1, { message: tValidations('required') })
       .pipe(
+        // @ts-expect-error - zod enum is not typed correctly.
         z.enum(
           (isEditing ? driverStatuses : driverInitialStatuses) as [
             drivers.DriverStatus,

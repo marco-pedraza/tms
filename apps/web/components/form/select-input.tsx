@@ -14,6 +14,7 @@ type OmittedSelectProps = 'id' | 'name' | 'value' | 'onChange' | 'aria-invalid';
 interface SelectItem {
   id: string;
   name: string;
+  hidden?: boolean;
 }
 
 interface SelectInputProps
@@ -62,7 +63,7 @@ export default function SelectInput({
             </SelectItem>
           )}
           {items.map((item) => (
-            <SelectItem key={item.id} value={item.id}>
+            <SelectItem key={item.id} value={item.id} hidden={item.hidden}>
               {item.name}
             </SelectItem>
           ))}

@@ -450,12 +450,12 @@ describe('Bus Diagram Models Controller', () => {
         seatsPerFloor: [
           {
             floorNumber: 1,
-            numRows: 3,
+            numRows: 4,
             seatsLeft: 2,
             seatsRight: 2,
           },
         ],
-        totalSeats: 12,
+        totalSeats: 16,
       });
 
       // Get the initial seats to work with their positions
@@ -520,7 +520,7 @@ describe('Bus Diagram Models Controller', () => {
       // All positions are existing seats being updated, no new seats created
       expect(updateResult.seatsCreated).toBe(0); // No new positions - all are updates
       expect(updateResult.seatsUpdated).toBe(4); // A1, original seat 2, NEW1, and NEW2
-      expect(updateResult.seatsDeactivated).toBe(8); // 8 seats not included in update payload
+      expect(updateResult.seatsDeactivated).toBe(12); // 12 seats not included in update payload
       expect(updateResult.totalActiveSeats).toBe(4); // 4 seats remain active after update
 
       // Query all seats after the operation to verify the complete result
@@ -531,7 +531,7 @@ describe('Bus Diagram Models Controller', () => {
           orderBy: [{ field: 'seatNumber', direction: 'asc' }],
         },
       );
-      expect(allSeats).toHaveLength(12); // Same 12 original seats (no new seats created)
+      expect(allSeats).toHaveLength(16); // Same 16 original seats (no new seats created)
 
       // Verify the updated seats in detail - filter only active SEAT space types
       const seatOnlyModels = await busSeatModelRepository.findAll({
@@ -729,17 +729,17 @@ describe('Bus Diagram Models Controller', () => {
         name: 'Flexible Seat Configuration Model',
         description:
           'Test model for aisle seats (vans, last row, foldable seats)',
-        maxCapacity: 15,
+        maxCapacity: 16,
         numFloors: 1,
         seatsPerFloor: [
           {
             floorNumber: 1,
-            numRows: 3,
+            numRows: 4,
             seatsLeft: 2,
             seatsRight: 2,
           },
         ],
-        totalSeats: 15,
+        totalSeats: 16,
       });
 
       // Test various aisle seat configurations
@@ -883,7 +883,7 @@ describe('Bus Diagram Models Controller', () => {
         seatsPerFloor: [
           {
             floorNumber: 1,
-            numRows: 6,
+            numRows: 7,
             seatsLeft: 2,
             seatsRight: 2,
           },
@@ -978,7 +978,7 @@ describe('Bus Diagram Models Controller', () => {
 
       // Verify parent models have correct number of seats and zones
       expect(parentModel1Seats).toHaveLength(32);
-      expect(parentModel2Seats).toHaveLength(24);
+      expect(parentModel2Seats).toHaveLength(28);
       expect(parentModel1Zones).toHaveLength(2); // Premium and Business
       expect(parentModel2Zones).toHaveLength(1); // VIP
 
@@ -1017,7 +1017,7 @@ describe('Bus Diagram Models Controller', () => {
           orderBy: [{ field: 'seatNumber', direction: 'asc' }],
         });
 
-        expect(childSeats).toHaveLength(24); // Same as parent2
+        expect(childSeats).toHaveLength(28); // Same as parent2
 
         // Compare each seat with corresponding parent seat
         for (let i = 0; i < parentModel2Seats.length; i++) {
@@ -1170,7 +1170,7 @@ describe('Bus Diagram Models Controller', () => {
         orderBy: [{ field: 'seatNumber', direction: 'asc' }],
       });
 
-      expect(unchangedSeats2B).toHaveLength(24); // Should still have original seat count
+      expect(unchangedSeats2B).toHaveLength(28); // Should still have original seat count
 
       // Should still match the ORIGINAL parent seats (before modification)
       for (let i = 0; i < parentModel2Seats.length; i++) {

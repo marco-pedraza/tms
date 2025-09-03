@@ -56,6 +56,7 @@ const createTimeOffFormSchema = (
       .string()
       .min(1, { message: tValidations('required') })
       .pipe(
+        // @ts-expect-error - zod enum is not typed correctly.
         z.enum(timeOffTypes as [TimeOffType, ...TimeOffType[]], {
           errorMap: () => ({ message: tValidations('required') }),
         }),

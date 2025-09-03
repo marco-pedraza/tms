@@ -4,6 +4,7 @@ import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
+import { optionalStringSchema } from '@/schemas/string';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
@@ -25,14 +26,17 @@ const createEventFormSchema = (
       .regex(/^(?![_-])[A-Z0-9_-]+(?<![_-])$/, {
         message: tValidations('code.alphanumeric'),
       }),
-    description: z.string().optional(),
-    baseTime: z.coerce.number().min(1, {
-      message: tValidations('greaterThanOrEquals', { value: 1 }),
-    }),
-    integration: z.boolean().optional(),
-    needsCost: z.boolean().optional(),
-    needsQuantity: z.boolean().optional(),
-    active: z.boolean().optional(),
+    description: optionalStringSchema(),
+    baseTime: z
+      .string()
+      .transform((val) => parseInt(val))
+      .refine((val) => !isNaN(val) && val >= 1, {
+        message: tValidations('greaterThanOrEquals', { value: 1 }),
+      }),
+    integration: z.boolean(),
+    needsCost: z.boolean(),
+    needsQuantity: z.boolean(),
+    active: z.boolean(),
   });
 
 export type EventFormValues = z.output<
@@ -53,7 +57,7 @@ export default function EventForm({ defaultValues, onSubmit }: EventFormProps) {
       name: '',
       code: '',
       description: '',
-      baseTime: 1,
+      baseTime: '',
       integration: false,
       needsCost: false,
       needsQuantity: false,
@@ -64,7 +68,11 @@ export default function EventForm({ defaultValues, onSubmit }: EventFormProps) {
     },
     onSubmit: async ({ value }) => {
       try {
-        await onSubmit(value);
+        const parsedValue =
+          createEventFormSchema(tValidations).safeParse(value);
+        if (parsedValue.success) {
+          await onSubmit(parsedValue.data);
+        }
       } catch (error: unknown) {
         injectTranslatedErrorsToForm({
           // @ts-expect-error - form param is not typed correctly.
@@ -110,7 +118,6 @@ export default function EventForm({ defaultValues, onSubmit }: EventFormProps) {
           {(field) => (
             <field.NumberInput
               label={tEvents('fields.baseTimeMinutes')}
-              allowDecimals={true}
               isRequired
               description={tEvents('details.baseTime')}
             />

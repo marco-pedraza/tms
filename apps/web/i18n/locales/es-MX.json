@@ -125,6 +125,7 @@
     "greaterThan": "El valor debe ser mayor a {value}.",
     "lessThanOrEquals": "El valor debe ser menor o igual a {value}.",
     "positive": "El valor debe ser un número positivo.",
+    "missingSeatDiagramSpaces": "Debes generar el diagrama de asientos.",
     "name": {
       "letters": "El nombre debe contener solo letras y espacios.",
       "nonWhitespace": "El nombre no puede contener solo espacios en blanco."
@@ -1610,7 +1611,11 @@
       "floors": "{count} {count, plural, one {piso} other {pisos}}",
       "seats": "{count} {count, plural, one {asiento} other {asientos}}",
       "passengers": "{count} {count, plural, one {pasajero} other {pasajeros}}",
-      "floor": "Piso {floorNumber}"
+      "floor": "Piso {floorNumber}",
+      "spaceType": "Tipo de Espacio",
+      "seatType": "Tipo de Asiento",
+      "seatNumber": "Número de Asiento",
+      "disableSpace": "Desactivar Espacio"
     },
     "sections": {
       "generalConfiguration": "Configuración general",
@@ -1631,9 +1636,29 @@
         "numFloors": "1 piso",
         "numRows": "10 filas",
         "maxCapacity": "Ej: 45",
-        "totalSeats": "Ej: 40"
+        "totalSeats": "Ej: 40",
+        "emptyQuickConfig": "Rellena la configuración rápida y presiona: Generar Diagrama",
+        "seatTypes": "Asiento {seatType, select, regular {Regular} premium {Premium} vip {VIP} business {Business} executive {Ejecutivo} other {}}",
+        "selectSpace": "Selecciona un espacio",
+        "editSpace": "Editar Espacio",
+        "spaceType": "Selecciona el tipo de espacio",
+        "seatType": "Selecciona uno",
+        "seatNumber": "Ej: 1A"
       },
-      "helpText": "Se generará un diagrama rápido, el cual se podrá modificar y configurar a detalle. Al presionar Generar se reemplazarán las configuraciones personalizadas."
+      "seatTypes": {
+        "regular": "Regular",
+        "premium": "Premium",
+        "vip": "VIP",
+        "business": "Business",
+        "executive": "Ejecutivo"
+      },
+      "spaceTypes": {
+        "seat": "Asiento",
+        "bathroom": "Baño",
+        "stairs": "Escalera",
+        "empty": "Espacio Vacío",
+        "hallway": "Pasillo"
+      }
     },
     "details": {
       "description": "Detalles del diagrama de asientos"
@@ -1662,6 +1687,11 @@
         "loading": "Eliminando diagrama de asientos...",
         "success": "Diagrama de asientos eliminado correctamente",
         "error": "No pudimos eliminar el diagrama de asientos"
+      },
+      "updateSeatConfiguration": {
+        "loading": "Actualizando configuración de asientos...",
+        "success": "Configuración de asientos actualizada correctamente",
+        "error": "No pudimos actualizar la configuración de asientos"
       }
     }
   }

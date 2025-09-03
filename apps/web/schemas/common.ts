@@ -37,8 +37,3 @@ export function codeSchema(
       message: tValidations('code.uppercase'),
     });
 }
-
-export const phoneSchema = z
-  .string()
-  .regex(/^\+[1-9][\d\s()-]{1,20}$/)
-  .optional();

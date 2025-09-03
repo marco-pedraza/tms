@@ -160,6 +160,7 @@
     "phone": {
       "invalid": "El teléfono no es válido."
     },
+    "atLeastOneSeat": "Debe haber al menos un asiento (izquierdo o derecho).",
     "server": {
       "duplicate": "Ya existe un registro de {entity} con {property}: \"{value}\".",
       "invalid_format": "Formato inválido en el campo {fieldName}.",
@@ -1591,11 +1592,15 @@
     "actions": {
       "create": "Crear Diagrama de Asientos",
       "update": "Actualizar Diagrama de Asientos",
-      "backToList": "Volver a diagramas de asientos"
+      "backToList": "Volver a diagramas de asientos",
+      "generateDiagram": "Generar diagrama",
+      "addFloor": "Agregar Piso"
     },
     "fields": {
+      "name": "Nombre del Diagrama",
+      "description": "Descripción del Diagrama",
       "maxCapacity": "Capacidad Máxima",
-      "numFloors": "Número de Pisos",
+      "numFloors": "Número de pisos",
       "totalSeats": "Total de Asientos",
       "isFactoryDefault": "Plantilla de Fábrica",
       "seatsPerFloor": "Asientos por Piso",
@@ -1607,21 +1612,28 @@
       "passengers": "{count} {count, plural, one {pasajero} other {pasajeros}}",
       "floor": "Piso {floorNumber}"
     },
+    "sections": {
+      "generalConfiguration": "Configuración general",
+      "quickConfiguration": "Configuración rápida",
+      "seatsConfiguration": "Configuración de asientos"
+    },
+    "pages": {
+      "new": {
+        "title": "Nuevo Diagrama de Asientos",
+        "subtitle": "Crear nuevo diagrama de asientos para los autobuses"
+      }
+    },
     "form": {
       "title": "Información del diagrama de asientos",
       "placeholders": {
-        "name": "Ej: Diagrama Ejecutivo 2 Pisos",
-        "description": "Descripción opcional del diagrama",
+        "name": "Nombre",
+        "description": "Descripción",
+        "numFloors": "1 piso",
+        "numRows": "10 filas",
         "maxCapacity": "Ej: 45",
-        "numFloors": "Ej: 2",
         "totalSeats": "Ej: 40"
       },
-      "helpText": {
-        "isFactoryDefault": "Indica si este es un diagrama predeterminado de fábrica",
-        "maxCapacity": "Capacidad máxima de pasajeros del autobús",
-        "numFloors": "Número de pisos del autobús",
-        "totalSeats": "Número total de asientos disponibles"
-      }
+      "helpText": "Se generará un diagrama rápido, el cual se podrá modificar y configurar a detalle. Al presionar Generar se reemplazarán las configuraciones personalizadas."
     },
     "details": {
       "description": "Detalles del diagrama de asientos"

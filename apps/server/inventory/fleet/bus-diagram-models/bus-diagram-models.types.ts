@@ -58,7 +58,7 @@ export interface CreateBusDiagramModelPayload {
   /**
    * Description of the bus diagram model
    */
-  description?: string;
+  description?: string | null;
 
   /**
    * Maximum capacity
@@ -108,7 +108,7 @@ export interface UpdateBusDiagramModelPayload {
   /**
    * Description of the bus diagram model
    */
-  description?: string;
+  description?: string | null;
 
   /**
    * Maximum capacity

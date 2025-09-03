@@ -2396,7 +2396,7 @@ export namespace inventory {
     /**
      * Description of the bus diagram model
      */
-    description?: string
+    description?: string | null
 
     /**
      * Maximum capacity
@@ -5605,7 +5605,7 @@ export namespace bus_diagram_models {
         /**
          * Description of the bus diagram model
          */
-        description?: string
+        description?: string | null
 
         /**
          * Maximum capacity

@@ -107,6 +107,7 @@ export default function BusModelForm({
   onSubmit,
 }: BusModelFormProps) {
   const tBusModels = useTranslations('busModels');
+  const tSeatDiagrams = useTranslations('seatDiagrams');
   const tCommon = useTranslations('common');
   const tValidations = useTranslations('validations');
   const busModelSchema = createBusModelFormSchema(tValidations);
@@ -168,7 +169,7 @@ export default function BusModelForm({
   });
 
   return (
-    <div className="max-w-7xl">
+    <Form onSubmit={form.handleSubmit}>
       <Tabs defaultValue="info">
         <TabsList className="w-full">
           <TabsTrigger value="info">{tBusModels('sections.info')}</TabsTrigger>
@@ -180,140 +181,105 @@ export default function BusModelForm({
           </TabsTrigger>
         </TabsList>
         <TabsContent value="info">
-          <Form onSubmit={form.handleSubmit}>
-            <FormLayout title={tBusModels('form.title')}>
-              <form.AppField name="manufacturer">
-                {(field) => (
-                  <field.TextInput
-                    label={tBusModels('fields.manufacturer')}
-                    placeholder={tBusModels('form.placeholders.manufacturer')}
-                    isRequired
-                  />
-                )}
-              </form.AppField>
+          <FormLayout title={tBusModels('form.title')}>
+            <form.AppField name="manufacturer">
+              {(field) => (
+                <field.TextInput
+                  label={tBusModels('fields.manufacturer')}
+                  placeholder={tBusModels('form.placeholders.manufacturer')}
+                  isRequired
+                />
+              )}
+            </form.AppField>
 
-              <form.AppField name="model">
-                {(field) => (
-                  <field.TextInput
-                    label={tBusModels('fields.model')}
-                    placeholder={tBusModels('form.placeholders.model')}
-                    isRequired
-                  />
-                )}
-              </form.AppField>
+            <form.AppField name="model">
+              {(field) => (
+                <field.TextInput
+                  label={tBusModels('fields.model')}
+                  placeholder={tBusModels('form.placeholders.model')}
+                  isRequired
+                />
+              )}
+            </form.AppField>
 
-              <form.AppField name="year">
-                {(field) => (
-                  <field.TextInput
-                    label={tBusModels('fields.year')}
-                    placeholder={tBusModels('form.placeholders.year')}
-                    isRequired
-                  />
-                )}
-              </form.AppField>
-              <form.AppField name="seatingCapacity">
-                {(field) => (
-                  <field.NumberInput
-                    label={tBusModels('fields.seatingCapacity')}
-                    placeholder={tBusModels(
-                      'form.placeholders.seatingCapacity',
-                    )}
-                    isRequired
-                  />
-                )}
-              </form.AppField>
+            <form.AppField name="year">
+              {(field) => (
+                <field.TextInput
+                  label={tBusModels('fields.year')}
+                  placeholder={tBusModels('form.placeholders.year')}
+                  isRequired
+                />
+              )}
+            </form.AppField>
+            <form.AppField name="seatingCapacity">
+              {(field) => (
+                <field.NumberInput
+                  label={tBusModels('fields.seatingCapacity')}
+                  placeholder={tBusModels('form.placeholders.seatingCapacity')}
+                  isRequired
+                />
+              )}
+            </form.AppField>
 
-              <form.AppField name="trunkCapacity">
-                {(field) => (
-                  <field.NumberInput
-                    label={tBusModels('fields.trunkCapacity')}
-                    placeholder={tBusModels('form.placeholders.trunkCapacity')}
-                  />
-                )}
-              </form.AppField>
+            <form.AppField name="trunkCapacity">
+              {(field) => (
+                <field.NumberInput
+                  label={tBusModels('fields.trunkCapacity')}
+                  placeholder={tBusModels('form.placeholders.trunkCapacity')}
+                />
+              )}
+            </form.AppField>
 
-              <form.AppField name="fuelEfficiency">
-                {(field) => (
-                  <field.NumberInput
-                    label={tBusModels('fields.fuelEfficiency')}
-                    placeholder={tBusModels('form.placeholders.fuelEfficiency')}
-                  />
-                )}
-              </form.AppField>
+            <form.AppField name="fuelEfficiency">
+              {(field) => (
+                <field.NumberInput
+                  label={tBusModels('fields.fuelEfficiency')}
+                  placeholder={tBusModels('form.placeholders.fuelEfficiency')}
+                />
+              )}
+            </form.AppField>
 
-              <form.AppField name="maxCapacity">
-                {(field) => (
-                  <field.NumberInput
-                    label={tBusModels('fields.maxCapacity')}
-                    placeholder={tBusModels('form.placeholders.maxCapacity')}
-                  />
-                )}
-              </form.AppField>
+            <form.AppField name="maxCapacity">
+              {(field) => (
+                <field.NumberInput
+                  label={tBusModels('fields.maxCapacity')}
+                  placeholder={tBusModels('form.placeholders.maxCapacity')}
+                />
+              )}
+            </form.AppField>
 
-              <form.AppField name="numFloors">
-                {(field) => (
-                  <field.NumberInput
-                    label={tBusModels('fields.numFloors')}
-                    placeholder={tBusModels('form.placeholders.numFloors')}
-                    isRequired
-                  />
-                )}
-              </form.AppField>
+            <form.AppField name="numFloors">
+              {(field) => (
+                <field.NumberInput
+                  label={tBusModels('fields.numFloors')}
+                  placeholder={tBusModels('form.placeholders.numFloors')}
+                  isRequired
+                />
+              )}
+            </form.AppField>
 
-              <form.AppField name="engineType">
-                {(field) => (
-                  <field.SelectInput
-                    label={tBusModels('fields.engineType')}
-                    placeholder={tBusModels('form.placeholders.engineType')}
-                    items={engineTypes.map((type) => ({
-                      id: type,
-                      name: tBusModels(
-                        `engineTypes.${busEngineTypeTranslationKeys[type]}`,
-                      ),
-                    }))}
-                    isRequired
-                  />
-                )}
-              </form.AppField>
+            <form.AppField name="engineType">
+              {(field) => (
+                <field.SelectInput
+                  label={tBusModels('fields.engineType')}
+                  placeholder={tBusModels('form.placeholders.engineType')}
+                  items={engineTypes.map((type) => ({
+                    id: type,
+                    name: tBusModels(
+                      `engineTypes.${busEngineTypeTranslationKeys[type]}`,
+                    ),
+                  }))}
+                  isRequired
+                />
+              )}
+            </form.AppField>
 
-              <form.AppField name="defaultBusDiagramModelId">
-                {(field) => (
-                  <field.SelectInput
-                    label={tBusModels('fields.busDiagramModel')}
-                    placeholder={tBusModels(
-                      'form.placeholders.busDiagramModel',
-                    )}
-                    emptyOptionsLabel={tBusModels(
-                      'form.placeholders.emptyOptionsLabel',
-                    )}
-                    items={
-                      busDiagrams?.data.map((diagram) => ({
-                        id: diagram.id.toString(),
-                        name: diagram.name,
-                      })) || []
-                    }
-                    isRequired
-                  />
-                )}
-              </form.AppField>
-
-              <form.AppField name="active">
-                {(field) => (
-                  <field.SwitchInput label={tCommon('fields.active')} />
-                )}
-              </form.AppField>
-
-              <FormFooter>
-                <form.AppForm>
-                  <form.SubmitButton>
-                    {defaultValues
-                      ? tBusModels('actions.update')
-                      : tBusModels('actions.create')}
-                  </form.SubmitButton>
-                </form.AppForm>
-              </FormFooter>
-            </FormLayout>
-          </Form>
+            <form.AppField name="active">
+              {(field) => (
+                <field.SwitchInput label={tCommon('fields.active')} />
+              )}
+            </form.AppField>
+          </FormLayout>
         </TabsContent>
         <TabsContent value="amenities">
           <Card>
@@ -328,10 +294,71 @@ export default function BusModelForm({
             <CardHeader>
               <CardTitle>{tBusModels('sections.diagram')}</CardTitle>
             </CardHeader>
-            <CardContent></CardContent>
+            <CardContent>
+              <form.AppField name="defaultBusDiagramModelId">
+                {(field) => {
+                  const seatDiagram = busDiagrams?.data.find(
+                    (diagram) => diagram.id.toString() === field.state.value,
+                  );
+                  return (
+                    <>
+                      <field.SelectInput
+                        label={tBusModels('fields.busDiagramModel')}
+                        placeholder={tBusModels(
+                          'form.placeholders.busDiagramModel',
+                        )}
+                        emptyOptionsLabel={tBusModels(
+                          'form.placeholders.emptyOptionsLabel',
+                        )}
+                        items={
+                          busDiagrams?.data.map((diagram) => ({
+                            id: diagram.id.toString(),
+                            name: diagram.name,
+                          })) || []
+                        }
+                        isRequired
+                      />
+                      {seatDiagram && (
+                        <div className="space-y-4 pt-4">
+                          {seatDiagram.seatsPerFloor.map((floor) => (
+                            <div
+                              key={floor.floorNumber}
+                              className="border rounded-lg p-4"
+                            >
+                              <h4 className="font-medium mb-2">
+                                {tSeatDiagrams('fields.floor', {
+                                  floorNumber: floor.floorNumber,
+                                })}
+                              </h4>
+                              <dl className="grid grid-cols-[1fr_1fr] gap-2 text-sm">
+                                <dt>{tSeatDiagrams('fields.numRows')}:</dt>
+                                <dd>{floor.numRows || '-'}</dd>
+                                <dt>{tSeatDiagrams('fields.seatsLeft')}:</dt>
+                                <dd>{floor.seatsLeft || '-'}</dd>
+                                <dt>{tSeatDiagrams('fields.seatsRight')}:</dt>
+                                <dd>{floor.seatsRight || '-'}</dd>
+                              </dl>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  );
+                }}
+              </form.AppField>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      <FormFooter>
+        <form.AppForm>
+          <form.SubmitButton>
+            {defaultValues
+              ? tBusModels('actions.update')
+              : tBusModels('actions.create')}
+          </form.SubmitButton>
+        </form.AppForm>
+      </FormFooter>
+    </Form>
   );
 }

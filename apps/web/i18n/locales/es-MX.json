@@ -1423,7 +1423,8 @@
       "basicInfo": "Información Básica",
       "modelInfo": "Información del Modelo y Fabricante",
       "technicalInfo": "Información Técnica",
-      "maintenanceInfo": "Información de Mantenimiento"
+      "maintenanceInfo": "Información de Mantenimiento",
+      "seatDiagram": "Diagrama de Asientos"
     },
     "edit": {
       "title": "Editar Autobús"
@@ -1465,7 +1466,8 @@
       "transporter": "Transportista",
       "alternateTransporter": "Transportista Alterno",
       "busLine": "Línea",
-      "base": "Base"
+      "base": "Base",
+      "seatDiagram": "Diagrama de Asientos"
     },
     "form": {
       "placeholders": {
@@ -1491,6 +1493,7 @@
         "alternateTransporter": "Selecciona el Transportista Alterno",
         "busLine": "Selecciona la Línea",
         "base": "Selecciona la Base",
+        "seatDiagram": "Selecciona el Diagrama de Asientos",
         "emptyOptionsLabel": "No hay opciones disponibles"
       }
     },

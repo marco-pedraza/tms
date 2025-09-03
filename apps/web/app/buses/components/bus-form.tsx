@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { buses } from '@repo/ims-client';
+import useQueryAllSeatDiagrams from '@/app/seat-diagrams/hooks/use-query-all-seat-diagrams';
 import useQueryAllBusLines from '@/bus-lines/hooks/use-query-all-bus-lines';
 import useQueryAllBusModels from '@/bus-models/hooks/use-query-all-bus-models';
 import busLicensePlateTypesTranslationKeys from '@/buses/translations/bus-license-plate-types-translations-keys';
@@ -10,6 +11,7 @@ import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
 import useQueryAllNodes from '@/nodes/hooks/use-query-all-nodes';
+import { requiredIntegerSchema } from '@/schemas/number';
 import {
   BusStatus,
   busLicensePlateTypes,
@@ -67,6 +69,8 @@ const createBusFormSchema = (tValidations: UseValidationsTranslationsResult) =>
       .string()
       .min(1, { message: tValidations('required') })
       .transform((val) => parseInt(val)),
+    // Seat diagram
+    seatDiagramId: requiredIntegerSchema(tValidations),
     // Technical information
     vehicleId: z
       .string()
@@ -120,6 +124,7 @@ export default function BusForm({
 }: BusFormProps) {
   const tCommon = useTranslations('common');
   const tBuses = useTranslations('buses');
+  const tSeatDiagrams = useTranslations('seatDiagrams');
   const tValidations = useTranslations('validations');
   const busSchema = createBusFormSchema(tValidations);
 
@@ -144,6 +149,7 @@ export default function BusForm({
         gpsId: defaultValues.gpsId || '',
         lastMaintenanceDate: defaultValues.lastMaintenanceDate || '',
         nextMaintenanceDate: defaultValues.nextMaintenanceDate || '',
+        seatDiagramId: defaultValues.seatDiagramId?.toString() || '',
       }
     : {
         economicNumber: '',
@@ -171,6 +177,7 @@ export default function BusForm({
         gpsId: '',
         lastMaintenanceDate: '',
         nextMaintenanceDate: '',
+        seatDiagramId: '',
         active: true,
       };
 
@@ -197,6 +204,7 @@ export default function BusForm({
     },
   });
   const { data: busModels } = useQueryAllBusModels();
+  const { data: seatDiagrams } = useQueryAllSeatDiagrams();
   const { data: transporters } = useQueryAllTransporters();
   const { data: busLines } = useQueryAllBusLines();
   const { data: nodes } = useQueryAllNodes();
@@ -341,11 +349,31 @@ export default function BusForm({
 
       <div className="pt-4">
         <FormLayout title={tBuses('sections.modelInfo')}>
-          <form.AppField name="modelId">
+          <form.AppField
+            name="modelId"
+            listeners={{
+              onChange: (field) => {
+                const model = busModels?.data.find(
+                  (model) => model.id.toString() === field.value,
+                );
+                if (model) {
+                  if (model.defaultBusDiagramModelId) {
+                    form.setFieldValue(
+                      'seatDiagramId',
+                      model.defaultBusDiagramModelId.toString(),
+                    );
+                  }
+                }
+              },
+            }}
+          >
             {(field) => (
               <field.SelectInput
                 label={tBuses('fields.model')}
                 placeholder={tBuses('form.placeholders.model')}
+                emptyOptionsLabel={tBuses(
+                  'form.placeholders.emptyOptionsLabel',
+                )}
                 items={
                   busModels?.data.map(
                     (model: { id: number; model: string }) => ({
@@ -478,6 +506,61 @@ export default function BusForm({
                 type="date"
               />
             )}
+          </form.AppField>
+        </FormLayout>
+      </div>
+
+      <div className="pt-4">
+        <FormLayout title={tBuses('sections.seatDiagram')}>
+          <form.AppField name="seatDiagramId">
+            {(field) => {
+              const seatDiagram = seatDiagrams?.data.find(
+                (seatDiagram) =>
+                  seatDiagram.id.toString() === field.state.value,
+              );
+              return (
+                <>
+                  <field.SelectInput
+                    label={tBuses('fields.seatDiagram')}
+                    placeholder={tBuses('form.placeholders.seatDiagram')}
+                    emptyOptionsLabel={tBuses(
+                      'form.placeholders.emptyOptionsLabel',
+                    )}
+                    isRequired
+                    items={
+                      seatDiagrams?.data.map((seatDiagram) => ({
+                        id: seatDiagram.id.toString(),
+                        name: seatDiagram.name,
+                      })) || []
+                    }
+                  />
+                  {seatDiagram && (
+                    <div className="space-y-4 pt-4">
+                      {seatDiagram.seatsPerFloor.map((floor) => (
+                        <div
+                          key={floor.floorNumber}
+                          className="border rounded-lg p-4"
+                        >
+                          <h4 className="font-medium mb-2">
+                            {tSeatDiagrams('fields.floor', {
+                              floorNumber: floor.floorNumber,
+                            })}
+                          </h4>
+                          <dl className="grid grid-cols-[1fr_1fr] gap-2 text-sm">
+                            <dt>{tSeatDiagrams('fields.numRows')}:</dt>
+                            <dd>{floor.numRows || '-'}</dd>
+                            <dt>{tSeatDiagrams('fields.seatsLeft')}:</dt>
+                            <dd>{floor.seatsLeft || '-'}</dd>
+                            <dt>{tSeatDiagrams('fields.seatsRight')}:</dt>
+                            <dd>{floor.seatsRight || '-'}</dd>
+                          </dl>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            }}
           </form.AppField>
         </FormLayout>
       </div>

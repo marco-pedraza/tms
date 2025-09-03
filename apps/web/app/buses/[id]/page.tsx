@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import useQuerySeatDiagram from '@/app/seat-diagrams/hooks/use-query-seat-diagram';
 import BusSkeleton from '@/buses/components/bus-skeleton';
 import BusStatusBadge from '@/buses/components/bus-status-badge';
 import useBusMutations from '@/buses/hooks/use-bus-mutations';
@@ -19,10 +20,15 @@ import busLicensePlateTypesTranslationKeys from '../translations/bus-license-pla
 export default function BusDetailsPage() {
   const tBuses = useTranslations('buses');
   const tCommon = useTranslations('common');
+  const tSeatDiagrams = useTranslations('seatDiagrams');
   const { itemId: busId, isValidId } = useCollectionItemDetailsParams();
   const { data: bus, isLoading } = useQueryBus({
     busId,
     enabled: isValidId,
+  });
+  const { data: seatDiagram } = useQuerySeatDiagram({
+    itemId: bus?.seatDiagramId ?? 0,
+    enabled: !!bus?.seatDiagramId,
   });
   const { delete: deleteBus } = useBusMutations();
   const { deleteId, setDeleteId, onConfirmDelete, onCancelDelete } =
@@ -251,6 +257,39 @@ export default function BusDetailsPage() {
                 : '-'}
             </dd>
           </dl>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>{tBuses('sections.seatDiagram')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {seatDiagram && (
+            <div className="space-y-4 pt-4">
+              <dl>
+                <dt className="font-medium">{tSeatDiagrams('fields.name')}:</dt>
+                <dd>{seatDiagram.name}</dd>
+              </dl>
+              {seatDiagram.seatsPerFloor.map((floor) => (
+                <div key={floor.floorNumber} className="border rounded-lg p-4">
+                  <h4 className="font-medium mb-2">
+                    {tSeatDiagrams('fields.floor', {
+                      floorNumber: floor.floorNumber,
+                    })}
+                  </h4>
+                  <dl className="grid grid-cols-[1fr_1fr] gap-2 text-sm">
+                    <dt>{tSeatDiagrams('fields.numRows')}:</dt>
+                    <dd>{floor.numRows ?? '-'}</dd>
+                    <dt>{tSeatDiagrams('fields.seatsLeft')}:</dt>
+                    <dd>{floor.seatsLeft ?? '-'}</dd>
+                    <dt>{tSeatDiagrams('fields.seatsRight')}:</dt>
+                    <dd>{floor.seatsRight ?? '-'}</dd>
+                  </dl>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 

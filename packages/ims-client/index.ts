@@ -109,6 +109,7 @@ export namespace inventory {
             this.createBusDiagramModelZone = this.createBusDiagramModelZone.bind(this)
             this.createBusLine = this.createBusLine.bind(this)
             this.createBusModel = this.createBusModel.bind(this)
+            this.createChromatic = this.createChromatic.bind(this)
             this.createCity = this.createCity.bind(this)
             this.createCountry = this.createCountry.bind(this)
             this.createDriver = this.createDriver.bind(this)
@@ -133,6 +134,7 @@ export namespace inventory {
             this.deleteBusDiagramModelZone = this.deleteBusDiagramModelZone.bind(this)
             this.deleteBusLine = this.deleteBusLine.bind(this)
             this.deleteBusModel = this.deleteBusModel.bind(this)
+            this.deleteChromatic = this.deleteChromatic.bind(this)
             this.deleteCity = this.deleteCity.bind(this)
             this.deleteCountry = this.deleteCountry.bind(this)
             this.deleteDriver = this.deleteDriver.bind(this)
@@ -158,6 +160,7 @@ export namespace inventory {
             this.getBusDiagramModelZone = this.getBusDiagramModelZone.bind(this)
             this.getBusLine = this.getBusLine.bind(this)
             this.getBusModel = this.getBusModel.bind(this)
+            this.getChromatic = this.getChromatic.bind(this)
             this.getCity = this.getCity.bind(this)
             this.getCountry = this.getCountry.bind(this)
             this.getDriver = this.getDriver.bind(this)
@@ -194,6 +197,8 @@ export namespace inventory {
             this.listBusValidNextStatuses = this.listBusValidNextStatuses.bind(this)
             this.listBuses = this.listBuses.bind(this)
             this.listBusesPaginated = this.listBusesPaginated.bind(this)
+            this.listChromatics = this.listChromatics.bind(this)
+            this.listChromaticsPaginated = this.listChromaticsPaginated.bind(this)
             this.listCities = this.listCities.bind(this)
             this.listCitiesPaginated = this.listCitiesPaginated.bind(this)
             this.listCountries = this.listCountries.bind(this)
@@ -244,6 +249,7 @@ export namespace inventory {
             this.updateBusDiagramModelZone = this.updateBusDiagramModelZone.bind(this)
             this.updateBusLine = this.updateBusLine.bind(this)
             this.updateBusModel = this.updateBusModel.bind(this)
+            this.updateChromatic = this.updateChromatic.bind(this)
             this.updateCity = this.updateCity.bind(this)
             this.updateCountry = this.updateCountry.bind(this)
             this.updateDriver = this.updateDriver.bind(this)
@@ -530,6 +536,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/bus-models/create`, JSON.stringify(params))
             return await resp.json() as bus_models.BusModel
+        }
+
+        /**
+         * Creates a new chromatic.
+         * @param params - The chromatic data to create
+         * @returns {Promise<Chromatic>} The created chromatic
+         * @throws {APIError} If the chromatic creation fails
+         */
+        public async createChromatic(params: chromatics.CreateChromaticPayload): Promise<chromatics.Chromatic> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/chromatics/create`, JSON.stringify(params))
+            return await resp.json() as chromatics.Chromatic
         }
 
         /**
@@ -838,6 +856,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/bus-models/${encodeURIComponent(id)}/delete`)
             return await resp.json() as bus_models.BusModel
+        }
+
+        /**
+         * Deletes a chromatic by its ID.
+         * @param params - Object containing the chromatic ID
+         * @param params.id - The ID of the chromatic to delete
+         * @returns {Promise<Chromatic>} The deleted chromatic
+         * @throws {APIError} If the chromatic is not found or deletion fails
+         */
+        public async deleteChromatic(id: number): Promise<chromatics.Chromatic> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/chromatics/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as chromatics.Chromatic
         }
 
         /**
@@ -1155,6 +1186,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/bus-models/${encodeURIComponent(id)}`)
             return await resp.json() as bus_models.BusModel
+        }
+
+        /**
+         * Retrieves a chromatic by its ID.
+         * @param params - Object containing the chromatic ID
+         * @param params.id - The ID of the chromatic to retrieve
+         * @returns {Promise<Chromatic>} The found chromatic
+         * @throws {APIError} If the chromatic is not found or retrieval fails
+         */
+        public async getChromatic(id: number): Promise<chromatics.Chromatic> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/chromatics/${encodeURIComponent(id)}`)
+            return await resp.json() as chromatics.Chromatic
         }
 
         /**
@@ -1609,6 +1653,30 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/buses/list`, JSON.stringify(params))
             return await resp.json() as buses.PaginatedListBusesResult
+        }
+
+        /**
+         * Retrieves all chromatics without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListChromaticsResult>} Unified response with data property containing array of chromatics
+         * @throws {APIError} If retrieval fails
+         */
+        public async listChromatics(params: chromatics.ListChromaticsQueryParams): Promise<chromatics.ListChromaticsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/chromatics/list/all`, JSON.stringify(params))
+            return await resp.json() as chromatics.ListChromaticsResult
+        }
+
+        /**
+         * Retrieves chromatics with pagination (useful for tables).
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListChromaticsResult>} Unified paginated response with data and pagination properties
+         * @throws {APIError} If retrieval fails
+         */
+        public async listChromaticsPaginated(params: chromatics.PaginatedListChromaticsQueryParams): Promise<chromatics.PaginatedListChromaticsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/chromatics/list`, JSON.stringify(params))
+            return await resp.json() as chromatics.PaginatedListChromaticsResult
         }
 
         /**
@@ -2369,6 +2437,11 @@ export namespace inventory {
     seatDiagramId?: number
 
     /**
+     * Chromatic
+     */
+    chromaticId?: number | null
+
+    /**
      * System information
      */
     active?: boolean
@@ -2622,6 +2695,40 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/bus-models/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as bus_models.BusModel
+        }
+
+        /**
+         * Updates an existing chromatic.
+         * @param params - Object containing the chromatic ID and update data
+         * @param params.id - The ID of the chromatic to update
+         * @returns {Promise<Chromatic>} The updated chromatic
+         * @throws {APIError} If the chromatic is not found or update fails
+         */
+        public async updateChromatic(id: number, params: {
+    /**
+     * Name of the chromatic
+     * Must have at least 1 non-whitespace character
+     */
+    name?: string
+
+    /**
+     * URL of the chromatic image
+     */
+    imageUrl?: string | null
+
+    /**
+     * Description of the chromatic
+     */
+    description?: string | null
+
+    /**
+     * Whether the chromatic is active/available
+     */
+    active?: boolean
+}): Promise<chromatics.Chromatic> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/chromatics/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as chromatics.Chromatic
         }
 
         /**
@@ -6968,6 +7075,11 @@ export namespace buses {
         seatDiagramId: number
 
         /**
+         * Chromatic
+         */
+        chromaticId: number | null
+
+        /**
          * System information
          */
         active: boolean
@@ -6989,6 +7101,7 @@ export namespace buses {
         busLine?: bus_lines.BusLine | null
         base?: nodes.Node | null
         technologies: technologies.Technology[]
+        chromatic?: chromatics.Chromatic | null
         /**
          * Basic information
          */
@@ -7035,6 +7148,11 @@ export namespace buses {
          * Seat Diagram
          */
         seatDiagramId: number
+
+        /**
+         * Chromatic
+         */
+        chromaticId: number | null
 
         /**
          * System information
@@ -7088,6 +7206,11 @@ export namespace buses {
          * Seat Diagram
          */
         seatDiagramId: number
+
+        /**
+         * Chromatic
+         */
+        chromaticId?: number | null
 
         /**
          * System information
@@ -7151,6 +7274,11 @@ export namespace buses {
         seatDiagramId: number
 
         /**
+         * Chromatic
+         */
+        chromaticId: number | null
+
+        /**
          * System information
          */
         active: boolean
@@ -7166,7 +7294,7 @@ export namespace buses {
 
     export interface ListBusesQueryParams {
         orderBy?: {
-            field: "id" | "economicNumber" | "registrationNumber" | "licensePlateType" | "licensePlateNumber" | "circulationCard" | "availableForTourismOnly" | "status" | "transporterId" | "alternateTransporterId" | "busLineId" | "baseId" | "purchaseDate" | "expirationDate" | "erpClientNumber" | "modelId" | "vehicleId" | "serialNumber" | "engineNumber" | "chassisNumber" | "grossVehicleWeight" | "sctPermit" | "currentKilometer" | "gpsId" | "lastMaintenanceDate" | "nextMaintenanceDate" | "seatDiagramId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            field: "id" | "economicNumber" | "registrationNumber" | "licensePlateType" | "licensePlateNumber" | "circulationCard" | "availableForTourismOnly" | "status" | "transporterId" | "alternateTransporterId" | "busLineId" | "baseId" | "purchaseDate" | "expirationDate" | "erpClientNumber" | "modelId" | "vehicleId" | "serialNumber" | "engineNumber" | "chassisNumber" | "grossVehicleWeight" | "sctPermit" | "currentKilometer" | "gpsId" | "lastMaintenanceDate" | "nextMaintenanceDate" | "seatDiagramId" | "chromaticId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -7197,6 +7325,7 @@ export namespace buses {
             lastMaintenanceDate?: string | null
             nextMaintenanceDate?: string | null
             seatDiagramId?: number
+            chromaticId?: number | null
             active?: boolean
             createdAt?: string | string
             updatedAt?: string | string
@@ -7213,7 +7342,7 @@ export namespace buses {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "economicNumber" | "registrationNumber" | "licensePlateType" | "licensePlateNumber" | "circulationCard" | "availableForTourismOnly" | "status" | "transporterId" | "alternateTransporterId" | "busLineId" | "baseId" | "purchaseDate" | "expirationDate" | "erpClientNumber" | "modelId" | "vehicleId" | "serialNumber" | "engineNumber" | "chassisNumber" | "grossVehicleWeight" | "sctPermit" | "currentKilometer" | "gpsId" | "lastMaintenanceDate" | "nextMaintenanceDate" | "seatDiagramId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            field: "id" | "economicNumber" | "registrationNumber" | "licensePlateType" | "licensePlateNumber" | "circulationCard" | "availableForTourismOnly" | "status" | "transporterId" | "alternateTransporterId" | "busLineId" | "baseId" | "purchaseDate" | "expirationDate" | "erpClientNumber" | "modelId" | "vehicleId" | "serialNumber" | "engineNumber" | "chassisNumber" | "grossVehicleWeight" | "sctPermit" | "currentKilometer" | "gpsId" | "lastMaintenanceDate" | "nextMaintenanceDate" | "seatDiagramId" | "chromaticId" | "active" | "createdAt" | "updatedAt" | "deletedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -7244,6 +7373,7 @@ export namespace buses {
             lastMaintenanceDate?: string | null
             nextMaintenanceDate?: string | null
             seatDiagramId?: number
+            chromaticId?: number | null
             active?: boolean
             createdAt?: string | string
             updatedAt?: string | string
@@ -7255,6 +7385,121 @@ export namespace buses {
     export interface PaginatedListBusesResult {
         pagination: shared.PaginationMeta
         data: Bus[]
+    }
+}
+
+export namespace chromatics {
+    export interface Chromatic {
+        /**
+         * Unique identifier for the chromatic
+         */
+        id: number
+
+        /**
+         * Name of the chromatic
+         */
+        name: string
+
+        /**
+         * URL of the chromatic image
+         */
+        imageUrl: string | null
+
+        /**
+         * Description of the chromatic
+         */
+        description: string | null
+
+        /**
+         * Whether the chromatic is active/available
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the chromatic record was created
+         */
+        createdAt: string | string
+
+        /**
+         * Timestamp when the chromatic record was last updated
+         */
+        updatedAt: string | string
+
+        /**
+         * Timestamp when the chromatic was soft deleted
+         */
+        deletedAt: string | string | null
+    }
+
+    export interface CreateChromaticPayload {
+        /**
+         * Name of the chromatic
+         * Must have at least 1 non-whitespace character
+         */
+        name: string
+
+        /**
+         * URL of the chromatic image
+         */
+        imageUrl?: string | null
+
+        /**
+         * Description of the chromatic
+         */
+        description?: string | null
+
+        /**
+         * Whether the chromatic is active/available
+         * @default true
+         */
+        active?: boolean
+    }
+
+    export interface ListChromaticsQueryParams {
+        orderBy?: {
+            field: "id" | "name" | "imageUrl" | "description" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            imageUrl?: string | null
+            description?: string | null
+            active?: boolean
+            createdAt?: string | string
+            updatedAt?: string | string
+            deletedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListChromaticsResult {
+        data: Chromatic[]
+    }
+
+    export interface PaginatedListChromaticsQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "imageUrl" | "description" | "active" | "createdAt" | "updatedAt" | "deletedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            imageUrl?: string | null
+            description?: string | null
+            active?: boolean
+            createdAt?: string | string
+            updatedAt?: string | string
+            deletedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListChromaticsResult {
+        pagination: shared.PaginationMeta
+        data: Chromatic[]
     }
 }
 

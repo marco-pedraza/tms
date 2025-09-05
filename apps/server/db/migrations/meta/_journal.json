@@ -337,6 +337,13 @@
       "when": 1756861293144,
       "tag": "20250903010133_create_technologies_table",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1756867310363,
+      "tag": "20250903024150_create_chromatics_table",
+      "breakpoints": true
     }
   ]
 }

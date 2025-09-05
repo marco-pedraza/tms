@@ -12,6 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { isNull, relations } from 'drizzle-orm';
 import { busModels } from '@/inventory/fleet/bus-models/bus-models.schema';
+import { chromatics } from '@/inventory/fleet/chromatics/chromatics.schema';
 import { seatDiagrams } from '@/inventory/fleet/seat-diagrams/seat-diagrams.schema';
 import { nodes } from '@/inventory/locations/nodes/nodes.schema';
 import { busLines } from '@/inventory/operators/bus-lines/bus-lines.schema';
@@ -66,6 +67,8 @@ export const buses = pgTable(
     seatDiagramId: integer('seat_diagram_id')
       .notNull()
       .references(() => seatDiagrams.id),
+    // Chromatic
+    chromaticId: integer('chromatic_id').references(() => chromatics.id),
     // System information
     active: boolean('active').notNull().default(true), // System status
     createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -78,6 +81,7 @@ export const buses = pgTable(
     index().on(table.seatDiagramId),
     index().on(table.busLineId),
     index().on(table.baseId),
+    index().on(table.chromaticId),
     index().on(table.economicNumber),
     index().on(table.engineNumber),
     index().on(table.nextMaintenanceDate),
@@ -115,5 +119,9 @@ export const busesRelations = relations(buses, ({ one }) => ({
   base: one(nodes, {
     fields: [buses.baseId],
     references: [nodes.id],
+  }),
+  chromatic: one(chromatics, {
+    fields: [buses.chromaticId],
+    references: [chromatics.id],
   }),
 }));

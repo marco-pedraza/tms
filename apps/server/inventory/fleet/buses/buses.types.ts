@@ -6,6 +6,7 @@ import {
   PaginatedListQueryResult,
 } from '@/shared/types';
 import type { BusModel } from '@/inventory/fleet/bus-models/bus-models.types';
+import type { Chromatic } from '@/inventory/fleet/chromatics/chromatics.types';
 import type { SeatDiagram } from '@/inventory/fleet/seat-diagrams/seat-diagrams.types';
 import type { Technology } from '@/inventory/fleet/technologies/technologies.types';
 import type { Node } from '@/inventory/locations/nodes/nodes.types';
@@ -64,6 +65,8 @@ export interface Bus {
   nextMaintenanceDate: Date | null;
   // Seat Diagram
   seatDiagramId: number;
+  // Chromatic
+  chromaticId: number | null;
   // System information
   active: boolean;
   createdAt: Date | string;
@@ -92,6 +95,7 @@ export interface BusWithRelations extends Bus {
   busLine?: BusLine | null;
   base?: Node | null;
   technologies: Technology[];
+  chromatic?: Chromatic | null;
 }
 
 export interface CreateBusPayload {
@@ -125,6 +129,8 @@ export interface CreateBusPayload {
   nextMaintenanceDate?: Date | string | null;
   // Seat Diagram
   seatDiagramId: number;
+  // Chromatic
+  chromaticId?: number | null;
   // System information
   active: boolean;
 }
@@ -160,6 +166,8 @@ export interface UpdateBusPayload {
   nextMaintenanceDate?: Date | string | null;
   // Seat Diagram
   seatDiagramId?: number;
+  // Chromatic
+  chromaticId?: number | null;
   // System information
   active?: boolean;
 }

@@ -274,7 +274,7 @@ async function createNodesFromClientData(
   );
 
   // Process in batches to avoid ID conflicts
-  const BATCH_SIZE = 25;
+  const BATCH_SIZE = 100;
   const totalBatches = Math.ceil(nodesData.length / BATCH_SIZE);
 
   for (let i = 0; i < totalBatches; i++) {
@@ -318,10 +318,7 @@ async function createNodesFromClientData(
       }
     }
 
-    // Add a small delay between batches to prevent ID conflicts
-    if (batchNumber < totalBatches) {
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    }
+    // No delay between batches needed - removed for performance
   }
 
   console.log(

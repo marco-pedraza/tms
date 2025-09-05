@@ -183,7 +183,7 @@ async function createCitiesFromClientData(
   statesCount: number,
 ): Promise<City[]> {
   const allCities: City[] = [];
-  const BATCH_SIZE = 50;
+  const BATCH_SIZE = 200;
 
   console.log(
     `   🏗️ Creating ${citiesFromClient.length} cities using factory...`,
@@ -218,16 +218,12 @@ async function createCitiesFromClientData(
             );
             break; // Give up after max attempts
           }
-          // Small delay before retry
-          await new Promise((resolve) => setTimeout(resolve, 50));
+          // No delay needed - removed for performance
         }
       }
     }
 
-    // Small delay between batches to ensure database consistency
-    if (i + BATCH_SIZE < citiesFromClient.length) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
+    // No delay between batches needed - removed for performance
   }
 
   console.log(
@@ -514,7 +510,7 @@ async function createPopulationsFromClientData(
   factoryDb: FactoryDb,
 ): Promise<Population[]> {
   const allPopulations: Population[] = [];
-  const BATCH_SIZE = 25;
+  const BATCH_SIZE = 100;
 
   console.log(
     `   🏗️ Creating ${populationsFromClient.length} populations using factory...`,
@@ -552,16 +548,12 @@ async function createPopulationsFromClientData(
             );
             break; // Give up after max attempts
           }
-          // Small delay before retry
-          await new Promise((resolve) => setTimeout(resolve, 50));
+          // No delay needed - removed for performance
         }
       }
     }
 
-    // Small delay between batches to ensure database consistency
-    if (i + BATCH_SIZE < populationsFromClient.length) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
+    // No delay between batches needed - removed for performance
   }
 
   console.log(

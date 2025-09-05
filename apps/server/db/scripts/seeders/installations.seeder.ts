@@ -1,4 +1,5 @@
 import { fakerES_MX as faker } from '@faker-js/faker';
+import type { City } from '@/inventory/locations/cities/cities.types';
 import type { EventType } from '@/inventory/locations/event-types/event-types.types';
 import type { InstallationProperty } from '@/inventory/locations/installation-properties/installation-properties.types';
 import type { InstallationSchema } from '@/inventory/locations/installation-schemas/installation-schemas.types';
@@ -11,6 +12,11 @@ import {
   installationSchemaFactory,
   installationTypeFactory,
 } from '@/tests/factories';
+import {
+  CLIENT_DATA_FILES,
+  hasClientData,
+  loadClientData,
+} from './client-data.utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FactoryDb = any;
@@ -365,12 +371,195 @@ export async function seedEventTypeInstallationTypes(
 }
 
 /**
- * Seeds installations
+ * Normalizes text for matching (removes accents, converts to lowercase)
+ */
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, ''); // Remove diacritics/accents
+}
+
+/**
+ * Finds a city by name using fuzzy matching
+ */
+function findCityByName(cities: City[], cityName: string): City | null {
+  const searchName = normalizeText(cityName);
+
+  // Try exact match first
+  let city = cities.find((c) => normalizeText(c.name) === searchName);
+
+  // If not found, try partial match
+  if (!city) {
+    city = cities.find((c) => normalizeText(c.name).includes(searchName));
+  }
+
+  // If still not found, try reverse partial match
+  if (!city) {
+    city = cities.find((c) => searchName.includes(normalizeText(c.name)));
+  }
+
+  return city || null;
+}
+
+/**
+ * Finds an installation type by code
+ */
+function findInstallationTypeByCode(
+  installationTypes: InstallationType[],
+  code: string,
+): InstallationType | null {
+  return installationTypes.find((it) => it.code === code) || null;
+}
+
+/**
+ * Creates installations from client JSON data
+ */
+async function createInstallationsFromClientData(
+  installationsData: Array<{
+    name: string;
+    installationTypeCode: string;
+    cityName: string;
+    address: string;
+    coordinates?: { lat: number; lng: number };
+    capacity?: number;
+    active?: boolean;
+  }>,
+  installationTypes: InstallationType[],
+  cities: City[],
+  factoryDb: FactoryDb,
+): Promise<Installation[]> {
+  const installations: Installation[] = [];
+  let successCount = 0;
+  let errorCount = 0;
+
+  console.log(
+    `   🏗️ Creating ${installationsData.length} installations from client data...`,
+  );
+
+  for (const installationData of installationsData) {
+    try {
+      // Find installation type by code
+      const installationType = findInstallationTypeByCode(
+        installationTypes,
+        installationData.installationTypeCode,
+      );
+
+      if (!installationType) {
+        console.warn(
+          `   ⚠️ Installation type not found: ${installationData.installationTypeCode} for ${installationData.name}`,
+        );
+        errorCount++;
+        continue;
+      }
+
+      // Find city by name
+      const city = findCityByName(cities, installationData.cityName);
+
+      if (!city) {
+        console.warn(
+          `   ⚠️ City not found: ${installationData.cityName} for ${installationData.name}`,
+        );
+        errorCount++;
+        continue;
+      }
+
+      // Create installation payload
+      const installationPayload = {
+        name: installationData.name,
+        address: installationData.address,
+        installationTypeId: installationType.id,
+        description: `${installationType.name} in ${city.name}`,
+        contactPhone: null,
+        contactEmail: null,
+        website: null,
+        operatingHours: null,
+        deletedAt: null,
+      };
+
+      const installation = (await installationFactory(factoryDb).create(
+        installationPayload,
+      )) as unknown as Installation;
+
+      installations.push(installation);
+      successCount++;
+    } catch (error) {
+      console.error(
+        `   ❌ Error creating installation ${installationData.name}:`,
+        error instanceof Error ? error.message : error,
+      );
+      errorCount++;
+    }
+  }
+
+  console.log(`   ✅ Created ${successCount} installations from client data`);
+  if (errorCount > 0) {
+    console.log(`   ⚠️ Failed to create ${errorCount} installations`);
+  }
+
+  return installations;
+}
+
+/**
+ * Seeds installations with proper installation type assignment
+ * Supports client data from installations.json
  */
 export async function seedInstallations(
   installationTypes: InstallationType[],
+  cities: City[],
   factoryDb: FactoryDb,
+  clientCode?: string,
 ): Promise<Installation[]> {
+  console.log('🏢 Seeding installations...');
+
+  // Try to use client data if available
+  if (
+    clientCode &&
+    hasClientData(clientCode, CLIENT_DATA_FILES.INSTALLATIONS)
+  ) {
+    console.log(
+      `🏢 Seeding installations for client: ${clientCode.toUpperCase()}`,
+    );
+
+    try {
+      const installationsData = (await loadClientData(
+        clientCode,
+        CLIENT_DATA_FILES.INSTALLATIONS,
+      )) as {
+        installations: Array<{
+          name: string;
+          installationTypeCode: string;
+          cityName: string;
+          address: string;
+          coordinates?: { lat: number; lng: number };
+          capacity?: number;
+          active?: boolean;
+        }>;
+      };
+
+      if (installationsData.installations?.length > 0) {
+        console.log(
+          `   📊 Found ${installationsData.installations.length} installations in JSON data`,
+        );
+
+        return await createInstallationsFromClientData(
+          installationsData.installations,
+          installationTypes,
+          cities,
+          factoryDb,
+        );
+      }
+    } catch (error) {
+      console.warn(
+        `   ⚠️ Error loading client installations data: ${error instanceof Error ? error.message : error}`,
+      );
+      console.log('   🔄 Falling back to random data generation...');
+    }
+  }
+
+  // Default behavior - generate random installations
+  console.log('🏢 Seeding installations with random data');
+
   const INSTALLATION_COUNT = 8;
 
   const installationPayloads = Array.from(
@@ -389,10 +578,10 @@ export async function seedInstallations(
 
   const installations = (await installationFactory(factoryDb).create(
     installationPayloads,
-  )) as Installation[];
+  )) as unknown as Installation[];
 
   console.log(
-    `Seeded ${installations.length} installations with types assigned`,
+    `   ✅ Created ${installations.length} installations with random data`,
   );
   return installations;
 }
@@ -426,7 +615,7 @@ export async function seedInstallationProperties(
 
   const installationProperties = (await installationPropertyFactory(
     factoryDb,
-  ).create(propertyPayloads)) as InstallationProperty[];
+  ).create(propertyPayloads)) as unknown as InstallationProperty[];
 
   console.log(
     `Seeded ${installationProperties.length} installation properties`,

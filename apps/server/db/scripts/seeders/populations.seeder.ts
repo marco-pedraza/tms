@@ -1,12 +1,16 @@
 import { fakerES_MX as faker } from '@faker-js/faker';
-import { db } from '@/inventory/db-service';
+import { cityRepository } from '@/inventory/locations/cities/cities.repository';
 import type { City } from '@/inventory/locations/cities/cities.types';
-import type { Installation } from '@/inventory/locations/installations/installations.types';
-import type { Node } from '@/inventory/locations/nodes/nodes.types';
 import { populationCities } from '@/inventory/locations/populations/populations.schema';
 import type { Population } from '@/inventory/locations/populations/populations.types';
-import type { State } from '@/inventory/locations/states/states.types';
-import { nodeFactory, populationFactory } from '@/factories';
+import { stateRepository } from '@/inventory/locations/states/states.repository';
+// Removed unused State import
+import { populationFactory } from '@/factories';
+import {
+  CLIENT_DATA_FILES,
+  hasClientData,
+  loadClientData,
+} from './client-data.utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FactoryDb = any;
@@ -15,10 +19,59 @@ type FactoryDb = any;
  * Seeds populations with geographic coherence
  */
 export async function seedPopulations(
-  cities: City[],
-  states: State[],
   factoryDb: FactoryDb,
+  clientCode?: string,
 ): Promise<Population[]> {
+  const logPrefix = clientCode
+    ? `👥 Seeding populations for client: ${clientCode.toUpperCase()}`
+    : '👥 Seeding populations';
+
+  console.log(logPrefix);
+
+  // Try to use client data if available
+  if (
+    clientCode &&
+    hasClientData(clientCode, CLIENT_DATA_FILES.CITIES_BY_POPULATION)
+  ) {
+    console.log(`   📊 Found populations in JSON data`);
+
+    const populationsData = (await loadClientData(
+      clientCode,
+      CLIENT_DATA_FILES.CITIES_BY_POPULATION,
+    )) as {
+      name?: string;
+      poblacion?: string;
+      code?: string;
+      codigo?: string;
+    }[];
+
+    console.log(
+      `   🏗️ Creating ${populationsData.length} populations using factory...`,
+    );
+
+    const populationPayloads = populationsData.map((popData) => ({
+      name: popData.name ?? popData.poblacion,
+      code: popData.code ?? popData.codigo,
+      deletedAt: null,
+    }));
+
+    const populations = (await populationFactory(factoryDb).create(
+      populationPayloads,
+    )) as unknown as Population[];
+
+    console.log(
+      `   ✅ Created ${populations.length} populations from client data`,
+    );
+    return populations;
+  }
+
+  // Fallback to random data
+  console.log('👥 Seeding populations with random data');
+
+  // Get cities and states from database for random seeding
+  const cities = await cityRepository.findAll();
+  const states = await stateRepository.findAll();
+
   const POPULATION_COUNT = 20;
 
   // Track assigned cities to ensure each city is only assigned to one population
@@ -84,7 +137,7 @@ export async function seedPopulations(
 
           // Create population-city associations and mark cities as assigned
           for (const city of selectedCities) {
-            await db.insert(populationCities).values({
+            await factoryDb.insert(populationCities).values({
               populationId: population.id,
               cityId: city.id,
             });
@@ -118,59 +171,4 @@ export async function seedPopulations(
   );
   console.log(`Assigned ${assignedCityIds.size} cities to populations`);
   return populations;
-}
-
-/**
- * Seeds nodes with proper distribution between installations and standalone nodes
- */
-export async function seedNodes(
-  cities: City[],
-  populations: Population[],
-  installations: Installation[],
-  factoryDb: FactoryDb,
-): Promise<Node[]> {
-  const NODE_COUNT = 10;
-  const nodePayloads = [];
-
-  // Create nodes for each installation (1:1 relationship)
-  installations.forEach((installation) => {
-    const randomCity = cities[Math.floor(Math.random() * cities.length)];
-    const randomPopulation =
-      populations[Math.floor(Math.random() * populations.length)];
-
-    nodePayloads.push({
-      cityId: randomCity.id,
-      populationId: randomPopulation.id,
-      installationId: installation.id, // Each installation gets exactly one node
-      latitude: faker.location.latitude(),
-      longitude: faker.location.longitude(),
-      radius: faker.number.float({ min: 0.5, max: 10.0, fractionDigits: 2 }),
-      deletedAt: null,
-    });
-  });
-
-  // Create remaining nodes without installations
-  const remainingNodeCount = NODE_COUNT - installations.length;
-  for (let i = 0; i < remainingNodeCount; i++) {
-    const randomCity = cities[Math.floor(Math.random() * cities.length)];
-    const randomPopulation =
-      populations[Math.floor(Math.random() * populations.length)];
-
-    nodePayloads.push({
-      cityId: randomCity.id,
-      populationId: randomPopulation.id,
-      installationId: null, // No installation for these nodes
-      latitude: faker.location.latitude(),
-      longitude: faker.location.longitude(),
-      radius: faker.number.float({ min: 0.5, max: 10.0, fractionDigits: 2 }),
-      deletedAt: null,
-    });
-  }
-
-  const nodes = (await nodeFactory(factoryDb).create(nodePayloads)) as Node[];
-
-  console.log(
-    `Seeded ${nodes.length} nodes (${installations.length} with installations, ${remainingNodeCount} without)`,
-  );
-  return nodes;
 }

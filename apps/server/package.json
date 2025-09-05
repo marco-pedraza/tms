@@ -19,7 +19,8 @@
     "encore:gen-client": "encore gen client --lang typescript --output ../../packages/ims-client/index.ts",
     "encore:check": "encore check",
     "seed:permissions": "encore exec -- npx tsx db/scripts/seed-permissions.ts --seed",
-    "seed:inventory": "encore exec -- npx tsx db/scripts/seed-inventory.ts --seed"
+    "seed:inventory": "encore exec -- npx tsx db/scripts/seed-inventory.ts --seed",
+    "seed:inventory:gfa": "encore exec -- npx tsx db/scripts/seed-inventory.ts --seed --client gfa"
   },
   "devDependencies": {
     "@faker-js/faker": "^9.7.0",

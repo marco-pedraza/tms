@@ -145,6 +145,23 @@ This project leverages Turborepo's capabilities:
 - [Local and remote caching](https://turbo.build/repo/docs/core-concepts/caching)
 - [Filtering workspaces](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
 
+## Database Seeding
+
+The backend includes database seeders for development and testing:
+
+```bash
+# Seed with default data
+npm run seed:inventory
+
+# Seed with client-specific data (GFA)
+npm run seed:inventory:gfa
+
+# Seed only permissions
+npm run seed:permissions
+```
+
+The seeders support client-specific data located in `apps/server/db/scripts/seeders/{client-code}/`.
+
 ## Contributing
 
 1. Ensure your code passes all tests

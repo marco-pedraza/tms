@@ -11,6 +11,8 @@ import { seedEventTypes } from './seeders/events.seeder';
 import {
   seedCities,
   seedCountries,
+  seedPopulationCities,
+  seedPopulations,
   seedStates,
 } from './seeders/geography.seeder';
 import {
@@ -21,7 +23,7 @@ import {
   seedInstallations,
 } from './seeders/installations.seeder';
 import { seedLabelNodes, seedLabels } from './seeders/labels.seeder';
-import { seedNodes, seedPopulations } from './seeders/populations.seeder';
+import { seedNodes } from './seeders/nodes.seeder';
 import {
   seedBusLines,
   seedBusModels,
@@ -37,8 +39,9 @@ const factoryDb = getFactoryDb(db);
 
 /**
  * Main inventory seeding function - orchestrates all seeders
+ * @param clientCode - Optional client code for client-specific data (e.g., 'gfa')
  */
-export async function seedInventory(): Promise<void> {
+export async function seedInventory(clientCode?: string): Promise<void> {
   try {
     console.log('🌱 Starting inventory seeding...\n');
 
@@ -47,7 +50,7 @@ export async function seedInventory(): Promise<void> {
 
     let countries: Country[];
     try {
-      countries = await seedCountries(factoryDb);
+      countries = await seedCountries(factoryDb, clientCode);
     } catch (error) {
       if (error instanceof Error && error.message.includes('duplicate key')) {
         console.log(
@@ -85,15 +88,20 @@ export async function seedInventory(): Promise<void> {
       throw new Error('Mexico country not found');
     }
 
-    const states = await seedStates(mexicoCountry, factoryDb);
-    const cities = await seedCities(states, factoryDb);
+    const states = await seedStates(mexicoCountry, factoryDb, clientCode);
+    const cities = await seedCities(states, factoryDb, clientCode);
     console.log('✅ Geography seeding completed\n');
 
     // === TRANSPORTATION SEEDING ===
     console.log('🚌 Seeding transportation data...');
-    const serviceTypes = await seedServiceTypes(factoryDb);
-    const transporters = await seedTransporters(cities, factoryDb);
-    const busLines = await seedBusLines(transporters, serviceTypes, factoryDb);
+    const serviceTypes = await seedServiceTypes(factoryDb, clientCode);
+    const transporters = await seedTransporters(cities, factoryDb, clientCode);
+    const busLines = await seedBusLines(
+      transporters,
+      serviceTypes,
+      factoryDb,
+      clientCode,
+    );
     const busModels = await seedBusModels(factoryDb);
     await seedBuses(transporters, busModels, factoryDb);
     const drivers = await seedDrivers(transporters, busLines, factoryDb);
@@ -122,7 +130,12 @@ export async function seedInventory(): Promise<void> {
 
     // === INSTALLATIONS ===
     console.log('🏢 Seeding installations...');
-    const installations = await seedInstallations(installationTypes, factoryDb);
+    const installations = await seedInstallations(
+      installationTypes,
+      cities,
+      factoryDb,
+      clientCode,
+    );
 
     // Create installation properties based on existing installations and schemas
     await seedInstallationProperties(
@@ -134,12 +147,18 @@ export async function seedInventory(): Promise<void> {
 
     // === POPULATIONS & NODES ===
     console.log('👥 Seeding populations and nodes...');
-    const populations = await seedPopulations(cities, states, factoryDb);
+    const populations = await seedPopulations(factoryDb, clientCode);
+
+    // Create population-city relationships if using client data
+    if (clientCode && populations.length > 0) {
+      await seedPopulationCities(populations, cities, factoryDb, clientCode);
+    }
+
     const nodes = await seedNodes(
       cities,
       populations,
-      installations,
-      factoryDb,
+      installationTypes,
+      clientCode,
     );
     console.log('✅ Populations and nodes seeding completed\n');
 
@@ -177,7 +196,22 @@ export async function seedInventory(): Promise<void> {
 // Allow running this script directly
 const shouldRunSeeder = process.argv.includes('--seed');
 if (shouldRunSeeder) {
-  seedInventory()
+  // Extract client code from command line arguments
+  const clientCodeIndex = process.argv.findIndex((arg) => arg === '--client');
+  const clientCode =
+    clientCodeIndex !== -1 && process.argv[clientCodeIndex + 1]
+      ? process.argv[clientCodeIndex + 1]
+      : undefined;
+
+  if (clientCode) {
+    console.log(
+      `🎯 Running seeder with client code: ${clientCode.toUpperCase()}`,
+    );
+  } else {
+    console.log('🌱 Running seeder with default data');
+  }
+
+  seedInventory(clientCode)
     .then(() => {
       console.log('✨ Seeding script completed');
       process.exit(0);

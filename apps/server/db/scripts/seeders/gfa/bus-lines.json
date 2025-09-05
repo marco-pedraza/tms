@@ -1,0 +1,71 @@
+{
+  "metadata": {
+    "generated_at": "2024-01-01T00:00:00Z",
+    "total_bus_lines": 3,
+    "description": "Bus lines data for GFA (Grupo Flecha Amarilla) seeding purposes"
+  },
+  "dependencies": {
+    "transporter": {
+      "name": "Grupo Flecha Amarilla",
+      "code": "GFA"
+    },
+    "service_types": [
+      {
+        "name": "Lujo",
+        "code": "LUX",
+        "category": "LUXURY"
+      },
+      {
+        "name": "Económico",
+        "code": "ECO",
+        "category": "ECONOMIC"
+      },
+      {
+        "name": "Estándar",
+        "code": "STD",
+        "category": "REGULAR"
+      }
+    ]
+  },
+  "bus_lines": [
+    {
+      "name": "Primera Plus",
+      "code": "PPLUS",
+      "transporterCode": "GFA",
+      "serviceTypeCode": "LUX",
+      "pricePerKilometer": 1.8,
+      "description": "Servicio de lujo con asientos ejecutivos totalmente reclinables, aire acondicionado individual, Wi-Fi gratuito, entretenimiento personal, servicio de cortesía y baño privado. La experiencia premium para el viajero exigente.",
+      "fleetSize": 35,
+      "website": "https://www.primeraplus.com.mx",
+      "email": "reservaciones@primeraplus.com.mx",
+      "phone": "+52 477 200 3000",
+      "active": true
+    },
+    {
+      "name": "Coordinados",
+      "code": "COORD",
+      "transporterCode": "GFA",
+      "serviceTypeCode": "STD",
+      "pricePerKilometer": 1.0,
+      "description": "Servicio regular confiable con asientos cómodos, aire acondicionado, Wi-Fi y entretenimiento básico. La opción ideal para viajes cotidianos con excelente puntualidad y cobertura regional.",
+      "fleetSize": 75,
+      "website": "https://www.coordinados.com.mx",
+      "email": "atencion@coordinados.com.mx",
+      "phone": "+52 477 150 2000",
+      "active": true
+    },
+    {
+      "name": "Roll & Bits",
+      "code": "ROLLBITS",
+      "transporterCode": "GFA",
+      "serviceTypeCode": "ECO",
+      "pricePerKilometer": 0.7,
+      "description": "Servicio económico accesible sin comprometer la seguridad y puntualidad. Transporte confiable con aire acondicionado y asientos ergonómicos, perfecto para presupuestos ajustados.",
+      "fleetSize": 50,
+      "website": "https://www.rollandbits.com.mx",
+      "email": "contacto@rollandbits.com.mx",
+      "phone": "+52 477 100 1000",
+      "active": true
+    }
+  ]
+}

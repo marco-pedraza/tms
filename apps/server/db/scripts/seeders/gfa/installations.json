@@ -1,0 +1,244 @@
+{
+  "metadata": {
+    "generated_at": "2024-01-01T00:00:00Z",
+    "total_installations": 15,
+    "description": "Installations data for GFA based on nodes.json patterns",
+    "source": "Extracted from nodes.json real GFA data"
+  },
+  "dependencies": {
+    "installation_types": [
+      {
+        "name": "Terminal de Pasajeros",
+        "code": "TERMINAL"
+      },
+      {
+        "name": "Parada de Autobús",
+        "code": "PARADA"
+      },
+      {
+        "name": "Centro de Mantenimiento",
+        "code": "MANTEN"
+      },
+      {
+        "name": "Oficina Administrativa",
+        "code": "OFICINA"
+      },
+      {
+        "name": "Punto de Control",
+        "code": "CONTROL"
+      }
+    ]
+  },
+  "installations": [
+    {
+      "name": "Central León",
+      "installationTypeCode": "TERMINAL",
+      "cityName": "León",
+      "address": "Central de Autobuses León",
+      "coordinates": {
+        "lat": 21.1207,
+        "lng": -101.6611
+      },
+      "nodeCode": "ON",
+      "gfaInstallationId": "452 - LEON",
+      "capacity": 500,
+      "active": true
+    },
+    {
+      "name": "Central Guanajuato",
+      "installationTypeCode": "TERMINAL",
+      "cityName": "Guanajuato City",
+      "address": "Central de Autobuses Guanajuato",
+      "coordinates": {
+        "lat": 21.019,
+        "lng": -101.2574
+      },
+      "nodeCode": "GTO",
+      "gfaInstallationId": null,
+      "capacity": 300,
+      "active": true
+    },
+    {
+      "name": "Central Silao",
+      "installationTypeCode": "TERMINAL",
+      "cityName": "Silao",
+      "address": "Central de Autobuses Silao",
+      "coordinates": {
+        "lat": 20.9438,
+        "lng": -101.4269
+      },
+      "nodeCode": "SILAO",
+      "gfaInstallationId": null,
+      "capacity": 200,
+      "active": true
+    },
+    {
+      "name": "Terminal Guadalajara Central Vieja",
+      "installationTypeCode": "TERMINAL",
+      "cityName": "Guadalajara",
+      "address": "Antigua Central de Autobuses",
+      "coordinates": {
+        "lat": 20.6597,
+        "lng": -103.3496
+      },
+      "nodeCode": "GDLCV",
+      "gfaInstallationId": null,
+      "capacity": 400,
+      "active": true
+    },
+    {
+      "name": "Terminal Zapopan",
+      "installationTypeCode": "TERMINAL",
+      "cityName": "Zapopan",
+      "address": "Terminal de Autobuses Zapopan",
+      "coordinates": {
+        "lat": 20.7214,
+        "lng": -103.3844
+      },
+      "nodeCode": "TZAP",
+      "gfaInstallationId": null,
+      "capacity": 250,
+      "active": true
+    },
+    {
+      "name": "Parada Puerto Interior",
+      "installationTypeCode": "PARADA",
+      "cityName": "Silao",
+      "address": "Complejo Puerto Interior",
+      "coordinates": {
+        "lat": 20.9438,
+        "lng": -101.4269
+      },
+      "nodeCode": "PTOI",
+      "gfaInstallationId": null,
+      "capacity": 50,
+      "active": true
+    },
+    {
+      "name": "Parada San Javier",
+      "installationTypeCode": "PARADA",
+      "cityName": "León",
+      "address": "Fraccionamiento San Javier",
+      "coordinates": {
+        "lat": 21.105,
+        "lng": -101.65
+      },
+      "nodeCode": "SJAV",
+      "gfaInstallationId": null,
+      "capacity": 30,
+      "active": true
+    },
+    {
+      "name": "Parada Centro Comercial Altacia",
+      "installationTypeCode": "PARADA",
+      "cityName": "León",
+      "address": "Centro Comercial Altacia",
+      "coordinates": {
+        "lat": 21.0851,
+        "lng": -101.6139
+      },
+      "nodeCode": "ALTAC",
+      "gfaInstallationId": null,
+      "capacity": 40,
+      "active": true
+    },
+    {
+      "name": "Parada Plaza Outlet León",
+      "installationTypeCode": "PARADA",
+      "cityName": "León",
+      "address": "Plaza Outlet León",
+      "coordinates": {
+        "lat": 21.084978,
+        "lng": -101.6139
+      },
+      "nodeCode": "OUTLE",
+      "gfaInstallationId": null,
+      "capacity": 25,
+      "active": true
+    },
+    {
+      "name": "Parada Salamanca Centro",
+      "installationTypeCode": "PARADA",
+      "cityName": "Salamanca",
+      "address": "Centro de Salamanca",
+      "coordinates": {
+        "lat": 20.5739,
+        "lng": -101.1956
+      },
+      "nodeCode": "SALC",
+      "gfaInstallationId": null,
+      "capacity": 35,
+      "active": true
+    },
+    {
+      "name": "Parada Moroleón Centro",
+      "installationTypeCode": "PARADA",
+      "cityName": "Moroleón",
+      "address": "Centro de Moroleón",
+      "coordinates": {
+        "lat": 20.1289,
+        "lng": -101.1928
+      },
+      "nodeCode": "MORC",
+      "gfaInstallationId": null,
+      "capacity": 20,
+      "active": true
+    },
+    {
+      "name": "Centro de Mantenimiento León",
+      "installationTypeCode": "MANTEN",
+      "cityName": "León",
+      "address": "Zona Industrial León",
+      "coordinates": {
+        "lat": 21.09,
+        "lng": -101.68
+      },
+      "nodeCode": "MANTL",
+      "gfaInstallationId": null,
+      "capacity": 20,
+      "active": true
+    },
+    {
+      "name": "Oficinas Administrativas GFA León",
+      "installationTypeCode": "OFICINA",
+      "cityName": "León",
+      "address": "Av. Hidalgo 1234, León, Gto",
+      "coordinates": {
+        "lat": 21.12,
+        "lng": -101.67
+      },
+      "nodeCode": "OFIGF",
+      "gfaInstallationId": null,
+      "capacity": 100,
+      "active": true
+    },
+    {
+      "name": "Punto de Control Irapuato",
+      "installationTypeCode": "CONTROL",
+      "cityName": "Irapuato",
+      "address": "Carretera León-Irapuato",
+      "coordinates": {
+        "lat": 20.6767,
+        "lng": -101.3542
+      },
+      "nodeCode": "CTLIR",
+      "gfaInstallationId": null,
+      "capacity": 10,
+      "active": true
+    },
+    {
+      "name": "Punto de Control Celaya",
+      "installationTypeCode": "CONTROL",
+      "cityName": "Celaya",
+      "address": "Entrada a Celaya",
+      "coordinates": {
+        "lat": 20.5289,
+        "lng": -100.8157
+      },
+      "nodeCode": "CTLCE",
+      "gfaInstallationId": null,
+      "capacity": 10,
+      "active": true
+    }
+  ]
+}

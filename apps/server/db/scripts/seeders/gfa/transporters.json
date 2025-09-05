@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "generated_at": "2024-01-01T00:00:00Z",
+    "total_transporters": 1,
+    "description": "Transporter data for GFA seeding purposes"
+  },
+  "transporters": [
+    {
+      "name": "Grupo Flecha Amarilla",
+      "code": "GFA",
+      "legalName": "Grupo Flecha Amarilla S.A. de C.V.",
+      "address": "Av. Hidalgo 1234, Centro, León, Guanajuato, México",
+      "description": "Empresa líder en transporte de pasajeros con más de 75 años de experiencia conectando el Bajío y centro de México. Especializada en rutas urbanas, suburbanas e interurbanas con los más altos estándares de calidad y seguridad.",
+      "website": "https://www.gfa.com.mx",
+      "email": "contacto@gfa.com.mx",
+      "phone": "+52 477 123 4567",
+      "headquarterCityName": "León",
+      "logoUrl": "https://www.gfa.com.mx/assets/logo-gfa.png",
+      "contactInfo": "Servicio al Cliente 24/7: +52 477 123 4567 | WhatsApp: +52 477 987 6543 | Email: atencion@gfa.com.mx",
+      "licenseNumber": "SCT-DGAF-2024-001",
+      "active": true
+    }
+  ]
+}

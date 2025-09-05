@@ -5,21 +5,34 @@ import { seedInventory } from '@/db/scripts/seed-inventory';
 import { seedPermissions } from '@/db/scripts/seed-permissions';
 import { appMeta } from 'encore.dev';
 
+/**
+ * Request payload for seeding operations with client code
+ */
+interface SeedWithClientPayload {
+  /**
+   * Client code to use for seeding (e.g., 'GFA', 'CLIENT_B')
+   * If not provided, will use random/default data
+   */
+  clientCode?: string;
+}
+
 export const runAllSeeders = api(
-  { expose: false, method: 'POST', path: '/seed' },
-  async (): Promise<{ success: boolean; message: string }> => {
+  { expose: true, method: 'POST', path: '/seed' },
+  async (
+    params: SeedWithClientPayload,
+  ): Promise<{ success: boolean; message: string }> => {
     const environment = appMeta().environment.type;
 
-    // Prevent execution in production environment
     if (environment === 'production') {
       throw APIError.permissionDenied(
         'Seeding is not allowed in production environments',
       );
     }
 
-    // Run all seed operations in sequence
+    const clientCode = params.clientCode;
+
     // await seedAdmin();
-    await seedInventory();
+    await seedInventory(clientCode);
     await seedPermissions();
 
     return {

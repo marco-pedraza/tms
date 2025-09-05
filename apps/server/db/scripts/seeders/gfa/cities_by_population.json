@@ -1,0 +1,2554 @@
+{
+  "metadata": {
+    "generated_at": "2024-01-01T00:00:00Z",
+    "total_populations": 408,
+    "total_cities": 506,
+    "description": "Poblaciones y ciudades extraídas de nodos GFA con geocodificación"
+  },
+  "populations": [
+    {
+      "code": "AGS",
+      "name": "AGUASCALIENTES",
+      "state": "Aguascalientes",
+      "cities": ["Aguascalientes"]
+    },
+    {
+      "code": "COYOT",
+      "name": "LOS COYOTES",
+      "state": "Aguascalientes",
+      "cities": ["Calvillito"]
+    },
+    {
+      "code": "COLI",
+      "name": "COLIMA",
+      "state": "Colima",
+      "cities": ["Colima"]
+    },
+    {
+      "code": "CUYO",
+      "name": "CUYUTLAN",
+      "state": "Colima",
+      "cities": ["Cuyutlán"]
+    },
+    {
+      "code": "MANZ",
+      "name": "MANZANILLO",
+      "state": "Colima",
+      "cities": ["Manzanillo"]
+    },
+    {
+      "code": "TECO",
+      "name": "TECOMAN",
+      "state": "Colima",
+      "cities": ["Tecoman"]
+    },
+    {
+      "code": "1601",
+      "name": "IMSS J. ROSAS",
+      "state": "Guanajuato",
+      "cities": ["Juventino Rosas"]
+    },
+    {
+      "code": "1603",
+      "name": "AUTOLATA J. ROSAS",
+      "state": "Guanajuato",
+      "cities": ["Juventino Rosas"]
+    },
+    {
+      "code": "ABACE",
+      "name": "ABASOLO CENTRO",
+      "state": "Guanajuato",
+      "cities": ["Abasolo"]
+    },
+    {
+      "code": "ABAS",
+      "name": "ABASOLO",
+      "state": "Guanajuato",
+      "cities": ["Abasolo"]
+    },
+    {
+      "code": "ACAM",
+      "name": "ACAMBARO",
+      "state": "Guanajuato",
+      "cities": ["Acámbaro"]
+    },
+    {
+      "code": "AEGTO",
+      "name": "AEROPUERTO DE GTO",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "AGA",
+      "name": "EMBOTELLADORA AGA",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "ALDEA",
+      "name": "LA ALDEA",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "ALOBR",
+      "name": "ALVARO OBREGON",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "AMAL",
+      "name": "LAS AMALIAS",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "AMECH",
+      "name": "AMECHE DE APAG",
+      "state": "Guanajuato",
+      "cities": ["Caleras de Amexhe"]
+    },
+    {
+      "code": "APAG",
+      "name": "APASEO EL GRANDE",
+      "state": "Guanajuato",
+      "cities": ["Apaseo el Grande"]
+    },
+    {
+      "code": "APAL",
+      "name": "APASEO EL ALTO",
+      "state": "Guanajuato",
+      "cities": ["Apaseo el Alto"]
+    },
+    {
+      "code": "AURRE",
+      "name": "AURRERA SALAM",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "AURSA",
+      "name": "AURRERA SALA",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "B.AHURRERA",
+      "name": "BODEGA AHURRERA",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "B.PEÑAFIEL",
+      "name": "BLVD. PEÑAFIEL PTO.I",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "B.VERTIZ",
+      "name": "BLVD.VERTIZ CAMPERO",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "BARA",
+      "name": "LA BARAÑA",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "BICEN",
+      "name": "PARQUE BICENTENARIO GTO",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "BLV.MORELO",
+      "name": "BLVD.JOSE MARIA MORELOS",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "BMOVIL",
+      "name": "BOLETERA MOVIL",
+      "state": "Guanajuato",
+      "cities": [
+        "Abasolo",
+        "Caleras de Amexhe",
+        "Cañada de Negros",
+        "Celaya",
+        "Comonfort",
+        "Cortazar",
+        "Cuestecita de San Juan",
+        "Dolores Hidalgo",
+        "El Capulín de la Cuesta",
+        "El Maguey",
+        "El Salitrillo",
+        "Guanajuato City",
+        "Irapuato",
+        "La Tapona",
+        "Laguna De Guadalupe",
+        "León",
+        "Loma de Yerbabuena",
+        "Marfil",
+        "Moroleón",
+        "Providencia De Guadalupe",
+        "Romita",
+        "Salamanca",
+        "San Angel",
+        "San Felipe",
+        "San José Iturbide",
+        "San Miguel de Allende",
+        "Santa Teresa",
+        "Silao",
+        "Uriangato",
+        "Valle de Santiago",
+        "Yuriria"
+      ]
+    },
+    {
+      "code": "BOMB",
+      "name": "BOMBEROS",
+      "state": "Guanajuato",
+      "cities": ["San Francisco del Rincón"]
+    },
+    {
+      "code": "C.AGU",
+      "name": "CALLE DEL AGUA",
+      "state": "Guanajuato",
+      "cities": ["Cuerámaro"]
+    },
+    {
+      "code": "C.ALFARO",
+      "name": "CAMINO ALFARO",
+      "state": "Guanajuato",
+      "cities": ["Alfaro"]
+    },
+    {
+      "code": "C.IND",
+      "name": "CIUDAD INDUSTRIAL",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "CALER",
+      "name": "CALERAS",
+      "state": "Guanajuato",
+      "cities": ["Caleras de Amexhe"]
+    },
+    {
+      "code": "CANE",
+      "name": "CANADA DE NEGROS",
+      "state": "Guanajuato",
+      "cities": ["Cañada de Negros"]
+    },
+    {
+      "code": "CARM",
+      "name": "EL CARMEN",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "CARME",
+      "name": "EL CARMEN",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "CASTI",
+      "name": "LOS CASTILLOS",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "CBTIS",
+      "name": "CBTIS",
+      "state": "Guanajuato",
+      "cities": ["San Francisco del Rincón"]
+    },
+    {
+      "code": "CCAMI",
+      "name": "CUATRO CAMINOS",
+      "state": "Guanajuato",
+      "cities": ["Yuriria"]
+    },
+    {
+      "code": "CERVE",
+      "name": "CERVERA",
+      "state": "Guanajuato",
+      "cities": ["Guanajuato City", "Santa Teresa", "Silao"]
+    },
+    {
+      "code": "CESMA",
+      "name": "CERESO DE SMA",
+      "state": "Guanajuato",
+      "cities": ["San Miguel de Allende"]
+    },
+    {
+      "code": "CHPAN",
+      "name": "CHARCO DE PANTOJA",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "CINTA",
+      "name": "LA CINTA",
+      "state": "Guanajuato",
+      "cities": ["Uriangato"]
+    },
+    {
+      "code": "CMCYA",
+      "name": "CENTRO MEDICO CYA",
+      "state": "Guanajuato",
+      "cities": ["Celaya"]
+    },
+    {
+      "code": "CMD",
+      "name": "CD. MANUEL DOBLAD",
+      "state": "Guanajuato",
+      "cities": ["Manuel Doblado"]
+    },
+    {
+      "code": "COL",
+      "name": "LAS COLONIAS NVO.",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "CONAP",
+      "name": "CONALEP PTO.I",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "COPA",
+      "name": "COPAL",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "COPAL",
+      "name": "COPALES",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "COQPI",
+      "name": "COQUETA PTO.I",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "CORRE",
+      "name": "EL CORREO",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "CORTZ",
+      "name": "CORTAZAR",
+      "state": "Guanajuato",
+      "cities": ["Cortazar"]
+    },
+    {
+      "code": "COSCY",
+      "name": "COSTCO CELAYA",
+      "state": "Guanajuato",
+      "cities": ["Celaya"]
+    },
+    {
+      "code": "CRES",
+      "name": "CRESPO",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "CRIT",
+      "name": "EL CRIT",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "CRUZR",
+      "name": "CRUZ ROJA CYA",
+      "state": "Guanajuato",
+      "cities": ["Celaya"]
+    },
+    {
+      "code": "CSALU",
+      "name": "C.SALUDSALAMANCA",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "CSFE1",
+      "name": "CIRCUITO 1 STAF1",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "CSFE2",
+      "name": "CIRCUITO1 STAF2",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "CSFE4",
+      "name": "CIRCUITO SANTA FE 4",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "CTMARA",
+      "name": "CENTRAL TRNSFERNCIA MARAVILLAS",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "CTMPI",
+      "name": "CENTRAL TRANSFER MODAL PTO.I",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "CUER",
+      "name": "CUERAMARO",
+      "state": "Guanajuato",
+      "cities": ["Cuerámaro", "Irapuato"]
+    },
+    {
+      "code": "CVIA",
+      "name": "C. LA VIA",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "CYA",
+      "name": "CELAYA",
+      "state": "Guanajuato",
+      "cities": ["Apaseo el Grande", "Celaya"]
+    },
+    {
+      "code": "CYTCU",
+      "name": "CECYTEG D CUERAMARO",
+      "state": "Guanajuato",
+      "cities": ["Cuerámaro"]
+    },
+    {
+      "code": "DIF",
+      "name": "DIF CELAYA",
+      "state": "Guanajuato",
+      "cities": ["Celaya"]
+    },
+    {
+      "code": "DOL",
+      "name": "DOLORES HIDALGO",
+      "state": "Guanajuato",
+      "cities": ["Dolores Hidalgo"]
+    },
+    {
+      "code": "DOLO",
+      "name": "DOLORES",
+      "state": "Guanajuato",
+      "cities": ["Dolores Hidalgo"]
+    },
+    {
+      "code": "DRMO",
+      "name": "DOCTOR MORA",
+      "state": "Guanajuato",
+      "cities": ["Doctor Mora"]
+    },
+    {
+      "code": "DVIAL",
+      "name": "DISTRIBUIDOR VIAL",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "EJAR",
+      "name": "ENTRONQUE A JARAL",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "ENPMA",
+      "name": "ENT PURISIMA",
+      "state": "Guanajuato",
+      "cities": ["Purísima de Bustos"]
+    },
+    {
+      "code": "ESCO",
+      "name": "EMPALME ESCOBEDO",
+      "state": "Guanajuato",
+      "cities": ["Empalme Escobedo"]
+    },
+    {
+      "code": "FCA.F",
+      "name": "FABRICAS FRANCO",
+      "state": "Guanajuato",
+      "cities": ["Franco Tavera"]
+    },
+    {
+      "code": "FCSAL",
+      "name": "FTE. CENTRO DE SALUD SALAMANCA",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "FFSFR",
+      "name": "FRENTE FERIA SFR",
+      "state": "Guanajuato",
+      "cities": ["San Francisco del Rincón"]
+    },
+    {
+      "code": "FIME",
+      "name": "ESCUELA FIME",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "FLOR",
+      "name": "FLORERIA CHETZ",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "FRANG",
+      "name": "FTE. RANCHO GRANDE",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "FSFR",
+      "name": "FERIA SFR",
+      "state": "Guanajuato",
+      "cities": ["San Francisco del Rincón"]
+    },
+    {
+      "code": "GAONA",
+      "name": "GLORIETA GAONA",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "GARMA",
+      "name": "GARMA",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "GLIRA",
+      "name": "GILLETTE DE IRAPUATO",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "GLORI",
+      "name": "GLORIETA DE APASEO",
+      "state": "Guanajuato",
+      "cities": ["Apaseo el Grande"]
+    },
+    {
+      "code": "GOXXO",
+      "name": "GLORIETA DE OXXO",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "GPILA",
+      "name": "GLORIETA DEL PIPILA",
+      "state": "Guanajuato",
+      "cities": ["San Miguel de Allende"]
+    },
+    {
+      "code": "GPTOI",
+      "name": "GLORIETA PTO INTERIOR",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "GSMA",
+      "name": "GLORIETA DE SMA",
+      "state": "Guanajuato",
+      "cities": ["San Miguel de Allende"]
+    },
+    {
+      "code": "GTO",
+      "name": "GUANAJUATO CENTRAL",
+      "state": "Guanajuato",
+      "cities": ["Guanajuato City", "Marfil", "Silao"]
+    },
+    {
+      "code": "GTO.A",
+      "name": "GTO. ALOHONDIGA",
+      "state": "Guanajuato",
+      "cities": ["Guanajuato City"]
+    },
+    {
+      "code": "GUAJE",
+      "name": "EL GUAJE",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "GUANT",
+      "name": "GUANTES",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "GUARA",
+      "name": "GUARAPO",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "H.PEDIATRI",
+      "name": "HOSPITAL PEDIATRICO",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "HDIPO",
+      "name": "HOME DEPOT",
+      "state": "Guanajuato",
+      "cities": ["Celaya"]
+    },
+    {
+      "code": "HMARY",
+      "name": "HOTEL MARY CYA",
+      "state": "Guanajuato",
+      "cities": ["Celaya"]
+    },
+    {
+      "code": "HRURI",
+      "name": "HOSPITAL DE REG URI",
+      "state": "Guanajuato",
+      "cities": ["Uriangato"]
+    },
+    {
+      "code": "HUANI",
+      "name": "HUANIMARO GTO.",
+      "state": "Guanajuato",
+      "cities": ["Huanímaro"]
+    },
+    {
+      "code": "ICA",
+      "name": "ICA",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "IMSPZ",
+      "name": "IMSS SLPZ",
+      "state": "Guanajuato",
+      "cities": ["San Luis de la Paz"]
+    },
+    {
+      "code": "IMSSA",
+      "name": "IMSS SALAMANCA",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "INDIO",
+      "name": "EL INDIO SFPE",
+      "state": "Guanajuato",
+      "cities": ["San Felipe"]
+    },
+    {
+      "code": "IPNLE",
+      "name": "POLITECNICO LEON",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "ITESI",
+      "name": "ITESI",
+      "state": "Guanajuato",
+      "cities": ["Abasolo"]
+    },
+    {
+      "code": "JA",
+      "name": "JARAL DEL PROGRESO",
+      "state": "Guanajuato",
+      "cities": ["Jaral del Progreso"]
+    },
+    {
+      "code": "JAZUL",
+      "name": "EL JARRON AZUL",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "JROS",
+      "name": "JUVENTINO ROSAS",
+      "state": "Guanajuato",
+      "cities": ["Juventino Rosas"]
+    },
+    {
+      "code": "K2",
+      "name": "K2",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "KERRY",
+      "name": "KERRY",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "LADRILLERA",
+      "name": "LA LADRILLERA",
+      "state": "Guanajuato",
+      "cities": ["Duarte"]
+    },
+    {
+      "code": "LEON",
+      "name": "LEON",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "LEYON",
+      "name": "LEY LEON",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "LOBOS",
+      "name": "LOS LOBOS",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "M.CYA",
+      "name": "MERCADO CELAYA",
+      "state": "Guanajuato",
+      "cities": ["Celaya"]
+    },
+    {
+      "code": "MAGDA",
+      "name": "LA MAGDALENA",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "MARF",
+      "name": "MARFIL",
+      "state": "Guanajuato",
+      "cities": ["Marfil"]
+    },
+    {
+      "code": "MAZDA",
+      "name": "MAZDA",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "MEGA",
+      "name": "C. MEX. LEON",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "MEGAC",
+      "name": "C.MEX.CYA",
+      "state": "Guanajuato",
+      "cities": ["Celaya"]
+    },
+    {
+      "code": "MILEN",
+      "name": "PTE MILENIO",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "MORO",
+      "name": "MOROLEON",
+      "state": "Guanajuato",
+      "cities": ["Moroleón", "Salamanca", "Uriangato"]
+    },
+    {
+      "code": "MRISC",
+      "name": "MARISCALA",
+      "state": "Guanajuato",
+      "cities": ["Caleras de Amexhe"]
+    },
+    {
+      "code": "OCAM",
+      "name": "OCAMPO",
+      "state": "Guanajuato",
+      "cities": ["Ocampo"]
+    },
+    {
+      "code": "ON",
+      "name": "LEON CENTRAL",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "ON1",
+      "name": "LEON",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "OUTLE",
+      "name": "PLAZA OUTLET",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "OXDOL",
+      "name": "OXXO DOLORES",
+      "state": "Guanajuato",
+      "cities": ["Dolores Hidalgo"]
+    },
+    {
+      "code": "OXPMA",
+      "name": "OXXO PURISIMA",
+      "state": "Guanajuato",
+      "cities": ["San Francisco del Rincón"]
+    },
+    {
+      "code": "OXXOS",
+      "name": "OXXO SMA",
+      "state": "Guanajuato",
+      "cities": ["San Miguel de Allende"]
+    },
+    {
+      "code": "P.ARA",
+      "name": "PUERTO DE ARACEO",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "P.COM",
+      "name": "FRENTE PENSION COMPLEJO",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "P.SJV",
+      "name": "PARADA SAN JAVIER",
+      "state": "Guanajuato",
+      "cities": ["Guanajuato City"]
+    },
+    {
+      "code": "P.TEL",
+      "name": "PARADA TELCEL CYA",
+      "state": "Guanajuato",
+      "cities": ["Celaya"]
+    },
+    {
+      "code": "PABCO",
+      "name": "PALO BLANCO",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "PANTS",
+      "name": "PANTEON SALAMANCA",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "PARAN",
+      "name": "PARANGARICO",
+      "state": "Guanajuato",
+      "cities": ["Yuriria"]
+    },
+    {
+      "code": "PCAML",
+      "name": "Plaza Campestre Leon",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "PENJ",
+      "name": "PENJAMO",
+      "state": "Guanajuato",
+      "cities": ["Pénjamo"]
+    },
+    {
+      "code": "PEPSA",
+      "name": "PEPSI SALAMANCA",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "PEPSI",
+      "name": "PEPSI CYA",
+      "state": "Guanajuato",
+      "cities": ["Celaya"]
+    },
+    {
+      "code": "PGOME",
+      "name": "PARADA GOMEZ CYA",
+      "state": "Guanajuato",
+      "cities": ["Celaya"]
+    },
+    {
+      "code": "PJUAR",
+      "name": "PUENTE JUAREZ",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "PLBCO",
+      "name": "PALOBLANCO",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "PLLSF",
+      "name": "EL POLLO",
+      "state": "Guanajuato",
+      "cities": ["San Francisco del Rincón"]
+    },
+    {
+      "code": "PMAR",
+      "name": "PUENTE MARLBORO",
+      "state": "Guanajuato",
+      "cities": ["Marfil"]
+    },
+    {
+      "code": "PNVO",
+      "name": "PUEBLO NUEVO",
+      "state": "Guanajuato",
+      "cities": ["Pueblo Nuevo"]
+    },
+    {
+      "code": "PPTOI",
+      "name": "PARADERO PUERTO INTERIOR",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "PREON",
+      "name": "PREPA OFICIAL LEO",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "PTA",
+      "name": "LA PUERTA",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "PTEAB",
+      "name": "PUENTE ABASOLO",
+      "state": "Guanajuato",
+      "cities": ["Abasolo"]
+    },
+    {
+      "code": "PTO.I",
+      "name": "PTO. INTERIOR",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "PURI",
+      "name": "PURISIMA",
+      "state": "Guanajuato",
+      "cities": ["Purísima de Bustos"]
+    },
+    {
+      "code": "QRO",
+      "name": "QUERETARO",
+      "state": "Guanajuato",
+      "cities": ["Tierra Blanca"]
+    },
+    {
+      "code": "RASON",
+      "name": "EL RASTRO LEON",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "RGDE",
+      "name": "RANCHO GRANDE",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "RI",
+      "name": "IRAPUATO",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "ROMA",
+      "name": "ROMITA",
+      "state": "Guanajuato",
+      "cities": ["Romita"]
+    },
+    {
+      "code": "ROVAS",
+      "name": "ROBA VACAS",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "RSECO",
+      "name": "RANCHO SECO",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "SALA",
+      "name": "SALAMANCA CENTRAL",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "SALAC",
+      "name": "SALAMANCA CENTRO",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "SALV",
+      "name": "SALVATIERRA",
+      "state": "Guanajuato",
+      "cities": ["Salvatierra"]
+    },
+    {
+      "code": "SAMBO",
+      "name": "SANBORNS CELAYA",
+      "state": "Guanajuato",
+      "cities": ["Celaya"]
+    },
+    {
+      "code": "SANAB",
+      "name": "SANABRIA",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "SANGE",
+      "name": "SAN ANGEL",
+      "state": "Guanajuato",
+      "cities": ["San Angel"]
+    },
+    {
+      "code": "SCATA",
+      "name": "SANTA CATARINA",
+      "state": "Guanajuato",
+      "cities": ["Santa Catarina"]
+    },
+    {
+      "code": "SCHER",
+      "name": "SCHERDEL",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "SCORT",
+      "name": "SALIDA CORTZ CYA",
+      "state": "Guanajuato",
+      "cities": ["Cortazar"]
+    },
+    {
+      "code": "SDU",
+      "name": "SN.DGO.DE LA UNIO",
+      "state": "Guanajuato",
+      "cities": ["San Diego de la Unión"]
+    },
+    {
+      "code": "SECU",
+      "name": "SECUNDARIA D ABASOLO",
+      "state": "Guanajuato",
+      "cities": ["Abasolo"]
+    },
+    {
+      "code": "SFPE",
+      "name": "SAN FELIPE",
+      "state": "Guanajuato",
+      "cities": ["San Felipe"]
+    },
+    {
+      "code": "SFR",
+      "name": "SN. FCO. DEL RINC",
+      "state": "Guanajuato",
+      "cities": ["San Francisco del Rincón"]
+    },
+    {
+      "code": "SILAO",
+      "name": "SILAO",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "SJERO",
+      "name": "SAN JERONIMO",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "SJIT",
+      "name": "SAN JOSE ITURBIDE",
+      "state": "Guanajuato",
+      "cities": ["San José Iturbide"]
+    },
+    {
+      "code": "SJLG",
+      "name": "SAN JUAN DE L.LGS",
+      "state": "Guanajuato",
+      "cities": ["Uriangato"]
+    },
+    {
+      "code": "SJLL",
+      "name": "SAN JOSE DE LLANOS",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "SJVE",
+      "name": "SAN JUAN VEGA",
+      "state": "Guanajuato",
+      "cities": ["San Juan de la Vega"]
+    },
+    {
+      "code": "SLPZ",
+      "name": "SAN LUIS DE LA PAZ",
+      "state": "Guanajuato",
+      "cities": ["San Luis de la Paz"]
+    },
+    {
+      "code": "SMA",
+      "name": "SAN MIGUEL ALLENDE",
+      "state": "Guanajuato",
+      "cities": ["San Miguel de Allende"]
+    },
+    {
+      "code": "SN.MI",
+      "name": "SAN MIGUEL",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "SORIM",
+      "name": "SORIANA MOROLEON",
+      "state": "Guanajuato",
+      "cities": ["Uriangato"]
+    },
+    {
+      "code": "SOSA",
+      "name": "SORIANA SATELITE",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "STAR",
+      "name": "SANTA ROSA",
+      "state": "Guanajuato",
+      "cities": ["Guanajuato City"]
+    },
+    {
+      "code": "STARI",
+      "name": "SANTA RITA",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "STORR",
+      "name": "SANCHEZTORRADO",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "TAVER",
+      "name": "TAVERA",
+      "state": "Guanajuato",
+      "cities": ["Franco Tavera"]
+    },
+    {
+      "code": "TECNO",
+      "name": "TECNOLOGICO",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "TENGO",
+      "name": "TENANGO",
+      "state": "Guanajuato",
+      "cities": ["Apaseo el Grande"]
+    },
+    {
+      "code": "TERE",
+      "name": "SANTA TERESA",
+      "state": "Guanajuato",
+      "cities": ["Marfil", "Santa Teresa"]
+    },
+    {
+      "code": "TERES",
+      "name": "LAS TERESAS",
+      "state": "Guanajuato",
+      "cities": ["Marfil"]
+    },
+    {
+      "code": "TGUI",
+      "name": "TIANGUIS SALAC",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "TINAJ",
+      "name": "LA TINAJA",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "TLAND",
+      "name": "TORRES LANDA",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "TUPA",
+      "name": "TUPATARO",
+      "state": "Guanajuato",
+      "cities": ["Cuerámaro"]
+    },
+    {
+      "code": "UPB",
+      "name": "U. POLITECNICA BICENTENARIO",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "UPB.S",
+      "name": "UNI POLI BIC. SIL",
+      "state": "Guanajuato",
+      "cities": ["Silao"]
+    },
+    {
+      "code": "UPG.C",
+      "name": "UPG CORTAZAR",
+      "state": "Guanajuato",
+      "cities": ["Cortazar"]
+    },
+    {
+      "code": "URI",
+      "name": "URIANGATO",
+      "state": "Guanajuato",
+      "cities": ["Uriangato"]
+    },
+    {
+      "code": "UTL",
+      "name": "UNIV. TEC. DE LEO",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "UTSOE",
+      "name": "UTSOE",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "VA",
+      "name": "VALLE DE SANTIAGO",
+      "state": "Guanajuato",
+      "cities": ["Valle de Santiago"]
+    },
+    {
+      "code": "VENA",
+      "name": "EL VENADO",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "VICT",
+      "name": "VICTORIA",
+      "state": "Guanajuato",
+      "cities": ["Victoria"]
+    },
+    {
+      "code": "VILL",
+      "name": "VILLAGRAN",
+      "state": "Guanajuato",
+      "cities": ["Villagrán"]
+    },
+    {
+      "code": "VIPS",
+      "name": "VIPS SALAMANCA",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "WALON",
+      "name": "WALMART LEON",
+      "state": "Guanajuato",
+      "cities": ["León"]
+    },
+    {
+      "code": "XIDDO",
+      "name": "XIDDO",
+      "state": "Guanajuato",
+      "cities": ["Salamanca"]
+    },
+    {
+      "code": "YURI",
+      "name": "YURIRIA",
+      "state": "Guanajuato",
+      "cities": ["Yuriria"]
+    },
+    {
+      "code": "ZMILI",
+      "name": "ZONA MILITAR RI",
+      "state": "Guanajuato",
+      "cities": ["Irapuato"]
+    },
+    {
+      "code": "KM83",
+      "name": "KILOMETRO 83",
+      "state": "Hidalgo",
+      "cities": ["Santa Ana Atzcapotzaltongo"]
+    },
+    {
+      "code": "TEPRI",
+      "name": "TEPEJI DEL RIO",
+      "state": "Hidalgo",
+      "cities": ["Tepeji de Ocampo"]
+    },
+    {
+      "code": "TULA",
+      "name": "TULA DE ALLENDE",
+      "state": "Hidalgo",
+      "cities": ["Monte Alegre", "San Marcos", "Tula"]
+    },
+    {
+      "code": "ACERO",
+      "name": "ACEROS ROSTANS",
+      "state": "Jalisco",
+      "cities": ["Acatlán de Juárez"]
+    },
+    {
+      "code": "AHUT",
+      "name": "AUTLAN",
+      "state": "Jalisco",
+      "cities": ["Autlán de Navarro"]
+    },
+    {
+      "code": "ALAMO",
+      "name": "ALAMO",
+      "state": "Jalisco",
+      "cities": ["Tlaquepaque"]
+    },
+    {
+      "code": "ALMOY",
+      "name": "ALTO MOYA",
+      "state": "Jalisco",
+      "cities": ["Lagos de Moreno"]
+    },
+    {
+      "code": "AMEC",
+      "name": "AMECA",
+      "state": "Jalisco",
+      "cities": ["Ameca"]
+    },
+    {
+      "code": "ANGUA",
+      "name": "ANGOSTURA JAL",
+      "state": "Jalisco",
+      "cities": ["San Miguel el Alto"]
+    },
+    {
+      "code": "ARAN",
+      "name": "ARANDAS",
+      "state": "Jalisco",
+      "cities": ["Arandas"]
+    },
+    {
+      "code": "ATOT",
+      "name": "ATOTONILCO",
+      "state": "Jalisco",
+      "cities": ["Atotonilco el Alto"]
+    },
+    {
+      "code": "ATOTB",
+      "name": "ATOTONILCO EL BAJO",
+      "state": "Jalisco",
+      "cities": ["Estipac"]
+    },
+    {
+      "code": "AVISP",
+      "name": "AVISPAS",
+      "state": "Jalisco",
+      "cities": ["Tepatitlán de Morelos"]
+    },
+    {
+      "code": "AYO",
+      "name": "AYOTLAN",
+      "state": "Jalisco",
+      "cities": ["Guadalajara"]
+    },
+    {
+      "code": "B.ACL",
+      "name": "BALNEARIO AGUA CAL.",
+      "state": "Jalisco",
+      "cities": ["Villa Corona"]
+    },
+    {
+      "code": "B.NAV",
+      "name": "BARRA DE NAVIDAD",
+      "state": "Jalisco",
+      "cities": ["Barra de Navidad"]
+    },
+    {
+      "code": "BAR",
+      "name": "LA BARCA",
+      "state": "Jalisco",
+      "cities": ["La Barca"]
+    },
+    {
+      "code": "BELLA",
+      "name": "BELLAVISTA",
+      "state": "Jalisco",
+      "cities": ["Bellavista"]
+    },
+    {
+      "code": "BMOVIL",
+      "name": "BOLETERA MOVIL",
+      "state": "Jalisco",
+      "cities": [
+        "Ameca",
+        "Cuisillos",
+        "Estipac",
+        "Guadalajara",
+        "Jamay",
+        "La Barca",
+        "La Sauceda",
+        "La Tijera",
+        "La Venta del Astillero",
+        "Ocotlán",
+        "Poncitlán",
+        "San Ignacio Cerro Gordo",
+        "San Juan de Ocotán",
+        "Teocaltitche",
+        "Tepatitlán de Morelos",
+        "Tepehuaje de Morelos",
+        "Tlaquepaque",
+        "Valle de Guadalupe",
+        "Villa Corona",
+        "Villa Hermosa",
+        "Zapotlanejo"
+      ]
+    },
+    {
+      "code": "CAP.G",
+      "name": "CAPILLA DE GUADALUPE",
+      "state": "Jalisco",
+      "cities": ["Tepatitlán de Morelos"]
+    },
+    {
+      "code": "CASTR",
+      "name": "CASTRO",
+      "state": "Jalisco",
+      "cities": ["Encarnación de Díaz"]
+    },
+    {
+      "code": "CATO",
+      "name": "CRO DE ATOTONILCO",
+      "state": "Jalisco",
+      "cities": ["Atotonilco el Alto"]
+    },
+    {
+      "code": "CIHUA",
+      "name": "CIHUATLAN",
+      "state": "Jalisco",
+      "cities": ["Cihuatlán"]
+    },
+    {
+      "code": "COCU",
+      "name": "COCULA",
+      "state": "Jalisco",
+      "cities": ["Cocula"]
+    },
+    {
+      "code": "DEGO",
+      "name": "DEGOLLADO",
+      "state": "Jalisco",
+      "cities": ["Degollado"]
+    },
+    {
+      "code": "ECUAD",
+      "name": "ECUAD",
+      "state": "Jalisco",
+      "cities": ["San Miguel el Alto"]
+    },
+    {
+      "code": "ENC",
+      "name": "ENCARC. DE DIAZ",
+      "state": "Jalisco",
+      "cities": ["Encarnación de Díaz"]
+    },
+    {
+      "code": "ENCES",
+      "name": "ENCARNACION DIAZ ESTUDIANTE",
+      "state": "Jalisco",
+      "cities": ["Encarnación de Díaz"]
+    },
+    {
+      "code": "GANAD",
+      "name": "LA GANADERA",
+      "state": "Jalisco",
+      "cities": ["San Diego de Alejandría"]
+    },
+    {
+      "code": "GUAD",
+      "name": "GUADALAJARA",
+      "state": "Jalisco",
+      "cities": [
+        "El Cabezón",
+        "Guadalajara",
+        "San Agustín",
+        "Santa Ana Tepetitlán",
+        "Tequila",
+        "Tlaquepaque",
+        "Villa Corona"
+      ]
+    },
+    {
+      "code": "GUZ",
+      "name": "CD. GUZMAN",
+      "state": "Jalisco",
+      "cities": ["Ciudad Guzmán"]
+    },
+    {
+      "code": "HUER",
+      "name": "LA HUERTA",
+      "state": "Jalisco",
+      "cities": ["La Huerta"]
+    },
+    {
+      "code": "INGTA",
+      "name": "INGENIO DE TALA",
+      "state": "Jalisco",
+      "cities": ["Tala"]
+    },
+    {
+      "code": "JALO",
+      "name": "JALOSTOTITLAN",
+      "state": "Jalisco",
+      "cities": ["Jalostotitlán"]
+    },
+    {
+      "code": "JAMAY",
+      "name": "JAMAY",
+      "state": "Jalisco",
+      "cities": ["Jamay"]
+    },
+    {
+      "code": "LCARR",
+      "name": "LAS CARRETAS",
+      "state": "Jalisco",
+      "cities": ["San Miguel el Alto"]
+    },
+    {
+      "code": "LGS",
+      "name": "LAGOS DE MORENO",
+      "state": "Jalisco",
+      "cities": ["Lagos de Moreno"]
+    },
+    {
+      "code": "LLCON",
+      "name": "EL LLANO",
+      "state": "Jalisco",
+      "cities": ["San Miguel el Alto"]
+    },
+    {
+      "code": "LPINT",
+      "name": "LAS PINTAS",
+      "state": "Jalisco",
+      "cities": ["San Diego de Alejandría"]
+    },
+    {
+      "code": "MAZA",
+      "name": "MAZAMITLA",
+      "state": "Jalisco",
+      "cities": ["Mazamitla"]
+    },
+    {
+      "code": "MELA",
+      "name": "MELAQUE",
+      "state": "Jalisco",
+      "cities": ["Melaque"]
+    },
+    {
+      "code": "OCO",
+      "name": "OCOTLAN",
+      "state": "Jalisco",
+      "cities": ["Ocotlán"]
+    },
+    {
+      "code": "OJUE",
+      "name": "OJUELOS",
+      "state": "Jalisco",
+      "cities": ["Ojuelos de Jalisco"]
+    },
+    {
+      "code": "PARTD",
+      "name": "PARTIDAS",
+      "state": "Jalisco",
+      "cities": ["Zapotlanejo"]
+    },
+    {
+      "code": "PEDRE",
+      "name": "PEDREGOSO",
+      "state": "Jalisco",
+      "cities": ["San Miguel el Alto"]
+    },
+    {
+      "code": "PEGUE",
+      "name": "PEGUEROS",
+      "state": "Jalisco",
+      "cities": ["Tepatitlán de Morelos"]
+    },
+    {
+      "code": "PJASO",
+      "name": "PADRE JASO",
+      "state": "Jalisco",
+      "cities": ["San Miguel el Alto"]
+    },
+    {
+      "code": "PSOL",
+      "name": "PLAZA DEL SOL GUA",
+      "state": "Jalisco",
+      "cities": ["Zapopan"]
+    },
+    {
+      "code": "PTES",
+      "name": "LOS PUENTES",
+      "state": "Jalisco",
+      "cities": ["El Cabezón"]
+    },
+    {
+      "code": "PTO.V",
+      "name": "PTO. VALLARTA",
+      "state": "Jalisco",
+      "cities": ["Las Juntas"]
+    },
+    {
+      "code": "PVIEJ",
+      "name": "PUEBLO VIEJO",
+      "state": "Jalisco",
+      "cities": ["Zapotlanejo"]
+    },
+    {
+      "code": "S.ANT",
+      "name": "SAN ANTONIO",
+      "state": "Jalisco",
+      "cities": ["La Resolana"]
+    },
+    {
+      "code": "SALVA",
+      "name": "SALVADOR",
+      "state": "Jalisco",
+      "cities": ["Encarnación de Díaz"]
+    },
+    {
+      "code": "SANTF",
+      "name": "SAN ANTONIO DE FERNANDEZ",
+      "state": "Jalisco",
+      "cities": ["Tototlán"]
+    },
+    {
+      "code": "SAYU",
+      "name": "SAYULA",
+      "state": "Jalisco",
+      "cities": ["Sayula"]
+    },
+    {
+      "code": "SDA",
+      "name": "SN.DGO.DE ALEJAN.",
+      "state": "Jalisco",
+      "cities": ["San Diego de Alejandría"]
+    },
+    {
+      "code": "SERO",
+      "name": "SELLO ROJO",
+      "state": "Jalisco",
+      "cities": ["Tepatitlán de Morelos"]
+    },
+    {
+      "code": "SEVEN",
+      "name": "SEVEN TERM ZAPOPA",
+      "state": "Jalisco",
+      "cities": ["San Juan de Ocotán"]
+    },
+    {
+      "code": "SIGNA",
+      "name": "SAN IGNACIO JAL.",
+      "state": "Jalisco",
+      "cities": ["Tepatitlán de Morelos"]
+    },
+    {
+      "code": "SJLG",
+      "name": "SAN JUAN DE L.LGS",
+      "state": "Jalisco",
+      "cities": ["San Juan de los Lagos"]
+    },
+    {
+      "code": "SJUL",
+      "name": "SAN JULIAN",
+      "state": "Jalisco",
+      "cities": ["San Julián"]
+    },
+    {
+      "code": "SMAL",
+      "name": "SAN MIGUEL EL ALT",
+      "state": "Jalisco",
+      "cities": ["San Miguel el Alto"]
+    },
+    {
+      "code": "SMAR",
+      "name": "SAN MARTIN",
+      "state": "Jalisco",
+      "cities": ["San Martín Hidalgo"]
+    },
+    {
+      "code": "TAMA",
+      "name": "TAMAZULA",
+      "state": "Jalisco",
+      "cities": ["Tamazula de Gordiano"]
+    },
+    {
+      "code": "TEOC",
+      "name": "TEOCALTICHE",
+      "state": "Jalisco",
+      "cities": ["Teocaltitche"]
+    },
+    {
+      "code": "TEOCO",
+      "name": "TECNOLOGICO DE OC",
+      "state": "Jalisco",
+      "cities": ["Ocotlán"]
+    },
+    {
+      "code": "TEPA",
+      "name": "TEPATITLAN",
+      "state": "Jalisco",
+      "cities": ["Tepatitlán de Morelos"]
+    },
+    {
+      "code": "TOMA",
+      "name": "TOMATLAN",
+      "state": "Jalisco",
+      "cities": ["Tomatlán"]
+    },
+    {
+      "code": "TOTO",
+      "name": "TOTOTLAN",
+      "state": "Jalisco",
+      "cities": ["Tototlán"]
+    },
+    {
+      "code": "TTLAQ",
+      "name": "TERMINAL TLAPAQUE",
+      "state": "Jalisco",
+      "cities": ["Tlaquepaque"]
+    },
+    {
+      "code": "TZAP",
+      "name": "TERMINAL ZAPOPAN",
+      "state": "Jalisco",
+      "cities": ["San Juan de Ocotán"]
+    },
+    {
+      "code": "USA",
+      "name": "UNION  DE SAN ANTONIO JAL",
+      "state": "Jalisco",
+      "cities": ["Unión de San Antonio"]
+    },
+    {
+      "code": "VENDS",
+      "name": "LAS VENADAS",
+      "state": "Jalisco",
+      "cities": ["Zapotlanejo"]
+    },
+    {
+      "code": "VILLA",
+      "name": "VILLA CORONA",
+      "state": "Jalisco",
+      "cities": ["Villa Corona"]
+    },
+    {
+      "code": "ZJNO",
+      "name": "ZAPOTLANEJO",
+      "state": "Jalisco",
+      "cities": ["Zapotlanejo"]
+    },
+    {
+      "code": "ZORRI",
+      "name": "ZORRILLOS",
+      "state": "Jalisco",
+      "cities": ["Zapotlanejo"]
+    },
+    {
+      "code": "AEMEX",
+      "name": "AEROPUERTO DE MEXICO",
+      "state": "Ciudad de México",
+      "cities": ["Ciudad de México"]
+    },
+    {
+      "code": "AMEX2",
+      "name": "AEROPUERTO TERMINAL2",
+      "state": "Ciudad de México",
+      "cities": ["Ciudad de México"]
+    },
+    {
+      "code": "ANGMX",
+      "name": "ANGEL DE REFORMA",
+      "state": "Ciudad de México",
+      "cities": ["Ciudad de México"]
+    },
+    {
+      "code": "COAPA",
+      "name": "COAPA MEX",
+      "state": "Ciudad de México",
+      "cities": ["Ciudad de México"]
+    },
+    {
+      "code": "EMBMX",
+      "name": "EMBAJADA DE MEXICO",
+      "state": "Ciudad de México",
+      "cities": ["Ciudad de México"]
+    },
+    {
+      "code": "EMBP",
+      "name": "EMBAJADA DE MEX PLUS",
+      "state": "Ciudad de México",
+      "cities": ["Ciudad de México"]
+    },
+    {
+      "code": "HCBCA",
+      "name": "HOTEL CASA BLANCA",
+      "state": "Ciudad de México",
+      "cities": ["Ciudad de México"]
+    },
+    {
+      "code": "MEX",
+      "name": "MEXICO",
+      "state": "Ciudad de México",
+      "cities": ["Ciudad de México"]
+    },
+    {
+      "code": "ARIO",
+      "name": "ARIO DE ROSALES",
+      "state": "Michoacán",
+      "cities": ["Ario de Rosales"]
+    },
+    {
+      "code": "BMOVIL",
+      "name": "BOLETERA MOVIL",
+      "state": "Michoacán",
+      "cities": [
+        "Angamacutiro",
+        "Ario de Rayón",
+        "Comanja",
+        "El Caudillo (Chorrera de Silva)",
+        "La Piedad de Cabadas",
+        "Puruándiro",
+        "Tarímbaro",
+        "Villa Jiménez",
+        "Zamora"
+      ]
+    },
+    {
+      "code": "BRIS",
+      "name": "BRISENAS",
+      "state": "Michoacán",
+      "cities": ["Briseñas de Matamoros"]
+    },
+    {
+      "code": "C.TAR",
+      "name": "C. TARIMBARO",
+      "state": "Michoacán",
+      "cities": ["Tarímbaro"]
+    },
+    {
+      "code": "CALVT",
+      "name": "CALVARIO DE TANU",
+      "state": "Michoacán",
+      "cities": ["Tanhuato de Guerrero"]
+    },
+    {
+      "code": "COMA",
+      "name": "COMANJA",
+      "state": "Michoacán",
+      "cities": ["Comanja"]
+    },
+    {
+      "code": "COTI",
+      "name": "COTIJA",
+      "state": "Michoacán",
+      "cities": ["Cotija de La Paz"]
+    },
+    {
+      "code": "CUIT",
+      "name": "CUITZEO",
+      "state": "Michoacán",
+      "cities": ["Cuitzeo del Porvenir"]
+    },
+    {
+      "code": "ELZAP",
+      "name": "EL ZAPOTE",
+      "state": "Michoacán",
+      "cities": ["La Piedad de Cabadas"]
+    },
+    {
+      "code": "FERIA",
+      "name": "FERIA DE MORELIA",
+      "state": "Michoacán",
+      "cities": ["Morelia"]
+    },
+    {
+      "code": "HUAN",
+      "name": "HUANDACAREO",
+      "state": "Michoacán",
+      "cities": ["Huandacareo"]
+    },
+    {
+      "code": "IRAP",
+      "name": "IRAP",
+      "state": "Michoacán",
+      "cities": ["Cuto del Porvenir"]
+    },
+    {
+      "code": "ISIDR",
+      "name": "SAN ISIDRO CERANO",
+      "state": "Michoacán",
+      "cities": ["Villa Morelos"]
+    },
+    {
+      "code": "JIQUI",
+      "name": "JIQUILPAN",
+      "state": "Michoacán",
+      "cities": ["Jiquilpan"]
+    },
+    {
+      "code": "LCORO",
+      "name": "LA CORONA MICH.",
+      "state": "Michoacán",
+      "cities": ["Morelia"]
+    },
+    {
+      "code": "MAR18",
+      "name": "18 DE MARZO",
+      "state": "Michoacán",
+      "cities": ["Cuitzeo del Porvenir"]
+    },
+    {
+      "code": "MORE",
+      "name": "MORELIA",
+      "state": "Michoacán",
+      "cities": ["Morelia"]
+    },
+    {
+      "code": "ODEA",
+      "name": "OJOS DE AGUA",
+      "state": "Michoacán",
+      "cities": ["Pastor Ortiz"]
+    },
+    {
+      "code": "PARIA",
+      "name": "REST. EL PARIAN",
+      "state": "Michoacán",
+      "cities": ["Tenencia Morelos"]
+    },
+    {
+      "code": "PATZ",
+      "name": "PATZCUARO",
+      "state": "Michoacán",
+      "cities": ["Morelia", "Pátzcuaro"]
+    },
+    {
+      "code": "PIED",
+      "name": "LA PIEDAD",
+      "state": "Michoacán",
+      "cities": ["La Piedad de Cabadas"]
+    },
+    {
+      "code": "PORT",
+      "name": "PASTOR ORTIZ",
+      "state": "Michoacán",
+      "cities": ["Pastor Ortiz"]
+    },
+    {
+      "code": "PURU",
+      "name": "PURUANDIRO",
+      "state": "Michoacán",
+      "cities": ["Puruándiro"]
+    },
+    {
+      "code": "QRO",
+      "name": "QUERETARO",
+      "state": "Michoacán",
+      "cities": ["Santa Ana Maya"]
+    },
+    {
+      "code": "QUIR",
+      "name": "QUIROGA",
+      "state": "Michoacán",
+      "cities": ["Quiroga"]
+    },
+    {
+      "code": "REY",
+      "name": "LOS REYES",
+      "state": "Michoacán",
+      "cities": ["Los Reyes de Salgado"]
+    },
+    {
+      "code": "SAHU",
+      "name": "SAHUAYO",
+      "state": "Michoacán",
+      "cities": ["Sahuayo de Morelos"]
+    },
+    {
+      "code": "SFA",
+      "name": "SN. FRANCISCO ANG",
+      "state": "Michoacán",
+      "cities": ["Angamacutiro"]
+    },
+    {
+      "code": "TACZ",
+      "name": "TACATZCUARO",
+      "state": "Michoacán",
+      "cities": ["San Antonio Tacátzcuaro"]
+    },
+    {
+      "code": "TANU",
+      "name": "TANHUATO",
+      "state": "Michoacán",
+      "cities": ["Tanhuato de Guerrero"]
+    },
+    {
+      "code": "TING",
+      "name": "TINGUINDIN",
+      "state": "Michoacán",
+      "cities": ["Tingüindín"]
+    },
+    {
+      "code": "TLAZ",
+      "name": "TLAZAZALCA",
+      "state": "Michoacán",
+      "cities": ["Tlazazalca"]
+    },
+    {
+      "code": "TOCU",
+      "name": "TOCUMBO",
+      "state": "Michoacán",
+      "cities": ["Tocumbo"]
+    },
+    {
+      "code": "VHER",
+      "name": "VISTA HERMOSA",
+      "state": "Michoacán",
+      "cities": ["Vista Hermosa de Negrete"]
+    },
+    {
+      "code": "VMOR",
+      "name": "VILLA MORELOS",
+      "state": "Michoacán",
+      "cities": ["Villa Morelos"]
+    },
+    {
+      "code": "YURE",
+      "name": "YURECUARO",
+      "state": "Michoacán",
+      "cities": ["Yurécuaro"]
+    },
+    {
+      "code": "ZACA",
+      "name": "ZACAPU",
+      "state": "Michoacán",
+      "cities": ["Zacapu"]
+    },
+    {
+      "code": "ZAM",
+      "name": "ZAMORA",
+      "state": "Michoacán",
+      "cities": ["Zamora"]
+    },
+    {
+      "code": "GUAYA",
+      "name": "GUAYABITOS",
+      "state": "Nayarit",
+      "cities": ["Compostela"]
+    },
+    {
+      "code": "MEZCA",
+      "name": "MEZCALES",
+      "state": "Nayarit",
+      "cities": ["Mezcales"]
+    },
+    {
+      "code": "NVOV",
+      "name": "NUEVO VALLARTA",
+      "state": "Nayarit",
+      "cities": ["Nuevo Nayarit"]
+    },
+    {
+      "code": "PENI",
+      "name": "LA PENITA",
+      "state": "Nayarit",
+      "cities": ["La Peñita de Jaltemba"]
+    },
+    {
+      "code": "SAYUL",
+      "name": "SAYULITA",
+      "state": "Nayarit",
+      "cities": ["Sayulita"]
+    },
+    {
+      "code": "AGUA",
+      "name": "AGUA ZARCA",
+      "state": "Querétaro",
+      "cities": ["Río Verdito"]
+    },
+    {
+      "code": "AGUG",
+      "name": "AHUACATLAN DE GPE",
+      "state": "Querétaro",
+      "cities": ["Ahuacatlán de Guadalupe"]
+    },
+    {
+      "code": "AUSJR",
+      "name": "AURRERA SJR",
+      "state": "Querétaro",
+      "cities": ["San Juan del Río"]
+    },
+    {
+      "code": "BMOVIL",
+      "name": "BOLETERA MOVIL",
+      "state": "Querétaro",
+      "cities": [
+        "Amealco de Bonfil",
+        "Barreales",
+        "Cuesta Colorada",
+        "El Gallo",
+        "Los Encinos",
+        "Querétaro",
+        "San Joaquín",
+        "San Juan del Río",
+        "San Pablo Tolimán",
+        "Tequisquiapan",
+        "Villa Guerrero"
+      ]
+    },
+    {
+      "code": "CADE",
+      "name": "CADEREYTA",
+      "state": "Querétaro",
+      "cities": ["Cadereyta de Montes"]
+    },
+    {
+      "code": "CAMAR",
+      "name": "CAMARGO",
+      "state": "Querétaro",
+      "cities": ["Cuesta Colorada"]
+    },
+    {
+      "code": "CPALM",
+      "name": "CASETA PALMILLAS",
+      "state": "Querétaro",
+      "cities": ["San Juan del Río"]
+    },
+    {
+      "code": "CRU.C",
+      "name": "CRUCERO COLON",
+      "state": "Querétaro",
+      "cities": ["Ajuchitlán"]
+    },
+    {
+      "code": "EL LOBO",
+      "name": "EL LOBO",
+      "state": "Querétaro",
+      "cities": ["El Lobo"]
+    },
+    {
+      "code": "ELDR",
+      "name": "EL DOCTOR",
+      "state": "Querétaro",
+      "cities": ["El Doctor"]
+    },
+    {
+      "code": "ENRRA",
+      "name": "LA ENRRAMADA",
+      "state": "Querétaro",
+      "cities": ["Peña Blanca"]
+    },
+    {
+      "code": "ESPER",
+      "name": "LA ESPERANZA",
+      "state": "Querétaro",
+      "cities": ["Esperanza"]
+    },
+    {
+      "code": "IMSSQ",
+      "name": "IMSS DE QRO",
+      "state": "Querétaro",
+      "cities": ["Querétaro"]
+    },
+    {
+      "code": "JALPA",
+      "name": "JALPAN",
+      "state": "Querétaro",
+      "cities": ["Jalpan de Serra"]
+    },
+    {
+      "code": "LAGU",
+      "name": "LAGUNITA",
+      "state": "Querétaro",
+      "cities": ["La Lagunita"]
+    },
+    {
+      "code": "OBRE",
+      "name": "OBRERA QUERETARO",
+      "state": "Querétaro",
+      "cities": ["Querétaro"]
+    },
+    {
+      "code": "P.ES",
+      "name": "PEDRO ESCOBEDO",
+      "state": "Querétaro",
+      "cities": ["La Palma"]
+    },
+    {
+      "code": "PBCA",
+      "name": "PEÑA BLANCA",
+      "state": "Querétaro",
+      "cities": ["Peña Blanca"]
+    },
+    {
+      "code": "PESC",
+      "name": "PEDRO ESCOBEDO",
+      "state": "Querétaro",
+      "cities": ["La Palma"]
+    },
+    {
+      "code": "PINA",
+      "name": "PINAL DE AMOLES",
+      "state": "Querétaro",
+      "cities": ["Pinal de Amoles"]
+    },
+    {
+      "code": "PZARA",
+      "name": "PTE. ZARAGOZA QRO",
+      "state": "Querétaro",
+      "cities": ["Querétaro"]
+    },
+    {
+      "code": "QRO",
+      "name": "QUERETARO",
+      "state": "Querétaro",
+      "cities": [
+        "Bernal",
+        "Corregidora",
+        "El Carmen",
+        "El Gallo",
+        "Galeras",
+        "Gudiños",
+        "Landa de Matamoros",
+        "Monte de la Calavera",
+        "Río Verdito",
+        "Santa Rosa Jauregui",
+        "Vizarrón de Montes"
+      ]
+    },
+    {
+      "code": "QRO1",
+      "name": "QRO_PLUS",
+      "state": "Querétaro",
+      "cities": ["Querétaro"]
+    },
+    {
+      "code": "QROTN",
+      "name": "QUERETARO T. NORT",
+      "state": "Querétaro",
+      "cities": ["Querétaro"]
+    },
+    {
+      "code": "S.NIC",
+      "name": "SAN NICOLAS",
+      "state": "Querétaro",
+      "cities": ["San Nicolás"]
+    },
+    {
+      "code": "SJOA",
+      "name": "SAN JOAQUIN",
+      "state": "Querétaro",
+      "cities": ["San Joaquín"]
+    },
+    {
+      "code": "SJR",
+      "name": "SAN JUAN DEL RIO",
+      "state": "Querétaro",
+      "cities": ["San Juan del Río"]
+    },
+    {
+      "code": "TANCO",
+      "name": "TANCOYOL",
+      "state": "Querétaro",
+      "cities": ["Tancoyol"]
+    },
+    {
+      "code": "TEJO",
+      "name": "EL TEJOCOTE",
+      "state": "Querétaro",
+      "cities": ["El Tejocote"]
+    },
+    {
+      "code": "TEQI",
+      "name": "TEQUISQUIAPAN",
+      "state": "Querétaro",
+      "cities": ["Tequisquiapan"]
+    },
+    {
+      "code": "TOLI",
+      "name": "TOLIMAN",
+      "state": "Querétaro",
+      "cities": ["Tolimán"]
+    },
+    {
+      "code": "V.VER",
+      "name": "VALLE VERDE",
+      "state": "Querétaro",
+      "cities": ["Valle verde"]
+    },
+    {
+      "code": "WASJR",
+      "name": "WALMART SJR",
+      "state": "Querétaro",
+      "cities": ["San Juan del Río"]
+    },
+    {
+      "code": "AHU.J",
+      "name": "AHUACATLAN  DE JESUS",
+      "state": "San Luis Potosí",
+      "cities": ["Ahuacatlán"]
+    },
+    {
+      "code": "ARRIA",
+      "name": "VILLA DE ARRIAGA",
+      "state": "San Luis Potosí",
+      "cities": ["Villa de Arriaga"]
+    },
+    {
+      "code": "COBAC",
+      "name": "C. DE BACHILLERES",
+      "state": "San Luis Potosí",
+      "cities": ["San Luis Potosí City"]
+    },
+    {
+      "code": "CONAL",
+      "name": "CONALEP",
+      "state": "San Luis Potosí",
+      "cities": ["Villa de Reyes"]
+    },
+    {
+      "code": "FRANC",
+      "name": "FRANCO",
+      "state": "San Luis Potosí",
+      "cities": ["San Francisco"]
+    },
+    {
+      "code": "GASO",
+      "name": "GASOLINERA",
+      "state": "San Luis Potosí",
+      "cities": ["San Antonio"]
+    },
+    {
+      "code": "LEON",
+      "name": "LEON",
+      "state": "San Luis Potosí",
+      "cities": ["El Tepetate"]
+    },
+    {
+      "code": "LROSA",
+      "name": "LA ROSA",
+      "state": "San Luis Potosí",
+      "cities": ["El Rosario"]
+    },
+    {
+      "code": "SAQUI",
+      "name": "SAN RAFAEL AQUISMO",
+      "state": "San Luis Potosí",
+      "cities": ["El Zopope"]
+    },
+    {
+      "code": "SDOMI",
+      "name": "SANTO DOMINGO",
+      "state": "San Luis Potosí",
+      "cities": ["La Pitahaya"]
+    },
+    {
+      "code": "SLP",
+      "name": "SAN LUIS POTOSI",
+      "state": "San Luis Potosí",
+      "cities": ["San Luis Potosí City"]
+    },
+    {
+      "code": "SLP.T",
+      "name": "SLP TERMINAL TERR",
+      "state": "San Luis Potosí",
+      "cities": ["San Luis Potosí City"]
+    },
+    {
+      "code": "SLPTUR",
+      "name": "SAN LUIS POTOSÍ R&B",
+      "state": "San Luis Potosí",
+      "cities": ["San Luis Potosí City"]
+    },
+    {
+      "code": "SMRI",
+      "name": "SANTA MA DEL RIO",
+      "state": "San Luis Potosí",
+      "cities": ["Santa María del Río"]
+    },
+    {
+      "code": "VILLE",
+      "name": "VILLELA",
+      "state": "San Luis Potosí",
+      "cities": ["La Pitahaya"]
+    },
+    {
+      "code": "VREY",
+      "name": "VILLAS DE REYES",
+      "state": "San Luis Potosí",
+      "cities": ["Villa de Reyes"]
+    },
+    {
+      "code": "XILI",
+      "name": "XILITLA",
+      "state": "San Luis Potosí",
+      "cities": ["Xilitla"]
+    },
+    {
+      "code": "MAZAT",
+      "name": "MAZATLAN",
+      "state": "Sinaloa",
+      "cities": ["Mazatlán"]
+    },
+    {
+      "code": "ATLA",
+      "name": "ATLACOMULCO",
+      "state": "Estado de México",
+      "cities": ["Atlacomulco de Fabela"]
+    },
+    {
+      "code": "BMOVIL",
+      "name": "BOLETERA MOVIL",
+      "state": "Estado de México",
+      "cities": ["Polotitlán"]
+    },
+    {
+      "code": "C.AZT",
+      "name": "CD AZTECA DF",
+      "state": "Estado de México",
+      "cities": ["Ecatepec de Morelos"]
+    },
+    {
+      "code": "C.REY",
+      "name": "CASETA LOS REYES",
+      "state": "Estado de México",
+      "cities": ["Ecatepec de Morelos"]
+    },
+    {
+      "code": "CBTAP",
+      "name": "CEBTA POLOTITLAN",
+      "state": "Estado de México",
+      "cities": ["Polotitlán"]
+    },
+    {
+      "code": "CBTPO",
+      "name": "CBTA POLO",
+      "state": "Estado de México",
+      "cities": ["Polotitlán"]
+    },
+    {
+      "code": "CEYLA",
+      "name": "CEYLAN",
+      "state": "Estado de México",
+      "cities": ["Tlalnepantla"]
+    },
+    {
+      "code": "CUAUT",
+      "name": "CUAUTITLAN IZCALLI",
+      "state": "Estado de México",
+      "cities": ["Cuautitlán Izcalli"]
+    },
+    {
+      "code": "CYA",
+      "name": "CELAYA",
+      "state": "Estado de México",
+      "cities": ["Ecatepec de Morelos"]
+    },
+    {
+      "code": "ENCIN",
+      "name": "ENCINILLAS",
+      "state": "Estado de México",
+      "cities": ["Tildío"]
+    },
+    {
+      "code": "KM98",
+      "name": "KILOMETRO 98",
+      "state": "Estado de México",
+      "cities": ["San Francisco Soyaniquilpan"]
+    },
+    {
+      "code": "MEX",
+      "name": "MEXICO",
+      "state": "Estado de México",
+      "cities": ["Nezahualcóyotl", "San Francisco Soyaniquilpan", "Tepotzotlán"]
+    },
+    {
+      "code": "MXLOT",
+      "name": "MEXICO LOTERIA NACIONAL",
+      "state": "Estado de México",
+      "cities": ["Ecatepec de Morelos"]
+    },
+    {
+      "code": "P.AME",
+      "name": "PLAZA LAS AMERICA",
+      "state": "Estado de México",
+      "cities": ["Ecatepec de Morelos"]
+    },
+    {
+      "code": "POLO",
+      "name": "POLOTITLAN",
+      "state": "Estado de México",
+      "cities": ["Polotitlán"]
+    },
+    {
+      "code": "POLOE",
+      "name": "POLOTITLAN ESTUDIANTES",
+      "state": "Estado de México",
+      "cities": ["Polotitlán"]
+    },
+    {
+      "code": "TEPO",
+      "name": "TEPOZOTLAN",
+      "state": "Estado de México",
+      "cities": ["Tepotzotlán"]
+    },
+    {
+      "code": "TEQS",
+      "name": "TEQUESQUINAHUA",
+      "state": "Estado de México",
+      "cities": ["Tlalnepantla"]
+    },
+    {
+      "code": "TOL",
+      "name": "TOLUCA",
+      "state": "Estado de México",
+      "cities": ["Toluca"]
+    }
+  ]
+}

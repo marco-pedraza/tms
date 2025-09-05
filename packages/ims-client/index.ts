@@ -242,6 +242,7 @@ export namespace inventory {
             this.listZonesByDiagramPaginated = this.listZonesByDiagramPaginated.bind(this)
             this.regenerateSeats = this.regenerateSeats.bind(this)
             this.removeOptionFromPathway = this.removeOptionFromPathway.bind(this)
+            this.runAllSeeders = this.runAllSeeders.bind(this)
             this.syncInstallationSchemas = this.syncInstallationSchemas.bind(this)
             this.updateAmenity = this.updateAmenity.bind(this)
             this.updateBus = this.updateBus.bind(this)
@@ -2320,6 +2321,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/pathways/${encodeURIComponent(pathwayId)}/options/${encodeURIComponent(optionId)}/remove`)
             return await resp.json() as pathways.Pathway
+        }
+
+        public async runAllSeeders(params: seeds.SeedWithClientPayload): Promise<{
+    success: boolean
+    message: string
+}> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/seed`, JSON.stringify(params))
+            return await resp.json() as {
+    success: boolean
+    message: string
+}
         }
 
         /**
@@ -10913,6 +10926,16 @@ export namespace seat_diagrams {
          * Timestamp when the seat diagram was last updated
          */
         updatedAt: string | string | null
+    }
+}
+
+export namespace seeds {
+    export interface SeedWithClientPayload {
+        /**
+         * Client code to use for seeding (e.g., 'GFA', 'CLIENT_B')
+         * If not provided, will use random/default data
+         */
+        clientCode?: string
     }
 }
 

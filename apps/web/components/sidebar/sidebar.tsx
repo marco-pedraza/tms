@@ -15,6 +15,7 @@ import {
   Map as MapIcon,
   MapPin,
   Package,
+  Palette,
   Settings,
   Star,
   Tag,
@@ -168,6 +169,11 @@ export default function Sidebar() {
             href={routes.technologies.index}
             icon={Cpu}
             label={tSidebar('inventory.fleet.technologies')}
+          />
+          <SidebarLink
+            href={routes.chromatics.index}
+            icon={Palette}
+            label={tSidebar('inventory.fleet.chromatics')}
           />
         </SidebarSection>
       </SidebarSection>

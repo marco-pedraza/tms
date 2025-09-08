@@ -10,6 +10,8 @@ import type { Node } from '@/inventory/locations/nodes/nodes.types';
 import type { Population } from '@/inventory/locations/populations/populations.types';
 import {
   CLIENT_DATA_FILES,
+  generateEmail,
+  generatePhone,
   hasClientData,
   loadClientData,
 } from './client-data.utils';
@@ -151,8 +153,8 @@ async function createInstallationForNode(
     address: address,
     installationTypeId: installationType.id,
     description: `${installationType.name} - ${installationName}`,
-    contactPhone: faker.phone.number(),
-    contactEmail: faker.internet.email(),
+    contactPhone: generatePhone(),
+    contactEmail: generateEmail(),
     website: faker.internet.url(),
     operatingHours: null,
     deletedAt: null,

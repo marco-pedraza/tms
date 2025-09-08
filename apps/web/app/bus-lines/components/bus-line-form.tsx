@@ -9,6 +9,7 @@ import NumberInput from '@/components/form/number-input';
 import SelectInput from '@/components/form/select-input';
 import useForm from '@/hooks/use-form';
 import { codeSchema, nameSchema } from '@/schemas/common';
+import { emailSchema, phoneSchema } from '@/schemas/contact';
 import useQueryAllServiceTypes from '@/service-types/hooks/use-query-all-service-types';
 import useQueryAllTransporters from '@/transporters/hooks/use-query-all-transporters';
 import { UseValidationsTranslationsResult } from '@/types/translations';
@@ -45,20 +46,8 @@ const createBusLineFormSchema = (
         z.literal(''),
       ])
       .optional(),
-    email: z
-      .union([
-        z.string().email({ message: tValidations('email.invalid') }),
-        z.literal(''),
-      ])
-      .optional(),
-    phone: z
-      .string()
-      .trim()
-      .transform((val) => val.replace(/[^\d+]/g, ''))
-      .refine((val) => val.length === 0 || /^\+[1-9]\d{1,14}$/.test(val), {
-        message: tValidations('phone.invalid'),
-      })
-      .optional(),
+    email: emailSchema(tValidations).optional(),
+    phone: phoneSchema(tValidations).optional(),
     active: z.boolean(),
   });
 

@@ -26,6 +26,7 @@ import OperatingHoursForm, {
 } from '@/nodes/components/operating-hours-form';
 import useQueryAllPopulations from '@/populations/hooks/use-query-all-populations';
 import useQueryPopulationCities from '@/populations/hooks/use-query-population-cities';
+import { emailSchema, phoneSchema } from '@/schemas/contact';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import {
   createDynamicFormDefaultValues,
@@ -104,29 +105,10 @@ const createBaseNodeFormSchema = (
       .transform((val) => parseFloat(val)),
     address: z.string().min(1, { message: tValidations('required') }),
     description: z.string().nullable(),
-    contactPhone: z
-      .string()
-      .trim()
-      .transform((val) => val.replace(/[^\d+]/g, ''))
-      .refine((val) => val.length === 0 || /^\+[1-9]\d{1,14}$/.test(val), {
-        message: tValidations('phone.invalid'),
-      })
+    contactPhone: phoneSchema(tValidations)
       .transform((val) => (val.length === 0 ? null : val))
       .nullable(),
-    contactEmail: z
-      .string()
-      .trim()
-      .refine(
-        (val) => {
-          if (val.length === 0) {
-            return true;
-          }
-          return val.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/);
-        },
-        {
-          message: tValidations('email.invalid'),
-        },
-      )
+    contactEmail: emailSchema(tValidations)
       .transform((val) => (val.length === 0 ? null : val))
       .nullable(),
     website: z

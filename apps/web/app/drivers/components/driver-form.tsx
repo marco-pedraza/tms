@@ -16,6 +16,7 @@ import FormLayout from '@/components/form/form-layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useForm from '@/hooks/use-form';
 import { nameSchema } from '@/schemas/common';
+import { emailSchema, phoneSchema } from '@/schemas/contact';
 import {
   TimeOffType,
   driverInitialStatuses,
@@ -45,20 +46,8 @@ const createDriverFormSchema = (
       .min(1, { message: tValidations('required') }),
     firstName: nameSchema(tValidations),
     lastName: nameSchema(tValidations),
-    phone: z
-      .string()
-      .trim()
-      .transform((val) => val.replace(/[^\d+]/g, ''))
-      .refine((val) => val.length === 0 || /^\+[1-9]\d{1,14}$/.test(val), {
-        message: tValidations('phone.invalid'),
-      })
-      .optional(),
-    email: z
-      .union([
-        z.string().email({ message: tValidations('email.invalid') }),
-        z.literal(''),
-      ])
-      .optional(),
+    phone: phoneSchema(tValidations).optional(),
+    email: emailSchema(tValidations).optional(),
     address: z.string().trim().optional(),
     emergencyContactName: z.string().trim().optional(),
     emergencyContactPhone: z

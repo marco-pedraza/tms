@@ -1,3 +1,4 @@
+import { fakerES_MX as faker } from '@faker-js/faker';
 import { accessSync } from 'fs';
 import { join, normalize, resolve } from 'path';
 
@@ -173,3 +174,17 @@ export const CLIENT_DATA_FILES = {
   INSTALLATIONS: 'installations.json',
   NODES: 'nodes.json',
 } as const;
+
+export function generatePhone(): string {
+  const areaCodes = ['55', '33', '81', '222', '442'];
+  const areaCode = faker.helpers.arrayElement(areaCodes);
+  const localLength = 10 - areaCode.length;
+  const localNumber = faker.string.numeric(localLength);
+  return `+52${areaCode}${localNumber}`;
+}
+
+export function generateEmail(): string {
+  const domains = ['com.mx', 'gmail.com', 'hotmail.com'];
+  const domain = faker.helpers.arrayElement(domains);
+  return faker.internet.email({ provider: domain });
+}

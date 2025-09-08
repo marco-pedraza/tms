@@ -7,6 +7,7 @@ import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
+import { emailSchema, phoneSchema } from '@/schemas/contact';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
@@ -35,17 +36,8 @@ const createTransporterFormSchema = (
       z.string().url({ message: tValidations('url.invalid') }),
       z.literal(''),
     ]),
-    email: z.union([
-      z.string().email({ message: tValidations('email.invalid') }),
-      z.literal(''),
-    ]),
-    phone: z
-      .string()
-      .trim()
-      .transform((val) => val.replace(/[^\d+]/g, ''))
-      .refine((val) => val.length === 0 || /^\+[1-9]\d{1,14}$/.test(val), {
-        message: tValidations('phone.invalid'),
-      })
+    email: emailSchema(tValidations),
+    phone: phoneSchema(tValidations)
       .transform((val) => (val.length === 0 ? null : val))
       .nullable(),
     headquarterCityId: z

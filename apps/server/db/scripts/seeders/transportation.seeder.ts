@@ -1,6 +1,12 @@
 import { fakerES_MX as faker } from '@faker-js/faker';
 import type { BusModel } from '@/inventory/fleet/bus-models/bus-models.types';
+import { EngineType } from '@/inventory/fleet/bus-models/bus-models.types';
 import type { Bus } from '@/inventory/fleet/buses/buses.types';
+import {
+  BusLicensePlateType,
+  BusStatus,
+} from '@/inventory/fleet/buses/buses.types';
+import { createBusWithSeatDiagram } from '@/inventory/fleet/buses/buses.use-cases';
 import type { Driver } from '@/inventory/fleet/drivers/drivers.types';
 import type { DriverMedicalCheck } from '@/inventory/fleet/drivers/medical-checks/medical-checks.types';
 import type { DriverTimeOff } from '@/inventory/fleet/drivers/time-offs/time-offs.types';
@@ -10,12 +16,10 @@ import type { ServiceType } from '@/inventory/operators/service-types/service-ty
 import { ServiceTypeCategory } from '@/inventory/operators/service-types/service-types.types';
 import type { Transporter } from '@/inventory/operators/transporters/transporters.types';
 import {
-  busFactory,
   busLineFactory,
   busModelFactory,
   driverFactory,
   medicalCheckFactory,
-  seatDiagramFactory,
   serviceTypeFactory,
   timeOffFactory,
   transporterFactory,
@@ -421,93 +425,195 @@ export async function seedBusLines(
 }
 
 /**
- * Seeds bus models
+ * Seeds bus models using the provided bus diagram models
  */
 export async function seedBusModels(
   db: ReturnType<typeof getFactoryDb>,
+  busDiagramModels: {
+    id: number;
+    name: string;
+    totalSeats: number;
+    numFloors: number;
+  }[],
 ): Promise<BusModel[]> {
-  const busModels = (await busModelFactory(db).create([
+  // Map bus diagram models to bus models with appropriate manufacturers
+  const busModelConfigs = [
     {
       manufacturer: 'Volvo',
       model: '9700',
       year: 2023,
-      seatingCapacity: 45,
-      numFloors: 1,
+      diagramIndex: 0, // 40-seat compact bus
       amenities: ['Wi-Fi', 'Air Conditioning', 'Reclining Seats'],
-      active: true,
+      engineType: 'DIESEL',
     },
     {
       manufacturer: 'Mercedes Benz',
       model: 'O500',
       year: 2022,
-      seatingCapacity: 42,
-      numFloors: 1,
-      amenities: ['Wi-Fi', 'Air Conditioning'],
-      active: true,
+      diagramIndex: 1, // 50-seat standard bus
+      amenities: ['Wi-Fi', 'Air Conditioning', 'USB Charging'],
+      engineType: 'DIESEL',
     },
     {
       manufacturer: 'Scania',
       model: 'Irizar i6',
       year: 2023,
-      seatingCapacity: 48,
-      numFloors: 1,
-      amenities: ['Wi-Fi', 'Air Conditioning', 'Entertainment System'],
-      active: true,
+      diagramIndex: 2, // 60-seat double decker bus
+      amenities: [
+        'Wi-Fi',
+        'Air Conditioning',
+        'Entertainment System',
+        'Premium Seating',
+      ],
+      engineType: 'HYBRID',
     },
-  ])) as unknown as BusModel[];
+  ];
 
-  console.log(`Seeded ${busModels.length} bus models`);
+  const busModelPayloads = busModelConfigs.map((config) => {
+    const diagramModel = busDiagramModels[config.diagramIndex];
+    if (!diagramModel) {
+      throw new Error(
+        `Bus diagram model at index ${config.diagramIndex} not found`,
+      );
+    }
+
+    return {
+      defaultBusDiagramModelId: diagramModel.id,
+      manufacturer: config.manufacturer,
+      model: config.model,
+      year: config.year,
+      seatingCapacity: diagramModel.totalSeats,
+      numFloors: diagramModel.numFloors,
+      maxCapacity: diagramModel.totalSeats + 2, // Add capacity for staff
+      amenities: config.amenities,
+      engineType: config.engineType as EngineType,
+      trunkCapacity: 500, // Standard trunk capacity
+      fuelEfficiency: config.engineType === 'HYBRID' ? 12 : 8, // Better efficiency for hybrid
+      active: true,
+    };
+  });
+
+  const busModels = (await busModelFactory(db).create(
+    busModelPayloads,
+  )) as unknown as BusModel[];
+
+  console.log(`Seeded ${busModels.length} bus models with diagram models`);
+
+  // Log the mapping between bus models and diagram models
+  busModels.forEach((busModel, index) => {
+    const diagramModel =
+      busDiagramModels[busModelConfigs[index]?.diagramIndex ?? 0];
+    console.log(
+      `   ${busModel.manufacturer} ${busModel.model}: ${busModel.seatingCapacity} seats (${diagramModel?.name})`,
+    );
+  });
+
   return busModels;
 }
 
 /**
- * Seeds buses for transporters
+ * Seeds buses for transporters using bus diagram models for functional seat diagrams
  */
 export async function seedBuses(
   transporters: Transporter[],
   busModels: BusModel[],
-  db: ReturnType<typeof getFactoryDb>,
 ): Promise<Bus[]> {
   const buses: Bus[] = [];
 
+  console.log('🚌 Creating buses with functional seat diagrams...');
+
   // Create buses for each transporter
   for (const transporter of transporters) {
+    console.log(`   🏢 Creating buses for ${transporter.name}...`);
+
     for (let i = 0; i < 3; i++) {
       const busModel = busModels[i % busModels.length];
 
       if (!busModel) continue;
 
-      // Create a seat diagram for this bus
-      const seatDiagram = await seatDiagramFactory(db).create({
-        busDiagramModelId: busModel.defaultBusDiagramModelId,
-        name: `Seat Diagram for Bus ${i + 1}`,
-        maxCapacity: busModel.seatingCapacity,
-        numFloors: busModel.numFloors,
-        seatsPerFloor: [
-          {
-            rows: Math.ceil(busModel.seatingCapacity / 4),
-            seatsPerRow: 4,
-          },
-        ],
-        totalSeats: busModel.seatingCapacity,
-        isFactoryDefault: false,
-        active: true,
-      });
+      try {
+        // Generate unique identifiers
+        const registrationNumber = `${transporter.name.substring(0, 3).toUpperCase()}-${String(i + 1).padStart(3, '0')}-${busModel.manufacturer.substring(0, 2).toUpperCase()}`;
+        const economicNumber = String(i + 1).padStart(4, '0');
+        const licensePlateNumber =
+          faker.string.alpha({ length: 3, casing: 'upper' }) +
+          '-' +
+          faker.string.numeric({ length: 3 });
+        const serialNumber = faker.string.alphanumeric({
+          length: 17,
+          casing: 'upper',
+        });
+        const chassisNumber = faker.string.alphanumeric({
+          length: 17,
+          casing: 'upper',
+        });
 
-      const transporterBuses = (await busFactory(db).create([
-        {
-          modelId: busModel.id,
+        // Generate dates
+        const purchaseDate = faker.date.past({ years: 5 });
+        const expirationDate = faker.date.future({
+          years: 10,
+          refDate: purchaseDate,
+        });
+
+        // Use the bus use case to create bus with functional seat diagram
+        const bus = await createBusWithSeatDiagram({
+          // Basic information
+          economicNumber,
+          registrationNumber,
+          licensePlateType: BusLicensePlateType.NATIONAL,
+          licensePlateNumber,
+          circulationCard: faker.string.alphanumeric({
+            length: 10,
+            casing: 'upper',
+          }),
+          availableForTourismOnly: false,
+          status: BusStatus.ACTIVE,
           transporterId: transporter.id,
-          seatDiagramId: seatDiagram.id,
+          // Model and dates
+          purchaseDate: purchaseDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+          expirationDate: expirationDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+          modelId: busModel.id,
+          // Technical information
+          serialNumber,
+          chassisNumber,
+          grossVehicleWeight: faker.number.int({ min: 15000, max: 25000 }), // Weight in kg
+          // System information
+          seatDiagramId: 0, // Will be set by the use case
           active: true,
-        },
-      ])) as unknown as Bus[];
+        });
 
-      buses.push(...transporterBuses);
+        buses.push(bus);
+
+        console.log(
+          `      ✅ Created ${busModel.manufacturer} ${busModel.model} (${busModel.seatingCapacity} seats, ${busModel.numFloors} floor${busModel.numFloors > 1 ? 's' : ''})`,
+        );
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
+        console.warn(
+          `      ⚠️ Failed to create bus ${i + 1} for ${transporter.name}: ${errorMessage}`,
+        );
+      }
     }
   }
 
-  console.log(`Seeded ${buses.length} buses`);
+  console.log(`✅ Seeded ${buses.length} buses with functional seat diagrams`);
+
+  // Log summary by bus model
+  const busModelCounts = buses.reduce(
+    (acc, bus) => {
+      const model = busModels.find((bm) => bm.id === bus.modelId);
+      const key = model ? `${model.manufacturer} ${model.model}` : 'Unknown';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  Object.entries(busModelCounts).forEach(([modelName, count]) => {
+    console.log(`   📊 ${modelName}: ${count as number} buses`);
+  });
+
   return buses;
 }
 

@@ -7,6 +7,10 @@ import {
   seedInstallationAmenities,
   seedServiceTypeAmenities,
 } from './seeders/amenities.seeder';
+import {
+  seedBusDiagramModelZones,
+  seedBusDiagramModels,
+} from './seeders/bus-diagrams.seeder';
 import { seedEventTypes } from './seeders/events.seeder';
 import {
   seedCities,
@@ -92,6 +96,12 @@ export async function seedInventory(clientCode?: string): Promise<void> {
     const cities = await seedCities(states, factoryDb, clientCode);
     console.log('✅ Geography seeding completed\n');
 
+    // === BUS DIAGRAM MODELS SEEDING ===
+    console.log('🎨 Seeding bus diagram models...');
+    const busDiagramModels = await seedBusDiagramModels();
+    seedBusDiagramModelZones(busDiagramModels);
+    console.log('✅ Bus diagram models seeding completed\n');
+
     // === TRANSPORTATION SEEDING ===
     console.log('🚌 Seeding transportation data...');
     const serviceTypes = await seedServiceTypes(factoryDb, clientCode);
@@ -102,8 +112,8 @@ export async function seedInventory(clientCode?: string): Promise<void> {
       factoryDb,
       clientCode,
     );
-    const busModels = await seedBusModels(factoryDb);
-    await seedBuses(transporters, busModels, factoryDb);
+    const busModels = await seedBusModels(factoryDb, busDiagramModels);
+    await seedBuses(transporters, busModels);
     const drivers = await seedDrivers(transporters, busLines, factoryDb);
     await seedDriverTimeOffs(drivers, factoryDb);
     await seedDriverMedicalChecks(drivers, factoryDb);

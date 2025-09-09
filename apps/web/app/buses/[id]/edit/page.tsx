@@ -7,6 +7,7 @@ import BusForm from '@/buses/components/bus-form';
 import { BusFormValues } from '@/buses/components/bus-form';
 import BusFormSkeleton from '@/buses/components/bus-form-skeleton';
 import useQueryBus from '@/buses/hooks/use-query-bus';
+import useQueryBusTechnologies from '@/buses/hooks/use-query-bus-technologies';
 import useQueryNextValidBusStatuses from '@/buses/hooks/use-query-next-valid-bus-statuses';
 import PageHeader from '@/components/page-header';
 import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
@@ -21,6 +22,11 @@ export default function EditBusPage() {
     busId,
     enabled: isValidId,
   });
+  const { data: technologies, isLoading: isLoadingTechnologies } =
+    useQueryBusTechnologies({
+      busId,
+      enabled: isValidId,
+    });
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: nextValidStatuses, isLoading: isNextValidStatusesLoading } =
@@ -29,12 +35,40 @@ export default function EditBusPage() {
       enabled: isValidId,
     });
 
-  const updateBusMutation = useMutation({
-    mutationFn: async (values: BusFormValues) =>
-      await imsClient.inventory.updateBus(busId, values),
+  const assignTechnologiesMutation = useMutation({
+    mutationKey: ['buses', 'assignTechnologies'],
+    mutationFn: async (payload: { busId: number; technologyIds: number[] }) => {
+      await imsClient.inventory.assignTechnologiesToBus(payload.busId, {
+        technologyIds: payload.technologyIds,
+      });
+
+      return {
+        busId: payload.busId,
+        technologyIds: payload.technologyIds,
+      };
+    },
   });
 
-  const updateBus = useToastMutation({
+  const assignTechnologies = useToastMutation({
+    mutation: assignTechnologiesMutation,
+    messages: {
+      loading: tBuses('messages.assignTechnologies.loading'),
+      success: tBuses('messages.assignTechnologies.success'),
+      error: tBuses('messages.assignTechnologies.error'),
+    },
+  });
+
+  const updateBusMutation = useMutation({
+    mutationFn: async (values: BusFormValues) => {
+      const bus = await imsClient.inventory.updateBus(busId, values);
+      return {
+        bus,
+        technologyIds: values.technologyIds,
+      };
+    },
+  });
+
+  const updateBusWithToast = useToastMutation({
     mutation: updateBusMutation,
     messages: {
       loading: tBuses('messages.update.loading'),
@@ -43,11 +77,15 @@ export default function EditBusPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['buses'] });
-      router.push(routes.buses.getDetailsRoute(data.id.toString()));
+      assignTechnologies.mutateWithToast({
+        busId: data.bus.id,
+        technologyIds: data.technologyIds ?? [],
+      });
+      router.push(routes.buses.getDetailsRoute(data.bus.id.toString()));
     },
   });
 
-  if (isLoading || isNextValidStatusesLoading) {
+  if (isLoading || isNextValidStatusesLoading || isLoadingTechnologies) {
     return <BusFormSkeleton />;
   }
 
@@ -63,8 +101,11 @@ export default function EditBusPage() {
         backHref={routes.buses.index}
       />
       <BusForm
-        defaultValues={data}
-        onSubmit={updateBus.mutateWithToast}
+        defaultValues={{
+          ...data,
+          technologyIds: technologies?.map((technology) => technology.id) ?? [],
+        }}
+        onSubmit={updateBusWithToast.mutateWithToast}
         nextValidStatuses={nextValidStatuses?.data}
       />
     </div>

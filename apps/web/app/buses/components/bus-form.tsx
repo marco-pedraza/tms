@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { buses } from '@repo/ims-client';
 import useQueryAllSeatDiagrams from '@/app/seat-diagrams/hooks/use-query-all-seat-diagrams';
+import useQueryAllTechnologies from '@/app/technologies/hooks/use-query-all-technologies';
 import useQueryAllBusLines from '@/bus-lines/hooks/use-query-all-bus-lines';
 import useQueryAllBusModels from '@/bus-models/hooks/use-query-all-bus-models';
 import busLicensePlateTypesTranslationKeys from '@/buses/translations/bus-license-plate-types-translations-keys';
@@ -9,6 +10,7 @@ import busStatusTranslationKeys from '@/buses/translations/bus-status-translatio
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
+import TechnologyCard from '@/components/ui/technology-card';
 import useForm from '@/hooks/use-form';
 import useQueryAllNodes from '@/nodes/hooks/use-query-all-nodes';
 import { requiredIntegerSchema } from '@/schemas/number';
@@ -106,6 +108,7 @@ const createBusFormSchema = (tValidations: UseValidationsTranslationsResult) =>
       .transform((val) => val || null),
     lastMaintenanceDate: z.string().transform((val) => val || null),
     nextMaintenanceDate: z.string().transform((val) => val || null),
+    technologyIds: z.array(z.number()).optional(),
   });
 
 export type BusFormValues = z.output<ReturnType<typeof createBusFormSchema>>;
@@ -125,8 +128,10 @@ export default function BusForm({
   const tCommon = useTranslations('common');
   const tBuses = useTranslations('buses');
   const tSeatDiagrams = useTranslations('seatDiagrams');
+  const tTechnologies = useTranslations('technologies');
   const tValidations = useTranslations('validations');
   const busSchema = createBusFormSchema(tValidations);
+  const { data: technologies } = useQueryAllTechnologies();
 
   const rawDefaultValues: BusFormRawValues = defaultValues
     ? {
@@ -150,6 +155,7 @@ export default function BusForm({
         lastMaintenanceDate: defaultValues.lastMaintenanceDate || '',
         nextMaintenanceDate: defaultValues.nextMaintenanceDate || '',
         seatDiagramId: defaultValues.seatDiagramId?.toString() || '',
+        technologyIds: defaultValues.technologyIds || [],
       }
     : {
         economicNumber: '',
@@ -179,6 +185,7 @@ export default function BusForm({
         nextMaintenanceDate: '',
         seatDiagramId: '',
         active: true,
+        technologyIds: [],
       };
 
   const form = useForm({
@@ -561,6 +568,56 @@ export default function BusForm({
                 </>
               );
             }}
+          </form.AppField>
+        </FormLayout>
+      </div>
+
+      <div className="pt-4">
+        <FormLayout title={tTechnologies('sections.technologies')}>
+          <form.AppField name="technologyIds">
+            {(field) => (
+              <div className="space-y-4">
+                <field.MultiSelectInput
+                  label={''}
+                  placeholder={tTechnologies(
+                    'form.sections.technologies.addTechnology',
+                  )}
+                  items={
+                    technologies?.data.map((technology) => ({
+                      id: technology.id.toString(),
+                      name: technology.name,
+                      description: technology.description,
+                    })) ?? []
+                  }
+                  emptyOptionsLabel={tTechnologies(
+                    'form.sections.technologies.emptyText',
+                  )}
+                />
+
+                {field.state.value && field.state.value.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-foreground">
+                      {tTechnologies('form.fields.selectedTechnologies', {
+                        count: field.state.value.length,
+                      })}
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {field.state.value.map((technologyId: number) => {
+                        const technology = technologies?.data.find(
+                          (a) => a.id === technologyId,
+                        );
+                        return technology ? (
+                          <TechnologyCard
+                            key={technology.id}
+                            technology={technology}
+                          />
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </form.AppField>
         </FormLayout>
       </div>

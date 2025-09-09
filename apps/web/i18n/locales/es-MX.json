@@ -1514,6 +1514,11 @@
       "retired": "Retirado"
     },
     "messages": {
+      "assignTechnologies": {
+        "loading": "Asignando tecnologías...",
+        "success": "Tecnologías asignadas correctamente",
+        "error": "No pudimos asignar las tecnologías"
+      },
       "create": {
         "loading": "Creando autobús...",
         "success": "Autobús creado correctamente",
@@ -1556,6 +1561,16 @@
         "version": "Ej: 1.0.0",
         "description": "Ej: Internet inalámbrico gratuito",
         "emptyOptionsLabel": "No hay tecnologías disponibles"
+      },
+      "sections": {
+        "technologies": {
+          "addTechnology": "Agregar Tecnología",
+          "selectedTechnologies": "Tecnologías seleccionadas",
+          "emptyText": "No hay tecnologías disponibles"
+        }
+      },
+      "fields": {
+        "selectedTechnologies": "Tecnologías seleccionadas"
       }
     },
     "details": {

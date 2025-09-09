@@ -5,6 +5,7 @@ import {
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '@/shared/types';
+import { Bus } from '@/inventory/fleet/buses/buses.types';
 import { MedicalCheckResult } from '@/inventory/fleet/drivers/medical-checks/medical-checks.types';
 import { BusLine } from '@/inventory/operators/bus-lines/bus-lines.types';
 import { Transporter } from '@/inventory/operators/transporters/transporters.types';
@@ -293,6 +294,7 @@ export interface UpdateDriverPayload {
 export interface DriverWithRelations extends Driver {
   transporter: Transporter;
   busLine: BusLine;
+  assignedBus?: Bus | null;
 }
 
 export type ListDriversQueryParams = ListQueryParams<Driver>;

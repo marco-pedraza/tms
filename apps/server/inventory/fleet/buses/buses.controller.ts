@@ -1,7 +1,8 @@
 import { api } from 'encore.dev/api';
-import { busModelRepository } from '../bus-models/bus-models.repository';
-import { technologiesRepository } from '../technologies/technologies.repository';
+import { busModelRepository } from '@/inventory/fleet/bus-models/bus-models.repository';
+import { technologiesRepository } from '@/inventory/fleet/technologies/technologies.repository';
 import type {
+  AssignDriverToBusCrewPayload,
   Bus,
   CreateBusPayload,
   ExtendedBusData,
@@ -17,8 +18,13 @@ import {
   BusWithRelations,
 } from './buses.types';
 import { busRepository } from './buses.repository';
-import { validateBus, validateTechnologyAssignment } from './buses.domain';
 import {
+  validateBus,
+  validateDriverAssignmentToBusCrew,
+  validateTechnologyAssignment,
+} from './buses.domain';
+import {
+  assignDriversToBusCrew as assignDriversToBusCrewUseCase,
   assignTechnologiesToBus as assignTechnologiesToBusUseCase,
   createBusWithSeatDiagram,
   updateBusWithSeatDiagram,
@@ -48,13 +54,17 @@ export const createBus = api(
 export const getBus = api(
   { method: 'GET', path: '/buses/:id', expose: true },
   async ({ id }: { id: number }): Promise<ExtendedBusData> => {
-    const bus = await busRepository.findOne(id);
+    const bus = await busRepository.findOneWithRelations(id);
     const busModel = await busModelRepository.findOne(bus.modelId);
     const technologies = await technologiesRepository.findByBusId(bus.id);
+    const busCrew = await busRepository.findBusCrewByBusId(id);
+
     return {
       ...busModel,
       ...bus,
+      busModel: busModel.model,
       technologies,
+      busCrew: busCrew ?? [],
     };
   },
 );
@@ -160,6 +170,34 @@ export const assignTechnologiesToBus = api(
     await validateTechnologyAssignment(id, { technologyIds });
     return await assignTechnologiesToBusUseCase(id, {
       technologyIds,
+    });
+  },
+);
+
+/**
+ * Assigns drivers to a bus crew (destructive sync).
+ * Replaces existing active assignments for this bus with the provided set.
+ * @param params - Object containing the bus ID and driver IDs
+ * @param params.id - The ID of the bus
+ * @param params.driverIds - Array of driver IDs to assign to the bus
+ * @returns {Promise<BusWithRelations>} The updated bus with relations (including busCrew)
+ * @throws {APIError} If validation or assignment fails
+ */
+export const assignDriversToBusCrew = api(
+  {
+    method: 'POST',
+    path: '/buses/:id/crew/assign',
+    expose: true,
+  },
+  async ({
+    id,
+    driverIds,
+  }: AssignDriverToBusCrewPayload & {
+    id: number;
+  }): Promise<BusWithRelations> => {
+    await validateDriverAssignmentToBusCrew(id, { driverIds });
+    return await assignDriversToBusCrewUseCase(id, {
+      driverIds,
     });
   },
 );

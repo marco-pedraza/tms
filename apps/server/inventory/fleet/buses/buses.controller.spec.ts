@@ -1,5 +1,8 @@
+import { busCrews } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { NotFoundError } from '@repo/base-repo';
+import { db } from '@/inventory/db-service';
 import { createBusDiagramModelZone } from '@/inventory/fleet/bus-diagram-model-zones/bus-diagram-model-zones.controller';
 import {
   createBusDiagramModel,
@@ -8,19 +11,30 @@ import {
 import { createBusModel } from '@/inventory/fleet/bus-models/bus-models.controller';
 import { busModelRepository } from '@/inventory/fleet/bus-models/bus-models.repository';
 import { EngineType } from '@/inventory/fleet/bus-models/bus-models.types';
+import { driverRepository } from '@/inventory/fleet/drivers/drivers.repository';
 import { seatDiagramZoneRepository } from '@/inventory/fleet/seat-diagram-zones/seat-diagram-zones.repository';
 import { seatDiagramRepository } from '@/inventory/fleet/seat-diagrams/seat-diagrams.repository';
 import { technologiesRepository } from '@/inventory/fleet/technologies/technologies.repository';
+import { createBusLine } from '@/inventory/operators/bus-lines/bus-lines.controller';
+import { busLineRepository } from '@/inventory/operators/bus-lines/bus-lines.repository';
+import { createServiceType } from '@/inventory/operators/service-types/service-types.controller';
+import { serviceTypeRepository } from '@/inventory/operators/service-types/service-types.repository';
+import { ServiceTypeCategory } from '@/inventory/operators/service-types/service-types.types';
+import { createTransporter } from '@/inventory/operators/transporters/transporters.controller';
+import { transporterRepository } from '@/inventory/operators/transporters/transporters.repository';
 import {
   createCleanupHelper,
   createTestSuiteId,
   createUniqueCode,
   createUniqueName,
 } from '@/tests/shared/test-utils';
+import { createDriver } from '../drivers/drivers.controller';
+import { DriverStatus } from '../drivers/drivers.types';
 import type { CreateBusPayload } from './buses.types';
 import { BusLicensePlateType, BusStatus } from './buses.types';
 import { busRepository } from './buses.repository';
 import {
+  assignDriversToBusCrew,
   assignTechnologiesToBus,
   createBus,
   deleteBus,
@@ -39,6 +53,9 @@ describe('Buses Controller', () => {
   let alternativeBusModelId: number;
   let alternativeBusDiagramModelId: number;
   let createdBusId: number;
+  let busLineId: number;
+  let transporterId: number;
+  let serviceTypeId: number;
 
   // Setup cleanup helpers
   // Use forceDelete for buses since they use soft delete and cause foreign key issues
@@ -62,9 +79,34 @@ describe('Buses Controller', () => {
     'bus diagram model',
   );
 
+  const busLineModelCleanup = createCleanupHelper(
+    ({ id }) => busLineRepository.forceDelete(id),
+    'bus line model',
+  );
+
   const technologyCleanup = createCleanupHelper(
     ({ id }) => technologiesRepository.delete(id),
     'technology',
+  );
+
+  const serviceTypeCleanup = createCleanupHelper(
+    ({ id }) => serviceTypeRepository.forceDelete(id),
+    'service type',
+  );
+
+  const busCrewCleanup = createCleanupHelper(
+    ({ id }) => db.delete(busCrews).where(eq(busCrews.id, id)),
+    'bus crew',
+  );
+
+  const transporterCleanup = createCleanupHelper(
+    ({ id }) => transporterRepository.forceDelete(id),
+    'transporter',
+  );
+
+  const driverCleanup = createCleanupHelper(
+    ({ id }) => driverRepository.forceDelete(id),
+    'driver',
   );
 
   beforeAll(async () => {
@@ -141,6 +183,40 @@ describe('Buses Controller', () => {
       alternativeBusDiagramModel.id,
     );
 
+    const serviceType = await createServiceType({
+      name: createUniqueName('Service Type', testSuiteId),
+      code: createUniqueCode('TSST', 3),
+      category: ServiceTypeCategory.REGULAR,
+      description: 'Test service type description',
+      active: true,
+    });
+
+    serviceTypeId = serviceTypeCleanup.track(serviceType.id);
+
+    const transporter = await createTransporter({
+      name: createUniqueName('Transporter', testSuiteId),
+      code: createUniqueCode('TST', 3),
+      description: 'Test transporter description',
+      website: 'https://testtransporter.com',
+      email: 'contact@testtransporter.com',
+      phone: '+1234567890',
+      contactInfo: 'Additional contact information',
+      licenseNumber: `LIC-${Date.now()}`,
+      active: true,
+    });
+
+    transporterId = transporterCleanup.track(transporter.id);
+
+    const busLine = await createBusLine({
+      name: createUniqueName('Alternative Bus Line', testSuiteId),
+      code: createUniqueCode('BL', 3),
+      transporterId: transporterId,
+      serviceTypeId: serviceTypeId,
+      active: true,
+    });
+
+    busLineId = busLineModelCleanup.track(busLine.id);
+
     // Create different zones for the alternative bus diagram model
     await createBusDiagramModelZone({
       busDiagramModelId: alternativeBusDiagramModel.id,
@@ -181,8 +257,14 @@ describe('Buses Controller', () => {
     // bus_models → bus_diagram_models
     // bus_seats → seat_diagrams (CASCADE delete)
     // seat_diagram_zones → seat_diagrams (CASCADE delete)
+    // bus_crews → drivers (CASCADE delete)
+    // transporters → bus_lines (CASCADE delete)
+    // bus_lines → service_types (CASCADE delete)
+    // service_types → transporters (CASCADE delete)
     //
     // Cleanup order (using forceDelete for buses to handle soft delete):
+    // 7. bus_crews (root entities, no dependencies)
+    await busCrewCleanup.cleanupAll();
     // 1. buses (free up references to seat_diagrams and bus_models)
     await busCleanup.cleanupAll();
     // 2. seat_diagrams (bus_seats and seat_diagram_zones deleted by CASCADE)
@@ -193,6 +275,14 @@ describe('Buses Controller', () => {
     await busDiagramModelCleanup.cleanupAll();
     // 5. technologies (root entities, no dependencies)
     await technologyCleanup.cleanupAll();
+    // 10. drivers (root entities, no dependencies)
+    await driverCleanup.cleanupAll();
+    // 9. bus lines (root entities, no dependencies)
+    await busLineModelCleanup.cleanupAll();
+    // 6. service types (root entities, no dependencies)
+    await serviceTypeCleanup.cleanupAll();
+    // 8. transporters (root entities, no dependencies)
+    await transporterCleanup.cleanupAll();
   });
 
   describe('success scenarios', () => {
@@ -217,6 +307,7 @@ describe('Buses Controller', () => {
         currentKilometer: 50000,
         gpsId: createUniqueCode('GPS', 5),
         seatDiagramId: 0, // This will be set by the controller
+        busLineId: busLineId,
         active: true,
       };
 
@@ -417,6 +508,146 @@ describe('Buses Controller', () => {
       expect(result).toBeDefined();
       expect(result.technologies).toHaveLength(0);
     });
+
+    test('should assign bus crew to a bus', async () => {
+      const driver1 = await createDriver({
+        driverKey: 'DRV001',
+        payrollKey: 'PAY001',
+        firstName: 'John',
+        lastName: 'Doe',
+        address: '123 Main St, Downtown, Mexico City, CDMX, 12345',
+        phone: '+52 55 12345678',
+        email: 'john.doe@example.com',
+        hireDate: '2020-01-15',
+        status: DriverStatus.ACTIVE,
+        license: 'LIC12345',
+        licenseExpiry: '2026-01-15',
+        busLineId: busLineId,
+        emergencyContactName: 'John Doe',
+        emergencyContactPhone: '+52 33 1234 5678',
+        emergencyContactRelationship: 'Father',
+      });
+
+      driverCleanup.track(driver1.id);
+
+      const driver2 = await createDriver({
+        driverKey: 'DRV002',
+        payrollKey: 'PAY002',
+        firstName: 'Jane',
+        lastName: 'Smith',
+        address: '123 Main St, Downtown, Mexico City, CDMX, 12345',
+        phone: '+52 55 12345679',
+        email: 'jane.smith@example.com',
+        hireDate: '2020-04-18',
+        status: DriverStatus.ACTIVE,
+        license: 'LIC12346',
+        licenseExpiry: '2026-08-20',
+        busLineId: busLineId,
+        emergencyContactName: 'Jane Smith',
+        emergencyContactPhone: '+52 33 1234 5679',
+        emergencyContactRelationship: 'Mother',
+      });
+
+      driverCleanup.track(driver2.id);
+
+      // Assign drivers to the bus crew
+      const result = await assignDriversToBusCrew({
+        id: createdBusId,
+        driverIds: [driver1.id, driver2.id],
+      });
+
+      result.busCrew.forEach((bc) => busCrewCleanup.track(bc.id));
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(createdBusId);
+      expect(result.busCrew).toHaveLength(2);
+      expect(result.busCrew.map((c) => c.driverId)).toContain(driver1.id);
+      expect(result.busCrew.map((c) => c.driverId)).toContain(driver2.id);
+    });
+
+    test('should include bus crew in getBus response', async () => {
+      // Create and assign a driver
+      const driver5 = await createDriver({
+        driverKey: createUniqueCode('DRV', 3),
+        payrollKey: createUniqueCode('PAYORDR', 3),
+        firstName: 'John',
+        lastName: 'Doe',
+        address: '123 Main St, Downtown, Mexico City, CDMX, 12345',
+        phone: '+52 55 12345678',
+        email: 'john.doe@example.com',
+        hireDate: '2020-01-15',
+        status: DriverStatus.ACTIVE,
+        license: 'LIC12345',
+        licenseExpiry: '2026-01-15',
+        busLineId: busLineId, // Will be set in beforeAll
+        emergencyContactName: 'John Doe',
+        emergencyContactPhone: '+52 33 1234 5678',
+        emergencyContactRelationship: 'Father',
+      });
+
+      driverCleanup.track(driver5.id);
+
+      const busCrewResult = await assignDriversToBusCrew({
+        id: createdBusId,
+        driverIds: [driver5.id],
+      });
+
+      busCrewResult.busCrew.forEach((bc) => busCrewCleanup.track(bc.id));
+
+      // Get the bus and verify drivers are included
+      const result = await getBus({ id: createdBusId });
+
+      expect(result).toBeDefined();
+      expect(result.busCrew).toHaveLength(1);
+      expect(result.busCrew[0].busId).toBe(createdBusId);
+      expect(result.busCrew[0].driverId).toBe(driver5.id);
+    });
+
+    test('should replace existing drivers when assigning new ones', async () => {
+      // Create another test technology
+      const driver3 = await createDriver({
+        driverKey: createUniqueCode('DRV', 3),
+        payrollKey: createUniqueCode('PAYORDR', 3),
+        firstName: 'John',
+        lastName: 'Doe',
+        address: '123 Main St, Downtown, Mexico City, CDMX, 12345',
+        phone: '+52 55 12345678',
+        email: 'john.doe@example.com',
+        hireDate: '2020-01-15',
+        status: DriverStatus.ACTIVE,
+        license: 'LIC12345',
+        licenseExpiry: '2026-01-15',
+        busLineId: busLineId,
+        emergencyContactName: 'John Doe',
+        emergencyContactPhone: '+52 33 1234 5678',
+        emergencyContactRelationship: 'Father',
+      });
+
+      driverCleanup.track(driver3.id);
+
+      // Assign only the new driver (should replace previous ones)
+      const result = await assignDriversToBusCrew({
+        id: createdBusId,
+        driverIds: [driver3.id],
+      });
+
+      result.busCrew.forEach((bc) => busCrewCleanup.track(bc.id));
+
+      expect(result).toBeDefined();
+      expect(result.busCrew).toHaveLength(1);
+      expect(result.busCrew[0].driverId).toBe(driver3.id);
+    });
+
+    test('should handle empty driver assignment', async () => {
+      // Assign empty array (should remove all drivers)
+      const result = await assignDriversToBusCrew({
+        id: createdBusId,
+        driverIds: [],
+      });
+
+      expect(result).toBeDefined();
+      expect(result.busCrew).toHaveLength(0);
+    });
   });
 
   describe('error scenarios', () => {
@@ -509,6 +740,61 @@ describe('Buses Controller', () => {
           gpsId: createUniqueCode('GPS3', 5),
           seatDiagramId: 0, // This will be set by the controller
           active: true,
+        }),
+      ).rejects.toThrow();
+    });
+
+    test('should handle when try to assign drivers from different bus lines', async () => {
+      const testSuiteId = createTestSuiteId('busCrew');
+
+      const transporter = await createTransporter({
+        name: createUniqueName('Transporter', testSuiteId),
+        code: createUniqueCode('TST', 3),
+        description: 'Test transporter description',
+        website: 'https://testtransporter.com',
+        email: 'contact@testtransporter.com',
+        phone: '+1234567890',
+        contactInfo: 'Additional contact information',
+        licenseNumber: `LIC-${Date.now()}`,
+        active: true,
+      });
+
+      transporterCleanup.track(transporter.id);
+
+      const busLine = await createBusLine({
+        name: createUniqueName('Alternative Bus Line', testSuiteId),
+        code: createUniqueCode('BL', 3),
+        transporterId: transporter.id,
+        serviceTypeId: serviceTypeId,
+        active: true,
+      });
+
+      busLineModelCleanup.track(busLine.id);
+
+      const driver = await createDriver({
+        driverKey: createUniqueCode('DRV', 4),
+        payrollKey: createUniqueCode('PAYORDR', 4),
+        firstName: 'Javer',
+        lastName: 'Tellez',
+        address: '123 Main St, Downtown, Mexico City, CDMX, 12345',
+        phone: '+52 55 12345678',
+        email: 'javer.tellez@example.com',
+        hireDate: '2020-01-15',
+        status: DriverStatus.ACTIVE,
+        license: 'LIC12345',
+        licenseExpiry: '2026-01-15',
+        busLineId: busLine.id,
+        emergencyContactName: 'Javer Tellez',
+        emergencyContactPhone: '+52 33 1234 5678',
+        emergencyContactRelationship: 'Father',
+      });
+
+      driverCleanup.track(driver.id);
+
+      await expect(
+        assignDriversToBusCrew({
+          id: createdBusId,
+          driverIds: [driver.id],
         }),
       ).rejects.toThrow();
     });

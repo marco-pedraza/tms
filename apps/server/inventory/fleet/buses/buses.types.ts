@@ -7,6 +7,7 @@ import {
 } from '@/shared/types';
 import type { BusModel } from '@/inventory/fleet/bus-models/bus-models.types';
 import type { Chromatic } from '@/inventory/fleet/chromatics/chromatics.types';
+import type { Driver } from '@/inventory/fleet/drivers/drivers.types';
 import type { SeatDiagram } from '@/inventory/fleet/seat-diagrams/seat-diagrams.types';
 import type { Technology } from '@/inventory/fleet/technologies/technologies.types';
 import type { Node } from '@/inventory/locations/nodes/nodes.types';
@@ -82,6 +83,29 @@ export interface ExtendedBusData extends Bus {
   numFloors: number;
   engineType?: string | null;
   technologies: Technology[];
+  busCrew: BusCrewWithRelations[];
+}
+
+/**
+ * Represents the association between a bus and its crew members
+ */
+export interface BusCrew {
+  /** Unique identifier for the bus crew assignment */
+  id: number;
+  /** The ID of the bus */
+  busId: number;
+  /** The ID of the driver assigned to this bus */
+  driverId: number;
+}
+
+/**
+ * Bus crew with optional related entities
+ */
+export interface BusCrewWithRelations extends BusCrew {
+  /** The related bus entity */
+  bus?: Bus;
+  /** The related driver entity */
+  driver?: Driver;
 }
 
 /**
@@ -96,6 +120,7 @@ export interface BusWithRelations extends Bus {
   base?: Node | null;
   technologies: Technology[];
   chromatic?: Chromatic | null;
+  busCrew: BusCrewWithRelations[];
 }
 
 export interface CreateBusPayload {
@@ -178,6 +203,13 @@ export interface UpdateBusPayload {
 export interface AssignTechnologiesToBusPayload {
   /** Array of technology IDs */
   technologyIds: number[];
+}
+
+/**
+ * Payload for assigning drivers to a bus crew
+ */
+export interface AssignDriverToBusCrewPayload {
+  driverIds: number[];
 }
 
 export type ListBusesQueryParams = ListQueryParams<Bus>;

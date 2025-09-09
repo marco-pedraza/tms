@@ -344,6 +344,13 @@
       "when": 1756867310363,
       "tag": "20250903024150_create_chromatics_table",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1757116767317,
+      "tag": "20250905235927_create_bus_crew_table",
+      "breakpoints": true
     }
   ]
 }

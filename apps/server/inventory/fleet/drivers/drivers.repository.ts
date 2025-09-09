@@ -1,6 +1,8 @@
+import { and, inArray, isNull } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
 import { PaginationMeta } from '@/shared/types';
+import { Bus } from '@/inventory/fleet/buses/buses.types';
 import { drivers } from './drivers.schema';
 import {
   CreateDriverPayload,
@@ -44,14 +46,25 @@ export const createDriverRepository = () => {
   ): Promise<DriverWithRelations> => {
     const driver = await db.query.drivers.findFirst({
       where: (d, { eq, and, isNull }) => and(eq(d.id, id), isNull(d.deletedAt)),
-      with: { transporter: true, busLine: true },
+      with: {
+        transporter: true,
+        busLine: true,
+        assignedBus: { with: { bus: true } },
+      },
     });
 
     if (!driver) {
       throw new NotFoundError(`Driver with id ${id} not found`);
     }
 
-    return driver as DriverWithRelations;
+    const assignedBus = driver.assignedBus
+      ? (driver.assignedBus.bus as unknown as Bus)
+      : null;
+
+    return {
+      ...driver,
+      assignedBus,
+    } as DriverWithRelations;
   };
 
   /**
@@ -81,19 +94,95 @@ export const createDriverRepository = () => {
       where: (d, { inArray, and, isNull }) =>
         and(inArray(d.id, ids), isNull(d.deletedAt)),
       orderBy: baseOrderBy,
-      with: { transporter: true, busLine: true },
+      with: {
+        transporter: true,
+        busLine: true,
+        assignedBus: { with: { bus: true } },
+      },
+    });
+
+    const data = driversWithRelations.map((driver) => {
+      const assignedBus = driver.assignedBus
+        ? (driver.assignedBus.bus as unknown as Bus)
+        : null;
+
+      return {
+        ...driver,
+        assignedBus,
+      };
     });
 
     return {
-      data: driversWithRelations as DriverWithRelations[],
+      data: data as DriverWithRelations[],
       pagination,
     };
+  };
+
+  /**
+   * Finds existing driver IDs from a given array of IDs
+   * @param driverIds - Array of driver IDs to check
+   * @returns Array of driver IDs that exist in the database
+   */
+  const findExistingIds = async (driverIds: number[]): Promise<number[]> => {
+    if (driverIds.length === 0) {
+      return [];
+    }
+
+    const results = await db
+      .select({ id: drivers.id })
+      .from(drivers)
+      .where(and(inArray(drivers.id, driverIds), isNull(drivers.deletedAt)));
+
+    return results.map((result: { id: number }) => result.id);
+  };
+
+  /**
+   * Finds multiple drivers by their IDs
+   * @param driverIds - Array of driver IDs to find
+   * @returns Array of drivers
+   */
+  const findManyByIds = async (driverIds: number[]): Promise<Driver[]> => {
+    if (driverIds.length === 0) return [];
+    const uniqueIds = Array.from(new Set(driverIds));
+    const results = await db.query.drivers.findMany({
+      where: (d, { inArray, and, isNull }) =>
+        and(inArray(d.id, uniqueIds), isNull(d.deletedAt)),
+    });
+    return results as Driver[];
+  };
+  /**
+   * Finds multiple drivers with relations (including assignedBus)
+   * @param driverIds - IDs to load
+   */
+  const findManyWithRelationsByIds = async (
+    driverIds: number[],
+  ): Promise<DriverWithRelations[]> => {
+    if (driverIds.length === 0) return [];
+    const uniqueIds = Array.from(new Set(driverIds));
+    const results = await db.query.drivers.findMany({
+      where: (d, { inArray, and, isNull }) =>
+        and(inArray(d.id, uniqueIds), isNull(d.deletedAt)),
+      with: {
+        transporter: true,
+        busLine: true,
+        assignedBus: { with: { bus: true } },
+      },
+    });
+    return results.map((driver) => {
+      const assignedBus = driver.assignedBus
+        ? (driver.assignedBus.bus as unknown as Bus)
+        : null;
+      return { ...driver, assignedBus } as DriverWithRelations;
+    });
   };
 
   return {
     ...baseRepository,
     findOneWithRelations,
     appendRelations,
+    findExistingIds,
+    findManyByIds,
+    findManyWithRelationsByIds,
   };
 };
 

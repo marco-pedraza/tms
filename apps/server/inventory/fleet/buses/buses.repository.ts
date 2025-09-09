@@ -1,3 +1,4 @@
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { createBaseRepository } from '@repo/base-repo';
 import { StateTransition, createBaseStateMachine } from '@repo/state-machine';
 import { db } from '@/inventory/db-service';
@@ -5,9 +6,10 @@ import { NotFoundError } from '@/shared/errors';
 import { busModelRepository } from '../bus-models/bus-models.repository';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
 import { technologiesRepository } from '../technologies/technologies.repository';
-import { buses } from './buses.schema';
+import { busCrews, buses } from './buses.schema';
 import type {
   Bus,
+  BusCrewWithRelations,
   BusLicensePlateType,
   BusWithRelations,
   CreateBusPayload,
@@ -157,6 +159,12 @@ export function createBusRepository() {
     const busModel = await busModelRepository.findOne(bus.modelId);
     const seatDiagram = await seatDiagramRepository.findOne(bus.seatDiagramId);
     const technologies = await technologiesRepository.findByBusId(id);
+    const busCrew = await db.query.busCrews.findMany({
+      with: {
+        driver: true,
+      },
+      where: and(eq(busCrews.busId, id), isNull(busCrews.deletedAt)),
+    });
 
     return {
       ...bus,
@@ -179,14 +187,71 @@ export function createBusRepository() {
       busModel,
       seatDiagram,
       technologies,
+      busCrew: busCrew as (Omit<BusCrewWithRelations, 'bus'> & {
+        bus?: undefined;
+      })[],
     };
   }
+
+  /**
+   * Assigns a driver to a bus crew
+   * @param busId - The ID of the bus to assign the driver to
+   * @param driverId - The ID of the driver to assign
+   * @returns The updated bus with its relations and assigned driver
+   */
+  const assignDriverToBusCrew = async (
+    busId: number,
+    driverId: number,
+  ): Promise<BusWithRelations> => {
+    await db
+      .insert(busCrews)
+      .values({
+        busId,
+        driverId,
+      })
+      .returning()
+      .then(([busCrew]) => busCrew);
+
+    return await findOneWithRelations(busId);
+  };
+
+  const findExistingBusCrewDriverIds = async (
+    driverIds: number[],
+  ): Promise<number[]> => {
+    if (driverIds.length === 0) {
+      return [];
+    }
+
+    const results = await db
+      .select({ driverId: busCrews.driverId })
+      .from(busCrews)
+      .where(
+        and(inArray(busCrews.driverId, driverIds), isNull(busCrews.deletedAt)),
+      );
+    return results.map((r) => r.driverId);
+  };
+
+  const findBusCrewByBusId = async (
+    busId: number,
+  ): Promise<BusCrewWithRelations[]> => {
+    const results = await db.query.busCrews.findMany({
+      where: and(eq(busCrews.busId, busId), isNull(busCrews.deletedAt)),
+      with: {
+        driver: true,
+      },
+    });
+
+    return results as BusCrewWithRelations[];
+  };
 
   return {
     ...baseRepository,
     update,
     getAllowedStatusTransitions,
     findOneWithRelations,
+    assignDriverToBusCrew,
+    findExistingBusCrewDriverIds,
+    findBusCrewByBusId,
   };
 }
 

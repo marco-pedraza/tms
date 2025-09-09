@@ -9,6 +9,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { isNull, relations } from 'drizzle-orm';
+import { busCrews } from '@/inventory/fleet/buses/buses.schema';
 import { busLines } from '@/inventory/operators/bus-lines/bus-lines.schema';
 import { transporters } from '@/inventory/operators/transporters/transporters.schema';
 
@@ -66,5 +67,9 @@ export const driversRelations = relations(drivers, ({ one }) => ({
   busLine: one(busLines, {
     fields: [drivers.busLineId],
     references: [busLines.id],
+  }),
+  assignedBus: one(busCrews, {
+    fields: [drivers.id],
+    references: [busCrews.driverId],
   }),
 }));

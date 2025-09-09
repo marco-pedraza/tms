@@ -99,6 +99,7 @@ export namespace inventory {
             this.assignAmenitiesToServiceType = this.assignAmenitiesToServiceType.bind(this)
             this.assignCitiesToPopulation = this.assignCitiesToPopulation.bind(this)
             this.assignCityToPopulation = this.assignCityToPopulation.bind(this)
+            this.assignDriversToBusCrew = this.assignDriversToBusCrew.bind(this)
             this.assignEventTypesToInstallationType = this.assignEventTypesToInstallationType.bind(this)
             this.assignEventsToNode = this.assignEventsToNode.bind(this)
             this.assignLabelsToNode = this.assignLabelsToNode.bind(this)
@@ -370,6 +371,23 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/populations/${encodeURIComponent(id)}/cities/assign/one`, JSON.stringify(params))
             return await resp.json() as populations.PopulationWithRelations
+        }
+
+        /**
+         * Assigns drivers to a bus crew (destructive sync).
+         * Replaces existing active assignments for this bus with the provided set.
+         * @param params - Object containing the bus ID and driver IDs
+         * @param params.id - The ID of the bus
+         * @param params.driverIds - Array of driver IDs to assign to the bus
+         * @returns {Promise<BusWithRelations>} The updated bus with relations (including busCrew)
+         * @throws {APIError} If validation or assignment fails
+         */
+        public async assignDriversToBusCrew(id: number, params: {
+    driverIds: number[]
+}): Promise<buses.BusWithRelations> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/buses/${encodeURIComponent(id)}/crew/assign`, JSON.stringify(params))
+            return await resp.json() as buses.BusWithRelations
         }
 
         /**
@@ -7102,6 +7120,33 @@ export namespace buses {
         deletedAt: string | string | null
     }
 
+    export interface BusCrewWithRelations {
+        /**
+         * The related bus entity
+         */
+        bus?: Bus
+
+        /**
+         * The related driver entity
+         */
+        driver?: drivers.Driver
+
+        /**
+         * Unique identifier for the bus crew assignment
+         */
+        id: number
+
+        /**
+         * The ID of the bus
+         */
+        busId: number
+
+        /**
+         * The ID of the driver assigned to this bus
+         */
+        driverId: number
+    }
+
     export type BusLicensePlateType = "NATIONAL" | "INTERNATIONAL" | "TOURISM"
 
     export type BusStatus = "ACTIVE" | "MAINTENANCE" | "REPAIR" | "OUT_OF_SERVICE" | "RESERVED" | "IN_TRANSIT" | "RETIRED"
@@ -7115,6 +7160,7 @@ export namespace buses {
         base?: nodes.Node | null
         technologies: technologies.Technology[]
         chromatic?: chromatics.Chromatic | null
+        busCrew: BusCrewWithRelations[]
         /**
          * Basic information
          */
@@ -7239,6 +7285,7 @@ export namespace buses {
         numFloors: number
         engineType?: string | null
         technologies: technologies.Technology[]
+        busCrew: BusCrewWithRelations[]
         /**
          * Basic information
          */
@@ -8415,6 +8462,7 @@ export namespace drivers {
     export interface DriverWithRelations {
         transporter: transporters.Transporter
         busLine: bus_lines.BusLine
+        assignedBus?: buses.Bus | null
         /**
          * Unique identifier for the driver
          */

@@ -1,5 +1,5 @@
-import { busTechnologies } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { busCrews, busTechnologies } from '@/db/schema';
+import { and, eq, isNull } from 'drizzle-orm';
 import { NotFoundError } from '@/shared/errors';
 import { busDiagramModelZoneRepository } from '@/inventory/fleet/bus-diagram-model-zones/bus-diagram-model-zones.repository';
 import type { BusDiagramModelZone } from '@/inventory/fleet/bus-diagram-model-zones/bus-diagram-model-zones.types';
@@ -13,6 +13,7 @@ import type { CreateSeatDiagramZonePayload } from '@/inventory/fleet/seat-diagra
 import { seatDiagramRepository } from '@/inventory/fleet/seat-diagrams/seat-diagrams.repository';
 import type { CreateSeatDiagramPayload } from '@/inventory/fleet/seat-diagrams/seat-diagrams.types';
 import type {
+  AssignDriverToBusCrewPayload,
   AssignTechnologiesToBusPayload,
   Bus,
   BusWithRelations,
@@ -315,6 +316,46 @@ export async function assignTechnologiesToBus(
         );
 
         await tx.insert(busTechnologies).values(technologyAssignments);
+      }
+
+      return busId;
+    })
+    .then((busId) => busRepository.findOneWithRelations(busId));
+}
+
+/**
+ * Assigns a driver to a bus crew with validation and atomicity
+ * This is a destructive operation that replaces existing driver
+ * @param busId - The ID of the bus to assign driver to
+ * @param payload - The assignment payload with driver ID
+ * @returns The updated bus with its relations and assigned driver
+ * @throws {ValidationError} If validation fails
+ */
+export async function assignDriversToBusCrew(
+  busId: number,
+  payload: AssignDriverToBusCrewPayload,
+): Promise<BusWithRelations> {
+  return await busRepository
+    .transaction(async (txRepo, tx) => {
+      // Remove duplicates from driverIds
+      const uniqueDriverIds = [...new Set(payload.driverIds)];
+
+      // Delete existing driver assignments
+      await tx
+        .update(busCrews)
+        .set({
+          deletedAt: new Date(),
+        })
+        .where(and(eq(busCrews.busId, busId), isNull(busCrews.deletedAt)));
+
+      // Insert new driver assignments if any
+      if (uniqueDriverIds.length > 0) {
+        const driverAssignments = uniqueDriverIds.map((driverId) => ({
+          busId,
+          driverId,
+        }));
+
+        await tx.insert(busCrews).values(driverAssignments);
       }
 
       return busId;

@@ -74,7 +74,12 @@ export {
   busSeatModels,
   busSeatModelsRelations,
 } from '@/inventory/fleet/bus-seat-models/bus-seat-models.schema';
-export { buses, busesRelations } from '@/inventory/fleet/buses/buses.schema';
+export {
+  buses,
+  busesRelations,
+  busCrews,
+  busCrewsRelations,
+} from '@/inventory/fleet/buses/buses.schema';
 export {
   pathways,
   pathwaysRelations,

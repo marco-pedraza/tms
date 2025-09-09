@@ -10,6 +10,7 @@ import {
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
+import { drivers } from '@/db/schema';
 import { isNull, relations } from 'drizzle-orm';
 import { busModels } from '@/inventory/fleet/bus-models/bus-models.schema';
 import { chromatics } from '@/inventory/fleet/chromatics/chromatics.schema';
@@ -93,9 +94,49 @@ export const buses = pgTable(
 );
 
 /**
+ * Database table for bus crews
+ */
+export const busCrews = pgTable(
+  'bus_crews',
+  {
+    id: serial('id').primaryKey(),
+    busId: integer('bus_id')
+      .notNull()
+      .references(() => buses.id),
+    driverId: integer('driver_id')
+      .notNull()
+      .references(() => drivers.id),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => [
+    index().on(table.busId),
+    index().on(table.driverId),
+    uniqueIndex()
+      .on(table.busId, table.driverId)
+      .where(isNull(table.deletedAt)),
+  ],
+);
+
+/**
+ * Relations for bus crews
+ */
+export const busCrewsRelations = relations(busCrews, ({ one }) => ({
+  bus: one(buses, {
+    fields: [busCrews.busId],
+    references: [buses.id],
+  }),
+  driver: one(drivers, {
+    fields: [busCrews.driverId],
+    references: [drivers.id],
+  }),
+}));
+
+/**
  * Relations for buses
  */
-export const busesRelations = relations(buses, ({ one }) => ({
+export const busesRelations = relations(buses, ({ one, many }) => ({
   busModel: one(busModels, {
     fields: [buses.modelId],
     references: [busModels.id],
@@ -124,4 +165,5 @@ export const busesRelations = relations(buses, ({ one }) => ({
     fields: [buses.chromaticId],
     references: [chromatics.id],
   }),
+  busCrew: many(busCrews),
 }));

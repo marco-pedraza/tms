@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { bus_diagram_models } from '@repo/ims-client';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
+import { FilterConfig } from '@/components/data-table/data-table-header';
 import IsActiveBadge from '@/components/is-active-badge';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import useServerTableEvents from '@/hooks/use-server-table-events';
@@ -109,13 +110,15 @@ export default function SeatDiagramsTable() {
     setSortingUrlState,
     searchUrlState,
     setSearchUrlState,
+    filtersUrlState,
+    setFiltersUrlState,
   } = useTableUrlState<bus_diagram_models.BusDiagramModel>();
   const { data, isLoading, error, refetch } = useQuerySeatDiagrams({
     page: paginationUrlState.page,
     pageSize: paginationUrlState.pageSize,
     orderBy: sortingUrlState,
     searchTerm: searchUrlState,
-    filters: {},
+    filters: filtersUrlState,
   });
   const { onSortingChange, onPaginationChange } = useServerTableEvents({
     paginationUrlState,
@@ -129,6 +132,17 @@ export default function SeatDiagramsTable() {
     });
 
   const columns = seatDiagramsColumnsFactory({ tCommon, tSeatDiagrams });
+
+  const filtersConfig: FilterConfig[] = [
+    {
+      name: tCommon('fields.status'),
+      key: 'active',
+      options: [
+        { label: tCommon('status.active'), value: true },
+        { label: tCommon('status.inactive'), value: false },
+      ],
+    },
+  ];
 
   return (
     <>
@@ -151,6 +165,9 @@ export default function SeatDiagramsTable() {
         onSortingChange={onSortingChange}
         initialSearchValue={searchUrlState}
         onSearchChange={setSearchUrlState}
+        filtersConfig={filtersConfig}
+        filtersState={filtersUrlState}
+        onFiltersChange={setFiltersUrlState}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

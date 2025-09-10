@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { service_types } from '@repo/ims-client';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
+import { FilterConfig } from '@/components/data-table/data-table-header';
 import IsActiveBadge from '@/components/is-active-badge';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import useServerTableEvents from '@/hooks/use-server-table-events';
@@ -68,6 +69,8 @@ export default function ServiceTypesTable() {
     setSortingUrlState,
     searchUrlState,
     setSearchUrlState,
+    filtersUrlState,
+    setFiltersUrlState,
   } = useTableUrlState<service_types.ServiceType>();
 
   const { data, isLoading, error, refetch } = useQueryServiceTypes({
@@ -75,7 +78,7 @@ export default function ServiceTypesTable() {
     pageSize: paginationUrlState.pageSize,
     orderBy: sortingUrlState,
     searchTerm: searchUrlState,
-    filters: {},
+    filters: filtersUrlState,
   });
 
   const { onSortingChange, onPaginationChange } = useServerTableEvents({
@@ -92,6 +95,17 @@ export default function ServiceTypesTable() {
     });
 
   const columns = columnsFactory({ tCommon, tServiceTypes });
+
+  const filtersConfig: FilterConfig[] = [
+    {
+      name: tCommon('fields.status'),
+      key: 'active',
+      options: [
+        { label: tCommon('status.active'), value: true },
+        { label: tCommon('status.inactive'), value: false },
+      ],
+    },
+  ];
 
   return (
     <>
@@ -114,6 +128,9 @@ export default function ServiceTypesTable() {
         onSearchChange={setSearchUrlState}
         onDelete={setDeleteId}
         routes={routes.serviceTypes}
+        filtersConfig={filtersConfig}
+        filtersState={filtersUrlState}
+        onFiltersChange={setFiltersUrlState}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

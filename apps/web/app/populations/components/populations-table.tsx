@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { populations } from '@repo/ims-client';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
+import { FilterConfig } from '@/components/data-table/data-table-header';
 import IsActiveBadge from '@/components/is-active-badge';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import useServerTableEvents from '@/hooks/use-server-table-events';
@@ -57,13 +58,15 @@ export default function PopulationsTable() {
     setSortingUrlState,
     searchUrlState,
     setSearchUrlState,
+    filtersUrlState,
+    setFiltersUrlState,
   } = useTableUrlState<populations.Population>();
   const { data, isLoading, error, refetch } = useQueryPopulations({
     page: paginationUrlState.page,
     pageSize: paginationUrlState.pageSize,
     searchTerm: searchUrlState,
     orderBy: sortingUrlState,
-    filters: {},
+    filters: filtersUrlState,
   });
   const { onSortingChange, onPaginationChange } = useServerTableEvents({
     paginationUrlState,
@@ -80,6 +83,17 @@ export default function PopulationsTable() {
   const columns = populationsColumnsFactory({
     tCommon,
   });
+
+  const filtersConfig: FilterConfig[] = [
+    {
+      name: tCommon('fields.status'),
+      key: 'active',
+      options: [
+        { label: tCommon('status.active'), value: true },
+        { label: tCommon('status.inactive'), value: false },
+      ],
+    },
+  ];
 
   return (
     <>
@@ -102,6 +116,9 @@ export default function PopulationsTable() {
         onSearchChange={setSearchUrlState}
         onDelete={setDeleteId}
         routes={routes.populations}
+        filtersConfig={filtersConfig}
+        filtersState={filtersUrlState}
+        onFiltersChange={setFiltersUrlState}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

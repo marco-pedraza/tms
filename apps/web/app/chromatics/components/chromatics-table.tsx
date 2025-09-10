@@ -6,6 +6,7 @@ import useChromaticMutations from '@/chromatics/hooks/use-chromatic-mutations';
 import useQueryChromatics from '@/chromatics/hooks/use-query-chromatics';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
+import { FilterConfig } from '@/components/data-table/data-table-header';
 import IsActiveBadge from '@/components/is-active-badge';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import useServerTableEvents from '@/hooks/use-server-table-events';
@@ -66,13 +67,15 @@ export default function ChromaticsTable() {
     setSortingUrlState,
     searchUrlState,
     setSearchUrlState,
+    filtersUrlState,
+    setFiltersUrlState,
   } = useTableUrlState<chromatics.Chromatic>();
   const { data, isLoading, error, refetch } = useQueryChromatics({
     page: paginationUrlState.page,
     pageSize: paginationUrlState.pageSize,
     orderBy: sortingUrlState,
     searchTerm: searchUrlState,
-    filters: {},
+    filters: filtersUrlState,
   });
   const { onSortingChange, onPaginationChange } = useServerTableEvents({
     paginationUrlState,
@@ -82,6 +85,17 @@ export default function ChromaticsTable() {
   });
 
   const columns = chromaticsColumnsFactory({ tChromatics, tCommon });
+
+  const filtersConfig: FilterConfig[] = [
+    {
+      name: tCommon('fields.status'),
+      key: 'active',
+      options: [
+        { label: tCommon('status.active'), value: true },
+        { label: tCommon('status.inactive'), value: false },
+      ],
+    },
+  ];
 
   return (
     <>
@@ -104,6 +118,9 @@ export default function ChromaticsTable() {
         onSortingChange={onSortingChange}
         initialSearchValue={searchUrlState}
         onSearchChange={setSearchUrlState}
+        filtersConfig={filtersConfig}
+        filtersState={filtersUrlState}
+        onFiltersChange={setFiltersUrlState}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

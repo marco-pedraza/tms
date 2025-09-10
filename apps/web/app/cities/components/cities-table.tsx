@@ -7,6 +7,7 @@ import useCityMutations from '@/cities/hooks/use-city-mutations';
 import useQueryCities from '@/cities/hooks/use-query-cities';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
+import { FilterConfig } from '@/components/data-table/data-table-header';
 import IsActiveBadge from '@/components/is-active-badge';
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
@@ -84,13 +85,15 @@ export default function CitiesTable() {
     setSortingUrlState,
     searchUrlState,
     setSearchUrlState,
+    filtersUrlState,
+    setFiltersUrlState,
   } = useTableUrlState<cities.City>();
   const { data, isLoading, error, refetch } = useQueryCities({
     page: paginationUrlState.page,
     pageSize: paginationUrlState.pageSize,
     orderBy: sortingUrlState,
     searchTerm: searchUrlState,
-    filters: {},
+    filters: filtersUrlState,
   });
   const { onSortingChange, onPaginationChange } = useServerTableEvents({
     paginationUrlState,
@@ -106,6 +109,17 @@ export default function CitiesTable() {
   };
 
   const columns = citiesColumnsFactory({ tCommon, tCities });
+
+  const filtersConfig: FilterConfig[] = [
+    {
+      name: tCommon('fields.status'),
+      key: 'active',
+      options: [
+        { label: tCommon('status.active'), value: true },
+        { label: tCommon('status.inactive'), value: false },
+      ],
+    },
+  ];
 
   return (
     <>
@@ -128,6 +142,9 @@ export default function CitiesTable() {
         routes={routes.cities}
         initialSearchValue={searchUrlState}
         onSearchChange={setSearchUrlState}
+        filtersConfig={filtersConfig}
+        filtersState={filtersUrlState}
+        onFiltersChange={setFiltersUrlState}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

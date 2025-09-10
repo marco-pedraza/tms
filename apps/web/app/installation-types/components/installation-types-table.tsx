@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { installation_types } from '@repo/ims-client';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
+import { FilterConfig } from '@/components/data-table/data-table-header';
 import IsActiveBadge from '@/components/is-active-badge';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import useServerTableEvents from '@/hooks/use-server-table-events';
@@ -89,6 +90,17 @@ export default function InstallationTypesTable() {
     tInstallationTypes,
   });
 
+  const filtersConfig: FilterConfig[] = [
+    {
+      name: tCommon('fields.status'),
+      key: 'active',
+      options: [
+        { label: tCommon('status.active'), value: true },
+        { label: tCommon('status.inactive'), value: false },
+      ],
+    },
+  ];
+
   return (
     <>
       <DataTable
@@ -107,7 +119,7 @@ export default function InstallationTypesTable() {
         sorting={sortingUrlState}
         initialSearchValue={searchUrlState}
         onSearchChange={setSearchUrlState}
-        filtersConfig={[]}
+        filtersConfig={filtersConfig}
         filtersState={filtersUrlState}
         onFiltersChange={setFiltersUrlState}
         onPaginationChange={onPaginationChange}

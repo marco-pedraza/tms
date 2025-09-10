@@ -126,19 +126,19 @@ export default function EventsTable() {
 
   const filtersConfig: FilterConfig[] = [
     {
-      name: tCommon('fields.active'),
-      key: 'active',
-      options: [
-        { label: tCommon('status.active'), value: true },
-        { label: tCommon('status.inactive'), value: false },
-      ],
-    },
-    {
       name: tEvents('fields.integration'),
       key: 'integration',
       options: [
         { label: tEvents('filters.withIntegration'), value: true },
         { label: tEvents('filters.withoutIntegration'), value: false },
+      ],
+    },
+    {
+      name: tCommon('fields.status'),
+      key: 'active',
+      options: [
+        { label: tCommon('status.active'), value: true },
+        { label: tCommon('status.inactive'), value: false },
       ],
     },
   ];

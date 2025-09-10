@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { labels } from '@repo/ims-client';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import { DataTable, DataTableColumnDef } from '@/components/data-table';
+import { FilterConfig } from '@/components/data-table/data-table-header';
 import IsActiveBadge from '@/components/is-active-badge';
 import { Badge } from '@/components/ui/badge';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
@@ -113,13 +114,15 @@ export default function LabelsTable() {
     setSortingUrlState,
     searchUrlState,
     setSearchUrlState,
+    filtersUrlState,
+    setFiltersUrlState,
   } = useTableUrlState<labels.Label>();
   const { data, isLoading, error, refetch } = useQueryLabels({
     page: paginationUrlState.page,
     pageSize: paginationUrlState.pageSize,
     orderBy: sortingUrlState,
     searchTerm: searchUrlState,
-    filters: {},
+    filters: filtersUrlState,
   });
   const { onSortingChange, onPaginationChange } = useServerTableEvents({
     paginationUrlState,
@@ -137,6 +140,17 @@ export default function LabelsTable() {
     tCommon,
     tLabels,
   });
+
+  const filtersConfig: FilterConfig[] = [
+    {
+      name: tCommon('fields.status'),
+      key: 'active',
+      options: [
+        { label: tCommon('status.active'), value: true },
+        { label: tCommon('status.inactive'), value: false },
+      ],
+    },
+  ];
 
   return (
     <>
@@ -159,6 +173,9 @@ export default function LabelsTable() {
         onSearchChange={setSearchUrlState}
         onDelete={setDeleteId}
         routes={routes.labels}
+        filtersConfig={filtersConfig}
+        filtersState={filtersUrlState}
+        onFiltersChange={setFiltersUrlState}
       />
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

@@ -88,7 +88,7 @@ export default function AmenityForm({
       active: true,
     },
     validators: {
-      onChange: amenitySchema,
+      onSubmit: amenitySchema,
     },
     onSubmit: async ({ value }) => {
       try {

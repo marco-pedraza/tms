@@ -109,7 +109,7 @@ export default function SeatDiagramForm({
   const form = useForm({
     defaultValues: rawDefaultValues,
     validators: {
-      onChange: seatDiagramSchema,
+      onSubmit: seatDiagramSchema,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -162,7 +162,7 @@ export default function SeatDiagramForm({
        * when the discriminated union is not the root of the schema
        */
       // @ts-expect-error - read todo above
-      onChange: createSeatDiagramSpaceSchema(tValidations),
+      onSubmit: createSeatDiagramSpaceSchema(tValidations),
     },
     onSubmit: ({ value }) => {
       const currentSeatConfiguration = form.getFieldValue('seatConfiguration');

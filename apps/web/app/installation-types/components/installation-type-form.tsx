@@ -93,7 +93,7 @@ export default function InstallationTypeForm({
   const form = useForm({
     defaultValues: rawDefaultValues,
     validators: {
-      onChange: installationTypeSchema,
+      onSubmit: installationTypeSchema,
     },
     onSubmit: async ({ value }) => {
       try {

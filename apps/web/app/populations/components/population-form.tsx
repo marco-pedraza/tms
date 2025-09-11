@@ -79,7 +79,7 @@ export default function PopulationForm({
       cities: [],
     },
     validators: {
-      onChange: populationSchema,
+      onSubmit: populationSchema,
     },
     onSubmit: async ({ value }) => {
       try {

@@ -64,7 +64,7 @@ export default function EventForm({ defaultValues, onSubmit }: EventFormProps) {
       active: true,
     },
     validators: {
-      onChange: createEventFormSchema(tValidations),
+      onSubmit: createEventFormSchema(tValidations),
     },
     onSubmit: async ({ value }) => {
       try {

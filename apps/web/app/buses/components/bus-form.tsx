@@ -191,7 +191,7 @@ export default function BusForm({
   const form = useForm({
     defaultValues: rawDefaultValues,
     validators: {
-      onChange: busSchema,
+      onSubmit: busSchema,
     },
     onSubmit: async ({ value }) => {
       try {

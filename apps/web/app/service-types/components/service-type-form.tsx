@@ -52,7 +52,7 @@ export default function ServiceTypeForm({ defaultValues, onSubmit }: Props) {
       amenityIds: [],
     },
     validators: {
-      onChange: serviceTypeFormSchema,
+      onSubmit: serviceTypeFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {

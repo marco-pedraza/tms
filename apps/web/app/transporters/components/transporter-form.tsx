@@ -115,7 +115,6 @@ export default function TransporterForm({
       active: true,
     },
     validators: {
-      onChange: transporterSchema,
       onSubmit: transporterSchema,
     },
     onSubmit: async ({ value }) => {

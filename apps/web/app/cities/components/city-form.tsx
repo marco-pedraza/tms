@@ -97,7 +97,7 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
       populationId: '',
     },
     validators: {
-      onChange: citySchema,
+      onSubmit: citySchema,
     },
     onSubmit: async ({ value }) => {
       try {

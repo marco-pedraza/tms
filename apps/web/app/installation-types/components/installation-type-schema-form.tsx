@@ -111,7 +111,7 @@ export default function InstallationTypeSchemaForm({
       description: '',
     },
     validators: {
-      onChange: installationTypeSchemaFormSchema,
+      onSubmit: installationTypeSchemaFormSchema,
     },
     onSubmit: ({ value }) => {
       onSubmit(value);

@@ -47,7 +47,7 @@ export default function LabelForm({ defaultValues, onSubmit }: LabelFormProps) {
       active: true,
     },
     validators: {
-      onChange: labelFormSchema,
+      onSubmit: labelFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {

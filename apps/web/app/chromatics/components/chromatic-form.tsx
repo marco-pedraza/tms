@@ -69,7 +69,7 @@ export default function ChromaticForm({
   const form = useForm({
     defaultValues: rawDefaultValues,
     validators: {
-      onChange: chromaticSchema,
+      onSubmit: chromaticSchema,
     },
     onSubmit: async ({ value }) => {
       try {

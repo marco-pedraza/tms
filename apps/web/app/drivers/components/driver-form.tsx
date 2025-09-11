@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import type { drivers } from '@repo/ims-client';
@@ -13,7 +13,6 @@ import useQueryAllBusLines from '@/bus-lines/hooks/use-query-all-bus-lines';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useForm from '@/hooks/use-form';
 import { nameSchema } from '@/schemas/common';
 import { emailSchema, phoneSchema } from '@/schemas/contact';
@@ -111,8 +110,6 @@ export default function DriverForm({
   const tDrivers = useTranslations('drivers');
   const tCommon = useTranslations('common');
 
-  const [activeTab, setActiveTab] = useState('basic');
-
   // Get driver ID and mutations for immediate operations
   const driverId = defaultValues?.id;
   const timeOffsMutations = useDriverTimeOffsMutations(driverId || 0);
@@ -197,7 +194,7 @@ export default function DriverForm({
       medicalChecks: [],
     },
     validators: {
-      onChange: driverFormSchema,
+      onSubmit: driverFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -262,346 +259,323 @@ export default function DriverForm({
 
   return (
     <Form onSubmit={form.handleSubmit}>
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="basic">
-            {tDrivers('sections.driverInfo')}
-          </TabsTrigger>
-          <TabsTrigger value="availability">
-            {tDrivers('sections.availability')}
-          </TabsTrigger>
-          <TabsTrigger value="medical">
-            {tDrivers('sections.medicalChecks')}
-          </TabsTrigger>
-        </TabsList>
+      <div className="space-y-6">
+        <FormLayout title={tDrivers('sections.personalInfo')}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form.AppField name="driverKey">
+              {(field) => (
+                <field.TextInput
+                  label={tDrivers('form.driverKey')}
+                  placeholder={tDrivers('form.placeholders.driverKey')}
+                  isRequired
+                />
+              )}
+            </form.AppField>
 
-        <TabsContent value="basic">
+            <form.AppField name="payrollKey">
+              {(field) => (
+                <field.TextInput
+                  label={tDrivers('form.payrollKey')}
+                  placeholder={tDrivers('form.placeholders.payrollKey')}
+                  isRequired
+                />
+              )}
+            </form.AppField>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form.AppField name="firstName">
+              {(field) => (
+                <field.TextInput
+                  label={tCommon('fields.firstName')}
+                  placeholder={tDrivers('form.placeholders.firstName')}
+                  isRequired
+                />
+              )}
+            </form.AppField>
+
+            <form.AppField name="lastName">
+              {(field) => (
+                <field.TextInput
+                  label={tCommon('fields.lastName')}
+                  placeholder={tDrivers('form.placeholders.lastName')}
+                  isRequired
+                />
+              )}
+            </form.AppField>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form.AppField name="phone">
+              {(field) => (
+                <field.TextInput
+                  type="tel"
+                  label={tCommon('fields.phone')}
+                  placeholder={tDrivers('form.placeholders.phone')}
+                />
+              )}
+            </form.AppField>
+
+            <form.AppField name="email">
+              {(field) => (
+                <field.TextInput
+                  type="email"
+                  label={tCommon('fields.email')}
+                  placeholder={tDrivers('form.placeholders.email')}
+                />
+              )}
+            </form.AppField>
+          </div>
+
+          <form.AppField name="address">
+            {(field) => (
+              <field.TextAreaInput
+                label={tDrivers('form.address')}
+                placeholder={tDrivers('form.placeholders.address')}
+              />
+            )}
+          </form.AppField>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <form.AppField name="emergencyContactName">
+              {(field) => (
+                <field.TextInput
+                  label={tDrivers('form.emergencyContactName')}
+                  placeholder={tDrivers(
+                    'form.placeholders.emergencyContactName',
+                  )}
+                />
+              )}
+            </form.AppField>
+
+            <form.AppField name="emergencyContactPhone">
+              {(field) => (
+                <field.TextInput
+                  type="tel"
+                  label={tDrivers('form.emergencyContactPhone')}
+                  placeholder={tDrivers(
+                    'form.placeholders.emergencyContactPhone',
+                  )}
+                />
+              )}
+            </form.AppField>
+
+            <form.AppField name="emergencyContactRelationship">
+              {(field) => (
+                <field.TextInput
+                  label={tDrivers('form.emergencyContactRelationship')}
+                  placeholder={tDrivers(
+                    'form.placeholders.emergencyContactRelationship',
+                  )}
+                />
+              )}
+            </form.AppField>
+          </div>
+        </FormLayout>
+
+        <FormLayout title={tDrivers('sections.jobInfo')}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form.AppField name="hireDate">
+              {(field) => (
+                <field.TextInput
+                  type="date"
+                  label={tDrivers('form.hireDate')}
+                />
+              )}
+            </form.AppField>
+
+            <form.AppField name="busLineId">
+              {(field) => (
+                <field.SelectInput
+                  label={tDrivers('form.busLine')}
+                  placeholder={tDrivers('form.placeholders.busLine')}
+                  items={busLinesOptions}
+                  isRequired
+                />
+              )}
+            </form.AppField>
+
+            <form.AppField name="status">
+              {(field) => (
+                <field.SelectInput
+                  label={tCommon('fields.status')}
+                  placeholder={tDrivers('form.placeholders.status')}
+                  items={(isEditing
+                    ? driverStatuses
+                    : driverInitialStatuses
+                  ).map((status) => ({
+                    id: status,
+                    name: tDrivers(`status.${status}`),
+                  }))}
+                  isRequired
+                />
+              )}
+            </form.AppField>
+
+            <form.AppField name="statusDate">
+              {(field) => (
+                <field.TextInput
+                  type="date"
+                  label={tDrivers('form.statusDate')}
+                />
+              )}
+            </form.AppField>
+
+            <form.AppField name="license">
+              {(field) => (
+                <field.TextInput
+                  label={tDrivers('form.license')}
+                  placeholder={tDrivers('form.placeholders.license')}
+                  isRequired
+                />
+              )}
+            </form.AppField>
+
+            <form.AppField name="licenseExpiry">
+              {(field) => (
+                <field.TextInput
+                  type="date"
+                  label={tDrivers('form.licenseExpiry')}
+                  isRequired
+                />
+              )}
+            </form.AppField>
+          </div>
+        </FormLayout>
+
+        <FormLayout title={tDrivers('sections.availability')}>
           <div className="space-y-6">
-            <FormLayout title={tDrivers('sections.personalInfo')}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <form.AppField name="driverKey">
-                  {(field) => (
-                    <field.TextInput
-                      label={tDrivers('form.driverKey')}
-                      placeholder={tDrivers('form.placeholders.driverKey')}
-                      isRequired
-                    />
-                  )}
-                </form.AppField>
+            <DriverTimeOffForm
+              onAdd={async (timeOff) => {
+                // Create immediately via API
+                const createdTimeOff =
+                  await timeOffsMutations.create.mutateWithToast(
+                    {
+                      startDate: timeOff.startDate,
+                      endDate: timeOff.endDate,
+                      type: timeOff.type,
+                      reason: timeOff.reason,
+                    },
+                    { standalone: false },
+                  );
 
-                <form.AppField name="payrollKey">
-                  {(field) => (
-                    <field.TextInput
-                      label={tDrivers('form.payrollKey')}
-                      placeholder={tDrivers('form.placeholders.payrollKey')}
-                      isRequired
-                    />
-                  )}
-                </form.AppField>
-              </div>
+                // Add to local state with API data
+                const currentTimeOffs = form.getFieldValue('timeOffs') || [];
+                const formattedTimeOff = {
+                  id: createdTimeOff.id,
+                  startDate: createdTimeOff.startDate,
+                  endDate: createdTimeOff.endDate,
+                  type: createdTimeOff.type as TimeOffType,
+                  reason: createdTimeOff.reason || '',
+                  isNew: true, // Mark as new for visual feedback
+                };
+                form.setFieldValue('timeOffs', [
+                  formattedTimeOff,
+                  ...currentTimeOffs,
+                ]);
+              }}
+              disabled={!isEditing}
+            />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <form.AppField name="firstName">
-                  {(field) => (
-                    <field.TextInput
-                      label={tCommon('fields.firstName')}
-                      placeholder={tDrivers('form.placeholders.firstName')}
-                      isRequired
-                    />
-                  )}
-                </form.AppField>
-
-                <form.AppField name="lastName">
-                  {(field) => (
-                    <field.TextInput
-                      label={tCommon('fields.lastName')}
-                      placeholder={tDrivers('form.placeholders.lastName')}
-                      isRequired
-                    />
-                  )}
-                </form.AppField>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <form.AppField name="phone">
-                  {(field) => (
-                    <field.TextInput
-                      type="tel"
-                      label={tCommon('fields.phone')}
-                      placeholder={tDrivers('form.placeholders.phone')}
-                    />
-                  )}
-                </form.AppField>
-
-                <form.AppField name="email">
-                  {(field) => (
-                    <field.TextInput
-                      type="email"
-                      label={tCommon('fields.email')}
-                      placeholder={tDrivers('form.placeholders.email')}
-                    />
-                  )}
-                </form.AppField>
-              </div>
-
-              <form.AppField name="address">
+            {isEditing && (
+              <form.AppField name="timeOffs">
                 {(field) => (
-                  <field.TextAreaInput
-                    label={tDrivers('form.address')}
-                    placeholder={tDrivers('form.placeholders.address')}
+                  <DriverTimeOffsView
+                    timeOffs={(field.state.value as TimeOffItem[]) || []}
+                    showHeader={true}
+                    onDelete={(index) => {
+                      (async () => {
+                        const currentTimeOffs =
+                          (field.state.value as TimeOffItem[]) || [];
+                        const timeOff = currentTimeOffs[index];
+
+                        if (timeOff?.id) {
+                          try {
+                            // Delete immediately via API
+                            await timeOffsMutations.delete.mutateWithToast(
+                              timeOff.id,
+                              { standalone: false },
+                            );
+
+                            // Remove from local state after successful deletion
+                            const updated = currentTimeOffs.filter(
+                              (_, i) => i !== index,
+                            );
+                            field.handleChange(updated);
+                          } catch {
+                            // Error is handled by the mutation toast
+                          }
+                        }
+                      })();
+                    }}
+                    disabled={!isEditing}
                   />
                 )}
               </form.AppField>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <form.AppField name="emergencyContactName">
-                  {(field) => (
-                    <field.TextInput
-                      label={tDrivers('form.emergencyContactName')}
-                      placeholder={tDrivers(
-                        'form.placeholders.emergencyContactName',
-                      )}
-                    />
-                  )}
-                </form.AppField>
-
-                <form.AppField name="emergencyContactPhone">
-                  {(field) => (
-                    <field.TextInput
-                      type="tel"
-                      label={tDrivers('form.emergencyContactPhone')}
-                      placeholder={tDrivers(
-                        'form.placeholders.emergencyContactPhone',
-                      )}
-                    />
-                  )}
-                </form.AppField>
-
-                <form.AppField name="emergencyContactRelationship">
-                  {(field) => (
-                    <field.TextInput
-                      label={tDrivers('form.emergencyContactRelationship')}
-                      placeholder={tDrivers(
-                        'form.placeholders.emergencyContactRelationship',
-                      )}
-                    />
-                  )}
-                </form.AppField>
-              </div>
-            </FormLayout>
-
-            <FormLayout title={tDrivers('sections.jobInfo')}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <form.AppField name="hireDate">
-                  {(field) => (
-                    <field.TextInput
-                      type="date"
-                      label={tDrivers('form.hireDate')}
-                    />
-                  )}
-                </form.AppField>
-
-                <form.AppField name="busLineId">
-                  {(field) => (
-                    <field.SelectInput
-                      label={tDrivers('form.busLine')}
-                      placeholder={tDrivers('form.placeholders.busLine')}
-                      items={busLinesOptions}
-                      isRequired
-                    />
-                  )}
-                </form.AppField>
-
-                <form.AppField name="status">
-                  {(field) => (
-                    <field.SelectInput
-                      label={tCommon('fields.status')}
-                      placeholder={tDrivers('form.placeholders.status')}
-                      items={(isEditing
-                        ? driverStatuses
-                        : driverInitialStatuses
-                      ).map((status) => ({
-                        id: status,
-                        name: tDrivers(`status.${status}`),
-                      }))}
-                      isRequired
-                    />
-                  )}
-                </form.AppField>
-
-                <form.AppField name="statusDate">
-                  {(field) => (
-                    <field.TextInput
-                      type="date"
-                      label={tDrivers('form.statusDate')}
-                    />
-                  )}
-                </form.AppField>
-
-                <form.AppField name="license">
-                  {(field) => (
-                    <field.TextInput
-                      label={tDrivers('form.license')}
-                      placeholder={tDrivers('form.placeholders.license')}
-                      isRequired
-                    />
-                  )}
-                </form.AppField>
-
-                <form.AppField name="licenseExpiry">
-                  {(field) => (
-                    <field.TextInput
-                      type="date"
-                      label={tDrivers('form.licenseExpiry')}
-                      isRequired
-                    />
-                  )}
-                </form.AppField>
-              </div>
-            </FormLayout>
+            )}
           </div>
-        </TabsContent>
+        </FormLayout>
 
-        <TabsContent value="availability">
-          <FormLayout title={tDrivers('sections.availability')}>
-            <div className="space-y-6">
-              <DriverTimeOffForm
-                onAdd={async (timeOff) => {
-                  // Create immediately via API
-                  const createdTimeOff =
-                    await timeOffsMutations.create.mutateWithToast(
-                      {
-                        startDate: timeOff.startDate,
-                        endDate: timeOff.endDate,
-                        type: timeOff.type,
-                        reason: timeOff.reason,
-                      },
-                      { standalone: false },
-                    );
+        <FormLayout title={tDrivers('sections.medicalChecks')}>
+          <div className="space-y-6">
+            <DriverMedicalCheckForm
+              onAdd={async (medicalCheck) => {
+                // Create immediately via API
+                const createdMedicalCheck =
+                  await medicalChecksMutations.create.mutateWithToast(
+                    {
+                      checkDate: medicalCheck.checkDate,
+                      daysUntilNextCheck: medicalCheck.daysUntilNextCheck,
+                      result: medicalCheck.result,
+                      notes: medicalCheck.notes,
+                    },
+                    { standalone: false },
+                  );
 
-                  // Add to local state with API data
-                  const currentTimeOffs = form.getFieldValue('timeOffs') || [];
-                  const formattedTimeOff = {
-                    id: createdTimeOff.id,
-                    startDate: createdTimeOff.startDate,
-                    endDate: createdTimeOff.endDate,
-                    type: createdTimeOff.type as TimeOffType,
-                    reason: createdTimeOff.reason || '',
-                    isNew: true, // Mark as new for visual feedback
-                  };
-                  form.setFieldValue('timeOffs', [
-                    formattedTimeOff,
-                    ...currentTimeOffs,
-                  ]);
-                }}
-                disabled={!isEditing}
-              />
+                // Add to local state with API data
+                const currentMedicalChecks =
+                  form.getFieldValue('medicalChecks') || [];
+                const formattedMedicalCheck = {
+                  id: createdMedicalCheck.id,
+                  checkDate: createdMedicalCheck.checkDate,
+                  nextCheckDate: createdMedicalCheck.nextCheckDate,
+                  daysUntilNextCheck: createdMedicalCheck.daysUntilNextCheck,
+                  result: createdMedicalCheck.result,
+                  notes: createdMedicalCheck.notes || '',
+                  isNew: true, // Mark as new for visual feedback
+                };
+                form.setFieldValue('medicalChecks', [
+                  formattedMedicalCheck,
+                  ...currentMedicalChecks,
+                ]);
+              }}
+              disabled={!isEditing}
+            />
 
-              {isEditing && (
-                <form.AppField name="timeOffs">
-                  {(field) => (
-                    <DriverTimeOffsView
-                      timeOffs={(field.state.value as TimeOffItem[]) || []}
-                      showHeader={true}
-                      onDelete={(index) => {
-                        (async () => {
-                          const currentTimeOffs =
-                            (field.state.value as TimeOffItem[]) || [];
-                          const timeOff = currentTimeOffs[index];
-
-                          if (timeOff?.id) {
-                            try {
-                              // Delete immediately via API
-                              await timeOffsMutations.delete.mutateWithToast(
-                                timeOff.id,
-                                { standalone: false },
-                              );
-
-                              // Remove from local state after successful deletion
-                              const updated = currentTimeOffs.filter(
-                                (_, i) => i !== index,
-                              );
-                              field.handleChange(updated);
-                            } catch {
-                              // Error is handled by the mutation toast
-                            }
-                          }
-                        })();
-                      }}
-                      disabled={!isEditing}
-                    />
-                  )}
-                </form.AppField>
-              )}
-            </div>
-          </FormLayout>
-        </TabsContent>
-
-        <TabsContent value="medical">
-          <FormLayout title={tDrivers('sections.medicalChecks')}>
-            <div className="space-y-6">
-              <DriverMedicalCheckForm
-                onAdd={async (medicalCheck) => {
-                  // Create immediately via API
-                  const createdMedicalCheck =
-                    await medicalChecksMutations.create.mutateWithToast(
-                      {
-                        checkDate: medicalCheck.checkDate,
-                        daysUntilNextCheck: medicalCheck.daysUntilNextCheck,
-                        result: medicalCheck.result,
-                        notes: medicalCheck.notes,
-                      },
-                      { standalone: false },
-                    );
-
-                  // Add to local state with API data
-                  const currentMedicalChecks =
-                    form.getFieldValue('medicalChecks') || [];
-                  const formattedMedicalCheck = {
-                    id: createdMedicalCheck.id,
-                    checkDate: createdMedicalCheck.checkDate,
-                    nextCheckDate: createdMedicalCheck.nextCheckDate,
-                    daysUntilNextCheck: createdMedicalCheck.daysUntilNextCheck,
-                    result: createdMedicalCheck.result,
-                    notes: createdMedicalCheck.notes || '',
-                    isNew: true, // Mark as new for visual feedback
-                  };
-                  form.setFieldValue('medicalChecks', [
-                    formattedMedicalCheck,
-                    ...currentMedicalChecks,
-                  ]);
-                }}
-                disabled={!isEditing}
-              />
-
-              {isEditing && (
-                <form.AppField name="medicalChecks">
-                  {(field) => (
-                    <DriverMedicalChecksView
-                      medicalChecks={
-                        (field.state.value as MedicalCheckItem[]) || []
-                      }
-                      showHeader={true}
-                    />
-                  )}
-                </form.AppField>
-              )}
-            </div>
-          </FormLayout>
-        </TabsContent>
-      </Tabs>
-
-      {activeTab === 'basic' && (
-        <FormFooter>
-          <form.AppForm>
-            <form.SubmitButton>
-              {defaultValues
-                ? tDrivers('actions.update')
-                : tDrivers('actions.create')}
-            </form.SubmitButton>
-          </form.AppForm>
-        </FormFooter>
-      )}
+            {isEditing && (
+              <form.AppField name="medicalChecks">
+                {(field) => (
+                  <DriverMedicalChecksView
+                    medicalChecks={
+                      (field.state.value as MedicalCheckItem[]) || []
+                    }
+                    showHeader={true}
+                  />
+                )}
+              </form.AppField>
+            )}
+          </div>
+        </FormLayout>
+      </div>
+      <FormFooter>
+        <form.AppForm>
+          <form.SubmitButton>
+            {defaultValues
+              ? tDrivers('actions.update')
+              : tDrivers('actions.create')}
+          </form.SubmitButton>
+        </form.AppForm>
+      </FormFooter>
     </Form>
   );
 }

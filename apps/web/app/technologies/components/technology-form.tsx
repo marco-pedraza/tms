@@ -65,7 +65,7 @@ export default function TechnologyForm({
   const form = useForm({
     defaultValues: rawDefaultValues,
     validators: {
-      onChange: technologySchema,
+      onSubmit: technologySchema,
     },
     onSubmit: async ({ value }) => {
       try {

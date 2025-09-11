@@ -98,7 +98,7 @@ export default function BusLineForm({
       active: true,
     },
     validators: {
-      onChange: schema,
+      onSubmit: schema,
     },
     onSubmit: async ({ value }) => {
       try {

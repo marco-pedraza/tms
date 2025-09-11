@@ -70,7 +70,7 @@ export default function StateForm({ defaultValues, onSubmit }: StateFormProps) {
       countryId: '',
     },
     validators: {
-      onChange: stateFormSchema,
+      onSubmit: stateFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {

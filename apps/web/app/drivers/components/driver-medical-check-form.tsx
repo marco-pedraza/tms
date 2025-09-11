@@ -118,7 +118,7 @@ export default function DriverMedicalCheckForm({
       notes: '',
     },
     validators: {
-      onChange: medicalCheckSchema,
+      onSubmit: medicalCheckSchema,
     },
     onSubmit: async ({ value }) => {
       const parsed = medicalCheckSchema.safeParse(value);

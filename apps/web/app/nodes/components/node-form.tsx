@@ -14,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useForm from '@/hooks/use-form';
 import useQueryInstallationTypeSchemas from '@/hooks/use-query-installation-type-schemas';
 import useQueryAllInstallationTypes from '@/installation-types/hooks/use-query-all-installation-types';
@@ -568,348 +567,187 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
 
   return (
     <Form onSubmit={handleSubmit}>
-      <Tabs defaultValue="basic">
-        <TabsList>
-          <TabsTrigger value="basic">
-            {tCommon('sections.basicInfo')}
-          </TabsTrigger>
-          <TabsTrigger value="location">
-            {tNodes('form.sections.locationAndContactInfo')}
-          </TabsTrigger>
-          <TabsTrigger value="events">{tCommon('sections.events')}</TabsTrigger>
-          <TabsTrigger value="custom">
-            {tNodes('form.sections.customAttributes')}
-          </TabsTrigger>
-          <TabsTrigger value="amenities">
-            {tNodes('fields.amenitiesAndHours')}
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="basic">
-          <FormLayout title={tNodes('form.sections.basicInfo')}>
-            <form.AppField name="installationTypeId">
+      <div className="space-y-4">
+        <FormLayout title={tNodes('form.sections.basicInfo')}>
+          <form.AppField name="installationTypeId">
+            {(field) => (
+              <field.SelectInput
+                label={tNodes('fields.installationType')}
+                placeholder={tNodes('form.placeholders.installationType')}
+                isRequired
+                items={
+                  installationTypes?.data.map((installationType) => ({
+                    id: installationType.id.toString(),
+                    name: installationType.name,
+                  })) ?? []
+                }
+              />
+            )}
+          </form.AppField>
+          <form.AppField name="name">
+            {(field) => (
+              <field.TextInput
+                label={tCommon('fields.name')}
+                placeholder={tNodes('form.placeholders.name')}
+                isRequired
+              />
+            )}
+          </form.AppField>
+          <form.AppField name="code">
+            {(field) => (
+              <field.TextInput
+                label={tCommon('fields.code')}
+                placeholder={tNodes('form.placeholders.code')}
+                isRequired
+              />
+            )}
+          </form.AppField>
+          <form.AppField name="description">
+            {(field) => (
+              <field.TextInput
+                label={tCommon('fields.description')}
+                placeholder={tNodes('form.placeholders.description')}
+              />
+            )}
+          </form.AppField>
+          <form.AppField name="labelIds">
+            {(field) => (
+              <field.MultiSelectInput
+                label={tNodes('fields.labels')}
+                placeholder={tNodes('form.placeholders.labels')}
+                items={
+                  labels?.data.map((label) => ({
+                    id: label.id.toString(),
+                    name: label.name,
+                    color: label.color,
+                  })) ?? []
+                }
+                emptyOptionsLabel={tNodes('form.placeholders.emptyLabelsList')}
+              />
+            )}
+          </form.AppField>
+          <form.AppField name="allowsBoarding">
+            {(field) => (
+              <field.SwitchInput label={tNodes('fields.allowsBoarding')} />
+            )}
+          </form.AppField>
+          <form.AppField name="allowsAlighting">
+            {(field) => (
+              <field.SwitchInput label={tNodes('fields.allowsAlighting')} />
+            )}
+          </form.AppField>
+        </FormLayout>
+        <FormLayout title={tNodes('form.sections.locationInfo')}>
+          <div className="grid grid-cols-2 gap-4">
+            <form.AppField
+              name="populationId"
+              listeners={{
+                onChange: () => {
+                  form.setFieldValue('cityId', '');
+                },
+              }}
+            >
               {(field) => (
                 <field.SelectInput
-                  label={tNodes('fields.installationType')}
-                  placeholder={tNodes('form.placeholders.installationType')}
+                  label={tNodes('fields.population')}
+                  placeholder={tNodes('form.placeholders.population')}
                   isRequired
                   items={
-                    installationTypes?.data.map((installationType) => ({
-                      id: installationType.id.toString(),
-                      name: installationType.name,
+                    populations?.data.map((population) => ({
+                      id: population.id.toString(),
+                      name: population.name,
                     })) ?? []
                   }
                 />
               )}
             </form.AppField>
-            <form.AppField name="name">
+            <form.AppField name="cityId">
               {(field) => (
-                <field.TextInput
-                  label={tCommon('fields.name')}
-                  placeholder={tNodes('form.placeholders.name')}
+                <field.SelectInput
+                  label={tNodes('fields.city')}
+                  placeholder={tNodes('form.placeholders.city')}
                   isRequired
-                />
-              )}
-            </form.AppField>
-            <form.AppField name="code">
-              {(field) => (
-                <field.TextInput
-                  label={tCommon('fields.code')}
-                  placeholder={tNodes('form.placeholders.code')}
-                  isRequired
-                />
-              )}
-            </form.AppField>
-            <form.AppField name="description">
-              {(field) => (
-                <field.TextInput
-                  label={tCommon('fields.description')}
-                  placeholder={tNodes('form.placeholders.description')}
-                />
-              )}
-            </form.AppField>
-            <form.AppField name="labelIds">
-              {(field) => (
-                <field.MultiSelectInput
-                  label={tNodes('fields.labels')}
-                  placeholder={tNodes('form.placeholders.labels')}
+                  emptyOptionsLabel={tNodes('form.placeholders.emptyCityList')}
                   items={
-                    labels?.data.map((label) => ({
-                      id: label.id.toString(),
-                      name: label.name,
-                      color: label.color,
+                    cities?.data.map((city) => ({
+                      id: city.id.toString(),
+                      name: city.name,
                     })) ?? []
                   }
-                  emptyOptionsLabel={tNodes(
-                    'form.placeholders.emptyLabelsList',
-                  )}
                 />
               )}
             </form.AppField>
-            <form.AppField name="allowsBoarding">
-              {(field) => (
-                <field.SwitchInput label={tNodes('fields.allowsBoarding')} />
-              )}
-            </form.AppField>
-            <form.AppField name="allowsAlighting">
-              {(field) => (
-                <field.SwitchInput label={tNodes('fields.allowsAlighting')} />
-              )}
-            </form.AppField>
-          </FormLayout>
-        </TabsContent>
-        <TabsContent value="location" className="space-y-4">
-          <FormLayout title={tNodes('form.sections.locationInfo')}>
-            <div className="grid grid-cols-2 gap-4">
-              <form.AppField
-                name="populationId"
-                listeners={{
-                  onChange: () => {
-                    form.setFieldValue('cityId', '');
-                  },
-                }}
-              >
-                {(field) => (
-                  <field.SelectInput
-                    label={tNodes('fields.population')}
-                    placeholder={tNodes('form.placeholders.population')}
-                    isRequired
-                    items={
-                      populations?.data.map((population) => ({
-                        id: population.id.toString(),
-                        name: population.name,
-                      })) ?? []
-                    }
-                  />
-                )}
-              </form.AppField>
-              <form.AppField name="cityId">
-                {(field) => (
-                  <field.SelectInput
-                    label={tNodes('fields.city')}
-                    placeholder={tNodes('form.placeholders.city')}
-                    isRequired
-                    emptyOptionsLabel={tNodes(
-                      'form.placeholders.emptyCityList',
-                    )}
-                    items={
-                      cities?.data.map((city) => ({
-                        id: city.id.toString(),
-                        name: city.name,
-                      })) ?? []
-                    }
-                  />
-                )}
-              </form.AppField>
-            </div>
-            <form.AppField name="address">
+          </div>
+          <form.AppField name="address">
+            {(field) => (
+              <field.TextInput
+                label={tNodes('fields.address')}
+                placeholder={tNodes('form.placeholders.address')}
+                isRequired
+              />
+            )}
+          </form.AppField>
+          <div className="grid grid-cols-2 gap-4">
+            <form.AppField name="latitude">
               {(field) => (
                 <field.TextInput
-                  label={tNodes('fields.address')}
-                  placeholder={tNodes('form.placeholders.address')}
+                  label={tCommon('fields.latitude')}
+                  placeholder={tNodes('form.placeholders.latitude')}
                   isRequired
+                  inputMode="decimal"
                 />
               )}
             </form.AppField>
-            <div className="grid grid-cols-2 gap-4">
-              <form.AppField name="latitude">
-                {(field) => (
-                  <field.TextInput
-                    label={tCommon('fields.latitude')}
-                    placeholder={tNodes('form.placeholders.latitude')}
-                    isRequired
-                    inputMode="decimal"
-                  />
-                )}
-              </form.AppField>
-              <form.AppField name="longitude">
-                {(field) => (
-                  <field.TextInput
-                    label={tCommon('fields.longitude')}
-                    placeholder={tNodes('form.placeholders.longitude')}
-                    isRequired
-                    inputMode="decimal"
-                  />
-                )}
-              </form.AppField>
-              <form.AppField name="radius">
-                {(field) => (
-                  <field.TextInput
-                    label={tNodes('fields.radius')}
-                    placeholder={tNodes('form.placeholders.radius')}
-                    isRequired
-                    inputMode="decimal"
-                  />
-                )}
-              </form.AppField>
-            </div>
-          </FormLayout>
-          <FormLayout title={tNodes('form.sections.contactInfo')}>
-            <form.AppField name="contactPhone">
+            <form.AppField name="longitude">
               {(field) => (
                 <field.TextInput
-                  label={tNodes('fields.contactPhone')}
-                  placeholder={tNodes('form.placeholders.contactPhone')}
+                  label={tCommon('fields.longitude')}
+                  placeholder={tNodes('form.placeholders.longitude')}
+                  isRequired
+                  inputMode="decimal"
                 />
               )}
             </form.AppField>
-            <form.AppField name="contactEmail">
+            <form.AppField name="radius">
               {(field) => (
                 <field.TextInput
-                  label={tNodes('fields.contactEmail')}
-                  placeholder={tNodes('form.placeholders.contactEmail')}
+                  label={tNodes('fields.radius')}
+                  placeholder={tNodes('form.placeholders.radius')}
+                  isRequired
+                  inputMode="decimal"
                 />
               )}
             </form.AppField>
-            <form.AppField name="website">
-              {(field) => (
-                <field.TextInput
-                  label={tNodes('fields.website')}
-                  placeholder={tNodes('form.placeholders.website')}
-                />
-              )}
-            </form.AppField>
-          </FormLayout>
-        </TabsContent>
-        <TabsContent value="events">
-          {!currentInstallationTypeId ? (
-            <Card>
-              <CardContent>
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground text-lg mb-4">
-                    {tNodes('form.placeholders.selectInstallationTypeFirst')}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {tNodes(
-                      'form.placeholders.selectInstallationTypeFirstDescription',
-                    )}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : events && events.length === 0 ? (
-            <Card>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">
-                    {tNodeEvents('noEventsAvailable')}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : isLoadingEvents ? (
-            <Card>
-              <CardContent>
-                <div className="flex justify-center items-center h-full">
-                  <Loader2 className="h-10 w-10 animate-spin" />
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  {tNodeEvents('title')}
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {tNodeEvents('description')}
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {events?.map((eventType) => (
-                    <div
-                      key={eventType.id}
-                      className="p-3 border rounded-lg hover:bg-accent cursor-pointer"
-                    >
-                      <div className="flex items-start space-x-3">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`event-${eventType.id}`}
-                            checked={selectedEvents.includes(eventType.id)}
-                            onCheckedChange={(checked: boolean) => {
-                              handleEventSelection(eventType.id, checked);
-                            }}
-                            className="mt-1"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <Label
-                            htmlFor={`event-${eventType.id}`}
-                            className="font-medium cursor-pointer block"
-                          >
-                            {eventType.name}
-                          </Label>
-                          <div className="flex flex-wrap items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-xs">
-                              {eventType.code}
-                            </Badge>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              {formatDuration({
-                                minutes: eventType.baseTime,
-                              })}
-                            </div>
-                            {eventType.integration && (
-                              <div className="flex items-center gap-1 text-xs text-blue-600">
-                                <Zap className="h-3 w-3" />
-                                {tNodeEvents('integration')}
-                              </div>
-                            )}
-                          </div>
-                          {eventType.description && (
-                            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                              {eventType.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {selectedEvents.includes(eventType.id) && (
-                        <div className="mt-3 ml-8">
-                          <div className="flex items-center gap-3">
-                            <Label
-                              htmlFor={`time-${eventType.id}`}
-                              className="text-sm font-medium min-w-0"
-                            >
-                              {tNodeEvents('customTime')}
-                            </Label>
-                            <Input
-                              id={`time-${eventType.id}`}
-                              min={0}
-                              step={1}
-                              type="number"
-                              placeholder={`${eventType.baseTime}`}
-                              value={
-                                currentFormEvents.find(
-                                  (event) => event.eventTypeId === eventType.id,
-                                )?.customTime || ''
-                              }
-                              onChange={(e) => {
-                                if (e.target.value === '') {
-                                  handleEventTimeChange(eventType.id, null);
-                                } else {
-                                  handleEventTimeChange(
-                                    eventType.id,
-                                    parseInt(e.target.value),
-                                  );
-                                }
-                              }}
-                              className="w-24"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-        <TabsContent value="custom">
-          {!currentInstallationTypeId ? (
+          </div>
+        </FormLayout>
+        <FormLayout title={tNodes('form.sections.contactInfo')}>
+          <form.AppField name="contactPhone">
+            {(field) => (
+              <field.TextInput
+                label={tNodes('fields.contactPhone')}
+                placeholder={tNodes('form.placeholders.contactPhone')}
+              />
+            )}
+          </form.AppField>
+          <form.AppField name="contactEmail">
+            {(field) => (
+              <field.TextInput
+                label={tNodes('fields.contactEmail')}
+                placeholder={tNodes('form.placeholders.contactEmail')}
+              />
+            )}
+          </form.AppField>
+          <form.AppField name="website">
+            {(field) => (
+              <field.TextInput
+                label={tNodes('fields.website')}
+                placeholder={tNodes('form.placeholders.website')}
+              />
+            )}
+          </form.AppField>
+        </FormLayout>
+        {!currentInstallationTypeId ? (
+          <FormLayout title={tNodeEvents('title')}>
             <div className="text-center py-12">
               <p className="text-muted-foreground text-lg mb-4">
                 {tNodes('form.placeholders.selectInstallationTypeFirst')}
@@ -920,7 +758,141 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
                 )}
               </p>
             </div>
-          ) : schemas.length === 0 ? (
+          </FormLayout>
+        ) : events && events.length === 0 ? (
+          <FormLayout title={tNodeEvents('title')}>
+            <div className="text-center py-8">
+              <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">
+                {tNodeEvents('noEventsAvailable')}
+              </p>
+            </div>
+          </FormLayout>
+        ) : isLoadingEvents ? (
+          <Card>
+            <CardContent>
+              <div className="flex justify-center items-center h-full">
+                <Loader2 className="h-10 w-10 animate-spin" />
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                {tNodeEvents('title')}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {tNodeEvents('description')}
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {events?.map((eventType) => (
+                  <div
+                    key={eventType.id}
+                    className="p-3 border rounded-lg hover:bg-accent cursor-pointer"
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`event-${eventType.id}`}
+                          checked={selectedEvents.includes(eventType.id)}
+                          onCheckedChange={(checked: boolean) => {
+                            handleEventSelection(eventType.id, checked);
+                          }}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Label
+                          htmlFor={`event-${eventType.id}`}
+                          className="font-medium cursor-pointer block"
+                        >
+                          {eventType.name}
+                        </Label>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {eventType.code}
+                          </Badge>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3" />
+                            {formatDuration({
+                              minutes: eventType.baseTime,
+                            })}
+                          </div>
+                          {eventType.integration && (
+                            <div className="flex items-center gap-1 text-xs text-blue-600">
+                              <Zap className="h-3 w-3" />
+                              {tNodeEvents('integration')}
+                            </div>
+                          )}
+                        </div>
+                        {eventType.description && (
+                          <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                            {eventType.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {selectedEvents.includes(eventType.id) && (
+                      <div className="mt-3 ml-8">
+                        <div className="flex items-center gap-3">
+                          <Label
+                            htmlFor={`time-${eventType.id}`}
+                            className="text-sm font-medium min-w-0"
+                          >
+                            {tNodeEvents('customTime')}
+                          </Label>
+                          <Input
+                            id={`time-${eventType.id}`}
+                            min={0}
+                            step={1}
+                            type="number"
+                            placeholder={`${eventType.baseTime}`}
+                            value={
+                              currentFormEvents.find(
+                                (event) => event.eventTypeId === eventType.id,
+                              )?.customTime ?? ''
+                            }
+                            onChange={(e) => {
+                              if (e.target.value === '') {
+                                handleEventTimeChange(eventType.id, null);
+                              } else {
+                                handleEventTimeChange(
+                                  eventType.id,
+                                  parseInt(e.target.value),
+                                );
+                              }
+                            }}
+                            className="w-24"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        {!currentInstallationTypeId ? (
+          <FormLayout title={tNodes('form.sections.customAttributes')}>
+            <div className="text-center py-12">
+              <p className="text-muted-foreground text-lg mb-4">
+                {tNodes('form.placeholders.selectInstallationTypeFirst')}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {tNodes(
+                  'form.placeholders.selectInstallationTypeFirstDescription',
+                )}
+              </p>
+            </div>
+          </FormLayout>
+        ) : schemas.length === 0 ? (
+          <FormLayout title={tNodes('form.sections.customAttributes')}>
             <div className="text-center py-12">
               <p className="text-muted-foreground text-lg mb-4">
                 {tNodes('form.placeholders.noCustomAttributes')}
@@ -929,88 +901,85 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
                 {tNodes('form.placeholders.noCustomAttributesDescription')}
               </p>
             </div>
-          ) : (
-            <InstallationDynamicForm
-              form={customAttributesForm}
-              schemas={schemas}
-            />
-          )}
-        </TabsContent>
-        <TabsContent value="amenities" className="space-y-4">
-          <FormLayout title={tNodes('fields.amenities')}>
-            <form.AppField name="amenityIds">
-              {(field) => (
-                <div className="space-y-4">
-                  <field.MultiSelectInput
-                    label={tNodes('fields.amenities')}
-                    placeholder={tNodes('form.placeholders.amenities')}
-                    items={
-                      amenities?.data.map((amenity) => ({
-                        id: amenity.id.toString(),
-                        name: amenity.name,
-                        category: amenity.category,
-                        iconName: amenity.iconName,
-                        description: amenity.description,
-                      })) ?? []
-                    }
-                    emptyOptionsLabel={tNodes(
-                      'form.placeholders.emptyAmenitiesList',
-                    )}
-                  />
-
-                  {field.state.value && field.state.value.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-medium text-foreground">
-                        {tNodes('fields.selectedAmenities', {
-                          count: field.state.value.length,
-                        })}
-                      </h4>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                        {field.state.value.map((amenityId: number) => {
-                          const amenity = amenities?.data.find(
-                            (a) => a.id === amenityId,
-                          );
-                          return amenity ? (
-                            <AmenityCard key={amenity.id} amenity={amenity} />
-                          ) : null;
-                        })}
-                      </div>
-                    </div>
+          </FormLayout>
+        ) : (
+          <InstallationDynamicForm
+            form={customAttributesForm}
+            schemas={schemas}
+          />
+        )}
+        <FormLayout title={tNodes('fields.amenities')}>
+          <form.AppField name="amenityIds">
+            {(field) => (
+              <div className="space-y-4">
+                <field.MultiSelectInput
+                  label={tNodes('fields.amenities')}
+                  placeholder={tNodes('form.placeholders.amenities')}
+                  items={
+                    amenities?.data.map((amenity) => ({
+                      id: amenity.id.toString(),
+                      name: amenity.name,
+                      category: amenity.category,
+                      iconName: amenity.iconName,
+                      description: amenity.description,
+                    })) ?? []
+                  }
+                  emptyOptionsLabel={tNodes(
+                    'form.placeholders.emptyAmenitiesList',
                   )}
-                </div>
-              )}
-            </form.AppField>
-          </FormLayout>
+                />
 
-          <FormLayout title={tNodes('fields.operatingHours.title')}>
-            <form.AppField name="operatingHours">
-              {(field) => {
-                return (
-                  <OperatingHoursForm
-                    value={field.state.value}
-                    onChange={(value) => field.handleChange(value)}
-                    errors={
-                      (field.state.meta.errors
-                        ?.filter(Boolean)
-                        .map((err) => err?.message)
-                        .filter(Boolean) as string[]) || []
-                    }
-                  />
-                );
-              }}
-            </form.AppField>
-          </FormLayout>
-        </TabsContent>
-      </Tabs>
-      <FormFooter>
-        <form.AppForm>
-          <form.SubmitButton>
-            {defaultValues
-              ? tNodes('actions.update')
-              : tNodes('actions.create')}
-          </form.SubmitButton>
-        </form.AppForm>
-      </FormFooter>
+                {field.state.value && field.state.value.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-foreground">
+                      {tNodes('fields.selectedAmenities', {
+                        count: field.state.value.length,
+                      })}
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {field.state.value.map((amenityId: number) => {
+                        const amenity = amenities?.data.find(
+                          (a) => a.id === amenityId,
+                        );
+                        return amenity ? (
+                          <AmenityCard key={amenity.id} amenity={amenity} />
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </form.AppField>
+        </FormLayout>
+        <FormLayout title={tNodes('fields.operatingHours.title')}>
+          <form.AppField name="operatingHours">
+            {(field) => {
+              return (
+                <OperatingHoursForm
+                  value={field.state.value}
+                  onChange={(value) => field.handleChange(value)}
+                  errors={
+                    (field.state.meta.errors
+                      ?.filter(Boolean)
+                      .map((err) => err?.message)
+                      .filter(Boolean) as string[]) || []
+                  }
+                />
+              );
+            }}
+          </form.AppField>
+        </FormLayout>
+        <FormFooter>
+          <form.AppForm>
+            <form.SubmitButton>
+              {defaultValues
+                ? tNodes('actions.update')
+                : tNodes('actions.create')}
+            </form.SubmitButton>
+          </form.AppForm>
+        </FormFooter>
+      </div>
     </Form>
   );
 }

@@ -55,7 +55,7 @@ export default function CountryForm({
       active: true,
     },
     validators: {
-      onChange: createCountryFormSchema(tValidations),
+      onSubmit: createCountryFormSchema(tValidations),
     },
     onSubmit: async (values) => {
       try {

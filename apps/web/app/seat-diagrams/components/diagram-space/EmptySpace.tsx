@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { SeatDiagramSpace } from '@/seat-diagrams/seat-diagrams.schemas';
 
 const emptySpaceVariants = cva(
-  'w-10 h-10 rounded-none bg-white border-dashed border-2 border-gray-300 shadow-none p-1',
+  'w-10 h-10 rounded-none bg-gray-200 border-dashed border-2 border-gray-300 shadow-none p-1',
   {
     variants: {
       isSelected: {

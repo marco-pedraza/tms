@@ -31,7 +31,9 @@ export default function DiagramSpace({
       );
 
     case SpaceType.HALLWAY:
-      return <HallwaySpace />;
+      return (
+        <HallwaySpace space={space} onClick={onClick} isSelected={isSelected} />
+      );
 
     case SpaceType.BATHROOM:
       return (

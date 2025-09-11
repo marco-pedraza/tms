@@ -62,11 +62,10 @@ export default function createFloorsFromQuickConfig(
 ) {
   // build floors
   // -- by default, each space in a floor is a hallway, or a seat
-  // -- the seat number is the row number + a letter corresponding to the row number (for example: 1A, 1B, 1C, 2A, 2B, 2C, etc.)
+  // -- the seat number is the global seat number counter incremented for each seat
   // -- for now, the zones array is empty
-  let rowsCountFromPreviousFloors = 0;
+  let globalSeatNumberCounter = 1;
   const floors = quickConfiguration.map((floor) => {
-    const startingCharCodeForRightSeats = 65 + floor.seatsLeft;
     const seatsLeft: bus_seat_models.BusSeatModel[] = [];
     const seatsRight: bus_seat_models.BusSeatModel[] = [];
     const hallways: bus_seat_models.BusSeatModel[] = [];
@@ -76,7 +75,7 @@ export default function createFloorsFromQuickConfig(
           id: Number(`${floor.floorNumber}${row}${seat}`),
           spaceType: SpaceType.SEAT,
           seatType: SeatType.REGULAR,
-          seatNumber: `${row + 1 + rowsCountFromPreviousFloors}${String.fromCharCode(65 + seat)}`,
+          seatNumber: `${globalSeatNumberCounter++}`,
           position: {
             x: seat,
             y: row,
@@ -95,7 +94,7 @@ export default function createFloorsFromQuickConfig(
           id: Number(`${floor.floorNumber}${row}${floor.seatsLeft + seat + 1}`),
           spaceType: SpaceType.SEAT,
           seatType: SeatType.REGULAR,
-          seatNumber: `${row + 1 + rowsCountFromPreviousFloors}${String.fromCharCode(startingCharCodeForRightSeats + seat)}`,
+          seatNumber: `${globalSeatNumberCounter++}`,
           position: {
             x: floor.seatsLeft + seat + 1,
             y: row,
@@ -125,7 +124,6 @@ export default function createFloorsFromQuickConfig(
         updatedAt: new Date().toISOString(),
       });
     }
-    rowsCountFromPreviousFloors += floor.numRows;
     return {
       floorNumber: floor.floorNumber,
       spaces: [...seatsLeft, ...hallways, ...seatsRight],

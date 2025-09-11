@@ -48,14 +48,6 @@ export default function ServiceTypeFormSkeleton() {
             <Skeleton className="h-10 w-full rounded-md" />
           </div>
 
-          {/* Category Field */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">
-              {tCommon('fields.category')}
-            </Label>
-            <Skeleton className="h-10 w-full rounded-md" />
-          </div>
-
           {/* Description Field */}
           <div className="space-y-2">
             <Label className="text-sm font-medium">

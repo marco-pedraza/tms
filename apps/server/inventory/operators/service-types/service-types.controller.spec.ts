@@ -12,7 +12,6 @@ import {
   safeCleanup,
 } from '@/tests/shared/test-utils';
 import type { ServiceType } from './service-types.types';
-import { ServiceTypeCategory } from './service-types.types';
 import { serviceTypeRepository } from './service-types.repository';
 import {
   assignAmenitiesToServiceType,
@@ -137,7 +136,6 @@ describe('Service Types Controller', () => {
     const serviceType = await createServiceType({
       name: serviceTypeEntity.name,
       code: serviceTypeEntity.code || 'TST001',
-      category: ServiceTypeCategory.REGULAR,
       description: 'A service type for testing',
       active: true,
       ...overrides,
@@ -165,7 +163,6 @@ describe('Service Types Controller', () => {
       expect(response.id).toBeDefined();
       expect(response.name).toContain('Test Service Type');
       expect(response.code).toContain('TST');
-      expect(response.category).toBe(ServiceTypeCategory.REGULAR);
       expect(response.description).toBe('A service type for testing');
       expect(response.active).toBe(true);
       expect(response.createdAt).toBeDefined();
@@ -180,7 +177,6 @@ describe('Service Types Controller', () => {
       expect(response.id).toBe(createdServiceType.id);
       expect(response.name).toBe(createdServiceType.name);
       expect(response.code).toBe(createdServiceType.code);
-      expect(response.category).toBe(ServiceTypeCategory.REGULAR);
       expect(response.description).toBe(createdServiceType.description);
       expect(response.active).toBe(createdServiceType.active);
     });
@@ -607,7 +603,6 @@ describe('Service Types Controller', () => {
         await createServiceType({
           name: 'Another Name',
           code: base.code,
-          category: ServiceTypeCategory.REGULAR,
           active: true,
         });
       } catch (error) {

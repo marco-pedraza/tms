@@ -49,10 +49,6 @@ export default function ServiceTypeSkeleton() {
               <Skeleton className="h-6 w-24" />
             </div>
             <div className="flex justify-between items-start">
-              <div className="font-medium">{tCommon('fields.category')}:</div>
-              <Skeleton className="h-6 w-32" />
-            </div>
-            <div className="flex justify-between items-start">
               <div className="font-medium">
                 {tCommon('fields.description')}:
               </div>

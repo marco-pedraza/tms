@@ -16,7 +16,6 @@ export const serviceTypes = pgTable(
     id: serial('id').primaryKey(),
     name: varchar('name', { length: 100 }).notNull(),
     code: varchar('code', { length: 20 }).notNull(),
-    category: varchar('category', { length: 100 }).notNull(),
     description: text('description'),
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').notNull().defaultNow(),

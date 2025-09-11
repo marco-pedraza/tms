@@ -8,17 +8,6 @@ import type {
 import type { Amenity } from '@/inventory/shared-entities/amenities/amenities.types';
 
 /**
- * Enum for service type categories
- * Defines the allowed categories for service types
- */
-export enum ServiceTypeCategory {
-  REGULAR = 'regular',
-  EXPRESS = 'express',
-  LUXURY = 'luxury',
-  ECONOMIC = 'economic',
-}
-
-/**
  * ServiceType from database
  */
 export interface ServiceType {
@@ -30,9 +19,6 @@ export interface ServiceType {
 
   /** Unique code for the service type */
   code: string;
-
-  /** Category this service type belongs to */
-  category: ServiceTypeCategory;
 
   /** Description of what this service type represents */
   description: string | null;
@@ -72,12 +58,6 @@ export interface CreateServiceTypePayload {
   code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
-   * Category for the service type
-   * Must be one of the allowed categories
-   */
-  category: ServiceTypeCategory;
-
-  /**
    * Description of the service type (optional)
    */
   description?: string;
@@ -104,12 +84,6 @@ export interface UpdateServiceTypePayload {
    * Must have at least 1 non-whitespace character
    */
   code?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-
-  /**
-   * Category for the service type
-   * Must be one of the allowed categories
-   */
-  category?: ServiceTypeCategory;
 
   /**
    * Description of the service type

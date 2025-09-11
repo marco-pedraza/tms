@@ -13,7 +13,6 @@ import type { DriverTimeOff } from '@/inventory/fleet/drivers/time-offs/time-off
 import type { City } from '@/inventory/locations/cities/cities.types';
 import type { BusLine } from '@/inventory/operators/bus-lines/bus-lines.types';
 import type { ServiceType } from '@/inventory/operators/service-types/service-types.types';
-import { ServiceTypeCategory } from '@/inventory/operators/service-types/service-types.types';
 import type { Transporter } from '@/inventory/operators/transporters/transporters.types';
 import {
   busLineFactory,
@@ -56,61 +55,11 @@ export async function seedServiceTypes(
     };
 
     if (busLinesData.dependencies?.service_types?.length > 0) {
-      /**
-       * Helper function to validate ServiceTypeCategory enum values
-       * Handles both uppercase and lowercase variations
-       */
-      const isValidServiceTypeCategory = (
-        category: unknown,
-      ): category is ServiceTypeCategory => {
-        if (typeof category !== 'string') return false;
-
-        // Normalize to lowercase for comparison
-        const normalizedCategory = category.toLowerCase();
-        return Object.values(ServiceTypeCategory)
-          .map((v) => v.toLowerCase())
-          .includes(normalizedCategory);
-      };
-
-      /**
-       * Helper function to normalize category to proper enum value
-       */
-      const normalizeServiceTypeCategory = (
-        category: string,
-      ): ServiceTypeCategory => {
-        const normalizedCategory = category.toLowerCase();
-        // Map normalized values to enum values
-        switch (normalizedCategory) {
-          case 'regular':
-            return ServiceTypeCategory.REGULAR;
-          case 'express':
-            return ServiceTypeCategory.EXPRESS;
-          case 'luxury':
-            return ServiceTypeCategory.LUXURY;
-          case 'economic':
-            return ServiceTypeCategory.ECONOMIC;
-          default:
-            return ServiceTypeCategory.REGULAR;
-        }
-      };
-
       const serviceTypesFromClient =
         busLinesData.dependencies.service_types.map((st) => {
-          // Validate enum value and provide safe fallback
-          let validCategory: ServiceTypeCategory;
-          if (isValidServiceTypeCategory(st.category)) {
-            validCategory = normalizeServiceTypeCategory(st.category);
-          } else {
-            console.warn(
-              `   ⚠️ Invalid service type category '${st.category as string}' for service type '${st.name}'. Using fallback: REGULAR`,
-            );
-            validCategory = ServiceTypeCategory.REGULAR;
-          }
-
           return {
             name: st.name,
             code: st.code,
-            category: validCategory,
             description: st.description ?? `${st.name} service`,
             active: true,
             deletedAt: null,
@@ -132,7 +81,6 @@ export async function seedServiceTypes(
     {
       name: 'Lujo',
       code: 'LUX',
-      category: ServiceTypeCategory.LUXURY,
       description: 'Premium service with enhanced comfort and amenities',
       active: true,
       deletedAt: null,
@@ -140,7 +88,6 @@ export async function seedServiceTypes(
     {
       name: 'Primera Clase',
       code: 'PRIM',
-      category: ServiceTypeCategory.LUXURY,
       description: 'First class service with comfortable seating',
       active: true,
       deletedAt: null,
@@ -148,7 +95,6 @@ export async function seedServiceTypes(
     {
       name: 'Económico',
       code: 'ECO',
-      category: ServiceTypeCategory.ECONOMIC,
       description: 'Standard economic service',
       active: true,
       deletedAt: null,
@@ -156,7 +102,6 @@ export async function seedServiceTypes(
     {
       name: 'Estándar',
       code: 'STD',
-      category: ServiceTypeCategory.REGULAR,
       description: 'Tourist class service',
       active: true,
       deletedAt: null,

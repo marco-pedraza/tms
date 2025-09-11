@@ -72,9 +72,6 @@ export default function ServiceTypeDetailsPage() {
               <dt className="font-medium">{tCommon('fields.code')}:</dt>
               <dd>{serviceType.code}</dd>
 
-              <dt className="font-medium">{tCommon('fields.category')}:</dt>
-              <dd>{tServiceTypes(`categories.${serviceType.category}`)}</dd>
-
               <dt className="col-span-2 font-medium mb-2">
                 {tServiceTypes('fields.amenities')}:
               </dt>

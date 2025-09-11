@@ -3,7 +3,6 @@ import {
   createServiceType,
   deleteServiceType,
 } from '@/inventory/operators/service-types/service-types.controller';
-import { ServiceTypeCategory } from '@/inventory/operators/service-types/service-types.types';
 import {
   createTransporter,
   deleteTransporter,
@@ -58,7 +57,6 @@ describe('Bus Lines Controller', () => {
     const serviceType = await createServiceType({
       name: 'Test Service Type for Bus Lines',
       code: 'TSTBL',
-      category: ServiceTypeCategory.REGULAR,
       description: 'Test service type for bus lines tests',
       active: true,
     });

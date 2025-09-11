@@ -2,7 +2,6 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { FieldValidationError, NotFoundError } from '@repo/base-repo';
 import { busLineRepository } from '@/inventory/operators/bus-lines/bus-lines.repository';
 import { serviceTypeRepository } from '@/inventory/operators/service-types/service-types.repository';
-import { ServiceTypeCategory } from '@/inventory/operators/service-types/service-types.types';
 import { transporterRepository } from '@/inventory/operators/transporters/transporters.repository';
 import { createCleanupHelper } from '@/tests/shared/test-utils';
 import { driverRepository } from '../drivers.repository';
@@ -147,7 +146,6 @@ describe('Driver Time-offs Controller', () => {
       const testServiceType = await serviceTypeRepository.create({
         name: 'Test Service Type for Time-offs',
         code: 'TSTSTD-TOFF',
-        category: ServiceTypeCategory.REGULAR,
         description: 'Test service type for driver time-off relations',
         active: true,
       });

@@ -2,13 +2,13 @@
 
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
-import type { amenities, service_types } from '@repo/ims-client';
+import type { amenities } from '@repo/ims-client';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import AmenityCard from '@/components/ui/amenity-card';
 import useForm from '@/hooks/use-form';
-import { codeSchema, nameSchema } from '@/schemas/common';
+import { alphanumericCodeSchema, nameSchema } from '@/schemas/common';
 import type { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 import useQueryServiceTypeAmenities from '../hooks/use-query-service-type-amenities';
@@ -18,11 +18,7 @@ const createServiceTypeFormSchema = (
 ) =>
   z.object({
     name: nameSchema(tValidations),
-    code: codeSchema(tValidations, 2, 20),
-    category: z.custom<service_types.ServiceTypeCategory>(
-      (val) => typeof val === 'string' && val.length > 0,
-      { message: tValidations('required') },
-    ),
+    code: alphanumericCodeSchema(tValidations, { minLength: 2, maxLength: 20 }),
     description: z.string().trim().optional(),
     active: z.boolean(),
     amenityIds: z.array(z.number()),
@@ -46,7 +42,6 @@ export default function ServiceTypeForm({ defaultValues, onSubmit }: Props) {
     defaultValues: defaultValues ?? {
       name: '',
       code: '',
-      category: '',
       description: undefined,
       active: true,
       amenityIds: [],
@@ -95,22 +90,6 @@ export default function ServiceTypeForm({ defaultValues, onSubmit }: Props) {
               label={tCommon('fields.code')}
               placeholder={tServiceTypes('form.placeholders.code')}
               isRequired
-            />
-          )}
-        </form.AppField>
-
-        <form.AppField name="category">
-          {(field) => (
-            <field.SelectInput
-              label={tCommon('fields.category')}
-              placeholder={tServiceTypes('form.placeholders.category')}
-              isRequired
-              items={[
-                { id: 'regular', name: tServiceTypes('categories.regular') },
-                { id: 'express', name: tServiceTypes('categories.express') },
-                { id: 'luxury', name: tServiceTypes('categories.luxury') },
-                { id: 'economic', name: tServiceTypes('categories.economic') },
-              ]}
             />
           )}
         </form.AppField>

@@ -10,21 +10,16 @@ import useDeleteDialog from '@/hooks/use-delete-dialog';
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
 import routes from '@/services/routes';
-import type {
-  UseCommonTranslationsResult,
-  UseServiceTypesTranslationsResult,
-} from '@/types/translations';
+import type { UseCommonTranslationsResult } from '@/types/translations';
 import useQueryServiceTypes from '../hooks/use-query-service-types';
 import useServiceTypeMutations from '../hooks/use-service-type-mutations';
 
 interface ColumnsFactoryProps {
   tCommon: UseCommonTranslationsResult;
-  tServiceTypes: UseServiceTypesTranslationsResult;
 }
 
 function columnsFactory({
   tCommon,
-  tServiceTypes,
 }: ColumnsFactoryProps): DataTableColumnDef<service_types.ServiceType>[] {
   return [
     {
@@ -35,14 +30,6 @@ function columnsFactory({
     {
       accessorKey: 'code',
       header: tCommon('fields.code'),
-      sortable: true,
-    },
-    {
-      accessorKey: 'category',
-      header: tCommon('fields.category'),
-      cell: ({ row }) => {
-        return tServiceTypes(`categories.${row.original.category}`);
-      },
       sortable: true,
     },
     {
@@ -61,7 +48,6 @@ function columnsFactory({
 
 export default function ServiceTypesTable() {
   const tCommon = useTranslations('common');
-  const tServiceTypes = useTranslations('serviceTypes');
   const {
     paginationUrlState,
     sortingUrlState,
@@ -94,7 +80,7 @@ export default function ServiceTypesTable() {
       onConfirm: deleteServiceType.mutateWithToast,
     });
 
-  const columns = columnsFactory({ tCommon, tServiceTypes });
+  const columns = columnsFactory({ tCommon });
 
   const filtersConfig: FilterConfig[] = [
     {

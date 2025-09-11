@@ -6,7 +6,6 @@ import {
 } from '@repo/base-repo';
 import { busLineRepository } from '@/inventory/operators/bus-lines/bus-lines.repository';
 import { serviceTypeRepository } from '@/inventory/operators/service-types/service-types.repository';
-import { ServiceTypeCategory } from '@/inventory/operators/service-types/service-types.types';
 import { transporterRepository } from '@/inventory/operators/transporters/transporters.repository';
 import { createCleanupHelper } from '@/tests/shared/test-utils';
 import type { Driver } from './drivers.types';
@@ -92,7 +91,6 @@ describe('Drivers Controller', () => {
       const testServiceType = await serviceTypeRepository.create({
         name: 'Test Service Type',
         code: 'TSTSTD',
-        category: ServiceTypeCategory.REGULAR,
         description: 'Test service type for driver relations',
         active: true,
       });

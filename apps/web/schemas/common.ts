@@ -37,3 +37,29 @@ export function codeSchema(
       message: tValidations('code.uppercase'),
     });
 }
+
+/**
+ * Alphanumeric code validation with uppercase letters, hyphens, and numbers
+ * @param tValidations - Translation functions for validation messages
+ * @param config - Configuration object with minLength and maxLength
+ * @returns Zod schema for alphanumeric codes
+ */
+export function alphanumericCodeSchema(
+  tValidations: UseValidationsTranslationsResult,
+  { minLength = 2, maxLength = 10 } = {},
+) {
+  const useExactLengthMessage = minLength === maxLength;
+
+  return z
+    .string()
+    .trim()
+    .min(minLength, {
+      message: useExactLengthMessage
+        ? tValidations('code.length', { length: minLength })
+        : tValidations('code.length-range', { min: minLength, max: maxLength }),
+    })
+    .max(maxLength)
+    .regex(/^[A-Z0-9-]+$/, {
+      message: tValidations('code.alphanumeric'),
+    });
+}

@@ -556,17 +556,10 @@
     "fields": {
       "name": "Nombre",
       "code": "Código",
-      "category": "Categoría",
       "description": "Descripción",
       "active": "Activo",
       "amenities": "Amenidades",
       "selectedAmenities": "Amenidades seleccionadas ({count})"
-    },
-    "categories": {
-      "regular": "Regular",
-      "express": "Exprés",
-      "luxury": "Lujo",
-      "economic": "Económico"
     },
     "form": {
       "title": "Información del tipo de servicio",
@@ -574,7 +567,6 @@
         "name": "Ej: Primera",
         "code": "Ej: PRIM",
         "description": "Ej: Servicio de transporte de primera clase",
-        "category": "Selecciona una categoría",
         "amenities": "Selecciona amenidades para este tipo de servicio",
         "emptyAmenitiesList": "No hay amenidades disponibles"
       }

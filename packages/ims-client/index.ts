@@ -3545,12 +3545,6 @@ export namespace inventory {
     code?: string
 
     /**
-     * Category for the service type
-     * Must be one of the allowed categories
-     */
-    category?: service_types.ServiceTypeCategory
-
-    /**
      * Description of the service type
      */
     description?: string
@@ -11025,12 +11019,6 @@ export namespace service_types {
         code: string
 
         /**
-         * Category for the service type
-         * Must be one of the allowed categories
-         */
-        category: ServiceTypeCategory
-
-        /**
          * Description of the service type (optional)
          */
         description?: string
@@ -11044,14 +11032,13 @@ export namespace service_types {
 
     export interface ListServiceTypesQueryParams {
         orderBy?: {
-            field: "id" | "name" | "code" | "category" | "description" | "active" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "code" | "description" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
             name?: string
             code?: string
-            category?: ServiceTypeCategory
             description?: string | null
             active?: boolean
             createdAt?: string | string | null
@@ -11068,14 +11055,13 @@ export namespace service_types {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "code" | "category" | "description" | "active" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "code" | "description" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
             name?: string
             code?: string
-            category?: ServiceTypeCategory
             description?: string | null
             active?: boolean
             createdAt?: string | string | null
@@ -11106,11 +11092,6 @@ export namespace service_types {
         code: string
 
         /**
-         * Category this service type belongs to
-         */
-        category: ServiceTypeCategory
-
-        /**
          * Description of what this service type represents
          */
         description: string | null
@@ -11130,8 +11111,6 @@ export namespace service_types {
          */
         updatedAt: string | string | null
     }
-
-    export type ServiceTypeCategory = "regular" | "express" | "luxury" | "economic"
 
     export interface ServiceTypeWithAmenities {
         /**
@@ -11153,11 +11132,6 @@ export namespace service_types {
          * Unique code for the service type
          */
         code: string
-
-        /**
-         * Category this service type belongs to
-         */
-        category: ServiceTypeCategory
 
         /**
          * Description of what this service type represents

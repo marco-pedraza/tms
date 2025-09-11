@@ -19,7 +19,6 @@ import { createBusLine } from '@/inventory/operators/bus-lines/bus-lines.control
 import { busLineRepository } from '@/inventory/operators/bus-lines/bus-lines.repository';
 import { createServiceType } from '@/inventory/operators/service-types/service-types.controller';
 import { serviceTypeRepository } from '@/inventory/operators/service-types/service-types.repository';
-import { ServiceTypeCategory } from '@/inventory/operators/service-types/service-types.types';
 import { createTransporter } from '@/inventory/operators/transporters/transporters.controller';
 import { transporterRepository } from '@/inventory/operators/transporters/transporters.repository';
 import {
@@ -186,7 +185,6 @@ describe('Buses Controller', () => {
     const serviceType = await createServiceType({
       name: createUniqueName('Service Type', testSuiteId),
       code: createUniqueCode('TSST', 3),
-      category: ServiceTypeCategory.REGULAR,
       description: 'Test service type description',
       active: true,
     });

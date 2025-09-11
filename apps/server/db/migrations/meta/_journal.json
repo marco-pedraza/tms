@@ -358,6 +358,13 @@
       "when": 1757376206198,
       "tag": "20250909000326_make_population_id_optiona_and_sets_base_time_zero_default",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1757455580593,
+      "tag": "20250909220620_removes_category_from_service_types",
+      "breakpoints": true
     }
   ]
 }

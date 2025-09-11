@@ -1,0 +1,1 @@
+ALTER TABLE "service_types" DROP COLUMN IF EXISTS "category";

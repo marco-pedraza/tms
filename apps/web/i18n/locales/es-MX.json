@@ -418,7 +418,13 @@
         "code": "Ej: GDL",
         "state": "Selecciona un estado",
         "population": "Selecciona una población",
-        "timezone": "Ej: America/Mexico_City"
+        "timezone": "Ej: America/Mexico_City",
+        "populationSearch": "Buscar Población",
+        "emptyPopulationList": "No se encontraron Poblaciones",
+        "stateSearch": "Buscar Estado",
+        "emptyStatesList": "No se encontraron Estados",
+        "timezoneSearch": "Buscar Zona Horaria",
+        "emptyTimezonesList": "No se encontraron Zonas Horarias"
       },
       "codeHelp": "Usa un código de 2-5 letras para identificar la ciudad",
       "timezoneHelp": "Usa el formato IANA (Ej: America/Mexico_City)",
@@ -461,6 +467,11 @@
         "loading": "Asignando población...",
         "success": "Población asignada correctamente",
         "error": "No pudimos asignar la población"
+      },
+      "unassignPopulation": {
+        "loading": "Desasignando población...",
+        "success": "Población desasignada correctamente",
+        "error": "No pudimos desasignar la población"
       }
     }
   },

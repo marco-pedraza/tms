@@ -215,6 +215,24 @@ export function createPopulationUseCases() {
     return await populationRepo.findOneWithRelations(populationId);
   }
 
+  async function unassignCityFromPopulation(
+    populationId: number,
+    cityId: number,
+  ): Promise<PopulationWithRelations> {
+    await populationRepo.transaction(async (txPopRepo, tx) => {
+      await tx
+        .delete(populationCities)
+        .where(
+          and(
+            eq(populationCities.populationId, populationId),
+            eq(populationCities.cityId, cityId),
+          ),
+        );
+      await updatePopulationTimestamp(tx, populationId);
+    });
+    return await populationRepo.findOneWithRelations(populationId);
+  }
+
   async function findPopulationByAssignedCity(
     cityId: number,
   ): Promise<PopulationWithRelations | undefined> {
@@ -257,6 +275,7 @@ export function createPopulationUseCases() {
     assignCities,
     findAvailableCities,
     assignCityToPopulation,
+    unassignCityFromPopulation,
     findPopulationByAssignedCity,
     getPopulationCities,
   };

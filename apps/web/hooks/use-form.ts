@@ -1,4 +1,5 @@
 import { createFormHook } from '@tanstack/react-form';
+import { ComboboxInput } from '@/components/form/combobox-input';
 import IconInput from '@/components/form/icon-input';
 import MultiSelectInput from '@/components/form/multi-select-input';
 import NumberInput from '@/components/form/number-input';
@@ -24,6 +25,7 @@ const { useAppForm: useForm, withForm } = createFormHook({
     SlugInput,
     NumberInput,
     IconInput,
+    ComboboxInput,
   },
   formComponents: {
     SubmitButton,

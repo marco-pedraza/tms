@@ -153,6 +153,31 @@ export const assignCityToPopulation = api(
 );
 
 /**
+ * Unassign a city from a population.
+ * @param params - Object containing the population ID and city ID
+ * @param params.id - The ID of the population to unassign the city from
+ * @param params.cityId - The ID of the city to unassign from the population
+ * @returns {Promise<Population>} The updated population
+ * @throws {APIError} If the population or city is not found or unassignment fails
+ */
+export const unassignCityFromPopulation = api(
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/populations/:id/cities/unassign/one',
+  },
+  async ({
+    id,
+    cityId,
+  }: {
+    id: number;
+    cityId: number;
+  }): Promise<PopulationWithRelations> => {
+    return await populationUseCases.unassignCityFromPopulation(id, cityId);
+  },
+);
+
+/**
  * Retrieves available cities for assignment to a population.
  * Returns cities not assigned to any population, or if populationId is provided,
  * includes cities assigned to that specific population.

@@ -245,6 +245,7 @@ export namespace inventory {
             this.removeOptionFromPathway = this.removeOptionFromPathway.bind(this)
             this.runAllSeeders = this.runAllSeeders.bind(this)
             this.syncInstallationSchemas = this.syncInstallationSchemas.bind(this)
+            this.unassignCityFromPopulation = this.unassignCityFromPopulation.bind(this)
             this.updateAmenity = this.updateAmenity.bind(this)
             this.updateBus = this.updateBus.bind(this)
             this.updateBusDiagramModel = this.updateBusDiagramModel.bind(this)
@@ -2368,6 +2369,22 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/installation/types/${encodeURIComponent(id)}/schemas`, JSON.stringify(params))
             return await resp.json() as installation_schemas.ListInstallationSchemasResult
+        }
+
+        /**
+         * Unassign a city from a population.
+         * @param params - Object containing the population ID and city ID
+         * @param params.id - The ID of the population to unassign the city from
+         * @param params.cityId - The ID of the city to unassign from the population
+         * @returns {Promise<Population>} The updated population
+         * @throws {APIError} If the population or city is not found or unassignment fails
+         */
+        public async unassignCityFromPopulation(id: number, params: {
+    cityId: number
+}): Promise<populations.PopulationWithRelations> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/populations/${encodeURIComponent(id)}/cities/unassign/one`, JSON.stringify(params))
+            return await resp.json() as populations.PopulationWithRelations
         }
 
         /**

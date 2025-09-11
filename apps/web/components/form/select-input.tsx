@@ -17,7 +17,7 @@ interface SelectItem {
   hidden?: boolean;
 }
 
-interface SelectInputProps
+export interface SelectInputProps
   extends Omit<React.ComponentProps<'select'>, OmittedSelectProps> {
   label: string;
   placeholder: string;

@@ -135,7 +135,7 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
 
         <form.AppField name="stateId">
           {(field) => (
-            <field.SelectInput
+            <field.ComboboxInput
               label={tCities('form.state')}
               placeholder={tCities('form.placeholders.state')}
               isRequired
@@ -145,13 +145,15 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
                   name: state.name,
                 })) ?? []
               }
+              searchPlaceholder={tCities('form.placeholders.stateSearch')}
+              emptyOptionsLabel={tCities('form.placeholders.emptyStatesList')}
             />
           )}
         </form.AppField>
 
         <form.AppField name="populationId">
           {(field) => (
-            <field.SelectInput
+            <field.ComboboxInput
               label={tCities('form.population')}
               placeholder={tCities('form.placeholders.population')}
               items={
@@ -160,13 +162,17 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
                   name: population.name,
                 })) ?? []
               }
+              searchPlaceholder={tCities('form.placeholders.populationSearch')}
+              emptyOptionsLabel={tCities(
+                'form.placeholders.emptyPopulationList',
+              )}
             />
           )}
         </form.AppField>
 
         <form.AppField name="timezone">
           {(field) => (
-            <field.SelectInput
+            <field.ComboboxInput
               label={tCities('form.timezone')}
               placeholder={tCities('form.placeholders.timezone')}
               isRequired
@@ -176,6 +182,10 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
                   name: timezone.id,
                 })) ?? []
               }
+              searchPlaceholder={tCities('form.placeholders.timezoneSearch')}
+              emptyOptionsLabel={tCities(
+                'form.placeholders.emptyTimezonesList',
+              )}
               description={tCities('form.timezoneHelp')}
             />
           )}

@@ -11,6 +11,7 @@ import DynamicLucideIcon from '@/components/ui/dynamic-lucide-icon';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import useServerTableEvents from '@/hooks/use-server-table-events';
 import useTableUrlState from '@/hooks/use-table-url-state';
+import { amenityTypes } from '@/services/ims-client';
 import routes from '@/services/routes';
 import {
   UseAmenitiesTranslationsResult,
@@ -18,7 +19,9 @@ import {
 } from '@/types/translations';
 import { createEnumArray } from '@/utils/create-enum-array';
 import useAmenitiesMutations from '../hooks/use-amenities-mutations';
+import amenityTypesTranslationKeys from '../translations/amenity-types-translations-keys';
 import AmenityCategoryBadge from './amenity-category-badge';
+import AmenityTypeBadge from './amenity-type-badge';
 
 // Create a mapping object for AmenityCategory to use with createEnumArray
 const amenityCategoryMap: { [key in amenities.AmenityCategory]: undefined } = {
@@ -39,6 +42,20 @@ function generateCategoryOptions(tAmenities: UseAmenitiesTranslationsResult) {
     .map((category) => ({
       label: tAmenities(`categories.${category}`),
       value: category,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+/**
+ * Generate amenity type filter options automatically from AmenityType enum, sorted alphabetically by label
+ */
+function generateAmenityTypeOptions(
+  tAmenities: UseAmenitiesTranslationsResult,
+) {
+  return amenityTypes
+    .map((type) => ({
+      label: tAmenities(`amenityTypes.${amenityTypesTranslationKeys[type]}`),
+      value: type,
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
 }
@@ -92,6 +109,15 @@ export function amenitiesColumnsFactory({
       cell: ({ row }) => {
         const category = row.original.category;
         return <AmenityCategoryBadge category={category} />;
+      },
+    },
+    {
+      accessorKey: 'amenityType',
+      header: tAmenities('fields.amenityType'),
+      sortable: true,
+      cell: ({ row }) => {
+        const amenityType = row.original.amenityType;
+        return <AmenityTypeBadge amenityType={amenityType} />;
       },
     },
     {
@@ -152,6 +178,11 @@ export default function AmenitiesTable() {
       name: tCommon('fields.category'),
       key: 'category',
       options: generateCategoryOptions(tAmenities),
+    },
+    {
+      name: tAmenities('fields.amenityType'),
+      key: 'amenityType',
+      options: generateAmenityTypeOptions(tAmenities),
     },
     {
       name: tCommon('fields.status'),

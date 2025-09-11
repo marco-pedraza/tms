@@ -3,11 +3,13 @@
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { bus_models } from '@repo/ims-client';
+import useQueryAllBusAmenities from '@/bus-models/hooks/use-query-all-bus-amenities';
 import { useQueryAllBusDiagrams } from '@/bus-models/hooks/use-query-all-bus-diagrams';
 import busEngineTypeTranslationKeys from '@/bus-models/translations/bus-engine-type-translation-keys';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
+import AmenityCard from '@/components/ui/amenity-card';
 import useForm from '@/hooks/use-form';
 import { engineTypes } from '@/services/ims-client';
 import { UseValidationsTranslationsResult } from '@/types/translations';
@@ -74,7 +76,7 @@ const createBusModelFormSchema = (
       .refine((val) => val === null || (!isNaN(val) && val >= 1), {
         message: tValidations('greaterThanOrEquals', { value: 1 }),
       }),
-    amenities: z.array(z.string()).optional(),
+    amenityIds: z.array(z.number()).optional().default([]),
     engineType: z
       .enum(engineTypes as [string, ...string[]], {
         message: tValidations('required'),
@@ -110,6 +112,7 @@ export default function BusModelForm({
   const tValidations = useTranslations('validations');
   const busModelSchema = createBusModelFormSchema(tValidations);
   const { data: busDiagrams } = useQueryAllBusDiagrams();
+  const { data: amenities } = useQueryAllBusAmenities();
 
   const rawDefaultValues: BusModelFormRawValues = defaultValues
     ? {
@@ -122,7 +125,7 @@ export default function BusModelForm({
         fuelEfficiency: defaultValues.fuelEfficiency?.toString() || '',
         maxCapacity: defaultValues.maxCapacity?.toString() || '',
         numFloors: defaultValues.numFloors.toString() || '',
-        amenities: defaultValues.amenities,
+        amenityIds: defaultValues.amenityIds || [],
         engineType: defaultValues.engineType || '',
         defaultBusDiagramModelId:
           defaultValues.defaultBusDiagramModelId?.toString() || '',
@@ -136,7 +139,7 @@ export default function BusModelForm({
         fuelEfficiency: '',
         maxCapacity: '',
         numFloors: '',
-        amenities: [],
+        amenityIds: [],
         engineType: '',
         active: true,
         defaultBusDiagramModelId: '',
@@ -264,6 +267,50 @@ export default function BusModelForm({
 
           <form.AppField name="active">
             {(field) => <field.SwitchInput label={tCommon('fields.active')} />}
+          </form.AppField>
+        </FormLayout>
+        <FormLayout title={tBusModels('sections.amenities')}>
+          <form.AppField name="amenityIds">
+            {(field) => (
+              <div className="space-y-4">
+                <field.MultiSelectInput
+                  label={tBusModels('fields.amenities')}
+                  placeholder={tBusModels('form.placeholders.amenities')}
+                  items={
+                    amenities?.data.map((amenity) => ({
+                      id: amenity.id.toString(),
+                      name: amenity.name,
+                      category: amenity.category,
+                      iconName: amenity.iconName,
+                      description: amenity.description,
+                    })) ?? []
+                  }
+                  emptyOptionsLabel={tBusModels(
+                    'form.placeholders.emptyAmenitiesList',
+                  )}
+                />
+
+                {field.state.value && field.state.value.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-foreground">
+                      {tBusModels('fields.selectedAmenities', {
+                        count: field.state.value.length,
+                      })}
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {field.state.value.map((amenityId: number) => {
+                        const amenity = amenities?.data.find(
+                          (a) => a.id === amenityId,
+                        );
+                        return amenity ? (
+                          <AmenityCard key={amenity.id} amenity={amenity} />
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </form.AppField>
         </FormLayout>
         <FormLayout title={tBusModels('sections.diagram')}>

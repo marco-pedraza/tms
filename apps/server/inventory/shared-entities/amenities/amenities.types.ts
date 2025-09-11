@@ -1,4 +1,4 @@
-import { MatchesRegexp, MinLen } from 'encore.dev/validate';
+import { MatchesRegexp, Min, MinLen } from 'encore.dev/validate';
 import {
   ListQueryParams,
   ListQueryResult,
@@ -147,3 +147,16 @@ export type ListAmenitiesResult = ListQueryResult<Amenity>;
 export type PaginatedListAmenitiesQueryParams =
   PaginatedListQueryParams<Amenity>;
 export type PaginatedListAmenitiesResult = PaginatedListQueryResult<Amenity>;
+
+/**
+ * Generic interface for assigning amenities to any entity
+ * This eliminates the need for separate payload interfaces for each entity type
+ */
+export interface AssignAmenitiesToEntityPayload {
+  /**
+   * Array of amenity IDs to assign to the entity
+   * Replaces all existing amenity assignments
+   * Must contain at least one amenity ID, and each ID must be >= 1
+   */
+  amenityIds: (number & Min<1>)[] & MinLen<1>;
+}

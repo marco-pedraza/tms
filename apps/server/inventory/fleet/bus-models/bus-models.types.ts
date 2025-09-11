@@ -5,6 +5,7 @@ import {
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '@/shared/types';
+import type { Amenity } from '@/inventory/shared-entities/amenities/amenities.types';
 
 /**
  * Enum for bus engine type
@@ -52,9 +53,6 @@ export interface BusModel {
 
   /** Number of floors/decks in the bus */
   numFloors: number;
-
-  /** Available amenities */
-  amenities: string[];
 
   /** Type of engine (e.g., diesel, electric) */
   engineType: EngineType;
@@ -131,12 +129,6 @@ export interface CreateBusModelPayload {
   numFloors: number;
 
   /**
-   * Available amenities
-   * @default []
-   */
-  amenities?: string[];
-
-  /**
    * Type of engine (e.g., diesel, electric)
    */
   engineType: EngineType;
@@ -208,11 +200,6 @@ export interface UpdateBusModelPayload {
   numFloors?: number;
 
   /**
-   * Available amenities
-   */
-  amenities?: string[];
-
-  /**
    * Type of engine (e.g., diesel, electric)
    */
   engineType?: EngineType;
@@ -250,3 +237,10 @@ export type PaginatedListBusModelsQueryParams =
  * Paginated list of bus models
  */
 export type PaginatedListBusModelsResult = PaginatedListQueryResult<BusModel>;
+
+/**
+ * Bus model entity with related details (amenities)
+ */
+export interface BusModelWithDetails extends BusModel {
+  amenities: Amenity[];
+}

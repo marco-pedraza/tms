@@ -9,6 +9,7 @@ import busEngineTypeTranslationKeys from '@/bus-models/translations/bus-engine-t
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
+import AmenityCard from '@/components/ui/amenity-card';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
@@ -191,6 +192,26 @@ export default function BusModelDetailsPage() {
               <CardHeader>
                 <CardTitle>{tBusModels('sections.amenities')}</CardTitle>
               </CardHeader>
+              <CardContent>
+                {busModel.amenities && busModel.amenities.length > 0 ? (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-foreground">
+                      {tBusModels('fields.selectedAmenities', {
+                        count: busModel.amenities.length,
+                      })}
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {busModel.amenities.map((amenity) => (
+                        <AmenityCard key={amenity.id} amenity={amenity} />
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    {tBusModels('messages.noAmenitiesAssigned')}
+                  </p>
+                )}
+              </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="diagram">

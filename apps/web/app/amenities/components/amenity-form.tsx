@@ -1,10 +1,12 @@
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { amenities } from '@repo/ims-client';
+import amenityTypesTranslationKeys from '@/amenities/translations/amenity-types-translations-keys';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
+import { amenityTypes } from '@/services/ims-client';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import { createEnumArray } from '@/utils/create-enum-array';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
@@ -43,6 +45,11 @@ const createAmenityFormSchema = (
         { message: tValidations('required') },
       )
       .transform((val) => val as amenities.AmenityCategory),
+    amenityType: z
+      .enum(amenityTypes as [string, ...string[]], {
+        message: tValidations('required'),
+      })
+      .transform((val) => val as amenities.AmenityType),
     description: z.string().optional(),
     iconName: z.string().optional(),
     active: z.boolean().default(true),
@@ -83,6 +90,7 @@ export default function AmenityForm({
     defaultValues: rawDefaultValues ?? {
       name: '',
       category: '',
+      amenityType: '',
       description: '',
       iconName: '',
       active: true,
@@ -116,6 +124,12 @@ export default function AmenityForm({
     }),
   );
 
+  // Generate amenity type options from enum
+  const amenityTypeOptions = amenityTypes.map((type) => ({
+    id: type,
+    name: tAmenities(`amenityTypes.${amenityTypesTranslationKeys[type]}`),
+  }));
+
   return (
     <Form onSubmit={form.handleSubmit}>
       <FormLayout title={tAmenities('form.title')}>
@@ -136,6 +150,17 @@ export default function AmenityForm({
               placeholder={tAmenities('form.placeholders.category')}
               isRequired
               items={categoryOptions}
+            />
+          )}
+        </form.AppField>
+
+        <form.AppField name="amenityType">
+          {(field) => (
+            <field.SelectInput
+              label={tAmenities('fields.amenityType')}
+              placeholder={tAmenities('form.placeholders.amenityType')}
+              isRequired
+              items={amenityTypeOptions}
             />
           )}
         </form.AppField>

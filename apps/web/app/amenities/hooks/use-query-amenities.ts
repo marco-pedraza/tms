@@ -2,8 +2,6 @@ import type { APIError, amenities } from '@repo/ims-client';
 import createCollectionQuery from '@/hooks/use-query-collection';
 import imsClient from '@/services/ims-client';
 
-const INSTALLATION_AMENITY: amenities.AmenityType = 'installation';
-
 /**
  * Custom hook for querying a paginated list of installation amenities
  *
@@ -22,7 +20,6 @@ export default createCollectionQuery<
     return imsClient.inventory.listAmenitiesPaginated({
       ...params,
       filters: {
-        amenityType: INSTALLATION_AMENITY,
         ...filters,
       },
     });

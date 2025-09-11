@@ -2,7 +2,6 @@ import {
   boolean,
   index,
   integer,
-  jsonb,
   pgTable,
   serial,
   text,
@@ -12,6 +11,7 @@ import {
 import { isNull, relations } from 'drizzle-orm';
 import { busDiagramModels } from '@/inventory/fleet/bus-diagram-models/bus-diagram-models.schema';
 import { buses } from '@/inventory/fleet/buses/buses.schema';
+import { busModelAmenities } from '@/inventory/shared-entities/amenities/amenities.schema';
 
 /**
  * Database table for bus models
@@ -31,7 +31,6 @@ export const busModels = pgTable(
     fuelEfficiency: integer('fuel_efficiency'),
     maxCapacity: integer('max_capacity'),
     numFloors: integer('num_floors').notNull().default(1),
-    amenities: jsonb('amenities').default([]),
     engineType: text('engine_type'),
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -58,4 +57,5 @@ export const busModelsRelations = relations(busModels, ({ one, many }) => ({
     references: [busDiagramModels.id],
   }),
   buses: many(buses),
+  busModelAmenities: many(busModelAmenities),
 }));

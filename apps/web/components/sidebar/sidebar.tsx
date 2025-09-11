@@ -8,6 +8,7 @@ import {
   Building2,
   Bus,
   Calendar,
+  Cog,
   Cpu,
   Flag,
   Globe,
@@ -77,11 +78,6 @@ export default function Sidebar() {
             href={routes.installationTypes.index}
             icon={Settings}
             label={tSidebar('inventory.localities.installationTypes')}
-          />
-          <SidebarLink
-            href={routes.amenities.index}
-            icon={Star}
-            label={tSidebar('inventory.localities.amenities')}
           />
           <SidebarLink
             href={routes.events.index}
@@ -174,6 +170,17 @@ export default function Sidebar() {
             href={routes.chromatics.index}
             icon={Palette}
             label={tSidebar('inventory.fleet.chromatics')}
+          />
+        </SidebarSection>
+
+        <SidebarSection
+          title={tSidebar('inventory.generalConfig.title')}
+          icon={<Cog className="h-4 w-4" />}
+        >
+          <SidebarLink
+            href={routes.amenities.index}
+            icon={Star}
+            label={tSidebar('inventory.generalConfig.amenities')}
           />
         </SidebarSection>
       </SidebarSection>

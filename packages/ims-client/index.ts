@@ -95,6 +95,7 @@ export namespace inventory {
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
             this.addOptionToPathway = this.addOptionToPathway.bind(this)
+            this.assignAmenitiesToBusModel = this.assignAmenitiesToBusModel.bind(this)
             this.assignAmenitiesToInstallation = this.assignAmenitiesToInstallation.bind(this)
             this.assignAmenitiesToServiceType = this.assignAmenitiesToServiceType.bind(this)
             this.assignCitiesToPopulation = this.assignCitiesToPopulation.bind(this)
@@ -299,6 +300,27 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/pathways/${encodeURIComponent(pathwayId)}/options/add`, JSON.stringify(params))
             return await resp.json() as pathways.Pathway
+        }
+
+        /**
+         * Assigns amenities to a bus model.
+         * @param params - Object containing the bus model ID and amenity assignment data
+         * @param params.id - The ID of the bus model to assign amenities to
+         * @param params.amenityIds - Array of amenity IDs to assign
+         * @returns {Promise<BusModelWithDetails>} The updated bus model with details
+         * @throws {APIError} If the bus model is not found or assignment fails
+         */
+        public async assignAmenitiesToBusModel(id: number, params: {
+    /**
+     * Array of amenity IDs to assign to the entity
+     * Replaces all existing amenity assignments
+     * Must contain at least one amenity ID, and each ID must be >= 1
+     */
+    amenityIds: number[]
+}): Promise<bus_models.BusModelWithDetails> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/bus-models/${encodeURIComponent(id)}/amenities/assign`, JSON.stringify(params))
+            return await resp.json() as bus_models.BusModelWithDetails
         }
 
         /**
@@ -1196,16 +1218,16 @@ export namespace inventory {
         }
 
         /**
-         * Retrieves a bus model by its ID.
+         * Retrieves a bus model by its ID with details (amenities).
          * @param params - Object containing the bus model ID
          * @param params.id - The ID of the bus model to retrieve
-         * @returns {Promise<BusModel>} The found bus model
+         * @returns {Promise<BusModelWithDetails>} The found bus model with details
          * @throws {APIError} If the bus model is not found or retrieval fails
          */
-        public async getBusModel(id: number): Promise<bus_models.BusModel> {
+        public async getBusModel(id: number): Promise<bus_models.BusModelWithDetails> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/bus-models/${encodeURIComponent(id)}`)
-            return await resp.json() as bus_models.BusModel
+            return await resp.json() as bus_models.BusModelWithDetails
         }
 
         /**
@@ -2724,11 +2746,6 @@ export namespace inventory {
      * Number of floors/decks in the bus
      */
     numFloors?: number
-
-    /**
-     * Available amenities
-     */
-    amenities?: string[]
 
     /**
      * Type of engine (e.g., diesel, electric)
@@ -6201,9 +6218,77 @@ export namespace bus_models {
         numFloors: number
 
         /**
-         * Available amenities
+         * Type of engine (e.g., diesel, electric)
          */
-        amenities: string[]
+        engineType: EngineType
+
+        /**
+         * Whether the bus model is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the bus model was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the bus model was last updated
+         */
+        updatedAt: string | string | null
+    }
+
+    export interface BusModelWithDetails {
+        amenities: amenities.Amenity[]
+        /**
+         * Unique identifier for the bus model
+         */
+        id: number
+
+        /**
+         * Default bus diagram model ID
+         */
+        defaultBusDiagramModelId: number
+
+        /**
+         * Manufacturer of the bus
+         */
+        manufacturer: string
+
+        /**
+         * Model name/number
+         */
+        model: string
+
+        /**
+         * Year the bus model was released
+         */
+        year: number
+
+        /**
+         * Total seating capacity
+         */
+        seatingCapacity: number
+
+        /**
+         * Trunk capacity
+         */
+        trunkCapacity: number | null
+
+        /**
+         * Fuel efficiency
+         */
+        fuelEfficiency: number | null
+
+        /**
+         * Max capacity
+         */
+        maxCapacity: number | null
+
+        /**
+         * Number of floors/decks in the bus
+         */
+        numFloors: number
 
         /**
          * Type of engine (e.g., diesel, electric)
@@ -6285,12 +6370,6 @@ export namespace bus_models {
         numFloors: number
 
         /**
-         * Available amenities
-         * @default []
-         */
-        amenities?: string[]
-
-        /**
          * Type of engine (e.g., diesel, electric)
          */
         engineType: EngineType
@@ -6306,7 +6385,7 @@ export namespace bus_models {
 
     export interface ListBusModelsQueryParams {
         orderBy?: {
-            field: "id" | "defaultBusDiagramModelId" | "manufacturer" | "model" | "year" | "seatingCapacity" | "trunkCapacity" | "fuelEfficiency" | "maxCapacity" | "numFloors" | "amenities" | "engineType" | "active" | "createdAt" | "updatedAt"
+            field: "id" | "defaultBusDiagramModelId" | "manufacturer" | "model" | "year" | "seatingCapacity" | "trunkCapacity" | "fuelEfficiency" | "maxCapacity" | "numFloors" | "engineType" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -6320,7 +6399,6 @@ export namespace bus_models {
             fuelEfficiency?: number | null
             maxCapacity?: number | null
             numFloors?: number
-            amenities?: string[]
             engineType?: EngineType
             active?: boolean
             createdAt?: string | string | null
@@ -6337,7 +6415,7 @@ export namespace bus_models {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "defaultBusDiagramModelId" | "manufacturer" | "model" | "year" | "seatingCapacity" | "trunkCapacity" | "fuelEfficiency" | "maxCapacity" | "numFloors" | "amenities" | "engineType" | "active" | "createdAt" | "updatedAt"
+            field: "id" | "defaultBusDiagramModelId" | "manufacturer" | "model" | "year" | "seatingCapacity" | "trunkCapacity" | "fuelEfficiency" | "maxCapacity" | "numFloors" | "engineType" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -6351,7 +6429,6 @@ export namespace bus_models {
             fuelEfficiency?: number | null
             maxCapacity?: number | null
             numFloors?: number
-            amenities?: string[]
             engineType?: EngineType
             active?: boolean
             createdAt?: string | string | null

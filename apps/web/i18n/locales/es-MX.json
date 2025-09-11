@@ -114,7 +114,10 @@
     },
     "iconSelector": {
       "searchPlaceholder": "Buscar icono...",
-      "selectIcon": "Seleccionar icono"
+      "selectIcon": "Seleccionar icono",
+      "popularIcons": "Iconos Populares",
+      "allIcons": "Todos los Iconos",
+      "showMore": "Mostrar más iconos..."
     }
   },
   "validations": {
@@ -230,6 +233,10 @@
         "busModels": "Modelos de Autobús",
         "technologies": "Tecnologías",
         "chromatics": "Esquemas Cromáticos"
+      },
+      "generalConfig": {
+        "title": "Configuración",
+        "amenities": "Amenidades"
       },
       "routes": "Rutas",
       "pathways": "Trayectos",
@@ -1283,7 +1290,8 @@
     },
     "amenityTypes": {
       "bus": "Autobús",
-      "installation": "Instalación"
+      "installation": "Instalación",
+      "service_type": "Tipo de Servicio"
     },
     "form": {
       "title": "Información de la amenidad",
@@ -1345,7 +1353,9 @@
       "maxCapacity": "Capacidad Máxima (pasajeros)",
       "numFloors": "Número de Pisos",
       "engineType": "Tipo de Motor",
-      "busDiagramModel": "Diagrama de Asientos"
+      "busDiagramModel": "Diagrama de Asientos",
+      "amenities": "Amenidades",
+      "selectedAmenities": "Amenidades seleccionadas ({count})"
     },
     "filters": {
       "active": "Activo"
@@ -1372,7 +1382,9 @@
         "numFloors": "Ej: 1",
         "engineType": "Ej: Diesel",
         "busDiagramModel": "Selecciona el diagrama de asientos",
-        "emptyOptionsLabel": "No hay diagramas de asientos disponibles"
+        "emptyOptionsLabel": "No hay diagramas de asientos disponibles",
+        "amenities": "Selecciona las amenidades del autobús",
+        "emptyAmenitiesList": "No hay amenidades disponibles"
       }
     },
     "details": {
@@ -1414,7 +1426,13 @@
         "loading": "Eliminando modelo de autobús...",
         "success": "Modelo de autobús eliminado correctamente",
         "error": "No pudimos eliminar el modelo de autobús"
-      }
+      },
+      "assignAmenities": {
+        "loading": "Asignando amenidades...",
+        "success": "Amenidades asignadas correctamente",
+        "error": "No se pudieron asignar las amenidades"
+      },
+      "noAmenitiesAssigned": "No hay amenidades asignadas a este modelo de autobús."
     }
   },
   "buses": {

@@ -1,6 +1,8 @@
 import { api } from 'encore.dev/api';
+import type { AssignAmenitiesToEntityPayload } from '@/inventory/shared-entities/amenities/amenities.types';
 import type {
   BusModel,
+  BusModelWithDetails,
   CreateBusModelPayload,
   ListBusModelsQueryParams,
   ListBusModelsResult,
@@ -10,6 +12,7 @@ import type {
 } from './bus-models.types';
 import { busModelRepository } from './bus-models.repository';
 import { busModelDomain } from './bus-models.domain';
+import { busModelUseCases } from './bus-models.use-cases';
 
 /**
  * Creates a new bus model.
@@ -26,16 +29,16 @@ export const createBusModel = api(
 );
 
 /**
- * Retrieves a bus model by its ID.
+ * Retrieves a bus model by its ID with details (amenities).
  * @param params - Object containing the bus model ID
  * @param params.id - The ID of the bus model to retrieve
- * @returns {Promise<BusModel>} The found bus model
+ * @returns {Promise<BusModelWithDetails>} The found bus model with details
  * @throws {APIError} If the bus model is not found or retrieval fails
  */
 export const getBusModel = api(
   { method: 'GET', path: '/bus-models/:id', expose: true },
-  async ({ id }: { id: number }): Promise<BusModel> => {
-    return await busModelRepository.findOne(id);
+  async ({ id }: { id: number }): Promise<BusModelWithDetails> => {
+    return await busModelRepository.findOneWithRelations(id);
   },
 );
 
@@ -99,5 +102,25 @@ export const deleteBusModel = api(
   { method: 'DELETE', path: '/bus-models/:id/delete', expose: true },
   async ({ id }: { id: number }): Promise<BusModel> => {
     return await busModelRepository.delete(id);
+  },
+);
+
+/**
+ * Assigns amenities to a bus model.
+ * @param params - Object containing the bus model ID and amenity assignment data
+ * @param params.id - The ID of the bus model to assign amenities to
+ * @param params.amenityIds - Array of amenity IDs to assign
+ * @returns {Promise<BusModelWithDetails>} The updated bus model with details
+ * @throws {APIError} If the bus model is not found or assignment fails
+ */
+export const assignAmenitiesToBusModel = api(
+  { method: 'PUT', path: '/bus-models/:id/amenities/assign', expose: true },
+  async ({
+    id,
+    amenityIds,
+  }: AssignAmenitiesToEntityPayload & {
+    id: number;
+  }): Promise<BusModelWithDetails> => {
+    return await busModelUseCases.assignAmenities(id, amenityIds);
   },
 );

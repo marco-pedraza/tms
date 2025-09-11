@@ -1,7 +1,7 @@
 'use client';
 
-import * as React from 'react';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { Check, ChevronsUpDown, icons } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,7 +20,35 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/utils/cn';
 
-// Popular amenity icons for initial display
+/**
+ * Convert PascalCase to kebab-case for icon names
+ * @example "AirVent" -> "air-vent", "Wifi" -> "wifi"
+ */
+function pascalToKebabCase(str: string): string {
+  return str
+    .replace(/([A-Z])/g, '-$1')
+    .toLowerCase()
+    .replace(/^-/, '');
+}
+
+// Cache for all available Lucide icon names in kebab-case format
+let cachedLucideIcons: string[] | null = null;
+
+/**
+ * Get all available Lucide icon names in kebab-case format
+ * Uses caching to avoid recomputing the list on every call
+ */
+function getAllLucideIcons(): string[] {
+  if (cachedLucideIcons === null) {
+    // Compute once and cache the result
+    cachedLucideIcons = Object.freeze(
+      Object.keys(icons).map(pascalToKebabCase).sort(),
+    ) as string[];
+  }
+  return cachedLucideIcons;
+}
+
+// Popular amenity icons for prioritized display
 const POPULAR_AMENITY_ICONS = [
   'accessibility',
   'air-vent',
@@ -67,7 +95,8 @@ interface IconSelectorProps {
 /**
  * Icon selector component using shadcn/ui Combobox pattern
  *
- * Provides a searchable dropdown of Lucide icons with preview functionality
+ * Provides a searchable dropdown of all available Lucide icons with preview functionality.
+ * Popular icons are shown first for better UX. Uses lazy loading for performance.
  */
 export default function IconSelector({
   value,
@@ -75,11 +104,70 @@ export default function IconSelector({
   placeholder,
   className,
 }: IconSelectorProps) {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showAllIcons, setShowAllIcons] = useState(false);
   const tCommon = useTranslations('common');
 
+  // Popular icons are always available
+  const popularIcons = useMemo(() => [...POPULAR_AMENITY_ICONS], []);
+
+  // Lazy load all icons only when needed
+  const allIcons = useMemo(() => {
+    if (!showAllIcons && !searchQuery) return [];
+    return getAllLucideIcons();
+  }, [showAllIcons, searchQuery]);
+
+  // Filter icons based on search query
+  const filteredPopularIcons = useMemo(() => {
+    if (!searchQuery) return popularIcons;
+    return popularIcons.filter((icon) =>
+      icon.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [popularIcons, searchQuery]);
+
+  const filteredOtherIcons = useMemo(() => {
+    if (!searchQuery && !showAllIcons) return [];
+
+    const otherIcons = allIcons.filter(
+      (icon) =>
+        !popularIcons.includes(icon as (typeof POPULAR_AMENITY_ICONS)[number]),
+    );
+
+    if (!searchQuery) return otherIcons.slice(0, 50); // Limit initial render
+
+    return otherIcons.filter((icon) =>
+      icon.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [allIcons, popularIcons, searchQuery, showAllIcons]);
+
+  // Handle search input changes
+  const handleSearch = useCallback(
+    (query: string) => {
+      setSearchQuery(query);
+      if (query && !showAllIcons) {
+        setShowAllIcons(true);
+      }
+    },
+    [showAllIcons],
+  );
+
+  // Load more icons when user scrolls or clicks "Show More"
+  const handleShowMore = useCallback(() => {
+    setShowAllIcons(true);
+  }, []);
+
+  // Reset state when popover closes for better performance
+  const handleOpenChange = useCallback((newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      setSearchQuery('');
+      setShowAllIcons(false);
+    }
+  }, []);
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -109,32 +197,76 @@ export default function IconSelector({
           <CommandInput
             placeholder={tCommon('iconSelector.searchPlaceholder')}
             className="h-9"
+            onValueChange={handleSearch}
           />
           <CommandList>
             <CommandEmpty>{tCommon('table.not_results')}</CommandEmpty>
-            <CommandGroup>
-              {POPULAR_AMENITY_ICONS.map((icon) => (
+
+            {/* Popular Icons Group */}
+            {filteredPopularIcons.length > 0 && (
+              <CommandGroup heading={tCommon('iconSelector.popularIcons')}>
+                {filteredPopularIcons.map((icon) => (
+                  <CommandItem
+                    key={`popular-${icon}`}
+                    value={icon}
+                    onSelect={(currentValue: string) => {
+                      onValueChange(currentValue === value ? '' : currentValue);
+                      setOpen(false);
+                    }}
+                  >
+                    <div className="flex items-center gap-2 flex-1">
+                      <DynamicLucideIcon name={icon} className="h-4 w-4" />
+                      <span>{icon}</span>
+                    </div>
+                    <Check
+                      className={cn(
+                        'h-4 w-4',
+                        value === icon ? 'opacity-100' : 'opacity-0',
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+
+            {/* All Other Icons Group */}
+            {filteredOtherIcons.length > 0 && (
+              <CommandGroup heading={tCommon('iconSelector.allIcons')}>
+                {filteredOtherIcons.map((icon) => (
+                  <CommandItem
+                    key={`other-${icon}`}
+                    value={icon}
+                    onSelect={(currentValue: string) => {
+                      onValueChange(currentValue === value ? '' : currentValue);
+                      setOpen(false);
+                    }}
+                  >
+                    <div className="flex items-center gap-2 flex-1">
+                      <DynamicLucideIcon name={icon} className="h-4 w-4" />
+                      <span>{icon}</span>
+                    </div>
+                    <Check
+                      className={cn(
+                        'h-4 w-4',
+                        value === icon ? 'opacity-100' : 'opacity-0',
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+
+            {/* Show More Button */}
+            {!showAllIcons && !searchQuery && (
+              <CommandGroup>
                 <CommandItem
-                  key={icon}
-                  value={icon}
-                  onSelect={(currentValue: string) => {
-                    onValueChange(currentValue === value ? '' : currentValue);
-                    setOpen(false);
-                  }}
+                  onSelect={handleShowMore}
+                  className="justify-center text-muted-foreground hover:text-foreground"
                 >
-                  <div className="flex items-center gap-2 flex-1">
-                    <DynamicLucideIcon name={icon} className="h-4 w-4" />
-                    <span>{icon}</span>
-                  </div>
-                  <Check
-                    className={cn(
-                      'h-4 w-4',
-                      value === icon ? 'opacity-100' : 'opacity-0',
-                    )}
-                  />
+                  <span>{tCommon('iconSelector.showMore')}</span>
                 </CommandItem>
-              ))}
-            </CommandGroup>
+              </CommandGroup>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>

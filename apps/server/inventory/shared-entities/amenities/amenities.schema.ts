@@ -10,6 +10,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { isNull, relations } from 'drizzle-orm';
+import { busModels } from '@/inventory/fleet/bus-models/bus-models.schema';
 import { installations } from '@/inventory/locations/installations/installations.schema';
 import { serviceTypes } from '@/inventory/operators/service-types/service-types.schema';
 
@@ -74,8 +75,28 @@ export const serviceTypeAmenities = pgTable(
   ],
 );
 
+export const busModelAmenities = pgTable(
+  'bus_model_amenities',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    busModelId: integer('bus_model_id')
+      .notNull()
+      .references(() => busModels.id),
+    amenityId: integer('amenity_id')
+      .notNull()
+      .references(() => amenities.id),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+  },
+  (table) => [
+    index().on(table.amenityId),
+    uniqueIndex().on(table.busModelId, table.amenityId),
+  ],
+);
+
 export const amenitiesRelations = relations(amenities, ({ many }) => ({
   installationAmenities: many(installationAmenities),
+  busModelAmenities: many(busModelAmenities),
 }));
 
 export const installationAmenitiesRelations = relations(
@@ -101,6 +122,20 @@ export const serviceTypeAmenitiesRelations = relations(
     }),
     amenity: one(amenities, {
       fields: [serviceTypeAmenities.amenityId],
+      references: [amenities.id],
+    }),
+  }),
+);
+
+export const busModelAmenitiesRelations = relations(
+  busModelAmenities,
+  ({ one }) => ({
+    busModel: one(busModels, {
+      fields: [busModelAmenities.busModelId],
+      references: [busModels.id],
+    }),
+    amenity: one(amenities, {
+      fields: [busModelAmenities.amenityId],
       references: [amenities.id],
     }),
   }),

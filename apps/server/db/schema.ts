@@ -136,6 +136,8 @@ export {
   installationAmenitiesRelations,
   serviceTypeAmenities,
   serviceTypeAmenitiesRelations,
+  busModelAmenities,
+  busModelAmenitiesRelations,
 } from '@/inventory/shared-entities/amenities/amenities.schema';
 export {
   technologies,

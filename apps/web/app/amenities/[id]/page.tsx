@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import AmenityCategoryBadge from '@/amenities/components/amenity-category-badge';
 import AmenitySkeleton from '@/amenities/components/amenity-skeleton';
+import AmenityTypeBadge from '@/amenities/components/amenity-type-badge';
 import useAmenitiesMutations from '@/amenities/hooks/use-amenities-mutations';
 import useQueryAmenity from '@/amenities/hooks/use-query-amenity';
 import ActionButtons from '@/components/action-buttons';
@@ -73,6 +74,13 @@ export default function AmenityDetailsPage() {
               <dt className="font-medium">{tCommon('fields.category')}:</dt>
               <dd>
                 <AmenityCategoryBadge category={amenity.category} />
+              </dd>
+
+              <dt className="font-medium">
+                {tAmenities('fields.amenityType')}:
+              </dt>
+              <dd>
+                <AmenityTypeBadge amenityType={amenity.amenityType} />
               </dd>
 
               <dt className="font-medium">{tAmenities('fields.iconName')}:</dt>

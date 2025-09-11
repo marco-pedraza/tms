@@ -10,6 +10,8 @@ export type KnownBusStatuses = keyof Messages['buses']['status'];
 export type KnownBusLicensePlateTypes =
   keyof Messages['buses']['licensePlateTypes'];
 export type KnownBusEngineTypes = keyof Messages['busModels']['engineTypes'];
+export type KnownAmenityCategories = keyof Messages['amenities']['categories'];
+export type KnownAmenityTypes = keyof Messages['amenities']['amenityTypes'];
 
 export type UseCommonTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'common'>

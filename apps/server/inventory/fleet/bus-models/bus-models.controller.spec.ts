@@ -4,6 +4,14 @@ import {
   deleteBusDiagramModel,
 } from '@/inventory/fleet/bus-diagram-models/bus-diagram-models.controller';
 import {
+  createAmenity,
+  deleteAmenity,
+} from '@/inventory/shared-entities/amenities/amenities.controller';
+import {
+  AmenityCategory,
+  AmenityType,
+} from '@/inventory/shared-entities/amenities/amenities.types';
+import {
   createCleanupHelper,
   createTestSuiteId,
   createUniqueName,
@@ -11,6 +19,7 @@ import {
 import { BusModel, EngineType } from './bus-models.types';
 import { busModelRepository } from './bus-models.repository';
 import {
+  assignAmenitiesToBusModel,
   createBusModel,
   deleteBusModel,
   getBusModel,
@@ -33,7 +42,6 @@ describe('Bus Models Controller', () => {
     fuelEfficiency: number;
     maxCapacity: number;
     numFloors: number;
-    amenities: string[];
     engineType: EngineType;
     active: boolean;
   };
@@ -92,7 +100,6 @@ describe('Bus Models Controller', () => {
       fuelEfficiency: 10,
       maxCapacity: 40,
       numFloors: 1,
-      amenities: ['WiFi', 'USB Charging', 'Air Conditioning'],
       engineType: EngineType.DIESEL,
       active: true,
     };
@@ -127,7 +134,6 @@ describe('Bus Models Controller', () => {
       expect(response.fuelEfficiency).toBe(testBusModelData.fuelEfficiency);
       expect(response.maxCapacity).toBe(testBusModelData.maxCapacity);
       expect(response.numFloors).toBe(testBusModelData.numFloors);
-      expect(response.amenities).toEqual(testBusModelData.amenities);
       expect(response.engineType).toBe(testBusModelData.engineType);
       expect(response.active).toBe(testBusModelData.active);
       expect(response.createdAt).toBeDefined();
@@ -150,12 +156,6 @@ describe('Bus Models Controller', () => {
         manufacturer: 'UpdatedManufacturer',
         model: 'UpdatedModel',
         seatingCapacity: 45,
-        amenities: [
-          'WiFi',
-          'USB Charging',
-          'Air Conditioning',
-          'Entertainment System',
-        ],
         engineType: EngineType.ELECTRIC,
       };
 
@@ -169,7 +169,6 @@ describe('Bus Models Controller', () => {
       expect(response.manufacturer).toBe(updateData.manufacturer);
       expect(response.model).toBe(updateData.model);
       expect(response.seatingCapacity).toBe(updateData.seatingCapacity);
-      expect(response.amenities).toEqual(updateData.amenities);
       expect(response.engineType).toBe(updateData.engineType);
       expect(response.trunkCapacity).toBe(testBusModelData.trunkCapacity);
       expect(response.fuelEfficiency).toBe(testBusModelData.fuelEfficiency);
@@ -194,7 +193,6 @@ describe('Bus Models Controller', () => {
         fuelEfficiency: 10,
         maxCapacity: 40,
         numFloors: 1,
-        amenities: [],
         engineType: EngineType.DIESEL,
         active: true,
       });
@@ -239,7 +237,6 @@ describe('Bus Models Controller', () => {
         fuelEfficiency: 10,
         maxCapacity: 40,
         numFloors: 1,
-        amenities: [],
         engineType: EngineType.DIESEL,
         active: true,
       });
@@ -257,7 +254,6 @@ describe('Bus Models Controller', () => {
             fuelEfficiency: 12,
             maxCapacity: 35,
             numFloors: 1,
-            amenities: [],
             engineType: EngineType.ELECTRIC,
             active: true,
           }),
@@ -289,7 +285,6 @@ describe('Bus Models Controller', () => {
         fuelEfficiency: 10,
         maxCapacity: 40,
         numFloors: 1,
-        amenities: [],
         engineType: EngineType.DIESEL,
         active: true,
       });
@@ -305,7 +300,6 @@ describe('Bus Models Controller', () => {
         fuelEfficiency: 12,
         maxCapacity: 35,
         numFloors: 1,
-        amenities: [],
         engineType: EngineType.ELECTRIC,
         active: true,
       });
@@ -372,7 +366,6 @@ describe('Bus Models Controller', () => {
         fuelEfficiency: 10,
         maxCapacity: 40,
         numFloors: 1,
-        amenities: [],
         engineType: EngineType.DIESEL,
         active: true,
       });
@@ -387,7 +380,6 @@ describe('Bus Models Controller', () => {
         fuelEfficiency: 10,
         maxCapacity: 40,
         numFloors: 1,
-        amenities: [],
         engineType: EngineType.DIESEL,
         active: true,
       });
@@ -443,7 +435,6 @@ describe('Bus Models Controller', () => {
         fuelEfficiency: 10,
         maxCapacity: 40,
         numFloors: 1,
-        amenities: ['WiFi', 'USB Charging', 'Air Conditioning'],
         engineType: EngineType.DIESEL,
         active: true,
       });
@@ -489,7 +480,6 @@ describe('Bus Models Controller', () => {
         fuelEfficiency: 10,
         maxCapacity: 40,
         numFloors: 1,
-        amenities: ['WiFi', 'USB Charging', 'Air Conditioning'],
         engineType: EngineType.DIESEL,
         active: true,
       });
@@ -504,7 +494,6 @@ describe('Bus Models Controller', () => {
         fuelEfficiency: 10,
         maxCapacity: 40,
         numFloors: 1,
-        amenities: ['WiFi', 'USB Charging', 'Air Conditioning'],
         engineType: EngineType.DIESEL,
         active: false,
       });
@@ -560,7 +549,6 @@ describe('Bus Models Controller', () => {
           fuelEfficiency: 10,
           maxCapacity: 40,
           numFloors: 1,
-          amenities: [],
           engineType: EngineType.DIESEL,
           active: true,
         },
@@ -573,7 +561,6 @@ describe('Bus Models Controller', () => {
           fuelEfficiency: 10,
           maxCapacity: 40,
           numFloors: 1,
-          amenities: [],
           engineType: EngineType.DIESEL,
           active: false,
         },
@@ -586,7 +573,6 @@ describe('Bus Models Controller', () => {
           fuelEfficiency: 10,
           maxCapacity: 40,
           numFloors: 1,
-          amenities: [],
           engineType: EngineType.DIESEL,
           active: true,
         },
@@ -679,7 +665,6 @@ describe('Bus Models Controller', () => {
           fuelEfficiency: 10,
           maxCapacity: 40,
           numFloors: 1,
-          amenities: [],
           engineType: EngineType.DIESEL,
           active: true,
         },
@@ -692,7 +677,6 @@ describe('Bus Models Controller', () => {
           fuelEfficiency: 10,
           maxCapacity: 40,
           numFloors: 1,
-          amenities: [],
           engineType: EngineType.DIESEL,
           active: true,
         },
@@ -750,7 +734,6 @@ describe('Bus Models Controller', () => {
         fuelEfficiency: 10,
         maxCapacity: 40,
         numFloors: 1,
-        amenities: [],
         engineType: EngineType.DIESEL,
         active: true,
       });
@@ -778,7 +761,6 @@ describe('Bus Models Controller', () => {
         fuelEfficiency: 10,
         maxCapacity: 40,
         numFloors: 1,
-        amenities: [],
         engineType: EngineType.DIESEL,
         active: true,
       });
@@ -791,6 +773,204 @@ describe('Bus Models Controller', () => {
       await expect(
         busModelRepository.findOne(testBusModel.id),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('amenity assignment', () => {
+    let testBusAmenityId: number;
+    let testInstallationAmenityId: number;
+
+    beforeAll(async () => {
+      // Create bus amenities for testing
+      const busAmenity = await createAmenity({
+        name: createUniqueName('Bus WiFi Service', testSuiteId),
+        category: AmenityCategory.TECHNOLOGY,
+        amenityType: AmenityType.BUS,
+        description: 'High-speed internet access for buses',
+        iconName: 'wifi',
+        active: true,
+      });
+      testBusAmenityId = busAmenity.id;
+
+      // Create an installation amenity to test type validation
+      const installationAmenity = await createAmenity({
+        name: createUniqueName('Installation Parking', testSuiteId),
+        category: AmenityCategory.SERVICES,
+        amenityType: AmenityType.INSTALLATION,
+        description: 'Secure parking facility',
+        iconName: 'car',
+        active: true,
+      });
+      testInstallationAmenityId = installationAmenity.id;
+    });
+
+    afterAll(async () => {
+      // Clean up amenities
+      if (testBusAmenityId || testInstallationAmenityId) {
+        try {
+          if (testBusAmenityId) {
+            await deleteAmenity({ id: testBusAmenityId });
+          }
+          if (testInstallationAmenityId) {
+            await deleteAmenity({ id: testInstallationAmenityId });
+          }
+        } catch (error) {
+          console.log('Error cleaning up test amenities:', error);
+        }
+      }
+    });
+
+    describe('success scenarios', () => {
+      test('should assign amenities to bus model and return bus model with amenities', async () => {
+        const response = await assignAmenitiesToBusModel({
+          id: createdBusModelId,
+          amenityIds: [testBusAmenityId],
+        });
+
+        expect(response).toBeDefined();
+        expect(response.id).toBe(createdBusModelId);
+        expect(response.amenities).toBeDefined();
+        expect(Array.isArray(response.amenities)).toBe(true);
+        expect(response.amenities).toHaveLength(1);
+        expect(response.amenities[0]?.id).toBe(testBusAmenityId);
+        expect(response.amenities[0]?.name).toContain('Bus WiFi Service');
+        expect(response.amenities[0]?.amenityType).toBe('bus');
+      });
+
+      test('should replace existing amenities (destructive operation)', async () => {
+        // Create another bus amenity for testing replacement
+        const amenity2 = await createAmenity({
+          name: createUniqueName('Bus AC System', testSuiteId),
+          category: AmenityCategory.COMFORT,
+          amenityType: AmenityType.BUS,
+          description: 'Air conditioning system',
+          iconName: 'air-vent',
+          active: true,
+        });
+
+        await assignAmenitiesToBusModel({
+          id: createdBusModelId,
+          amenityIds: [testBusAmenityId, amenity2.id],
+        });
+
+        // Verify both amenities are assigned
+        let busModel = await getBusModel({ id: createdBusModelId });
+        expect(busModel.amenities).toHaveLength(2);
+
+        // Now replace with just one amenity
+        await assignAmenitiesToBusModel({
+          id: createdBusModelId,
+          amenityIds: [amenity2.id],
+        });
+
+        // Verify only the new amenity is assigned
+        busModel = await getBusModel({ id: createdBusModelId });
+        expect(busModel.amenities).toHaveLength(1);
+        expect(busModel.amenities[0]?.id).toBe(amenity2.id);
+
+        // Clean up - first clear amenity assignments, then delete
+        await assignAmenitiesToBusModel({
+          id: createdBusModelId,
+          amenityIds: [],
+        });
+        await deleteAmenity({ id: amenity2.id });
+      });
+
+      test('should allow empty amenity list (removes all amenities)', async () => {
+        // First assign an amenity
+        await assignAmenitiesToBusModel({
+          id: createdBusModelId,
+          amenityIds: [testBusAmenityId],
+        });
+
+        // Verify amenity is assigned
+        let busModel = await getBusModel({ id: createdBusModelId });
+        expect(busModel.amenities).toHaveLength(1);
+
+        // Now remove all amenities
+        await assignAmenitiesToBusModel({
+          id: createdBusModelId,
+          amenityIds: [],
+        });
+
+        // Verify no amenities are assigned
+        busModel = await getBusModel({ id: createdBusModelId });
+        expect(busModel.amenities).toHaveLength(0);
+      });
+
+      test('should include amenities in getBusModel but not in list operations', async () => {
+        // Assign an amenity
+        await assignAmenitiesToBusModel({
+          id: createdBusModelId,
+          amenityIds: [testBusAmenityId],
+        });
+
+        // Verify amenities are included in getBusModel
+        const singleBusModel = await getBusModel({ id: createdBusModelId });
+        expect(singleBusModel.amenities).toBeDefined();
+        expect(singleBusModel.amenities).toHaveLength(1);
+
+        // Verify amenities are NOT included in list operations for performance
+        const listResponse = await listBusModels({});
+        const testBusModelInList = listResponse.data.find(
+          (bm: BusModel) => bm.id === createdBusModelId,
+        );
+        expect(testBusModelInList).toBeDefined();
+        // List operations should not include amenities property
+        expect(testBusModelInList).not.toHaveProperty('amenities');
+
+        // Clean up
+        await assignAmenitiesToBusModel({
+          id: createdBusModelId,
+          amenityIds: [],
+        });
+      });
+    });
+
+    describe('error scenarios', () => {
+      test('should handle bus model not found', async () => {
+        await expect(
+          assignAmenitiesToBusModel({
+            id: 99999,
+            amenityIds: [testBusAmenityId],
+          }),
+        ).rejects.toThrow();
+      });
+
+      test('should reject installation amenities (wrong type)', async () => {
+        await expect(
+          assignAmenitiesToBusModel({
+            id: createdBusModelId,
+            amenityIds: [testInstallationAmenityId],
+          }),
+        ).rejects.toThrow();
+      });
+
+      test('should reject non-existent amenity IDs', async () => {
+        await expect(
+          assignAmenitiesToBusModel({
+            id: createdBusModelId,
+            amenityIds: [99999],
+          }),
+        ).rejects.toThrow();
+      });
+
+      test('should reject duplicate amenity IDs', async () => {
+        try {
+          await assignAmenitiesToBusModel({
+            id: createdBusModelId,
+            amenityIds: [testBusAmenityId, testBusAmenityId],
+          });
+          expect.fail('Expected function to throw');
+        } catch (error: unknown) {
+          expect(error).toBeInstanceOf(Error);
+          const validationError = error as {
+            name: string;
+            message: string;
+          };
+          expect(validationError.message).toContain('Duplicate amenity IDs');
+        }
+      });
     });
   });
 });

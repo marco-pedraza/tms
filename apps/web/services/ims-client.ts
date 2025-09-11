@@ -81,6 +81,21 @@ enum MedicalCheckSource {
   API = 'api',
 }
 
+enum AmenityCategory {
+  BASIC = 'basic',
+  COMFORT = 'comfort',
+  TECHNOLOGY = 'technology',
+  SECURITY = 'security',
+  ACCESSIBILITY = 'accessibility',
+  SERVICES = 'services',
+}
+
+enum AmenityType {
+  BUS = 'bus',
+  INSTALLATION = 'installation',
+  SERVICE_TYPE = 'service_type',
+}
+
 const busStatuses = Object.values(BusStatus);
 const busLicensePlateTypes = Object.values(BusLicensePlateType);
 const driverStatuses = Object.values(DriverStatus);
@@ -94,6 +109,8 @@ const spaceTypesWithoutSeat = spaceTypes.filter(
 const timeOffTypes = Object.values(TimeOffType);
 const medicalCheckResults = Object.values(MedicalCheckResult);
 const medicalCheckSources = Object.values(MedicalCheckSource);
+const amenityCategories = Object.values(AmenityCategory);
+const amenityTypes = Object.values(AmenityType);
 
 export {
   BusStatus,
@@ -102,6 +119,8 @@ export {
   TimeOffType,
   MedicalCheckResult,
   MedicalCheckSource,
+  AmenityCategory,
+  AmenityType,
   busStatuses,
   busLicensePlateTypes,
   driverStatuses,
@@ -114,5 +133,7 @@ export {
   timeOffTypes,
   medicalCheckResults,
   medicalCheckSources,
+  amenityCategories,
+  amenityTypes,
 };
 export default client;

@@ -66,10 +66,11 @@ export interface CreateEventTypePayload {
   description?: string;
 
   /**
-   * Base time in minutes (required, must be positive integer)
-   * @minimum 1
+   * Base time in minutes (optional, defaults to 0, must be non-negative integer)
+   * @minimum 0
+   * @default 0
    */
-  baseTime: number & Min<1>;
+  baseTime?: number & Min<0>;
 
   /**
    * Whether this event type requires cost tracking (defaults to false)
@@ -118,10 +119,11 @@ export interface UpdateEventTypePayload {
   description?: string;
 
   /**
-   * Base time in minutes (optional, but if provided must be positive integer)
-   * @minimum 1
+   * Base time in minutes (optional, but if provided must be non-negative integer)
+   * @minimum 0
+   * @default 0
    */
-  baseTime?: number & Min<1>;
+  baseTime?: number & Min<0>;
 
   /**
    * Whether this event type requires cost tracking

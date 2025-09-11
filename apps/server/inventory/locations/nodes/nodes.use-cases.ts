@@ -50,8 +50,10 @@ export function createNodeUseCases() {
     return await nodeEventRepo
       .transaction(async (txRepo, tx) => {
         // Validate node exists and get installation type
-        const installationTypeId =
-          await nodeRepo.getInstallationTypeIdByNodeId(nodeId);
+        const installationTypeId = await nodeRepo.getInstallationTypeIdByNodeId(
+          nodeId,
+          tx,
+        );
 
         if (installationTypeId === null) {
           throw new ValidationError(

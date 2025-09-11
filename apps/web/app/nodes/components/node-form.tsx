@@ -5,6 +5,7 @@ import { Calendar, Clock, Loader2, Zap } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import useQueryAllInstallationAmenities from '@/amenities/hooks/use-query-all-installation-amenities';
+import useQueryAllCities from '@/cities/hooks/use-query-all-cities';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
@@ -72,8 +73,8 @@ const createBaseNodeFormSchema = (
       .transform((val) => parseInt(val)),
     populationId: z
       .string()
-      .min(1, tValidations('required'))
-      .transform((val) => parseInt(val)),
+      .optional()
+      .transform((val) => (val && val.length > 0 ? parseInt(val) : undefined)),
     latitude: z
       .string()
       .min(1, { message: tValidations('required') })
@@ -178,7 +179,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
         radius: defaultValues.radius.toString(),
         installationTypeId: defaultValues.installationTypeId?.toString() ?? '',
         cityId: defaultValues.cityId.toString(),
-        populationId: defaultValues.populationId.toString(),
+        populationId: defaultValues.populationId?.toString() ?? '',
         latitude: defaultValues.latitude.toString(),
         longitude: defaultValues.longitude.toString(),
         operatingHours: defaultValues.operatingHours || null,
@@ -250,10 +251,23 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
     form.store,
     (state) => state.values.populationId,
   );
-  const { data: cities } = useQueryPopulationCities({
-    populationId: parseInt(selectedPopulationId),
-    enabled: !!selectedPopulationId,
+
+  // Get all cities when no population is selected
+  const { data: allCities } = useQueryAllCities();
+
+  // Get population-specific cities when population is selected
+  const { data: populationCities } = useQueryPopulationCities({
+    populationId:
+      selectedPopulationId && selectedPopulationId.length > 0
+        ? parseInt(selectedPopulationId)
+        : undefined,
   });
+
+  // Use population cities if population is selected, otherwise use all cities
+  const cities =
+    selectedPopulationId && selectedPopulationId.length > 0
+      ? populationCities
+      : allCities;
 
   // Get current installation type ID for dynamic form
   const currentInstallationTypeId = useStore(

@@ -26,7 +26,7 @@ interface NodesColumnsFactoryProps {
 function nodesColumnsFactory({
   tCommon,
   tNodes,
-}: NodesColumnsFactoryProps): DataTableColumnDef<nodes.Node>[] {
+}: NodesColumnsFactoryProps): DataTableColumnDef<nodes.NodeWithRelations>[] {
   return [
     {
       accessorKey: 'name',
@@ -43,6 +43,16 @@ function nodesColumnsFactory({
       accessorKey: 'city.name',
       header: tNodes('fields.city'),
       sortable: false,
+    },
+    {
+      id: 'population',
+      accessorKey: 'population.name',
+      header: tNodes('fields.population'),
+      sortable: false,
+      cell: ({ row }) => {
+        const population = row.original.population;
+        return population?.name ?? '-';
+      },
     },
   ];
 }

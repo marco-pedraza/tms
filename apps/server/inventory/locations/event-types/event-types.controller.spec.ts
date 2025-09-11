@@ -107,6 +107,71 @@ describe('Event Types Controller', () => {
       expect(response.needsCost).toBe(true);
     });
 
+    test('should create an event type with baseTime = 0', async () => {
+      const zeroTimeEventType = {
+        name: 'Zero Time Event Type',
+        code: 'ZTET',
+        description: 'Event type with zero base time',
+        baseTime: 0,
+        needsCost: false,
+        needsQuantity: false,
+        integration: false,
+        active: true,
+      };
+
+      const response = await createEventType(zeroTimeEventType);
+      eventTypeCleanup.track(response.id);
+
+      expect(response).toBeDefined();
+      expect(response.id).toBeDefined();
+      expect(response.name).toBe(zeroTimeEventType.name);
+      expect(response.code).toBe(zeroTimeEventType.code);
+      expect(response.baseTime).toBe(0);
+      expect(response.createdAt).toBeDefined();
+    });
+
+    test('should use 0 as default when baseTime is not provided', async () => {
+      const eventTypeWithoutBaseTime = {
+        name: 'Default Time Event Type',
+        code: 'DTET2',
+        description: 'Event type without baseTime specified',
+        // baseTime intentionally omitted
+        needsCost: false,
+        needsQuantity: false,
+        integration: false,
+        active: true,
+      };
+
+      const response = await createEventType(eventTypeWithoutBaseTime);
+      eventTypeCleanup.track(response.id);
+
+      expect(response).toBeDefined();
+      expect(response.id).toBeDefined();
+      expect(response.name).toBe(eventTypeWithoutBaseTime.name);
+      expect(response.code).toBe(eventTypeWithoutBaseTime.code);
+      expect(response.baseTime).toBe(0); // Should default to 0
+      expect(response.createdAt).toBeDefined();
+    });
+
+    test('should update an event type to baseTime = 0', async () => {
+      // Create an event type with non-zero baseTime first
+      const initialEventType = await createTestEventType(
+        createUniqueEventTypeData('Update to Zero Time Event Type', 'UZTET', {
+          baseTime: 30,
+        }),
+      );
+
+      // Update to zero baseTime
+      const response = await updateEventType({
+        id: initialEventType.id,
+        baseTime: 0,
+      });
+
+      expect(response).toBeDefined();
+      expect(response.id).toBe(initialEventType.id);
+      expect(response.baseTime).toBe(0);
+    });
+
     test('should delete an event type', async () => {
       // Create an event type specifically for deletion test
       const eventTypeToDelete = await createEventType(

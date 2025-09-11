@@ -3,7 +3,7 @@ import type { APIError, cities } from '@repo/ims-client';
 import imsClient from '@/services/ims-client';
 
 interface UseQueryPopulationCitiesParams {
-  populationId: number;
+  populationId?: number;
   enabled?: boolean;
 }
 
@@ -19,7 +19,12 @@ export default function useQueryPopulationCities({
 > {
   return useQuery({
     queryKey: ['populations', populationId, 'cities'],
-    queryFn: () => imsClient.inventory.getPopulationCities(populationId),
-    enabled,
+    queryFn: () => {
+      if (!populationId) {
+        throw new Error('Population ID is required');
+      }
+      return imsClient.inventory.getPopulationCities(populationId);
+    },
+    enabled: enabled && !!populationId,
   });
 }

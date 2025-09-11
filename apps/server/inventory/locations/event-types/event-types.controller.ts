@@ -20,8 +20,14 @@ import { validateEventType } from './event-types.domain';
 export const createEventType = api(
   { expose: true, method: 'POST', path: '/event-types/create' },
   async (params: CreateEventTypePayload): Promise<EventType> => {
-    await validateEventType(params);
-    return await eventTypeRepository.create(params);
+    // Apply default value for baseTime if not provided
+    const eventTypeData = {
+      ...params,
+      baseTime: params.baseTime ?? 0,
+    };
+
+    await validateEventType(eventTypeData);
+    return await eventTypeRepository.create(eventTypeData);
   },
 );
 
@@ -52,8 +58,14 @@ export const updateEventType = api(
     id,
     ...data
   }: UpdateEventTypePayload & { id: number }): Promise<EventType> => {
-    await validateEventType(data, id);
-    return await eventTypeRepository.update(id, data);
+    // Apply default value for baseTime if explicitly set to undefined
+    const eventTypeData = {
+      ...data,
+      ...(data.baseTime !== undefined && { baseTime: data.baseTime ?? 0 }),
+    };
+
+    await validateEventType(eventTypeData, id);
+    return await eventTypeRepository.update(id, eventTypeData);
   },
 );
 

@@ -194,6 +194,38 @@ describe('Nodes Controller', () => {
       expect(result.slug).toContain(nodeData.code.toLowerCase());
     });
 
+    test('should create a node without populationId (optional population)', async () => {
+      const nodeData: CreateNodePayload = {
+        code: createUniqueCode('CNP', 3),
+        name: createUniqueName('Create Node No Population', testSuiteId),
+        latitude: 19.7326,
+        longitude: -99.4332,
+        radius: 600,
+        cityId: testCityId,
+        // populationId is intentionally omitted (optional)
+      };
+
+      const result = await createNode(nodeData);
+      nodeCleanup.track(result.id);
+
+      expect(result).toBeDefined();
+      expect(result.id).toBeTypeOf('number');
+      expect(result.code).toBe(nodeData.code);
+      expect(result.name).toBe(nodeData.name);
+      expect(result.latitude).toBe(nodeData.latitude);
+      expect(result.longitude).toBe(nodeData.longitude);
+      expect(result.radius).toBe(nodeData.radius);
+      expect(result.cityId).toBe(nodeData.cityId);
+      expect(result.populationId).toBeNull(); // Should be null when not provided
+      expect(result.createdAt).toBeDefined();
+      expect(result.updatedAt).toBeDefined();
+
+      // Verify slug generation still works
+      expect(result.slug).toBeDefined();
+      expect(result.slug).toMatch(/^n-.*-[a-z0-9]+$/);
+      expect(result.slug).toContain(nodeData.code.toLowerCase());
+    });
+
     test('should retrieve a node by ID with relations', async () => {
       const result = await getNode({ id: createdNodeId });
 
@@ -203,11 +235,43 @@ describe('Nodes Controller', () => {
       expect(result.population).toBeDefined();
       expect(result.installation).toBeDefined();
       expect(result.city.id).toBe(testCityId);
-      expect(result.population.id).toBe(testPopulationId);
+      expect(result.population?.id).toBe(testPopulationId);
 
       // Verify slug exists
       expect(result.slug).toBeDefined();
       expect(typeof result.slug).toBe('string');
+    });
+
+    test('should retrieve a node without population with null population relation', async () => {
+      // Create a node without population
+      const nodeData: CreateNodePayload = {
+        code: createUniqueCode('NNP', 3),
+        name: createUniqueName('Node No Population Relations', testSuiteId),
+        latitude: 19.8326,
+        longitude: -99.5332,
+        radius: 400,
+        cityId: testCityId,
+        // populationId is intentionally omitted
+      };
+
+      const createdNode = await createNode(nodeData);
+      const nodeId = nodeCleanup.track(createdNode.id);
+
+      // Retrieve the node with relations
+      const result = await getNode({ id: nodeId });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(nodeId);
+      expect(result.city).toBeDefined();
+      expect(result.population).toBeNull(); // Should be null when no population is assigned
+      expect(result.city.id).toBe(testCityId);
+      expect(result.populationId).toBeNull();
+
+      // Verify other relations still work
+      expect(result.nodeEvents).toBeDefined();
+      expect(result.labels).toBeDefined();
+      expect(Array.isArray(result.nodeEvents)).toBe(true);
+      expect(Array.isArray(result.labels)).toBe(true);
     });
 
     test('should update a node successfully and regenerate slug when name changes', async () => {
@@ -306,6 +370,44 @@ describe('Nodes Controller', () => {
 
       // Verify slug was NOT regenerated since name and code didn't change
       expect(result.slug).toBe(originalSlug);
+    });
+
+    test('should update a node to remove population (set to null)', async () => {
+      // Create a node with population first
+      const nodeData: CreateNodePayload = {
+        code: createUniqueCode('URP', 3),
+        name: createUniqueName('Update Remove Population', testSuiteId),
+        latitude: 19.9326,
+        longitude: -99.6332,
+        radius: 350,
+        cityId: testCityId,
+        populationId: testPopulationId, // Start with a population
+      };
+
+      const createdNode = await createNode(nodeData);
+      const nodeId = nodeCleanup.track(createdNode.id);
+
+      // Verify it was created with population
+      expect(createdNode.populationId).toBe(testPopulationId);
+
+      // Update to remove population by setting it to null explicitly
+      const updateData: UpdateNodePayload = {
+        populationId: null, // Now properly typed to accept null
+      };
+
+      const result = await updateNode({
+        id: nodeId,
+        ...updateData,
+      });
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe(nodeId);
+      expect(result.populationId).toBeNull(); // Should be null after update
+
+      // Verify the node can still be retrieved with relations
+      const nodeWithRelations = await getNode({ id: nodeId });
+      expect(nodeWithRelations.population).toBeNull();
+      expect(nodeWithRelations.city).toBeDefined(); // City should still be there
     });
 
     test('should delete a node successfully', async () => {

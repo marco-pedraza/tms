@@ -47,6 +47,7 @@ export default function EditEventPage() {
         defaultValues={{
           ...data,
           description: data.description ?? '',
+          baseTime: (data.baseTime ?? 0).toString(),
         }}
         onSubmit={handleSubmit}
       />

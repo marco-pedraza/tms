@@ -2,6 +2,7 @@ import { and, count, eq, exists, inArray } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
 import { PaginationMeta } from '@/shared/types';
+import { OperatingHours } from '@/inventory/locations/installations/installations.types';
 import { installationUseCases } from '@/inventory/locations/installations/installations.use-cases';
 import { labelRepository } from '@/inventory/locations/labels/labels.repository';
 import { labelNodes } from '@/inventory/locations/labels/labels.schema';
@@ -259,6 +260,8 @@ export function createNodeRepository() {
       installation: node.installation
         ? {
             ...node.installation,
+            operatingHours: node.installation
+              .operatingHours as OperatingHours | null,
             location: null, // Location info not needed for list operations
             properties: [], // Properties not needed for list operations
             amenities: [], // Amenities not needed for list operations
@@ -306,13 +309,17 @@ export function createNodeRepository() {
   /**
    * Gets the installation type ID for a node
    * @param nodeId - The ID of the node
+   * @param tx - Optional transaction instance
    * @returns The installation type ID or null if no installation is assigned
    * @throws {NotFoundError} If the node is not found
    */
   async function getInstallationTypeIdByNodeId(
     nodeId: number,
+    tx?: unknown,
   ): Promise<number | null> {
-    const nodeWithInstallation = await db.query.nodes.findFirst({
+    const dbInstance = (tx as typeof db) || db;
+
+    const nodeWithInstallation = await dbInstance.query.nodes.findFirst({
       where: (nodes, { eq, and, isNull }) =>
         and(eq(nodes.id, nodeId), isNull(nodes.deletedAt)),
       with: {

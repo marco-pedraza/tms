@@ -49,7 +49,7 @@ export interface Node {
   cityId: number;
 
   /** ID of the population this node belongs to */
-  populationId: number;
+  populationId: number | null;
 
   /** Optional ID of the installation associated with this node */
   installationId: number | null;
@@ -121,9 +121,11 @@ export interface CreateNodePayload {
 
   /**
    * ID of the population this node belongs to
-   * Must be a positive number
+   * - undefined: no change to current value
+   * - null: clear/remove population
+   * - number: set to specific population (must be positive)
    */
-  populationId: number & Min<1>;
+  populationId?: number | null;
 
   /**
    * Optional ID of the installation associated with this node
@@ -189,9 +191,11 @@ export interface UpdateNodePayload {
 
   /**
    * ID of the population this node belongs to
-   * Must be a positive number
+   * - undefined: no change to current value
+   * - null: clear/remove population
+   * - number: set to specific population (must be positive)
    */
-  populationId?: number & Min<1>;
+  populationId?: number | null;
 
   /**
    * Optional ID of the installation associated with this node
@@ -205,7 +209,7 @@ export interface UpdateNodePayload {
  */
 export interface NodeWithRelations extends Node {
   city: City;
-  population: Population;
+  population: Population | null;
   installation: InstallationWithDetails | null;
   nodeEvents: NodeEventFlat[];
   labels: Label[];

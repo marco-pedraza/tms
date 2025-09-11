@@ -351,6 +351,13 @@
       "when": 1757116767317,
       "tag": "20250905235927_create_bus_crew_table",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1757376206198,
+      "tag": "20250909000326_make_population_id_optiona_and_sets_base_time_zero_default",
+      "breakpoints": true
     }
   ]
 }

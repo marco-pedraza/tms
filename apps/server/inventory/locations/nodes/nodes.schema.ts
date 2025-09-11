@@ -31,9 +31,7 @@ export const nodes = pgTable(
     cityId: integer('city_id')
       .notNull()
       .references(() => cities.id),
-    populationId: integer('population_id')
-      .notNull()
-      .references(() => populations.id),
+    populationId: integer('population_id').references(() => populations.id),
     installationId: integer('installation_id').references(
       () => installations.id,
     ),

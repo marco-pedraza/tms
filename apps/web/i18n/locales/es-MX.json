@@ -948,7 +948,7 @@
     "fields": {
       "city": "Ciudad",
       "population": "Población",
-      "radius": "Radio",
+      "radius": "Radio (Km)",
       "installationType": "Tipo de Instalación",
       "address": "Dirección",
       "contactPhone": "Teléfono",
@@ -1238,6 +1238,9 @@
       "needsCost": "Indica si se debe solicitar el costo durante la creación de roles",
       "needsQuantity": "Indica si se debe solicitar la cantidad durante la creación de roles",
       "active": "Indica si el tipo de evento está activo en el sistema"
+    },
+    "baseTime": {
+      "minutes": "{count, plural, =0 {Sin tiempo base} =1 {# minuto} other {# minutos}}"
     },
     "edit": {
       "title": "Editar Tipo de Evento"

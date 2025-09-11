@@ -2995,8 +2995,9 @@ export namespace inventory {
     description?: string
 
     /**
-     * Base time in minutes (optional, but if provided must be positive integer)
-     * @minimum 1
+     * Base time in minutes (optional, but if provided must be non-negative integer)
+     * @minimum 0
+     * @default 0
      */
     baseTime?: number
 
@@ -3273,9 +3274,11 @@ export namespace inventory {
 
     /**
      * ID of the population this node belongs to
-     * Must be a positive number
+     * - undefined: no change to current value
+     * - null: clear/remove population
+     * - number: set to specific population (must be positive)
      */
-    populationId?: number
+    populationId?: number | null
 
     /**
      * Optional ID of the installation associated with this node
@@ -8721,10 +8724,11 @@ export namespace event_types {
         description?: string
 
         /**
-         * Base time in minutes (required, must be positive integer)
-         * @minimum 1
+         * Base time in minutes (optional, defaults to 0, must be non-negative integer)
+         * @minimum 0
+         * @default 0
          */
-        baseTime: number
+        baseTime?: number
 
         /**
          * Whether this event type requires cost tracking (defaults to false)
@@ -9946,9 +9950,11 @@ export namespace nodes {
 
         /**
          * ID of the population this node belongs to
-         * Must be a positive number
+         * - undefined: no change to current value
+         * - null: clear/remove population
+         * - number: set to specific population (must be positive)
          */
-        populationId: number
+        populationId?: number | null
 
         /**
          * Optional ID of the installation associated with this node
@@ -9970,7 +9976,7 @@ export namespace nodes {
             allowsAlighting?: boolean
             active?: boolean
             cityId?: number
-            populationId?: number
+            populationId?: number | null
             installationId?: number | null
             createdAt?: string | string | null
             updatedAt?: string | string | null
@@ -10049,7 +10055,7 @@ export namespace nodes {
         /**
          * ID of the population this node belongs to
          */
-        populationId: number
+        populationId: number | null
 
         /**
          * Optional ID of the installation associated with this node
@@ -10081,7 +10087,7 @@ export namespace nodes {
 
     export interface NodeWithRelations {
         city: cities.City
-        population: populations.Population
+        population: populations.Population | null
         installation: installations.InstallationWithDetails | null
         nodeEvents: node_events.NodeEventFlat[]
         labels: labels.Label[]
@@ -10143,7 +10149,7 @@ export namespace nodes {
         /**
          * ID of the population this node belongs to
          */
-        populationId: number
+        populationId: number | null
 
         /**
          * Optional ID of the installation associated with this node
@@ -10174,7 +10180,7 @@ export namespace nodes {
             allowsAlighting?: boolean
             active?: boolean
             cityId?: number
-            populationId?: number
+            populationId?: number | null
             installationId?: number | null
             createdAt?: string | string | null
             updatedAt?: string | string | null

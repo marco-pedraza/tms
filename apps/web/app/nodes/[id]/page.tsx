@@ -190,7 +190,7 @@ export default function NodeDetailsPage() {
               <dd>{node.city.name}</dd>
 
               <dt className="font-medium">{tNodes('fields.population')}:</dt>
-              <dd>{node.population.name}</dd>
+              <dd>{node.population?.name ?? '-'}</dd>
 
               <dt className="font-medium">{tCommon('fields.coordinates')}:</dt>
               <dd>

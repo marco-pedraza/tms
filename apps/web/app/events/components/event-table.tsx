@@ -1,6 +1,5 @@
 'use client';
 
-import { formatDuration } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import { event_types } from '@repo/ims-client';
 import AffirmationBadge from '@/components/affirmation-badge';
@@ -48,7 +47,7 @@ function EventsColumnsFactory({
       header: tEvents('fields.baseTime'),
       cell: ({ row }) => {
         const value = row.original.baseTime;
-        return <span>{formatDuration({ minutes: value })}</span>;
+        return <span>{tEvents('baseTime.minutes', { count: value })}</span>;
       },
     },
     {

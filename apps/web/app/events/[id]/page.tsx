@@ -1,6 +1,5 @@
 'use client';
 
-import { formatDuration } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import ActionButtons from '@/components/action-buttons';
 import AffirmationBadge from '@/components/affirmation-badge';
@@ -94,7 +93,7 @@ export default function EventDetailsPage() {
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
               <dt className="font-medium">{tEvents('fields.baseTime')}:</dt>
               <dd className="flex flex-col gap-2">
-                {formatDuration({ minutes: eventType.baseTime })}
+                {tEvents('baseTime.minutes', { count: eventType.baseTime })}
                 <small className="text-muted-foreground">
                   {tEvents('details.baseTime')}
                 </small>

@@ -124,6 +124,22 @@ async function validateNode(
     currentId,
     preparedSlug,
   );
+
+  // Validate populationId constraint when it's a number
+  if (
+    typeof payload.populationId === 'number' &&
+    (!Number.isFinite(payload.populationId) ||
+      !Number.isInteger(payload.populationId) ||
+      payload.populationId <= 0)
+  ) {
+    validator.addError(
+      'populationId',
+      'MIN_VALUE',
+      'Population ID must be a positive integer',
+      payload.populationId,
+    );
+  }
+
   // TODO: Add foreign key validation for cityId, populationId, and installationId
   validator.throwIfErrors();
 }

@@ -4,6 +4,7 @@ import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
+import { optionalIntegerSchema } from '@/schemas/number';
 import { optionalStringSchema } from '@/schemas/string';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
@@ -27,12 +28,7 @@ const createEventFormSchema = (
         message: tValidations('code.alphanumeric'),
       }),
     description: optionalStringSchema(),
-    baseTime: z
-      .string()
-      .transform((val) => parseInt(val))
-      .refine((val) => !isNaN(val) && val >= 1, {
-        message: tValidations('greaterThanOrEquals', { value: 1 }),
-      }),
+    baseTime: optionalIntegerSchema().transform((val) => val ?? 0),
     integration: z.boolean(),
     needsCost: z.boolean(),
     needsQuantity: z.boolean(),
@@ -43,8 +39,10 @@ export type EventFormValues = z.output<
   ReturnType<typeof createEventFormSchema>
 >;
 
+export type EventFormInput = z.input<ReturnType<typeof createEventFormSchema>>;
+
 interface EventFormProps {
-  defaultValues?: EventFormValues;
+  defaultValues?: Partial<EventFormInput>;
   onSubmit: (values: EventFormValues) => Promise<unknown>;
 }
 
@@ -57,7 +55,7 @@ export default function EventForm({ defaultValues, onSubmit }: EventFormProps) {
       name: '',
       code: '',
       description: '',
-      baseTime: '',
+      baseTime: '0',
       integration: false,
       needsCost: false,
       needsQuantity: false,
@@ -118,8 +116,8 @@ export default function EventForm({ defaultValues, onSubmit }: EventFormProps) {
           {(field) => (
             <field.NumberInput
               label={tEvents('fields.baseTimeMinutes')}
-              isRequired
               description={tEvents('details.baseTime')}
+              placeholder="0"
             />
           )}
         </form.AppField>

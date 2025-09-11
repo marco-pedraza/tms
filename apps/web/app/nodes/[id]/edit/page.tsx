@@ -160,6 +160,7 @@ export default function EditNodePage() {
       <NodeForm
         defaultValues={{
           ...data,
+          populationId: data.populationId ?? undefined, // Convert null to undefined for form
           installationTypeId: data.installation?.installationTypeId,
           address: data.installation?.address || '',
           description: data.installation?.description || '',

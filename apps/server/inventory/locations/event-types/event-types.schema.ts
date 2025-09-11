@@ -20,7 +20,7 @@ export const eventTypes = pgTable(
     name: text('name').notNull(),
     code: text('code').notNull(),
     description: text('description'),
-    baseTime: integer('base_time').notNull(),
+    baseTime: integer('base_time').notNull().default(0),
     needsCost: boolean('needs_cost').notNull().default(false),
     needsQuantity: boolean('needs_quantity').notNull().default(false),
     integration: boolean('integration').notNull().default(false),

@@ -15,8 +15,8 @@ export function emailSchema(tValidations: UseValidationsTranslationsResult) {
   return z.union([
     z
       .string()
-      .email()
-      .refine(() => true, { message: tValidations('email.invalid') }),
+      .trim()
+      .email({ message: tValidations('email.invalid') }),
     z.literal(''),
   ]);
 }

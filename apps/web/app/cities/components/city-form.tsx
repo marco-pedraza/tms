@@ -186,7 +186,6 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
               emptyOptionsLabel={tCities(
                 'form.placeholders.emptyTimezonesList',
               )}
-              description={tCities('form.timezoneHelp')}
             />
           )}
         </form.AppField>

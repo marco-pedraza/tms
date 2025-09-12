@@ -434,7 +434,6 @@
         "emptyTimezonesList": "No se encontraron Zonas Horarias"
       },
       "codeHelp": "Usa un código de 2-5 letras para identificar la ciudad",
-      "timezoneHelp": "Usa el formato IANA (Ej: America/Mexico_City)",
       "state": "Estado",
       "timezone": "Zona Horaria",
       "population": "Población"

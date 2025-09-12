@@ -299,6 +299,11 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
     return new Set<number>();
   }, [defaultValues?.nodeEvents]);
 
+  // Get all available event IDs for opt-out behavior
+  const allAvailableEventIds = useMemo(() => {
+    return events?.map((event) => event.id) ?? [];
+  }, [events]);
+
   // Helper function to compare arrays reliably (order-independent)
   const areArraysEqual = useCallback((arr1: number[], arr2: number[]) => {
     if (arr1.length !== arr2.length) return false;
@@ -316,6 +321,7 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
   const prevSelectedEvents = useRef<number[]>([]);
   const hasInitialized = useRef(false);
   const hasUserClearedEvents = useRef(false);
+  const populateAllOnNextEvents = useRef(false);
 
   const syncFormEventsWithSelectedEvents = useCallback(() => {
     const currentFormEvents = form.getFieldValue('nodeEvents') || [];
@@ -336,10 +342,12 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
       currentInstallationTypeId !== prevInstallationTypeId.current;
 
     if (hasInstallationTypeChanged) {
-      // Clear events when installation type changes
+      // Defer population until events for the new type are loaded
+      populateAllOnNextEvents.current = true;
       setSelectedEvents([]);
       prevSelectedEvents.current = [];
       form.setFieldValue('nodeEvents', []);
+
       // Reset the user cleared flag when installation type changes
       hasUserClearedEvents.current = false;
       prevInstallationTypeId.current = currentInstallationTypeId;
@@ -347,17 +355,34 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
   }, [currentInstallationTypeId, form]);
 
   const handleInitialEventsForEditMode = useCallback(() => {
-    if (!hasInitialized.current && initialEvents.size > 0) {
-      const initialEventArray = Array.from(initialEvents);
-      setSelectedEvents(initialEventArray);
-      prevSelectedEvents.current = initialEventArray;
-      // Set form events from default values
-      if (defaultValues?.nodeEvents) {
-        form.setFieldValue('nodeEvents', defaultValues.nodeEvents);
+    if (!hasInitialized.current) {
+      if (initialEvents.size > 0) {
+        // In edit mode with existing events, use the existing events
+        const initialEventArray = Array.from(initialEvents);
+        setSelectedEvents(initialEventArray);
+        prevSelectedEvents.current = initialEventArray;
+        // Set form events from default values
+        if (defaultValues?.nodeEvents) {
+          form.setFieldValue('nodeEvents', defaultValues.nodeEvents);
+        }
+        hasInitialized.current = true;
+      } else if (allAvailableEventIds.length > 0) {
+        // In edit mode without existing events, select all available events (opt-out)
+        setSelectedEvents(allAvailableEventIds);
+        prevSelectedEvents.current = allAvailableEventIds;
+
+        // Create form events for all available events
+        const allEvents = allAvailableEventIds.map((eventTypeId) => ({
+          eventTypeId,
+          customTime: null,
+        }));
+        form.setFieldValue('nodeEvents', allEvents);
+        hasInitialized.current = true;
       }
-      hasInitialized.current = true;
+      // Do not set hasInitialized.current = true if no initialization occurred
+      // This allows the effect to run again when allAvailableEventIds becomes available
     }
-  }, [initialEvents, defaultValues?.nodeEvents, form]);
+  }, [initialEvents, defaultValues?.nodeEvents, form, allAvailableEventIds]);
 
   // Single consolidated effect to handle form events synchronization
   useEffect(() => {
@@ -374,14 +399,32 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
     handleInitialEventsForEditMode();
   }, [handleInitialEventsForEditMode]);
 
-  // Restore events when installation type is changed back to original in edit mode
+  // Initialize all events for new nodes (creation mode) when events are loaded
+  // Also handles deferred population after installation type changes
   useEffect(() => {
     if (
-      defaultValues?.installationTypeId &&
-      currentInstallationTypeId &&
-      defaultValues.nodeEvents &&
-      defaultValues.nodeEvents.length > 0
+      !defaultValues &&
+      allAvailableEventIds.length > 0 &&
+      (selectedEvents.length === 0 || populateAllOnNextEvents.current)
     ) {
+      // In creation mode or after installation type change, select all available events (opt-out behavior)
+      setSelectedEvents(allAvailableEventIds);
+      prevSelectedEvents.current = allAvailableEventIds;
+
+      const allEvents = allAvailableEventIds.map((eventTypeId) => ({
+        eventTypeId,
+        customTime: null,
+      }));
+      form.setFieldValue('nodeEvents', allEvents);
+
+      // Clear the deferred population flag after successful population
+      populateAllOnNextEvents.current = false;
+    }
+  }, [defaultValues, allAvailableEventIds, selectedEvents.length, form]);
+
+  // Restore events when installation type is changed back to original in edit mode
+  useEffect(() => {
+    if (defaultValues?.installationTypeId && currentInstallationTypeId) {
       const originalInstallationTypeId =
         defaultValues.installationTypeId.toString();
       const isBackToOriginal =
@@ -394,15 +437,34 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
         selectedEvents.length === 0 &&
         !hasUserClearedEvents.current
       ) {
-        const eventIds = defaultValues.nodeEvents.map(
-          (event) => event.eventTypeId,
-        );
-        setSelectedEvents(eventIds);
-        prevSelectedEvents.current = eventIds;
-        form.setFieldValue('nodeEvents', defaultValues.nodeEvents);
+        if (defaultValues.nodeEvents && defaultValues.nodeEvents.length > 0) {
+          // Restore original events if they exist
+          const eventIds = defaultValues.nodeEvents.map(
+            (event) => event.eventTypeId,
+          );
+          setSelectedEvents(eventIds);
+          prevSelectedEvents.current = eventIds;
+          form.setFieldValue('nodeEvents', defaultValues.nodeEvents);
+        } else if (allAvailableEventIds.length > 0) {
+          // If no original events, select all available events (opt-out)
+          setSelectedEvents(allAvailableEventIds);
+          prevSelectedEvents.current = allAvailableEventIds;
+
+          const allEvents = allAvailableEventIds.map((eventTypeId) => ({
+            eventTypeId,
+            customTime: null,
+          }));
+          form.setFieldValue('nodeEvents', allEvents);
+        }
       }
     }
-  }, [currentInstallationTypeId, defaultValues, form, selectedEvents]);
+  }, [
+    currentInstallationTypeId,
+    defaultValues,
+    form,
+    selectedEvents,
+    allAvailableEventIds,
+  ]);
 
   const handleEventSelection = useCallback(
     (eventTypeId: number, checked: boolean) => {
@@ -665,7 +727,6 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
                 <field.SelectInput
                   label={tNodes('fields.population')}
                   placeholder={tNodes('form.placeholders.population')}
-                  isRequired
                   items={
                     populations?.data.map((population) => ({
                       id: population.id.toString(),

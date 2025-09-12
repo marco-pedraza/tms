@@ -382,12 +382,10 @@ export default function BusForm({
                   'form.placeholders.emptyOptionsLabel',
                 )}
                 items={
-                  busModels?.data.map(
-                    (model: { id: number; model: string }) => ({
-                      id: model.id.toString(),
-                      name: model.model,
-                    }),
-                  ) || []
+                  busModels?.data.map((model) => ({
+                    id: model.id.toString(),
+                    name: `${model.manufacturer} - ${model.model}`,
+                  })) || []
                 }
                 isRequired
               />

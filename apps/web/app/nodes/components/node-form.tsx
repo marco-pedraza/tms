@@ -647,9 +647,18 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
         <FormLayout title={tNodes('form.sections.basicInfo')}>
           <form.AppField name="installationTypeId">
             {(field) => (
-              <field.SelectInput
+              <field.ComboboxInput
                 label={tNodes('fields.installationType')}
                 placeholder={tNodes('form.placeholders.installationType')}
+                emptyOptionsLabel={tNodes(
+                  'form.placeholders.emptyInstallationTypesList',
+                )}
+                searchPlaceholder={tNodes(
+                  'form.placeholders.installationTypeSearch',
+                )}
+                noResultsLabel={tNodes(
+                  'form.placeholders.noInstallationTypesFound',
+                )}
                 isRequired
                 items={
                   installationTypes?.data.map((installationType) => ({
@@ -724,9 +733,19 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
               }}
             >
               {(field) => (
-                <field.SelectInput
+                <field.ComboboxInput
                   label={tNodes('fields.population')}
                   placeholder={tNodes('form.placeholders.population')}
+                  isRequired
+                  emptyOptionsLabel={tNodes(
+                    'form.placeholders.emptyPopulationList',
+                  )}
+                  searchPlaceholder={tNodes(
+                    'form.placeholders.populationSearch',
+                  )}
+                  noResultsLabel={tNodes(
+                    'form.placeholders.noPopulationsFound',
+                  )}
                   items={
                     populations?.data.map((population) => ({
                       id: population.id.toString(),
@@ -738,11 +757,13 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
             </form.AppField>
             <form.AppField name="cityId">
               {(field) => (
-                <field.SelectInput
+                <field.ComboboxInput
                   label={tNodes('fields.city')}
                   placeholder={tNodes('form.placeholders.city')}
                   isRequired
                   emptyOptionsLabel={tNodes('form.placeholders.emptyCityList')}
+                  searchPlaceholder={tNodes('form.placeholders.citySearch')}
+                  noResultsLabel={tNodes('form.placeholders.noCitiesFound')}
                   items={
                     cities?.data.map((city) => ({
                       id: city.id.toString(),

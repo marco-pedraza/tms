@@ -321,13 +321,19 @@ export default function BusModelForm({
               );
               return (
                 <>
-                  <field.SelectInput
+                  <field.ComboboxInput
                     label={tBusModels('fields.busDiagramModel')}
                     placeholder={tBusModels(
                       'form.placeholders.busDiagramModel',
                     )}
                     emptyOptionsLabel={tBusModels(
                       'form.placeholders.emptyOptionsLabel',
+                    )}
+                    searchPlaceholder={tBusModels(
+                      'form.placeholders.busDiagramModelSearch',
+                    )}
+                    noResultsLabel={tBusModels(
+                      'form.placeholders.noBusDiagramModelsFound',
                     )}
                     items={
                       busDiagrams?.data.map((diagram) => ({

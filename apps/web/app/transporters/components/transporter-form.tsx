@@ -199,10 +199,18 @@ export default function TransporterForm({
 
           <form.AppField name="headquarterCityId">
             {(field) => (
-              <field.SelectInput
+              <field.ComboboxInput
                 label={tTransporters('fields.headquarterCity')}
                 placeholder={tTransporters('form.placeholders.headquarterCity')}
-                emptyOptionsLabel={tTransporters('form.emptyCitiesOptions')}
+                emptyOptionsLabel={tTransporters(
+                  'form.placeholders.emptyCityList',
+                )}
+                searchPlaceholder={tTransporters(
+                  'form.placeholders.citySearch',
+                )}
+                noResultsLabel={tTransporters(
+                  'form.placeholders.noCitiesFound',
+                )}
                 items={
                   cities?.data.map((city) => ({
                     id: city.id.toString(),

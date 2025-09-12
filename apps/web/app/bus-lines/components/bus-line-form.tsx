@@ -5,8 +5,6 @@ import { z } from 'zod';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
-import NumberInput from '@/components/form/number-input';
-import SelectInput from '@/components/form/select-input';
 import useForm from '@/hooks/use-form';
 import { codeSchema, nameSchema } from '@/schemas/common';
 import { emailSchema, phoneSchema } from '@/schemas/contact';
@@ -160,30 +158,48 @@ export default function BusLineForm({
         </form.AppField>
 
         <form.AppField name="transporterId">
-          {() => (
-            <SelectInput
+          {(field) => (
+            <field.ComboboxInput
               label={tCommon('fields.transporter')}
               placeholder={tBusLines('form.placeholders.transporter')}
               items={transporterItems}
+              emptyOptionsLabel={tBusLines(
+                'form.placeholders.emptyTransportersList',
+              )}
+              searchPlaceholder={tBusLines(
+                'form.placeholders.transporterSearch',
+              )}
+              noResultsLabel={tBusLines(
+                'form.placeholders.noTransportersFound',
+              )}
               isRequired
             />
           )}
         </form.AppField>
 
         <form.AppField name="serviceTypeId">
-          {() => (
-            <SelectInput
+          {(field) => (
+            <field.ComboboxInput
               label={tCommon('fields.serviceType')}
               placeholder={tBusLines('form.placeholders.serviceType')}
               items={serviceTypeItems}
+              emptyOptionsLabel={tBusLines(
+                'form.placeholders.emptyServiceTypesList',
+              )}
+              searchPlaceholder={tBusLines(
+                'form.placeholders.serviceTypeSearch',
+              )}
+              noResultsLabel={tBusLines(
+                'form.placeholders.noServiceTypesFound',
+              )}
               isRequired
             />
           )}
         </form.AppField>
 
         <form.AppField name="pricePerKilometer">
-          {() => (
-            <NumberInput
+          {(field) => (
+            <field.NumberInput
               label={tBusLines('fields.pricePerKilometer')}
               step={0.01}
               min={1}
@@ -194,8 +210,8 @@ export default function BusLineForm({
         </form.AppField>
 
         <form.AppField name="fleetSize">
-          {() => (
-            <NumberInput
+          {(field) => (
+            <field.NumberInput
               label={tBusLines('fields.fleetSize')}
               placeholder={tBusLines('form.placeholders.fleetSize')}
               allowDecimals={false}

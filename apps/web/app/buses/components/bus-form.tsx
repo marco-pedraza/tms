@@ -284,10 +284,12 @@ export default function BusForm({
         </form.AppField>
         <form.AppField name="transporterId">
           {(field) => (
-            <field.SelectInput
+            <field.ComboboxInput
               label={tBuses('fields.transporter')}
               placeholder={tBuses('form.placeholders.transporter')}
               emptyOptionsLabel={tBuses('form.placeholders.emptyOptionsLabel')}
+              searchPlaceholder={tBuses('form.placeholders.transporterSearch')}
+              noResultsLabel={tBuses('form.placeholders.noTransportersFound')}
               items={
                 transporters?.data.map((transporter) => ({
                   id: transporter.id.toString(),
@@ -299,10 +301,12 @@ export default function BusForm({
         </form.AppField>
         <form.AppField name="alternateTransporterId">
           {(field) => (
-            <field.SelectInput
+            <field.ComboboxInput
               label={tBuses('fields.alternateTransporter')}
               placeholder={tBuses('form.placeholders.alternateTransporter')}
               emptyOptionsLabel={tBuses('form.placeholders.emptyOptionsLabel')}
+              searchPlaceholder={tBuses('form.placeholders.transporterSearch')}
+              noResultsLabel={tBuses('form.placeholders.noTransportersFound')}
               items={
                 transporters?.data.map((transporter) => ({
                   id: transporter.id.toString(),
@@ -314,10 +318,12 @@ export default function BusForm({
         </form.AppField>
         <form.AppField name="busLineId">
           {(field) => (
-            <field.SelectInput
+            <field.ComboboxInput
               label={tBuses('fields.busLine')}
               placeholder={tBuses('form.placeholders.busLine')}
               emptyOptionsLabel={tBuses('form.placeholders.emptyOptionsLabel')}
+              searchPlaceholder={tBuses('form.placeholders.busLineSearch')}
+              noResultsLabel={tBuses('form.placeholders.noBusLinesFound')}
               items={
                 busLines?.data.map((busLine) => ({
                   id: busLine.id.toString(),
@@ -329,10 +335,12 @@ export default function BusForm({
         </form.AppField>
         <form.AppField name="baseId">
           {(field) => (
-            <field.SelectInput
+            <field.ComboboxInput
               label={tBuses('fields.base')}
               placeholder={tBuses('form.placeholders.base')}
               emptyOptionsLabel={tBuses('form.placeholders.emptyOptionsLabel')}
+              searchPlaceholder={tBuses('form.placeholders.nodeSearch')}
+              noResultsLabel={tBuses('form.placeholders.noNodesFound')}
               items={
                 nodes?.data.map((node) => ({
                   id: node.id.toString(),
@@ -375,12 +383,14 @@ export default function BusForm({
             }}
           >
             {(field) => (
-              <field.SelectInput
+              <field.ComboboxInput
                 label={tBuses('fields.model')}
                 placeholder={tBuses('form.placeholders.model')}
                 emptyOptionsLabel={tBuses(
                   'form.placeholders.emptyOptionsLabel',
                 )}
+                searchPlaceholder={tBuses('form.placeholders.modelSearch')}
+                noResultsLabel={tBuses('form.placeholders.noModelsFound')}
                 items={
                   busModels?.data.map((model) => ({
                     id: model.id.toString(),
@@ -525,11 +535,17 @@ export default function BusForm({
               );
               return (
                 <>
-                  <field.SelectInput
+                  <field.ComboboxInput
                     label={tBuses('fields.seatDiagram')}
                     placeholder={tBuses('form.placeholders.seatDiagram')}
                     emptyOptionsLabel={tBuses(
                       'form.placeholders.emptyOptionsLabel',
+                    )}
+                    searchPlaceholder={tBuses(
+                      'form.placeholders.seatDiagramSearch',
+                    )}
+                    noResultsLabel={tBuses(
+                      'form.placeholders.noSeatDiagramsFound',
                     )}
                     isRequired
                     items={

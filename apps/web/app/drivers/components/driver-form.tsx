@@ -386,10 +386,17 @@ export default function DriverForm({
 
             <form.AppField name="busLineId">
               {(field) => (
-                <field.SelectInput
+                <field.ComboboxInput
                   label={tDrivers('form.busLine')}
                   placeholder={tDrivers('form.placeholders.busLine')}
                   items={busLinesOptions}
+                  emptyOptionsLabel={tDrivers(
+                    'form.placeholders.emptyBusLinesList',
+                  )}
+                  searchPlaceholder={tDrivers(
+                    'form.placeholders.busLineSearch',
+                  )}
+                  noResultsLabel={tDrivers('form.placeholders.noBusLinesFound')}
                   isRequired
                 />
               )}

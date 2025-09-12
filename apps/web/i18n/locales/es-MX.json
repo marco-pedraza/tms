@@ -425,12 +425,15 @@
         "state": "Selecciona un estado",
         "population": "Selecciona una población",
         "timezone": "Ej: America/Mexico_City",
+        "emptyPopulationList": "No hay Poblaciones disponibles",
         "populationSearch": "Buscar Población",
-        "emptyPopulationList": "No se encontraron Poblaciones",
+        "noPopulationsFound": "No se encontraron Poblaciones",
+        "emptyStatesList": "No hay Estados disponibles",
         "stateSearch": "Buscar Estado",
-        "emptyStatesList": "No se encontraron Estados",
+        "noStatesFound": "No se encontraron Estados",
+        "emptyTimezonesList": "No hay Zonas Horarias disponibles",
         "timezoneSearch": "Buscar Zona Horaria",
-        "emptyTimezonesList": "No se encontraron Zonas Horarias"
+        "noTimezonesFound": "No se encontraron Zonas Horarias"
       },
       "state": "Estado",
       "timezone": "Zona Horaria",
@@ -524,12 +527,13 @@
         "legalName": "Ej: Autobuses de México S.A. de C.V.",
         "address": "Ej: Av. Central #123, Col. Centro",
         "contactInfo": "Ej: Información adicional de contacto",
-        "emptyCityList": "No hay ciudades disponibles"
+        "emptyCityList": "No hay ciudades disponibles",
+        "citySearch": "Buscar Ciudad",
+        "noCitiesFound": "No se encontraron Ciudades"
       },
       "codeHelp": "Usa un código de 1-10 caracteres con letras mayúsculas, números y guiones",
       "logoUrlHelp": "URL válida de la imagen del logo de la empresa",
-      "contactInfoHelp": "Información adicional de contacto como horarios de atención o datos relevantes",
-      "emptyCitiesOptions": "No hay ciudades disponibles"
+      "contactInfoHelp": "Información adicional de contacto como horarios de atención o datos relevantes"
     },
     "messages": {
       "create": {
@@ -638,7 +642,13 @@
         "fleetSize": "Ej: 10",
         "website": "Ej: https://autobusesdemexico.com",
         "email": "Ej: info@autobusesdemexico.com",
-        "phone": "Ej: +52 (33) 1234-5678"
+        "phone": "Ej: +52 (33) 1234-5678",
+        "emptyTransportersList": "No hay Transportistas disponibles",
+        "transporterSearch": "Buscar Transportista",
+        "noTransportersFound": "No se encontraron Transportistas",
+        "emptyServiceTypesList": "No hay Tipos de Servicio disponibles",
+        "serviceTypeSearch": "Buscar Tipo de Servicio",
+        "noServiceTypesFound": "No se encontraron Tipos de Servicio"
       }
     },
     "details": {
@@ -722,7 +732,10 @@
         "emergencyContactPhone": "Ej: +52 (33) 9876-5432",
         "emergencyContactRelationship": "Ej: Esposa",
         "busLine": "Selecciona una línea de autobús",
-        "status": "Selecciona un estatus"
+        "status": "Selecciona un estatus",
+        "emptyBusLinesList": "No hay Líneas de Autobús disponibles",
+        "busLineSearch": "Buscar Línea de Autobús",
+        "noBusLinesFound": "No se encontraron Líneas de Autobús"
       },
       "driverKey": "Clave",
       "payrollKey": "Clave Nómina",
@@ -984,7 +997,6 @@
         "radius": "Ej: 100",
         "latitude": "Ej: 19.4326",
         "longitude": "Ej: -99.1332",
-        "emptyCityList": "Selecciona una población con ciudades asignadas",
         "installationType": "Selecciona un tipo de instalación",
         "address": "Ej: Av. Central #123, Col. Centro",
         "contactPhone": "Ej: +52 (33) 1234-5678",
@@ -999,7 +1011,16 @@
         "labels": "Selecciona etiquetas",
         "emptyLabelsList": "No hay etiquetas disponibles",
         "amenities": "Selecciona amenidades",
-        "emptyAmenitiesList": "No hay amenidades disponibles"
+        "emptyAmenitiesList": "No hay amenidades disponibles",
+        "emptyInstallationTypesList": "No hay Tipos de Instalación disponibles",
+        "installationTypeSearch": "Buscar Tipo de Instalación",
+        "noInstallationTypesFound": "No se encontraron Tipos de Instalación",
+        "emptyCityList": "No hay Ciudades disponibles",
+        "citySearch": "Buscar Ciudad",
+        "noCitiesFound": "No se encontraron Ciudades",
+        "emptyPopulationList": "No hay Poblaciones disponibles",
+        "populationSearch": "Buscar Población",
+        "noPopulationsFound": "No se encontraron Poblaciones"
       }
     },
     "edit": {
@@ -1379,7 +1400,9 @@
         "numFloors": "Ej: 1",
         "engineType": "Ej: Diesel",
         "busDiagramModel": "Selecciona el diagrama de asientos",
-        "emptyOptionsLabel": "No hay diagramas de asientos disponibles",
+        "emptyOptionsLabel": "No hay Diagramas de Asientos disponibles",
+        "busDiagramModelSearch": "Buscar Diagrama de Asientos",
+        "noBusDiagramModelsFound": "No se encontraron Diagramas de Asientos",
         "amenities": "Selecciona las amenidades del autobús",
         "emptyAmenitiesList": "No hay amenidades disponibles"
       }
@@ -1517,7 +1540,17 @@
         "busLine": "Selecciona la Línea",
         "base": "Selecciona la Base",
         "seatDiagram": "Selecciona el Diagrama de Asientos",
-        "emptyOptionsLabel": "No hay opciones disponibles"
+        "emptyOptionsLabel": "No hay opciones disponibles",
+        "transporterSearch": "Buscar Transportista",
+        "noTransportersFound": "No se encontraron Transportistas",
+        "busLineSearch": "Buscar Línea",
+        "noBusLinesFound": "No se encontraron Líneas",
+        "nodeSearch": "Buscar Base",
+        "noNodesFound": "No se encontraron Bases",
+        "seatDiagramSearch": "Buscar Diagrama de Asientos",
+        "noSeatDiagramsFound": "No se encontraron Diagramas de Asientos",
+        "modelSearch": "Buscar Modelo",
+        "noModelsFound": "No se encontraron Modelos"
       }
     },
     "licensePlateTypes": {

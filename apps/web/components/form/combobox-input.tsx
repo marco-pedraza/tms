@@ -30,8 +30,10 @@ export function ComboboxInput({
   isRequired = false,
   emptyOptionsLabel,
   searchPlaceholder,
+  noResultsLabel,
 }: SelectInputProps & {
   searchPlaceholder: string;
+  noResultsLabel: string;
 }) {
   const field = useFieldContext<string>();
   const [open, setOpen] = React.useState(false);
@@ -65,7 +67,9 @@ export function ComboboxInput({
           <Command>
             <CommandInput placeholder={searchPlaceholder} className="h-9" />
             <CommandList>
-              <CommandEmpty>{emptyOptionsLabel}</CommandEmpty>
+              <CommandEmpty>
+                {items.length === 0 ? emptyOptionsLabel : noResultsLabel}
+              </CommandEmpty>
               <CommandGroup>
                 {items.map((item) => (
                   <CommandItem

@@ -145,8 +145,9 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
                   name: state.name,
                 })) ?? []
               }
-              searchPlaceholder={tCities('form.placeholders.stateSearch')}
               emptyOptionsLabel={tCities('form.placeholders.emptyStatesList')}
+              searchPlaceholder={tCities('form.placeholders.stateSearch')}
+              noResultsLabel={tCities('form.placeholders.noStatesFound')}
             />
           )}
         </form.AppField>
@@ -162,10 +163,11 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
                   name: population.name,
                 })) ?? []
               }
-              searchPlaceholder={tCities('form.placeholders.populationSearch')}
               emptyOptionsLabel={tCities(
                 'form.placeholders.emptyPopulationList',
               )}
+              searchPlaceholder={tCities('form.placeholders.populationSearch')}
+              noResultsLabel={tCities('form.placeholders.noPopulationsFound')}
             />
           )}
         </form.AppField>
@@ -182,10 +184,11 @@ function CityForm({ defaultValues, onSubmit }: CityFormProps) {
                   name: timezone.id,
                 })) ?? []
               }
-              searchPlaceholder={tCities('form.placeholders.timezoneSearch')}
               emptyOptionsLabel={tCities(
                 'form.placeholders.emptyTimezonesList',
               )}
+              searchPlaceholder={tCities('form.placeholders.timezoneSearch')}
+              noResultsLabel={tCities('form.placeholders.noTimezonesFound')}
             />
           )}
         </form.AppField>

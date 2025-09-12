@@ -134,8 +134,9 @@
       "nonWhitespace": "El nombre no puede contener solo espacios en blanco."
     },
     "code": {
-      "length": "El código debe contener {length} carácteres.",
-      "length-range": "El código debe contener entre {min} y {max} carácteres.",
+      "length": "El código debe contener {length} caracteres.",
+      "minLength": "El código debe contener al menos {length} caracteres.",
+      "length-range": "El código debe contener entre {min} y {max} caracteres.",
       "uppercase": "El código debe contener solo letras mayúsculas.",
       "alphanumeric": "El código debe contener solo letras mayúsculas, números y guiones.",
       "transporterFormat": "El código debe contener solo letras mayúsculas, números y guiones (máximo 10 caracteres)."
@@ -263,8 +264,7 @@
       "placeholders": {
         "name": "Ej: México",
         "code": "Ej: MX"
-      },
-      "codeHelp": "Usa el código ISO 3166-1 alpha-2 (2 letras)"
+      }
     },
     "details": {
       "description": "Detalles del país"
@@ -370,7 +370,6 @@
         "code": "Ej: JAL",
         "country": "Selecciona un país"
       },
-      "codeHelp": "Usa un código de 2-3 letras para identificar el estado",
       "country": "País"
     },
     "details": {
@@ -433,7 +432,6 @@
         "timezoneSearch": "Buscar Zona Horaria",
         "emptyTimezonesList": "No se encontraron Zonas Horarias"
       },
-      "codeHelp": "Usa un código de 2-5 letras para identificar la ciudad",
       "state": "Estado",
       "timezone": "Zona Horaria",
       "population": "Población"

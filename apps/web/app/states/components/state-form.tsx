@@ -27,12 +27,8 @@ const createStateFormSchema = (
     code: z
       .string()
       .min(2, {
-        message: tValidations('code.length-range', {
-          min: 2,
-          max: 3,
-        }),
+        message: tValidations('code.minLength', { length: 2 }),
       })
-      .max(3)
       .regex(/^[A-Z]+$/, { message: tValidations('code.uppercase') }),
     countryId: z
       .string()
@@ -110,8 +106,6 @@ export default function StateForm({ defaultValues, onSubmit }: StateFormProps) {
               label={tCommon('fields.code')}
               placeholder={tStates('form.placeholders.code')}
               isRequired
-              description={tStates('form.codeHelp')}
-              maxLength={3}
             />
           )}
         </form.AppField>

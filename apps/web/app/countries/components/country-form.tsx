@@ -23,9 +23,8 @@ const createCountryFormSchema = (
     code: z
       .string()
       .min(2, {
-        message: tValidations('code.length', { length: 2 }),
+        message: tValidations('code.minLength', { length: 2 }),
       })
-      .max(2)
       .regex(/^[A-Z]+$/, {
         message: tValidations('code.uppercase'),
       }),
@@ -91,7 +90,6 @@ export default function CountryForm({
               label={tCommon('fields.code')}
               placeholder={tCountries('form.placeholders.code')}
               isRequired
-              maxLength={2}
             />
           )}
         </form.AppField>

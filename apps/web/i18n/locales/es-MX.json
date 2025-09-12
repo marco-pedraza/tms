@@ -480,21 +480,21 @@
     }
   },
   "transporters": {
-    "title": "Transportistas",
+    "title": "Grupos de Transporte",
     "description": "Administra información de transportistas para el Sistema de Inventario de Autobuses",
     "actions": {
-      "create": "Crear Transportista",
-      "update": "Actualizar Transportista",
-      "backToList": "Volver a transportistas"
+      "create": "Crear Grupo de Transporte",
+      "update": "Editar Grupo de Transporte",
+      "backToList": "Volver a grupos de transporte"
     },
     "errors": {
       "notFound": {
-        "title": "Transportista no encontrado",
+        "title": "Grupo de Transporte no encontrado",
         "description": "No pudimos encontrar el transportista que buscas. Es posible que haya sido eliminado o que no exista."
       }
     },
     "details": {
-      "description": "Detalles del transportista"
+      "description": "Detalles del grupo de transporte"
     },
     "fields": {
       "licenseNumber": "Número de Licencia",
@@ -510,7 +510,7 @@
       "contactInfo": "Información de Contacto"
     },
     "form": {
-      "title": "Información del transportista",
+      "title": "Información del grupo de transporte",
       "placeholders": {
         "name": "Ej: Autobuses de México",
         "code": "Ej: AMX",
@@ -533,19 +533,19 @@
     },
     "messages": {
       "create": {
-        "loading": "Creando transportista...",
-        "success": "Transportista creado correctamente",
-        "error": "No pudimos crear el transportista"
+        "loading": "Creando grupo de transporte...",
+        "success": "Grupo de transporte creado correctamente",
+        "error": "No pudimos crear el grupo de transporte"
       },
       "update": {
-        "loading": "Actualizando transportista...",
-        "success": "Transportista actualizado correctamente",
-        "error": "No pudimos actualizar el transportista"
+        "loading": "Actualizando grupo de transporte...",
+        "success": "Grupo de transporte actualizado correctamente",
+        "error": "No pudimos actualizar el grupo de transporte"
       },
       "delete": {
-        "loading": "Eliminando transportista...",
-        "success": "Transportista eliminado correctamente",
-        "error": "No pudimos eliminar el transportista"
+        "loading": "Eliminando grupo de transporte...",
+        "success": "Grupo de transporte eliminado correctamente",
+        "error": "No pudimos eliminar el grupo de transporte"
       }
     }
   },

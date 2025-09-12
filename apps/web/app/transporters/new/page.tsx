@@ -10,7 +10,6 @@ import useTransporterMutations from '@/transporters/hooks/use-transporter-mutati
 
 export default function NewTransporterPage() {
   const { create: createTransporter } = useTransporterMutations();
-  const tCommon = useTranslations('common');
   const tTransporters = useTranslations('transporters');
 
   const onSubmit = async (values: TransporterFormOutputValues) => {
@@ -20,7 +19,7 @@ export default function NewTransporterPage() {
   return (
     <div>
       <PageHeader
-        title={tCommon('actions.create')}
+        title={tTransporters('actions.create')}
         backHref={routes.transporters.index}
         backLabel={tTransporters('actions.backToList')}
       />

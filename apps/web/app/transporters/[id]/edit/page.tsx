@@ -11,7 +11,7 @@ import useQueryTransporter from '@/transporters/hooks/use-query-transporter';
 import useTransporterMutations from '@/transporters/hooks/use-transporter-mutations';
 
 export default function EditTransporterPage() {
-  const tCommon = useTranslations('common');
+  const tTransporters = useTranslations('transporters');
   const { itemId: transporterId, isValidId } = useCollectionItemDetailsParams();
   const { data, isLoading } = useQueryTransporter({
     itemId: transporterId,
@@ -37,7 +37,7 @@ export default function EditTransporterPage() {
   return (
     <div>
       <PageHeader
-        title={tCommon('actions.edit')}
+        title={tTransporters('actions.update')}
         description={data.name}
         backHref={routes.transporters.index}
       />

@@ -4,6 +4,7 @@ import { StateTransition, createBaseStateMachine } from '@repo/state-machine';
 import { db } from '@/inventory/db-service';
 import { NotFoundError } from '@/shared/errors';
 import { busModelRepository } from '../bus-models/bus-models.repository';
+import { Chromatic } from '../chromatics/chromatics.types';
 import { seatDiagramRepository } from '../seat-diagrams/seat-diagrams.repository';
 import { technologiesRepository } from '../technologies/technologies.repository';
 import { busCrews, buses } from './buses.schema';
@@ -150,6 +151,7 @@ export function createBusRepository() {
         alternateTransporter: true,
         busLine: true,
         base: true,
+        chromatic: true,
       },
     });
 
@@ -187,6 +189,7 @@ export function createBusRepository() {
       busModel,
       seatDiagram,
       technologies,
+      chromatic: bus.chromaticId ? (bus.chromatic as Chromatic) : null,
       busCrew: busCrew as (Omit<BusCrewWithRelations, 'bus'> & {
         bus?: undefined;
       })[],

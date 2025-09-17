@@ -84,6 +84,7 @@ export interface ExtendedBusData extends Bus {
   engineType?: string | null;
   technologies: Technology[];
   busCrew: BusCrewWithRelations[];
+  chromatic?: Chromatic | null;
 }
 
 /**

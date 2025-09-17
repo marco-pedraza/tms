@@ -7377,6 +7377,7 @@ export namespace buses {
         engineType?: string | null
         technologies: technologies.Technology[]
         busCrew: BusCrewWithRelations[]
+        chromatic?: chromatics.Chromatic | null
         /**
          * Basic information
          */

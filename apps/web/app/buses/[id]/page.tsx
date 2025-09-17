@@ -21,6 +21,7 @@ export default function BusDetailsPage() {
   const tBuses = useTranslations('buses');
   const tCommon = useTranslations('common');
   const tSeatDiagrams = useTranslations('seatDiagrams');
+  const tChromatics = useTranslations('chromatics');
   const { itemId: busId, isValidId } = useCollectionItemDetailsParams();
   const { data: bus, isLoading } = useQueryBus({
     busId,
@@ -289,6 +290,26 @@ export default function BusDetailsPage() {
                 </div>
               ))}
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>{tBuses('sections.chromatics')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {bus.chromatic ? (
+            <dl className="grid grid-cols-[1fr_2fr] gap-4">
+              <dt className="font-medium">{tChromatics('fields.name')}:</dt>
+              <dd>{bus.chromatic?.name || '-'}</dd>
+              <dt className="font-medium">
+                {tChromatics('fields.description')}:
+              </dt>
+              <dd>{bus.chromatic?.description || '-'}</dd>
+            </dl>
+          ) : (
+            '-'
           )}
         </CardContent>
       </Card>

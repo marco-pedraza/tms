@@ -7,6 +7,7 @@ import useQueryAllBusLines from '@/bus-lines/hooks/use-query-all-bus-lines';
 import useQueryAllBusModels from '@/bus-models/hooks/use-query-all-bus-models';
 import busLicensePlateTypesTranslationKeys from '@/buses/translations/bus-license-plate-types-translations-keys';
 import busStatusTranslationKeys from '@/buses/translations/bus-status-translations-keys';
+import useQueryAllChromatics from '@/chromatics/hooks/use-query-all-chromatics';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
@@ -109,6 +110,7 @@ const createBusFormSchema = (tValidations: UseValidationsTranslationsResult) =>
     lastMaintenanceDate: z.string().transform((val) => val || null),
     nextMaintenanceDate: z.string().transform((val) => val || null),
     technologyIds: z.array(z.number()).optional(),
+    chromaticId: z.string().transform((val) => (val ? parseInt(val) : null)),
   });
 
 export type BusFormValues = z.output<ReturnType<typeof createBusFormSchema>>;
@@ -132,6 +134,8 @@ export default function BusForm({
   const tValidations = useTranslations('validations');
   const busSchema = createBusFormSchema(tValidations);
   const { data: technologies } = useQueryAllTechnologies();
+  const { data: chromatics, isLoading: isLoadingChromatics } =
+    useQueryAllChromatics();
 
   const rawDefaultValues: BusFormRawValues = defaultValues
     ? {
@@ -156,6 +160,7 @@ export default function BusForm({
         nextMaintenanceDate: defaultValues.nextMaintenanceDate || '',
         seatDiagramId: defaultValues.seatDiagramId?.toString() || '',
         technologyIds: defaultValues.technologyIds || [],
+        chromaticId: defaultValues.chromaticId?.toString() || '',
       }
     : {
         economicNumber: '',
@@ -186,6 +191,7 @@ export default function BusForm({
         seatDiagramId: '',
         active: true,
         technologyIds: [],
+        chromaticId: '',
       };
 
   const form = useForm({
@@ -631,6 +637,29 @@ export default function BusForm({
                   </div>
                 )}
               </div>
+            )}
+          </form.AppField>
+        </FormLayout>
+      </div>
+
+      <div className="pt-4">
+        <FormLayout title={tBuses('sections.chromatics')}>
+          <form.AppField name="chromaticId">
+            {(field) => (
+              <field.SelectInput
+                label={tBuses('fields.chromatics')}
+                placeholder={tBuses('form.placeholders.chromatics')}
+                emptyOptionsLabel={tBuses(
+                  'form.placeholders.emptyOptionsLabel',
+                )}
+                items={
+                  chromatics?.data.map((chromatic) => ({
+                    id: chromatic.id.toString(),
+                    name: chromatic.name,
+                  })) || []
+                }
+                disabled={isLoadingChromatics}
+              />
             )}
           </form.AppField>
         </FormLayout>

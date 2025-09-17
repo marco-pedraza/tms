@@ -1,6 +1,6 @@
 import { api } from 'encore.dev/api';
-import { busModelRepository } from '@/inventory/fleet/bus-models/bus-models.repository';
-import { technologiesRepository } from '@/inventory/fleet/technologies/technologies.repository';
+import { busModelRepository } from '../bus-models/bus-models.repository';
+import { technologiesRepository } from '../technologies/technologies.repository';
 import type {
   AssignDriverToBusCrewPayload,
   Bus,

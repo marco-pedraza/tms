@@ -1,22 +1,17 @@
 import {
   boolean,
   index,
-  integer,
   pgTable,
   serial,
   text,
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { tenants } from '../tenants/tenants.schema';
 
 export const departments = pgTable(
   'departments',
   {
     id: serial('id').primaryKey(),
-    tenantId: integer('tenant_id')
-      .notNull()
-      .references(() => tenants.id),
     name: text('name').notNull(),
     code: text('code').notNull(),
     description: text('description'),
@@ -24,8 +19,5 @@ export const departments = pgTable(
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
-  (table) => [
-    uniqueIndex().on(table.code, table.tenantId), // Composite unique constraint on code + tenantId
-    index().on(table.name),
-  ],
+  (table) => [uniqueIndex().on(table.code), index().on(table.name)],
 );

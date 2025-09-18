@@ -3737,11 +3737,6 @@ export namespace users {
 
     export interface CreateUserPayload {
         /**
-         * ID of the tenant this user belongs to
-         */
-        tenantId: number
-
-        /**
          * ID of the department this user belongs to
          */
         departmentId: number
@@ -3814,12 +3809,11 @@ export namespace users {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "tenantId" | "departmentId" | "username" | "email" | "passwordHash" | "firstName" | "lastName" | "phone" | "position" | "employeeId" | "mfaSettings" | "lastLogin" | "isActive" | "isSystemAdmin" | "createdAt" | "updatedAt"
+            field: "id" | "departmentId" | "username" | "email" | "passwordHash" | "firstName" | "lastName" | "phone" | "position" | "employeeId" | "mfaSettings" | "lastLogin" | "isActive" | "isSystemAdmin" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
-            tenantId?: number
             departmentId?: number
             username?: string
             email?: string
@@ -3839,7 +3833,6 @@ export namespace users {
 
     export interface SafeUser {
         id: number
-        tenantId: number
         departmentId: number
         username: string
         email: string
@@ -3865,12 +3858,11 @@ export namespace users {
 
     export interface UsersQueryOptions {
         orderBy?: {
-            field: "id" | "tenantId" | "departmentId" | "username" | "email" | "passwordHash" | "firstName" | "lastName" | "phone" | "position" | "employeeId" | "mfaSettings" | "lastLogin" | "isActive" | "isSystemAdmin" | "createdAt" | "updatedAt"
+            field: "id" | "departmentId" | "username" | "email" | "passwordHash" | "firstName" | "lastName" | "phone" | "position" | "employeeId" | "mfaSettings" | "lastLogin" | "isActive" | "isSystemAdmin" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
-            tenantId?: number
             departmentId?: number
             username?: string
             email?: string
@@ -3903,19 +3895,16 @@ export namespace users {
             this.createPermission = this.createPermission.bind(this)
             this.createPermissionGroup = this.createPermissionGroup.bind(this)
             this.createRole = this.createRole.bind(this)
-            this.createTenant = this.createTenant.bind(this)
             this.createUser = this.createUser.bind(this)
             this.deleteDepartment = this.deleteDepartment.bind(this)
             this.deletePermission = this.deletePermission.bind(this)
             this.deletePermissionGroup = this.deletePermissionGroup.bind(this)
             this.deleteRole = this.deleteRole.bind(this)
-            this.deleteTenant = this.deleteTenant.bind(this)
             this.deleteUser = this.deleteUser.bind(this)
             this.getDepartment = this.getDepartment.bind(this)
             this.getPermission = this.getPermission.bind(this)
             this.getRole = this.getRole.bind(this)
             this.getRoleWithPermissions = this.getRoleWithPermissions.bind(this)
-            this.getTenant = this.getTenant.bind(this)
             this.getUser = this.getUser.bind(this)
             this.getUserPermissions = this.getUserPermissions.bind(this)
             this.getUserRoles = this.getUserRoles.bind(this)
@@ -3930,20 +3919,9 @@ export namespace users {
             this.listPermissions = this.listPermissions.bind(this)
             this.listPermissionsWithPagination = this.listPermissionsWithPagination.bind(this)
             this.listRoles = this.listRoles.bind(this)
-            this.listRolesByTenant = this.listRolesByTenant.bind(this)
-            this.listRolesByTenantWithPagination = this.listRolesByTenantWithPagination.bind(this)
-            this.listRolesByTenantWithPermissions = this.listRolesByTenantWithPermissions.bind(this)
             this.listRolesWithPagination = this.listRolesWithPagination.bind(this)
             this.listRolesWithPermissions = this.listRolesWithPermissions.bind(this)
             this.listRolesWithPermissionsAndPagination = this.listRolesWithPermissionsAndPagination.bind(this)
-            this.listTenantDepartments = this.listTenantDepartments.bind(this)
-            this.listTenantDepartmentsPaginated = this.listTenantDepartmentsPaginated.bind(this)
-            this.listTenantRoles = this.listTenantRoles.bind(this)
-            this.listTenantRolesWithPagination = this.listTenantRolesWithPagination.bind(this)
-            this.listTenantUsers = this.listTenantUsers.bind(this)
-            this.listTenantUsersPaginated = this.listTenantUsersPaginated.bind(this)
-            this.listTenants = this.listTenants.bind(this)
-            this.listTenantsWithPagination = this.listTenantsWithPagination.bind(this)
             this.listUsers = this.listUsers.bind(this)
             this.listUsersPaginated = this.listUsersPaginated.bind(this)
             this.login = this.login.bind(this)
@@ -3956,15 +3934,12 @@ export namespace users {
             this.searchPermissionsPaginated = this.searchPermissionsPaginated.bind(this)
             this.searchRoles = this.searchRoles.bind(this)
             this.searchRolesPaginated = this.searchRolesPaginated.bind(this)
-            this.searchTenants = this.searchTenants.bind(this)
-            this.searchTenantsPaginated = this.searchTenantsPaginated.bind(this)
             this.searchUsers = this.searchUsers.bind(this)
             this.searchUsersPaginated = this.searchUsersPaginated.bind(this)
             this.updateDepartment = this.updateDepartment.bind(this)
             this.updatePermission = this.updatePermission.bind(this)
             this.updatePermissionGroup = this.updatePermissionGroup.bind(this)
             this.updateRole = this.updateRole.bind(this)
-            this.updateTenant = this.updateTenant.bind(this)
             this.updateUser = this.updateUser.bind(this)
         }
 
@@ -4134,18 +4109,6 @@ export namespace users {
         }
 
         /**
-         * Creates a new tenant.
-         * @param params - The tenant data to create
-         * @returns {Promise<Tenant>} The created tenant
-         * @throws {APIError} If the tenant creation fails
-         */
-        public async createTenant(params: tenants.CreateTenantPayload): Promise<tenants.Tenant> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/tenants`, JSON.stringify(params))
-            return await resp.json() as tenants.Tenant
-        }
-
-        /**
          * Creates a new user
          * @param params - The user data to create
          * @returns {Promise<SafeUser>} The created user (without password hash)
@@ -4206,19 +4169,6 @@ export namespace users {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/roles/${encodeURIComponent(id)}`)
             return await resp.json() as roles.Role
-        }
-
-        /**
-         * Deletes a tenant by ID.
-         * @param params - Object containing the tenant ID
-         * @param params.id - The ID of the tenant to delete
-         * @returns {Promise<Tenant>} The deleted tenant
-         * @throws {APIError} If the tenant is not found or deletion fails
-         */
-        public async deleteTenant(id: number): Promise<tenants.Tenant> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/tenants/${encodeURIComponent(id)}`)
-            return await resp.json() as tenants.Tenant
         }
 
         /**
@@ -4284,19 +4234,6 @@ export namespace users {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/roles/${encodeURIComponent(id)}/with-permissions`)
             return await resp.json() as roles.RoleWithPermissions
-        }
-
-        /**
-         * Retrieves a tenant by ID.
-         * @param params - Object containing the tenant ID
-         * @param params.id - The ID of the tenant to retrieve
-         * @returns {Promise<Tenant>} The found tenant
-         * @throws {APIError} If the tenant is not found or retrieval fails
-         */
-        public async getTenant(id: number): Promise<tenants.Tenant> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(id)}`)
-            return await resp.json() as tenants.Tenant
         }
 
         /**
@@ -4384,12 +4321,11 @@ export namespace users {
          */
         public async listDepartmentUsers(departmentId: number, params: {
     orderBy?: {
-        field: "id" | "tenantId" | "departmentId" | "username" | "email" | "passwordHash" | "firstName" | "lastName" | "phone" | "position" | "employeeId" | "mfaSettings" | "lastLogin" | "isActive" | "isSystemAdmin" | "createdAt" | "updatedAt"
+        field: "id" | "departmentId" | "username" | "email" | "passwordHash" | "firstName" | "lastName" | "phone" | "position" | "employeeId" | "mfaSettings" | "lastLogin" | "isActive" | "isSystemAdmin" | "createdAt" | "updatedAt"
         direction: "asc" | "desc"
     }[]
     filters?: {
         id?: number
-        tenantId?: number
         departmentId?: number
         username?: string
         email?: string
@@ -4422,12 +4358,11 @@ export namespace users {
     page?: number
     pageSize?: number
     orderBy?: {
-        field: "id" | "tenantId" | "departmentId" | "username" | "email" | "passwordHash" | "firstName" | "lastName" | "phone" | "position" | "employeeId" | "mfaSettings" | "lastLogin" | "isActive" | "isSystemAdmin" | "createdAt" | "updatedAt"
+        field: "id" | "departmentId" | "username" | "email" | "passwordHash" | "firstName" | "lastName" | "phone" | "position" | "employeeId" | "mfaSettings" | "lastLogin" | "isActive" | "isSystemAdmin" | "createdAt" | "updatedAt"
         direction: "asc" | "desc"
     }[]
     filters?: {
         id?: number
-        tenantId?: number
         departmentId?: number
         username?: string
         email?: string
@@ -4521,75 +4456,6 @@ export namespace users {
         }
 
         /**
-         * Retrieves all roles for a tenant with optional filtering and ordering.
-         * @param params - Object containing the tenant ID and query options
-         * @param params.tenantId - The ID of the tenant
-         * @returns {Promise<Roles>} List of roles for the tenant
-         * @throws {APIError} If the retrieval fails
-         */
-        public async listRolesByTenant(tenantId: number, params: {
-    orderBy?: {
-        field: "id" | "name" | "description" | "tenantId" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        name?: string
-        description?: string | null
-        tenantId?: number
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-    includePermissions?: boolean
-}): Promise<roles.Roles> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/tenants/${encodeURIComponent(tenantId)}/get-roles`, JSON.stringify(params))
-            return await resp.json() as roles.Roles
-        }
-
-        /**
-         * Retrieves roles for a tenant with pagination, filtering, and ordering.
-         * @param params - Object containing the tenant ID and pagination parameters
-         * @param params.tenantId - The ID of the tenant
-         * @returns {Promise<PaginatedRoles>} Paginated list of roles for the tenant
-         * @throws {APIError} If retrieval fails
-         */
-        public async listRolesByTenantWithPagination(tenantId: number, params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "name" | "description" | "tenantId" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        name?: string
-        description?: string | null
-        tenantId?: number
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-    includePermissions?: boolean
-}): Promise<roles.PaginatedRoles> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/tenants/${encodeURIComponent(tenantId)}/get-roles/paginated`, JSON.stringify(params))
-            return await resp.json() as roles.PaginatedRoles
-        }
-
-        /**
-         * Retrieves all roles for a tenant with permissions (maintains backward compatibility).
-         * @param params - Object containing the tenant ID
-         * @param params.tenantId - The ID of the tenant
-         * @returns {Promise<RolesWithPermissions>} List of roles for the tenant with permissions
-         * @throws {APIError} If the retrieval fails
-         */
-        public async listRolesByTenantWithPermissions(tenantId: number): Promise<roles.RolesWithPermissions> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(tenantId)}/roles/with-permissions`)
-            return await resp.json() as roles.RolesWithPermissions
-        }
-
-        /**
          * Retrieves roles with pagination, filtering, and ordering.
          * @param params - Pagination, filtering, and ordering parameters
          * @returns {Promise<PaginatedRoles>} Paginated list of roles
@@ -4622,204 +4488,6 @@ export namespace users {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/roles/with-permissions/paginated`, JSON.stringify(params))
             return await resp.json() as roles.PaginatedRolesWithPermissions
-        }
-
-        /**
-         * Retrieves departments for a specific tenant with optional filtering and ordering.
-         * @param params - Object containing the tenant ID and query options
-         * @param params.tenantId - The ID of the tenant to get departments for
-         * @returns {Promise<Departments>} List of departments for the tenant
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTenantDepartments(tenantId: number, params: {
-    orderBy?: {
-        field: "id" | "tenantId" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        tenantId?: number
-        name?: string
-        code?: string
-        description?: string | null
-        isActive?: boolean
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-}): Promise<departments.Departments> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/tenants/${encodeURIComponent(tenantId)}/departments`, JSON.stringify(params))
-            return await resp.json() as departments.Departments
-        }
-
-        /**
-         * Retrieves paginated departments for a specific tenant with filtering and ordering.
-         * @param params - Object containing the tenant ID and pagination/query parameters
-         * @param params.tenantId - The ID of the tenant to get departments for
-         * @returns {Promise<PaginatedDepartments>} Paginated list of departments for the tenant
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTenantDepartmentsPaginated(tenantId: number, params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "tenantId" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        tenantId?: number
-        name?: string
-        code?: string
-        description?: string | null
-        isActive?: boolean
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-}): Promise<departments.PaginatedDepartments> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/tenants/${encodeURIComponent(tenantId)}/departments/paginated`, JSON.stringify(params))
-            return await resp.json() as departments.PaginatedDepartments
-        }
-
-        /**
-         * Alias for listRolesByTenant to match test case naming.
-         * @param params - Object containing the tenant ID
-         * @param params.tenantId - The ID of the tenant
-         * @returns {Promise<Roles>} List of all roles for the tenant
-         * @throws {APIError} If the retrieval fails
-         */
-        public async listTenantRoles(tenantId: number): Promise<roles.Roles> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/${encodeURIComponent(tenantId)}/roles-alias`)
-            return await resp.json() as roles.Roles
-        }
-
-        /**
-         * Alias for listRolesByTenantWithPagination to match test case naming.
-         * @param params - Object containing pagination parameters and tenant ID
-         * @param params.tenantId - The ID of the tenant
-         * @returns {Promise<PaginatedRoles>} Paginated list of tenant roles
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTenantRolesWithPagination(tenantId: number, params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "name" | "description" | "tenantId" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        name?: string
-        description?: string | null
-        tenantId?: number
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-    includePermissions?: boolean
-}): Promise<roles.PaginatedRoles> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/tenants/${encodeURIComponent(tenantId)}/roles-paginated`, JSON.stringify(params))
-            return await resp.json() as roles.PaginatedRoles
-        }
-
-        /**
-         * Retrieves users for a specific tenant with optional filtering and ordering
-         * @param params - Object containing the tenant ID and query options
-         * @param params.tenantId - The ID of the tenant to get users for
-         * @returns {Promise<Users>} List of users for the tenant (without password hashes)
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTenantUsers(tenantId: number, params: {
-    orderBy?: {
-        field: "id" | "tenantId" | "departmentId" | "username" | "email" | "passwordHash" | "firstName" | "lastName" | "phone" | "position" | "employeeId" | "mfaSettings" | "lastLogin" | "isActive" | "isSystemAdmin" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        tenantId?: number
-        departmentId?: number
-        username?: string
-        email?: string
-        firstName?: string
-        lastName?: string
-        phone?: string | null
-        position?: string | null
-        employeeId?: string | null
-        mfaSettings?: { [key: string]: any } | null
-        lastLogin?: string | string | null
-        isActive?: boolean
-        isSystemAdmin?: boolean
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-}): Promise<Users> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/tenants/${encodeURIComponent(tenantId)}/users`, JSON.stringify(params))
-            return await resp.json() as Users
-        }
-
-        /**
-         * Retrieves paginated users for a specific tenant with filtering and ordering
-         * @param params - Object containing the tenant ID and pagination/query parameters
-         * @param params.tenantId - The ID of the tenant to get users for
-         * @returns {Promise<PaginatedUsers>} Paginated list of users for the tenant
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTenantUsersPaginated(tenantId: number, params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "tenantId" | "departmentId" | "username" | "email" | "passwordHash" | "firstName" | "lastName" | "phone" | "position" | "employeeId" | "mfaSettings" | "lastLogin" | "isActive" | "isSystemAdmin" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        tenantId?: number
-        departmentId?: number
-        username?: string
-        email?: string
-        firstName?: string
-        lastName?: string
-        phone?: string | null
-        position?: string | null
-        employeeId?: string | null
-        mfaSettings?: { [key: string]: any } | null
-        lastLogin?: string | string | null
-        isActive?: boolean
-        isSystemAdmin?: boolean
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-}): Promise<PaginatedUsers> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/tenants/${encodeURIComponent(tenantId)}/users/paginated`, JSON.stringify(params))
-            return await resp.json() as PaginatedUsers
-        }
-
-        /**
-         * Retrieves all tenants with optional filtering and ordering.
-         * @param params - Query options for filtering and ordering
-         * @returns {Promise<Tenants>} List of tenants
-         * @throws {APIError} If the retrieval fails
-         */
-        public async listTenants(params: tenants.TenantsQueryOptions): Promise<tenants.Tenants> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-tenants`, JSON.stringify(params))
-            return await resp.json() as tenants.Tenants
-        }
-
-        /**
-         * Retrieves tenants with pagination, filtering, and ordering.
-         * @param params - Pagination, filtering, and ordering parameters
-         * @returns {Promise<PaginatedTenants>} Paginated list of tenants
-         * @throws {APIError} If retrieval fails
-         */
-        public async listTenantsWithPagination(params: tenants.PaginationParamsTenants): Promise<tenants.PaginatedTenants> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-tenants/paginated`, JSON.stringify(params))
-            return await resp.json() as tenants.PaginatedTenants
         }
 
         /**
@@ -4939,12 +4607,11 @@ export namespace users {
     page?: number
     pageSize?: number
     orderBy?: {
-        field: "id" | "tenantId" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
+        field: "id" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
         direction: "asc" | "desc"
     }[]
     filters?: {
         id?: number
-        tenantId?: number
         name?: string
         code?: string
         description?: string | null
@@ -5023,14 +4690,13 @@ export namespace users {
         public async searchRoles(params: {
     term: string
     orderBy?: {
-        field: "id" | "name" | "description" | "tenantId" | "createdAt" | "updatedAt"
+        field: "id" | "name" | "description" | "createdAt" | "updatedAt"
         direction: "asc" | "desc"
     }[]
     filters?: {
         id?: number
         name?: string
         description?: string | null
-        tenantId?: number
         createdAt?: string | string | null
         updatedAt?: string | string | null
     }
@@ -5052,14 +4718,13 @@ export namespace users {
     page?: number
     pageSize?: number
     orderBy?: {
-        field: "id" | "name" | "description" | "tenantId" | "createdAt" | "updatedAt"
+        field: "id" | "name" | "description" | "createdAt" | "updatedAt"
         direction: "asc" | "desc"
     }[]
     filters?: {
         id?: number
         name?: string
         description?: string | null
-        tenantId?: number
         createdAt?: string | string | null
         updatedAt?: string | string | null
     }
@@ -5069,56 +4734,6 @@ export namespace users {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/roles/search/paginated`, JSON.stringify(params))
             return await resp.json() as roles.PaginatedRoles
-        }
-
-        /**
-         * Searches for tenants by matching a search term against name, code, and description.
-         * @param params - Search parameters
-         * @param params.term - The search term to match against tenant fields
-         * @returns {Promise<Tenants>} List of matching tenants
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchTenants(params: {
-    term: string
-}): Promise<tenants.Tenants> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                term: params.term,
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/tenants/search`, undefined, {query})
-            return await resp.json() as tenants.Tenants
-        }
-
-        /**
-         * Searches for tenants with pagination by matching a search term.
-         * @param params - Search and pagination parameters
-         * @param params.term - The search term to match against tenant fields
-         * @returns {Promise<PaginatedTenants>} Paginated list of matching tenants
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchTenantsPaginated(params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        name?: string
-        code?: string
-        description?: string | null
-        isActive?: boolean
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-    term: string
-}): Promise<tenants.PaginatedTenants> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/tenants/search/paginated`, JSON.stringify(params))
-            return await resp.json() as tenants.PaginatedTenants
         }
 
         /**
@@ -5152,12 +4767,11 @@ export namespace users {
     page?: number
     pageSize?: number
     orderBy?: {
-        field: "id" | "tenantId" | "departmentId" | "username" | "email" | "passwordHash" | "firstName" | "lastName" | "phone" | "position" | "employeeId" | "mfaSettings" | "lastLogin" | "isActive" | "isSystemAdmin" | "createdAt" | "updatedAt"
+        field: "id" | "departmentId" | "username" | "email" | "passwordHash" | "firstName" | "lastName" | "phone" | "position" | "employeeId" | "mfaSettings" | "lastLogin" | "isActive" | "isSystemAdmin" | "createdAt" | "updatedAt"
         direction: "asc" | "desc"
     }[]
     filters?: {
         id?: number
-        tenantId?: number
         departmentId?: number
         username?: string
         email?: string
@@ -5296,42 +4910,6 @@ export namespace users {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/roles/${encodeURIComponent(id)}`, JSON.stringify(params))
             return await resp.json() as roles.RoleWithPermissions
-        }
-
-        /**
-         * Updates an existing tenant.
-         * @param params - Object containing the tenant ID and update data
-         * @param params.id - The ID of the tenant to update
-         * @returns {Promise<Tenant>} The updated tenant
-         * @throws {APIError} If the tenant is not found or update fails
-         */
-        public async updateTenant(id: number, params: {
-    /**
-     * Updated name of the tenant
-     * @minLength 2
-     */
-    name?: string
-
-    /**
-     * Updated code for the tenant (alphanumeric with no spaces)
-     * @minLength 2
-     * @pattern ^[a-zA-Z0-9-]+$
-     */
-    code?: string
-
-    /**
-     * Updated description of the tenant
-     */
-    description?: string
-
-    /**
-     * Updated active status of the tenant
-     */
-    isActive?: boolean
-}): Promise<tenants.Tenant> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/tenants/${encodeURIComponent(id)}`, JSON.stringify(params))
-            return await resp.json() as tenants.Tenant
         }
 
         /**
@@ -8079,11 +7657,6 @@ export namespace countries {
 export namespace departments {
     export interface CreateDepartmentPayload {
         /**
-         * ID of the tenant this department belongs to
-         */
-        tenantId: number
-
-        /**
          * Name of the department
          * @minLength 2
          */
@@ -8107,11 +7680,6 @@ export namespace departments {
          * Unique identifier for the department
          */
         id: number
-
-        /**
-         * ID of the tenant this department belongs to
-         */
-        tenantId: number
 
         /**
          * Name of the department
@@ -8153,12 +7721,11 @@ export namespace departments {
 
     export interface DepartmentsQueryOptions {
         orderBy?: {
-            field: "id" | "tenantId" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
-            tenantId?: number
             name?: string
             code?: string
             description?: string | null
@@ -8177,12 +7744,11 @@ export namespace departments {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "tenantId" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
-            tenantId?: number
             name?: string
             code?: string
             description?: string | null
@@ -10796,11 +10362,6 @@ export namespace roles {
         description?: string
 
         /**
-         * ID of the tenant this role belongs to
-         */
-        tenantId: number
-
-        /**
          * IDs of permissions to associate with this role
          */
         permissionIds?: number[]
@@ -10820,14 +10381,13 @@ export namespace roles {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "description" | "tenantId" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "description" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
             name?: string
             description?: string | null
-            tenantId?: number
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }
@@ -10838,14 +10398,13 @@ export namespace roles {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "description" | "tenantId" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "description" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
             name?: string
             description?: string | null
-            tenantId?: number
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }
@@ -10867,11 +10426,6 @@ export namespace roles {
          * Description of what the role represents
          */
         description: string | null
-
-        /**
-         * ID of the tenant this role belongs to
-         */
-        tenantId: number
 
         /**
          * Timestamp when the role was created
@@ -10906,11 +10460,6 @@ export namespace roles {
         description: string | null
 
         /**
-         * ID of the tenant this role belongs to
-         */
-        tenantId: number
-
-        /**
          * Timestamp when the role was created
          */
         createdAt: string | string | null
@@ -10930,14 +10479,13 @@ export namespace roles {
 
     export interface RolesQueryOptions {
         orderBy?: {
-            field: "id" | "name" | "description" | "tenantId" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "description" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
             name?: string
             description?: string | null
-            tenantId?: number
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }
@@ -11535,81 +11083,6 @@ export namespace technologies {
     }
 }
 
-export namespace tenants {
-    export interface CreateTenantPayload {
-        /**
-         * Name of the tenant
-         * @minLength 2
-         */
-        name: string
-
-        /**
-         * Unique code for the tenant (alphanumeric with no spaces)
-         * @minLength 2
-         * @pattern ^[a-zA-Z0-9-]+$
-         */
-        code: string
-
-        /**
-         * Optional description of the tenant
-         */
-        description?: string
-    }
-
-    export interface PaginatedTenants {
-        pagination: shared.PaginationMeta
-        data: Tenant[]
-    }
-
-    export interface PaginationParamsTenants {
-        page?: number
-        pageSize?: number
-        orderBy?: {
-            field: "id" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            name?: string
-            code?: string
-            description?: string | null
-            isActive?: boolean
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
-    }
-
-    export interface Tenant {
-        id: number
-        name: string
-        code: string
-        description?: string | null
-        isActive: boolean
-        createdAt: string | string | null
-        updatedAt: string | string | null
-    }
-
-    export interface Tenants {
-        tenants: Tenant[]
-    }
-
-    export interface TenantsQueryOptions {
-        orderBy?: {
-            field: "id" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            name?: string
-            code?: string
-            description?: string | null
-            isActive?: boolean
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
-    }
-}
-
 export namespace time_offs {
     export interface CreateDriverTimeOffRepositoryPayload {
         /**
@@ -12049,7 +11522,6 @@ export namespace user_permissions {
         effectivePermissions: permissions.Permission[]
 
         id: number
-        tenantId: number
         departmentId: number
         username: string
         email: string
@@ -12073,7 +11545,6 @@ export namespace user_permissions {
         roles: roles.Role[]
 
         id: number
-        tenantId: number
         departmentId: number
         username: string
         email: string

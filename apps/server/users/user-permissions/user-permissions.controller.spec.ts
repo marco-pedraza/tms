@@ -11,8 +11,6 @@ import {
 import type { CreatePermissionPayload } from '../permissions/permissions.types';
 import { createRole, deleteRole } from '../roles/roles.controller';
 import type { CreateRolePayload } from '../roles/roles.types';
-import { createTenant, deleteTenant } from '../tenants/tenants.controller';
-import type { CreateTenantPayload } from '../tenants/tenants.types';
 import { createUser, deleteUser } from '../users/users.controller';
 import type { CreateUserPayload } from '../users/users.types';
 import type {
@@ -28,28 +26,19 @@ import {
 
 describe('User Permissions Controller', () => {
   // Test data
-  let tenantId = 0;
   let departmentId = 0;
   let userId = 0;
   let permissionId1 = 0;
   let permissionId2 = 0;
   let roleId = 0;
 
-  const testTenant: CreateTenantPayload = {
-    name: 'Test Tenant',
-    code: 'TEST-TENANT-UPER',
-    description: 'A test tenant for user permissions testing',
-  };
-
   const testDepartment: CreateDepartmentPayload = {
-    tenantId: 0, // Will be set after tenant creation
     name: 'Test Department',
     code: 'TEST-DEPT-UPER',
     description: 'A test department for user permissions testing',
   };
 
   const testUser: CreateUserPayload = {
-    tenantId: 0, // Will be set after tenant creation
     departmentId: 0, // Will be set after department creation
     username: 'testuser_perm',
     email: 'permissions.test@example.com',
@@ -78,7 +67,6 @@ describe('User Permissions Controller', () => {
   const testRole: CreateRolePayload = {
     name: 'Test User Role',
     description: 'A test role for user permissions testing',
-    tenantId: 0, // Will be set after tenant creation
   };
 
   // Clean up after all tests
@@ -98,27 +86,11 @@ describe('User Permissions Controller', () => {
     if (departmentId > 0) {
       await deleteDepartment({ id: departmentId });
     }
-    if (tenantId > 0) {
-      await deleteTenant({ id: tenantId });
-    }
   });
 
   describe('Setup', () => {
-    it('should create test tenant', async () => {
-      const result = await createTenant(testTenant);
-      tenantId = result.id;
-      expect(tenantId).toBeGreaterThan(0);
-
-      // Update test data with the tenant ID
-      testUser.tenantId = tenantId;
-      testRole.tenantId = tenantId;
-    });
-
     it('should create test department', async () => {
-      const result = await createDepartment({
-        ...testDepartment,
-        tenantId,
-      });
+      const result = await createDepartment(testDepartment);
       departmentId = result.id;
       expect(departmentId).toBeGreaterThan(0);
 
@@ -244,7 +216,6 @@ describe('User Permissions Controller', () => {
       const anotherRole = await createRole({
         name: 'Another Role',
         description: 'Another test role',
-        tenantId,
       });
 
       try {

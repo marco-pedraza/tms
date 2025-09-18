@@ -11,15 +11,11 @@ import {
 import { relations } from 'drizzle-orm';
 import { audits } from '../audits/audits.schema';
 import { departments } from '../departments/departments.schema';
-import { tenants } from '../tenants/tenants.schema';
 
 export const users = pgTable(
   'users',
   {
     id: serial('id').primaryKey(),
-    tenantId: integer('tenant_id')
-      .notNull()
-      .references(() => tenants.id),
     departmentId: integer('department_id')
       .notNull()
       .references(() => departments.id),
@@ -39,7 +35,6 @@ export const users = pgTable(
     updatedAt: timestamp('updated_at').defaultNow(),
   },
   (table) => [
-    index().on(table.tenantId),
     index().on(table.departmentId),
     index().on(table.firstName, table.lastName),
     index().on(table.employeeId),

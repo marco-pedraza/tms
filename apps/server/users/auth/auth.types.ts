@@ -46,11 +46,6 @@ export interface JwtPayload {
   sub: number;
 
   /**
-   * Tenant ID
-   */
-  tenantId: number;
-
-  /**
    * Username
    */
   username: string;

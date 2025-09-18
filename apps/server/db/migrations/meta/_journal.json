@@ -372,6 +372,13 @@
       "when": 1757464155325,
       "tag": "20250910002915_creates_bus_model_amenities_table",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1758135275726,
+      "tag": "20250917185435_remove_tenant",
+      "breakpoints": true
     }
   ]
 }

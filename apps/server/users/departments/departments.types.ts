@@ -9,9 +9,6 @@ export interface Department {
   /** Unique identifier for the department */
   id: number;
 
-  /** ID of the tenant this department belongs to */
-  tenantId: number;
-
   /** Name of the department */
   name: string;
 
@@ -35,11 +32,6 @@ export interface Department {
  * Payload for creating a new department
  */
 export interface CreateDepartmentPayload {
-  /**
-   * ID of the tenant this department belongs to
-   */
-  tenantId: number;
-
   /**
    * Name of the department
    * @minLength 2

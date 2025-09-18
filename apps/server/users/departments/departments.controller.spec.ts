@@ -1,6 +1,4 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { createTenant, deleteTenant } from '../tenants/tenants.controller';
-import type { CreateTenantPayload } from '../tenants/tenants.types';
 import type {
   CreateDepartmentPayload,
   Department,
@@ -12,8 +10,6 @@ import {
   getDepartment,
   listDepartments,
   listDepartmentsPaginated,
-  listTenantDepartments,
-  listTenantDepartmentsPaginated,
   searchDepartments,
   searchDepartmentsPaginated,
   updateDepartment,
@@ -21,20 +17,12 @@ import {
 
 describe('Departments Controller', () => {
   // Test data
-  let tenantId = 0;
   let departmentId = 0;
-
-  const testTenant: CreateTenantPayload = {
-    name: 'Test Tenant',
-    code: 'TEST-TENANT-DEPT',
-    description: 'A test tenant for department testing',
-  };
 
   const testDepartment: CreateDepartmentPayload = {
     name: 'Test Department',
     code: 'TEST-DEPT',
     description: 'A test department for automated testing',
-    tenantId,
   };
 
   // Variable to store created IDs for cleanup
@@ -52,32 +40,11 @@ describe('Departments Controller', () => {
         }
       }
     }
-
-    // Delete tenant
-    if (tenantId > 0) {
-      try {
-        await deleteTenant({ id: tenantId });
-      } catch (error) {
-        console.log('Error cleaning up test tenant:', error);
-      }
-    }
-  });
-
-  describe('Setup', () => {
-    test('should create test tenant', async () => {
-      const result = await createTenant(testTenant);
-      tenantId = result.id;
-      testDepartment.tenantId = tenantId;
-      expect(tenantId).toBeGreaterThan(0);
-    });
   });
 
   describe('success scenarios', () => {
     test('should create a new department', async () => {
-      const result = await createDepartment({
-        ...testDepartment,
-        tenantId,
-      });
+      const result = await createDepartment(testDepartment);
 
       // Save ID for other tests
       departmentId = result.id;
@@ -89,7 +56,6 @@ describe('Departments Controller', () => {
       expect(result.name).toBe(testDepartment.name);
       expect(result.code).toBe(testDepartment.code);
       expect(result.description).toBe(testDepartment.description);
-      expect(result.tenantId).toBe(tenantId);
       expect(result.isActive).toBe(true);
       expect(result.createdAt).toBeDefined();
       expect(result.updatedAt).toBeDefined();
@@ -103,7 +69,6 @@ describe('Departments Controller', () => {
       expect(response.name).toBe(testDepartment.name);
       expect(response.code).toBe(testDepartment.code);
       expect(response.description).toBe(testDepartment.description);
-      expect(response.tenantId).toBe(tenantId);
     });
 
     test('should update a department', async () => {
@@ -122,7 +87,6 @@ describe('Departments Controller', () => {
       expect(response.name).toBe(updateData.name);
       expect(response.description).toBe(updateData.description);
       expect(response.code).toBe(testDepartment.code);
-      expect(response.tenantId).toBe(tenantId);
       expect(response.updatedAt).toBeDefined();
     });
 
@@ -132,7 +96,6 @@ describe('Departments Controller', () => {
         ...testDepartment,
         name: 'Department To Delete',
         code: 'DEPT-DELETE',
-        tenantId,
       });
 
       // Delete should not throw an error
@@ -153,13 +116,8 @@ describe('Departments Controller', () => {
     });
 
     test('should handle duplicate errors', async () => {
-      // Try to create department with same code in same tenant
-      await expect(
-        createDepartment({
-          ...testDepartment,
-          tenantId,
-        }),
-      ).rejects.toThrow();
+      // Try to create department with same code
+      await expect(createDepartment(testDepartment)).rejects.toThrow();
     });
   });
 
@@ -191,10 +149,7 @@ describe('Departments Controller', () => {
       ];
 
       for (const deptData of departments) {
-        const created = await createDepartment({
-          ...deptData,
-          tenantId,
-        });
+        const created = await createDepartment(deptData);
         testDepartments.push(created);
         createdDepartmentIds.push(created.id);
       }
@@ -289,74 +244,6 @@ describe('Departments Controller', () => {
     });
   });
 
-  describe('tenant filtering', () => {
-    // Test departments for tenant filtering
-    const filterTestDepartments: Department[] = [];
-
-    beforeAll(async () => {
-      // Create test departments for tenant testing
-      const departments = [
-        {
-          ...testDepartment,
-          name: 'Tenant Department 1',
-          code: 'TENANT-DEPT1',
-          isActive: true,
-        },
-        {
-          ...testDepartment,
-          name: 'Tenant Department 2',
-          code: 'TENANT-DEPT2',
-          isActive: false,
-        },
-      ];
-
-      for (const deptData of departments) {
-        const created = await createDepartment({
-          ...deptData,
-          tenantId,
-        });
-        filterTestDepartments.push(created);
-        createdDepartmentIds.push(created.id);
-      }
-    });
-
-    test('should return departments for a specific tenant', async () => {
-      const response = await listTenantDepartments({ tenantId });
-
-      // All returned departments should belong to the specified tenant
-      expect(response.departments.every((d) => d.tenantId === tenantId)).toBe(
-        true,
-      );
-
-      // Should include our test departments
-      for (const dept of filterTestDepartments) {
-        expect(response.departments.some((d) => d.id === dept.id)).toBe(true);
-      }
-    });
-
-    test('should return paginated departments for a specific tenant', async () => {
-      const response = await listTenantDepartmentsPaginated({
-        tenantId,
-        page: 1,
-        pageSize: 10,
-      });
-
-      // All returned departments should belong to the specified tenant
-      expect(response.data.every((d) => d.tenantId === tenantId)).toBe(true);
-
-      // Check pagination properties
-      expect(response.pagination).toBeDefined();
-      expect(response.pagination.currentPage).toBe(1);
-      expect(response.pagination.pageSize).toBe(10);
-    });
-
-    test('should return empty list for non-existent tenant', async () => {
-      const response = await listTenantDepartments({ tenantId: 999999 });
-      expect(Array.isArray(response.departments)).toBe(true);
-      expect(response.departments.length).toBe(0);
-    });
-  });
-
   describe('search functionality', () => {
     test('should search departments', async () => {
       // Create a unique department for search testing
@@ -364,7 +251,6 @@ describe('Departments Controller', () => {
         ...testDepartment,
         name: 'Searchable Department',
         code: 'SEARCH-DEPT',
-        tenantId,
       });
 
       createdDepartmentIds.push(searchableDepartment.id);

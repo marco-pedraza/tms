@@ -4,8 +4,6 @@ import {
   deleteDepartment,
 } from '../departments/departments.controller';
 import type { CreateDepartmentPayload } from '../departments/departments.types';
-import { createTenant, deleteTenant } from '../tenants/tenants.controller';
-import type { CreateTenantPayload } from '../tenants/tenants.types';
 import { createUser, deleteUser } from '../users/users.controller';
 import type { CreateUserPayload } from '../users/users.types';
 import type {
@@ -23,12 +21,6 @@ import {
 
 describe('Auth Controller', () => {
   // Test data for reuse
-  const testTenant: CreateTenantPayload = {
-    name: 'Test Tenant Auth',
-    code: 'TEST-TENANT-AUTH',
-    description: 'A test tenant for auth testing',
-  };
-
   const testDepartment: CreateDepartmentPayload = {
     name: 'Test Department Auth',
     code: 'TEST-DEPT-AUTH',
@@ -36,7 +28,6 @@ describe('Auth Controller', () => {
   };
 
   const testUser: CreateUserPayload = {
-    tenantId: 0, // Will be set after tenant creation
     departmentId: 0, // Will be set after department creation
     username: 'testauth',
     email: 'auth.test@test.com',
@@ -57,7 +48,6 @@ describe('Auth Controller', () => {
 
   describe('login', () => {
     // Setup for login tests
-    let tenantId = 0;
     let departmentId = 0;
     let userId = 0;
     // This variable is necessary for storing the token during tests
@@ -66,23 +56,14 @@ describe('Auth Controller', () => {
     let refreshTokenString = '';
 
     beforeAll(async () => {
-      // Create tenant
-      const tenant = await createTenant(testTenant);
-      tenantId = tenant.id;
-      expect(tenantId).toBeGreaterThan(0);
-
       // Create department
-      const department = await createDepartment({
-        ...testDepartment,
-        tenantId,
-      });
+      const department = await createDepartment(testDepartment);
       departmentId = department.id;
       expect(departmentId).toBeGreaterThan(0);
 
       // Create test user
       const user = await createUser({
         ...testUser,
-        tenantId,
         departmentId,
       });
       userId = user.id;
@@ -127,15 +108,6 @@ describe('Auth Controller', () => {
         if (departmentId > 0) {
           try {
             await deleteDepartment({ id: departmentId });
-          } catch {
-            // Ignore errors
-          }
-        }
-
-        // 4. Delete the tenant
-        if (tenantId > 0) {
-          try {
-            await deleteTenant({ id: tenantId });
           } catch {
             // Ignore errors
           }
@@ -193,24 +165,15 @@ describe('Auth Controller', () => {
 
   describe('refreshToken', () => {
     // Setup for refresh token tests
-    let tenantId = 0;
     let departmentId = 0;
     let userId = 0;
     let refreshTokenString = '';
 
     beforeAll(async () => {
-      // Create tenant
-      const tenant = await createTenant({
-        ...testTenant,
-        code: `${testTenant.code}-REFRESH`,
-      });
-      tenantId = tenant.id;
-
       // Create department
       const department = await createDepartment({
         ...testDepartment,
         code: `${testDepartment.code}-REFRESH`,
-        tenantId,
       });
       departmentId = department.id;
 
@@ -219,7 +182,6 @@ describe('Auth Controller', () => {
         ...testUser,
         username: `${testUser.username}_refresh`,
         email: `refresh.${testUser.email}`,
-        tenantId,
         departmentId,
       });
       userId = user.id;
@@ -266,12 +228,6 @@ describe('Auth Controller', () => {
         if (departmentId > 0)
           try {
             await deleteDepartment({ id: departmentId });
-          } catch {
-            /* Ignore errors */
-          }
-        if (tenantId > 0)
-          try {
-            await deleteTenant({ id: tenantId });
           } catch {
             /* Ignore errors */
           }
@@ -327,24 +283,15 @@ describe('Auth Controller', () => {
 
   describe('logout', () => {
     // Setup for logout tests
-    let tenantId = 0;
     let departmentId = 0;
     let userId = 0;
     let refreshTokenString = '';
 
     beforeAll(async () => {
-      // Create tenant
-      const tenant = await createTenant({
-        ...testTenant,
-        code: `${testTenant.code}-LOGOUT`,
-      });
-      tenantId = tenant.id;
-
       // Create department
       const department = await createDepartment({
         ...testDepartment,
         code: `${testDepartment.code}-LOGOUT`,
-        tenantId,
       });
       departmentId = department.id;
 
@@ -353,7 +300,6 @@ describe('Auth Controller', () => {
         ...testUser,
         username: `${testUser.username}_logout`,
         email: `logout.${testUser.email}`,
-        tenantId,
         departmentId,
       });
       userId = user.id;
@@ -400,12 +346,6 @@ describe('Auth Controller', () => {
           } catch {
             /* Ignore errors */
           }
-        if (tenantId > 0)
-          try {
-            await deleteTenant({ id: tenantId });
-          } catch {
-            /* Ignore errors */
-          }
       } catch {
         // Ignore errors
       }
@@ -444,23 +384,14 @@ describe('Auth Controller', () => {
 
   describe('revokeAllTokens', () => {
     // Setup for revoke tokens tests
-    let tenantId = 0;
     let departmentId = 0;
     let userId = 0;
 
     beforeAll(async () => {
-      // Create tenant
-      const tenant = await createTenant({
-        ...testTenant,
-        code: `${testTenant.code}-REVOKE`,
-      });
-      tenantId = tenant.id;
-
       // Create department
       const department = await createDepartment({
         ...testDepartment,
         code: `${testDepartment.code}-REVOKE`,
-        tenantId,
       });
       departmentId = department.id;
 
@@ -469,7 +400,6 @@ describe('Auth Controller', () => {
         ...testUser,
         username: `${testUser.username}_revoke`,
         email: `revoke.${testUser.email}`,
-        tenantId,
         departmentId,
       });
       userId = user.id;
@@ -504,12 +434,6 @@ describe('Auth Controller', () => {
         if (departmentId > 0)
           try {
             await deleteDepartment({ id: departmentId });
-          } catch {
-            /* Ignore errors */
-          }
-        if (tenantId > 0)
-          try {
-            await deleteTenant({ id: tenantId });
           } catch {
             /* Ignore errors */
           }

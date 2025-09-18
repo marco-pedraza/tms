@@ -18,7 +18,6 @@ export {
 } from '@/inventory/operators/bus-lines/bus-lines.schema';
 export { users, userRelations } from '../users/users/users.schema';
 export { departments } from '../users/departments/departments.schema';
-export { tenants } from '../users/tenants/tenants.schema';
 export {
   permissions,
   permissionRelations,

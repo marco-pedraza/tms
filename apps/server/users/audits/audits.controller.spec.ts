@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createDepartment } from '../departments/departments.controller';
-import { createTenant } from '../tenants/tenants.controller';
 import { createUser, deleteUser } from '../users/users.controller';
 import { CreateUserPayload } from '../users/users.types';
 import { auditsRepository } from './audits.repository';
@@ -8,24 +7,14 @@ import { listAuditsPaginated } from './audits.controller';
 
 describe('Audits Controller', () => {
   // Variables to store created test resource IDs
-  let testTenantId: number;
   let testDepartmentId: number;
   let testUserId: number;
   const createdAuditIds: number[] = [];
 
   // Setup test resources before all tests
   beforeAll(async () => {
-    // Create test tenant
-    const tenant = await createTenant({
-      name: 'Test Tenant',
-      code: 'TEST_TENANT',
-      description: 'Tenant for audit tests',
-    });
-    testTenantId = tenant.id;
-
     // Create test department
     const department = await createDepartment({
-      tenantId: testTenantId,
       name: 'Test Department',
       code: 'TEST_DEPT',
       description: 'Department for audit tests',
@@ -34,7 +23,6 @@ describe('Audits Controller', () => {
 
     // Create test user
     const testUser: CreateUserPayload = {
-      tenantId: testTenantId,
       departmentId: testDepartmentId,
       username: 'testaudituser',
       email: 'testaudit@example.com',
@@ -103,7 +91,7 @@ describe('Audits Controller', () => {
       }
     }
 
-    // Note: We don't clean up the department and tenant because there might be
+    // Note: We don't clean up the department because there might be
     // foreign key constraints in the database preventing deletion.
     // In a real application, you would need a proper cleanup strategy.
   });

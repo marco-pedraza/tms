@@ -58,7 +58,6 @@ const generateToken = async (
 ): Promise<string> => {
   const payload: JwtPayload = {
     sub: user.id,
-    tenantId: user.tenantId,
     username: user.username,
     isSystemAdmin: user.isSystemAdmin,
     type: tokenType,

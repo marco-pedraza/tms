@@ -72,56 +72,6 @@ export const listDepartmentsPaginated = api(
 );
 
 /**
- * Retrieves departments for a specific tenant with optional filtering and ordering.
- * @param params - Object containing the tenant ID and query options
- * @param params.tenantId - The ID of the tenant to get departments for
- * @returns {Promise<Departments>} List of departments for the tenant
- * @throws {APIError} If retrieval fails
- */
-export const listTenantDepartments = api(
-  {
-    method: 'POST',
-    path: '/tenants/:tenantId/departments',
-    expose: true,
-    auth: true,
-  },
-  async ({
-    tenantId,
-    ...options
-  }: { tenantId: number } & DepartmentsQueryOptions): Promise<Departments> => {
-    const departments = await departmentRepository.findByTenant(
-      tenantId,
-      options,
-    );
-    return { departments };
-  },
-);
-
-/**
- * Retrieves paginated departments for a specific tenant with filtering and ordering.
- * @param params - Object containing the tenant ID and pagination/query parameters
- * @param params.tenantId - The ID of the tenant to get departments for
- * @returns {Promise<PaginatedDepartments>} Paginated list of departments for the tenant
- * @throws {APIError} If retrieval fails
- */
-export const listTenantDepartmentsPaginated = api(
-  {
-    method: 'POST',
-    path: '/tenants/:tenantId/departments/paginated',
-    expose: true,
-    auth: true,
-  },
-  async ({
-    tenantId,
-    ...params
-  }: {
-    tenantId: number;
-  } & PaginationParamsDepartments): Promise<PaginatedDepartments> => {
-    return await departmentRepository.findByTenantPaginated(tenantId, params);
-  },
-);
-
-/**
  * Updates an existing department.
  * @param params - Object containing the department ID and update data
  * @param params.id - The ID of the department to update

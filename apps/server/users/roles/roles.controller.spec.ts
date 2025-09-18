@@ -4,8 +4,6 @@ import {
   deletePermission,
 } from '../permissions/permissions.controller';
 import type { CreatePermissionPayload } from '../permissions/permissions.types';
-import { createTenant, deleteTenant } from '../tenants/tenants.controller';
-import type { CreateTenantPayload } from '../tenants/tenants.types';
 import type {
   CreateRolePayload,
   RoleWithPermissions,
@@ -19,8 +17,6 @@ import {
   getRoleWithPermissions,
   listRoles,
   listRolesWithPagination,
-  listTenantRoles,
-  listTenantRolesWithPagination,
   searchRoles,
   searchRolesPaginated,
   updateRole,
@@ -28,16 +24,9 @@ import {
 
 describe('Roles Controller', () => {
   // Test data
-  let tenantId = 0;
   let roleId = 0;
   let permissionId1 = 0;
   let permissionId2 = 0;
-
-  const testTenant: CreateTenantPayload = {
-    name: 'Test Tenant',
-    code: 'TEST-TENANT-ROLE',
-    description: 'A test tenant for role testing',
-  };
 
   const testPermission1: CreatePermissionPayload = {
     name: 'Test Permission 1',
@@ -54,7 +43,6 @@ describe('Roles Controller', () => {
   const testRole: CreateRolePayload = {
     name: 'Test Role',
     description: 'A test role for automated testing',
-    tenantId: 0, // Will be set after tenant creation
   };
 
   // Clean up after all tests
@@ -68,21 +56,9 @@ describe('Roles Controller', () => {
     if (permissionId2 > 0) {
       await deletePermission({ id: permissionId2 });
     }
-    if (tenantId > 0) {
-      await deleteTenant({ id: tenantId });
-    }
   });
 
   describe('Setup', () => {
-    it('should create test tenant', async () => {
-      const result = await createTenant(testTenant);
-      tenantId = result.id;
-      expect(tenantId).toBeGreaterThan(0);
-
-      // Update the test role with the tenant ID
-      testRole.tenantId = tenantId;
-    });
-
     it('should create test permissions', async () => {
       const result1 = await createPermission(testPermission1);
       permissionId1 = result1.id;
@@ -106,7 +82,6 @@ describe('Roles Controller', () => {
       expect(typeof result.id).toBe('number');
       expect(result.name).toBe(testRole.name);
       expect(result.description).toBe(testRole.description);
-      expect(result.tenantId).toBe(tenantId);
       expect(result.createdAt).toBeDefined();
       expect(result.updatedAt).toBeDefined();
     });
@@ -148,7 +123,6 @@ describe('Roles Controller', () => {
       expect(result.id).toBe(roleId);
       expect(result.name).toBe(testRole.name);
       expect(result.description).toBe(testRole.description);
-      expect(result.tenantId).toBe(tenantId);
     });
 
     it('should fail to get non-existent role', async () => {
@@ -166,26 +140,6 @@ describe('Roles Controller', () => {
       const foundRole = result.roles.find((r) => r.id === roleId);
       expect(foundRole).toBeDefined();
       expect(foundRole?.name).toBe(testRole.name);
-      expect(foundRole?.tenantId).toBe(tenantId);
-    });
-  });
-
-  describe('listTenantRoles', () => {
-    it('should list roles for a tenant', async () => {
-      const result = await listTenantRoles({ tenantId });
-
-      expect(Array.isArray(result.roles)).toBe(true);
-      expect(result.roles.length).toBeGreaterThan(0);
-
-      const foundRole = result.roles.find((r) => r.id === roleId);
-      expect(foundRole).toBeDefined();
-      expect(foundRole?.name).toBe(testRole.name);
-    });
-
-    it('should return empty list for non-existent tenant', async () => {
-      const result = await listTenantRoles({ tenantId: 999999 });
-      expect(Array.isArray(result.roles)).toBe(true);
-      expect(result.roles.length).toBe(0);
     });
   });
 
@@ -201,7 +155,6 @@ describe('Roles Controller', () => {
       expect(result.id).toBe(roleId);
       expect(result.name).toBe(updateData.name);
       expect(result.description).toBe(updateData.description);
-      expect(result.tenantId).toBe(tenantId);
       expect(result.updatedAt).toBeDefined();
     });
 
@@ -313,12 +266,10 @@ describe('Roles Controller', () => {
       roleA = await createRole({
         name: 'AAA Test Role',
         description: 'Test role A',
-        tenantId,
       });
       roleZ = await createRole({
         name: 'ZZZ Test Role',
         description: 'Test role Z',
-        tenantId,
       });
 
       // Get roles with large enough page size to include test roles
@@ -342,12 +293,10 @@ describe('Roles Controller', () => {
         roleA = await createRole({
           name: 'AAA Test Role',
           description: 'Test role A',
-          tenantId,
         });
         roleZ = await createRole({
           name: 'ZZZ Test Role',
           description: 'Test role Z',
-          tenantId,
         });
       }
 
@@ -370,17 +319,6 @@ describe('Roles Controller', () => {
         ).toBeGreaterThanOrEqual(0);
       }
     });
-
-    it('should return paginated tenant roles with default parameters', async () => {
-      const response = await listTenantRolesWithPagination({
-        tenantId,
-      });
-
-      expect(response.data).toBeDefined();
-      expect(Array.isArray(response.data)).toBe(true);
-      expect(response.pagination).toBeDefined();
-      expect(response.pagination.currentPage).toBe(1);
-    });
   });
 
   describe('search functionality', () => {
@@ -392,13 +330,11 @@ describe('Roles Controller', () => {
       searchRoleA = await createRole({
         name: 'Search Role Alpha',
         description: 'This is a role for testing search functionality',
-        tenantId,
       });
 
       searchRoleB = await createRole({
         name: 'Search Role Beta',
         description: 'Another role for search tests',
-        tenantId,
       });
     });
 

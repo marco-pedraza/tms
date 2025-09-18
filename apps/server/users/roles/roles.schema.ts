@@ -8,7 +8,6 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { permissions } from '../permissions/permissions.schema';
-import { tenants } from '../tenants/tenants.schema';
 
 /**
  * Schema for the roles table
@@ -20,15 +19,10 @@ export const roles = pgTable(
     id: serial('id').primaryKey(),
     name: text('name').notNull(),
     description: text('description'),
-    tenantId: integer('tenant_id')
-      .notNull()
-      .references(() => tenants.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
-  (table) => [
-    uniqueIndex().on(table.name, table.tenantId), // Composite unique constraint on name + tenantId
-  ],
+  (table) => [uniqueIndex().on(table.name)],
 );
 
 /**

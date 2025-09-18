@@ -106,27 +106,6 @@ export function createRoleRepository() {
   }
 
   /**
-   * Finds all roles for a tenant with optional filtering, ordering, and permissions
-   * @param tenantId - ID of the tenant
-   * @param options - Query options for filtering, ordering, and including permissions
-   * @returns List of roles for the tenant
-   */
-  async function findAllByTenant(
-    tenantId: number,
-    options: RolesQueryOptions = {},
-  ): Promise<Role[]> {
-    const combinedOptions: RolesQueryOptions = {
-      ...options,
-      filters: {
-        ...(options.filters ?? {}),
-        tenantId,
-      },
-    };
-
-    return await findAll(combinedOptions);
-  }
-
-  /**
    * Finds all roles with pagination, filtering, ordering, and optional permissions
    * @param params - Pagination, filtering, and ordering parameters
    * @returns Paginated roles
@@ -209,27 +188,6 @@ export function createRoleRepository() {
   }
 
   /**
-   * Finds all roles for a tenant with pagination, filtering, ordering, and optional permissions
-   * @param tenantId - ID of the tenant
-   * @param params - Pagination, filtering, and ordering parameters
-   * @returns Paginated roles for the tenant
-   */
-  async function findAllByTenantPaginated(
-    tenantId: number,
-    params: PaginationParamsRoles = {},
-  ): Promise<PaginatedRoles | PaginatedRolesWithPermissions> {
-    const combinedParams: PaginationParamsRoles = {
-      ...params,
-      filters: {
-        ...(params.filters ?? {}),
-        tenantId,
-      },
-    };
-
-    return await findAllPaginated(combinedParams);
-  }
-
-  /**
    * Searches for roles by matching a search term against name and description
    * @param term - The search term to match against role fields
    * @param options - Additional options for filtering and ordering
@@ -304,9 +262,7 @@ export function createRoleRepository() {
     update,
     findOneWithPermissions,
     findAll,
-    findAllByTenant,
     findAllPaginated,
-    findAllByTenantPaginated,
     assignPermissions,
     search,
     searchPaginated,

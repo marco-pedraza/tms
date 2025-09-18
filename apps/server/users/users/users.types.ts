@@ -9,9 +9,6 @@ export interface User {
   /** Unique identifier for the user */
   id: number;
 
-  /** ID of the tenant this user belongs to */
-  tenantId: number;
-
   /** ID of the department this user belongs to */
   departmentId: number;
 
@@ -67,11 +64,6 @@ export type SafeUser = Omit<User, 'passwordHash'>;
  * Input for creating a new user
  */
 export interface CreateUserPayload {
-  /**
-   * ID of the tenant this user belongs to
-   */
-  tenantId: number;
-
   /**
    * ID of the department this user belongs to
    */

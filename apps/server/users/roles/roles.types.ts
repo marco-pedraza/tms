@@ -15,9 +15,6 @@ export interface Role {
   /** Description of what the role represents */
   description: string | null;
 
-  /** ID of the tenant this role belongs to */
-  tenantId: number;
-
   /** Timestamp when the role was created */
   createdAt: Date | string | null;
 
@@ -47,11 +44,6 @@ export interface CreateRolePayload {
    * Description of what the role represents
    */
   description?: string;
-
-  /**
-   * ID of the tenant this role belongs to
-   */
-  tenantId: number;
 
   /**
    * IDs of permissions to associate with this role

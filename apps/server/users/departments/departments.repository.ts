@@ -4,9 +4,6 @@ import { departments } from './departments.schema';
 import type {
   CreateDepartmentPayload,
   Department,
-  DepartmentsQueryOptions,
-  PaginatedDepartments,
-  PaginationParamsDepartments,
   UpdateDepartmentPayload,
 } from './departments.types';
 
@@ -24,50 +21,8 @@ export function createDepartmentRepository() {
     searchableFields: [departments.name, departments.code],
   });
 
-  /**
-   * Finds departments by tenant ID with optional filtering and ordering
-   * @param tenantId Tenant ID
-   * @param options Query options for filtering and ordering
-   * @returns Array of departments
-   */
-  async function findByTenant(
-    tenantId: number,
-    options: DepartmentsQueryOptions = {},
-  ): Promise<Department[]> {
-    const mergedOptions: DepartmentsQueryOptions = {
-      ...options,
-      filters: {
-        ...(options.filters ?? {}),
-        tenantId,
-      },
-    };
-    return await baseRepository.findAll(mergedOptions);
-  }
-
-  /**
-   * Finds departments by tenant ID with pagination
-   * @param tenantId Tenant ID
-   * @param params Pagination, filtering, and ordering parameters
-   * @returns Paginated result of departments
-   */
-  async function findByTenantPaginated(
-    tenantId: number,
-    params: PaginationParamsDepartments = {},
-  ): Promise<PaginatedDepartments> {
-    const mergedParams: PaginationParamsDepartments = {
-      ...params,
-      filters: {
-        ...(params.filters ?? {}),
-        tenantId,
-      },
-    };
-    return await baseRepository.findAllPaginated(mergedParams);
-  }
-
   return {
     ...baseRepository,
-    findByTenant,
-    findByTenantPaginated,
   };
 }
 

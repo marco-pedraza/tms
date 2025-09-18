@@ -67,53 +67,6 @@ export const listUsersPaginated = api(
 );
 
 /**
- * Retrieves users for a specific tenant with optional filtering and ordering
- * @param params - Object containing the tenant ID and query options
- * @param params.tenantId - The ID of the tenant to get users for
- * @returns {Promise<Users>} List of users for the tenant (without password hashes)
- * @throws {APIError} If retrieval fails
- */
-export const listTenantUsers = api(
-  {
-    method: 'POST',
-    path: '/tenants/:tenantId/users',
-    expose: true,
-    auth: true,
-  },
-  async ({
-    tenantId,
-    ...options
-  }: { tenantId: number } & UsersQueryOptions): Promise<Users> => {
-    const users = await userRepository.findByTenant(tenantId, options);
-    return { users };
-  },
-);
-
-/**
- * Retrieves paginated users for a specific tenant with filtering and ordering
- * @param params - Object containing the tenant ID and pagination/query parameters
- * @param params.tenantId - The ID of the tenant to get users for
- * @returns {Promise<PaginatedUsers>} Paginated list of users for the tenant
- * @throws {APIError} If retrieval fails
- */
-export const listTenantUsersPaginated = api(
-  {
-    method: 'POST',
-    path: '/tenants/:tenantId/users/paginated',
-    expose: true,
-    auth: true,
-  },
-  async ({
-    tenantId,
-    ...params
-  }: {
-    tenantId: number;
-  } & PaginationParamsUsers): Promise<PaginatedUsers> => {
-    return await userRepository.findByTenantPaginated(tenantId, params);
-  },
-);
-
-/**
  * Retrieves users for a specific department with optional filtering and ordering
  * @param params - Object containing the department ID and query options
  * @param params.departmentId - The ID of the department to get users for

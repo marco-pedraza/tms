@@ -4,8 +4,6 @@ import {
   deleteDepartment,
 } from '../departments/departments.controller';
 import type { CreateDepartmentPayload } from '../departments/departments.types';
-import { createTenant, deleteTenant } from '../tenants/tenants.controller';
-import type { CreateTenantPayload } from '../tenants/tenants.types';
 import type {
   ChangePasswordPayload,
   CreateUserPayload,
@@ -19,8 +17,6 @@ import {
   getUser,
   listDepartmentUsers,
   listDepartmentUsersPaginated,
-  listTenantUsers,
-  listTenantUsersPaginated,
   listUsers,
   listUsersPaginated,
   searchUsers,
@@ -30,16 +26,9 @@ import {
 
 describe('Users Controller', () => {
   // Test data and setup
-  let tenantId = 0;
   let departmentId = 0;
   let userId = 0;
   let passwordUserId = 0;
-
-  const testTenant: CreateTenantPayload = {
-    name: 'Test Tenant',
-    code: 'TEST-TENANT-USER',
-    description: 'A test tenant for user testing',
-  };
 
   const testDepartment: CreateDepartmentPayload = {
     name: 'Test Department',
@@ -48,7 +37,6 @@ describe('Users Controller', () => {
   };
 
   const testUser: CreateUserPayload = {
-    tenantId: 0, // Will be set after tenant creation
     departmentId: 0, // Will be set after department creation
     username: 'testuser',
     email: 'john.doe@test.com',
@@ -78,7 +66,7 @@ describe('Users Controller', () => {
       }
     }
 
-    // Delete department and tenant
+    // Delete department
     if (departmentId > 0) {
       try {
         await deleteDepartment({ id: departmentId });
@@ -86,28 +74,11 @@ describe('Users Controller', () => {
         console.log('Error cleaning up test department:', error);
       }
     }
-
-    if (tenantId > 0) {
-      try {
-        await deleteTenant({ id: tenantId });
-      } catch (error) {
-        console.log('Error cleaning up test tenant:', error);
-      }
-    }
   });
 
   describe('Setup', () => {
-    test('should create test tenant', async () => {
-      const result = await createTenant(testTenant);
-      tenantId = result.id;
-      expect(tenantId).toBeGreaterThan(0);
-    });
-
     test('should create test department', async () => {
-      const result = await createDepartment({
-        ...testDepartment,
-        tenantId,
-      });
+      const result = await createDepartment(testDepartment);
       departmentId = result.id;
       expect(departmentId).toBeGreaterThan(0);
     });
@@ -117,7 +88,6 @@ describe('Users Controller', () => {
     test('should create a new user', async () => {
       const result = await createUser({
         ...testUser,
-        tenantId,
         departmentId,
       });
 
@@ -135,7 +105,6 @@ describe('Users Controller', () => {
       expect(result.phone).toBe(testUser.phone);
       expect(result.position).toBe(testUser.position);
       expect(result.employeeId).toBe(testUser.employeeId);
-      expect(result.tenantId).toBe(tenantId);
       expect(result.departmentId).toBe(departmentId);
       expect(result.isActive).toBe(true);
       expect(result.isSystemAdmin).toBe(false);
@@ -180,7 +149,6 @@ describe('Users Controller', () => {
       expect(response.username).toBe(testUser.username);
       expect(response.phone).toBe(testUser.phone);
       expect(response.employeeId).toBe(testUser.employeeId);
-      expect(response.tenantId).toBe(tenantId);
       expect(response.departmentId).toBe(departmentId);
       expect(response.isActive).toBe(updateData.isActive);
       expect(response.updatedAt).toBeDefined();
@@ -192,7 +160,6 @@ describe('Users Controller', () => {
         ...testUser,
         username: 'user_to_delete',
         email: 'delete_me@test.com',
-        tenantId,
         departmentId,
       });
 
@@ -214,7 +181,6 @@ describe('Users Controller', () => {
       await expect(
         createUser({
           ...testUser,
-          tenantId,
           departmentId,
         }),
       ).rejects.toThrow();
@@ -257,7 +223,6 @@ describe('Users Controller', () => {
       for (const userData of users) {
         const created = await createUser({
           ...userData,
-          tenantId,
           departmentId,
         });
         testUsers.push(created);
@@ -357,23 +322,23 @@ describe('Users Controller', () => {
     });
   });
 
-  describe('tenant and department filtering', () => {
-    // Test users for tenant and department tests
+  describe('department filtering', () => {
+    // Test users for department tests
     const filterTestUsers: SafeUser[] = [];
 
     beforeAll(async () => {
-      // Create test users for tenant and department testing if needed
+      // Create test users for department testing if needed
       const users = [
         {
           ...testUser,
-          username: 'tenant_user1',
-          email: 'tenant1@test.com',
+          username: 'dept_user1',
+          email: 'dept1@test.com',
           isActive: true,
         },
         {
           ...testUser,
-          username: 'tenant_user2',
-          email: 'tenant2@test.com',
+          username: 'dept_user2',
+          email: 'dept2@test.com',
           isActive: false,
         },
       ];
@@ -381,40 +346,11 @@ describe('Users Controller', () => {
       for (const userData of users) {
         const created = await createUser({
           ...userData,
-          tenantId,
           departmentId,
         });
         filterTestUsers.push(created);
         createdUserIds.push(created.id);
       }
-    });
-
-    test('should return users for a specific tenant', async () => {
-      const response = await listTenantUsers({ tenantId });
-
-      // All returned users should belong to the specified tenant
-      expect(response.users.every((u) => u.tenantId === tenantId)).toBe(true);
-
-      // Should include our test users
-      for (const user of filterTestUsers) {
-        expect(response.users.some((u) => u.id === user.id)).toBe(true);
-      }
-    });
-
-    test('should return paginated users for a specific tenant', async () => {
-      const response = await listTenantUsersPaginated({
-        tenantId,
-        page: 1,
-        pageSize: 10,
-      });
-
-      // All returned users should belong to the specified tenant
-      expect(response.data.every((u) => u.tenantId === tenantId)).toBe(true);
-
-      // Check pagination properties
-      expect(response.pagination).toBeDefined();
-      expect(response.pagination.currentPage).toBe(1);
-      expect(response.pagination.pageSize).toBe(10);
     });
 
     test('should return users for a specific department', async () => {
@@ -459,7 +395,6 @@ describe('Users Controller', () => {
         email: 'searchable@test.com',
         firstName: 'Searchable',
         lastName: 'Test',
-        tenantId,
         departmentId,
       });
 
@@ -503,7 +438,6 @@ describe('Users Controller', () => {
         ...testUser,
         username: 'pwdtestuser',
         email: 'password@test.com',
-        tenantId,
         departmentId,
       });
 

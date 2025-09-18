@@ -1,25 +1,15 @@
 import { departmentRepository } from '../../users/departments/departments.repository';
-import { tenantRepository } from '../../users/tenants/tenants.repository';
 import { userRepository } from '../../users/users/users.repository';
 
 // Define the secret at global scope as required by Encore
 const DEFAULT_PASSWORD = 'admin123';
 
 /**
- * Main function to seed admin user with required tenant and department
+ * Main function to seed admin user with required department
  */
 export async function seedAdmin(): Promise<void> {
   try {
     console.log('Starting admin user seeding...');
-
-    // Create default tenant
-    console.log('Creating default tenant...');
-    const tenant = await tenantRepository.create({
-      name: 'Default Tenant',
-      code: 'default',
-      description: 'Default tenant for system administration',
-    });
-    console.log('Created default tenant:', tenant);
 
     // Create default department
     console.log('Creating default department...');
@@ -27,7 +17,6 @@ export async function seedAdmin(): Promise<void> {
       name: 'Administration',
       code: 'admin',
       description: 'System administration department',
-      tenantId: tenant.id,
     });
     console.log('Created default department:', department);
 
@@ -43,7 +32,6 @@ export async function seedAdmin(): Promise<void> {
       password: adminPassword,
       firstName: 'System',
       lastName: 'Administrator',
-      tenantId: tenant.id,
       departmentId: department.id,
       isSystemAdmin: true,
       position: 'System Administrator',

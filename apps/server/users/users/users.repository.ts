@@ -109,47 +109,6 @@ export function createUserRepository() {
   }
 
   /**
-   * Finds users by tenant ID
-   * @param tenantId Tenant ID
-   * @param options Query options for filtering and ordering
-   * @returns Array of users (without password hashes)
-   */
-  async function findByTenant(
-    tenantId: number,
-    options: UsersQueryOptions = {},
-  ): Promise<SafeUser[]> {
-    const mergedOptions: UsersQueryOptions = {
-      ...options,
-      filters: {
-        ...(options.filters ?? {}),
-        tenantId,
-      },
-    };
-    const users = await findAll(mergedOptions);
-    return users;
-  }
-
-  /**
-   * Finds users by tenant ID with pagination
-   * @param tenantId Tenant ID
-   * @param params Pagination, filtering, and ordering parameters
-   * @returns Paginated result of users (without password hashes)
-   */
-  async function findByTenantPaginated(
-    tenantId: number,
-    params: PaginationParamsUsers = {},
-  ): Promise<PaginatedUsers> {
-    const mergedParams: PaginationParamsUsers = {
-      ...params,
-      filters: {
-        ...(params.filters ?? {}),
-        tenantId,
-      },
-    };
-    return await findAllPaginated(mergedParams);
-  }
-
-  /**
    * Finds users by department ID
    * @param departmentId Department ID
    * @param options Query options for filtering and ordering
@@ -264,8 +223,6 @@ export function createUserRepository() {
     findOne,
     findAll,
     findAllPaginated,
-    findByTenant,
-    findByTenantPaginated,
     findByDepartment,
     findByDepartmentPaginated,
     findByUsername,

@@ -131,6 +131,7 @@
     "missingSeatDiagramSpaces": "Debes generar el diagrama de asientos.",
     "name": {
       "letters": "El nombre debe contener solo letras y espacios.",
+      "lettersAndNumbers": "El nombre debe contener solo letras, números y espacios.",
       "nonWhitespace": "El nombre no puede contener solo espacios en blanco."
     },
     "code": {
@@ -762,8 +763,7 @@
       },
       "timeOff": {
         "invalidDateRange": "La fecha de inicio debe ser anterior o igual a la fecha de fin",
-        "overlappingTimeOff": "El período de ausencia se superpone con otro período de ausencia",
-        "pastDateNotAllowed": "La fecha de inicio no puede ser en el pasado"
+        "overlappingTimeOff": "El período de ausencia se superpone con otro período de ausencia"
       }
     },
     "messages": {

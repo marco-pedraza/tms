@@ -16,6 +16,19 @@ export function nameSchema(tValidations: UseValidationsTranslationsResult) {
     });
 }
 
+// Name validation that allows numbers
+export function nameWithNumbersSchema(
+  tValidations: UseValidationsTranslationsResult,
+) {
+  return z
+    .string()
+    .trim()
+    .min(1, { message: tValidations('required') })
+    .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ0-9\s]+$/, {
+      message: tValidations('name.lettersAndNumbers'),
+    });
+}
+
 // Uppercase code validation with configurable length and translations
 export function codeSchema(
   tValidations: UseValidationsTranslationsResult,

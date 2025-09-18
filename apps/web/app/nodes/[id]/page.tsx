@@ -122,9 +122,6 @@ export default function NodeDetailsPage() {
               <dt className="font-medium">{tCommon('fields.name')}:</dt>
               <dd>{node.name}</dd>
 
-              <dt className="font-medium">{tCommon('fields.slug')}:</dt>
-              <dd>{node.slug}</dd>
-
               <dt className="font-medium">{tCommon('fields.code')}:</dt>
               <dd>{node.code}</dd>
 
@@ -337,6 +334,9 @@ export default function NodeDetailsPage() {
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
               <dt className="font-medium">{tCommon('fields.id')}:</dt>
               <dd>{node.id}</dd>
+
+              <dt className="font-medium">{tCommon('fields.slug')}:</dt>
+              <dd>{node.slug}</dd>
 
               <dt className="font-medium">{tCommon('fields.createdAt')}:</dt>
               <dd>

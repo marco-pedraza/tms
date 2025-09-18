@@ -26,6 +26,7 @@ import OperatingHoursForm, {
 } from '@/nodes/components/operating-hours-form';
 import useQueryAllPopulations from '@/populations/hooks/use-query-all-populations';
 import useQueryPopulationCities from '@/populations/hooks/use-query-population-cities';
+import { nameWithNumbersSchema } from '@/schemas/common';
 import { emailSchema, phoneSchema } from '@/schemas/contact';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import {
@@ -39,13 +40,7 @@ const createBaseNodeFormSchema = (
   tValidations: UseValidationsTranslationsResult,
 ) =>
   z.object({
-    name: z
-      .string()
-      .trim()
-      .min(1, { message: tValidations('required') })
-      .regex(/^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$/, {
-        message: tValidations('name.letters'),
-      }),
+    name: nameWithNumbersSchema(tValidations),
     code: z
       .string()
       .min(1, { message: tValidations('required') })
@@ -736,7 +731,6 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
                 <field.ComboboxInput
                   label={tNodes('fields.population')}
                   placeholder={tNodes('form.placeholders.population')}
-                  isRequired
                   emptyOptionsLabel={tNodes(
                     'form.placeholders.emptyPopulationList',
                   )}

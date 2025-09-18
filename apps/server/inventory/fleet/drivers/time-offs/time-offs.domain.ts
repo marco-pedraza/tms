@@ -36,22 +36,7 @@ export function validateTimeOffDateRange(
       return collector;
     }
 
-    // Then validate that start date is not in the past
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
-
-    // Normalize start date to start of day for comparison
-    const normalizedStartDate = new Date(startDate);
-    normalizedStartDate.setHours(0, 0, 0, 0);
-
-    if (normalizedStartDate < today) {
-      collector.addError(
-        'startDate',
-        'PAST_DATE_NOT_ALLOWED',
-        'Start date cannot be in the past',
-        payload.startDate,
-      );
-    }
+    // Note: Removed past date validation to allow time-offs in the past
   }
 
   return collector;

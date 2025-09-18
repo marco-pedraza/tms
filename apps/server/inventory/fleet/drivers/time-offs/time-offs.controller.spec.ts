@@ -656,7 +656,7 @@ describe('Driver Time-offs Controller', () => {
         );
       });
 
-      test('should throw validation error for past date', async () => {
+      test('should allow time-off in the past', async () => {
         // Create a test driver
         const driver = await driverRepository.create({
           ...testDriver,
@@ -674,34 +674,20 @@ describe('Driver Time-offs Controller', () => {
           startDate: pastDate,
           endDate: pastDate,
           type: 'VACATION' as TimeOffType,
-          reason: 'Past vacation attempt',
+          reason: 'Past vacation',
         };
 
-        // Capture the error to make specific assertions
-        let validationError: FieldValidationError | undefined;
-        try {
-          await createDriverTimeOff(pastTimeOffData);
-        } catch (error) {
-          validationError = error as FieldValidationError;
-        }
+        // This should now succeed
+        const timeOff = await createDriverTimeOff(pastTimeOffData);
+        timeOffCleanup.track(timeOff.id);
 
-        expect(validationError).toBeDefined();
-        const typedValidationError = validationError as FieldValidationError;
-        expect(typedValidationError.name).toBe('FieldValidationError');
-        expect(typedValidationError.message).toContain('Validation failed');
-        expect(typedValidationError.fieldErrors).toBeDefined();
-        expect(Array.isArray(typedValidationError.fieldErrors)).toBe(true);
-        expect(typedValidationError.fieldErrors.length).toBeGreaterThan(0);
-
-        const pastDateError = typedValidationError.fieldErrors.find(
-          (error) =>
-            error.field === 'startDate' &&
-            error.code === 'PAST_DATE_NOT_ALLOWED',
-        );
-        expect(pastDateError).toBeDefined();
-        expect(pastDateError?.code).toBe('PAST_DATE_NOT_ALLOWED');
-        expect(pastDateError?.message).toBe('Start date cannot be in the past');
-        expect(pastDateError?.value).toBe(pastDate);
+        expect(timeOff).toBeDefined();
+        expect(timeOff.id).toBeDefined();
+        expect(timeOff.driverId).toBe(driver.id);
+        expect(timeOff.startDate).toBe(pastDate);
+        expect(timeOff.endDate).toBe(pastDate);
+        expect(timeOff.type).toBe('VACATION');
+        expect(timeOff.reason).toBe('Past vacation');
       });
 
       test('should allow time-off starting today', async () => {

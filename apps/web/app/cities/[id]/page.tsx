@@ -101,9 +101,6 @@ export default function CityDetailsPage() {
               <dt className="font-medium">{tCities('fields.timezone')}:</dt>
               <dd>{city.timezone}</dd>
 
-              <dt className="font-medium">{tCommon('fields.slug')}:</dt>
-              <dd>{city.slug}</dd>
-
               <dt className="font-medium">{tCommon('fields.coordinates')}:</dt>
               <dd>
                 <a
@@ -141,6 +138,9 @@ export default function CityDetailsPage() {
             <dl className="grid grid-cols-[1fr_2fr] gap-4">
               <dt className="font-medium">{tCommon('fields.id')}:</dt>
               <dd>{city.id}</dd>
+
+              <dt className="font-medium">{tCommon('fields.slug')}:</dt>
+              <dd>{city.slug}</dd>
 
               <dt className="font-medium">{tCommon('fields.createdAt')}:</dt>
               <dd>

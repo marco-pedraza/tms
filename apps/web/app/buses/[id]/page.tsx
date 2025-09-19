@@ -12,6 +12,8 @@ import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import DriverCard from '@/components/ui/driver-card';
+import TechnologyCard from '@/components/ui/technology-card';
 import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import routes from '@/services/routes';
@@ -311,6 +313,38 @@ export default function BusDetailsPage() {
           ) : (
             '-'
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>{tBuses('sections.technologies')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {(bus.technologies?.length ?? 0) > 0
+              ? bus.technologies?.map((technology) => (
+                  <TechnologyCard key={technology.id} technology={technology} />
+                ))
+              : '-'}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>{tBuses('sections.busCrew')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {(bus.busCrew?.length ?? 0) > 0
+              ? bus.busCrew?.map((crew) =>
+                  crew.driver ? (
+                    <DriverCard key={crew.id} driver={crew.driver} />
+                  ) : null,
+                )
+              : '-'}
+          </div>
         </CardContent>
       </Card>
 

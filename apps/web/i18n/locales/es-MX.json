@@ -748,7 +748,14 @@
       "busLine": "Línea de Autobús",
       "emergencyContactName": "Contacto de Emergencia",
       "emergencyContactPhone": "Teléfono de Contacto",
-      "emergencyContactRelationship": "Relación"
+      "emergencyContactRelationship": "Relación",
+      "sections": {
+        "drivers": {
+          "selectedDrivers": "Conductores seleccionados ({count})",
+          "addDriver": "Agregar Conductor",
+          "emptyText": "No hay conductores disponibles"
+        }
+      }
     },
     "details": {
       "description": "Detalles del conductor"
@@ -1471,6 +1478,8 @@
       "technicalInfo": "Información Técnica",
       "maintenanceInfo": "Información de Mantenimiento",
       "seatDiagram": "Diagrama de Asientos",
+      "busCrew": "Asignación de Conductores",
+      "technologies": "Asignación de Tecnologías",
       "chromatics": "Esquema Cromático"
     },
     "edit": {
@@ -1571,6 +1580,11 @@
       "retired": "Retirado"
     },
     "messages": {
+      "assignDrivers": {
+        "loading": "Asignando conductores...",
+        "success": "Conductores asignados correctamente",
+        "error": "No pudimos asignar los conductores"
+      },
       "assignTechnologies": {
         "loading": "Asignando tecnologías...",
         "success": "Tecnologías asignadas correctamente",

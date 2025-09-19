@@ -34,12 +34,36 @@ export default function NewBusPage() {
     },
   });
 
+  const assignDriversMutation = useMutation({
+    mutationKey: ['buses', 'assignDrivers'],
+    mutationFn: async (payload: { busId: number; driverIds: number[] }) => {
+      await imsClient.inventory.assignDriversToBusCrew(payload.busId, {
+        driverIds: payload.driverIds,
+      });
+
+      return {
+        busId: payload.busId,
+        driverIds: payload.driverIds,
+      };
+    },
+  });
+
+  const assignDrivers = useToastMutation({
+    mutation: assignDriversMutation,
+    messages: {
+      loading: tBuses('messages.assignDrivers.loading'),
+      success: tBuses('messages.assignDrivers.success'),
+      error: tBuses('messages.assignDrivers.error'),
+    },
+  });
+
   const createBusMutation = useMutation({
     mutationFn: async (values: BusFormValues) => {
       const bus = await imsClient.inventory.createBus(values);
       return {
         bus,
         technologyIds: values.technologyIds,
+        driverIds: values.driverIds,
       };
     },
   });
@@ -49,6 +73,10 @@ export default function NewBusPage() {
       assignTechnologies.mutateWithToast({
         busId: data.bus.id,
         technologyIds: data.technologyIds ?? [],
+      });
+      assignDrivers.mutateWithToast({
+        busId: data.bus.id,
+        driverIds: data.driverIds ?? [],
       });
     },
     mutation: createBusMutation,

@@ -58,12 +58,36 @@ export default function EditBusPage() {
     },
   });
 
+  const assignDriversMutation = useMutation({
+    mutationKey: ['buses', 'assignDrivers'],
+    mutationFn: async (payload: { busId: number; driverIds: number[] }) => {
+      await imsClient.inventory.assignDriversToBusCrew(payload.busId, {
+        driverIds: payload.driverIds,
+      });
+
+      return {
+        busId: payload.busId,
+        driverIds: payload.driverIds,
+      };
+    },
+  });
+
+  const assignDrivers = useToastMutation({
+    mutation: assignDriversMutation,
+    messages: {
+      loading: tBuses('messages.assignDrivers.loading'),
+      success: tBuses('messages.assignDrivers.success'),
+      error: tBuses('messages.assignDrivers.error'),
+    },
+  });
+
   const updateBusMutation = useMutation({
     mutationFn: async (values: BusFormValues) => {
       const bus = await imsClient.inventory.updateBus(busId, values);
       return {
         bus,
         technologyIds: values.technologyIds,
+        driverIds: values.driverIds,
       };
     },
   });
@@ -77,6 +101,10 @@ export default function EditBusPage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['buses'] });
+      assignDrivers.mutateWithToast({
+        busId: data.bus.id,
+        driverIds: data.driverIds ?? [],
+      });
       assignTechnologies.mutateWithToast({
         busId: data.bus.id,
         technologyIds: data.technologyIds ?? [],
@@ -103,6 +131,7 @@ export default function EditBusPage() {
       <BusForm
         defaultValues={{
           ...data,
+          driverIds: data.busCrew?.map((driver) => driver.driverId) ?? [],
           technologyIds: technologies?.map((technology) => technology.id) ?? [],
         }}
         onSubmit={updateBusWithToast.mutateWithToast}

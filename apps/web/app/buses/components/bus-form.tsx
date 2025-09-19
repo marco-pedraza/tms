@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react';
+import { useStore } from '@tanstack/react-form';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
-import { buses } from '@repo/ims-client';
+import { buses, drivers } from '@repo/ims-client';
+import useQueryAllDrivers from '@/app/drivers/hooks/use-query-all-drivers';
 import useQueryAllSeatDiagrams from '@/app/seat-diagrams/hooks/use-query-all-seat-diagrams';
 import useQueryAllTechnologies from '@/app/technologies/hooks/use-query-all-technologies';
 import useQueryAllBusLines from '@/bus-lines/hooks/use-query-all-bus-lines';
@@ -11,6 +14,7 @@ import useQueryAllChromatics from '@/chromatics/hooks/use-query-all-chromatics';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
+import DriverCard from '@/components/ui/driver-card';
 import TechnologyCard from '@/components/ui/technology-card';
 import useForm from '@/hooks/use-form';
 import useQueryAllNodes from '@/nodes/hooks/use-query-all-nodes';
@@ -111,6 +115,7 @@ const createBusFormSchema = (tValidations: UseValidationsTranslationsResult) =>
     nextMaintenanceDate: z.string().transform((val) => val || null),
     technologyIds: z.array(z.number()).optional(),
     chromaticId: z.string().transform((val) => (val ? parseInt(val) : null)),
+    driverIds: z.array(z.number()).optional(),
   });
 
 export type BusFormValues = z.output<ReturnType<typeof createBusFormSchema>>;
@@ -131,6 +136,7 @@ export default function BusForm({
   const tBuses = useTranslations('buses');
   const tSeatDiagrams = useTranslations('seatDiagrams');
   const tTechnologies = useTranslations('technologies');
+  const tDrivers = useTranslations('drivers');
   const tValidations = useTranslations('validations');
   const busSchema = createBusFormSchema(tValidations);
   const { data: technologies } = useQueryAllTechnologies();
@@ -161,6 +167,7 @@ export default function BusForm({
         seatDiagramId: defaultValues.seatDiagramId?.toString() || '',
         technologyIds: defaultValues.technologyIds || [],
         chromaticId: defaultValues.chromaticId?.toString() || '',
+        driverIds: defaultValues.driverIds || [],
       }
     : {
         economicNumber: '',
@@ -192,6 +199,7 @@ export default function BusForm({
         active: true,
         technologyIds: [],
         chromaticId: '',
+        driverIds: [],
       };
 
   const form = useForm({
@@ -216,6 +224,30 @@ export default function BusForm({
       }
     },
   });
+
+  const [selectedDrivers, setSelectedDrivers] = useState<drivers.Driver[]>([]);
+  const busLineId = useStore(form.store, (state) => state.values.busLineId);
+
+  const { data: busLineDrivers } = useQueryAllDrivers({
+    filters: { busLineId: busLineId ? parseInt(busLineId) : undefined },
+  });
+
+  // When bus line changes, refresh list and drop selections not in the new list
+  useEffect(() => {
+    if (!busLineId) {
+      setSelectedDrivers([]);
+      return;
+    }
+    const list = busLineDrivers?.data ?? [];
+    setSelectedDrivers(list);
+    form.setFieldValue(
+      'driverIds',
+      (defaultValues?.driverIds ?? []).filter((id: number) =>
+        list.some((d) => d.id === id),
+      ),
+    );
+  }, [busLineId, defaultValues?.driverIds, busLineDrivers, form]);
+
   const { data: busModels } = useQueryAllBusModels();
   const { data: seatDiagrams } = useQueryAllSeatDiagrams();
   const { data: transporters } = useQueryAllTransporters();
@@ -660,6 +692,51 @@ export default function BusForm({
                 }
                 disabled={isLoadingChromatics}
               />
+            )}
+          </form.AppField>
+        </FormLayout>
+      </div>
+
+      <div className="pt-4">
+        <FormLayout title={tBuses('sections.busCrew')}>
+          <form.AppField name="driverIds">
+            {(field) => (
+              <div className="space-y-4">
+                <field.MultiSelectInput
+                  label={''}
+                  placeholder={tDrivers('form.sections.drivers.addDriver')}
+                  items={
+                    selectedDrivers.map((driver) => ({
+                      id: driver.id.toString(),
+                      name: driver.firstName + ' ' + driver.lastName,
+                      description: driver.busLineId.toString(),
+                    })) ?? []
+                  }
+                  emptyOptionsLabel={tDrivers(
+                    'form.sections.drivers.emptyText',
+                  )}
+                />
+
+                {field.state.value && field.state.value.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium text-foreground">
+                      {tDrivers('form.sections.drivers.selectedDrivers', {
+                        count: field.state.value.length,
+                      })}
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {field.state.value.map((driverId: number) => {
+                        const driver = selectedDrivers.find(
+                          (a) => a.id === driverId,
+                        );
+                        return driver ? (
+                          <DriverCard key={driver.id} driver={driver} />
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </form.AppField>
         </FormLayout>

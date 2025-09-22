@@ -1,8 +1,0 @@
----
-description: 
-globs: 
-alwaysApply: true
----
-Before implementing any changes, find and read the relevant documentation.
-
-The documentation is at apps/docs/.

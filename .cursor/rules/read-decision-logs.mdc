@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+
+Before implementing any changes, read the decision logs to read about latest best code practices.
+
+Take in mind that: newer decisions might overwrite old ones. So keep an eye on the date of each decision and understand what to ignore and what not to.

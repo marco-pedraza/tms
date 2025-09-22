@@ -21,10 +21,14 @@ export default function EditBusLinePage() {
   const { update: updateBusLine } = useBusLineMutations();
 
   const handleSubmit = (values: BusLineFormValues) => {
-    const apiValues = {
-      ...values,
-    };
-    return updateBusLine.mutateWithToast({ id: busLineId, values: apiValues });
+    return updateBusLine.mutateWithToast({
+      id: busLineId,
+      values: {
+        ...values,
+        email: values.email ?? '',
+        phone: values.phone ?? '',
+      },
+    });
   };
 
   if (isLoading) {

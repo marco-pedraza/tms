@@ -17,6 +17,10 @@ import TechnologyCard from '@/components/ui/technology-card';
 import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import routes from '@/services/routes';
+import {
+  parseAndFormatDateForHumans,
+  parseAndFormatDateForHumansRelative,
+} from '@/utils/date';
 import busLicensePlateTypesTranslationKeys from '../translations/bus-license-plate-types-translations-keys';
 
 export default function BusDetailsPage() {
@@ -143,14 +147,10 @@ export default function BusDetailsPage() {
               <dd>{bus.id}</dd>
 
               <dt className="font-medium">{tCommon('fields.createdAt')}:</dt>
-              <dd>
-                {bus.createdAt ? new Date(bus.createdAt).toLocaleString() : '-'}
-              </dd>
+              <dd>{parseAndFormatDateForHumansRelative(bus.createdAt)}</dd>
 
               <dt className="font-medium">{tCommon('fields.updatedAt')}:</dt>
-              <dd>
-                {bus.updatedAt ? new Date(bus.updatedAt).toLocaleString() : '-'}
-              </dd>
+              <dd>{parseAndFormatDateForHumansRelative(bus.updatedAt)}</dd>
             </dl>
           </CardContent>
         </Card>
@@ -183,14 +183,14 @@ export default function BusDetailsPage() {
             <dt className="font-medium">{tBuses('fields.purchaseDate')}:</dt>
             <dd>
               {bus.purchaseDate
-                ? new Date(bus.purchaseDate).toLocaleDateString()
+                ? parseAndFormatDateForHumans(bus.purchaseDate)
                 : '-'}
             </dd>
 
             <dt className="font-medium">{tBuses('fields.expirationDate')}:</dt>
             <dd>
               {bus.expirationDate
-                ? new Date(bus.expirationDate).toLocaleDateString()
+                ? parseAndFormatDateForHumans(bus.expirationDate)
                 : '-'}
             </dd>
 
@@ -247,7 +247,7 @@ export default function BusDetailsPage() {
             </dt>
             <dd>
               {bus.lastMaintenanceDate
-                ? new Date(bus.lastMaintenanceDate).toLocaleDateString()
+                ? parseAndFormatDateForHumans(bus.lastMaintenanceDate)
                 : '-'}
             </dd>
 
@@ -256,7 +256,7 @@ export default function BusDetailsPage() {
             </dt>
             <dd>
               {bus.nextMaintenanceDate
-                ? new Date(bus.nextMaintenanceDate).toLocaleDateString()
+                ? parseAndFormatDateForHumans(bus.nextMaintenanceDate)
                 : '-'}
             </dd>
           </dl>

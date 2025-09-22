@@ -7,7 +7,7 @@ import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
 import { codeSchema, nameSchema } from '@/schemas/common';
-import { emailSchema, phoneSchema } from '@/schemas/contact';
+import { optionalEmailSchema, optionalPhoneSchema } from '@/schemas/contact';
 import useQueryAllServiceTypes from '@/service-types/hooks/use-query-all-service-types';
 import useQueryAllTransporters from '@/transporters/hooks/use-query-all-transporters';
 import { UseValidationsTranslationsResult } from '@/types/translations';
@@ -44,8 +44,8 @@ const createBusLineFormSchema = (
         z.literal(''),
       ])
       .optional(),
-    email: emailSchema(tValidations).optional(),
-    phone: phoneSchema(tValidations).optional(),
+    email: optionalEmailSchema(tValidations),
+    phone: optionalPhoneSchema(tValidations),
     active: z.boolean(),
   });
 
@@ -75,6 +75,8 @@ export default function BusLineForm({
   const rawDefaultValues: BusLineFormRawValues | undefined = defaultValues
     ? {
         ...defaultValues,
+        email: defaultValues.email ?? '',
+        phone: defaultValues.phone ?? '',
         transporterId: String(defaultValues.transporterId),
         serviceTypeId: String(defaultValues.serviceTypeId),
         fleetSize: defaultValues.fleetSize ?? '',

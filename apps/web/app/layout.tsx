@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import DateFnsLocaleProvider from '@/components/date-fns-locale-provider';
 import QueryClientProvider from '@/components/query-client-provider';
 import Sidebar from '@/components/sidebar';
 import { Toaster } from '@/components/ui/sonner';
@@ -33,19 +34,21 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <NuqsAdapter>
-          <QueryClientProvider>
-            <NextIntlClientProvider>
-              <div className="flex min-h-screen">
-                <aside className="w-64 border-r bg-background">
-                  <Sidebar />
-                </aside>
-                <main className="flex-1 p-6">{children}</main>
-              </div>
-              <Toaster richColors />
-            </NextIntlClientProvider>
-          </QueryClientProvider>
-        </NuqsAdapter>
+        <DateFnsLocaleProvider>
+          <NuqsAdapter>
+            <QueryClientProvider>
+              <NextIntlClientProvider>
+                <div className="flex min-h-screen">
+                  <aside className="w-64 border-r bg-background">
+                    <Sidebar />
+                  </aside>
+                  <main className="flex-1 p-6">{children}</main>
+                </div>
+                <Toaster richColors />
+              </NextIntlClientProvider>
+            </QueryClientProvider>
+          </NuqsAdapter>
+        </DateFnsLocaleProvider>
       </body>
     </html>
   );

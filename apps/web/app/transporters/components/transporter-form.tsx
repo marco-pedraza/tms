@@ -7,7 +7,13 @@ import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
-import { emailSchema, phoneSchema } from '@/schemas/contact';
+import {
+  optionalEmailSchema,
+  optionalPhoneSchema,
+  optionalUrlSchema,
+} from '@/schemas/contact';
+import { optionalIntegerSchema } from '@/schemas/number';
+import { optionalStringSchema } from '@/schemas/string';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
@@ -29,47 +35,29 @@ const createTransporterFormSchema = (
       .regex(/^[A-Z0-9-]{1,10}$/, {
         message: tValidations('code.transporterFormat'),
       }),
-    description: z.string(),
-    legalName: z.string(),
-    address: z.string(),
-    website: z.union([
-      z.string().url({ message: tValidations('url.invalid') }),
-      z.literal(''),
-    ]),
-    email: emailSchema(tValidations),
-    phone: phoneSchema(tValidations)
-      .transform((val) => (val.length === 0 ? null : val))
-      .nullable(),
-    headquarterCityId: z
-      .string()
-      .transform((val) => (val === '' ? undefined : parseInt(val)))
-      .optional(),
-    logoUrl: z.union([
-      z.string().url({ message: tValidations('url.invalid') }),
-      z.literal(''),
-    ]),
-    contactInfo: z.string(),
-    licenseNumber: z.string(),
+    description: optionalStringSchema(),
+    legalName: optionalStringSchema(),
+    address: optionalStringSchema(),
+    website: optionalUrlSchema(tValidations),
+    email: optionalEmailSchema(tValidations),
+    phone: optionalPhoneSchema(tValidations),
+    headquarterCityId: optionalIntegerSchema(),
+    logoUrl: optionalUrlSchema(tValidations),
+    contactInfo: optionalStringSchema(),
+    licenseNumber: optionalStringSchema(),
     active: z.boolean(),
   });
 
-export type TransporterFormOutputValues = z.output<
+export type TransporterFormValues = z.output<
   ReturnType<typeof createTransporterFormSchema>
 >;
 type TransporterFormRawValues = z.input<
   ReturnType<typeof createTransporterFormSchema>
 >;
 
-export type TransporterFormValues = Omit<
-  TransporterFormOutputValues,
-  'headquarterCityId'
-> & {
-  headquarterCityId: number | undefined;
-};
-
 interface TransporterFormProps {
   defaultValues?: TransporterFormValues;
-  onSubmit: (values: TransporterFormOutputValues) => Promise<unknown>;
+  onSubmit: (values: TransporterFormValues) => Promise<unknown>;
 }
 
 export default function TransporterForm({

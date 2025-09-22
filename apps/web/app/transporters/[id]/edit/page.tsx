@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import PageHeader from '@/components/page-header';
 import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import routes from '@/services/routes';
-import { TransporterFormOutputValues } from '@/transporters/components/transporter-form';
+import { TransporterFormValues } from '@/transporters/components/transporter-form';
 import TransporterForm from '@/transporters/components/transporter-form';
 import TransporterFormSkeleton from '@/transporters/components/transporter-form-skeleton';
 import useQueryTransporter from '@/transporters/hooks/use-query-transporter';
@@ -19,7 +19,7 @@ export default function EditTransporterPage() {
   });
   const { update: updateTransporter } = useTransporterMutations();
 
-  const handleSubmit = async (values: TransporterFormOutputValues) => {
+  const handleSubmit = async (values: TransporterFormValues) => {
     return await updateTransporter.mutateWithToast({
       id: transporterId,
       values,
@@ -41,22 +41,7 @@ export default function EditTransporterPage() {
         description={data.name}
         backHref={routes.transporters.index}
       />
-      <TransporterForm
-        defaultValues={{
-          ...data,
-          description: data.description || '',
-          legalName: data.legalName || '',
-          address: data.address || '',
-          website: data.website || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          logoUrl: data.logoUrl || '',
-          contactInfo: data.contactInfo || '',
-          licenseNumber: data.licenseNumber || '',
-          headquarterCityId: data.headquarterCityId || undefined,
-        }}
-        onSubmit={handleSubmit}
-      />
+      <TransporterForm defaultValues={data} onSubmit={handleSubmit} />
     </div>
   );
 }

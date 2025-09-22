@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { useStore } from '@tanstack/react-form';
 import { useTranslations } from 'next-intl';
@@ -18,7 +20,14 @@ import DriverCard from '@/components/ui/driver-card';
 import TechnologyCard from '@/components/ui/technology-card';
 import useForm from '@/hooks/use-form';
 import useQueryAllNodes from '@/nodes/hooks/use-query-all-nodes';
-import { requiredIntegerSchema } from '@/schemas/number';
+import { optionalDateSchema, requiredDateSchema } from '@/schemas/date';
+import {
+  optionalFloatSchema,
+  optionalIntegerSchema,
+  requiredFloatSchema,
+  requiredIntegerSchema,
+} from '@/schemas/number';
+import { optionalStringSchema, requiredStringSchema } from '@/schemas/string';
 import {
   BusStatus,
   busLicensePlateTypes,
@@ -26,93 +35,51 @@ import {
 } from '@/services/ims-client';
 import useQueryAllTransporters from '@/transporters/hooks/use-query-all-transporters';
 import { UseValidationsTranslationsResult } from '@/types/translations';
+import { parseAndFormatDateForInput } from '@/utils/date';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
 const createBusFormSchema = (tValidations: UseValidationsTranslationsResult) =>
   z.object({
     // basic information
-    economicNumber: z
-      .string()
-      .trim()
-      .min(1, { message: tValidations('required') }),
-    registrationNumber: z
-      .string()
-      .trim()
-      .min(1, { message: tValidations('required') }),
+    economicNumber: requiredStringSchema(tValidations),
+    registrationNumber: requiredStringSchema(tValidations),
     licensePlateType: z
       .enum(busLicensePlateTypes as [string, ...string[]], {
         message: tValidations('required'),
       })
       .transform((val) => val as buses.BusLicensePlateType),
-    licensePlateNumber: z
-      .string()
-      .trim()
-      .min(1, { message: tValidations('required') }),
+    licensePlateNumber: requiredStringSchema(tValidations),
     availableForTourismOnly: z.boolean(),
     status: z
       .enum(busStatuses as [string, ...string[]], {
         message: tValidations('required'),
       })
       .transform((val) => val as buses.BusStatus),
-    circulationCard: z
-      .string()
-      .trim()
-      .transform((val) => val || null),
-    transporterId: z.string().transform((val) => (val ? parseInt(val) : null)),
-    alternateTransporterId: z
-      .string()
-      .transform((val) => (val ? parseInt(val) : null)),
-    busLineId: z.string().transform((val) => (val ? parseInt(val) : null)),
-    baseId: z.string().transform((val) => (val ? parseInt(val) : null)),
+    circulationCard: optionalStringSchema(),
+    transporterId: optionalIntegerSchema(),
+    alternateTransporterId: optionalIntegerSchema(),
+    busLineId: optionalIntegerSchema(),
+    baseId: optionalIntegerSchema(),
     active: z.boolean(),
     // model and manufacturer information
-    purchaseDate: z.string().min(1, { message: tValidations('required') }),
-    expirationDate: z.string().min(1, { message: tValidations('required') }),
-    erpClientNumber: z
-      .string()
-      .trim()
-      .transform((val) => val || null),
-    modelId: z
-      .string()
-      .min(1, { message: tValidations('required') })
-      .transform((val) => parseInt(val)),
+    purchaseDate: requiredDateSchema(tValidations),
+    expirationDate: requiredDateSchema(tValidations),
+    erpClientNumber: optionalStringSchema(),
+    modelId: requiredIntegerSchema(tValidations),
     // Seat diagram
     seatDiagramId: requiredIntegerSchema(tValidations),
     // Technical information
-    vehicleId: z
-      .string()
-      .trim()
-      .transform((val) => val || null),
-    serialNumber: z
-      .string()
-      .trim()
-      .min(1, { message: tValidations('required') }),
-    engineNumber: z
-      .string()
-      .trim()
-      .transform((val) => val || null),
-    chassisNumber: z
-      .string()
-      .trim()
-      .min(1, { message: tValidations('required') }),
-    grossVehicleWeight: z
-      .string()
-      .min(1, { message: tValidations('required') })
-      .transform((val) => parseFloat(val)),
-    sctPermit: z
-      .string()
-      .trim()
-      .transform((val) => val || null),
+    vehicleId: optionalStringSchema(),
+    serialNumber: requiredStringSchema(tValidations),
+    engineNumber: optionalStringSchema(),
+    chassisNumber: requiredStringSchema(tValidations),
+    grossVehicleWeight: requiredFloatSchema(tValidations),
+    sctPermit: optionalStringSchema(),
     // Maintenance information
-    currentKilometer: z
-      .string()
-      .transform((val) => (val ? parseFloat(val) : null)),
-    gpsId: z
-      .string()
-      .trim()
-      .transform((val) => val || null),
-    lastMaintenanceDate: z.string().transform((val) => val || null),
-    nextMaintenanceDate: z.string().transform((val) => val || null),
+    currentKilometer: optionalFloatSchema(),
+    gpsId: optionalStringSchema(),
+    lastMaintenanceDate: optionalDateSchema(),
+    nextMaintenanceDate: optionalDateSchema(),
     technologyIds: z.array(z.number()).optional(),
     chromaticId: z.string().transform((val) => (val ? parseInt(val) : null)),
     driverIds: z.array(z.number()).optional(),
@@ -152,8 +119,10 @@ export default function BusForm({
           defaultValues.alternateTransporterId?.toString() || '',
         busLineId: defaultValues.busLineId?.toString() || '',
         baseId: defaultValues.baseId?.toString() || '',
-        purchaseDate: defaultValues.purchaseDate || '',
-        expirationDate: defaultValues.expirationDate || '',
+        purchaseDate: parseAndFormatDateForInput(defaultValues.purchaseDate),
+        expirationDate: parseAndFormatDateForInput(
+          defaultValues.expirationDate,
+        ),
         erpClientNumber: defaultValues.erpClientNumber || '',
         modelId: defaultValues.modelId?.toString() || '',
         vehicleId: defaultValues.vehicleId || '',
@@ -162,8 +131,12 @@ export default function BusForm({
         sctPermit: defaultValues.sctPermit || '',
         currentKilometer: defaultValues.currentKilometer?.toString() || '',
         gpsId: defaultValues.gpsId || '',
-        lastMaintenanceDate: defaultValues.lastMaintenanceDate || '',
-        nextMaintenanceDate: defaultValues.nextMaintenanceDate || '',
+        lastMaintenanceDate: defaultValues.lastMaintenanceDate
+          ? parseAndFormatDateForInput(defaultValues.lastMaintenanceDate)
+          : '',
+        nextMaintenanceDate: defaultValues.nextMaintenanceDate
+          ? parseAndFormatDateForInput(defaultValues.nextMaintenanceDate)
+          : '',
         seatDiagramId: defaultValues.seatDiagramId?.toString() || '',
         technologyIds: defaultValues.technologyIds || [],
         chromaticId: defaultValues.chromaticId?.toString() || '',
@@ -232,6 +205,7 @@ export default function BusForm({
     filters: { busLineId: busLineId ? parseInt(busLineId) : undefined },
   });
 
+  // @todo - refactor this logic using form.Subscribe
   // When bus line changes, refresh list and drop selections not in the new list
   useEffect(() => {
     if (!busLineId) {

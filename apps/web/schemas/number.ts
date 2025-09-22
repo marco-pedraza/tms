@@ -14,3 +14,15 @@ export function requiredIntegerSchema(
     .min(1, { message: tValidations('required') })
     .transform((val) => parseInt(val));
 }
+
+export function optionalFloatSchema() {
+  return baseNumberSchema.transform((val) => (val ? parseFloat(val) : null));
+}
+
+export function requiredFloatSchema(
+  tValidations: UseValidationsTranslationsResult,
+) {
+  return baseNumberSchema
+    .min(1, { message: tValidations('required') })
+    .transform((val) => parseFloat(val));
+}

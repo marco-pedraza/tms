@@ -27,7 +27,11 @@ import OperatingHoursForm, {
 import useQueryAllPopulations from '@/populations/hooks/use-query-all-populations';
 import useQueryPopulationCities from '@/populations/hooks/use-query-population-cities';
 import { nameWithNumbersSchema } from '@/schemas/common';
-import { emailSchema, phoneSchema } from '@/schemas/contact';
+import {
+  optionalEmailSchema,
+  optionalPhoneSchema,
+  optionalUrlSchema,
+} from '@/schemas/contact';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import {
   createDynamicFormDefaultValues,
@@ -100,30 +104,9 @@ const createBaseNodeFormSchema = (
       .transform((val) => parseFloat(val)),
     address: z.string().min(1, { message: tValidations('required') }),
     description: z.string().nullable(),
-    contactPhone: phoneSchema(tValidations)
-      .transform((val) => (val.length === 0 ? null : val))
-      .nullable(),
-    contactEmail: emailSchema(tValidations)
-      .transform((val) => (val.length === 0 ? null : val))
-      .nullable(),
-    website: z
-      .string()
-      .trim()
-      .refine(
-        (val) => {
-          if (val.length === 0) {
-            return true;
-          }
-          return val.match(
-            /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*)$/,
-          );
-        },
-        {
-          message: tValidations('url.invalid'),
-        },
-      )
-      .transform((val) => (val.length === 0 ? null : val))
-      .nullable(),
+    contactPhone: optionalPhoneSchema(tValidations),
+    contactEmail: optionalEmailSchema(tValidations),
+    website: optionalUrlSchema(tValidations),
     allowsBoarding: z.boolean().optional(),
     allowsAlighting: z.boolean().optional(),
     nodeEvents: z.array(
@@ -171,6 +154,9 @@ export default function NodeForm({ defaultValues, onSubmit }: NodeFormProps) {
   const rawDefaultValues: NodeFormRawValues | undefined = defaultValues
     ? {
         ...defaultValues,
+        contactPhone: defaultValues.contactPhone ?? '',
+        contactEmail: defaultValues.contactEmail ?? '',
+        website: defaultValues.website ?? '',
         radius: defaultValues.radius.toString(),
         installationTypeId: defaultValues.installationTypeId?.toString() ?? '',
         cityId: defaultValues.cityId.toString(),

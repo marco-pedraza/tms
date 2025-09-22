@@ -15,7 +15,7 @@ import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
 import { nameSchema } from '@/schemas/common';
-import { emailSchema, phoneSchema } from '@/schemas/contact';
+import { optionalEmailSchema, optionalPhoneSchema } from '@/schemas/contact';
 import {
   TimeOffType,
   driverInitialStatuses,
@@ -45,8 +45,8 @@ const createDriverFormSchema = (
       .min(1, { message: tValidations('required') }),
     firstName: nameSchema(tValidations),
     lastName: nameSchema(tValidations),
-    phone: phoneSchema(tValidations).optional(),
-    email: emailSchema(tValidations).optional(),
+    phone: optionalPhoneSchema(tValidations),
+    email: optionalEmailSchema(tValidations),
     address: z.string().trim().optional(),
     emergencyContactName: z.string().trim().optional(),
     emergencyContactPhone: z
@@ -140,6 +140,8 @@ export default function DriverForm({
   const rawDefaultValues: DriverFormRawValues | undefined = defaultValues
     ? {
         ...defaultValues,
+        email: defaultValues.email ?? '',
+        phone: defaultValues.phone ?? '',
         busLineId: String(defaultValues.busLineId),
         status: defaultValues.status,
         hireDate: defaultValues.hireDate ?? '',

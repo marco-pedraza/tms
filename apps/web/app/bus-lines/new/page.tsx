@@ -1,7 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import BusLineForm from '@/bus-lines/components/bus-line-form';
+import BusLineForm, {
+  BusLineFormValues,
+} from '@/bus-lines/components/bus-line-form';
 import useBusLineMutations from '@/bus-lines/hooks/use-bus-line-mutations';
 import PageHeader from '@/components/page-header';
 import routes from '@/services/routes';
@@ -10,6 +12,14 @@ export default function NewBusLinePage() {
   const t = useTranslations('busLines');
   const { create } = useBusLineMutations();
 
+  const onSubmit = (values: BusLineFormValues) => {
+    return create.mutateWithToast({
+      ...values,
+      email: values.email ?? '',
+      phone: values.phone ?? '',
+    });
+  };
+
   return (
     <div>
       <PageHeader
@@ -17,7 +27,7 @@ export default function NewBusLinePage() {
         backHref={routes.busLines.index}
         backLabel={t('actions.backToList')}
       />
-      <BusLineForm onSubmit={create.mutateWithToast} />
+      <BusLineForm onSubmit={onSubmit} />
     </div>
   );
 }

@@ -29,7 +29,9 @@
       "available": "Disponible",
       "unavailable": "No Disponible",
       "enabled": "Habilitado",
-      "disabled": "Deshabilitado"
+      "disabled": "Deshabilitado",
+      "emptyTrip": "Vacío",
+      "notEmptyTrip": "Con Pasajeros"
     },
     "fields": {
       "id": "ID",
@@ -240,8 +242,11 @@
         "title": "Configuración",
         "amenities": "Amenidades"
       },
-      "routes": "Rutas",
-      "pathways": "Trayectos",
+      "routing": {
+        "title": "Recorridos",
+        "pathways": "Trayectos",
+        "routes": "Rutas"
+      },
       "pathwayServices": "Servicios de Trayecto",
       "services": "Servicios",
       "busModels": "Modelos de Autobús",
@@ -1840,6 +1845,71 @@
         "loading": "Actualizando configuración de asientos...",
         "success": "Configuración de asientos actualizada correctamente",
         "error": "No pudimos actualizar la configuración de asientos"
+      }
+    }
+  },
+  "pathways": {
+    "title": "Trayectos",
+    "description": "Gestiona los trayectos entre nodos para tus rutas de autobuses",
+    "actions": {
+      "create": "Crear Trayecto",
+      "update": "Actualizar Trayecto",
+      "backToList": "Volver a trayectos"
+    },
+    "fields": {
+      "name": "Nombre",
+      "code": "Código",
+      "origin": "Origen",
+      "destination": "Destino",
+      "description": "Descripción",
+      "isEmptyTrip": "Trayecto Vacío",
+      "isSellable": "Trayecto Vendible"
+    },
+    "filters": {
+      "active": "Activo"
+    },
+    "form": {
+      "title": "Información del trayecto",
+      "placeholders": {
+        "name": "Ej: Guadalajara - León",
+        "code": "Ej: GDL-LEO",
+        "description": "Ej: Trayecto directo sin escalas",
+        "emptyOptionsLabel": "No hay trayectos disponibles"
+      },
+      "sections": {
+        "info": "Información"
+      }
+    },
+    "details": {
+      "description": "Detalles del trayecto"
+    },
+    "edit": {
+      "title": "Editar Trayecto"
+    },
+    "sections": {
+      "info": "Información"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Trayecto no encontrado",
+        "description": "No pudimos encontrar el trayecto que buscas. Es posible que haya sido eliminado o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando trayecto...",
+        "success": "Trayecto creado correctamente",
+        "error": "No pudimos crear el trayecto"
+      },
+      "update": {
+        "loading": "Actualizando trayecto...",
+        "success": "Trayecto actualizado correctamente",
+        "error": "No pudimos actualizar el trayecto"
+      },
+      "delete": {
+        "loading": "Eliminando trayecto...",
+        "success": "Trayecto eliminado correctamente",
+        "error": "No pudimos eliminar el trayecto"
       }
     }
   }

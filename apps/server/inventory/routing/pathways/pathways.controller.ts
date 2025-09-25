@@ -69,7 +69,7 @@ export const listPathwaysPaginated = api(
   async (
     params: PaginatedListPathwaysQueryParams,
   ): Promise<PaginatedListPathwaysResult> => {
-    return await pathwayRepository.findAllPaginated(params);
+    return await pathwayRepository.findAllPaginatedWithRelations(params);
   },
 );
 

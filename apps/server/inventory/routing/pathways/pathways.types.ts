@@ -5,6 +5,7 @@ import {
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '@/shared/types';
+import { Node } from '@/inventory/locations/nodes/nodes.types';
 
 /**
  * Base interface representing a pathway entity
@@ -51,6 +52,14 @@ export interface Pathway {
 
   /** Timestamp when the pathway was deleted */
   deletedAt: Date | string | null;
+}
+
+/**
+ * Interface for a pathway with relations
+ */
+export interface PathwayWithRelations extends Pathway {
+  origin: Node;
+  destination: Node;
 }
 
 /**
@@ -152,4 +161,5 @@ export type ListPathwaysResult = ListQueryResult<Pathway>;
 
 export type PaginatedListPathwaysQueryParams =
   PaginatedListQueryParams<Pathway>;
-export type PaginatedListPathwaysResult = PaginatedListQueryResult<Pathway>;
+export type PaginatedListPathwaysResult =
+  PaginatedListQueryResult<PathwayWithRelations>;

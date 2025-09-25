@@ -15,8 +15,10 @@ import {
   LayoutGrid,
   Map as MapIcon,
   MapPin,
+  Navigation,
   Package,
   Palette,
+  Route,
   Settings,
   Star,
   Tag,
@@ -118,16 +120,6 @@ export default function Sidebar() {
           label={tSidebar('inventory.routes')}
         />
         <SidebarLink
-          href={routes.pathways.index}
-          icon={Navigation}
-          label={tSidebar('inventory.pathways')}
-        />
-        <SidebarLink
-          href={routes.pathwayServices.index}
-          icon={Settings}
-          label={tSidebar('inventory.pathwayServices')}
-        />
-        <SidebarLink
           href={routes.services.index}
           icon={Bus}
           label={tSidebar('inventory.services')}
@@ -170,6 +162,17 @@ export default function Sidebar() {
             href={routes.chromatics.index}
             icon={Palette}
             label={tSidebar('inventory.fleet.chromatics')}
+          />
+        </SidebarSection>
+
+        <SidebarSection
+          title={tSidebar('inventory.routing.title')}
+          icon={<Route className="h-4 w-4" />}
+        >
+          <SidebarLink
+            href={routes.pathways.index}
+            icon={Navigation}
+            label={tSidebar('inventory.routing.pathways')}
           />
         </SidebarSection>
 

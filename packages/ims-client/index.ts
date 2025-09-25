@@ -9810,10 +9810,84 @@ export namespace pathways {
 
     export interface PaginatedListPathwaysResult {
         pagination: shared.PaginationMeta
-        data: Pathway[]
+        data: PathwayWithRelations[]
     }
 
     export interface Pathway {
+        /**
+         * Unique identifier for the pathway
+         */
+        id: number
+
+        /**
+         * ID of the origin node
+         */
+        originNodeId: number
+
+        /**
+         * ID of the destination node
+         */
+        destinationNodeId: number
+
+        /**
+         * ID of the origin city
+         */
+        originCityId: number
+
+        /**
+         * ID of the destination city
+         */
+        destinationCityId: number
+
+        /**
+         * Name of the pathway
+         */
+        name: string
+
+        /**
+         * Code of the pathway
+         */
+        code: string
+
+        /**
+         * Description of the pathway
+         */
+        description: string | null
+
+        /**
+         * Whether the pathway is sellable
+         */
+        isSellable: boolean
+
+        /**
+         * Whether the pathway is an empty trip
+         */
+        isEmptyTrip: boolean
+
+        /**
+         * Whether the pathway is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the pathway was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the pathway was last updated
+         */
+        updatedAt: string | string | null
+
+        /**
+         * Timestamp when the pathway was deleted
+         */
+        deletedAt: string | string | null
+    }
+
+    export interface PathwayWithRelations {
+        origin: nodes.Node
+        destination: nodes.Node
         /**
          * Unique identifier for the pathway
          */

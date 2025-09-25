@@ -32,7 +32,7 @@ describe('Audits Controller', () => {
       phone: '5551234567',
       position: 'Test Position',
       employeeId: 'EMP123',
-      isActive: true,
+      active: true,
       isSystemAdmin: false,
     };
 

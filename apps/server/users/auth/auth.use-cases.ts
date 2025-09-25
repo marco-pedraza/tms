@@ -55,7 +55,7 @@ export function createAuthUseCases() {
     }
 
     // Check if user is active
-    if (!user.isActive) {
+    if (!user.active) {
       throw errors.unauthenticated(ERROR_MESSAGES.ACCOUNT_INACTIVE);
     }
 
@@ -228,7 +228,7 @@ export function createAuthUseCases() {
       throw errors.unauthenticated('User not found');
     }
 
-    if (!user.isActive) {
+    if (!user.active) {
       throw errors.unauthenticated('User account is inactive');
     }
 

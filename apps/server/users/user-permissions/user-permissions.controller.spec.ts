@@ -48,7 +48,7 @@ describe('User Permissions Controller', () => {
     phone: '+1234567890',
     position: 'Test User',
     employeeId: 'EMP-PERM',
-    isActive: true,
+    active: true,
     isSystemAdmin: false,
   };
 

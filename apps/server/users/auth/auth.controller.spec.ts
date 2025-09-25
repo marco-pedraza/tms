@@ -37,7 +37,7 @@ describe('Auth Controller', () => {
     phone: '+1234567890',
     position: 'Auth Test User',
     employeeId: 'EMP002',
-    isActive: true,
+    active: true,
     isSystemAdmin: false,
   };
 

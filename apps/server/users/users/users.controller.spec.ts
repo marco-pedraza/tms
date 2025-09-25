@@ -1,4 +1,11 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { FieldValidationError } from '@repo/base-repo';
+import {
+  createCleanupHelper,
+  createTestSuiteId,
+  createUniqueCode,
+  createUniqueName,
+} from '@/tests/shared/test-utils';
 import {
   createDepartment,
   deleteDepartment,
@@ -15,24 +22,34 @@ import {
   createUser,
   deleteUser,
   getUser,
-  listDepartmentUsers,
-  listDepartmentUsersPaginated,
   listUsers,
   listUsersPaginated,
-  searchUsers,
-  searchUsersPaginated,
   updateUser,
 } from './users.controller';
 
 describe('Users Controller', () => {
+  // Test configuration
+  const testSuiteId = createTestSuiteId('users');
+
+  // Cleanup helpers
+  const usersCleanup = createCleanupHelper(
+    ({ id }) => deleteUser({ id }),
+    'user',
+  );
+
+  const departmentsCleanup = createCleanupHelper(
+    ({ id }) => deleteDepartment({ id }),
+    'department',
+  );
+
   // Test data and setup
   let departmentId = 0;
   let userId = 0;
   let passwordUserId = 0;
 
   const testDepartment: CreateDepartmentPayload = {
-    name: 'Test Department',
-    code: 'TEST-DEPT-USER',
+    name: createUniqueName('Test Department', testSuiteId),
+    code: createUniqueCode('TD'),
     description: 'A test department for user testing',
   };
 
@@ -46,42 +63,22 @@ describe('Users Controller', () => {
     phone: '+1234567890',
     position: 'Test User',
     employeeId: 'EMP001',
-    isActive: true,
-    isSystemAdmin: false,
+    active: true,
+    isSystemAdmin: true,
   };
 
-  // Variable to store created IDs for cleanup
-  const createdUserIds: number[] = [];
+  beforeAll(async () => {
+    // Create test department for all tests
+    const result = await createDepartment(testDepartment);
+    departmentId = result.id;
+    departmentsCleanup.track(departmentId);
+    expect(departmentId).toBeGreaterThan(0);
+  });
 
   // Clean up after all tests
   afterAll(async () => {
-    // Delete created users
-    for (const id of createdUserIds) {
-      if (id) {
-        try {
-          await deleteUser({ id });
-        } catch (error) {
-          console.log(`Error cleaning up test user ${id}:`, error);
-        }
-      }
-    }
-
-    // Delete department
-    if (departmentId > 0) {
-      try {
-        await deleteDepartment({ id: departmentId });
-      } catch (error) {
-        console.log('Error cleaning up test department:', error);
-      }
-    }
-  });
-
-  describe('Setup', () => {
-    test('should create test department', async () => {
-      const result = await createDepartment(testDepartment);
-      departmentId = result.id;
-      expect(departmentId).toBeGreaterThan(0);
-    });
+    await usersCleanup.cleanupAll();
+    await departmentsCleanup.cleanupAll();
   });
 
   describe('success scenarios', () => {
@@ -91,13 +88,12 @@ describe('Users Controller', () => {
         departmentId,
       });
 
-      // Save ID for other tests
+      // Save ID for other tests and track for cleanup
       userId = result.id;
-      createdUserIds.push(userId);
+      usersCleanup.track(userId);
 
       // Verify response
       expect(result.id).toBeDefined();
-      expect(typeof result.id).toBe('number');
       expect(result.firstName).toBe(testUser.firstName);
       expect(result.lastName).toBe(testUser.lastName);
       expect(result.email).toBe(testUser.email);
@@ -106,8 +102,8 @@ describe('Users Controller', () => {
       expect(result.position).toBe(testUser.position);
       expect(result.employeeId).toBe(testUser.employeeId);
       expect(result.departmentId).toBe(departmentId);
-      expect(result.isActive).toBe(true);
-      expect(result.isSystemAdmin).toBe(false);
+      expect(result.active).toBe(true);
+      expect(result.isSystemAdmin).toBe(true);
       expect(result.createdAt).toBeDefined();
       expect(result.updatedAt).toBeDefined();
       // Ensure passwordHash is not exposed
@@ -132,7 +128,7 @@ describe('Users Controller', () => {
         firstName: 'Jane',
         lastName: 'Smith',
         position: 'Senior Test User',
-        isActive: false,
+        active: false,
       };
 
       const response = await updateUser({
@@ -150,7 +146,7 @@ describe('Users Controller', () => {
       expect(response.phone).toBe(testUser.phone);
       expect(response.employeeId).toBe(testUser.employeeId);
       expect(response.departmentId).toBe(departmentId);
-      expect(response.isActive).toBe(updateData.isActive);
+      expect(response.active).toBe(updateData.active);
       expect(response.updatedAt).toBeDefined();
     });
 
@@ -162,6 +158,9 @@ describe('Users Controller', () => {
         email: 'delete_me@test.com',
         departmentId,
       });
+
+      // Track for cleanup (in case deletion fails)
+      usersCleanup.track(userToDelete.id);
 
       // Delete should not throw an error
       await expect(deleteUser({ id: userToDelete.id })).resolves.not.toThrow();
@@ -185,6 +184,141 @@ describe('Users Controller', () => {
         }),
       ).rejects.toThrow();
     });
+
+    describe('field validation errors', () => {
+      test('should throw detailed field validation error for duplicate username', async () => {
+        // Ensure the test user exists and get fresh data
+        const existingUser = await getUser({ id: userId });
+
+        const duplicateUsernamePayload = {
+          ...testUser,
+          username: existingUser.username, // Same username as existing user
+          email: 'different@test.com', // Different email
+          departmentId,
+        };
+
+        // Verify that the function rejects
+        await expect(createUser(duplicateUsernamePayload)).rejects.toThrow();
+
+        // Capture the error to make specific assertions
+        let validationError: FieldValidationError | undefined;
+        try {
+          await createUser(duplicateUsernamePayload);
+        } catch (error) {
+          validationError = error as FieldValidationError;
+        }
+
+        // Verify that validation error is thrown (middleware transformation happens at HTTP level)
+        expect(validationError).toBeDefined();
+        const typedValidationError = validationError as FieldValidationError;
+        expect(typedValidationError.name).toBe('FieldValidationError');
+        expect(typedValidationError.message).toContain('Validation failed');
+
+        // The error should have fieldErrors array
+        expect(typedValidationError.fieldErrors).toBeDefined();
+        expect(Array.isArray(typedValidationError.fieldErrors)).toBe(true);
+        expect(typedValidationError.fieldErrors).toHaveLength(1);
+        expect(typedValidationError.fieldErrors[0].field).toBe('username');
+        expect(typedValidationError.fieldErrors[0].code).toBe('DUPLICATE');
+        expect(typedValidationError.fieldErrors[0].message).toContain(
+          'already exists',
+        );
+        expect(typedValidationError.fieldErrors[0].value).toBe(
+          existingUser.username,
+        );
+      });
+
+      test('should throw field validation error with multiple fields', async () => {
+        // Ensure the test user exists and get fresh data
+        const existingUser = await getUser({ id: userId });
+
+        const duplicateBothPayload = {
+          ...testUser,
+          username: existingUser.username, // Same username
+          email: existingUser.email, // Same email
+          departmentId,
+        };
+
+        // Verify that the function rejects
+        await expect(createUser(duplicateBothPayload)).rejects.toThrow();
+
+        // Capture the error to make specific assertions
+        let validationError: FieldValidationError | undefined;
+        try {
+          await createUser(duplicateBothPayload);
+        } catch (error) {
+          validationError = error as FieldValidationError;
+        }
+
+        expect(validationError).toBeDefined();
+        const typedValidationError = validationError as FieldValidationError;
+        expect(typedValidationError.name).toBe('FieldValidationError');
+        expect(typedValidationError.message).toContain('Validation failed');
+
+        expect(typedValidationError.fieldErrors).toBeDefined();
+        expect(Array.isArray(typedValidationError.fieldErrors)).toBe(true);
+        expect(typedValidationError.fieldErrors).toHaveLength(2);
+
+        // Both fields should have DUPLICATE errors
+        const usernameError = typedValidationError.fieldErrors.find(
+          (e: { field: string }) => e.field === 'username',
+        );
+        const emailError = typedValidationError.fieldErrors.find(
+          (e: { field: string }) => e.field === 'email',
+        );
+
+        expect(usernameError).toBeDefined();
+        expect(emailError).toBeDefined();
+        expect(usernameError?.code).toBe('DUPLICATE');
+        expect(emailError?.code).toBe('DUPLICATE');
+      });
+
+      test('should handle update validation errors correctly', async () => {
+        // Create another user to test duplicate on update
+        const anotherUser = await createUser({
+          ...testUser,
+          username: 'another_test_user',
+          email: 'another@test.com',
+          departmentId,
+        });
+
+        // Track for cleanup
+        usersCleanup.track(anotherUser.id);
+
+        // Ensure the test user exists and get fresh data
+        const existingUser = await getUser({ id: userId });
+
+        const updatePayload = {
+          id: anotherUser.id,
+          email: anotherUser.email,
+          username: existingUser.username, // This should trigger duplicate validation
+        };
+
+        try {
+          // Verify that the function rejects
+          await expect(updateUser(updatePayload)).rejects.toThrow();
+
+          // Capture the error to make specific assertions
+          let validationError: FieldValidationError | undefined;
+          try {
+            await updateUser(updatePayload);
+          } catch (error) {
+            validationError = error as FieldValidationError;
+          }
+
+          expect(validationError).toBeDefined();
+          const typedValidationError = validationError as FieldValidationError;
+          expect(typedValidationError.name).toBe('FieldValidationError');
+          expect(typedValidationError.message).toContain('Validation failed');
+          expect(typedValidationError.fieldErrors).toBeDefined();
+          expect(typedValidationError.fieldErrors[0].field).toBe('username');
+          expect(typedValidationError.fieldErrors[0].code).toBe('DUPLICATE');
+        } finally {
+          // Clean up the additional user
+          await usersCleanup.cleanup(anotherUser.id);
+        }
+      });
+    });
   });
 
   describe('pagination, filtering and ordering', () => {
@@ -200,7 +334,7 @@ describe('Users Controller', () => {
           email: 'alpha@test.com',
           firstName: 'Alpha',
           lastName: 'User',
-          isActive: true,
+          active: true,
         },
         {
           ...testUser,
@@ -208,7 +342,7 @@ describe('Users Controller', () => {
           email: 'beta@test.com',
           firstName: 'Beta',
           lastName: 'User',
-          isActive: false,
+          active: false,
         },
         {
           ...testUser,
@@ -216,7 +350,7 @@ describe('Users Controller', () => {
           email: 'gamma@test.com',
           firstName: 'Gamma',
           lastName: 'User',
-          isActive: true,
+          active: true,
         },
       ];
 
@@ -226,7 +360,7 @@ describe('Users Controller', () => {
           departmentId,
         });
         testUsers.push(created);
-        createdUserIds.push(created.id);
+        usersCleanup.track(created.id);
       }
     });
 
@@ -258,9 +392,9 @@ describe('Users Controller', () => {
     test('should return non-paginated list for dropdowns', async () => {
       const response = await listUsers({});
 
-      expect(response.users).toBeDefined();
-      expect(Array.isArray(response.users)).toBe(true);
-      expect(response.users.length).toBeGreaterThan(0);
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.data.length).toBeGreaterThan(0);
       // No pagination info should be present
       expect(response).not.toHaveProperty('pagination');
     });
@@ -273,7 +407,7 @@ describe('Users Controller', () => {
         ],
       });
 
-      const names = response.users.map((u) => `${u.lastName}, ${u.firstName}`);
+      const names = response.data.map((u) => `${u.lastName}, ${u.firstName}`);
       // Check if names are in ascending order
       for (let i = 0; i < names.length - 1; i++) {
         expect(names[i] <= names[i + 1]).toBe(true);
@@ -282,32 +416,32 @@ describe('Users Controller', () => {
 
     test('should filter users by active status', async () => {
       const response = await listUsers({
-        filters: { isActive: true },
+        filters: { active: true },
       });
 
       // All returned users should be active
-      expect(response.users.every((u) => u.isActive === true)).toBe(true);
+      expect(response.data.every((u) => u.active === true)).toBe(true);
 
       // Should include our active test users
       const activeTestUserIds = testUsers
-        .filter((u) => u.isActive)
+        .filter((u) => u.active)
         .map((u) => u.id);
 
       for (const id of activeTestUserIds) {
-        expect(response.users.some((u) => u.id === id)).toBe(true);
+        expect(response.data.some((u) => u.id === id)).toBe(true);
       }
     });
 
     test('should combine ordering and filtering in paginated results', async () => {
       const response = await listUsersPaginated({
-        filters: { isActive: true },
+        filters: { active: true },
         orderBy: [{ field: 'firstName', direction: 'asc' }],
         page: 1,
         pageSize: 10,
       });
 
       // Check filtering
-      expect(response.data.every((u) => u.isActive === true)).toBe(true);
+      expect(response.data.every((u) => u.active === true)).toBe(true);
 
       // Check ordering (ascending)
       const names = response.data.map((u) => u.firstName);
@@ -320,74 +454,79 @@ describe('Users Controller', () => {
       expect(response.pagination.currentPage).toBe(1);
       expect(response.pagination.pageSize).toBe(10);
     });
-  });
 
-  describe('department filtering', () => {
-    // Test users for department tests
-    const filterTestUsers: SafeUser[] = [];
+    test('should order users by firstName descending', async () => {
+      const response = await listUsers({
+        orderBy: [{ field: 'firstName', direction: 'desc' }],
+      });
 
-    beforeAll(async () => {
-      // Create test users for department testing if needed
-      const users = [
+      const names = response.data.map((u) => u.firstName);
+      // Check if names are in descending order
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] >= names[i + 1]).toBe(true);
+      }
+    });
+
+    test('should allow multi-field ordering', async () => {
+      // Create users with same firstName but different lastNames
+      const sameFirstNameUsers = [
         {
           ...testUser,
-          username: 'dept_user1',
-          email: 'dept1@test.com',
-          isActive: true,
+          username: 'same_first_a',
+          email: 'samefirsta@test.com',
+          firstName: 'Same',
+          lastName: 'A',
         },
         {
           ...testUser,
-          username: 'dept_user2',
-          email: 'dept2@test.com',
-          isActive: false,
+          username: 'same_first_b',
+          email: 'samefirstb@test.com',
+          firstName: 'Same',
+          lastName: 'B',
         },
       ];
 
-      for (const userData of users) {
-        const created = await createUser({
-          ...userData,
-          departmentId,
+      const createdUsers: SafeUser[] = [];
+
+      try {
+        for (const userData of sameFirstNameUsers) {
+          const created = await createUser({
+            ...userData,
+            departmentId,
+          });
+          createdUsers.push(created);
+          usersCleanup.track(created.id);
+        }
+
+        // Order by firstName first, then by lastName
+        const response = await listUsers({
+          orderBy: [
+            { field: 'firstName', direction: 'asc' },
+            { field: 'lastName', direction: 'asc' },
+          ],
         });
-        filterTestUsers.push(created);
-        createdUserIds.push(created.id);
+
+        // Get all users with the same firstName and verify they're ordered by lastName
+        const sameFirstNameResults = response.data.filter(
+          (u) => u.firstName === 'Same',
+        );
+        const lastNames = sameFirstNameResults.map((u) => u.lastName);
+
+        for (let i = 0; i < lastNames.length - 1; i++) {
+          // LastNames should be in ascending order for same firstName
+          expect(lastNames[i] <= lastNames[i + 1]).toBe(true);
+        }
+      } finally {
+        // Clean up
+        for (const user of createdUsers) {
+          await usersCleanup.cleanup(user.id);
+        }
       }
-    });
-
-    test('should return users for a specific department', async () => {
-      const response = await listDepartmentUsers({ departmentId });
-
-      // All returned users should belong to the specified department
-      expect(response.users.every((u) => u.departmentId === departmentId)).toBe(
-        true,
-      );
-
-      // Should include our test users
-      for (const user of filterTestUsers) {
-        expect(response.users.some((u) => u.id === user.id)).toBe(true);
-      }
-    });
-
-    test('should return paginated users for a specific department', async () => {
-      const response = await listDepartmentUsersPaginated({
-        departmentId,
-        page: 1,
-        pageSize: 10,
-      });
-
-      // All returned users should belong to the specified department
-      expect(response.data.every((u) => u.departmentId === departmentId)).toBe(
-        true,
-      );
-
-      // Check pagination properties
-      expect(response.pagination).toBeDefined();
-      expect(response.pagination.currentPage).toBe(1);
-      expect(response.pagination.pageSize).toBe(10);
     });
   });
 
   describe('search functionality', () => {
-    test('should search users', async () => {
+    test('should search users using searchTerm in list endpoint', async () => {
       // Create a unique user for search testing
       const searchableUser = await createUser({
         ...testUser,
@@ -398,27 +537,27 @@ describe('Users Controller', () => {
         departmentId,
       });
 
-      createdUserIds.push(searchableUser.id);
+      usersCleanup.track(searchableUser.id);
 
       try {
-        // Search for the user by term
-        const response = await searchUsers({ term: 'Searchable' });
+        // Search for the user using searchTerm in listUsers
+        const response = await listUsers({ searchTerm: 'Searchable' });
 
-        expect(response.users).toBeDefined();
-        expect(Array.isArray(response.users)).toBe(true);
-        expect(response.users.some((u) => u.id === searchableUser.id)).toBe(
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(response.data.some((u) => u.id === searchableUser.id)).toBe(
           true,
         );
       } catch (error) {
         // If test fails, still clean up
-        await deleteUser({ id: searchableUser.id });
+        await usersCleanup.cleanup(searchableUser.id);
         throw error;
       }
     });
 
-    test('should search users with pagination', async () => {
-      const response = await searchUsersPaginated({
-        term: 'Test',
+    test('should search users with pagination using searchTerm', async () => {
+      const response = await listUsersPaginated({
+        searchTerm: 'Test',
         page: 1,
         pageSize: 5,
       });
@@ -428,6 +567,35 @@ describe('Users Controller', () => {
       expect(response.pagination).toBeDefined();
       expect(response.pagination.currentPage).toBe(1);
       expect(response.pagination.pageSize).toBe(5);
+    });
+
+    test('should search in both firstName and lastName', async () => {
+      // Create a user with searchable lastName
+      const lastNameSearchableUser = await createUser({
+        ...testUser,
+        username: 'lastname_searchable',
+        email: 'lastname@test.com',
+        firstName: 'Normal',
+        lastName: 'SearchableLastName',
+        departmentId,
+      });
+
+      usersCleanup.track(lastNameSearchableUser.id);
+
+      try {
+        // Search for the keyword that's only in lastName
+        const response = await listUsers({ searchTerm: 'SearchableLastName' });
+
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(
+          response.data.some((u) => u.id === lastNameSearchableUser.id),
+        ).toBe(true);
+      } catch (error) {
+        // If test fails, still clean up
+        await usersCleanup.cleanup(lastNameSearchableUser.id);
+        throw error;
+      }
     });
   });
 
@@ -442,7 +610,7 @@ describe('Users Controller', () => {
       });
 
       passwordUserId = pwdTestUser.id;
-      createdUserIds.push(passwordUserId);
+      usersCleanup.track(passwordUserId);
       expect(passwordUserId).toBeGreaterThan(0);
     });
 

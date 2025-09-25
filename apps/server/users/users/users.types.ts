@@ -1,6 +1,10 @@
-// API types
 import { MatchesRegexp, MinLen } from 'encore.dev/validate';
-import { PaginatedResult, PaginationParams } from '@/shared/types';
+import {
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '@/shared/types';
 
 /**
  * Base interface representing a user entity
@@ -43,7 +47,7 @@ export interface User {
   lastLogin: Date | string | null;
 
   /** Whether the user is currently active */
-  isActive: boolean;
+  active: boolean;
 
   /** Whether the user is a system-wide admin */
   isSystemAdmin: boolean;
@@ -79,8 +83,7 @@ export interface CreateUserPayload {
    * Email address of the user
    * Must be a valid email format
    */
-  email: string &
-    MatchesRegexp<'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'>;
+  email: string & MatchesRegexp<'^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$'>;
 
   /**
    * Password for the user
@@ -120,7 +123,7 @@ export interface CreateUserPayload {
    * Whether the user is currently active
    * @default true
    */
-  isActive?: boolean;
+  active?: boolean;
 
   /**
    * Whether the user is a system-wide admin
@@ -142,8 +145,7 @@ export interface UpdateUserPayload {
    * Email address of the user
    * Must be a valid email format
    */
-  email?: string &
-    MatchesRegexp<'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'>;
+  email?: string & MatchesRegexp<'^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$'>;
 
   /**
    * First name of the user
@@ -175,7 +177,7 @@ export interface UpdateUserPayload {
   /**
    * Whether the user is currently active
    */
-  isActive?: boolean;
+  active?: boolean;
 
   /**
    * Whether the user is a system-wide admin
@@ -207,16 +209,8 @@ export interface Users {
   users: SafeUser[];
 }
 
-export interface UsersQueryOptions {
-  orderBy?: { field: keyof User; direction: 'asc' | 'desc' }[];
-  filters?: Partial<SafeUser>;
-}
+export type ListUsersQueryParams = ListQueryParams<SafeUser>;
+export type ListUsersResult = ListQueryResult<SafeUser>;
 
-/**
- * Paginated response type for the list users endpoint
- */
-export type PaginatedUsers = PaginatedResult<SafeUser>;
-
-export interface PaginationParamsUsers
-  extends PaginationParams,
-    UsersQueryOptions {}
+export type PaginatedListUsersQueryParams = PaginatedListQueryParams<SafeUser>;
+export type PaginatedListUsersResult = PaginatedListQueryResult<SafeUser>;

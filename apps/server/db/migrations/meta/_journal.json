@@ -379,6 +379,13 @@
       "when": 1758135275726,
       "tag": "20250917185435_remove_tenant",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1758726292642,
+      "tag": "20250924150452_update_users_columns",
+      "breakpoints": true
     }
   ]
 }

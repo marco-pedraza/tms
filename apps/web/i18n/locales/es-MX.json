@@ -193,7 +193,8 @@
       "driver": "Conductor",
       "timeOff": "Período de Ausencia",
       "technology": "Tecnología",
-      "chromatic": "Esquema Cromático"
+      "chromatic": "Esquema Cromático",
+      "pathway": "Trayecto"
     },
     "fields": {
       "name": "Nombre",
@@ -1854,7 +1855,8 @@
     "actions": {
       "create": "Crear Trayecto",
       "update": "Actualizar Trayecto",
-      "backToList": "Volver a trayectos"
+      "backToList": "Volver a trayectos",
+      "regenerateName": "Regenerar Nombre"
     },
     "fields": {
       "name": "Nombre",
@@ -1871,9 +1873,13 @@
     "form": {
       "title": "Información del trayecto",
       "placeholders": {
-        "name": "Ej: Guadalajara - León",
-        "code": "Ej: GDL-LEO",
-        "description": "Ej: Trayecto directo sin escalas",
+        "code": "Código automático basado en los nodos seleccionados",
+        "name": "Nombre automatico basado en los nodos seleccionados",
+        "origin": "Nodo de origen",
+        "destination": "Nodo de destino",
+        "isEmptyTrip": "Trayecto vacío",
+        "isSellable": "Trayecto vendible",
+        "description": "Descripción opcional del trayecto",
         "emptyOptionsLabel": "No hay trayectos disponibles"
       },
       "sections": {

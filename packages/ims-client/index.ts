@@ -3339,7 +3339,7 @@ export namespace inventory {
     /**
      * Description of the pathway
      */
-    description?: string
+    description?: string | null
 
     /**
      * Whether the pathway is sellable
@@ -9736,7 +9736,7 @@ export namespace pathways {
         /**
          * Description of the pathway
          */
-        description?: string
+        description?: string | null
 
         /**
          * Whether the pathway is sellable

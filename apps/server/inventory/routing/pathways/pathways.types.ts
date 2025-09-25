@@ -93,7 +93,7 @@ export interface CreatePathwayPayload {
   /**
    * Description of the pathway
    */
-  description?: string;
+  description?: string | null;
 
   /**
    * Whether the pathway is sellable
@@ -138,7 +138,7 @@ export interface UpdatePathwayPayload {
   /**
    * Description of the pathway
    */
-  description?: string;
+  description?: string | null;
 
   /**
    * Whether the pathway is sellable

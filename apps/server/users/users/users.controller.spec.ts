@@ -17,6 +17,7 @@ import type {
   SafeUser,
   UpdateUserPayload,
 } from './users.types';
+import { userRepository } from './users.repository';
 import {
   changePassword,
   createUser,
@@ -33,7 +34,7 @@ describe('Users Controller', () => {
 
   // Cleanup helpers
   const usersCleanup = createCleanupHelper(
-    ({ id }) => deleteUser({ id }),
+    ({ id }) => userRepository.forceDelete(id),
     'user',
   );
 

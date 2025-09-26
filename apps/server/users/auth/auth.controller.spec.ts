@@ -4,7 +4,8 @@ import {
   deleteDepartment,
 } from '../departments/departments.controller';
 import type { CreateDepartmentPayload } from '../departments/departments.types';
-import { createUser, deleteUser } from '../users/users.controller';
+import { createUser } from '../users/users.controller';
+import { userRepository } from '../users/users.repository';
 import type { CreateUserPayload } from '../users/users.types';
 import type {
   LoginPayload,
@@ -98,7 +99,7 @@ describe('Auth Controller', () => {
         // 2. Now delete the user
         if (userId > 0) {
           try {
-            await deleteUser({ id: userId });
+            await userRepository.forceDelete(userId);
           } catch {
             // Ignore errors
           }
@@ -221,7 +222,7 @@ describe('Auth Controller', () => {
 
         if (userId > 0)
           try {
-            await deleteUser({ id: userId });
+            await userRepository.forceDelete(userId);
           } catch {
             /* Ignore errors */
           }
@@ -336,7 +337,7 @@ describe('Auth Controller', () => {
 
         if (userId > 0)
           try {
-            await deleteUser({ id: userId });
+            await userRepository.forceDelete(userId);
           } catch {
             /* Ignore errors */
           }
@@ -427,7 +428,7 @@ describe('Auth Controller', () => {
 
         if (userId > 0)
           try {
-            await deleteUser({ id: userId });
+            await userRepository.forceDelete(userId);
           } catch {
             /* Ignore errors */
           }

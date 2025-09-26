@@ -5,6 +5,7 @@ import {
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '@/shared/types';
+import type { Department } from '../departments/departments.types';
 
 /**
  * Base interface representing a user entity
@@ -63,6 +64,14 @@ export interface User {
  * User without sensitive information for API responses
  */
 export type SafeUser = Omit<User, 'passwordHash'>;
+
+/**
+ * User with department information for API responses
+ */
+export interface UserWithDepartment extends SafeUser {
+  /** Department information */
+  department: Department;
+}
 
 /**
  * Input for creating a new user

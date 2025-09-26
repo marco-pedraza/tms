@@ -11,7 +11,8 @@ import {
 import type { CreatePermissionPayload } from '../permissions/permissions.types';
 import { createRole, deleteRole } from '../roles/roles.controller';
 import type { CreateRolePayload } from '../roles/roles.types';
-import { createUser, deleteUser } from '../users/users.controller';
+import { createUser } from '../users/users.controller';
+import { userRepository } from '../users/users.repository';
 import type { CreateUserPayload } from '../users/users.types';
 import type {
   AssignPermissionsToUserPayload,
@@ -72,7 +73,7 @@ describe('User Permissions Controller', () => {
   // Clean up after all tests
   afterAll(async () => {
     if (userId > 0) {
-      await deleteUser({ id: userId });
+      await userRepository.forceDelete(userId);
     }
     if (roleId > 0) {
       await deleteRole({ id: roleId });

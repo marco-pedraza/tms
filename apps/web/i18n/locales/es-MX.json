@@ -168,6 +168,14 @@
     "phone": {
       "invalid": "El teléfono no es válido."
     },
+    "username": {
+      "minLength": "El nombre de usuario debe tener al menos {length} caracteres.",
+      "maxLength": "El nombre de usuario no puede tener más de {length} caracteres.",
+      "format": "El nombre de usuario solo puede contener letras, números, puntos, guiones y guiones bajos."
+    },
+    "password": {
+      "minLength": "La contraseña debe tener al menos {length} caracteres."
+    },
     "atLeastOneSeat": "Debe haber al menos un asiento (izquierdo o derecho).",
     "server": {
       "duplicate": "Ya existe un registro de {entity} con {property}: \"{value}\".",
@@ -194,6 +202,7 @@
       "timeOff": "Período de Ausencia",
       "technology": "Tecnología",
       "chromatic": "Esquema Cromático",
+      "user": "Usuario",
       "pathway": "Trayecto"
     },
     "fields": {
@@ -253,9 +262,93 @@
       "busModels": "Modelos de Autobús",
       "buses": "Autobuses"
     },
+    "users": {
+      "title": "Organización",
+      "users": "Usuarios"
+    },
     "planning": {
       "title": "Planeación",
       "busPlans": "Roles"
+    }
+  },
+  "users": {
+    "title": "Usuarios",
+    "description": "Administra información de usuarios del sistema",
+    "actions": {
+      "create": "Crear Usuario",
+      "update": "Actualizar Usuario",
+      "backToList": "Volver a usuarios"
+    },
+    "fields": {
+      "username": "Usuario",
+      "email": "Correo Electrónico",
+      "firstName": "Nombre",
+      "lastName": "Apellidos",
+      "password": "Contraseña",
+      "fullName": "Nombre Completo",
+      "position": "Posición",
+      "employeeId": "ID de Empleado",
+      "phone": "Teléfono",
+      "role": "Rol",
+      "department": "Departamento",
+      "lastLogin": "Último Acceso",
+      "isSystemAdmin": "Administrador del Sistema"
+    },
+    "roles": {
+      "admin": "Administrador",
+      "user": "Usuario"
+    },
+    "form": {
+      "title": "Información del usuario",
+      "placeholders": {
+        "username": "Ej: juan.perez",
+        "email": "Ej: juan.perez@empresa.com",
+        "firstName": "Ej: Juan",
+        "lastName": "Ej: Pérez",
+        "position": "Ej: Coordinador de inventario",
+        "employeeId": "Ej: EMP001",
+        "phone": "Ej: +52 (33) 1234-5678",
+        "password": "Ingresa una contraseña",
+        "department": "Selecciona un departamento",
+        "emptyDepartmentsList": "No hay departamentos disponibles"
+      },
+      "descriptions": {
+        "isSystemAdmin": "Concede privilegios de administrador del sistema"
+      }
+    },
+    "details": {
+      "title": "Detalles del Usuario",
+      "description": "Detalles del usuario"
+    },
+    "sections": {
+      "basicInfo": "Información Básica",
+      "systemInfo": "Información del Sistema"
+    },
+    "edit": {
+      "title": "Editar Usuario"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Usuario no encontrado",
+        "description": "No pudimos encontrar el usuario que buscas. Es posible que haya sido eliminado o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando usuario...",
+        "success": "Usuario creado correctamente",
+        "error": "No pudimos crear el usuario"
+      },
+      "update": {
+        "loading": "Actualizando usuario...",
+        "success": "Usuario actualizado correctamente",
+        "error": "No pudimos actualizar el usuario"
+      },
+      "delete": {
+        "loading": "Eliminando usuario...",
+        "success": "Usuario eliminado correctamente",
+        "error": "No pudimos eliminar el usuario"
+      }
     }
   },
   "countries": {

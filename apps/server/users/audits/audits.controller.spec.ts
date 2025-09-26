@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { createDepartment } from '../departments/departments.controller';
-import { createUser, deleteUser } from '../users/users.controller';
+import { createUser } from '../users/users.controller';
+import { userRepository } from '../users/users.repository';
 import { CreateUserPayload } from '../users/users.types';
 import { auditsRepository } from './audits.repository';
 import { listAuditsPaginated } from './audits.controller';
@@ -85,7 +86,7 @@ describe('Audits Controller', () => {
     // Clean up test user after audits are deleted
     if (testUserId) {
       try {
-        await deleteUser({ id: testUserId });
+        await userRepository.forceDelete(testUserId);
       } catch (error) {
         console.log('Error cleaning up test user:', error);
       }

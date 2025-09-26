@@ -36,6 +36,7 @@ export interface Routes {
   seatDiagrams: CrudRoute;
   technologies: CrudRoute;
   chromatics: CrudRoute;
+  users: CrudRoute;
 }
 
 const routes: Routes = {
@@ -171,6 +172,12 @@ const routes: Routes = {
     new: '/chromatics/new',
     getDetailsRoute: (id: string) => `/chromatics/${id}`,
     getEditRoute: (id: string) => `/chromatics/${id}/edit`,
+  },
+  users: {
+    index: '/users',
+    new: '/users/new',
+    getDetailsRoute: (id: string) => `/users/${id}`,
+    getEditRoute: (id: string) => `/users/${id}/edit`,
   },
 };
 

@@ -12,6 +12,7 @@ import {
   Cpu,
   Flag,
   Globe,
+  House,
   LayoutGrid,
   Map as MapIcon,
   MapPin,
@@ -23,6 +24,7 @@ import {
   Star,
   Tag,
   Truck,
+  UserRoundSearch,
   Users,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -199,6 +201,18 @@ export default function Sidebar() {
           label={tSidebar('planning.busPlans')}
         />
       </SidebarSection> */}
+
+      <SidebarSection
+        title={tSidebar('users.title')}
+        icon={<House className="h-4 w-4" />}
+        defaultOpen={true}
+      >
+        <SidebarLink
+          href={routes.users.index}
+          icon={UserRoundSearch}
+          label={tSidebar('users.users')}
+        />
+      </SidebarSection>
     </nav>
   );
 }

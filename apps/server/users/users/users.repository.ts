@@ -1,5 +1,6 @@
 import { secret } from 'encore.dev/config';
-import { createBaseRepository } from '@repo/base-repo';
+import { and, eq, isNull } from 'drizzle-orm';
+import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { hashPassword, omitPasswordHash } from '@/shared/auth-utils';
 import { db } from '../db-service';
 import { users } from './users.schema';
@@ -11,6 +12,7 @@ import type {
   SafeUser,
   UpdateUserPayload,
   User,
+  UserWithDepartment,
 } from './users.types';
 
 // Get salt rounds from Encore secret
@@ -38,6 +40,7 @@ export function createUserRepository() {
       users.username,
       users.employeeId,
     ],
+    softDeleteEnabled: true,
   });
 
   /**
@@ -71,13 +74,28 @@ export function createUserRepository() {
   }
 
   /**
-   * Finds a user by ID
+   * Finds a user by ID including department information
    * @param id User ID
-   * @returns User (without password hash)
+   * @returns User with department information (without password hash)
    */
-  async function findOne(id: number): Promise<SafeUser> {
-    const user = await baseRepository.findOne(id);
-    return await Promise.resolve(omitPasswordHash(user));
+  async function findOne(id: number): Promise<UserWithDepartment> {
+    const result = await db.query.users.findFirst({
+      where: and(eq(users.id, id), isNull(users.deletedAt)),
+      with: {
+        department: true,
+      },
+    });
+
+    if (!result) {
+      throw new NotFoundError(`User with id ${id} not found`);
+    }
+
+    const { department, ...userWithoutDepartment } = result;
+    const safeUser = omitPasswordHash(userWithoutDepartment as User);
+    return {
+      ...safeUser,
+      department,
+    };
   }
 
   /**

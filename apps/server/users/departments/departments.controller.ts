@@ -44,7 +44,7 @@ export const getDepartment = api(
  * @throws {APIError} If retrieval fails
  */
 export const listDepartments = api(
-  { method: 'POST', path: '/get-departments', expose: true, auth: true },
+  { method: 'POST', path: '/get-departments', expose: true, auth: false },
   async (params: DepartmentsQueryOptions): Promise<Departments> => {
     const departments = await departmentRepository.findAll(params);
     return { departments };

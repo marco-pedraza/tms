@@ -3879,6 +3879,29 @@ export namespace users {
         updatedAt: string | string | null
     }
 
+    export interface UserWithDepartment {
+        /**
+         * Department information
+         */
+        department: departments.Department
+
+        id: number
+        departmentId: number
+        username: string
+        email: string
+        firstName: string
+        lastName: string
+        phone: string | null
+        position: string | null
+        employeeId: string | null
+        mfaSettings: { [key: string]: any } | null
+        lastLogin: string | string | null
+        active: boolean
+        isSystemAdmin: boolean
+        createdAt: string | string | null
+        updatedAt: string | string | null
+    }
+
     export class ServiceClient {
         private baseClient: BaseClient
 
@@ -4235,13 +4258,13 @@ export namespace users {
          * Retrieves a user by its ID.
          * @param params - Object containing the user ID
          * @param params.id - The ID of the user to retrieve
-         * @returns {Promise<SafeUser>} The found user (without password hash)
+         * @returns {Promise<UserWithDepartment>} The found user with department information
          * @throws {APIError} If the user is not found or retrieval fails
          */
-        public async getUser(id: number): Promise<SafeUser> {
+        public async getUser(id: number): Promise<UserWithDepartment> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/users/${encodeURIComponent(id)}`)
-            return await resp.json() as SafeUser
+            return await resp.json() as UserWithDepartment
         }
 
         /**

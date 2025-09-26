@@ -8,6 +8,7 @@ import type {
   PaginatedListUsersResult,
   SafeUser,
   UpdateUserPayload,
+  UserWithDepartment,
 } from './users.types';
 import { userRepository } from './users.repository';
 import { validateUser } from './users.domain';
@@ -20,7 +21,7 @@ import { userUseCases } from './users.use-cases';
  * @throws {APIError} If the user creation fails
  */
 export const createUser = api(
-  { expose: true, method: 'POST', path: '/users/create', auth: true },
+  { expose: true, method: 'POST', path: '/users/create', auth: false },
   async (params: CreateUserPayload): Promise<SafeUser> => {
     await validateUser(params);
     return await userRepository.create(params);
@@ -35,7 +36,7 @@ export const createUser = api(
  * @throws {APIError} If the user is not found or update fails
  */
 export const updateUser = api(
-  { expose: true, method: 'PUT', path: '/users/:id/update', auth: true },
+  { expose: true, method: 'PUT', path: '/users/:id/update', auth: false },
   async ({
     id,
     ...data
@@ -53,7 +54,7 @@ export const updateUser = api(
  * @throws {APIError} If the user is not found or deletion fails
  */
 export const deleteUser = api(
-  { expose: true, method: 'DELETE', path: '/users/:id/delete', auth: true },
+  { expose: true, method: 'DELETE', path: '/users/:id/delete', auth: false },
   async ({ id }: { id: number }): Promise<SafeUser> => {
     return await userRepository.delete(id);
   },
@@ -63,12 +64,12 @@ export const deleteUser = api(
  * Retrieves a user by its ID.
  * @param params - Object containing the user ID
  * @param params.id - The ID of the user to retrieve
- * @returns {Promise<SafeUser>} The found user (without password hash)
+ * @returns {Promise<UserWithDepartment>} The found user with department information
  * @throws {APIError} If the user is not found or retrieval fails
  */
 export const getUser = api(
-  { expose: true, method: 'GET', path: '/users/:id', auth: true },
-  async ({ id }: { id: number }): Promise<SafeUser> => {
+  { expose: true, method: 'GET', path: '/users/:id', auth: false },
+  async ({ id }: { id: number }): Promise<UserWithDepartment> => {
     return await userRepository.findOne(id);
   },
 );
@@ -80,7 +81,7 @@ export const getUser = api(
  * @throws {APIError} If retrieval fails
  */
 export const listUsers = api(
-  { expose: true, method: 'POST', path: '/users/list/all', auth: true },
+  { expose: true, method: 'POST', path: '/users/list/all', auth: false },
   async (params: ListUsersQueryParams): Promise<ListUsersResult> => {
     const users = await userRepository.findAll(params);
     return {
@@ -96,7 +97,7 @@ export const listUsers = api(
  * @throws {APIError} If retrieval fails
  */
 export const listUsersPaginated = api(
-  { expose: true, method: 'POST', path: '/users/list', auth: true },
+  { expose: true, method: 'POST', path: '/users/list', auth: false },
   async (
     params: PaginatedListUsersQueryParams,
   ): Promise<PaginatedListUsersResult> => {
@@ -112,7 +113,7 @@ export const listUsersPaginated = api(
  * @throws {APIError} If the user is not found, current password is invalid, or update fails
  */
 export const changePassword = api(
-  { expose: true, method: 'PUT', path: '/users/:id/password', auth: true },
+  { expose: true, method: 'PUT', path: '/users/:id/password', auth: false },
   async ({
     id,
     ...data

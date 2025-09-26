@@ -7,3 +7,8 @@ node_modules
 # Coverage reports
 coverage/
 *.lcov
+
+# Postman Generator Output
+tools/postman-generator/output/
+*.postman_collection.json
+*.postman_environment.json

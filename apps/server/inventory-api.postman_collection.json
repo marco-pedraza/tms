@@ -1,0 +1,3487 @@
+{
+  "info": {
+    "name": "inventory API",
+    "description": "Generated API collection for /Users/helios/reservamos/ims/apps/server/inventory",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "busDiagramModelId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "driverId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "seatDiagramId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "cityId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "pathwayId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "optionId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "inventory",
+      "item": [
+        {
+          "name": "fleet",
+          "item": [
+            {
+              "name": "bus-diagram-model-zones",
+              "item": [
+                {
+                  "name": "Create Bus Diagram Model Zone",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/bus-diagram-models/{{busDiagramModelId}}/zones",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"rowNumbers\": [0],\n  \"priceMultiplier\": 0 //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Bus Diagram Model Zone",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/bus-diagram-models/{{busDiagramModelId}}/zones/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Zones By Diagram Model",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/bus-diagram-models/{{busDiagramModelId}}/get-zones",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":null,\"direction\":\"asc\"}], //optional\n  \"filters\": null //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Zones By Diagram Model (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/bus-diagram-models/{{busDiagramModelId}}/get-zones/paginated",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Bus Diagram Model Zone",
+                  "request": {
+                    "method": "PATCH",
+                    "url": "{{base_url}}/bus-diagram-models/{{busDiagramModelId}}/zones/{{id}}",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"rowNumbers\": [0], //optional\n  \"priceMultiplier\": 0 //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Bus Diagram Model Zone",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/bus-diagram-models/{{busDiagramModelId}}/zones/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "bus-diagram-models",
+              "item": [
+                {
+                  "name": "Create Bus Diagram Model",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/bus-diagram-models/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"description\": \"\", //optional\n  \"maxCapacity\": 0,\n  \"numFloors\": 0,\n  \"seatsPerFloor\": [null],\n  \"totalSeats\": 0,\n  \"isFactoryDefault\": false, //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Bus Diagram Model",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/bus-diagram-models/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Bus Diagram Models",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/bus-diagram-models/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"description\":\"\",\"maxCapacity\":0,\"numFloors\":0,\"seatsPerFloor\":[null],\"totalSeats\":0,\"isFactoryDefault\":false,\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Bus Diagram Models (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/bus-diagram-models/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"description\":\"\",\"maxCapacity\":0,\"numFloors\":0,\"seatsPerFloor\":[null],\"totalSeats\":0,\"isFactoryDefault\":false,\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Bus Diagram Model",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/bus-diagram-models/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"description\": \"\", //optional\n  \"maxCapacity\": 0, //optional\n  \"numFloors\": 0, //optional\n  \"seatsPerFloor\": [null], //optional\n  \"totalSeats\": 0, //optional\n  \"isFactoryDefault\": false, //optional\n  \"active\": false, //optional\n  \"regenerateSeats?\": false\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Bus Diagram Model",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/bus-diagram-models/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Seat Configuration",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/bus-diagram-models/{{id}}/seats/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Bus Diagram Model Seats",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/bus-diagram-models/{{id}}/seats/list",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Regenerate Seats",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/bus-diagram-models/{{id}}/seats/regenerate",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "bus-models",
+              "item": [
+                {
+                  "name": "Create Bus Model",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/bus-models/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"defaultBusDiagramModelId\": 0,\n  \"manufacturer\": \"\",\n  \"model\": \"\",\n  \"year\": 0,\n  \"seatingCapacity\": 0,\n  \"trunkCapacity\": 0, //optional\n  \"fuelEfficiency\": 0, //optional\n  \"maxCapacity\": 0, //optional\n  \"numFloors\": 0,\n  \"amenities\": [\"\"], //optional\n  \"engineType\": null,\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Bus Model",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/bus-models/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Bus Models",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/bus-models/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"defaultBusDiagramModelId\":0,\"manufacturer\":\"\",\"model\":\"\",\"year\":0,\"seatingCapacity\":0,\"trunkCapacity\":0,\"fuelEfficiency\":0,\"maxCapacity\":0,\"numFloors\":0,\"amenities\":[\"\"],\"engineType\":null,\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Bus Models (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/bus-models/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"defaultBusDiagramModelId\":0,\"manufacturer\":\"\",\"model\":\"\",\"year\":0,\"seatingCapacity\":0,\"trunkCapacity\":0,\"fuelEfficiency\":0,\"maxCapacity\":0,\"numFloors\":0,\"amenities\":[\"\"],\"engineType\":null,\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Bus Model",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/bus-models/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"defaultBusDiagramModelId\": 0, //optional\n  \"manufacturer\": \"\", //optional\n  \"model\": \"\", //optional\n  \"year\": 0, //optional\n  \"seatingCapacity\": 0, //optional\n  \"trunkCapacity\": 0, //optional\n  \"fuelEfficiency\": 0, //optional\n  \"maxCapacity\": 0, //optional\n  \"numFloors\": 0, //optional\n  \"amenities\": [\"\"], //optional\n  \"engineType\": null, //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Bus Model",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/bus-models/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "buses",
+              "item": [
+                {
+                  "name": "Create Bus",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/buses/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"economicNumber\": \"\",\n  \"registrationNumber\": \"\",\n  \"licensePlateType\": null,\n  \"licensePlateNumber\": \"\",\n  \"circulationCard\": \"\",\n  \"availableForTourismOnly\": false,\n  \"status\": null,\n  \"transporterId\": 0, //optional\n  \"alternateTransporterId\": 0, //optional\n  \"busLineId\": 0, //optional\n  \"baseId\": 0, //optional\n  \"purchaseDate\": \"2009-11-10T23:00:00Z\",\n  \"expirationDate\": \"2009-11-10T23:00:00Z\",\n  \"erpClientNumber\": \"\", //optional\n  \"modelId\": 0,\n  \"vehicleId\": \"\", //optional\n  \"serialNumber\": \"\",\n  \"engineNumber\": \"\", //optional\n  \"chassisNumber\": \"\",\n  \"grossVehicleWeight\": 0,\n  \"sctPermit\": \"\", //optional\n  \"currentKilometer\": 0, //optional\n  \"gpsId\": \"\", //optional\n  \"lastMaintenanceDate\": \"2009-11-10T23:00:00Z\", //optional\n  \"nextMaintenanceDate\": \"2009-11-10T23:00:00Z\", //optional\n  \"seatDiagramId\": 0,\n  \"active\": false\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Bus",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/buses/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Buses",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/buses/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Buses (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/buses/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Bus",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/buses/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"economicNumber\": \"\", //optional\n  \"registrationNumber\": \"\", //optional\n  \"licensePlateType\": null, //optional\n  \"licensePlateNumber\": \"\", //optional\n  \"circulationCard\": \"\", //optional\n  \"availableForTourismOnly\": false, //optional\n  \"status\": null, //optional\n  \"transporterId\": 0, //optional\n  \"alternateTransporterId\": 0, //optional\n  \"busLineId\": 0, //optional\n  \"baseId\": 0, //optional\n  \"purchaseDate\": \"2009-11-10T23:00:00Z\", //optional\n  \"expirationDate\": \"2009-11-10T23:00:00Z\", //optional\n  \"erpClientNumber\": \"\", //optional\n  \"modelId\": 0, //optional\n  \"vehicleId\": \"\", //optional\n  \"serialNumber\": \"\", //optional\n  \"engineNumber\": \"\", //optional\n  \"chassisNumber\": \"\", //optional\n  \"grossVehicleWeight\": 0, //optional\n  \"sctPermit\": \"\", //optional\n  \"currentKilometer\": 0, //optional\n  \"gpsId\": \"\", //optional\n  \"lastMaintenanceDate\": \"2009-11-10T23:00:00Z\", //optional\n  \"nextMaintenanceDate\": \"2009-11-10T23:00:00Z\", //optional\n  \"seatDiagramId\": 0, //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Bus",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/buses/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Bus Valid Next Statuses",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/buses/{{id}}/valid-next-statuses",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "drivers",
+              "item": [
+                {
+                  "name": "Create Driver",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/drivers/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"driverKey\": \"\",\n  \"payrollKey\": \"\",\n  \"firstName\": \"\",\n  \"lastName\": \"\",\n  \"address\": \"\", //optional\n  \"phone\": \"\", //optional\n  \"email\": \"\", //optional\n  \"hireDate\": \"\", //optional\n  \"status\": null,\n  \"statusDate\": \"\", //optional\n  \"license\": \"\",\n  \"licenseExpiry\": \"\",\n  \"busLineId\": 0,\n  \"emergencyContactName\": \"\", //optional\n  \"emergencyContactPhone\": \"\", //optional\n  \"emergencyContactRelationship\": \"\" //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Driver",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/drivers/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Drivers",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/drivers/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"driverKey\":\"\",\"payrollKey\":\"\",\"firstName\":\"\",\"lastName\":\"\",\"address\":\"\",\"phone\":\"\",\"email\":\"\",\"hireDate\":\"2009-11-10T23:00:00Z\",\"status\":null,\"statusDate\":\"2009-11-10T23:00:00Z\",\"license\":\"\",\"licenseExpiry\":\"2009-11-10T23:00:00Z\",\"busLineId\":0,\"emergencyContactName\":\"\",\"emergencyContactPhone\":\"\",\"emergencyContactRelationship\":\"\",\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Drivers (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/drivers/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"driverKey\":\"\",\"payrollKey\":\"\",\"firstName\":\"\",\"lastName\":\"\",\"address\":\"\",\"phone\":\"\",\"email\":\"\",\"hireDate\":\"2009-11-10T23:00:00Z\",\"status\":null,\"statusDate\":\"2009-11-10T23:00:00Z\",\"license\":\"\",\"licenseExpiry\":\"2009-11-10T23:00:00Z\",\"busLineId\":0,\"emergencyContactName\":\"\",\"emergencyContactPhone\":\"\",\"emergencyContactRelationship\":\"\",\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Driver",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/drivers/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"driverKey\": \"\", //optional\n  \"payrollKey\": \"\", //optional\n  \"firstName\": \"\", //optional\n  \"lastName\": \"\", //optional\n  \"address\": \"\", //optional\n  \"phone\": \"\", //optional\n  \"email\": \"\", //optional\n  \"hireDate\": \"\", //optional\n  \"status\": null, //optional\n  \"statusDate\": \"\", //optional\n  \"license\": \"\", //optional\n  \"licenseExpiry\": \"\", //optional\n  \"busLineId\": 0, //optional\n  \"emergencyContactName\": \"\", //optional\n  \"emergencyContactPhone\": \"\", //optional\n  \"emergencyContactRelationship\": \"\" //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Driver",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/drivers/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Drivers Availability",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/drivers/availability",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "medical-checks",
+                  "item": [
+                    {
+                      "name": "Create Driver Medical Check",
+                      "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/drivers/{{driverId}}/medical-checks/create",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "type": "text"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Get Driver Medical Check",
+                      "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/drivers/{{driverId}}/medical-checks/{{id}}",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "type": "text"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "List Driver Medical Checks",
+                      "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/drivers/{{driverId}}/medical-checks/list/all",
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "type": "text"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "List Driver Medical Checks (Paginated)",
+                      "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/drivers/{{driverId}}/medical-checks/list",
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "type": "text"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "name": "time-offs",
+                  "item": [
+                    {
+                      "name": "Create Driver Time Off",
+                      "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/drivers/{{driverId}}/time-offs/create",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "type": "text"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Get Driver Time Off",
+                      "request": {
+                        "method": "GET",
+                        "url": "{{base_url}}/drivers/{{driverId}}/time-offs/{{id}}",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "type": "text"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "List Driver Time Offs",
+                      "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/drivers/{{driverId}}/time-offs/list/all",
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "type": "text"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "List Driver Time Offs (Paginated)",
+                      "request": {
+                        "method": "POST",
+                        "url": "{{base_url}}/drivers/{{driverId}}/time-offs/list",
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        },
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "type": "text"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Update Driver Time Off",
+                      "request": {
+                        "method": "PUT",
+                        "url": "{{base_url}}/drivers/{{driverId}}/time-offs/{{id}}/update",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "type": "text"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "name": "Delete Driver Time Off",
+                      "request": {
+                        "method": "DELETE",
+                        "url": "{{base_url}}/drivers/{{driverId}}/time-offs/{{id}}/delete",
+                        "header": [
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json",
+                            "type": "text"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "seat-diagram-zones",
+              "item": [
+                {
+                  "name": "Create Seat Diagram Zone",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/seat-diagrams/{{seatDiagramId}}/zones",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"rowNumbers\": [0],\n  \"priceMultiplier\": 0 //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Seat Diagram Zone",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/seat-diagrams/{{seatDiagramId}}/zones/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Zones By Diagram",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/seat-diagrams/{{seatDiagramId}}/get-zones",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":null,\"direction\":\"asc\"}], //optional\n  \"filters\": null //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Zones By Diagram (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/seat-diagrams/{{seatDiagramId}}/get-zones/paginated",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Seat Diagram Zone",
+                  "request": {
+                    "method": "PATCH",
+                    "url": "{{base_url}}/seat-diagrams/{{seatDiagramId}}/zones/{{id}}",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"rowNumbers\": [0], //optional\n  \"priceMultiplier\": 0 //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Seat Diagram Zone",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/seat-diagrams/{{seatDiagramId}}/zones/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "seat-diagrams",
+              "item": [
+                {
+                  "name": "Get Seat Diagram",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/seat-diagrams/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Seat Diagram",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/seat-diagrams/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"description\": \"\", //optional\n  \"maxCapacity\": 0, //optional\n  \"numFloors\": 0, //optional\n  \"seatsPerFloor\": [null], //optional\n  \"totalSeats\": 0, //optional\n  \"isFactoryDefault\": false, //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Seat Diagram",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/seat-diagrams/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Seat Diagram Seats",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/seat-diagrams/{{id}}/seats/list",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Seat Diagram Configuration",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/seat-diagrams/{{id}}/seats/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "locations",
+          "item": [
+            {
+              "name": "cities",
+              "item": [
+                {
+                  "name": "Create City",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/cities/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"stateId\": 0,\n  \"latitude\": 0,\n  \"longitude\": 0,\n  \"timezone\": \"\",\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get City",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/cities/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Cities",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/cities/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Cities (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/cities/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update City",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/cities/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"stateId\": 0, //optional\n  \"latitude\": 0, //optional\n  \"longitude\": 0, //optional\n  \"timezone\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete City",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/cities/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "countries",
+              "item": [
+                {
+                  "name": "Create Country",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/countries/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"code\": \"\",\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Country",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/countries/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Countries",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/countries/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Countries (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/countries/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Country",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/countries/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"code\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Country",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/countries/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "event-types",
+              "item": [
+                {
+                  "name": "Create Event Type",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/event-types/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"code\": \"\",\n  \"description\": \"\", //optional\n  \"baseTime\": 0,\n  \"needsCost\": false, //optional\n  \"needsQuantity\": false, //optional\n  \"integration\": false, //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Event Type",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/event-types/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Event Type",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/event-types/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"code\": \"\", //optional\n  \"description\": \"\", //optional\n  \"baseTime\": 0, //optional\n  \"needsCost\": false, //optional\n  \"needsQuantity\": false, //optional\n  \"integration\": false, //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Event Types",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/event-types/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"code\":\"\",\"description\":\"\",\"baseTime\":0,\"needsCost\":false,\"needsQuantity\":false,\"integration\":false,\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Event Types (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/event-types/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"code\":\"\",\"description\":\"\",\"baseTime\":0,\"needsCost\":false,\"needsQuantity\":false,\"integration\":false,\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Event Type",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/event-types/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "installation-schemas",
+              "item": [
+                {
+                  "name": "Create Installation Schema",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/installation/schemas/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"description\": \"\", //optional\n  \"type\": null,\n  \"options\": {\"enumValues\":[\"\"]}, //optional\n  \"required\": false, //optional\n  \"installationTypeId\": 0\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Installation Schema",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/installation/schemas/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Installation Schema",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/installation/schemas/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"description\": \"\", //optional\n  \"type\": null, //optional\n  \"options\": {\"enumValues\":[\"\"]}, //optional\n  \"required\": false, //optional\n  \"installationTypeId\": 0 //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Installation Schemas",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/installation/schemas/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"description\":\"\",\"type\":null,\"options\":{\"enumValues\":[\"\"]},\"required\":false,\"installationTypeId\":0,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Installation Schemas (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/installation/schemas/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"description\":\"\",\"type\":null,\"options\":{\"enumValues\":[\"\"]},\"required\":false,\"installationTypeId\":0,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Installation Schema",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/installation/schemas/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "installation-types",
+              "item": [
+                {
+                  "name": "Create Installation Type",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/installation/types/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"code\": \"\",\n  \"description\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Installation Type",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/installation/types/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Installation Type Schema",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/installation/types/{{id}}/schema",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Sync Installation Schemas",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/installation/types/{{id}}/schemas",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"schemas\": []\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Installation Type",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/installation/types/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"code\": \"\", //optional\n  \"description\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Installation Types",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/installation/types/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"code\":\"\",\"description\":\"\",\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Installation Types (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/installation/types/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"code\":\"\",\"description\":\"\",\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Installation Type",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/installation/types/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Assign Event Types To Installation Type",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/installation/types/{{id}}/event-types/assign",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"eventTypeIds\": [0]\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "installations",
+              "item": [
+                {
+                  "name": "Create Installation",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/installations/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nodeId\": 0,\n  \"name\": \"\",\n  \"address\": \"\",\n  \"description\": \"\", //optional\n  \"contactPhone\": \"\", //optional\n  \"contactEmail\": \"\", //optional\n  \"website\": \"\", //optional\n  \"installationTypeId\": 0, //optional\n  \"operatingHours\": {\"monday\":{\"open\":\"\",\"close\":\"\"},\"tuesday\":{\"open\":\"\",\"close\":\"\"},\"wednesday\":{\"open\":\"\",\"close\":\"\"},\"thursday\":{\"open\":\"\",\"close\":\"\"},\"friday\":{\"open\":\"\",\"close\":\"\"},\"saturday\":{\"open\":\"\",\"close\":\"\"},\"sunday\":{\"open\":\"\",\"close\":\"\"}} //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Installation",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/installations/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Installation",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/installations/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"address\": \"\", //optional\n  \"description\": \"\", //optional\n  \"contactPhone\": \"\", //optional\n  \"contactEmail\": \"\", //optional\n  \"website\": \"\", //optional\n  \"installationTypeId\": 0, //optional\n  \"operatingHours\": {\"monday\":{\"open\":\"\",\"close\":\"\"},\"tuesday\":{\"open\":\"\",\"close\":\"\"},\"wednesday\":{\"open\":\"\",\"close\":\"\"},\"thursday\":{\"open\":\"\",\"close\":\"\"},\"friday\":{\"open\":\"\",\"close\":\"\"},\"saturday\":{\"open\":\"\",\"close\":\"\"},\"sunday\":{\"open\":\"\",\"close\":\"\"}} //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Installations",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/installations/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"address\":\"\",\"description\":\"\",\"contactPhone\":\"\",\"contactEmail\":\"\",\"website\":\"\",\"installationTypeId\":0,\"operatingHours\":{\"monday\":{\"open\":\"\",\"close\":\"\"},\"tuesday\":{\"open\":\"\",\"close\":\"\"},\"wednesday\":{\"open\":\"\",\"close\":\"\"},\"thursday\":{\"open\":\"\",\"close\":\"\"},\"friday\":{\"open\":\"\",\"close\":\"\"},\"saturday\":{\"open\":\"\",\"close\":\"\"},\"sunday\":{\"open\":\"\",\"close\":\"\"}},\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Installations (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/installations/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"address\":\"\",\"description\":\"\",\"contactPhone\":\"\",\"contactEmail\":\"\",\"website\":\"\",\"installationTypeId\":0,\"operatingHours\":{\"monday\":{\"open\":\"\",\"close\":\"\"},\"tuesday\":{\"open\":\"\",\"close\":\"\"},\"wednesday\":{\"open\":\"\",\"close\":\"\"},\"thursday\":{\"open\":\"\",\"close\":\"\"},\"friday\":{\"open\":\"\",\"close\":\"\"},\"saturday\":{\"open\":\"\",\"close\":\"\"},\"sunday\":{\"open\":\"\",\"close\":\"\"}},\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Installation",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/installations/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Installation Properties",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/installations/{{id}}/properties/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"properties\": []\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Assign Amenities To Installation",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/installations/{{id}}/amenities/assign",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"amenityIds\": [0]\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "labels",
+              "item": [
+                {
+                  "name": "Create Label",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/labels/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"description\": \"\", //optional\n  \"color\": \"\",\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Label",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/labels/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"description\": \"\", //optional\n  \"color\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Label",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/labels/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Label",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/labels/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Labels (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/labels/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"description\":\"\",\"color\":\"\",\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Labels",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/labels/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"description\":\"\",\"color\":\"\",\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Labels Metrics",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/labels/metrics",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "nodes",
+              "item": [
+                {
+                  "name": "Create Node",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/nodes/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"code\": \"\",\n  \"name\": \"\",\n  \"latitude\": 0,\n  \"longitude\": 0,\n  \"radius\": 0,\n  \"allowsBoarding\": false, //optional\n  \"allowsAlighting\": false, //optional\n  \"active\": false, //optional\n  \"cityId\": 0,\n  \"populationId\": 0,\n  \"installationId\": 0 //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Node",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/nodes/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Nodes",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/nodes/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"code\":\"\",\"name\":\"\",\"latitude\":0,\"longitude\":0,\"radius\":0,\"slug\":\"\",\"allowsBoarding\":false,\"allowsAlighting\":false,\"active\":false,\"cityId\":0,\"populationId\":0,\"installationId\":0,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"}, //optional\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Nodes (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/nodes/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"code\":\"\",\"name\":\"\",\"latitude\":0,\"longitude\":0,\"radius\":0,\"slug\":\"\",\"allowsBoarding\":false,\"allowsAlighting\":false,\"active\":false,\"cityId\":0,\"populationId\":0,\"installationId\":0,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"}, //optional\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Node",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/nodes/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"code\": \"\", //optional\n  \"name\": \"\", //optional\n  \"latitude\": 0, //optional\n  \"longitude\": 0, //optional\n  \"radius\": 0, //optional\n  \"allowsBoarding\": false, //optional\n  \"allowsAlighting\": false, //optional\n  \"active\": false, //optional\n  \"cityId\": 0, //optional\n  \"populationId\": 0, //optional\n  \"installationId\": 0 //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Node",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/nodes/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Assign Events To Node",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/nodes/{{id}}/events/assign",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"events\": [{\"eventTypeId\":0,\"customTime\":0}]\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Assign Labels To Node",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/nodes/{{id}}/labels/assign",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"labelIds\": [0]\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "populations",
+              "item": [
+                {
+                  "name": "Create Population",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/populations/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"code\": \"\",\n  \"name\": \"\",\n  \"description\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Population",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/populations/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Populations",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/populations/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"code\":\"\",\"name\":\"\",\"description\":\"\",\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Populations (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/populations/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"code\":\"\",\"name\":\"\",\"description\":\"\",\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Population",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/populations/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"code\": \"\", //optional\n  \"name\": \"\", //optional\n  \"description\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Assign Cities To Population",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/populations/{{id}}/cities/assign",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"cityIds\": [0]\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Assign City To Population",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/populations/{{id}}/cities/assign/one",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"cityId\": 0\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Available Cities",
+                  "request": {
+                    "method": "GET",
+                    "url": {
+                      "raw": "{{base_url}}/populations/cities",
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "populations",
+                        "cities"
+                      ],
+                      "query": [
+                        {
+                          "key": "populationId?",
+                          "value": "0",
+                          "disabled": false
+                        }
+                      ]
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Population Cities",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/populations/{{id}}/cities",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Population",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/populations/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Find Population By Assigned City",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/populations/find/{{cityId}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "states",
+              "item": [
+                {
+                  "name": "Create State",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/states/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"code\": \"\",\n  \"countryId\": 0,\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get State",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/states/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List States",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/states/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"code\":\"\",\"countryId\":0,\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List States (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/states/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"code\":\"\",\"countryId\":0,\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update State",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/states/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"code\": \"\", //optional\n  \"countryId\": 0, //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete State",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/states/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "timezones",
+              "item": [
+                {
+                  "name": "Get Timezone",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/timezones/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Timezones",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/timezones",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "operators",
+          "item": [
+            {
+              "name": "bus-lines",
+              "item": [
+                {
+                  "name": "Create Bus Line",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/bus-lines/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"code\": \"\",\n  \"transporterId\": 0,\n  \"serviceTypeId\": 0,\n  \"pricePerKilometer\": 0, //optional\n  \"description\": \"\", //optional\n  \"fleetSize\": 0, //optional\n  \"website\": \"\", //optional\n  \"email\": \"\", //optional\n  \"phone\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Bus Line",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/bus-lines/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Bus Lines",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/bus-lines/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"code\":\"\",\"transporterId\":0,\"serviceTypeId\":0,\"pricePerKilometer\":0,\"description\":\"\",\"fleetSize\":0,\"website\":\"\",\"email\":\"\",\"phone\":\"\",\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Bus Lines (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/bus-lines/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"code\":\"\",\"transporterId\":0,\"serviceTypeId\":0,\"pricePerKilometer\":0,\"description\":\"\",\"fleetSize\":0,\"website\":\"\",\"email\":\"\",\"phone\":\"\",\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Bus Line",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/bus-lines/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"code\": \"\", //optional\n  \"transporterId\": 0, //optional\n  \"serviceTypeId\": 0, //optional\n  \"pricePerKilometer\": 0, //optional\n  \"description\": \"\", //optional\n  \"fleetSize\": 0, //optional\n  \"website\": \"\", //optional\n  \"email\": \"\", //optional\n  \"phone\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Bus Line",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/bus-lines/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "service-types",
+              "item": [
+                {
+                  "name": "Create Service Type",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/service-types/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"code\": \"\",\n  \"category\": null,\n  \"description\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Service Type",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/service-types/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Service Types",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/service-types/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"code\":\"\",\"category\":null,\"description\":\"\",\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Service Types (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/service-types/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"code\":\"\",\"category\":null,\"description\":\"\",\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Service Type",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/service-types/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"code\": \"\", //optional\n  \"category\": null, //optional\n  \"description\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Service Type",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/service-types/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Assign Amenities To Service Type",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/service-types/{{id}}/amenities/assign",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"amenityIds\": [0]\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "transporters",
+              "item": [
+                {
+                  "name": "Create Transporter",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/transporters/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"code\": \"\",\n  \"description\": \"\", //optional\n  \"legalName\": \"\", //optional\n  \"address\": \"\", //optional\n  \"website\": \"\", //optional\n  \"email\": \"\", //optional\n  \"phone\": \"\", //optional\n  \"headquarterCityId\": 0, //optional\n  \"logoUrl\": \"\", //optional\n  \"contactInfo\": \"\", //optional\n  \"licenseNumber\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Transporter",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/transporters/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Transporters",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/transporters/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"code\":\"\",\"legalName\":\"\",\"address\":\"\",\"description\":\"\",\"website\":\"\",\"email\":\"\",\"phone\":\"\",\"headquarterCityId\":0,\"logoUrl\":\"\",\"contactInfo\":\"\",\"licenseNumber\":\"\",\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Transporters (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/transporters/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"name\":\"\",\"code\":\"\",\"legalName\":\"\",\"address\":\"\",\"description\":\"\",\"website\":\"\",\"email\":\"\",\"phone\":\"\",\"headquarterCityId\":0,\"logoUrl\":\"\",\"contactInfo\":\"\",\"licenseNumber\":\"\",\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Transporter",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/transporters/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"code\": \"\", //optional\n  \"description\": \"\", //optional\n  \"legalName\": \"\", //optional\n  \"address\": \"\", //optional\n  \"website\": \"\", //optional\n  \"email\": \"\", //optional\n  \"phone\": \"\", //optional\n  \"headquarterCityId\": 0, //optional\n  \"logoUrl\": \"\", //optional\n  \"contactInfo\": \"\", //optional\n  \"licenseNumber\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Transporter",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/transporters/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "routing",
+          "item": [
+            {
+              "name": "pathways",
+              "item": [
+                {
+                  "name": "Create Pathway",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/pathways/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"originNodeId\": 0,\n  \"destinationNodeId\": 0,\n  \"name\": \"\",\n  \"code\": \"\",\n  \"description\": \"\", //optional\n  \"isSellable\": false, //optional\n  \"isEmptyTrip\": false, //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Pathway",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/pathways/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Pathways",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/pathways/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"originNodeId\":0,\"destinationNodeId\":0,\"originCityId\":0,\"destinationCityId\":0,\"name\":\"\",\"code\":\"\",\"description\":\"\",\"isSellable\":false,\"isEmptyTrip\":false,\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\",\"deletedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Pathways (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/pathways/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {\"id\":0,\"originNodeId\":0,\"destinationNodeId\":0,\"originCityId\":0,\"destinationCityId\":0,\"name\":\"\",\"code\":\"\",\"description\":\"\",\"isSellable\":false,\"isEmptyTrip\":false,\"active\":false,\"createdAt\":\"2009-11-10T23:00:00Z\",\"updatedAt\":\"2009-11-10T23:00:00Z\",\"deletedAt\":\"2009-11-10T23:00:00Z\"},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Pathway",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/pathways/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"originNodeId\": 0, //optional\n  \"destinationNodeId\": 0, //optional\n  \"name\": \"\", //optional\n  \"code\": \"\", //optional\n  \"description\": \"\", //optional\n  \"isSellable\": false, //optional\n  \"isEmptyTrip\": false, //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Pathway",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/pathways/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Add Option To Pathway",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/pathways/{{pathwayId}}/options/add",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"optionData\": null\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Remove Option From Pathway",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/pathways/{{pathwayId}}/options/{{optionId}}/remove",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Pathway Option",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/pathways/{{pathwayId}}/options/{{optionId}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"optionData\": null\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "shared-entities",
+          "item": [
+            {
+              "name": "amenities",
+              "item": [
+                {
+                  "name": "Create Amenity",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/amenities/create",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\",\n  \"category\": null,\n  \"amenityType\": null,\n  \"description\": \"\", //optional\n  \"iconName\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Get Amenity",
+                  "request": {
+                    "method": "GET",
+                    "url": "{{base_url}}/amenities/{{id}}",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Amenities",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/amenities/list/all",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {},\n  \"searchTerm\": \"\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "List Amenities (Paginated)",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/amenities/list",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"orderBy\": [{\"field\":\"id\",\"direction\":\"asc\"}],\n  \"filters\": {},\n  \"searchTerm\": \"\",\n  \"page\": 0,\n  \"pageSize\": 10\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Update Amenity",
+                  "request": {
+                    "method": "PUT",
+                    "url": "{{base_url}}/amenities/{{id}}/update",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"\", //optional\n  \"category\": null, //optional\n  \"amenityType\": null, //optional\n  \"description\": \"\", //optional\n  \"iconName\": \"\", //optional\n  \"active\": false //optional\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "name": "Delete Amenity",
+                  "request": {
+                    "method": "DELETE",
+                    "url": "{{base_url}}/amenities/{{id}}/delete",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "seeds",
+              "item": [
+                {
+                  "name": "Run All Seeders",
+                  "request": {
+                    "method": "POST",
+                    "url": "{{base_url}}/seed",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json",
+                        "type": "text"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

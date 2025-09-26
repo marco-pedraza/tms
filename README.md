@@ -162,6 +162,21 @@ npm run seed:permissions
 
 The seeders support client-specific data located in `apps/server/db/scripts/seeders/{client-code}/`.
 
+## Postman Collection Generator
+
+Generate a comprehensive Postman collection from your API endpoints:
+
+```bash
+npm run generate-postman-collection
+```
+
+This will create `inventory-api.postman_collection.json` in the `tools/postman-generator/output/` directory with:
+
+- All API endpoints organized by feature
+- Request examples with sample data
+- Environment variables
+- Automatic folder structure
+
 ## Contributing
 
 1. Ensure your code passes all tests

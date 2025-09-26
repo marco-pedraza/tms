@@ -204,10 +204,187 @@ export default function SeatDiagramForm({
     spaceForm.reset(space);
   };
 
+  const onAddColumn = (floorNumber: number, afterX: number) => {
+    const currentSeatConfiguration = form.getFieldValue('seatConfiguration');
+    const floorToModify = currentSeatConfiguration.find(
+      (floor) => floor.floorNumber === floorNumber,
+    );
+
+    if (floorToModify) {
+      // Get all unique Y positions (rows) for this floor
+      const uniqueYPositions = Array.from(
+        new Set(floorToModify.spaces.map((space) => space.position.y)),
+      ).sort((a, b) => a - b);
+
+      // Shift existing spaces to the right (x > afterX)
+      const shiftedSpaces = floorToModify.spaces.map((space) => {
+        if (space.position.x > afterX) {
+          return {
+            ...space,
+            position: {
+              ...space.position,
+              x: space.position.x + 1,
+            },
+          };
+        }
+        return space;
+      });
+
+      // Create new spaces for the new column
+      const newColumnSpaces: SeatDiagramSpace[] = uniqueYPositions.map((y) => ({
+        spaceType: SpaceType.SEAT,
+        seatType: SeatType.REGULAR,
+        seatNumber: '', // Empty - user needs to set manually
+        floorNumber,
+        active: true,
+        position: {
+          x: afterX + 1,
+          y,
+        },
+      }));
+
+      const newSpacesForFloor = [...shiftedSpaces, ...newColumnSpaces];
+      const newSeatConfiguration = currentSeatConfiguration.filter(
+        (floor) => floor.floorNumber !== floorNumber,
+      );
+      newSeatConfiguration.push({
+        floorNumber,
+        spaces: newSpacesForFloor,
+      });
+
+      const orderedByFloorNumber = newSeatConfiguration.sort(
+        (a, b) => a.floorNumber - b.floorNumber,
+      );
+      form.setFieldValue('seatConfiguration', orderedByFloorNumber);
+    }
+  };
+
+  const onAddRow = (floorNumber: number) => {
+    const currentSeatConfiguration = form.getFieldValue('seatConfiguration');
+    const floorToModify = currentSeatConfiguration.find(
+      (floor) => floor.floorNumber === floorNumber,
+    );
+
+    if (floorToModify && floorToModify.spaces.length > 0) {
+      // Find the maximum Y position to add the new row after it
+      const maxY = Math.max(
+        ...floorToModify.spaces.map((space) => space.position.y),
+      );
+      const newRowY = maxY + 1;
+
+      // Get unique X positions from existing spaces to maintain structure
+      const uniqueXPositions = Array.from(
+        new Set(floorToModify.spaces.map((space) => space.position.x)),
+      ).sort((a, b) => a - b);
+
+      // Create new row with one seat and the rest as empty spaces
+      const newRowSpaces: SeatDiagramSpace[] = uniqueXPositions.map((x) => {
+        return {
+          spaceType: SpaceType.SEAT,
+          seatType: SeatType.REGULAR,
+          seatNumber: '', // Empty - user needs to set manually
+          floorNumber,
+          active: true,
+          position: { x, y: newRowY },
+        };
+      });
+
+      const newSpacesForFloor = [...floorToModify.spaces, ...newRowSpaces];
+      const newSeatConfiguration = currentSeatConfiguration.filter(
+        (floor) => floor.floorNumber !== floorNumber,
+      );
+      newSeatConfiguration.push({
+        floorNumber,
+        spaces: newSpacesForFloor,
+      });
+
+      const orderedByFloorNumber = newSeatConfiguration.sort(
+        (a, b) => a.floorNumber - b.floorNumber,
+      );
+      form.setFieldValue('seatConfiguration', orderedByFloorNumber);
+    }
+  };
+
+  const onRemoveColumn = (floorNumber: number, columnX: number) => {
+    const currentSeatConfiguration = form.getFieldValue('seatConfiguration');
+    const floorToModify = currentSeatConfiguration.find(
+      (floor) => floor.floorNumber === floorNumber,
+    );
+
+    if (floorToModify) {
+      // Remove spaces at the specified X position
+      const spacesWithoutColumn = floorToModify.spaces.filter(
+        (space) => space.position.x !== columnX,
+      );
+
+      // Shift spaces to the left (x > columnX)
+      const shiftedSpaces = spacesWithoutColumn.map((space) => {
+        if (space.position.x > columnX) {
+          return {
+            ...space,
+            position: {
+              ...space.position,
+              x: space.position.x - 1,
+            },
+          };
+        }
+        return space;
+      });
+
+      const newSeatConfiguration = currentSeatConfiguration.filter(
+        (floor) => floor.floorNumber !== floorNumber,
+      );
+      newSeatConfiguration.push({
+        floorNumber,
+        spaces: shiftedSpaces,
+      });
+
+      const orderedByFloorNumber = newSeatConfiguration.sort(
+        (a, b) => a.floorNumber - b.floorNumber,
+      );
+      form.setFieldValue('seatConfiguration', orderedByFloorNumber);
+    }
+  };
+
+  const onRemoveRow = (floorNumber: number) => {
+    const currentSeatConfiguration = form.getFieldValue('seatConfiguration');
+    const floorToModify = currentSeatConfiguration.find(
+      (floor) => floor.floorNumber === floorNumber,
+    );
+
+    if (floorToModify && floorToModify.spaces.length > 0) {
+      // Find the maximum Y position (last row)
+      const maxY = Math.max(
+        ...floorToModify.spaces.map((space) => space.position.y),
+      );
+
+      // Remove spaces from the last row
+      const spacesWithoutLastRow = floorToModify.spaces.filter(
+        (space) => space.position.y !== maxY,
+      );
+
+      const newSeatConfiguration = currentSeatConfiguration.filter(
+        (floor) => floor.floorNumber !== floorNumber,
+      );
+      newSeatConfiguration.push({
+        floorNumber,
+        spaces: spacesWithoutLastRow,
+      });
+
+      const orderedByFloorNumber = newSeatConfiguration.sort(
+        (a, b) => a.floorNumber - b.floorNumber,
+      );
+      form.setFieldValue('seatConfiguration', orderedByFloorNumber);
+    }
+  };
+
   return (
-    <Form onSubmit={form.handleSubmit}>
+    <Form onSubmit={form.handleSubmit} className="w-full max-w-none">
       {/* General Configuration Section */}
-      <FormLayout title={tSeatDiagrams('sections.generalConfiguration')}>
+      <FormLayout
+        title={tSeatDiagrams('sections.generalConfiguration')}
+        className="w-full max-w-none"
+      >
         <form.AppField name="name">
           {(field) => (
             <field.TextInput
@@ -251,7 +428,10 @@ export default function SeatDiagramForm({
 
       {/* Quick Configuration Section */}
       <div className="pt-4">
-        <FormLayout title={tSeatDiagrams('sections.quickConfiguration')}>
+        <FormLayout
+          title={tSeatDiagrams('sections.quickConfiguration')}
+          className="w-full max-w-none"
+        >
           <div className="grid gap-4">
             <form.AppField name="seatsPerFloor">
               {(field) => (
@@ -376,43 +556,48 @@ export default function SeatDiagramForm({
             </form.AppField>
           </div>
         </FormLayout>
-        <div className="pt-4">
-          <FormLayout title={tSeatDiagrams('sections.seatsConfiguration')}>
-            <spaceForm.Subscribe selector={(state) => [state.values]}>
-              {([selectedSpace]: [SeatDiagramSpace]) => (
-                <form.Subscribe
-                  selector={(state) => [state.values.seatConfiguration]}
-                >
-                  {([seatConfiguration]: [SeatDiagramSpace[]]) =>
-                    seatConfiguration.length === 0 ? (
-                      <div>
-                        {tSeatDiagrams('form.placeholders.emptyQuickConfig')}
+      </div>
+      <div className="pt-4">
+        <FormLayout
+          title={tSeatDiagrams('sections.seatsConfiguration')}
+          className="w-full max-w-none"
+        >
+          <spaceForm.Subscribe selector={(state) => [state.values]}>
+            {([selectedSpace]: [SeatDiagramSpace]) => (
+              <form.Subscribe
+                selector={(state) => [state.values.seatConfiguration]}
+              >
+                {([seatConfiguration]: [SeatDiagramSpace[]]) =>
+                  seatConfiguration.length === 0 ? (
+                    <div>
+                      {tSeatDiagrams('form.placeholders.emptyQuickConfig')}
+                    </div>
+                  ) : (
+                    <div className="grid gap-4 w-full">
+                      <div className="flex gap-1">
+                        {seatConfiguration.map((floor) => (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            key={floor.floorNumber}
+                            onClick={() => {
+                              setSelectedFloor(floor.floorNumber);
+                            }}
+                            type="button"
+                            className={
+                              selectedFloor === floor.floorNumber
+                                ? 'bg-primary text-primary-foreground ring'
+                                : ''
+                            }
+                          >
+                            {tSeatDiagrams('fields.floor', {
+                              floorNumber: floor.floorNumber,
+                            })}
+                          </Button>
+                        ))}
                       </div>
-                    ) : (
-                      <div className="grid gap-4">
-                        <div className="flex gap-1">
-                          {seatConfiguration.map((floor) => (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              key={floor.floorNumber}
-                              onClick={() => {
-                                setSelectedFloor(floor.floorNumber);
-                              }}
-                              type="button"
-                              className={
-                                selectedFloor === floor.floorNumber
-                                  ? 'bg-primary text-primary-foreground ring'
-                                  : ''
-                              }
-                            >
-                              {tSeatDiagrams('fields.floor', {
-                                floorNumber: floor.floorNumber,
-                              })}
-                            </Button>
-                          ))}
-                        </div>
-                        <div className="grid gap-4 grid-cols-[3fr_2fr_2fr]">
+                      <div className="h-[min(70vh,_700px)]">
+                        <div className="grid gap-4 grid-cols-[3fr_auto_2fr] h-full">
                           <form.AppField name="seatConfiguration">
                             {(field) => {
                               const floor = field.state.value.find(
@@ -425,11 +610,15 @@ export default function SeatDiagramForm({
                                   floorNumber={floor.floorNumber}
                                   onClick={handleSpaceClick}
                                   selectedSpace={selectedSpace}
+                                  onAddColumn={onAddColumn}
+                                  onAddRow={onAddRow}
+                                  onRemoveColumn={onRemoveColumn}
+                                  onRemoveRow={onRemoveRow}
                                 />
                               );
                             }}
                           </form.AppField>
-                          <div className="pr-4 text-sm">
+                          <div className="p-4 pt-20 text-sm ">
                             <ul>
                               <li className="flex items-center gap-2">
                                 <span className="w-3 h-3 bg-white border border-gray-300 rounded-full" />
@@ -481,7 +670,7 @@ export default function SeatDiagramForm({
                                 {tSeatDiagrams('form.placeholders.editSpace')}
                               </CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="h-full">
                               <spaceForm.Subscribe
                                 selector={(state) => {
                                   return [
@@ -504,95 +693,99 @@ export default function SeatDiagramForm({
                                         )}
                                       </div>
                                     ) : (
-                                      <div className="grid gap-1">
-                                        <spaceForm.AppField name="spaceType">
-                                          {(field) => (
-                                            <field.SelectInput
-                                              label={tSeatDiagrams(
-                                                'fields.spaceType',
-                                              )}
-                                              isRequired
-                                              placeholder={tSeatDiagrams(
-                                                'form.placeholders.spaceType',
-                                              )}
-                                              disabled={
-                                                spaceType === SpaceType.EMPTY
-                                              }
-                                              items={Object.values(
-                                                SpaceType,
-                                              ).map((type) => ({
-                                                id: type,
-                                                name: tSeatDiagrams(
-                                                  `form.spaceTypes.${type}`,
-                                                ),
-                                                hidden:
-                                                  type === SpaceType.EMPTY,
-                                              }))}
-                                            />
+                                      <div className="flex flex-col gap-2 justify-between h-full">
+                                        <div className="grid gap-2">
+                                          <spaceForm.AppField name="spaceType">
+                                            {(field) => (
+                                              <field.SelectInput
+                                                label={tSeatDiagrams(
+                                                  'fields.spaceType',
+                                                )}
+                                                isRequired
+                                                placeholder={tSeatDiagrams(
+                                                  'form.placeholders.spaceType',
+                                                )}
+                                                disabled={
+                                                  spaceType === SpaceType.EMPTY
+                                                }
+                                                items={Object.values(
+                                                  SpaceType,
+                                                ).map((type) => ({
+                                                  id: type,
+                                                  name: tSeatDiagrams(
+                                                    `form.spaceTypes.${type}`,
+                                                  ),
+                                                  hidden:
+                                                    type === SpaceType.EMPTY,
+                                                }))}
+                                              />
+                                            )}
+                                          </spaceForm.AppField>
+                                          {spaceType === SpaceType.SEAT && (
+                                            <>
+                                              <spaceForm.AppField name="seatType">
+                                                {(field) => (
+                                                  <field.SelectInput
+                                                    label={tSeatDiagrams(
+                                                      'fields.seatType',
+                                                    )}
+                                                    isRequired
+                                                    placeholder={tSeatDiagrams(
+                                                      'form.placeholders.seatType',
+                                                    )}
+                                                    items={Object.values(
+                                                      SeatType,
+                                                    ).map((type) => ({
+                                                      id: type,
+                                                      name: tSeatDiagrams(
+                                                        `form.seatTypes.${type}`,
+                                                      ),
+                                                    }))}
+                                                  />
+                                                )}
+                                              </spaceForm.AppField>
+                                              <spaceForm.AppField name="seatNumber">
+                                                {(field) => (
+                                                  <field.TextInput
+                                                    label={tSeatDiagrams(
+                                                      'fields.seatNumber',
+                                                    )}
+                                                    isRequired
+                                                    placeholder={tSeatDiagrams(
+                                                      'form.placeholders.seatNumber',
+                                                    )}
+                                                  />
+                                                )}
+                                              </spaceForm.AppField>
+                                            </>
                                           )}
-                                        </spaceForm.AppField>
-                                        {spaceType === SpaceType.SEAT && (
-                                          <>
-                                            <spaceForm.AppField name="seatType">
+                                          <div className="pt-2">
+                                            <spaceForm.AppField name="spaceType">
                                               {(field) => (
-                                                <field.SelectInput
+                                                <BaseSwitchInput
                                                   label={tSeatDiagrams(
-                                                    'fields.seatType',
+                                                    'fields.disableSpace',
                                                   )}
-                                                  isRequired
-                                                  placeholder={tSeatDiagrams(
-                                                    'form.placeholders.seatType',
-                                                  )}
-                                                  items={Object.values(
-                                                    SeatType,
-                                                  ).map((type) => ({
-                                                    id: type,
-                                                    name: tSeatDiagrams(
-                                                      `form.seatTypes.${type}`,
-                                                    ),
-                                                  }))}
+                                                  name="disable-space"
+                                                  value={
+                                                    field.state.value ===
+                                                    SpaceType.EMPTY
+                                                  }
+                                                  onChange={(value) => {
+                                                    field.handleChange(
+                                                      value
+                                                        ? SpaceType.EMPTY
+                                                        : SpaceType.SEAT,
+                                                    );
+                                                    spaceForm.validateSync(
+                                                      'change',
+                                                    );
+                                                  }}
                                                 />
                                               )}
                                             </spaceForm.AppField>
-                                            <spaceForm.AppField name="seatNumber">
-                                              {(field) => (
-                                                <field.TextInput
-                                                  label={tSeatDiagrams(
-                                                    'fields.seatNumber',
-                                                  )}
-                                                  isRequired
-                                                  placeholder={tSeatDiagrams(
-                                                    'form.placeholders.seatNumber',
-                                                  )}
-                                                />
-                                              )}
-                                            </spaceForm.AppField>
-                                          </>
-                                        )}
-                                        <spaceForm.AppField name="spaceType">
-                                          {(field) => (
-                                            <BaseSwitchInput
-                                              label={tSeatDiagrams(
-                                                'fields.disableSpace',
-                                              )}
-                                              name="disable-space"
-                                              value={
-                                                field.state.value ===
-                                                SpaceType.EMPTY
-                                              }
-                                              onChange={(value) => {
-                                                field.handleChange(
-                                                  value
-                                                    ? SpaceType.EMPTY
-                                                    : SpaceType.SEAT,
-                                                );
-                                                spaceForm.validateSync(
-                                                  'change',
-                                                );
-                                              }}
-                                            />
-                                          )}
-                                        </spaceForm.AppField>
+                                          </div>
+                                        </div>
                                         <Button
                                           variant="outline"
                                           type="button"
@@ -611,13 +804,13 @@ export default function SeatDiagramForm({
                           </Card>
                         </div>
                       </div>
-                    )
-                  }
-                </form.Subscribe>
-              )}
-            </spaceForm.Subscribe>
-          </FormLayout>
-        </div>
+                    </div>
+                  )
+                }
+              </form.Subscribe>
+            )}
+          </spaceForm.Subscribe>
+        </FormLayout>
       </div>
       <FormFooter>
         <form.AppForm>

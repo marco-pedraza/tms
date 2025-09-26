@@ -66,7 +66,7 @@ export default function EditSeatDiagramPage() {
   }
 
   return (
-    <div>
+    <div className="w-full max-w-5xl mx-auto">
       <PageHeader
         title={tSeatDiagrams('edit.title')}
         description={data?.name}

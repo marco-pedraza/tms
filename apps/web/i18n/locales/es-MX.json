@@ -1797,7 +1797,13 @@
         "editSpace": "Editar Espacio",
         "spaceType": "Selecciona el tipo de espacio",
         "seatType": "Selecciona uno",
-        "seatNumber": "Ej: 1A"
+        "seatNumber": "Ej: 1A",
+        "addColumnBeforeHallway": "Agregar columna antes del pasillo",
+        "addColumnAfterHallway": "Agregar columna después del pasillo",
+        "removeColumnBeforeHallway": "Eliminar columna antes del pasillo",
+        "removeColumnAfterHallway": "Eliminar columna después del pasillo",
+        "addRow": "Agregar fila",
+        "removeRow": "Eliminar fila"
       },
       "seatTypes": {
         "regular": "Regular",

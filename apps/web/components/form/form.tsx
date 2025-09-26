@@ -1,9 +1,15 @@
-interface FormProps
-  extends Omit<React.ComponentProps<'form'>, 'onSubmit' | 'className'> {
+import { cn } from '@/utils/cn';
+
+interface FormProps extends Omit<React.ComponentProps<'form'>, 'onSubmit'> {
   onSubmit: () => Promise<void> | void;
 }
 
-export default function Form({ children, onSubmit, ...formProps }: FormProps) {
+export default function Form({
+  children,
+  onSubmit,
+  className,
+  ...formProps
+}: FormProps) {
   return (
     <form
       {...formProps}
@@ -12,7 +18,7 @@ export default function Form({ children, onSubmit, ...formProps }: FormProps) {
         e.stopPropagation();
         onSubmit();
       }}
-      className="max-w-2xl mx-auto w-full"
+      className={cn('max-w-2xl mx-auto w-full', className)}
     >
       {children}
     </form>

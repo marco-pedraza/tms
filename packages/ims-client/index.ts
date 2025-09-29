@@ -245,6 +245,7 @@ export namespace inventory {
             this.regenerateSeats = this.regenerateSeats.bind(this)
             this.removeOptionFromPathway = this.removeOptionFromPathway.bind(this)
             this.runAllSeeders = this.runAllSeeders.bind(this)
+            this.setDefaultPathwayOption = this.setDefaultPathwayOption.bind(this)
             this.syncInstallationSchemas = this.syncInstallationSchemas.bind(this)
             this.unassignCityFromPopulation = this.unassignCityFromPopulation.bind(this)
             this.updateAmenity = this.updateAmenity.bind(this)
@@ -2374,6 +2375,18 @@ export namespace inventory {
     success: boolean
     message: string
 }
+        }
+
+        /**
+         * Sets a specific option as the default option for a pathway.
+         * @param params - Object containing pathway ID and option ID
+         * @returns {Promise<Pathway>} The updated pathway with the new default option
+         * @throws {APIError} If the pathway or option is not found, or operation fails
+         */
+        public async setDefaultPathwayOption(pathwayId: number, optionId: number): Promise<pathways.Pathway> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/pathways/${encodeURIComponent(pathwayId)}/options/${encodeURIComponent(optionId)}/set-default`)
+            return await resp.json() as pathways.Pathway
         }
 
         /**

@@ -1,4 +1,5 @@
 import { FieldErrorCollector } from '@repo/base-repo';
+import { EntityUtils } from '@/shared/domain/entity-utils';
 import type { PathwayOption } from '@/inventory/routing/pathway-options/pathway-options.types';
 import type {
   CreatePathwayPayload,
@@ -10,23 +11,19 @@ import type {
   PathwayEntity,
   PathwayEntityDependencies,
   UpdatePathwayOptionPayloadClean,
-} from './pathway.entity.types';
+} from './pathways.types';
 import { pathwayErrors } from './pathway.errors';
 
-// Re-export types for backward compatibility
-export type {
-  AddPathwayOptionPayload,
-  PathwayEntity,
-  PathwayEntityDependencies,
-  UpdatePathwayOptionPayloadClean,
-} from './pathway.entity.types';
-
-// Note: CreatePathwayWithOptionPayload removed for now - we'll implement it later
-// For now, we focus on the basic validation: pathways cannot be active without options
-
 export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
-  const { pathwaysRepository, pathwayOptionsRepository, nodesRepository } =
-    dependencies;
+  const {
+    pathwaysRepository,
+    pathwayOptionsRepository,
+    nodesRepository,
+    pathwayOptionEntityFactory,
+  } = dependencies;
+
+  // Desestructurar las utilidades del mixin
+  const { isEntityPersisted } = EntityUtils;
 
   /**
    * Validates origin and destination are different
@@ -144,7 +141,7 @@ export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
   }
 
   function createInstance(pathwayData: Partial<Pathway>): PathwayEntity {
-    const isPersisted = pathwayData.id !== undefined && pathwayData.id !== null;
+    const isPersisted = isEntityPersisted(pathwayData.id);
 
     // Cache for loaded options (lazy loading)
     let optionsCache: PathwayOption[] | null = null;
@@ -356,12 +353,15 @@ export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
       // First option becomes default automatically
       const shouldBeDefault = existingOptions.length === 0;
 
-      // Create option with automatic default handling
-      await pathwayOptionsRepository.create({
+      // Create option using pathway option entity (includes validation and avgSpeed calculation)
+      const optionEntity = pathwayOptionEntityFactory.create({
         ...optionData,
         pathwayId: pathwayData.id as number,
         isDefault: shouldBeDefault,
       });
+
+      // Save the option entity (includes all validations and calculations)
+      await optionEntity.save();
 
       clearOptionsCache();
       return createInstance(pathwayData);
@@ -406,8 +406,30 @@ export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
       // Validate option exists and belongs to this pathway
       await validateOptionOwnership(optionId);
 
-      // Update the option (isDefault and pathwayId are not included in the clean type)
-      await pathwayOptionsRepository.update(optionId, optionData);
+      // Update using pathway option entity (includes validation and avgSpeed recalculation)
+      const optionEntity = await pathwayOptionEntityFactory.findOne(optionId);
+      await optionEntity.update(optionData);
+
+      clearOptionsCache();
+      return createInstance(pathwayData);
+    }
+
+    async function setDefaultOption(optionId: number): Promise<PathwayEntity> {
+      requirePersisted();
+
+      // Validate option exists and belongs to this pathway
+      const optionToSetDefault = await validateOptionOwnership(optionId);
+
+      // If already default, no-op
+      if (optionToSetDefault.isDefault) {
+        return createInstance(pathwayData);
+      }
+
+      // Use repository method that leverages base-repo
+      await pathwayOptionsRepository.setDefaultOption(
+        pathwayData.id as number,
+        optionId,
+      );
 
       clearOptionsCache();
       return createInstance(pathwayData);
@@ -426,6 +448,7 @@ export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
       addOption,
       removeOption,
       updateOption,
+      setDefaultOption,
     } as PathwayEntity;
   }
 

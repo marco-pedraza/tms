@@ -172,3 +172,23 @@ export const updatePathwayOption = api(
     );
   },
 );
+
+/**
+ * Sets a specific option as the default option for a pathway.
+ * @param params - Object containing pathway ID and option ID
+ * @returns {Promise<Pathway>} The updated pathway with the new default option
+ * @throws {APIError} If the pathway or option is not found, or operation fails
+ */
+export const setDefaultPathwayOption = api(
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/pathways/:pathwayId/options/:optionId/set-default',
+  },
+  async (params: { pathwayId: number; optionId: number }): Promise<Pathway> => {
+    return await pathwayApplicationService.setDefaultOption(
+      params.pathwayId,
+      params.optionId,
+    );
+  },
+);

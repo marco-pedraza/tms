@@ -1,5 +1,6 @@
 import type { TransactionalDB } from '@repo/base-repo';
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
+import { createPathwayOptionEntity } from '../pathway-options/pathway-option.entity';
 import { pathwayOptionRepository } from '../pathway-options/pathway-options.repository';
 import type { PathwayOption } from '../pathway-options/pathway-options.types';
 import type {
@@ -7,45 +8,59 @@ import type {
   Pathway,
   UpdatePathwayPayload,
 } from './pathways.types';
+import type {
+  AddPathwayOptionPayload,
+  PathwayEntity,
+  UpdatePathwayOptionPayloadClean,
+} from './pathways.types';
 import { pathwayRepository } from './pathways.repository';
-import {
-  type AddPathwayOptionPayload,
-  type PathwayEntity,
-  type UpdatePathwayOptionPayloadClean,
-  createPathwayEntity,
-} from './domain/pathway.entity';
+import { createPathwayEntity } from './pathway.entity';
 
 /**
  * Application service for pathway operations
  * Handles dependency injection and exposes domain operations to controllers
  */
 export function createPathwayApplicationService() {
-  // Initialize the pathway entity with injected repositories
+  // Create pathway option entity factory
+  const pathwayOptionEntityFactory = createPathwayOptionEntity({
+    pathwayOptionsRepository: pathwayOptionRepository,
+  });
+
+  // Initialize the pathway entity with injected repositories and factories
   const pathwayEntity = createPathwayEntity({
     pathwaysRepository: pathwayRepository,
     pathwayOptionsRepository: pathwayOptionRepository,
     nodesRepository: nodeRepository,
+    pathwayOptionEntityFactory,
   });
 
   /**
-   * Creates transaction-aware repositories with proper interfaces
+   * Creates transaction-aware repositories and factories with proper interfaces
    * @param tx - The transaction instance
-   * @returns Object with transaction-aware repositories
+   * @returns Object with transaction-aware repositories and factories
    */
   function createTransactionRepositories(tx: TransactionalDB) {
     const txPathwayOptionRepo = {
       ...pathwayOptionRepository.withTransaction(tx),
       findByPathwayId: (id: number) =>
         pathwayOptionRepository.findByPathwayId(id, tx),
-      delete: async (id: number): Promise<PathwayOption | null> => {
+      delete: async (id: number): Promise<PathwayOption> => {
         return await pathwayOptionRepository.withTransaction(tx).delete(id);
       },
+      setDefaultOption: (pathwayId: number, optionId: number) =>
+        pathwayOptionRepository.setDefaultOption(pathwayId, optionId, tx),
     };
     const txNodeRepo = nodeRepository.withTransaction(tx);
+
+    // Create transaction-aware pathway option entity factory
+    const txPathwayOptionEntityFactory = createPathwayOptionEntity({
+      pathwayOptionsRepository: txPathwayOptionRepo,
+    });
 
     return {
       txPathwayOptionRepo,
       txNodeRepo,
+      txPathwayOptionEntityFactory,
     };
   }
 
@@ -60,14 +75,15 @@ export function createPathwayApplicationService() {
     operation: (pathwayEntityInstance: PathwayEntity) => Promise<T>,
   ): Promise<T> {
     return pathwayRepository.transaction(async (txPathwayRepo, tx) => {
-      const { txPathwayOptionRepo, txNodeRepo } =
+      const { txPathwayOptionRepo, txNodeRepo, txPathwayOptionEntityFactory } =
         createTransactionRepositories(tx);
 
-      // Create entity with transaction repositories
+      // Create entity with transaction repositories and factories
       const txPathwayEntity = createPathwayEntity({
         pathwaysRepository: txPathwayRepo,
         pathwayOptionsRepository: txPathwayOptionRepo,
         nodesRepository: txNodeRepo,
+        pathwayOptionEntityFactory: txPathwayOptionEntityFactory,
       });
 
       // Find pathway (options will be loaded lazily by entity)
@@ -191,6 +207,25 @@ export function createPathwayApplicationService() {
     });
   }
 
+  /**
+   * Sets a specific option as the default option for a pathway
+   * @param pathwayId - The ID of the pathway containing the option
+   * @param optionId - The ID of the option to set as default
+   * @returns The updated pathway with the new default option
+   * @throws {FieldValidationError} If validation fails
+   * @throws {NotFoundError} If pathway or option is not found
+   */
+  function setDefaultOption(
+    pathwayId: number,
+    optionId: number,
+  ): Promise<Pathway> {
+    return executeInTransaction(pathwayId, async (pathwayEntityInstance) => {
+      const updatedEntity =
+        await pathwayEntityInstance.setDefaultOption(optionId);
+      return updatedEntity.toPathway();
+    });
+  }
+
   return {
     createPathway,
     updatePathway,
@@ -199,6 +234,7 @@ export function createPathwayApplicationService() {
     addOptionToPathway,
     removeOptionFromPathway,
     updatePathwayOption,
+    setDefaultOption,
   };
 }
 

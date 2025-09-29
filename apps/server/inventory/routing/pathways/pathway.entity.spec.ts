@@ -12,9 +12,11 @@ import {
   createUniqueCode,
   createUniqueName,
 } from '@/tests/shared/test-utils';
-import { pathwayOptionRepository } from '../../pathway-options/pathway-options.repository';
-import { pathwayOptions } from '../../pathway-options/pathway-options.schema';
-import { pathwayRepository } from '../pathways.repository';
+import { createPathwayOptionEntity } from '../pathway-options/pathway-option.entity';
+import { pathwayOptionRepository } from '../pathway-options/pathway-options.repository';
+import { pathwayOptions } from '../pathway-options/pathway-options.schema';
+import type { PathwayEntity } from './pathways.types';
+import { pathwayRepository } from './pathways.repository';
 import { createPathwayEntity } from './pathway.entity';
 
 describe('PathwayEntity', () => {
@@ -102,17 +104,23 @@ describe('PathwayEntity', () => {
 
     const nodeIds = [originNode.id, destinationNode.id];
 
-    // Create pathway entity with repositories
+    // Create pathway entity with repositories and factories
     const pathwayOptionRepo = {
       ...pathwayOptionRepository,
       findByPathwayId: (pathwayId: number) =>
         pathwayOptionRepository.findAllBy(pathwayOptions.pathwayId, pathwayId),
     };
 
+    // Create pathway option entity factory
+    const pathwayOptionEntityFactory = createPathwayOptionEntity({
+      pathwayOptionsRepository: pathwayOptionRepo,
+    });
+
     const pathwayEntity = createPathwayEntity({
       pathwaysRepository: pathwayRepository,
       pathwayOptionsRepository: pathwayOptionRepo,
       nodesRepository: nodeRepository,
+      pathwayOptionEntityFactory,
     });
 
     testData = {
@@ -127,8 +135,29 @@ describe('PathwayEntity', () => {
 
   afterEach(async () => {
     if (testData) {
-      // Clean up in dependency order
+      // Clean up pathway options first (to avoid foreign key constraints)
       await testData.pathwayOptionCleanup.cleanupAll();
+
+      // Clean up any remaining pathway options by pathway ID
+      for (const pathwayId of testData.pathwayCleanup.getTrackedIds()) {
+        try {
+          const options = await pathwayOptionRepository.findAllBy(
+            pathwayOptions.pathwayId,
+            pathwayId,
+          );
+          for (const option of options) {
+            try {
+              await pathwayOptionRepository.forceDelete(option.id);
+            } catch {
+              // Ignore if already deleted
+            }
+          }
+        } catch {
+          // Ignore if pathway doesn't exist
+        }
+      }
+
+      // Clean up pathways
       await testData.pathwayCleanup.cleanupAll();
 
       // Clean up nodes (created by repository)
@@ -389,6 +418,216 @@ describe('PathwayEntity', () => {
       expect(entityFromData.name).toBe('Minimal Pathway');
       expect(entityFromData.code).toBe('MIN-001');
       expect(entityFromData.isPersisted).toBe(true);
+    });
+  });
+
+  describe('pathway options integration', () => {
+    let savedPathway: PathwayEntity;
+
+    beforeEach(async () => {
+      // Create and save a pathway for option tests
+      const pathway = testData.pathwayEntity.create({
+        originNodeId: testData.nodeIds[0],
+        destinationNodeId: testData.nodeIds[1],
+        name: createUniqueName(
+          'Test Pathway for Options',
+          `${testSuiteId}-${Date.now()}`,
+        ),
+        code: createUniqueCode('TPO', 6),
+        description: 'Test pathway for option operations',
+        isSellable: true,
+        isEmptyTrip: false,
+        active: false,
+      });
+
+      savedPathway = await pathway.save();
+      testData.pathwayCleanup.track(savedPathway.id as number);
+    });
+
+    describe('addOption', () => {
+      it('should add option with automatic avgSpeed calculation', async () => {
+        const optionData = {
+          name: 'Test Option',
+          description: 'Test option with metrics',
+          distanceKm: 150,
+          typicalTimeMin: 120,
+          // avgSpeedKmh will be calculated automatically
+          isPassThrough: false,
+          active: true,
+        };
+
+        const updatedPathway = await savedPathway.addOption(optionData);
+        const options = await updatedPathway.options;
+
+        expect(options).toHaveLength(1);
+        expect(options[0]?.name).toBe('Test Option');
+        expect(options[0]?.distanceKm).toBe(150);
+        expect(options[0]?.typicalTimeMin).toBe(120);
+        expect(options[0]?.avgSpeedKmh).toBe(75); // (150 * 60) / 120 = 75
+        expect(options[0]?.isDefault).toBe(true); // First option becomes default
+        expect(options[0]?.active).toBe(true);
+
+        // Cleanup
+        if (options[0]) {
+          testData.pathwayOptionCleanup.track(options[0].id);
+        }
+      });
+
+      it('should validate required metrics when adding option', async () => {
+        const optionData = {
+          name: 'Invalid Option',
+          distanceKm: undefined, // Missing required field
+          typicalTimeMin: 120,
+          isPassThrough: false,
+          active: true,
+        };
+
+        await expect(savedPathway.addOption(optionData)).rejects.toThrow(
+          FieldValidationError,
+        );
+      });
+
+      it('should validate pass-through business rules when adding option', async () => {
+        const optionData = {
+          name: 'Pass-through Option',
+          distanceKm: 150,
+          typicalTimeMin: 120,
+          isPassThrough: true,
+          passThroughTimeMin: undefined, // Invalid: pass-through requires time
+          active: true,
+        };
+
+        await expect(savedPathway.addOption(optionData)).rejects.toThrow(
+          FieldValidationError,
+        );
+      });
+
+      it('should validate default-active business rules when adding option', async () => {
+        const optionData = {
+          name: 'Default Inactive Option',
+          distanceKm: 150,
+          typicalTimeMin: 120,
+          isDefault: true, // This will be set by business logic
+          active: false, // Invalid: default options must be active
+        };
+
+        await expect(savedPathway.addOption(optionData)).rejects.toThrow(
+          FieldValidationError,
+        );
+      });
+    });
+
+    describe('updateOption', () => {
+      let optionId: number;
+
+      beforeEach(async () => {
+        // Add an option to update
+        const updatedPathway = await savedPathway.addOption({
+          name: 'Original Option',
+          distanceKm: 100,
+          typicalTimeMin: 60,
+          isPassThrough: false,
+          active: true,
+        });
+
+        const options = await updatedPathway.options;
+        optionId = options[0]?.id as number;
+
+        if (options[0]) {
+          testData.pathwayOptionCleanup.track(options[0].id);
+        }
+      });
+
+      it('should update option with automatic avgSpeed recalculation', async () => {
+        const updateData = {
+          name: 'Updated Option',
+          distanceKm: 200,
+          typicalTimeMin: 100,
+        };
+
+        const updatedPathway = await savedPathway.updateOption(
+          optionId,
+          updateData,
+        );
+        const options = await updatedPathway.options;
+
+        expect(options).toHaveLength(1);
+        expect(options[0]?.name).toBe('Updated Option');
+        expect(options[0]?.distanceKm).toBe(200);
+        expect(options[0]?.typicalTimeMin).toBe(100);
+        expect(options[0]?.avgSpeedKmh).toBe(120); // (200 * 60) / 100 = 120
+      });
+
+      it('should validate metrics when updating option', async () => {
+        const updateData = {
+          distanceKm: 0, // Invalid: must be > 0
+          typicalTimeMin: 100,
+        };
+
+        await expect(
+          savedPathway.updateOption(optionId, updateData),
+        ).rejects.toThrow(FieldValidationError);
+      });
+
+      it('should validate business rules when updating option', async () => {
+        const updateData = {
+          isPassThrough: true,
+          passThroughTimeMin: undefined, // Invalid: pass-through requires time
+        };
+
+        await expect(
+          savedPathway.updateOption(optionId, updateData),
+        ).rejects.toThrow(FieldValidationError);
+      });
+    });
+
+    describe('option validation integration', () => {
+      it('should collect multiple validation errors at once', async () => {
+        const optionData = {
+          name: 'Invalid Option',
+          distanceKm: undefined, // Error 1: missing distance
+          typicalTimeMin: undefined, // Error 2: missing time
+          isPassThrough: false,
+          active: true,
+        };
+
+        try {
+          await savedPathway.addOption(optionData);
+          expect.fail('Should have thrown FieldValidationError');
+        } catch (error) {
+          expect(error).toBeInstanceOf(FieldValidationError);
+          const fieldError = error as FieldValidationError;
+
+          // Should have multiple field errors (distanceKm and typicalTimeMin)
+          expect(fieldError.fieldErrors.length).toBe(2);
+
+          // Check for specific field errors
+          const fieldNames = fieldError.fieldErrors.map((e) => e.field);
+          expect(fieldNames).toContain('distanceKm');
+          expect(fieldNames).toContain('typicalTimeMin');
+        }
+      });
+
+      it('should preserve avgSpeedKmh when provided explicitly', async () => {
+        const optionData = {
+          name: 'Custom Speed Option',
+          distanceKm: 150,
+          typicalTimeMin: 120,
+          avgSpeedKmh: 80, // Explicit speed (different from calculated 75)
+          isPassThrough: false,
+          active: true,
+        };
+
+        const updatedPathway = await savedPathway.addOption(optionData);
+        const options = await updatedPathway.options;
+
+        expect(options[0]?.avgSpeedKmh).toBe(80); // Should preserve explicit value
+
+        // Cleanup
+        if (options[0]) {
+          testData.pathwayOptionCleanup.track(options[0].id);
+        }
+      });
     });
   });
 });

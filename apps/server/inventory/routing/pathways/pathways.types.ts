@@ -1,4 +1,5 @@
 import { MatchesRegexp, Min, MinLen } from 'encore.dev/validate';
+import type { BaseDomainEntity } from '@/shared/domain/base-entity';
 import {
   ListQueryParams,
   ListQueryResult,
@@ -6,6 +7,12 @@ import {
   PaginatedListQueryResult,
 } from '@/shared/types';
 import { Node } from '@/inventory/locations/nodes/nodes.types';
+import type { PathwayOptionEntity } from '@/inventory/routing/pathway-options/pathway-option.entity.types';
+import type {
+  CreatePathwayOptionPayload,
+  PathwayOption,
+  UpdatePathwayOptionPayload,
+} from '@/inventory/routing/pathway-options/pathway-options.types';
 
 /**
  * Base interface representing a pathway entity
@@ -163,3 +170,120 @@ export type PaginatedListPathwaysQueryParams =
   PaginatedListQueryParams<Pathway>;
 export type PaginatedListPathwaysResult =
   PaginatedListQueryResult<PathwayWithRelations>;
+
+// =============================================================================
+// DOMAIN ENTITY TYPES
+// =============================================================================
+
+/**
+ * Payload for adding options to a pathway
+ * Excludes pathwayId (set automatically) and isDefault (managed by business rules)
+ */
+export type AddPathwayOptionPayload = Omit<
+  CreatePathwayOptionPayload,
+  'pathwayId' | 'isDefault'
+>;
+
+/**
+ * Payload for updating pathway options
+ * Excludes pathwayId (immutable) and isDefault (managed by business rules)
+ */
+export type UpdatePathwayOptionPayloadClean = Omit<
+  UpdatePathwayOptionPayload,
+  'pathwayId' | 'isDefault'
+>;
+
+/**
+ * Dependencies interface for pathway entity factory function
+ * Defines the repository contracts and entity factories needed for pathway entity operations
+ */
+export interface PathwayEntityDependencies {
+  pathwaysRepository: {
+    create: (
+      payload: CreatePathwayPayload & {
+        originCityId: number;
+        destinationCityId: number;
+      },
+    ) => Promise<Pathway>;
+    update: (id: number, payload: UpdatePathwayPayload) => Promise<Pathway>;
+    findOne: (id: number) => Promise<Pathway>; // Throws NotFoundError if not found
+  };
+  pathwayOptionsRepository: {
+    findByPathwayId: (pathwayId: number) => Promise<PathwayOption[]>;
+    create: (payload: CreatePathwayOptionPayload) => Promise<PathwayOption>;
+    update: (
+      id: number,
+      payload: UpdatePathwayOptionPayload,
+    ) => Promise<PathwayOption>;
+    findOne: (id: number) => Promise<PathwayOption>; // Throws NotFoundError if not found
+    delete: (id: number) => Promise<PathwayOption>; // Throws NotFoundError if not found
+    setDefaultOption: (pathwayId: number, optionId: number) => Promise<void>;
+  };
+  nodesRepository: {
+    findOne: (id: number) => Promise<{ id: number; cityId: number }>;
+  };
+  pathwayOptionEntityFactory: {
+    create: (payload: CreatePathwayOptionPayload) => PathwayOptionEntity;
+    findOne: (id: number) => Promise<PathwayOptionEntity>;
+    fromData: (data: PathwayOption) => PathwayOptionEntity;
+  };
+}
+
+/**
+ * Pathway entity with domain behavior
+ * Extends all pathway properties for direct access (e.g., instance.name instead of instance.data.name)
+ */
+export interface PathwayEntity
+  extends Omit<Pathway, 'id'>,
+    BaseDomainEntity<PathwayEntity, UpdatePathwayPayload> {
+  /** Associated pathway options (lazy-loaded) */
+  options: Promise<PathwayOption[]>;
+
+  /**
+   * Extracts plain pathway data from the entity
+   * @returns Plain pathway object without entity methods
+   */
+  toPathway: () => Pathway;
+
+  /**
+   * Adds an option to this pathway
+   * @param optionData - Option data (pathwayId and isDefault are set automatically)
+   * @returns A new PathwayEntity instance with the added option
+   * @throws {FieldValidationError} If validation fails
+   * @throws {ValidationError} If pathway is not persisted
+   */
+  addOption: (optionData: AddPathwayOptionPayload) => Promise<PathwayEntity>;
+
+  /**
+   * Removes an option from this pathway
+   * @param optionId - The ID of the option to remove
+   * @returns A new PathwayEntity instance without the removed option
+   * @throws {NotFoundError} If option is not found
+   * @throws {ValidationError} If option doesn't belong to this pathway
+   * @throws {FieldValidationError} If trying to remove default option or last option from active pathway
+   */
+  removeOption: (optionId: number) => Promise<PathwayEntity>;
+
+  /**
+   * Updates an existing option
+   * @param optionId - The ID of the option to update
+   * @param optionData - Option update data (isDefault and pathwayId are managed separately)
+   * @returns A new PathwayEntity instance with updated option
+   * @throws {NotFoundError} If option is not found
+   * @throws {ValidationError} If option doesn't belong to this pathway
+   */
+  updateOption: (
+    optionId: number,
+    optionData: UpdatePathwayOptionPayloadClean,
+  ) => Promise<PathwayEntity>;
+
+  /**
+   * Sets an option as the default option
+   * Only one option can be default per pathway
+   * @param optionId - The ID of the option to set as default
+   * @returns A new PathwayEntity instance with updated default option
+   * @throws {NotFoundError} If option is not found
+   * @throws {ValidationError} If option doesn't belong to this pathway
+   */
+  setDefaultOption: (optionId: number) => Promise<PathwayEntity>;
+}

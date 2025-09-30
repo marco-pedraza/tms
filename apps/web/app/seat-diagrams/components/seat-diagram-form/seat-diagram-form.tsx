@@ -511,6 +511,7 @@ export default function SeatDiagramForm({
                       {tSeatDiagrams('actions.addFloor')}
                     </Button>
                     <form.Subscribe
+                      // @ts-expect-error - Form library expects FormState return but we need array destructuring pattern
                       selector={(state) => {
                         const errorsKeys = state.errors.reduce(
                           (acc, errorMap) => {
@@ -528,6 +529,7 @@ export default function SeatDiagramForm({
                         return [hasSeatsPerFloorErrors];
                       }}
                     >
+                      {/* @ts-expect-error - Form library expects FormState parameter but we use array destructuring */}
                       {([hasSeatsPerFloorErrors]: [boolean]) => (
                         <Button
                           variant="outline"
@@ -562,11 +564,17 @@ export default function SeatDiagramForm({
           title={tSeatDiagrams('sections.seatsConfiguration')}
           className="w-full max-w-none"
         >
-          <spaceForm.Subscribe selector={(state) => [state.values]}>
+          <spaceForm.Subscribe
+            // @ts-expect-error - Form library expects FormState return but we need array destructuring pattern
+            selector={(state) => [state.values]}
+          >
+            {/* @ts-expect-error - Form library expects FormState parameter but we use array destructuring */}
             {([selectedSpace]: [SeatDiagramSpace]) => (
               <form.Subscribe
+                // @ts-expect-error - Form library expects FormState return but we need array destructuring pattern
                 selector={(state) => [state.values.seatConfiguration]}
               >
+                {/* @ts-expect-error - Form library expects FormState parameter but we use array destructuring */}
                 {([seatConfiguration]: [SeatDiagramSpace[]]) =>
                   seatConfiguration.length === 0 ? (
                     <div>
@@ -672,6 +680,7 @@ export default function SeatDiagramForm({
                             </CardHeader>
                             <CardContent className="h-full">
                               <spaceForm.Subscribe
+                                // @ts-expect-error - Form library expects FormState return but we need array destructuring pattern
                                 selector={(state) => {
                                   return [
                                     state.values.spaceType,
@@ -680,6 +689,7 @@ export default function SeatDiagramForm({
                                   ];
                                 }}
                               >
+                                {/* @ts-expect-error - Form library expects FormState parameter but we use array destructuring */}
                                 {([spaceType, canSubmit, isSubmitting]: [
                                   SpaceType,
                                   boolean,

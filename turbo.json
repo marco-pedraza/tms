@@ -38,6 +38,13 @@
     },
     "encore:check": {
       "dependsOn": ["^encore:check"]
+    },
+    "storybook": {
+      "cache": false,
+      "persistent": true
+    },
+    "shadcn": {
+      "cache": false
     }
   }
 }

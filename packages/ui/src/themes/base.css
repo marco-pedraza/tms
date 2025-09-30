@@ -1,0 +1,164 @@
+/* IMS Design Tokens - Base Theme */
+
+:root {
+  /* ========================================
+   * IMS Brand Colors (OKLCH format)
+   * ======================================== */
+
+  /* Primary Colors */
+  --ims-primary: oklch(0.285 0.098 154.5); /* #00491F - Dark Green */
+  --ims-primary-light: oklch(0.65 0.15 154.5); /* #00AF68 - Light Green */
+
+  /* Accent Colors */
+  --ims-accent: oklch(0.68 0.15 45); /* #FF6800 - Orange */
+  --ims-accent-strong: oklch(0.55 0.12 45); /* #D55701 - Strong Orange */
+
+  /* ========================================
+   * Gray Scale Palette
+   * ======================================== */
+
+  /* Gray Tokens */
+  --ims-gray-600: oklch(0.158 0 0); /* #232323 - Darkest Gray */
+  --ims-gray-500: oklch(0.437 0 0); /* #686868 - Dark Gray */
+  --ims-gray-400: oklch(0.639 0 0); /* #9B9B9B - Medium Gray */
+  --ims-gray-300: oklch(0.804 0 0); /* #C7C7C7 - Light Gray */
+  --ims-gray-200: oklch(0.916 0 0); /* #E6E6E6 - Very Light Gray */
+  --ims-gray-100: oklch(0.967 0 0); /* #F5F5F5 - Lightest Gray */
+
+  /* ========================================
+   * Status Colors
+   * ======================================== */
+
+  /* Success Colors */
+  --ims-success: oklch(0.713 0.142 132.5); /* #66BA5B - Success Green */
+  --ims-success-strong: oklch(0.548 0.108 132.5); /* #428B3D - Strong Success */
+
+  /* Error Colors */
+  --ims-error: oklch(0.544 0.233 27.3); /* #FF040E - Error Red */
+  --ims-error-strong: oklch(0.398 0.186 27.3); /* #C70106 - Strong Error */
+
+  /* ========================================
+   * Semantic Color Mapping
+   * ======================================== */
+
+  /* Primary System Colors */
+  --primary: var(--ims-primary);
+  --primary-foreground: oklch(0.985 0 0); /* White text on primary */
+  --primary-light: var(--ims-primary-light);
+  --primary-light-foreground: oklch(
+    0.985 0 0
+  ); /* White text on primary light */
+
+  /* Accent System Colors */
+  --accent: var(--ims-accent);
+  --accent-foreground: oklch(0.985 0 0); /* White text on accent */
+  --accent-strong: var(--ims-accent-strong);
+  --accent-strong-foreground: oklch(
+    0.985 0 0
+  ); /* White text on strong accent */
+
+  /* Secondary Colors (keep existing neutral palette) */
+  --secondary: oklch(0.97 0 0); /* Light gray */
+  --secondary-foreground: var(--ims-primary); /* Use IMS primary for text */
+
+  /* Background & Surface Colors */
+  --background: oklch(1 0 0); /* White */
+  --foreground: var(--ims-gray-600); /* Use IMS darkest gray for main text */
+  --card: oklch(1 0 0); /* White cards */
+  --card-foreground: var(--ims-gray-600); /* IMS darkest gray for card text */
+
+  /* Interactive Elements */
+  --muted: var(--ims-gray-100); /* IMS lightest gray */
+  --muted-foreground: var(--ims-gray-500); /* IMS dark gray text */
+  --border: var(--ims-gray-200); /* IMS very light gray border */
+  --input: var(--ims-gray-100); /* IMS lightest gray input background */
+  --ring: var(--ims-primary-light); /* Focus ring - use primary light */
+
+  /* Status Colors */
+  --destructive: var(--ims-error); /* IMS error red */
+  --destructive-foreground: oklch(0.985 0 0); /* White text on destructive */
+  --success: var(--ims-success); /* IMS success green */
+  --success-foreground: oklch(0.985 0 0); /* White text on success */
+
+  /* Layout Elements */
+  --sidebar: var(--ims-gray-100); /* IMS lightest gray */
+  --sidebar-foreground: var(--ims-gray-600); /* IMS darkest gray text */
+  --sidebar-primary: var(--ims-primary); /* IMS primary for active items */
+  --sidebar-primary-foreground: oklch(0.985 0 0); /* White text */
+  --sidebar-accent: var(--ims-gray-200); /* IMS very light gray for hover */
+  --sidebar-accent-foreground: var(--ims-gray-600); /* IMS darkest gray text */
+  --sidebar-border: var(--ims-gray-200); /* IMS very light gray border */
+  --sidebar-ring: var(--ims-primary-light); /* Focus ring */
+
+  /* Charts (using IMS brand colors) */
+  --chart-1: var(--ims-primary); /* Primary green */
+  --chart-2: var(--ims-primary-light); /* Light green */
+  --chart-3: var(--ims-accent); /* Orange */
+  --chart-4: var(--ims-accent-strong); /* Strong orange */
+  --chart-5: var(--ims-success); /* IMS success green */
+
+  /* Border Radius */
+  --radius: 0.625rem;
+
+  /* Popover Colors */
+  --popover: oklch(1 0 0); /* White */
+  --popover-foreground: var(--ims-primary); /* IMS primary text */
+}
+
+/* ========================================
+ * Dark Theme Overrides
+ * ======================================== */
+
+.dark {
+  /* Background & Surface */
+  --background: var(--ims-gray-600); /* IMS darkest gray background */
+  --foreground: var(--ims-gray-100); /* IMS lightest gray text */
+  --card: var(--ims-gray-500); /* IMS dark gray card background */
+  --card-foreground: var(--ims-gray-100); /* IMS lightest gray text on cards */
+
+  /* Primary Colors (lighter in dark mode) */
+  --primary: var(--ims-primary-light); /* Use light green in dark mode */
+  --primary-foreground: oklch(0.145 0 0); /* Dark text on light green */
+
+  /* Accent Colors (same, good contrast in dark) */
+  --accent: var(--ims-accent); /* Orange works well in dark */
+  --accent-foreground: oklch(0.145 0 0); /* Dark text on orange */
+
+  /* Secondary Colors */
+  --secondary: var(--ims-gray-400); /* IMS medium gray */
+  --secondary-foreground: var(--ims-gray-100); /* IMS lightest gray text */
+
+  /* Interactive Elements */
+  --muted: var(--ims-gray-500); /* IMS dark gray */
+  --muted-foreground: var(--ims-gray-300); /* IMS light gray text */
+  --border: var(--ims-gray-400); /* IMS medium gray border */
+  --input: var(--ims-gray-500); /* IMS dark gray input background */
+  --ring: var(--ims-primary-light); /* Keep primary light for focus */
+
+  /* Status Colors */
+  --destructive: var(--ims-error); /* IMS error red (same in dark) */
+  --destructive-foreground: oklch(0.985 0 0); /* Light text */
+  --success: var(--ims-success); /* IMS success green (same in dark) */
+  --success-foreground: oklch(0.985 0 0); /* Light text */
+
+  /* Layout Elements */
+  --sidebar: var(--ims-gray-500); /* IMS dark gray sidebar */
+  --sidebar-foreground: var(--ims-gray-100); /* IMS lightest gray text */
+  --sidebar-primary: var(--ims-primary-light); /* Light green for active */
+  --sidebar-primary-foreground: var(--ims-gray-600); /* IMS darkest gray text */
+  --sidebar-accent: var(--ims-gray-400); /* IMS medium gray for hover */
+  --sidebar-accent-foreground: var(--ims-gray-100); /* IMS lightest gray text */
+  --sidebar-border: var(--ims-gray-400); /* IMS medium gray border */
+  --sidebar-ring: var(--ims-primary-light); /* Focus ring */
+
+  /* Charts (adjust for dark mode) */
+  --chart-1: var(--ims-primary-light); /* Light green */
+  --chart-2: var(--ims-primary); /* Dark green */
+  --chart-3: var(--ims-accent); /* Orange */
+  --chart-4: var(--ims-accent-strong); /* Strong orange */
+  --chart-5: var(--ims-success); /* IMS success green */
+
+  /* Popover Colors */
+  --popover: var(--ims-gray-500); /* IMS dark gray popover */
+  --popover-foreground: var(--ims-gray-100); /* IMS lightest gray text */
+}

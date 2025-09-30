@@ -10,7 +10,9 @@
     "check-types": "turbo run check-types",
     "server:test": "turbo run test:encore --filter=ims-server",
     "encore:gen-client": "turbo run ims-server#encore:gen-client",
-    "encore:check": "turbo run ims-server#encore:check"
+    "encore:check": "turbo run ims-server#encore:check",
+    "storybook": "turbo run storybook",
+    "shadcn": "turbo run shadcn --filter=@repo/ui --"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

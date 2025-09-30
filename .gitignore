@@ -47,3 +47,6 @@ encore.gen.cue
 
 #Ignore cursor AI rules
 .cursor/rules/codacy.mdc
+
+*storybook.log
+storybook-static

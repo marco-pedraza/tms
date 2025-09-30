@@ -1,0 +1,12 @@
+/* IMS Theme System - Entry Point */
+
+@import './base.css';
+
+/* 
+ * This file serves as the entry point for the IMS theme system.
+ * Currently includes only the base theme with light/dark variants.
+ * 
+ * Future themes can be added here as needed:
+ * @import './compact.css';
+ * @import './high-contrast.css';
+ */

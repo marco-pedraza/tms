@@ -44,6 +44,7 @@ export default function SelectInput({
         {label}
         {isRequired && <span className="text-red-500">*</span>}
       </Label>
+      {/* @ts-expect-error - inputProps may contain defaultValue with number type but Select expects string */}
       <Select
         value={field.state.value ?? ''}
         onValueChange={field.handleChange}

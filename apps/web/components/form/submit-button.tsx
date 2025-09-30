@@ -10,7 +10,11 @@ export default function SubmitButton({ children }: SubmitButtonProps) {
   const form = useFormContext();
 
   return (
-    <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+    <form.Subscribe
+      // @ts-expect-error - Form library expects FormState return but we need array destructuring pattern
+      selector={(state) => [state.canSubmit, state.isSubmitting]}
+    >
+      {/* @ts-expect-error - Form library expects FormState parameter but we use array destructuring */}
       {([canSubmit, isSubmitting]: [boolean, boolean]) => (
         <Button type="submit" disabled={!canSubmit || isSubmitting}>
           {isSubmitting && <Loader2 className="animate-spin" />}

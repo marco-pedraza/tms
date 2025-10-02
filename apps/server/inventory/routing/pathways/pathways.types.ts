@@ -181,12 +181,21 @@ export type PaginatedListPathwaysResult =
 
 /**
  * Payload for adding options to a pathway
- * Excludes pathwayId (set automatically) and isDefault (managed by business rules)
+ * Excludes pathwayId (set automatically)
+ * isDefault is optional - if not provided, first option becomes default automatically
  */
 export type AddPathwayOptionPayload = Omit<
   CreatePathwayOptionPayload,
-  'pathwayId' | 'isDefault'
->;
+  'pathwayId'
+> & {
+  /**
+   * Whether this option should be the default
+   * Optional - if not provided:
+   * - First option: becomes default automatically
+   * - Subsequent options: NOT default
+   */
+  isDefault?: boolean;
+};
 
 /**
  * Payload for updating pathway options
@@ -197,10 +206,87 @@ export type UpdatePathwayOptionPayloadClean = Omit<
   'pathwayId' | 'isDefault'
 >;
 
+// =============================================================================
+// BULK SYNC TYPES
+// =============================================================================
+
 /**
- * Dependencies interface for pathway entity factory function
- * Defines the repository contracts and entity factories needed for pathway entity operations
+ * Input for a single option in bulk sync operation (API type)
+ * Does not include tempId (internal implementation detail)
  */
+export interface BulkSyncOptionInput {
+  /** ID of existing option (omit for new options) */
+  id?: number;
+
+  /** Name of the option */
+  name: string;
+
+  /** Description of the option */
+  description?: string | null;
+
+  /** Distance in kilometers */
+  distanceKm: number;
+
+  /** Typical time in minutes */
+  typicalTimeMin: number;
+
+  /** Average speed in km/h (calculated automatically if not provided) */
+  avgSpeedKmh?: number;
+
+  /** Whether this is a pass-through option */
+  isPassThrough: boolean;
+
+  /** Pass-through time in minutes (required if isPassThrough is true) */
+  passThroughTimeMin?: number | null;
+
+  /** Sequence number for ordering */
+  sequence?: number | null;
+
+  /** Whether the option is active */
+  active: boolean;
+
+  /** Whether this option should be the default */
+  isDefault?: boolean;
+
+  /** Optional array of tolls for this option */
+  tolls?: SyncTollsInput[];
+}
+
+/**
+ * Internal type with tempId for tracking new options during bulk sync
+ * Used internally to map newly created options to their tolls
+ */
+export interface BulkSyncOptionInputInternal extends BulkSyncOptionInput {
+  /** Temporary ID for new options (used internally to map tolls) */
+  tempId?: number;
+}
+
+/**
+ * Payload for bulk sync operation
+ */
+export interface BulkSyncOptionsPayload {
+  /** Array of options to sync (creates, updates, deletes determined by presence of id) */
+  options: BulkSyncOptionInput[];
+}
+
+/**
+ * Result of categorizing bulk sync operations
+ */
+export interface CategorizedOperations {
+  /** Options to create (with tempId for internal tracking) */
+  toCreate: [number, BulkSyncOptionInputInternal][];
+
+  /** Options to update */
+  toUpdate: BulkSyncOptionInputInternal[];
+
+  /** Options to delete (current options not in payload) */
+  toDelete: PathwayOption[];
+}
+
+// =============================================================================
+// PATHWAY ENTITY DEPENDENCIES AND INTERFACE
+// =============================================================================
+
 export interface PathwayEntityDependencies {
   pathwaysRepository: {
     create: (
@@ -224,11 +310,14 @@ export interface PathwayEntityDependencies {
     setDefaultOption: (pathwayId: number, optionId: number) => Promise<void>;
   };
   nodesRepository: {
-    findOne: (id: number) => Promise<{ id: number; cityId: number }>;
+    findOne: (id: number) => Promise<Node>; // Throws NotFoundError if not found
   };
   pathwayOptionEntityFactory: {
-    create: (payload: CreatePathwayOptionPayload) => PathwayOptionEntity;
+    create: (
+      payload: CreatePathwayOptionPayload,
+    ) => PathwayOptionEntity & { save: () => Promise<PathwayOptionEntity> };
     findOne: (id: number) => Promise<PathwayOptionEntity>;
+
     fromData: (data: PathwayOption) => PathwayOptionEntity;
   };
 }
@@ -251,7 +340,7 @@ export interface PathwayEntity
 
   /**
    * Adds an option to this pathway
-   * @param optionData - Option data (pathwayId and isDefault are set automatically)
+   * @param optionData - Option data (pathwayId set automatically, isDefault optional)
    * @returns A new PathwayEntity instance with the added option
    * @throws {FieldValidationError} If validation fails
    * @throws {ValidationError} If pathway is not persisted
@@ -292,11 +381,10 @@ export interface PathwayEntity
   setDefaultOption: (optionId: number) => Promise<PathwayEntity>;
 
   /**
-   * Synchronizes tolls for a pathway option (destructive operation)
-   * Delegates to PathwayOptionEntity while maintaining aggregate boundary
+   * Synchronizes tolls for an option (destructive operation)
    * @param optionId - The ID of the option to sync tolls for
    * @param tolls - Array of toll inputs (sequence assigned automatically 1..N)
-   * @returns A new PathwayEntity instance after sync
+   * @returns A new PathwayEntity instance with synchronized tolls
    * @throws {NotFoundError} If option is not found
    * @throws {ValidationError} If option doesn't belong to this pathway
    * @throws {FieldValidationError} If toll validation fails
@@ -307,10 +395,9 @@ export interface PathwayEntity
   ) => Promise<PathwayEntity>;
 
   /**
-   * Gets all tolls for a pathway option
-   * Delegates to PathwayOptionEntity while maintaining aggregate boundary
-   * @param optionId - The ID of the option to get tolls from
-   * @returns Array of pathway option tolls ordered by sequence
+   * Gets all tolls for an option
+   * @param optionId - The ID of the option to get tolls for
+   * @returns Array of pathway option tolls
    * @throws {NotFoundError} If option is not found
    * @throws {ValidationError} If option doesn't belong to this pathway
    */

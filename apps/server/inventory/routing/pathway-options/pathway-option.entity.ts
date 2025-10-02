@@ -453,5 +453,11 @@ export function createPathwayOptionEntity(
     findOne,
     fromData: createEntityFromData,
     calculateMetrics: calculateAvgSpeed,
+    // Export validation functions for reuse
+    validators: {
+      validateNoDuplicateTollNodes,
+      validateNoConsecutiveDuplicates,
+      validateTollNodesExist,
+    },
   };
 }

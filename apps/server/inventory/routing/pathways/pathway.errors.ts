@@ -54,16 +54,71 @@ const PATHWAY_ERROR_CONFIG = {
   },
 } as const;
 
+// Bulk sync-specific error configuration
+const BULK_SYNC_ERROR_CONFIG = {
+  emptyOptions: {
+    message: 'Pathway must have at least one option',
+    field: 'options',
+    code: 'REQUIRED',
+  },
+  cannotRemoveAllOptionsFromActivePathway: {
+    message: 'Cannot remove all options from an active pathway',
+    field: 'options',
+    code: 'INVALID_OPERATION',
+  },
+  multipleDefaults: {
+    message: 'Only one option can be marked as default',
+    field: 'options',
+    code: 'MULTIPLE_DEFAULTS',
+  },
+  duplicateOptionNames: {
+    message: 'Duplicate option names found',
+    field: 'options',
+    code: 'DUPLICATE_NAMES',
+  },
+  optionsNotFound: {
+    message: 'Some options were not found',
+    field: 'options',
+    code: 'OPTIONS_NOT_FOUND',
+  },
+  optionsFromDifferentPathway: {
+    message: 'Some options belong to a different pathway',
+    field: 'options',
+    code: 'WRONG_PATHWAY',
+  },
+  tollNodesNotFound: {
+    message: 'Some toll nodes were not found',
+    field: 'tolls',
+    code: 'NODES_NOT_FOUND',
+  },
+  duplicateTollNodesInOption: {
+    message: 'Duplicate toll nodes found within an option',
+    field: 'tolls',
+    code: 'DUPLICATE_NODES',
+  },
+  consecutiveDuplicateTolls: {
+    message: 'Consecutive duplicate toll nodes are not allowed',
+    field: 'tolls',
+    code: 'CONSECUTIVE_DUPLICATES',
+  },
+} as const;
+
 // Generate error helpers automatically
 const basePathwayErrors =
   createDomainErrorHelpersWithFields(PATHWAY_ERROR_CONFIG);
+const bulkSyncErrorHelpers = createDomainErrorHelpersWithFields(
+  BULK_SYNC_ERROR_CONFIG,
+);
 
 /**
  * Helper functions to add pathway-specific errors to collector
  */
 export const pathwayErrors = {
-  // Use generated helpers for most cases
+  // Use generated helpers for base pathway errors
   ...basePathwayErrors,
+
+  // Use generated helpers for bulk sync errors
+  ...bulkSyncErrorHelpers,
 
   /**
    * Adds error when option belongs to different pathway

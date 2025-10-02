@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import type { TransactionalDB } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
@@ -24,26 +24,53 @@ export function createPathwayOptionRepository() {
   });
 
   /**
-   * Helper function to get the appropriate repository instance based on transaction context
-   * @param tx - Optional transaction instance
-   * @returns Repository instance (transactional or base)
-   */
-  function getRepository(tx?: TransactionalDB) {
-    return tx ? baseRepository.withTransaction(tx) : baseRepository;
-  }
-
-  /**
-   * Finds all pathway options for a specific pathway
+   * Finds all pathway options for a specific pathway (excluding soft-deleted)
    * @param pathwayId - The pathway ID to find options for
    * @param tx - Optional transaction instance
-   * @returns Array of pathway options
+   * @returns Array of pathway options (only non-deleted)
    */
   async function findByPathwayId(
     pathwayId: number,
     tx?: TransactionalDB,
   ): Promise<PathwayOption[]> {
-    const repo = getRepository(tx);
-    return await repo.findAllBy(pathwayOptions.pathwayId, pathwayId);
+    const dbInstance = tx || db;
+
+    // Query with explicit deletedAt filter to exclude soft-deleted options
+    return await dbInstance
+      .select()
+      .from(pathwayOptions)
+      .where(
+        and(
+          eq(pathwayOptions.pathwayId, pathwayId),
+          isNull(pathwayOptions.deletedAt),
+        ),
+      );
+  }
+
+  /**
+   * Finds multiple pathway options by their IDs
+   * @param ids - Array of option IDs to find
+   * @param tx - Optional transaction instance
+   * @returns Array of found pathway options (may be less than requested if some don't exist)
+   */
+  async function findByIds(
+    ids: number[],
+    tx?: TransactionalDB,
+  ): Promise<PathwayOption[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const dbInstance = tx || db;
+
+    const results = await dbInstance
+      .select()
+      .from(pathwayOptions)
+      .where(
+        and(inArray(pathwayOptions.id, ids), isNull(pathwayOptions.deletedAt)),
+      );
+
+    return results;
   }
 
   /**
@@ -101,6 +128,7 @@ export function createPathwayOptionRepository() {
   return {
     ...baseRepository,
     findByPathwayId,
+    findByIds,
     setDefaultOption,
   };
 }

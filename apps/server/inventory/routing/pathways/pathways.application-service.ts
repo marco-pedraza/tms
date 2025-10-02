@@ -7,17 +7,17 @@ import type {
   SyncTollsInput,
 } from '../pathway-options-tolls/pathway-options-tolls.types';
 import { createPathwayOptionEntity } from '../pathway-options/pathway-option.entity';
+import { createPathwayOptionDomainService } from '../pathway-options/pathway-options.domain-service';
 import { pathwayOptionRepository } from '../pathway-options/pathway-options.repository';
 import type { PathwayOption } from '../pathway-options/pathway-options.types';
 import type {
+  AddPathwayOptionPayload,
+  BulkSyncOptionsPayload,
   CreatePathwayPayload,
   Pathway,
-  UpdatePathwayPayload,
-} from './pathways.types';
-import type {
-  AddPathwayOptionPayload,
   PathwayEntity,
   UpdatePathwayOptionPayloadClean,
+  UpdatePathwayPayload,
 } from './pathways.types';
 import { pathwayRepository } from './pathways.repository';
 import { createPathwayEntity } from './pathway.entity';
@@ -33,6 +33,9 @@ export function createPathwayApplicationService() {
     pathwayOptionTollsRepository: pathwayOptionTollRepository,
     nodesRepository: nodeRepository,
   });
+
+  // Note: pathwayOptionDomainService is not initialized here
+  // It's created with transaction-wrapped repositories in createTransactionRepositories()
 
   // Initialize the pathway entity with injected repositories and factories
   const pathwayEntity = createPathwayEntity({
@@ -52,6 +55,7 @@ export function createPathwayApplicationService() {
       ...pathwayOptionRepository.withTransaction(tx),
       findByPathwayId: (id: number) =>
         pathwayOptionRepository.findByPathwayId(id, tx),
+      findByIds: (ids: number[]) => pathwayOptionRepository.findByIds(ids, tx),
       delete: async (id: number): Promise<PathwayOption> => {
         return await pathwayOptionRepository.withTransaction(tx).delete(id);
       },
@@ -80,10 +84,18 @@ export function createPathwayApplicationService() {
       nodesRepository: txNodeRepo,
     });
 
+    // Create transaction-aware domain service
+    const txPathwayOptionDomainService = createPathwayOptionDomainService({
+      pathwayOptionRepository: txPathwayOptionRepo,
+      nodeRepository: txNodeRepo,
+      pathwayOptionEntityFactory: txPathwayOptionEntityFactory,
+    });
+
     return {
       txPathwayOptionRepo,
       txNodeRepo,
       txPathwayOptionEntityFactory,
+      txPathwayOptionDomainService,
     };
   }
 
@@ -287,6 +299,68 @@ export function createPathwayApplicationService() {
     return await pathway.getOptionTolls(optionId);
   }
 
+  // =============================================================================
+  // BULK SYNC OPERATIONS - Application service orchestration
+  // =============================================================================
+
+  /**
+   * Synchronizes pathway options with create/update/delete operations
+   * Application service only handles transaction orchestration
+   * All business logic is delegated to the domain service
+   *
+   * @param pathwayId - The ID of the pathway
+   * @param payload - Sync payload with options array
+   * @returns The updated pathway with all synchronized options
+   * @throws {FieldValidationError} If validation fails
+   * @throws {NotFoundError} If pathway is not found
+   */
+  function syncPathwayOptions(
+    pathwayId: number,
+    payload: BulkSyncOptionsPayload,
+  ): Promise<Pathway> {
+    return pathwayRepository.transaction(async (txPathwayRepo, tx) => {
+      // ═══════════════════════════════════════════════════════════
+      // 1. Create transaction-aware dependencies
+      // ═══════════════════════════════════════════════════════════
+      const {
+        txPathwayOptionRepo,
+        txNodeRepo,
+        txPathwayOptionEntityFactory,
+        txPathwayOptionDomainService,
+      } = createTransactionRepositories(tx);
+
+      // ═══════════════════════════════════════════════════════════
+      // 2. Create entity with transaction repositories
+      // ═══════════════════════════════════════════════════════════
+      const txPathwayEntity = createPathwayEntity({
+        pathwaysRepository: txPathwayRepo,
+        pathwayOptionsRepository: txPathwayOptionRepo,
+        nodesRepository: txNodeRepo,
+        pathwayOptionEntityFactory: txPathwayOptionEntityFactory,
+      });
+
+      // ═══════════════════════════════════════════════════════════
+      // 3. Load pathway and create entity instance
+      // ═══════════════════════════════════════════════════════════
+      const pathway = await txPathwayRepo.findOne(pathwayId);
+      const pathwayEntityInstance = txPathwayEntity.fromData(pathway);
+
+      // ═══════════════════════════════════════════════════════════
+      // 4. Delegate to domain service (executes complete bulk sync)
+      // ═══════════════════════════════════════════════════════════
+      const updatedEntity = await txPathwayOptionDomainService.bulkSyncOptions(
+        pathwayEntityInstance,
+        pathwayId,
+        payload,
+      );
+
+      // ═══════════════════════════════════════════════════════════
+      // 5. Return updated pathway
+      // ═══════════════════════════════════════════════════════════
+      return updatedEntity.toPathway();
+    });
+  }
+
   return {
     createPathway,
     updatePathway,
@@ -298,6 +372,7 @@ export function createPathwayApplicationService() {
     setDefaultOption,
     syncOptionTolls,
     getOptionTolls,
+    syncPathwayOptions,
   };
 }
 

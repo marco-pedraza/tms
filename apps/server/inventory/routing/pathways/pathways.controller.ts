@@ -8,6 +8,7 @@ import type {
   UpdatePathwayOptionPayload,
 } from '../pathway-options/pathway-options.types';
 import type {
+  BulkSyncOptionInput,
   CreatePathwayPayload,
   ListPathwaysQueryParams,
   ListPathwaysResult,
@@ -248,5 +249,45 @@ export const listPathwayOptionTolls = api(
       params.optionId,
     );
     return { data: tolls };
+  },
+);
+
+/**
+ * Synchronizes pathway options with their tolls (destructive operation)
+ *
+ * This endpoint allows creating, updating, and deleting multiple pathway options
+ * in a single atomic transaction. Options are identified by their ID:
+ * - Options with ID will be updated
+ * - Options without ID will be created
+ * - Options not included in the array will be deleted
+ *
+ * Business rules:
+ * - At least one option must remain
+ * - Only one option can be default per pathway
+ * - If no default is specified, the current default is preserved (if in payload)
+ *   or the first option becomes default
+ * - Tolls can be synchronized for each option (if tolls array is provided)
+ *
+ * @param params - Request with pathwayId and options array
+ * @returns {Promise<Pathway>} The updated pathway with all synchronized options
+ * @throws {APIError} NotFound if pathway doesn't exist
+ * @throws {APIError} InvalidArgument if validation fails
+ */
+export const syncPathwayOptions = api(
+  {
+    expose: true,
+    method: 'POST',
+    path: '/pathways/:pathwayId/options/sync',
+  },
+  async (params: {
+    pathwayId: number;
+    options: BulkSyncOptionInput[];
+  }): Promise<Pathway> => {
+    return await pathwayApplicationService.syncPathwayOptions(
+      params.pathwayId,
+      {
+        options: params.options,
+      },
+    );
   },
 );

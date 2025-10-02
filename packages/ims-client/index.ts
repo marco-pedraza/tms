@@ -249,6 +249,7 @@ export namespace inventory {
             this.setDefaultPathwayOption = this.setDefaultPathwayOption.bind(this)
             this.syncInstallationSchemas = this.syncInstallationSchemas.bind(this)
             this.syncPathwayOptionTolls = this.syncPathwayOptionTolls.bind(this)
+            this.syncPathwayOptions = this.syncPathwayOptions.bind(this)
             this.unassignCityFromPopulation = this.unassignCityFromPopulation.bind(this)
             this.updateAmenity = this.updateAmenity.bind(this)
             this.updateBus = this.updateBus.bind(this)
@@ -2440,6 +2441,35 @@ export namespace inventory {
 }): Promise<pathways.Pathway> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/pathways/${encodeURIComponent(pathwayId)}/options/${encodeURIComponent(optionId)}/tolls/sync`, JSON.stringify(params))
+            return await resp.json() as pathways.Pathway
+        }
+
+        /**
+         * Synchronizes pathway options with their tolls (destructive operation)
+         * 
+         * This endpoint allows creating, updating, and deleting multiple pathway options
+         * in a single atomic transaction. Options are identified by their ID:
+         * - Options with ID will be updated
+         * - Options without ID will be created
+         * - Options not included in the array will be deleted
+         * 
+         * Business rules:
+         * - At least one option must remain
+         * - Only one option can be default per pathway
+         * - If no default is specified, the current default is preserved (if in payload)
+         * or the first option becomes default
+         * - Tolls can be synchronized for each option (if tolls array is provided)
+         * 
+         * @param params - Request with pathwayId and options array
+         * @returns {Promise<Pathway>} The updated pathway with all synchronized options
+         * @throws {APIError} NotFound if pathway doesn't exist
+         * @throws {APIError} InvalidArgument if validation fails
+         */
+        public async syncPathwayOptions(pathwayId: number, params: {
+    options: pathways.BulkSyncOptionInput[]
+}): Promise<pathways.Pathway> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/pathways/${encodeURIComponent(pathwayId)}/options/sync`, JSON.stringify(params))
             return await resp.json() as pathways.Pathway
         }
 
@@ -9842,6 +9872,68 @@ export namespace pathway_options_tolls {
 }
 
 export namespace pathways {
+    export interface BulkSyncOptionInput {
+        /**
+         * ID of existing option (omit for new options)
+         */
+        id?: number
+
+        /**
+         * Name of the option
+         */
+        name: string
+
+        /**
+         * Description of the option
+         */
+        description?: string | null
+
+        /**
+         * Distance in kilometers
+         */
+        distanceKm: number
+
+        /**
+         * Typical time in minutes
+         */
+        typicalTimeMin: number
+
+        /**
+         * Average speed in km/h (calculated automatically if not provided)
+         */
+        avgSpeedKmh?: number
+
+        /**
+         * Whether this is a pass-through option
+         */
+        isPassThrough: boolean
+
+        /**
+         * Pass-through time in minutes (required if isPassThrough is true)
+         */
+        passThroughTimeMin?: number | null
+
+        /**
+         * Sequence number for ordering
+         */
+        sequence?: number | null
+
+        /**
+         * Whether the option is active
+         */
+        active: boolean
+
+        /**
+         * Whether this option should be the default
+         */
+        isDefault?: boolean
+
+        /**
+         * Optional array of tolls for this option
+         */
+        tolls?: pathway_options_tolls.SyncTollsInput[]
+    }
+
     export interface CreatePathwayPayload {
         /**
          * ID of the origin node

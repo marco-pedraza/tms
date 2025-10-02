@@ -351,11 +351,15 @@ export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
     ): Promise<PathwayEntity> {
       requirePersisted();
 
-      // Get existing options to determine if this should be default
+      // Get existing options to determine default behavior
       const existingOptions = await loadOptions();
 
-      // First option becomes default automatically
-      const shouldBeDefault = existingOptions.length === 0;
+      // Determine isDefault value:
+      // 1. If explicitly provided in optionData, use that value
+      // 2. If not provided and this is the first option, make it default
+      // 3. Otherwise, not default
+      const shouldBeDefault =
+        optionData.isDefault ?? existingOptions.length === 0;
 
       // Create option using pathway option entity (includes validation and avgSpeed calculation)
       const optionEntity = pathwayOptionEntityFactory.create({

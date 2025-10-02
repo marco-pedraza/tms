@@ -1,5 +1,11 @@
 import type { TransactionalDB } from '@repo/base-repo';
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
+import { pathwayOptionTollRepository } from '../pathway-options-tolls/pathway-options-tolls.repository';
+import type {
+  CreatePathwayOptionTollPayload,
+  PathwayOptionToll,
+  SyncTollsInput,
+} from '../pathway-options-tolls/pathway-options-tolls.types';
 import { createPathwayOptionEntity } from '../pathway-options/pathway-option.entity';
 import { pathwayOptionRepository } from '../pathway-options/pathway-options.repository';
 import type { PathwayOption } from '../pathway-options/pathway-options.types';
@@ -24,6 +30,8 @@ export function createPathwayApplicationService() {
   // Create pathway option entity factory
   const pathwayOptionEntityFactory = createPathwayOptionEntity({
     pathwayOptionsRepository: pathwayOptionRepository,
+    pathwayOptionTollsRepository: pathwayOptionTollRepository,
+    nodesRepository: nodeRepository,
   });
 
   // Initialize the pathway entity with injected repositories and factories
@@ -50,11 +58,26 @@ export function createPathwayApplicationService() {
       setDefaultOption: (pathwayId: number, optionId: number) =>
         pathwayOptionRepository.setDefaultOption(pathwayId, optionId, tx),
     };
-    const txNodeRepo = nodeRepository.withTransaction(tx);
+    const baseNodeRepoWithTx = nodeRepository.withTransaction(tx);
+    const txNodeRepo = {
+      ...baseNodeRepoWithTx,
+      findByIds: (ids: number[]) => nodeRepository.findByIds(ids, tx),
+    };
+    const txPathwayOptionTollRepo = {
+      ...pathwayOptionTollRepository.withTransaction(tx),
+      findByOptionId: (optionId: number) =>
+        pathwayOptionTollRepository.findByOptionId(optionId, tx),
+      deleteByOptionId: (optionId: number) =>
+        pathwayOptionTollRepository.deleteByOptionId(optionId, tx),
+      createMany: (tolls: CreatePathwayOptionTollPayload[]) =>
+        pathwayOptionTollRepository.createMany(tolls, tx),
+    };
 
     // Create transaction-aware pathway option entity factory
     const txPathwayOptionEntityFactory = createPathwayOptionEntity({
       pathwayOptionsRepository: txPathwayOptionRepo,
+      pathwayOptionTollsRepository: txPathwayOptionTollRepo,
+      nodesRepository: txNodeRepo,
     });
 
     return {
@@ -226,6 +249,44 @@ export function createPathwayApplicationService() {
     });
   }
 
+  /**
+   * Synchronizes tolls for a pathway option (destructive operation)
+   * @param pathwayId - The ID of the pathway containing the option
+   * @param optionId - The ID of the option to sync tolls for
+   * @param tolls - Array of toll inputs (sequence assigned automatically 1..N)
+   * @returns The updated pathway
+   * @throws {FieldValidationError} If validation fails
+   * @throws {NotFoundError} If pathway or option is not found
+   */
+  function syncOptionTolls(
+    pathwayId: number,
+    optionId: number,
+    tolls: SyncTollsInput[],
+  ): Promise<Pathway> {
+    return executeInTransaction(pathwayId, async (pathwayEntityInstance) => {
+      const updatedEntity = await pathwayEntityInstance.syncOptionTolls(
+        optionId,
+        tolls,
+      );
+      return updatedEntity.toPathway();
+    });
+  }
+
+  /**
+   * Gets all tolls for a pathway option
+   * @param pathwayId - The ID of the pathway containing the option
+   * @param optionId - The ID of the option to get tolls from
+   * @returns Array of pathway option tolls ordered by sequence
+   * @throws {NotFoundError} If pathway or option is not found
+   */
+  async function getOptionTolls(
+    pathwayId: number,
+    optionId: number,
+  ): Promise<PathwayOptionToll[]> {
+    const pathway = await pathwayEntity.findOne(pathwayId);
+    return await pathway.getOptionTolls(optionId);
+  }
+
   return {
     createPathway,
     updatePathway,
@@ -235,6 +296,8 @@ export function createPathwayApplicationService() {
     removeOptionFromPathway,
     updatePathwayOption,
     setDefaultOption,
+    syncOptionTolls,
+    getOptionTolls,
   };
 }
 

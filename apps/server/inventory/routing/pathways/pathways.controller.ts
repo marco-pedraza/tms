@@ -1,5 +1,9 @@
 import { api } from 'encore.dev/api';
 import type {
+  PathwayOptionToll,
+  SyncTollsInput,
+} from '../pathway-options-tolls/pathway-options-tolls.types';
+import type {
   CreatePathwayOptionPayload,
   UpdatePathwayOptionPayload,
 } from '../pathway-options/pathway-options.types';
@@ -190,5 +194,59 @@ export const setDefaultPathwayOption = api(
       params.pathwayId,
       params.optionId,
     );
+  },
+);
+
+/**
+ * Synchronizes tolls for a pathway option (destructive operation)
+ * @param params - Request parameters with pathwayId and optionId
+ * @param params.pathwayId - The ID of the pathway
+ * @param params.optionId - The ID of the option to sync tolls for
+ * @param params.tolls - Array of toll inputs (sequence assigned automatically 1..N)
+ * @returns {Promise<Pathway>} The updated pathway
+ * @throws {APIError} If the pathway or option is not found, or validation fails
+ */
+export const syncPathwayOptionTolls = api(
+  {
+    expose: true,
+    method: 'POST',
+    path: '/pathways/:pathwayId/options/:optionId/tolls/sync',
+  },
+  async (params: {
+    pathwayId: number;
+    optionId: number;
+    tolls: SyncTollsInput[];
+  }): Promise<Pathway> => {
+    return await pathwayApplicationService.syncOptionTolls(
+      params.pathwayId,
+      params.optionId,
+      params.tolls,
+    );
+  },
+);
+
+/**
+ * Lists all tolls for a pathway option ordered by sequence
+ * @param params - Request parameters with pathwayId and optionId
+ * @param params.pathwayId - The ID of the pathway
+ * @param params.optionId - The ID of the option to get tolls from
+ * @returns {Promise<{data: PathwayOptionToll[]}>} Array of pathway option tolls
+ * @throws {APIError} If the pathway or option is not found
+ */
+export const listPathwayOptionTolls = api(
+  {
+    expose: true,
+    method: 'POST',
+    path: '/pathways/:pathwayId/options/:optionId/tolls/list',
+  },
+  async (params: {
+    pathwayId: number;
+    optionId: number;
+  }): Promise<{ data: PathwayOptionToll[] }> => {
+    const tolls = await pathwayApplicationService.getOptionTolls(
+      params.pathwayId,
+      params.optionId,
+    );
+    return { data: tolls };
   },
 );

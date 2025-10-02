@@ -1,5 +1,9 @@
 import { FieldErrorCollector } from '@repo/base-repo';
 import { EntityUtils } from '@/shared/domain/entity-utils';
+import type {
+  PathwayOptionToll,
+  SyncTollsInput,
+} from '@/inventory/routing/pathway-options-tolls/pathway-options-tolls.types';
 import type { PathwayOption } from '@/inventory/routing/pathway-options/pathway-options.types';
 import type {
   CreatePathwayPayload,
@@ -435,6 +439,36 @@ export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
       return createInstance(pathwayData);
     }
 
+    async function syncOptionTolls(
+      optionId: number,
+      tolls: SyncTollsInput[],
+    ): Promise<PathwayEntity> {
+      requirePersisted();
+
+      // Validate option exists and belongs to this pathway
+      await validateOptionOwnership(optionId);
+
+      // Get option entity and delegate toll sync
+      const optionEntity = await pathwayOptionEntityFactory.findOne(optionId);
+      await optionEntity.syncTolls(tolls);
+
+      // Return fresh pathway instance
+      return createInstance(pathwayData);
+    }
+
+    async function getOptionTolls(
+      optionId: number,
+    ): Promise<PathwayOptionToll[]> {
+      requirePersisted();
+
+      // Validate option exists and belongs to this pathway
+      await validateOptionOwnership(optionId);
+
+      // Get option entity and delegate toll retrieval
+      const optionEntity = await pathwayOptionEntityFactory.findOne(optionId);
+      return await optionEntity.getTolls();
+    }
+
     // Use spread operator to provide direct access to all properties
     return {
       ...pathwayData,
@@ -449,6 +483,8 @@ export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
       removeOption,
       updateOption,
       setDefaultOption,
+      syncOptionTolls,
+      getOptionTolls,
     } as PathwayEntity;
   }
 

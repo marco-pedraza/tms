@@ -224,6 +224,7 @@ export namespace inventory {
             this.listLabelsPaginated = this.listLabelsPaginated.bind(this)
             this.listNodes = this.listNodes.bind(this)
             this.listNodesPaginated = this.listNodesPaginated.bind(this)
+            this.listPathwayOptionTolls = this.listPathwayOptionTolls.bind(this)
             this.listPathways = this.listPathways.bind(this)
             this.listPathwaysPaginated = this.listPathwaysPaginated.bind(this)
             this.listPopulations = this.listPopulations.bind(this)
@@ -247,6 +248,7 @@ export namespace inventory {
             this.runAllSeeders = this.runAllSeeders.bind(this)
             this.setDefaultPathwayOption = this.setDefaultPathwayOption.bind(this)
             this.syncInstallationSchemas = this.syncInstallationSchemas.bind(this)
+            this.syncPathwayOptionTolls = this.syncPathwayOptionTolls.bind(this)
             this.unassignCityFromPopulation = this.unassignCityFromPopulation.bind(this)
             this.updateAmenity = this.updateAmenity.bind(this)
             this.updateBus = this.updateBus.bind(this)
@@ -2069,6 +2071,24 @@ export namespace inventory {
         }
 
         /**
+         * Lists all tolls for a pathway option ordered by sequence
+         * @param params - Request parameters with pathwayId and optionId
+         * @param params.pathwayId - The ID of the pathway
+         * @param params.optionId - The ID of the option to get tolls from
+         * @returns {Promise<{data: PathwayOptionToll[]}>} Array of pathway option tolls
+         * @throws {APIError} If the pathway or option is not found
+         */
+        public async listPathwayOptionTolls(pathwayId: number, optionId: number): Promise<{
+    data: pathway_options_tolls.PathwayOptionToll[]
+}> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/pathways/${encodeURIComponent(pathwayId)}/options/${encodeURIComponent(optionId)}/tolls/list`)
+            return await resp.json() as {
+    data: pathway_options_tolls.PathwayOptionToll[]
+}
+        }
+
+        /**
          * Retrieves all pathways without pagination (useful for dropdowns).
          * @param params - Query parameters including orderBy, filters, and searchTerm
          * @returns {Promise<ListPathwaysResult>} Unified response with data property containing array of pathways
@@ -2404,6 +2424,23 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/installation/types/${encodeURIComponent(id)}/schemas`, JSON.stringify(params))
             return await resp.json() as installation_schemas.ListInstallationSchemasResult
+        }
+
+        /**
+         * Synchronizes tolls for a pathway option (destructive operation)
+         * @param params - Request parameters with pathwayId and optionId
+         * @param params.pathwayId - The ID of the pathway
+         * @param params.optionId - The ID of the option to sync tolls for
+         * @param params.tolls - Array of toll inputs (sequence assigned automatically 1..N)
+         * @returns {Promise<Pathway>} The updated pathway
+         * @throws {APIError} If the pathway or option is not found, or validation fails
+         */
+        public async syncPathwayOptionTolls(pathwayId: number, optionId: number, params: {
+    tolls: pathway_options_tolls.SyncTollsInput[]
+}): Promise<pathways.Pathway> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/pathways/${encodeURIComponent(pathwayId)}/options/${encodeURIComponent(optionId)}/tolls/sync`, JSON.stringify(params))
+            return await resp.json() as pathways.Pathway
         }
 
         /**
@@ -9740,6 +9777,67 @@ export namespace nodes {
     export interface PaginatedListNodesResult {
         pagination: shared.PaginationMeta
         data: NodeWithRelations[]
+    }
+}
+
+export namespace pathway_options_tolls {
+    export interface PathwayOptionToll {
+        /**
+         * Unique identifier for the pathway option toll
+         */
+        id: number
+
+        /**
+         * ID of the pathway option this toll belongs to
+         */
+        pathwayOptionId: number
+
+        /**
+         * ID of the node where the toll is located
+         */
+        nodeId: number
+
+        /**
+         * Sequence order of this toll in the pathway option
+         */
+        sequence: number
+
+        /**
+         * Time to pass through this toll in minutes
+         */
+        passTimeMin: number
+
+        /**
+         * Distance to this toll point
+         */
+        distance: number | null
+
+        /**
+         * Timestamp when the pathway option toll was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the pathway option toll was last updated
+         */
+        updatedAt: string | string | null
+    }
+
+    export interface SyncTollsInput {
+        /**
+         * ID of the node where the toll is located
+         */
+        nodeId: number
+
+        /**
+         * Time to pass through this toll in minutes
+         */
+        passTimeMin: number
+
+        /**
+         * Distance to this toll point (optional)
+         */
+        distance?: number
     }
 }
 

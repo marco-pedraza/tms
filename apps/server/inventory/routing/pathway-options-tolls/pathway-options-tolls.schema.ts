@@ -7,7 +7,6 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { isNull } from 'drizzle-orm';
 import { nodes } from '@/inventory/locations/nodes/nodes.schema';
 import { pathwayOptions } from '@/inventory/routing/pathway-options/pathway-options.schema';
 
@@ -27,16 +26,12 @@ export const pathwayOptionTolls = pgTable(
     distance: integer('distance'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
-    deletedAt: timestamp('deleted_at'),
   },
   (table) => [
-    uniqueIndex()
-      .on(table.pathwayOptionId, table.sequence)
-      .where(isNull(table.deletedAt)),
+    uniqueIndex().on(table.pathwayOptionId, table.sequence),
     index().on(table.nodeId),
     index().on(table.pathwayOptionId),
     index().on(table.sequence),
-    index().on(table.deletedAt),
   ],
 );
 

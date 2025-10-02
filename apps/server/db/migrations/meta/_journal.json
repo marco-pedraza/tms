@@ -386,6 +386,13 @@
       "when": 1758726292642,
       "tag": "20250924150452_update_users_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1759354485554,
+      "tag": "20251001213445_remove_soft_delete_for_options",
+      "breakpoints": true
     }
   ]
 }

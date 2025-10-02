@@ -1,4 +1,10 @@
+import { TransactionalDB } from '@repo/base-repo';
 import type { BaseDomainEntity } from '@/shared/domain/base-entity';
+import type {
+  CreatePathwayOptionTollPayload,
+  PathwayOptionToll,
+  SyncTollsInput,
+} from '@/inventory/routing/pathway-options-tolls/pathway-options-tolls.types';
 import type {
   CreatePathwayOptionPayload,
   PathwayOption,
@@ -41,6 +47,20 @@ export interface PathwayOptionEntityDependencies {
     findOne: (id: number) => Promise<PathwayOption>; // Throws NotFoundError if not found
     delete: (id: number) => Promise<PathwayOption>; // Throws NotFoundError if not found
   };
+  pathwayOptionTollsRepository: {
+    findByOptionId: (optionId: number) => Promise<PathwayOptionToll[]>;
+    deleteByOptionId: (optionId: number) => Promise<void>;
+    createMany: (
+      tolls: CreatePathwayOptionTollPayload[],
+    ) => Promise<PathwayOptionToll[]>;
+  };
+  nodesRepository: {
+    findOne: (id: number) => Promise<{ id: number }>;
+    findByIds: (
+      ids: number[],
+      tx?: TransactionalDB,
+    ) => Promise<{ id: number }[]>;
+  };
 }
 
 /**
@@ -56,4 +76,21 @@ export interface PathwayOptionEntity
    * @throws {Error} If entity is not persisted (missing id)
    */
   toPathwayOption: () => PathwayOption;
+
+  /**
+   * Synchronizes tolls for this pathway option (destructive operation)
+   * Deletes all existing tolls and creates new ones with auto-assigned sequence (1..N)
+   * @param tollsInput - Array of toll data (sequence assigned automatically)
+   * @returns A new PathwayOptionEntity instance after sync
+   * @throws {FieldValidationError} If toll validation fails
+   * @throws {Error} If entity is not persisted
+   */
+  syncTolls: (tollsInput: SyncTollsInput[]) => Promise<PathwayOptionEntity>;
+
+  /**
+   * Gets all tolls for this pathway option ordered by sequence
+   * @returns Array of pathway option tolls
+   * @throws {Error} If entity is not persisted
+   */
+  getTolls: () => Promise<PathwayOptionToll[]>;
 }

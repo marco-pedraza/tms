@@ -9,7 +9,7 @@ import {
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import { pathwayOptionTolls } from '../pathway-options-tolls/pathway-options-tolls.schema';
 import { pathways } from '../pathways/pathways.schema';
 
@@ -41,7 +41,7 @@ export const pathwayOptions = pgTable(
     // Ensure only one default option per pathway (excluding soft-deleted records)
     uniqueIndex('pathway_options_pathway_id_is_default_unique')
       .on(table.pathwayId)
-      .where('is_default = true AND deleted_at IS NULL'),
+      .where(sql`is_default = true AND deleted_at IS NULL`),
   ],
 );
 

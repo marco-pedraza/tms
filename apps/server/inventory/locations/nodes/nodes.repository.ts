@@ -1,5 +1,9 @@
 import { and, count, eq, exists, inArray } from 'drizzle-orm';
-import { NotFoundError, createBaseRepository } from '@repo/base-repo';
+import {
+  NotFoundError,
+  TransactionalDB,
+  createBaseRepository,
+} from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
 import { PaginationMeta } from '@/shared/types';
 import { OperatingHours } from '@/inventory/locations/installations/installations.types';
@@ -338,6 +342,39 @@ export function createNodeRepository() {
     return nodeWithInstallation.installation?.installationTypeId || null;
   }
 
+  /**
+   * Finds multiple nodes by their IDs in a single query
+   * Respects soft delete and other base repository filters
+   * @param ids - Array of node IDs to find
+   * @param tx - Optional transaction instance
+   * @returns Array of found nodes (only existing, non-deleted nodes)
+   */
+  async function findByIds(
+    ids: number[],
+    tx?: TransactionalDB,
+  ): Promise<Node[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const dbInstance = tx || db;
+
+    // Use buildQueryExpressions to respect soft delete filter
+    const { baseWhere } = baseRepository.buildQueryExpressions();
+
+    // Combine inArray condition with soft delete filter
+    const whereCondition = baseWhere
+      ? and(inArray(nodes.id, ids), baseWhere)
+      : inArray(nodes.id, ids);
+
+    const foundNodes = await dbInstance
+      .select()
+      .from(nodes)
+      .where(whereCondition);
+
+    return foundNodes as Node[];
+  }
+
   return {
     ...baseRepository,
     // Override base repository methods with custom implementations
@@ -348,6 +385,7 @@ export function createNodeRepository() {
     appendRelations,
     assignInstallation,
     getInstallationTypeIdByNodeId,
+    findByIds,
   };
 }
 

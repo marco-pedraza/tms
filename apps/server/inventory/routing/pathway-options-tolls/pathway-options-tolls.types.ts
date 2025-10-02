@@ -33,9 +33,6 @@ export interface PathwayOptionToll {
 
   /** Timestamp when the pathway option toll was last updated */
   updatedAt: Date | string | null;
-
-  /** Timestamp when the pathway option toll was deleted */
-  deletedAt: Date | string | null;
 }
 
 /**
@@ -111,3 +108,18 @@ export type PaginatedListPathwayOptionTollsQueryParams =
   PaginatedListQueryParams<PathwayOptionToll>;
 export type PaginatedListPathwayOptionTollsResult =
   PaginatedListQueryResult<PathwayOptionToll>;
+
+/**
+ * Input for syncing tolls to a pathway option
+ * Sequence is assigned automatically based on array order (1..N)
+ */
+export interface SyncTollsInput {
+  /** ID of the node where the toll is located */
+  nodeId: number & Min<1>;
+
+  /** Time to pass through this toll in minutes */
+  passTimeMin: number & Min<1>;
+
+  /** Distance to this toll point (optional) */
+  distance?: number & Min<0>;
+}

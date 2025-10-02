@@ -23,10 +23,12 @@ import {
   createPathway,
   deletePathway,
   getPathway,
+  listPathwayOptionTolls,
   listPathways,
   listPathwaysPaginated,
   removeOptionFromPathway,
   setDefaultPathwayOption,
+  syncPathwayOptionTolls,
   updatePathway,
   updatePathwayOption,
 } from './pathways.controller';
@@ -292,7 +294,29 @@ describe('Pathways Controller', () => {
      * Cleans up test data after each test
      */
     async function cleanupTestData(data: TestData): Promise<void> {
-      // First, clean up pathway options by removing them from pathways
+      // Cleanup in correct dependency order (deepest first)
+
+      // 1. First, clean up pathway option tolls (deepest dependency)
+      for (const pathwayId of data.createdPathwayIds) {
+        try {
+          // Get all options for this pathway
+          const options = await db
+            .select()
+            .from(schema.pathwayOptions)
+            .where(eq(schema.pathwayOptions.pathwayId, pathwayId));
+
+          // Delete tolls for each option
+          for (const option of options) {
+            await db
+              .delete(schema.pathwayOptionTolls)
+              .where(eq(schema.pathwayOptionTolls.pathwayOptionId, option.id));
+          }
+        } catch {
+          // Ignore cleanup errors
+        }
+      }
+
+      // 2. Clean up pathway options
       for (const pathwayId of data.createdPathwayIds) {
         try {
           await db
@@ -303,7 +327,7 @@ describe('Pathways Controller', () => {
         }
       }
 
-      // Clean up pathways directly to avoid foreign key constraints with nodes
+      // 3. Clean up pathways (now that options and tolls are deleted)
       for (const pathwayId of data.createdPathwayIds) {
         try {
           await db
@@ -314,12 +338,12 @@ describe('Pathways Controller', () => {
         }
       }
 
-      // Clean up remaining tracked pathways
-      await data.pathwayCleanup.cleanupAll();
-
-      // Then clean up nodes and populations
+      // 4. Clean up nodes (now that pathways and tolls are deleted)
       await data.nodeCleanup.cleanupAll();
+
+      // 5. Clean up populations (now that nodes are deleted)
       await data.populationCleanup.cleanupAll();
+
       // Cities are cleaned up automatically by factories
     }
 
@@ -881,6 +905,237 @@ describe('Pathways Controller', () => {
           updatePathway({
             id: createdPathway.id,
             destinationNodeId: 999999, // Non-existent node
+          }),
+        ).rejects.toThrow();
+      });
+    });
+
+    describe('pathway option toll operations', () => {
+      let createdPathway: Pathway;
+      let optionId: number;
+      let tollNodeIds: number[];
+
+      beforeEach(async () => {
+        // Create a pathway with an option for toll tests
+        createdPathway = await createTestPathway(testData);
+
+        await addOptionToPathway({
+          pathwayId: createdPathway.id,
+          optionData: {
+            name: 'Test Option for Tolls',
+            description: 'Option for testing toll operations',
+            distanceKm: 150,
+            typicalTimeMin: 120,
+            active: true,
+          },
+        });
+
+        const pathway = await getPathway({ id: createdPathway.id });
+        const options = await pathwayOptionRepository.findAllBy(
+          schema.pathwayOptions.pathwayId,
+          pathway.id,
+        );
+        optionId = options[0]?.id as number;
+
+        // Create additional toll nodes
+        const tollNode1 = await nodeRepository.create({
+          code: `TOLL1-${Date.now()}`,
+          name: `Toll Node 1 ${Date.now()}`,
+          cityId: testData.cityId,
+          latitude: 19.5,
+          longitude: -99.5,
+          radius: 1000,
+          slug: `tn-toll-1-${Date.now()}`,
+          populationId: testData.populationId,
+          allowsBoarding: false,
+          allowsAlighting: false,
+          active: true,
+        });
+        testData.nodeCleanup.track(tollNode1.id);
+
+        const tollNode2 = await nodeRepository.create({
+          code: `TOLL2-${Date.now()}`,
+          name: `Toll Node 2 ${Date.now()}`,
+          cityId: testData.cityId,
+          latitude: 19.7,
+          longitude: -99.7,
+          radius: 1000,
+          slug: `tn-toll-2-${Date.now()}`,
+          populationId: testData.populationId,
+          allowsBoarding: false,
+          allowsAlighting: false,
+          active: true,
+        });
+        testData.nodeCleanup.track(tollNode2.id);
+
+        tollNodeIds = [tollNode1.id, tollNode2.id];
+      });
+
+      test('should sync tolls to pathway option', async () => {
+        const tollsInput = [
+          {
+            nodeId: tollNodeIds[0],
+            passTimeMin: 5,
+            distance: 10,
+          },
+          {
+            nodeId: tollNodeIds[1],
+            passTimeMin: 7,
+            distance: 15,
+          },
+        ];
+
+        const result = await syncPathwayOptionTolls({
+          pathwayId: createdPathway.id,
+          optionId,
+          tolls: tollsInput,
+        });
+
+        expect(result).toBeDefined();
+        expect(result.id).toBe(createdPathway.id);
+      });
+
+      test('should list tolls for pathway option', async () => {
+        // First sync some tolls
+        await syncPathwayOptionTolls({
+          pathwayId: createdPathway.id,
+          optionId,
+          tolls: [
+            { nodeId: tollNodeIds[0], passTimeMin: 5, distance: 10 },
+            { nodeId: tollNodeIds[1], passTimeMin: 7, distance: 15 },
+          ],
+        });
+
+        // Now list them
+        const result = await listPathwayOptionTolls({
+          pathwayId: createdPathway.id,
+          optionId,
+        });
+
+        expect(result.data).toHaveLength(2);
+        expect(result.data[0]?.nodeId).toBe(tollNodeIds[0]);
+        expect(result.data[0]?.sequence).toBe(1);
+        expect(result.data[0]?.passTimeMin).toBe(5);
+        expect(result.data[0]?.distance).toBe(10);
+        expect(result.data[1]?.nodeId).toBe(tollNodeIds[1]);
+        expect(result.data[1]?.sequence).toBe(2);
+        expect(result.data[1]?.passTimeMin).toBe(7);
+        expect(result.data[1]?.distance).toBe(15);
+      });
+
+      test('should sync with empty array to remove all tolls', async () => {
+        // First add tolls
+        await syncPathwayOptionTolls({
+          pathwayId: createdPathway.id,
+          optionId,
+          tolls: [{ nodeId: tollNodeIds[0], passTimeMin: 5 }],
+        });
+
+        // Verify tolls exist
+        let tollsResult = await listPathwayOptionTolls({
+          pathwayId: createdPathway.id,
+          optionId,
+        });
+        expect(tollsResult.data).toHaveLength(1);
+
+        // Now remove all tolls
+        await syncPathwayOptionTolls({
+          pathwayId: createdPathway.id,
+          optionId,
+          tolls: [],
+        });
+
+        // Verify tolls are gone
+        tollsResult = await listPathwayOptionTolls({
+          pathwayId: createdPathway.id,
+          optionId,
+        });
+        expect(tollsResult.data).toHaveLength(0);
+      });
+
+      test('should replace existing tolls (destructive sync)', async () => {
+        // Initial sync
+        await syncPathwayOptionTolls({
+          pathwayId: createdPathway.id,
+          optionId,
+          tolls: [{ nodeId: tollNodeIds[0], passTimeMin: 5 }],
+        });
+
+        // Second sync with different tolls
+        await syncPathwayOptionTolls({
+          pathwayId: createdPathway.id,
+          optionId,
+          tolls: [{ nodeId: tollNodeIds[1], passTimeMin: 7 }],
+        });
+
+        // Verify only new toll exists
+        const tollsResult = await listPathwayOptionTolls({
+          pathwayId: createdPathway.id,
+          optionId,
+        });
+        expect(tollsResult.data).toHaveLength(1);
+        expect(tollsResult.data[0]?.nodeId).toBe(tollNodeIds[1]);
+      });
+
+      test('should respect aggregate root boundary (access through pathway)', async () => {
+        // This test verifies that toll operations require valid pathway and option IDs
+        await expect(
+          syncPathwayOptionTolls({
+            pathwayId: 999999,
+            optionId,
+            tolls: [{ nodeId: tollNodeIds[0], passTimeMin: 5 }],
+          }),
+        ).rejects.toThrow();
+
+        await expect(
+          listPathwayOptionTolls({
+            pathwayId: 999999,
+            optionId,
+          }),
+        ).rejects.toThrow();
+      });
+
+      test('should propagate validation errors for duplicate toll nodes', async () => {
+        const invalidTolls = [
+          { nodeId: tollNodeIds[0], passTimeMin: 5 },
+          { nodeId: tollNodeIds[0], passTimeMin: 7 }, // Duplicate
+        ];
+
+        await expect(
+          syncPathwayOptionTolls({
+            pathwayId: createdPathway.id,
+            optionId,
+            tolls: invalidTolls,
+          }),
+        ).rejects.toThrow();
+      });
+
+      test('should propagate validation errors for consecutive duplicate toll nodes', async () => {
+        const invalidTolls = [
+          { nodeId: tollNodeIds[0], passTimeMin: 5 },
+          { nodeId: tollNodeIds[1], passTimeMin: 7 },
+          { nodeId: tollNodeIds[1], passTimeMin: 10 }, // Consecutive duplicate
+        ];
+
+        await expect(
+          syncPathwayOptionTolls({
+            pathwayId: createdPathway.id,
+            optionId,
+            tolls: invalidTolls,
+          }),
+        ).rejects.toThrow();
+      });
+
+      test('should propagate validation errors for non-existent toll nodes', async () => {
+        const invalidTolls = [
+          { nodeId: 999999, passTimeMin: 5 }, // Non-existent node
+        ];
+
+        await expect(
+          syncPathwayOptionTolls({
+            pathwayId: createdPathway.id,
+            optionId,
+            tolls: invalidTolls,
           }),
         ).rejects.toThrow();
       });

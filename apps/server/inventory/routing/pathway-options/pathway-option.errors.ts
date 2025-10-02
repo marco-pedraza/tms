@@ -25,6 +25,32 @@ const PATHWAY_OPTION_ERROR_CONFIG = {
     message: 'Default options must be active',
     field: 'isDefault',
   },
+  // Toll-related errors
+  duplicateTollNode: {
+    message: 'Duplicate toll node found in the same pathway option',
+    field: 'tolls',
+    code: 'DUPLICATE_NODE',
+  },
+  consecutiveDuplicateToll: {
+    message: 'Consecutive duplicate toll nodes are not allowed',
+    field: 'tolls',
+    code: 'CONSECUTIVE_DUPLICATE',
+  },
+  tollNodeNotFound: {
+    message: 'Toll node not found',
+    field: 'tolls',
+    code: 'NODE_NOT_FOUND',
+  },
+  cannotSyncTollsOnNonPersisted: {
+    message: 'Cannot sync tolls on non-persisted pathway option',
+    field: 'tolls',
+    code: 'NOT_PERSISTED',
+  },
+  cannotGetTollsFromNonPersisted: {
+    message: 'Cannot get tolls from non-persisted pathway option',
+    field: 'tolls',
+    code: 'NOT_PERSISTED',
+  },
 } as const;
 
 // Generate error helpers automatically

@@ -1,6 +1,10 @@
 import { FieldErrorCollector } from '@repo/base-repo';
 import { EntityUtils } from '@/shared/domain/entity-utils';
 import type {
+  PathwayOptionToll,
+  SyncTollsInput,
+} from '@/inventory/routing/pathway-options-tolls/pathway-options-tolls.types';
+import type {
   MetricsCalculationInput,
   MetricsCalculationResult,
   PathwayOptionEntity,
@@ -16,7 +20,11 @@ import { pathwayOptionErrors } from './pathway-option.errors';
 export function createPathwayOptionEntity(
   dependencies: PathwayOptionEntityDependencies,
 ) {
-  const { pathwayOptionsRepository } = dependencies;
+  const {
+    pathwayOptionsRepository,
+    pathwayOptionTollsRepository,
+    nodesRepository,
+  } = dependencies;
 
   // Desestructurar las utilidades del mixin
   const { isEntityPersisted } = EntityUtils;
@@ -126,6 +134,89 @@ export function createPathwayOptionEntity(
   ): void {
     validatePassThroughRule(data);
     validateDefaultActiveRule(data);
+  }
+
+  /**
+   * Validates no duplicate nodes in tolls array
+   * @param tollsInput - Array of toll inputs
+   * @param collector - Error collector
+   */
+  function validateNoDuplicateTollNodes(
+    tollsInput: SyncTollsInput[],
+    collector: FieldErrorCollector,
+  ): void {
+    const nodeIds = tollsInput.map((t) => t.nodeId);
+    const seenNodes = new Set<number>();
+    const duplicates = new Set<number>();
+
+    for (const nodeId of nodeIds) {
+      if (seenNodes.has(nodeId)) {
+        duplicates.add(nodeId);
+      }
+      seenNodes.add(nodeId);
+    }
+
+    if (duplicates.size > 0) {
+      pathwayOptionErrors.duplicateTollNode(
+        collector,
+        Array.from(duplicates).join(', '),
+      );
+    }
+  }
+
+  /**
+   * Validates no consecutive duplicate nodes in tolls array
+   * @param tollsInput - Array of toll inputs
+   * @param collector - Error collector
+   */
+  function validateNoConsecutiveDuplicates(
+    tollsInput: SyncTollsInput[],
+    collector: FieldErrorCollector,
+  ): void {
+    for (let i = 1; i < tollsInput.length; i++) {
+      if (tollsInput[i].nodeId === tollsInput[i - 1].nodeId) {
+        pathwayOptionErrors.consecutiveDuplicateToll(
+          collector,
+          `positions ${i} and ${i + 1}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Validates all toll nodes exist in database using bulk query
+   * @param tollsInput - Array of toll inputs
+   * @param collector - Error collector
+   */
+  async function validateTollNodesExist(
+    tollsInput: SyncTollsInput[],
+    collector: FieldErrorCollector,
+  ): Promise<void> {
+    const nodeIds = tollsInput.map((t) => t.nodeId);
+    const existingNodes = await nodesRepository.findByIds(nodeIds);
+    const existingNodeIds = new Set(existingNodes.map((n) => n.id));
+    const missingNodes = nodeIds.filter((id) => !existingNodeIds.has(id));
+
+    if (missingNodes.length > 0) {
+      pathwayOptionErrors.tollNodeNotFound(collector, missingNodes.join(', '));
+    }
+  }
+
+  /**
+   * Validates tolls business rules
+   * @param tollsInput - Array of toll inputs to validate
+   * @throws {FieldValidationError} If there are validation violations
+   */
+  async function validateTollsBusinessRules(
+    tollsInput: SyncTollsInput[],
+  ): Promise<void> {
+    const collector = new FieldErrorCollector();
+
+    validateNoDuplicateTollNodes(tollsInput, collector);
+    validateNoConsecutiveDuplicates(tollsInput, collector);
+    await validateTollNodesExist(tollsInput, collector);
+
+    collector.throwIfErrors();
   }
 
   /**
@@ -301,6 +392,58 @@ export function createPathwayOptionEntity(
           updatedAt: data.updatedAt ?? null,
           deletedAt: data.deletedAt ?? null,
         };
+      },
+
+      syncTolls: async (
+        tollsInput: SyncTollsInput[],
+      ): Promise<PathwayOptionEntity> => {
+        if (!isPersisted || !data.id) {
+          const collector = new FieldErrorCollector();
+          pathwayOptionErrors.cannotSyncTollsOnNonPersisted(collector, null);
+          collector.throwIfErrors();
+          throw new Error('Unreachable'); // TypeScript guard
+        }
+
+        const optionId = data.id;
+
+        // Validate business rules
+        await validateTollsBusinessRules(tollsInput);
+
+        // Destructive sync: delete all existing tolls
+        await pathwayOptionTollsRepository.deleteByOptionId(optionId);
+
+        // Create new tolls with auto-assigned sequence (1..N)
+        if (tollsInput.length > 0) {
+          const tollPayloads = tollsInput.map((toll, index) => ({
+            pathwayOptionId: optionId,
+            nodeId: toll.nodeId,
+            sequence: index + 1,
+            passTimeMin: toll.passTimeMin,
+            distance: toll.distance,
+          }));
+
+          await pathwayOptionTollsRepository.createMany(tollPayloads);
+        }
+
+        // Return fresh instance
+        const updated = await pathwayOptionsRepository.findOne(optionId);
+        return createEntityFromData(updated);
+      },
+
+      /**
+       * Gets all tolls for this pathway option ordered by sequence
+       * @returns Array of pathway option tolls
+       * @throws {FieldValidationError} If entity is not persisted
+       */
+      getTolls: async (): Promise<PathwayOptionToll[]> => {
+        if (!isPersisted || !data.id) {
+          const collector = new FieldErrorCollector();
+          pathwayOptionErrors.cannotGetTollsFromNonPersisted(collector, null);
+          collector.throwIfErrors();
+          throw new Error('Unreachable'); // TypeScript guard TODO: Simplify this
+        }
+
+        return await pathwayOptionTollsRepository.findByOptionId(data.id);
       },
     } as PathwayOptionEntity;
   }

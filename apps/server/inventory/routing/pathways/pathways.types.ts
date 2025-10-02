@@ -7,6 +7,10 @@ import {
   PaginatedListQueryResult,
 } from '@/shared/types';
 import { Node } from '@/inventory/locations/nodes/nodes.types';
+import type {
+  PathwayOptionToll,
+  SyncTollsInput,
+} from '@/inventory/routing/pathway-options-tolls/pathway-options-tolls.types';
 import type { PathwayOptionEntity } from '@/inventory/routing/pathway-options/pathway-option.entity.types';
 import type {
   CreatePathwayOptionPayload,
@@ -286,4 +290,29 @@ export interface PathwayEntity
    * @throws {ValidationError} If option doesn't belong to this pathway
    */
   setDefaultOption: (optionId: number) => Promise<PathwayEntity>;
+
+  /**
+   * Synchronizes tolls for a pathway option (destructive operation)
+   * Delegates to PathwayOptionEntity while maintaining aggregate boundary
+   * @param optionId - The ID of the option to sync tolls for
+   * @param tolls - Array of toll inputs (sequence assigned automatically 1..N)
+   * @returns A new PathwayEntity instance after sync
+   * @throws {NotFoundError} If option is not found
+   * @throws {ValidationError} If option doesn't belong to this pathway
+   * @throws {FieldValidationError} If toll validation fails
+   */
+  syncOptionTolls: (
+    optionId: number,
+    tolls: SyncTollsInput[],
+  ) => Promise<PathwayEntity>;
+
+  /**
+   * Gets all tolls for a pathway option
+   * Delegates to PathwayOptionEntity while maintaining aggregate boundary
+   * @param optionId - The ID of the option to get tolls from
+   * @returns Array of pathway option tolls ordered by sequence
+   * @throws {NotFoundError} If option is not found
+   * @throws {ValidationError} If option doesn't belong to this pathway
+   */
+  getOptionTolls: (optionId: number) => Promise<PathwayOptionToll[]>;
 }

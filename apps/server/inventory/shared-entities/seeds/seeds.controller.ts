@@ -2,7 +2,7 @@ import { api } from 'encore.dev/api';
 import { APIError } from 'encore.dev/api';
 // import { seedAdmin } from '../../db/scripts/seed-admin';
 import { seedInventory } from '@/db/scripts/seed-inventory';
-import { seedPermissions } from '@/db/scripts/seed-permissions';
+import { seedUsersData } from '@/db/scripts/seed-users';
 import { appMeta } from 'encore.dev';
 
 /**
@@ -33,7 +33,7 @@ export const runAllSeeders = api(
 
     // await seedAdmin();
     await seedInventory(clientCode);
-    await seedPermissions();
+    await seedUsersData();
 
     return {
       success: true,

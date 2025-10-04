@@ -4716,11 +4716,12 @@ export namespace users {
         public async searchRoles(params: {
     term: string
     orderBy?: {
-        field: "id" | "name" | "description" | "createdAt" | "updatedAt"
+        field: "id" | "code" | "name" | "description" | "createdAt" | "updatedAt"
         direction: "asc" | "desc"
     }[]
     filters?: {
         id?: number
+        code?: string
         name?: string
         description?: string | null
         createdAt?: string | string | null
@@ -4744,11 +4745,12 @@ export namespace users {
     page?: number
     pageSize?: number
     orderBy?: {
-        field: "id" | "name" | "description" | "createdAt" | "updatedAt"
+        field: "id" | "code" | "name" | "description" | "createdAt" | "updatedAt"
         direction: "asc" | "desc"
     }[]
     filters?: {
         id?: number
+        code?: string
         name?: string
         description?: string | null
         createdAt?: string | string | null
@@ -4836,6 +4838,12 @@ export namespace users {
          */
         public async updatePermissionGroup(id: number, params: {
     /**
+     * Unique code identifier for the permission group
+     * Must have at least 1 non-whitespace character
+     */
+    code?: string
+
+    /**
      * Name of the permission group
      * Must have at least 1 non-whitespace character
      */
@@ -4864,6 +4872,12 @@ export namespace users {
          * @throws {APIError} If the role is not found or update fails
          */
         public async updateRole(id: number, params: {
+    /**
+     * Unique code identifier for the role
+     * Must have at least 1 non-whitespace character
+     */
+    code?: string
+
     /**
      * Human-readable name of the role
      * Must have at least 3 non-whitespace characters
@@ -10189,6 +10203,12 @@ export namespace pathways {
 export namespace permission_groups {
     export interface CreatePermissionGroupPayload {
         /**
+         * Unique code identifier for the permission group
+         * Must have at least 1 non-whitespace character
+         */
+        code: string
+
+        /**
          * Name of the permission group
          * Must have at least 1 non-whitespace character
          */
@@ -10210,6 +10230,11 @@ export namespace permission_groups {
          * Unique identifier for the permission group
          */
         id: number
+
+        /**
+         * Unique code identifier for the permission group
+         */
+        code: string
 
         /**
          * Name of the permission group
@@ -10516,6 +10541,12 @@ export namespace populations {
 export namespace roles {
     export interface CreateRolePayload {
         /**
+         * Unique code identifier for the role
+         * Must have at least 1 non-whitespace character
+         */
+        code: string
+
+        /**
          * Human-readable name of the role
          * Must have at least 3 non-whitespace characters
          */
@@ -10546,11 +10577,12 @@ export namespace roles {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "description" | "createdAt" | "updatedAt"
+            field: "id" | "code" | "name" | "description" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
+            code?: string
             name?: string
             description?: string | null
             createdAt?: string | string | null
@@ -10563,11 +10595,12 @@ export namespace roles {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "description" | "createdAt" | "updatedAt"
+            field: "id" | "code" | "name" | "description" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
+            code?: string
             name?: string
             description?: string | null
             createdAt?: string | string | null
@@ -10581,6 +10614,11 @@ export namespace roles {
          * Unique identifier for the role
          */
         id: number
+
+        /**
+         * Unique code identifier for the role
+         */
+        code: string
 
         /**
          * Human-readable name of the role
@@ -10615,6 +10653,11 @@ export namespace roles {
         id: number
 
         /**
+         * Unique code identifier for the role
+         */
+        code: string
+
+        /**
          * Human-readable name of the role
          */
         name: string
@@ -10644,11 +10687,12 @@ export namespace roles {
 
     export interface RolesQueryOptions {
         orderBy?: {
-            field: "id" | "name" | "description" | "createdAt" | "updatedAt"
+            field: "id" | "code" | "name" | "description" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
+            code?: string
             name?: string
             description?: string | null
             createdAt?: string | string | null

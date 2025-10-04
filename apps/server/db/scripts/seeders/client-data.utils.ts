@@ -173,6 +173,11 @@ export const CLIENT_DATA_FILES = {
   // Infrastructure
   INSTALLATIONS: 'installations.json',
   NODES: 'nodes.json',
+
+  // Users
+  DEPARTMENTS: 'departments.json',
+  ROLES: 'roles.json',
+  USERS: 'users.json',
 } as const;
 
 export function generatePhone(): string {

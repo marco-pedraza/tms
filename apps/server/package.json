@@ -21,6 +21,8 @@
     "seed:permissions": "encore exec -- npx tsx db/scripts/seed-permissions.ts --seed",
     "seed:inventory": "encore exec -- npx tsx db/scripts/seed-inventory.ts --seed",
     "seed:inventory:gfa": "encore exec -- npx tsx db/scripts/seed-inventory.ts --seed --client gfa",
+    "seed:users": "encore exec -- npx tsx db/scripts/seed-users.ts --seed",
+    "seed:users:gfa": "encore exec -- npx tsx db/scripts/seed-users.ts --seed --client gfa",
     "generate-postman-collection": "tsx tools/postman-generator/src/index.ts"
   },
   "devDependencies": {

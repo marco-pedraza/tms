@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "generated_at": "2024-01-01T00:00:00Z",
+    "total_departments": 3,
+    "description": "Department data for GFA seeding purposes"
+  },
+  "departments": [
+    {
+      "name": "Tecnologías de la Información",
+      "code": "ti",
+      "description": "Manejo de infraestructura tecnológica y soporte técnico"
+    },
+    {
+      "name": "Operaciones",
+      "code": "ops",
+      "description": "Gestión de operaciones diarias del negocio y logística de transporte"
+    },
+    {
+      "name": "Gestión de Flota",
+      "code": "flota",
+      "description": "Manejo de operaciones y mantenimiento de la flota vehicular"
+    }
+  ]
+}

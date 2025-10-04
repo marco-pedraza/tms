@@ -10,6 +10,7 @@ import {
 describe('Permission Groups Controller', () => {
   // Test data and setup
   const testPermissionGroup = {
+    code: 'TEST_PERM_GROUP',
     name: 'Test Permission Group',
     description: 'A permission group for testing purposes',
   };
@@ -33,6 +34,7 @@ describe('Permission Groups Controller', () => {
 
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
+      expect(response.code).toBe(testPermissionGroup.code);
       expect(response.name).toBe(testPermissionGroup.name);
       expect(response.description).toBe(testPermissionGroup.description);
       expect(response.createdAt).toBeDefined();
@@ -50,21 +52,25 @@ describe('Permission Groups Controller', () => {
         (group: PermissionGroup) => group.id === createdPermissionGroupId,
       );
       expect(foundGroup).toBeDefined();
+      expect(foundGroup?.code).toBe(testPermissionGroup.code);
       expect(foundGroup?.name).toBe(testPermissionGroup.name);
     });
 
     test('should update a permission group', async () => {
+      const updatedCode = 'UPDATED_PERM_GROUP';
       const updatedName = 'Updated Permission Group';
       const updatedDescription = 'Updated description for testing';
 
       const response = await updatePermissionGroup({
         id: createdPermissionGroupId,
+        code: updatedCode,
         name: updatedName,
         description: updatedDescription,
       });
 
       expect(response).toBeDefined();
       expect(response.id).toBe(createdPermissionGroupId);
+      expect(response.code).toBe(updatedCode);
       expect(response.name).toBe(updatedName);
       expect(response.description).toBe(updatedDescription);
       expect(response.updatedAt).toBeDefined();
@@ -73,6 +79,7 @@ describe('Permission Groups Controller', () => {
     test('should delete a permission group', async () => {
       // Create a new permission group specifically for deletion test
       const groupToDelete = await createPermissionGroup({
+        code: 'GROUP_TO_DELETE',
         name: 'Group To Delete',
         description: 'This group will be deleted',
       });
@@ -99,6 +106,7 @@ describe('Permission Groups Controller', () => {
       // Attempt to create a permission group with the same name
       try {
         await createPermissionGroup({
+          code: 'DUPLICATE_NAME_TEST',
           name: testPermissionGroup.name, // Using the same name as the existing group
           description: 'Another group with the same name',
         });

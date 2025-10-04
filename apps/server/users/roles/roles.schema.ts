@@ -7,6 +7,7 @@ import {
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
+import { isNull } from 'drizzle-orm';
 import { permissions } from '../permissions/permissions.schema';
 
 /**
@@ -17,12 +18,18 @@ export const roles = pgTable(
   'roles',
   {
     id: serial('id').primaryKey(),
+    code: text('code').notNull(),
     name: text('name').notNull(),
     description: text('description'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
+    deletedAt: timestamp('deleted_at'),
   },
-  (table) => [uniqueIndex().on(table.name)],
+  (table) => [
+    uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
+    uniqueIndex().on(table.name).where(isNull(table.deletedAt)),
+    index().on(table.deletedAt),
+  ],
 );
 
 /**

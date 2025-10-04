@@ -393,6 +393,20 @@
       "when": 1759354485554,
       "tag": "20251001213445_remove_soft_delete_for_options",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1759506934640,
+      "tag": "20251003155534_update_permission_groups_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1759521734118,
+      "tag": "20251003200214_update_roles_columns",
+      "breakpoints": true
     }
   ]
 }

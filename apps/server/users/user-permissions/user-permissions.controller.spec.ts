@@ -66,6 +66,7 @@ describe('User Permissions Controller', () => {
   };
 
   const testRole: CreateRolePayload = {
+    code: 'TEST_USER_ROLE',
     name: 'Test User Role',
     description: 'A test role for user permissions testing',
   };
@@ -215,6 +216,7 @@ describe('User Permissions Controller', () => {
     it('should replace existing roles when assigning roles', async () => {
       // Create another role
       const anotherRole = await createRole({
+        code: 'ANOTHER_ROLE',
         name: 'Another Role',
         description: 'Another test role',
       });

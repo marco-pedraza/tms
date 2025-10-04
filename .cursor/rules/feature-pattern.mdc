@@ -19,9 +19,8 @@ apps/
     │   ├── schema.ts         # Schema exports aggregation
     │   ├── index.ts          # Database exports aggregation
     │   ├── scripts/          # Database scripts (seeding, etc.)
-    │   │   ├── seed-admin.ts        # Admin user seeding
     │   │   ├── seed-inventory.ts    # Inventory data seeding
-    │   │   └── seed-permissions.ts  # Permissions seeding
+    │   │   └── seed-users.ts  # Users seeding
     │   └── migrations/       # Database migrations
     ├── inventory/            # Subsystem for inventory management
     │   ├── countries/        # Feature: countries management

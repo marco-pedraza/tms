@@ -8,6 +8,9 @@ export interface PermissionGroup {
   /** Unique identifier for the permission group */
   id: number;
 
+  /** Unique code identifier for the permission group */
+  code: string;
+
   /** Name of the permission group */
   name: string;
 
@@ -29,6 +32,12 @@ export interface PermissionGroup {
  */
 export interface CreatePermissionGroupPayload {
   /**
+   * Unique code identifier for the permission group
+   * Must have at least 1 non-whitespace character
+   */
+  code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
    * Name of the permission group
    * Must have at least 1 non-whitespace character
    */
@@ -45,6 +54,12 @@ export interface CreatePermissionGroupPayload {
  * Input for updating a permission group
  */
 export interface UpdatePermissionGroupPayload {
+  /**
+   * Unique code identifier for the permission group
+   * Must have at least 1 non-whitespace character
+   */
+  code?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
   /**
    * Name of the permission group
    * Must have at least 1 non-whitespace character

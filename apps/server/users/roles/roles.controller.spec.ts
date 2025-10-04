@@ -41,6 +41,7 @@ describe('Roles Controller', () => {
   };
 
   const testRole: CreateRolePayload = {
+    code: 'TEST_ROLE',
     name: 'Test Role',
     description: 'A test role for automated testing',
   };
@@ -80,6 +81,7 @@ describe('Roles Controller', () => {
       // Verify response
       expect(result.id).toBeDefined();
       expect(typeof result.id).toBe('number');
+      expect(result.code).toBe(testRole.code);
       expect(result.name).toBe(testRole.name);
       expect(result.description).toBe(testRole.description);
       expect(result.createdAt).toBeDefined();
@@ -89,6 +91,7 @@ describe('Roles Controller', () => {
     it('should create a new role with permissions', async () => {
       const roleWithPermissions = {
         ...testRole,
+        code: 'TEST_ROLE_WITH_PERMS',
         name: 'Test Role With Permissions',
         permissionIds: [permissionId1, permissionId2],
       };
@@ -121,6 +124,7 @@ describe('Roles Controller', () => {
       const result = await getRole({ id: roleId });
 
       expect(result.id).toBe(roleId);
+      expect(result.code).toBe(testRole.code);
       expect(result.name).toBe(testRole.name);
       expect(result.description).toBe(testRole.description);
     });
@@ -139,12 +143,14 @@ describe('Roles Controller', () => {
 
       const foundRole = result.roles.find((r) => r.id === roleId);
       expect(foundRole).toBeDefined();
+      expect(foundRole?.code).toBe(testRole.code);
       expect(foundRole?.name).toBe(testRole.name);
     });
   });
 
   describe('updateRole', () => {
     const updateData: UpdateRolePayload = {
+      code: 'UPDATED_ROLE',
       name: 'Updated Role',
       description: 'Updated description for testing',
     };
@@ -153,6 +159,7 @@ describe('Roles Controller', () => {
       const result = await updateRole({ id: roleId, ...updateData });
 
       expect(result.id).toBe(roleId);
+      expect(result.code).toBe(updateData.code);
       expect(result.name).toBe(updateData.name);
       expect(result.description).toBe(updateData.description);
       expect(result.updatedAt).toBeDefined();
@@ -195,6 +202,7 @@ describe('Roles Controller', () => {
       const result = await getRoleWithPermissions({ id: roleId });
 
       expect(result.id).toBe(roleId);
+      expect(result.code).toBe('UPDATED_ROLE');
       expect(result.name).toBe('Updated Role');
       expect(result.permissions).toBeDefined();
       expect(result.permissions.length).toBe(2);
@@ -215,6 +223,7 @@ describe('Roles Controller', () => {
       const result = await deleteRole({ id: roleId });
 
       expect(result.id).toBe(roleId);
+      expect(result.code).toBe('UPDATED_ROLE');
       expect(result.name).toBe('Updated Role');
 
       // Mark as deleted so afterAll doesn't try to delete again
@@ -264,10 +273,12 @@ describe('Roles Controller', () => {
     it('should default sort by name in ascending order', async () => {
       // Create test roles with different names for verification of default sorting
       roleA = await createRole({
+        code: 'AAA_TEST_ROLE',
         name: 'AAA Test Role',
         description: 'Test role A',
       });
       roleZ = await createRole({
+        code: 'ZZZ_TEST_ROLE',
         name: 'ZZZ Test Role',
         description: 'Test role Z',
       });
@@ -291,10 +302,12 @@ describe('Roles Controller', () => {
       // Create additional roles and ensure we have at least roleA and roleZ from previous test
       if (!roleA?.id || !roleZ?.id) {
         roleA = await createRole({
+          code: 'AAA_TEST_ROLE',
           name: 'AAA Test Role',
           description: 'Test role A',
         });
         roleZ = await createRole({
+          code: 'ZZZ_TEST_ROLE',
           name: 'ZZZ Test Role',
           description: 'Test role Z',
         });
@@ -328,11 +341,13 @@ describe('Roles Controller', () => {
     beforeAll(async () => {
       // Create roles with searchable content
       searchRoleA = await createRole({
+        code: 'SEARCH_ROLE_ALPHA',
         name: 'Search Role Alpha',
         description: 'This is a role for testing search functionality',
       });
 
       searchRoleB = await createRole({
+        code: 'SEARCH_ROLE_BETA',
         name: 'Search Role Beta',
         description: 'Another role for search tests',
       });

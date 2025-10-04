@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "generated_at": "2024-01-01T00:00:00Z",
+    "total_users": 4,
+    "description": "User data for GFA seeding purposes"
+  },
+  "users": [
+    {
+      "username": "admin",
+      "email": "admin@gfa.com",
+      "firstName": "Administrador",
+      "lastName": "Sistema",
+      "position": "Administrador del Sistema",
+      "employeeId": null,
+      "isSystemAdmin": true,
+      "roles": ["admin"],
+      "departmentCode": "ti"
+    },
+    {
+      "username": "gerente.operaciones",
+      "email": "operaciones@gfa.com",
+      "firstName": "Carlos",
+      "lastName": "Mendoza",
+      "position": "Gerente de Operaciones",
+      "employeeId": "EMP002",
+      "isSystemAdmin": false,
+      "roles": ["read_only", "editor"],
+      "departmentCode": "ops"
+    },
+    {
+      "username": "supervisor.flota",
+      "email": "flota@gfa.com",
+      "firstName": "Ana",
+      "lastName": "Rodriguez",
+      "position": "Supervisora de Flota",
+      "employeeId": "EMP003",
+      "isSystemAdmin": false,
+      "roles": ["read_only", "editor"],
+      "departmentCode": "flota"
+    },
+    {
+      "username": "coordinador.ti",
+      "email": "ti@gfa.com",
+      "firstName": "Miguel",
+      "lastName": "Hernandez",
+      "position": "Coordinador de TI",
+      "employeeId": "EMP004",
+      "isSystemAdmin": false,
+      "roles": ["read_only"],
+      "departmentCode": "ti"
+    }
+  ]
+}

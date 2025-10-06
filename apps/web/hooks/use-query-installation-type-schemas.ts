@@ -19,6 +19,8 @@ export default function useQueryInstallationTypeSchemas({
   ListInstallationSchemasResult,
   APIError
 > {
+  // @todo fix type inference setup
+  // @ts-expect-error - fix type inference setup
   return useQuery({
     queryKey: ['installationTypes', installationTypeId, 'schemas'],
     enabled: enabled && !!installationTypeId,

@@ -1,7 +1,7 @@
 import {
   type UseQueryResult,
   useQuery,
-  useQueryClient,
+  // useQueryClient,
 } from '@tanstack/react-query';
 import type { cities } from '@repo/ims-client';
 import imsClient from '@/services/ims-client';
@@ -29,18 +29,23 @@ export default function useQueryCity({
   cities.CityWithRelations,
   QueryCityError
 > {
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
 
   return useQuery({
     queryKey: ['cities', cityId],
     enabled,
     queryFn: () => imsClient.inventory.getCity(cityId),
-    initialData: () =>
-      queryClient
-        .getQueryData<cities.PaginatedListCitiesResult>(['cities'])
-        ?.data.find((city) => city.id === cityId),
-    initialDataUpdatedAt: () =>
-      queryClient.getQueryState<cities.PaginatedListCitiesResult>(['cities'])
-        ?.dataUpdatedAt,
+    // @todo update cities list query to include population and match CityWithRelations type
+    // Currently, the types don't match, so we can't use the initial data from the query client
+    // After updating the cities list query to include population and match CityWithRelations type,
+    // we can use the initial data from the query client
+
+    // initialData: () =>
+    //   queryClient
+    //     .getQueryData<cities.PaginatedListCitiesResult>(['cities'])
+    //     ?.data.find((city) => city.id === cityId),
+    // initialDataUpdatedAt: () =>
+    //   queryClient.getQueryState<cities.PaginatedListCitiesResult>(['cities'])
+    //     ?.dataUpdatedAt,
   });
 }

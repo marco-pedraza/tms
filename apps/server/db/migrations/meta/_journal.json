@@ -407,6 +407,13 @@
       "when": 1759521734118,
       "tag": "20251003200214_update_roles_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1759782461391,
+      "tag": "20251006202741_update_role_permissions_table",
+      "breakpoints": true
     }
   ]
 }

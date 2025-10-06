@@ -9,7 +9,8 @@ import {
   deletePermission,
 } from '../permissions/permissions.controller';
 import type { CreatePermissionPayload } from '../permissions/permissions.types';
-import { createRole, deleteRole } from '../roles/roles.controller';
+import { createRole } from '../roles/roles.controller';
+import { roleRepository } from '../roles/roles.repository';
 import type { CreateRolePayload } from '../roles/roles.types';
 import { createUser } from '../users/users.controller';
 import { userRepository } from '../users/users.repository';
@@ -77,7 +78,9 @@ describe('User Permissions Controller', () => {
       await userRepository.forceDelete(userId);
     }
     if (roleId > 0) {
-      await deleteRole({ id: roleId });
+      // Clear permissions first
+      await roleRepository.assignPermissions(roleId, { permissionIds: [] });
+      await roleRepository.forceDelete(roleId);
     }
     if (permissionId1 > 0) {
       await deletePermission({ id: permissionId1 });
@@ -243,7 +246,7 @@ describe('User Permissions Controller', () => {
         expect(result.roles[0].id).toBe(roleId);
       } finally {
         // Clean up the additional role
-        await deleteRole({ id: anotherRole.id });
+        await roleRepository.forceDelete(anotherRole.id);
       }
     });
 

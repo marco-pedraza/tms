@@ -2,17 +2,16 @@ import { api } from 'encore.dev/api';
 import type {
   AssignPermissionsToRolePayload,
   CreateRolePayload,
-  PaginatedRoles,
-  PaginatedRolesWithPermissions,
-  PaginationParamsRoles,
+  ListRolesQueryParams,
+  ListRolesResult,
+  PaginatedListRolesQueryParams,
+  PaginatedListRolesResult,
   Role,
   RoleWithPermissions,
-  Roles,
-  RolesQueryOptions,
-  RolesWithPermissions,
   UpdateRolePayload,
 } from './roles.types';
 import { roleRepository } from './roles.repository';
+import { validatePermissionsAssignment, validateRole } from './roles.domain';
 
 /**
  * Creates a new role.
@@ -21,105 +20,55 @@ import { roleRepository } from './roles.repository';
  * @throws {APIError} If the role creation fails
  */
 export const createRole = api(
-  { method: 'POST', path: '/roles', expose: true, auth: true },
+  { expose: true, method: 'POST', path: '/roles/create' },
   async (params: CreateRolePayload): Promise<RoleWithPermissions> => {
+    await validateRole(params);
     return await roleRepository.create(params);
   },
 );
 
 /**
- * Retrieves a role by ID.
- * @param params - Object containing the role ID
- * @param params.id - The ID of the role to retrieve
- * @returns {Promise<Role>} The found role
- * @throws {APIError} If the role is not found or retrieval fails
- */
-export const getRole = api(
-  { method: 'GET', path: '/roles/:id', expose: true, auth: true },
-  async ({ id }: { id: number }): Promise<Role> => {
-    return await roleRepository.findOne(id);
-  },
-);
-
-/**
- * Retrieves a role by ID with its permissions.
+ * Retrieves a role by its ID with its permissions.
  * @param params - Object containing the role ID
  * @param params.id - The ID of the role to retrieve
  * @returns {Promise<RoleWithPermissions>} The found role with permissions
  * @throws {APIError} If the role is not found or retrieval fails
  */
-export const getRoleWithPermissions = api(
-  {
-    method: 'GET',
-    path: '/roles/:id/with-permissions',
-    expose: true,
-    auth: true,
-  },
+export const getRole = api(
+  { expose: true, method: 'GET', path: '/roles/:id' },
   async ({ id }: { id: number }): Promise<RoleWithPermissions> => {
     return await roleRepository.findOneWithPermissions(id);
   },
 );
 
 /**
- * Retrieves all roles with optional filtering, ordering, and permissions.
- * @param params - Query options for filtering, ordering, and including permissions
- * @returns {Promise<Roles>} List of roles
- * @throws {APIError} If the retrieval fails
+ * Retrieves all roles without pagination (useful for dropdowns).
+ * @param params - Query parameters including orderBy, filters, searchTerm, and includePermissions
+ * @returns {Promise<ListRolesResult>} Unified response with data property containing array of roles
+ * @throws {APIError} If retrieval fails
  */
 export const listRoles = api(
-  { method: 'POST', path: '/get-roles', expose: true, auth: true },
-  async (params: RolesQueryOptions): Promise<Roles> => {
+  { expose: true, method: 'POST', path: '/roles/list/all' },
+  async (params: ListRolesQueryParams): Promise<ListRolesResult> => {
     const roles = await roleRepository.findAll(params);
-    return { roles };
+    return {
+      data: roles,
+    };
   },
 );
 
 /**
- * Retrieves all roles with their permissions (maintains backward compatibility).
- * @returns {Promise<RolesWithPermissions>} List of all roles with permissions
- * @throws {APIError} If the retrieval fails
- */
-export const listRolesWithPermissions = api(
-  { method: 'GET', path: '/roles/with-permissions', expose: true, auth: true },
-  async (): Promise<RolesWithPermissions> => {
-    const roles = await roleRepository.findAll({ includePermissions: true });
-    return { roles: roles as RoleWithPermissions[] };
-  },
-);
-
-/**
- * Retrieves roles with pagination, filtering, and ordering.
- * @param params - Pagination, filtering, and ordering parameters
- * @returns {Promise<PaginatedRoles>} Paginated list of roles
+ * Retrieves roles with pagination (useful for tables).
+ * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, searchTerm, and includePermissions
+ * @returns {Promise<PaginatedListRolesResult>} Unified paginated response with data and pagination properties
  * @throws {APIError} If retrieval fails
  */
-export const listRolesWithPagination = api(
-  { method: 'POST', path: '/get-roles/paginated', expose: true, auth: true },
-  async (params: PaginationParamsRoles): Promise<PaginatedRoles> => {
-    return (await roleRepository.findAllPaginated(params)) as PaginatedRoles;
-  },
-);
-
-/**
- * Retrieves roles with permissions and pagination (maintains backward compatibility).
- * @param params - Pagination parameters
- * @returns {Promise<PaginatedRolesWithPermissions>} Paginated list of roles with permissions
- * @throws {APIError} If retrieval fails
- */
-export const listRolesWithPermissionsAndPagination = api(
-  {
-    method: 'POST',
-    path: '/roles/with-permissions/paginated',
-    expose: true,
-    auth: true,
-  },
+export const listRolesPaginated = api(
+  { expose: true, method: 'POST', path: '/roles/list' },
   async (
-    params: PaginationParamsRoles,
-  ): Promise<PaginatedRolesWithPermissions> => {
-    return (await roleRepository.findAllPaginated({
-      ...params,
-      includePermissions: true,
-    })) as PaginatedRolesWithPermissions;
+    params: PaginatedListRolesQueryParams,
+  ): Promise<PaginatedListRolesResult> => {
+    return await roleRepository.findAllPaginated(params);
   },
 );
 
@@ -131,11 +80,12 @@ export const listRolesWithPermissionsAndPagination = api(
  * @throws {APIError} If the role is not found or update fails
  */
 export const updateRole = api(
-  { method: 'PUT', path: '/roles/:id', expose: true, auth: true },
+  { expose: true, method: 'PUT', path: '/roles/:id/update' },
   async ({
     id,
     ...data
   }: UpdateRolePayload & { id: number }): Promise<RoleWithPermissions> => {
+    await validateRole(data, id);
     return await roleRepository.update(id, data);
   },
 );
@@ -149,65 +99,28 @@ export const updateRole = api(
  * @throws {APIError} If the role is not found or assignment fails
  */
 export const assignPermissionsToRole = api(
-  { method: 'POST', path: '/roles/:id/permissions', expose: true, auth: true },
+  { expose: true, method: 'POST', path: '/roles/:id/permissions' },
   async ({
     id,
     ...data
   }: AssignPermissionsToRolePayload & {
     id: number;
   }): Promise<RoleWithPermissions> => {
+    await validatePermissionsAssignment(data);
     return await roleRepository.assignPermissions(id, data);
   },
 );
 
 /**
- * Deletes a role by ID.
+ * Deletes a role by its ID.
  * @param params - Object containing the role ID
  * @param params.id - The ID of the role to delete
  * @returns {Promise<Role>} The deleted role
  * @throws {APIError} If the role is not found or deletion fails
  */
 export const deleteRole = api(
-  { method: 'DELETE', path: '/roles/:id', expose: true, auth: true },
+  { expose: true, method: 'DELETE', path: '/roles/:id/delete' },
   async ({ id }: { id: number }): Promise<Role> => {
     return await roleRepository.delete(id);
-  },
-);
-
-/**
- * Searches for roles by matching a search term against name and description.
- * @param params - Search parameters
- * @param params.term - The search term to match against role fields
- * @returns {Promise<Roles>} List of matching roles
- * @throws {APIError} If search fails or no searchable fields are configured
- */
-export const searchRoles = api(
-  { method: 'POST', path: '/roles/search', expose: true, auth: true },
-  async ({
-    term,
-    ...options
-  }: { term: string } & RolesQueryOptions): Promise<Roles> => {
-    const roles = await roleRepository.search(term, options);
-    return { roles };
-  },
-);
-
-/**
- * Searches for roles with pagination by matching a search term.
- * @param params - Search and pagination parameters
- * @param params.term - The search term to match against role fields
- * @returns {Promise<PaginatedRoles>} Paginated list of matching roles
- * @throws {APIError} If search fails or no searchable fields are configured
- */
-export const searchRolesPaginated = api(
-  { method: 'POST', path: '/roles/search/paginated', expose: true, auth: true },
-  async ({
-    term,
-    ...params
-  }: PaginationParamsRoles & { term: string }): Promise<PaginatedRoles> => {
-    return (await roleRepository.searchPaginated(
-      term,
-      params,
-    )) as PaginatedRoles;
   },
 );

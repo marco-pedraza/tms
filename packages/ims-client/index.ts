@@ -4006,7 +4006,6 @@ export namespace users {
             this.getDepartment = this.getDepartment.bind(this)
             this.getPermission = this.getPermission.bind(this)
             this.getRole = this.getRole.bind(this)
-            this.getRoleWithPermissions = this.getRoleWithPermissions.bind(this)
             this.getUser = this.getUser.bind(this)
             this.getUserPermissions = this.getUserPermissions.bind(this)
             this.getUserRoles = this.getUserRoles.bind(this)
@@ -4019,9 +4018,7 @@ export namespace users {
             this.listPermissions = this.listPermissions.bind(this)
             this.listPermissionsWithPagination = this.listPermissionsWithPagination.bind(this)
             this.listRoles = this.listRoles.bind(this)
-            this.listRolesWithPagination = this.listRolesWithPagination.bind(this)
-            this.listRolesWithPermissions = this.listRolesWithPermissions.bind(this)
-            this.listRolesWithPermissionsAndPagination = this.listRolesWithPermissionsAndPagination.bind(this)
+            this.listRolesPaginated = this.listRolesPaginated.bind(this)
             this.listUsers = this.listUsers.bind(this)
             this.listUsersPaginated = this.listUsersPaginated.bind(this)
             this.login = this.login.bind(this)
@@ -4032,8 +4029,6 @@ export namespace users {
             this.searchDepartmentsPaginated = this.searchDepartmentsPaginated.bind(this)
             this.searchPermissions = this.searchPermissions.bind(this)
             this.searchPermissionsPaginated = this.searchPermissionsPaginated.bind(this)
-            this.searchRoles = this.searchRoles.bind(this)
-            this.searchRolesPaginated = this.searchRolesPaginated.bind(this)
             this.updateDepartment = this.updateDepartment.bind(this)
             this.updatePermission = this.updatePermission.bind(this)
             this.updatePermissionGroup = this.updatePermissionGroup.bind(this)
@@ -4202,7 +4197,7 @@ export namespace users {
          */
         public async createRole(params: roles.CreateRolePayload): Promise<roles.RoleWithPermissions> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/roles`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("POST", `/roles/create`, JSON.stringify(params))
             return await resp.json() as roles.RoleWithPermissions
         }
 
@@ -4257,7 +4252,7 @@ export namespace users {
         }
 
         /**
-         * Deletes a role by ID.
+         * Deletes a role by its ID.
          * @param params - Object containing the role ID
          * @param params.id - The ID of the role to delete
          * @returns {Promise<Role>} The deleted role
@@ -4265,7 +4260,7 @@ export namespace users {
          */
         public async deleteRole(id: number): Promise<roles.Role> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/roles/${encodeURIComponent(id)}`)
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/roles/${encodeURIComponent(id)}/delete`)
             return await resp.json() as roles.Role
         }
 
@@ -4309,28 +4304,15 @@ export namespace users {
         }
 
         /**
-         * Retrieves a role by ID.
-         * @param params - Object containing the role ID
-         * @param params.id - The ID of the role to retrieve
-         * @returns {Promise<Role>} The found role
-         * @throws {APIError} If the role is not found or retrieval fails
-         */
-        public async getRole(id: number): Promise<roles.Role> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/roles/${encodeURIComponent(id)}`)
-            return await resp.json() as roles.Role
-        }
-
-        /**
-         * Retrieves a role by ID with its permissions.
+         * Retrieves a role by its ID with its permissions.
          * @param params - Object containing the role ID
          * @param params.id - The ID of the role to retrieve
          * @returns {Promise<RoleWithPermissions>} The found role with permissions
          * @throws {APIError} If the role is not found or retrieval fails
          */
-        public async getRoleWithPermissions(id: number): Promise<roles.RoleWithPermissions> {
+        public async getRole(id: number): Promise<roles.RoleWithPermissions> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/roles/${encodeURIComponent(id)}/with-permissions`)
+            const resp = await this.baseClient.callTypedAPI("GET", `/roles/${encodeURIComponent(id)}`)
             return await resp.json() as roles.RoleWithPermissions
         }
 
@@ -4470,50 +4452,27 @@ export namespace users {
         }
 
         /**
-         * Retrieves all roles with optional filtering, ordering, and permissions.
-         * @param params - Query options for filtering, ordering, and including permissions
-         * @returns {Promise<Roles>} List of roles
-         * @throws {APIError} If the retrieval fails
-         */
-        public async listRoles(params: roles.RolesQueryOptions): Promise<roles.Roles> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-roles`, JSON.stringify(params))
-            return await resp.json() as roles.Roles
-        }
-
-        /**
-         * Retrieves roles with pagination, filtering, and ordering.
-         * @param params - Pagination, filtering, and ordering parameters
-         * @returns {Promise<PaginatedRoles>} Paginated list of roles
+         * Retrieves all roles without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, searchTerm, and includePermissions
+         * @returns {Promise<ListRolesResult>} Unified response with data property containing array of roles
          * @throws {APIError} If retrieval fails
          */
-        public async listRolesWithPagination(params: roles.PaginationParamsRoles): Promise<roles.PaginatedRoles> {
+        public async listRoles(params: roles.ListRolesQueryParams): Promise<roles.ListRolesResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-roles/paginated`, JSON.stringify(params))
-            return await resp.json() as roles.PaginatedRoles
+            const resp = await this.baseClient.callTypedAPI("POST", `/roles/list/all`, JSON.stringify(params))
+            return await resp.json() as roles.ListRolesResult
         }
 
         /**
-         * Retrieves all roles with their permissions (maintains backward compatibility).
-         * @returns {Promise<RolesWithPermissions>} List of all roles with permissions
-         * @throws {APIError} If the retrieval fails
-         */
-        public async listRolesWithPermissions(): Promise<roles.RolesWithPermissions> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/roles/with-permissions`)
-            return await resp.json() as roles.RolesWithPermissions
-        }
-
-        /**
-         * Retrieves roles with permissions and pagination (maintains backward compatibility).
-         * @param params - Pagination parameters
-         * @returns {Promise<PaginatedRolesWithPermissions>} Paginated list of roles with permissions
+         * Retrieves roles with pagination (useful for tables).
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, searchTerm, and includePermissions
+         * @returns {Promise<PaginatedListRolesResult>} Unified paginated response with data and pagination properties
          * @throws {APIError} If retrieval fails
          */
-        public async listRolesWithPermissionsAndPagination(params: roles.PaginationParamsRoles): Promise<roles.PaginatedRolesWithPermissions> {
+        public async listRolesPaginated(params: roles.PaginatedListRolesQueryParams): Promise<roles.PaginatedListRolesResult> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/roles/with-permissions/paginated`, JSON.stringify(params))
-            return await resp.json() as roles.PaginatedRolesWithPermissions
+            const resp = await this.baseClient.callTypedAPI("POST", `/roles/list`, JSON.stringify(params))
+            return await resp.json() as roles.PaginatedListRolesResult
         }
 
         /**
@@ -4707,64 +4666,6 @@ export namespace users {
         }
 
         /**
-         * Searches for roles by matching a search term against name and description.
-         * @param params - Search parameters
-         * @param params.term - The search term to match against role fields
-         * @returns {Promise<Roles>} List of matching roles
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchRoles(params: {
-    term: string
-    orderBy?: {
-        field: "id" | "code" | "name" | "description" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        code?: string
-        name?: string
-        description?: string | null
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-    includePermissions?: boolean
-}): Promise<roles.Roles> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/roles/search`, JSON.stringify(params))
-            return await resp.json() as roles.Roles
-        }
-
-        /**
-         * Searches for roles with pagination by matching a search term.
-         * @param params - Search and pagination parameters
-         * @param params.term - The search term to match against role fields
-         * @returns {Promise<PaginatedRoles>} Paginated list of matching roles
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchRolesPaginated(params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "code" | "name" | "description" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        code?: string
-        name?: string
-        description?: string | null
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-    includePermissions?: boolean
-    term: string
-}): Promise<roles.PaginatedRoles> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/roles/search/paginated`, JSON.stringify(params))
-            return await resp.json() as roles.PaginatedRoles
-        }
-
-        /**
          * Updates an existing department.
          * @param params - Object containing the department ID and update data
          * @param params.id - The ID of the department to update
@@ -4890,7 +4791,7 @@ export namespace users {
     description?: string
 }): Promise<roles.RoleWithPermissions> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/roles/${encodeURIComponent(id)}`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("PUT", `/roles/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as roles.RoleWithPermissions
         }
 
@@ -10563,17 +10464,28 @@ export namespace roles {
         permissionIds?: number[]
     }
 
-    export interface PaginatedRoles {
-        pagination: shared.PaginationMeta
-        data: Role[]
+    export interface ListRolesQueryParams {
+        orderBy?: {
+            field: "id" | "code" | "name" | "description" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            code?: string
+            name?: string
+            description?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+        includePermissions?: boolean
     }
 
-    export interface PaginatedRolesWithPermissions {
-        pagination: shared.PaginationMeta
-        data: RoleWithPermissions[]
+    export interface ListRolesResult {
+        data: (Role | RoleWithPermissions)[]
     }
 
-    export interface PaginationParamsRoles {
+    export interface PaginatedListRolesQueryParams {
         page?: number
         pageSize?: number
         orderBy?: {
@@ -10588,25 +10500,13 @@ export namespace roles {
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }
+        searchTerm?: string
         includePermissions?: boolean
     }
 
-    export interface PaginationParamsRoles {
-        page?: number
-        pageSize?: number
-        orderBy?: {
-            field: "id" | "code" | "name" | "description" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            code?: string
-            name?: string
-            description?: string | null
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
-        includePermissions?: boolean
+    export interface PaginatedListRolesResult {
+        pagination: shared.PaginationMeta
+        data: (Role | RoleWithPermissions)[]
     }
 
     export interface Role {
@@ -10676,36 +10576,6 @@ export namespace roles {
          * Timestamp when the role was last updated
          */
         updatedAt: string | string | null
-    }
-
-    export interface Roles {
-        /**
-         * List of roles
-         */
-        roles: Role[]
-    }
-
-    export interface RolesQueryOptions {
-        orderBy?: {
-            field: "id" | "code" | "name" | "description" | "createdAt" | "updatedAt"
-            direction: "asc" | "desc"
-        }[]
-        filters?: {
-            id?: number
-            code?: string
-            name?: string
-            description?: string | null
-            createdAt?: string | string | null
-            updatedAt?: string | string | null
-        }
-        includePermissions?: boolean
-    }
-
-    export interface RolesWithPermissions {
-        /**
-         * List of roles with their permissions
-         */
-        roles: RoleWithPermissions[]
     }
 }
 

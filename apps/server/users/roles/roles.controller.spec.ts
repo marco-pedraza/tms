@@ -1,33 +1,24 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { FieldValidationError } from '@repo/base-repo';
 import {
   createPermission,
   deletePermission,
 } from '../permissions/permissions.controller';
 import type { CreatePermissionPayload } from '../permissions/permissions.types';
-import type {
-  CreateRolePayload,
-  RoleWithPermissions,
-  UpdateRolePayload,
-} from './roles.types';
+import type { CreateRolePayload, RoleWithPermissions } from './roles.types';
+import { roleRepository } from './roles.repository';
 import {
   assignPermissionsToRole,
   createRole,
   deleteRole,
   getRole,
-  getRoleWithPermissions,
   listRoles,
-  listRolesWithPagination,
-  searchRoles,
-  searchRolesPaginated,
+  listRolesPaginated,
   updateRole,
 } from './roles.controller';
 
 describe('Roles Controller', () => {
-  // Test data
-  let roleId = 0;
-  let permissionId1 = 0;
-  let permissionId2 = 0;
-
+  // Test data and setup
   const testPermission1: CreatePermissionPayload = {
     name: 'Test Permission 1',
     code: 'TEST_PERMISSION_1',
@@ -46,53 +37,74 @@ describe('Roles Controller', () => {
     description: 'A test role for automated testing',
   };
 
-  // Clean up after all tests
+  // Variables to store created IDs for cleanup
+  let createdRoleId: number;
+  let permissionId1: number;
+  let permissionId2: number;
+
+  beforeAll(async () => {
+    // Create test permissions
+    const result1 = await createPermission(testPermission1);
+    permissionId1 = result1.id;
+
+    const result2 = await createPermission(testPermission2);
+    permissionId2 = result2.id;
+  });
+
   afterAll(async () => {
-    if (roleId > 0) {
-      await deleteRole({ id: roleId });
+    // Clean up test data
+    if (createdRoleId) {
+      try {
+        // Clear permissions first
+        await roleRepository.assignPermissions(createdRoleId, {
+          permissionIds: [],
+        });
+        await roleRepository.forceDelete(createdRoleId);
+      } catch (error) {
+        console.log('Error cleaning up test role:', error);
+      }
     }
-    if (permissionId1 > 0) {
-      await deletePermission({ id: permissionId1 });
+    if (permissionId1) {
+      try {
+        await deletePermission({ id: permissionId1 });
+      } catch (error) {
+        console.log('Error cleaning up test permission 1:', error);
+      }
     }
-    if (permissionId2 > 0) {
-      await deletePermission({ id: permissionId2 });
+    if (permissionId2) {
+      try {
+        await deletePermission({ id: permissionId2 });
+      } catch (error) {
+        console.log('Error cleaning up test permission 2:', error);
+      }
     }
   });
 
-  describe('Setup', () => {
-    it('should create test permissions', async () => {
-      const result1 = await createPermission(testPermission1);
-      permissionId1 = result1.id;
-      expect(permissionId1).toBeGreaterThan(0);
+  describe('success scenarios', () => {
+    test('should create a new role', async () => {
+      // Create a new role
+      const response = await createRole(testRole);
 
-      const result2 = await createPermission(testPermission2);
-      permissionId2 = result2.id;
-      expect(permissionId2).toBeGreaterThan(0);
-    });
-  });
+      // Store the ID for later cleanup
+      createdRoleId = response.id;
 
-  describe('createRole', () => {
-    it('should create a new role', async () => {
-      const result = await createRole(testRole);
-
-      // Save ID for other tests
-      roleId = result.id;
-
-      // Verify response
-      expect(result.id).toBeDefined();
-      expect(typeof result.id).toBe('number');
-      expect(result.code).toBe(testRole.code);
-      expect(result.name).toBe(testRole.name);
-      expect(result.description).toBe(testRole.description);
-      expect(result.createdAt).toBeDefined();
-      expect(result.updatedAt).toBeDefined();
+      // Assertions
+      expect(response).toBeDefined();
+      expect(response.id).toBeDefined();
+      expect(response.code).toBe(testRole.code);
+      expect(response.name).toBe(testRole.name);
+      expect(response.description).toBe(testRole.description);
+      expect(response.createdAt).toBeDefined();
+      expect(response.updatedAt).toBeDefined();
+      expect(response.permissions).toBeDefined();
+      expect(Array.isArray(response.permissions)).toBe(true);
     });
 
-    it('should create a new role with permissions', async () => {
+    test('should create a new role with permissions', async () => {
       const roleWithPermissions = {
-        ...testRole,
         code: 'TEST_ROLE_WITH_PERMS',
         name: 'Test Role With Permissions',
+        description: 'A role with initial permissions',
         permissionIds: [permissionId1, permissionId2],
       };
 
@@ -101,83 +113,58 @@ describe('Roles Controller', () => {
 
       try {
         // Verify the role was created with permissions
-        const roleDetail = await getRoleWithPermissions({
-          id: roleWithPermsId,
-        });
-        expect(roleDetail.id).toBe(roleWithPermsId);
-        expect(roleDetail.permissions).toBeDefined();
-        expect(roleDetail.permissions.length).toBe(2);
+        expect(result.id).toBeDefined();
+        expect(result.permissions).toBeDefined();
+        expect(result.permissions.length).toBe(2);
 
         // Check that both permissions are assigned
-        const permissionIds = roleDetail.permissions.map((p) => p.id);
+        const permissionIds = result.permissions.map((p) => p.id);
         expect(permissionIds).toContain(permissionId1);
         expect(permissionIds).toContain(permissionId2);
       } finally {
-        // Clean up the test role
-        await deleteRole({ id: roleWithPermsId });
+        // Clean up the test role - clear permissions first
+        await roleRepository.assignPermissions(roleWithPermsId, {
+          permissionIds: [],
+        });
+        await roleRepository.forceDelete(roleWithPermsId);
       }
     });
-  });
 
-  describe('getRole', () => {
-    it('should get an existing role', async () => {
-      const result = await getRole({ id: roleId });
+    test('should retrieve a role by ID', async () => {
+      const response = await getRole({ id: createdRoleId });
 
-      expect(result.id).toBe(roleId);
-      expect(result.code).toBe(testRole.code);
-      expect(result.name).toBe(testRole.name);
-      expect(result.description).toBe(testRole.description);
+      expect(response).toBeDefined();
+      expect(response.id).toBe(createdRoleId);
+      expect(response.code).toBe(testRole.code);
+      expect(response.name).toBe(testRole.name);
+      expect(response.description).toBe(testRole.description);
+      expect(response.permissions).toBeDefined();
+      expect(Array.isArray(response.permissions)).toBe(true);
     });
 
-    it('should fail to get non-existent role', async () => {
-      await expect(getRole({ id: 999999 })).rejects.toThrow();
-    });
-  });
+    test('should update a role', async () => {
+      const updatedName = 'Updated Test Role';
+      const updatedCode = 'UPDATED_ROLE';
+      const response = await updateRole({
+        id: createdRoleId,
+        name: updatedName,
+        code: updatedCode,
+      });
 
-  describe('listRoles', () => {
-    it('should list all roles', async () => {
-      const result = await listRoles({});
-
-      expect(Array.isArray(result.roles)).toBe(true);
-      expect(result.roles.length).toBeGreaterThan(0);
-
-      const foundRole = result.roles.find((r) => r.id === roleId);
-      expect(foundRole).toBeDefined();
-      expect(foundRole?.code).toBe(testRole.code);
-      expect(foundRole?.name).toBe(testRole.name);
-    });
-  });
-
-  describe('updateRole', () => {
-    const updateData: UpdateRolePayload = {
-      code: 'UPDATED_ROLE',
-      name: 'Updated Role',
-      description: 'Updated description for testing',
-    };
-
-    it('should update an existing role', async () => {
-      const result = await updateRole({ id: roleId, ...updateData });
-
-      expect(result.id).toBe(roleId);
-      expect(result.code).toBe(updateData.code);
-      expect(result.name).toBe(updateData.name);
-      expect(result.description).toBe(updateData.description);
-      expect(result.updatedAt).toBeDefined();
+      expect(response).toBeDefined();
+      expect(response.id).toBe(createdRoleId);
+      expect(response.name).toBe(updatedName);
+      expect(response.code).toBe(updatedCode);
+      expect(response.updatedAt).toBeDefined();
     });
 
-    it('should fail to update non-existent role', async () => {
-      await expect(updateRole({ id: 999999, ...updateData })).rejects.toThrow();
-    });
-  });
-
-  describe('assignPermissionsToRole', () => {
-    it('should assign permissions to a role', async () => {
+    test('should assign permissions to a role', async () => {
       const result = await assignPermissionsToRole({
-        id: roleId,
+        id: createdRoleId,
         permissionIds: [permissionId1, permissionId2],
       });
 
-      expect(result.id).toBe(roleId);
+      expect(result.id).toBe(createdRoleId);
       expect(result.permissions).toBeDefined();
       expect(result.permissions.length).toBe(2);
 
@@ -187,7 +174,55 @@ describe('Roles Controller', () => {
       expect(permissionIds).toContain(permissionId2);
     });
 
-    it('should fail to assign permissions to non-existent role', async () => {
+    test('should delete a role', async () => {
+      // Create a role specifically for deletion test
+      const roleToDelete = await createRole({
+        code: 'ROLE_TO_DELETE',
+        name: 'Role To Delete',
+        description: 'A role to be deleted',
+      });
+
+      // Delete should not throw an error
+      await expect(deleteRole({ id: roleToDelete.id })).resolves.not.toThrow();
+
+      // Attempt to get should throw a not found error
+      await expect(getRole({ id: roleToDelete.id })).rejects.toThrow();
+    });
+  });
+
+  describe('error scenarios', () => {
+    test('should handle not found errors', async () => {
+      await expect(getRole({ id: 999999 })).rejects.toThrow();
+    });
+
+    test('should handle duplicate errors', async () => {
+      // Ensure the test role exists and get fresh data
+      const existingRole = await getRole({ id: createdRoleId });
+
+      // Try to create role with same code as existing one
+      await expect(
+        createRole({
+          code: existingRole.code,
+          name: 'Different Name',
+          description: 'Duplicate test',
+        }),
+      ).rejects.toThrow();
+    });
+
+    test('should fail to update non-existent role', async () => {
+      await expect(
+        updateRole({
+          id: 999999,
+          name: 'Non-existent',
+        }),
+      ).rejects.toThrow();
+    });
+
+    test('should fail to delete non-existent role', async () => {
+      await expect(deleteRole({ id: 999999 })).rejects.toThrow();
+    });
+
+    test('should fail to assign permissions to non-existent role', async () => {
       await expect(
         assignPermissionsToRole({
           id: 999999,
@@ -195,58 +230,134 @@ describe('Roles Controller', () => {
         }),
       ).rejects.toThrow();
     });
-  });
 
-  describe('getRoleWithPermissions', () => {
-    it('should get a role with its permissions', async () => {
-      const result = await getRoleWithPermissions({ id: roleId });
+    describe('field validation errors', () => {
+      test('should throw detailed field validation error for duplicate code', async () => {
+        // Ensure the test role exists and get fresh data
+        const existingRole = await getRole({ id: createdRoleId });
 
-      expect(result.id).toBe(roleId);
-      expect(result.code).toBe('UPDATED_ROLE');
-      expect(result.name).toBe('Updated Role');
-      expect(result.permissions).toBeDefined();
-      expect(result.permissions.length).toBe(2);
+        const duplicateCodePayload = {
+          code: existingRole.code, // Same code as existing role
+          name: 'Different Role Name', // Different name
+          description: 'Duplicate code test',
+        };
 
-      // Check that both permissions are assigned
-      const permissionIds = result.permissions.map((p) => p.id);
-      expect(permissionIds).toContain(permissionId1);
-      expect(permissionIds).toContain(permissionId2);
-    });
-  });
+        // Verify that the function rejects
+        await expect(createRole(duplicateCodePayload)).rejects.toThrow();
 
-  describe('deleteRole', () => {
-    it('should fail to delete non-existent role', async () => {
-      await expect(deleteRole({ id: 999999 })).rejects.toThrow();
-    });
+        // Capture the error to make specific assertions
+        let validationError: FieldValidationError | undefined;
+        try {
+          await createRole(duplicateCodePayload);
+        } catch (error) {
+          validationError = error as FieldValidationError;
+        }
 
-    it('should delete an existing role', async () => {
-      const result = await deleteRole({ id: roleId });
+        // Verify that validation error is thrown
+        expect(validationError).toBeDefined();
+        const typedValidationError = validationError as FieldValidationError;
+        expect(typedValidationError.name).toBe('FieldValidationError');
+        expect(typedValidationError.message).toContain('Validation failed');
 
-      expect(result.id).toBe(roleId);
-      expect(result.code).toBe('UPDATED_ROLE');
-      expect(result.name).toBe('Updated Role');
+        // The error should have fieldErrors array
+        expect(typedValidationError.fieldErrors).toBeDefined();
+        expect(Array.isArray(typedValidationError.fieldErrors)).toBe(true);
+        expect(typedValidationError.fieldErrors).toHaveLength(1);
+        expect(typedValidationError.fieldErrors[0].field).toBe('code');
+        expect(typedValidationError.fieldErrors[0].code).toBe('DUPLICATE');
+        expect(typedValidationError.fieldErrors[0].message).toContain(
+          'already exists',
+        );
+        expect(typedValidationError.fieldErrors[0].value).toBe(
+          existingRole.code,
+        );
+      });
 
-      // Mark as deleted so afterAll doesn't try to delete again
-      roleId = 0;
+      test('should handle update validation errors correctly', async () => {
+        // Create another role to test duplicate on update
+        const anotherRole = await createRole({
+          code: 'ANOTHER_TEST_ROLE',
+          name: 'Another Test Role',
+          description: 'Another role for testing',
+        });
+
+        // Ensure the test role exists and get fresh data
+        const existingRole = await getRole({ id: createdRoleId });
+
+        const updatePayload = {
+          id: anotherRole.id,
+          code: existingRole.code, // This should trigger duplicate validation
+        };
+
+        try {
+          // Verify that the function rejects
+          await expect(updateRole(updatePayload)).rejects.toThrow();
+
+          // Capture the error to make specific assertions
+          let validationError: FieldValidationError | undefined;
+          try {
+            await updateRole(updatePayload);
+          } catch (error) {
+            validationError = error as FieldValidationError;
+          }
+
+          expect(validationError).toBeDefined();
+          const typedValidationError = validationError as FieldValidationError;
+          expect(typedValidationError.name).toBe('FieldValidationError');
+          expect(typedValidationError.message).toContain('Validation failed');
+          expect(typedValidationError.fieldErrors).toBeDefined();
+          expect(typedValidationError.fieldErrors[0].field).toBe('code');
+          expect(typedValidationError.fieldErrors[0].code).toBe('DUPLICATE');
+        } finally {
+          // Clean up the additional role
+          await roleRepository.forceDelete(anotherRole.id);
+        }
+      });
+
+      test('should throw detailed field validation error for non-existent permissions', async () => {
+        const nonExistentPermissionIds = [999999, 999998];
+        const payload = {
+          id: createdRoleId,
+          permissionIds: nonExistentPermissionIds,
+        };
+
+        // Verify that the function rejects
+        await expect(assignPermissionsToRole(payload)).rejects.toThrow();
+
+        // Capture the error to make specific assertions
+        let validationError: FieldValidationError | undefined;
+        try {
+          await assignPermissionsToRole(payload);
+        } catch (error) {
+          validationError = error as FieldValidationError;
+        }
+
+        // Verify that validation error is thrown
+        expect(validationError).toBeDefined();
+        const typedValidationError = validationError as FieldValidationError;
+        expect(typedValidationError.name).toBe('FieldValidationError');
+        expect(typedValidationError.message).toContain('Validation failed');
+
+        // The error should have fieldErrors array
+        expect(typedValidationError.fieldErrors).toBeDefined();
+        expect(Array.isArray(typedValidationError.fieldErrors)).toBe(true);
+        expect(typedValidationError.fieldErrors.length).toBe(2); // Two non-existent permissions
+
+        // Check that all errors are for permissionIds field
+        typedValidationError.fieldErrors.forEach((error) => {
+          expect(error.field).toBe('permissionIds');
+          expect(error.code).toBe('NOT_FOUND');
+          expect(error.message).toContain('Permission with id');
+          expect(error.message).toContain('not found');
+          expect(nonExistentPermissionIds).toContain(error.value);
+        });
+      });
     });
   });
 
   describe('pagination', () => {
-    let roleA: { id: number };
-    let roleZ: { id: number };
-
-    afterAll(async () => {
-      // Clean up test roles
-      if (roleA?.id) {
-        await deleteRole({ id: roleA.id });
-      }
-      if (roleZ?.id) {
-        await deleteRole({ id: roleZ.id });
-      }
-    });
-
-    it('should return paginated roles with default parameters', async () => {
-      const response = await listRolesWithPagination({});
+    test('should return paginated roles with default parameters', async () => {
+      const response = await listRolesPaginated({});
 
       expect(response.data).toBeDefined();
       expect(Array.isArray(response.data)).toBe(true);
@@ -259,8 +370,8 @@ describe('Roles Controller', () => {
       expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
     });
 
-    it('should honor page and pageSize parameters', async () => {
-      const response = await listRolesWithPagination({
+    test('should honor page and pageSize parameters', async () => {
+      const response = await listRolesPaginated({
         page: 1,
         pageSize: 5,
       });
@@ -270,153 +381,194 @@ describe('Roles Controller', () => {
       expect(response.data.length).toBeLessThanOrEqual(5);
     });
 
-    it('should default sort by name in ascending order', async () => {
+    test('should default sort by name in ascending order', async () => {
       // Create test roles with different names for verification of default sorting
-      roleA = await createRole({
+      const roleA = await createRole({
         code: 'AAA_TEST_ROLE',
         name: 'AAA Test Role',
         description: 'Test role A',
       });
-      roleZ = await createRole({
+      const roleZ = await createRole({
         code: 'ZZZ_TEST_ROLE',
         name: 'ZZZ Test Role',
         description: 'Test role Z',
       });
 
-      // Get roles with large enough page size to include test roles
-      const response = await listRolesWithPagination({
-        pageSize: 50,
-      });
+      try {
+        // Get roles with large enough page size to include test roles
+        const response = await listRolesPaginated({
+          pageSize: 50,
+        });
 
-      // Find the indices of our test roles
-      const indexA = response.data.findIndex((r) => r.id === roleA.id);
-      const indexZ = response.data.findIndex((r) => r.id === roleZ.id);
+        // Find the indices of our test roles
+        const indexA = response.data.findIndex((r) => r.id === roleA.id);
+        const indexZ = response.data.findIndex((r) => r.id === roleZ.id);
 
-      // Verify that roleA (AAA) comes before roleZ (ZZZ) in the results
-      if (indexA !== -1 && indexZ !== -1) {
-        expect(indexA).toBeLessThan(indexZ);
+        // Verify that roleA (AAA) comes before roleZ (ZZZ) in the results
+        if (indexA !== -1 && indexZ !== -1) {
+          expect(indexA).toBeLessThan(indexZ);
+        }
+      } finally {
+        // Clean up test roles
+        await roleRepository.forceDelete(roleA.id);
+        await roleRepository.forceDelete(roleZ.id);
       }
     });
 
-    it('should properly sort names in descending order with localeCompare', async () => {
-      // Create additional roles and ensure we have at least roleA and roleZ from previous test
-      if (!roleA?.id || !roleZ?.id) {
-        roleA = await createRole({
-          code: 'AAA_TEST_ROLE',
-          name: 'AAA Test Role',
-          description: 'Test role A',
-        });
-        roleZ = await createRole({
-          code: 'ZZZ_TEST_ROLE',
-          name: 'ZZZ Test Role',
-          description: 'Test role Z',
-        });
-      }
+    test('should return non-paginated list for dropdowns', async () => {
+      const response = await listRoles({});
 
-      // Get a list of roles
-      const result = await listRolesWithPagination({
-        pageSize: 50,
-      });
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.data.length).toBeGreaterThan(0);
+      // No pagination info should be present
+      expect(response).not.toHaveProperty('pagination');
+    });
 
-      // Verify we have multiple results
-      expect(result.data.length).toBeGreaterThan(1);
+    test('should return paginated roles with permissions', async () => {
+      const response = await listRolesPaginated({ includePermissions: true });
 
-      // Using localeCompare for locale-aware descending order sorting
-      const names = result.data.map((r) => r.name);
-      const sortedDesc = [...names].sort((a, b) => b.localeCompare(a));
-
-      // Verify the sorting is correct - each item should be >= the next item
-      for (let i = 0; i < sortedDesc.length - 1; i++) {
-        expect(
-          sortedDesc[i].localeCompare(sortedDesc[i + 1]),
-        ).toBeGreaterThanOrEqual(0);
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      if (response.data.length > 0) {
+        const roleWithPerms = response.data[0] as RoleWithPermissions;
+        expect(roleWithPerms.permissions).toBeDefined();
       }
     });
   });
 
   describe('search functionality', () => {
-    let searchRoleA: RoleWithPermissions;
-    let searchRoleB: RoleWithPermissions;
+    test('should search roles using searchTerm in list endpoint', async () => {
+      // Create a unique role for search testing
+      const searchableRole = await createRole({
+        code: 'SEARCHABLE_TEST_ROLE',
+        name: 'Searchable Test Role',
+        description: 'A searchable role for testing',
+      });
+
+      try {
+        // Search for the role using searchTerm in listRoles
+        const response = await listRoles({ searchTerm: 'Searchable' });
+
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(response.data.some((r) => r.id === searchableRole.id)).toBe(
+          true,
+        );
+      } finally {
+        // Clean up
+        await roleRepository.forceDelete(searchableRole.id);
+      }
+    });
+
+    test('should search roles with pagination using searchTerm', async () => {
+      const response = await listRolesPaginated({
+        searchTerm: 'Test',
+        page: 1,
+        pageSize: 5,
+      });
+
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(5);
+    });
+
+    test('should search in both name and code', async () => {
+      // Create a role with searchable code
+      const codeSearchableRole = await createRole({
+        code: 'UNIQUE_CODE_SEARCHABLE',
+        name: 'Normal Role Name',
+        description: 'A role with searchable code',
+      });
+
+      try {
+        // Search for the keyword that's only in code
+        const response = await listRoles({ searchTerm: 'UNIQUE_CODE' });
+
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(response.data.some((r) => r.id === codeSearchableRole.id)).toBe(
+          true,
+        );
+      } finally {
+        // Clean up
+        await roleRepository.forceDelete(codeSearchableRole.id);
+      }
+    });
+  });
+
+  describe('ordering and filtering', () => {
+    // Test roles for ordering and filtering tests
+    const testRoles: { id: number; code: string; name: string }[] = [];
 
     beforeAll(async () => {
-      // Create roles with searchable content
-      searchRoleA = await createRole({
-        code: 'SEARCH_ROLE_ALPHA',
-        name: 'Search Role Alpha',
-        description: 'This is a role for testing search functionality',
-      });
+      // Create test roles with different properties
+      const rolesToCreate = [
+        { code: 'ALPHA_ROLE', name: 'Alpha Role', description: 'First role' },
+        { code: 'BETA_ROLE', name: 'Beta Role', description: 'Second role' },
+        { code: 'GAMMA_ROLE', name: 'Gamma Role', description: 'Third role' },
+      ];
 
-      searchRoleB = await createRole({
-        code: 'SEARCH_ROLE_BETA',
-        name: 'Search Role Beta',
-        description: 'Another role for search tests',
-      });
+      for (const roleData of rolesToCreate) {
+        const created = await createRole(roleData);
+        testRoles.push(created);
+      }
     });
 
     afterAll(async () => {
       // Clean up test roles
-      if (searchRoleA?.id) {
-        await deleteRole({ id: searchRoleA.id });
-      }
-      if (searchRoleB?.id) {
-        await deleteRole({ id: searchRoleB.id });
+      for (const role of testRoles) {
+        try {
+          await roleRepository.forceDelete(role.id);
+        } catch (error) {
+          console.log(`Error cleaning up test role ${role.id}:`, error);
+        }
       }
     });
 
-    it('should search roles by term', async () => {
-      const result = await searchRoles({ term: 'Search' });
-
-      expect(Array.isArray(result.roles)).toBe(true);
-      expect(result.roles.length).toBeGreaterThan(0);
-      expect(
-        result.roles.some((r) => r.name.toLowerCase().includes('search')),
-      ).toBe(true);
-    });
-
-    it('should search roles with includePermissions option', async () => {
-      const result = await searchRoles({
-        term: 'Search',
-        includePermissions: true,
+    test('should order roles by name descending', async () => {
+      const response = await listRoles({
+        orderBy: [{ field: 'name', direction: 'desc' }],
       });
 
-      expect(Array.isArray(result.roles)).toBe(true);
-      if (result.roles.length > 0) {
-        // Check that permissions are included in the result
-        // The roles should now be RoleWithPermissions
-        const roleWithPerms = result.roles[0] as RoleWithPermissions;
-        expect(roleWithPerms.permissions).toBeDefined();
+      const names = response.data.map((r) => r.name);
+      // Check if names are in descending order
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] >= names[i + 1]).toBe(true);
       }
     });
 
-    it('should search roles with pagination', async () => {
-      const result = await searchRolesPaginated({
-        term: 'Role',
+    test('should order roles by code in ascending order', async () => {
+      const response = await listRoles({
+        orderBy: [{ field: 'code', direction: 'asc' }],
+      });
+
+      const codes = response.data.map((r) => r.code);
+      // Check if codes are in ascending order
+      for (let i = 0; i < codes.length - 1; i++) {
+        expect(codes[i] <= codes[i + 1]).toBe(true);
+      }
+    });
+
+    test('should combine ordering and filtering in paginated results', async () => {
+      const response = await listRolesPaginated({
+        orderBy: [{ field: 'name', direction: 'asc' }],
         page: 1,
         pageSize: 10,
       });
 
-      expect(result.data).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
-      expect(result.pagination).toBeDefined();
-      expect(result.pagination.currentPage).toBe(1);
-    });
-
-    it('should search with pagination and ordering', async () => {
-      const result = await searchRolesPaginated({
-        term: 'Search',
-        orderBy: [{ field: 'name', direction: 'desc' }],
-        page: 1,
-        pageSize: 20,
-      });
-
-      expect(result.data).toBeDefined();
-      expect(Array.isArray(result.data)).toBe(true);
-
-      // Verify search results are ordered correctly
-      if (result.data.length > 1) {
-        const names = result.data.map((r) => r.name);
-        expect(names).toEqual([...names].sort().reverse());
+      // Check ordering (ascending)
+      const names = response.data.map((r) => r.name);
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] <= names[i + 1]).toBe(true);
       }
+
+      // Check pagination properties
+      expect(response.pagination).toBeDefined();
+      expect(response.pagination.currentPage).toBe(1);
+      expect(response.pagination.pageSize).toBe(10);
     });
   });
 });

@@ -22,7 +22,12 @@ export {
   permissions,
   permissionRelations,
 } from '../users/permissions/permissions.schema';
-export { roles, rolePermissions } from '../users/roles/roles.schema';
+export {
+  roles,
+  rolesRelations,
+  rolePermissions,
+  rolePermissionsRelations,
+} from '../users/roles/roles.schema';
 export {
   permissionGroups,
   permissionGroupRelations,

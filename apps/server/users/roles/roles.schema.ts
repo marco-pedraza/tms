@@ -7,6 +7,7 @@ import {
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import { isNull } from 'drizzle-orm';
 import { permissions } from '../permissions/permissions.schema';
 
@@ -42,11 +43,30 @@ export const rolePermissions = pgTable(
     id: serial('id').primaryKey(),
     roleId: integer('role_id')
       .notNull()
-      .references(() => roles.id, { onDelete: 'cascade' }),
+      .references(() => roles.id),
     permissionId: integer('permission_id')
       .notNull()
-      .references(() => permissions.id, { onDelete: 'cascade' }),
+      .references(() => permissions.id),
     createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
   },
   (table) => [index().on(table.roleId, table.permissionId)],
+);
+
+export const rolesRelations = relations(roles, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+}));
+
+export const rolePermissionsRelations = relations(
+  rolePermissions,
+  ({ one }) => ({
+    role: one(roles, {
+      fields: [rolePermissions.roleId],
+      references: [roles.id],
+    }),
+    permission: one(permissions, {
+      fields: [rolePermissions.permissionId],
+      references: [permissions.id],
+    }),
+  }),
 );

@@ -21,6 +21,7 @@ export const installationSchemas = pgTable(
     type: text('type').notNull(),
     options: jsonb('options').notNull().default({}),
     required: boolean('required').notNull().default(false),
+    systemLocked: boolean('system_locked').notNull().default(false),
     installationTypeId: integer('installation_type_id')
       .notNull()
       .references(() => installationTypes.id),
@@ -31,6 +32,7 @@ export const installationSchemas = pgTable(
   (table) => [
     index().on(table.installationTypeId),
     index().on(table.deletedAt),
+    index().on(table.systemLocked),
     uniqueIndex()
       .on(table.name, table.installationTypeId)
       .where(isNull(table.deletedAt)),

@@ -69,12 +69,13 @@ export interface CleanupHelper {
 /**
  * Creates a cleanup helper for managing entity lifecycle in tests
  * @param deleteFunction - The function to call for deleting entities
- * @param entityName - The name of the entity type for logging (optional)
+ * @param _entityName - The name of the entity type for logging (optional, currently unused)
  * @returns A cleanup helper object
  */
 export function createCleanupHelper<T>(
   deleteFunction: (params: { id: number }) => Promise<T>,
-  entityName?: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _entityName?: string,
 ): CleanupHelper {
   const trackedIds: number[] = [];
 
@@ -89,9 +90,13 @@ export function createCleanupHelper<T>(
     try {
       await deleteFunction({ id });
     } catch (error) {
-      if (!(error instanceof Error && error.message.includes('not found'))) {
-        const entityType = entityName || 'entity';
-        console.log(`Error cleaning up ${entityType} (ID: ${id}):`, error);
+      // Ignore "not found" and foreign key errors (expected during cleanup)
+      const isNotFound =
+        error instanceof Error && error.message.includes('not found');
+
+      if (!isNotFound) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.warn(`⚠️  Cleanup failed [ID: ${id}]: ${errorMsg}`);
       }
     }
     const index = trackedIds.indexOf(id);
@@ -183,5 +188,36 @@ export async function safeCleanup(
       const idInfo = entityId ? ` (ID: ${entityId})` : '';
       console.log(`Error cleaning up ${entityName}${idInfo}:`, error);
     }
+  }
+}
+
+/**
+ * Safely finds or creates an entity, handling race conditions from parallel test execution
+ * @param findFn - Function to find the entity
+ * @param createFn - Function to create the entity if not found
+ * @returns The found or created entity
+ */
+export async function findOrCreate<T>(
+  findFn: () => Promise<T | undefined | null>,
+  createFn: () => Promise<T>,
+): Promise<T> {
+  // First attempt to find
+  let entity = await findFn();
+  if (entity) {
+    return entity;
+  }
+
+  // Try to create
+  try {
+    entity = await createFn();
+    return entity;
+  } catch (error) {
+    // If creation failed (likely due to race condition), try finding again
+    entity = await findFn();
+    if (entity) {
+      return entity;
+    }
+    // If still not found, re-throw the original error
+    throw error;
   }
 }

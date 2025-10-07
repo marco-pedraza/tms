@@ -33,6 +33,10 @@ export interface PathwayOptionDomainServiceDependencies {
         tolls: SyncTollsInput[],
         collector: FieldErrorCollector,
       ) => void;
+      validateTollNodesAreTollbooths: (
+        tolls: SyncTollsInput[],
+        collector: FieldErrorCollector,
+      ) => Promise<void>;
     };
   };
 }
@@ -95,11 +99,11 @@ export function createPathwayOptionDomainService(
    * @param optionIndex - Index of the option in the array (for error context)
    * @param collector - Field error collector
    */
-  function validateTollsForOption(
+  async function validateTollsForOption(
     tolls: SyncTollsInput[],
     optionIndex: number,
     collector: FieldErrorCollector,
-  ): void {
+  ): Promise<void> {
     // Create a temporary collector to capture entity validation errors
     const tempCollector = new FieldErrorCollector();
 
@@ -109,6 +113,10 @@ export function createPathwayOptionDomainService(
       tempCollector,
     );
     pathwayOptionEntityFactory.validators.validateNoConsecutiveDuplicates(
+      tolls,
+      tempCollector,
+    );
+    await pathwayOptionEntityFactory.validators.validateTollNodesAreTollbooths(
       tolls,
       tempCollector,
     );
@@ -210,7 +218,7 @@ export function createPathwayOptionDomainService(
     // ═══════════════════════════════════════════════════════════
     for (const [index, option] of options.entries()) {
       if (option.tolls && option.tolls.length > 0) {
-        validateTollsForOption(option.tolls, index, collector);
+        await validateTollsForOption(option.tolls, index, collector);
       }
     }
 

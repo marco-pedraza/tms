@@ -18,6 +18,7 @@ export const installationTypes = pgTable(
     name: text('name').notNull(),
     code: text('code').notNull(),
     description: text('description'),
+    systemLocked: boolean('system_locked').notNull().default(false),
     active: boolean('active').notNull().default(true),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
@@ -25,6 +26,7 @@ export const installationTypes = pgTable(
   },
   (table) => [
     index().on(table.deletedAt),
+    index().on(table.systemLocked),
     uniqueIndex().on(table.name).where(isNull(table.deletedAt)),
     uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
   ],

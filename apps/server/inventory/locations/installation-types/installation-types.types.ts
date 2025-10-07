@@ -25,6 +25,13 @@ export interface InstallationType {
   /** Optional description of the installation type */
   description: string | null;
 
+  /**
+   * Whether this installation type is system-locked
+   * System-locked types cannot be modified or deleted through the API
+   * @default false
+   */
+  systemLocked: boolean;
+
   /** Whether the installation type is active */
   active: boolean;
 

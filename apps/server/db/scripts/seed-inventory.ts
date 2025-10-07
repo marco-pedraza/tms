@@ -2,6 +2,7 @@ import { db } from '@/inventory/db-service';
 import { countryRepository } from '@/inventory/locations/countries/countries.repository';
 import { Country } from '@/inventory/locations/countries/countries.types';
 import { getFactoryDb } from '@/tests/factories/factory-utils';
+import { seedTollbooths } from './seed-tollbooths';
 import {
   seedAmenities,
   seedInstallationAmenities,
@@ -136,6 +137,9 @@ export async function seedInventory(clientCode?: string): Promise<void> {
       installationTypes,
       factoryDb,
     );
+
+    // Seed special installation types (TOLLBOOTH)
+    await seedTollbooths();
     console.log('✅ Installation and event types seeding completed\n');
 
     // === INSTALLATIONS ===

@@ -1,5 +1,6 @@
 import { FieldErrorCollector } from '@repo/base-repo';
 import { EntityUtils } from '@/shared/domain/entity-utils';
+import { assertIsValidTollbooth } from '@/inventory/locations/tollbooths/tollbooths.guard';
 import type {
   PathwayOptionToll,
   SyncTollsInput,
@@ -24,6 +25,7 @@ export function createPathwayOptionEntity(
     pathwayOptionsRepository,
     pathwayOptionTollsRepository,
     nodesRepository,
+    tollboothRepository,
   } = dependencies;
 
   // Desestructurar las utilidades del mixin
@@ -203,6 +205,51 @@ export function createPathwayOptionEntity(
   }
 
   /**
+   * Validates that all toll nodes are valid tollbooths with required data
+   * Uses batch fetching for performance (single query)
+   * @param tollsInput - Array of toll inputs to validate
+   * @param collector - Field error collector
+   */
+  async function validateTollNodesAreTollbooths(
+    tollsInput: SyncTollsInput[],
+    collector: FieldErrorCollector,
+  ): Promise<void> {
+    if (tollsInput.length === 0) {
+      return;
+    }
+
+    const nodeIds = tollsInput.map((toll) => toll.nodeId);
+
+    // Single batch query - fetch all tollbooths at once
+    const tollbooths = await tollboothRepository.findByIds(nodeIds);
+
+    // Create a map for O(1) lookup
+    const tollboothMap = new Map(tollbooths.map((tb) => [tb.id, tb]));
+
+    // Validate each node
+    for (const nodeId of nodeIds) {
+      const tollbooth = tollboothMap.get(nodeId);
+
+      if (!tollbooth) {
+        // Node doesn't exist or is not a tollbooth
+        pathwayOptionErrors.tollNodeNotTollbooth(collector, nodeId);
+      } else {
+        // Node is a tollbooth, validate business rules
+        try {
+          assertIsValidTollbooth(tollbooth);
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
+          pathwayOptionErrors.invalidTollboothData(
+            collector,
+            `Node ${nodeId}: ${errorMessage}`,
+          );
+        }
+      }
+    }
+  }
+
+  /**
    * Validates tolls business rules
    * @param tollsInput - Array of toll inputs to validate
    * @throws {FieldValidationError} If there are validation violations
@@ -215,6 +262,7 @@ export function createPathwayOptionEntity(
     validateNoDuplicateTollNodes(tollsInput, collector);
     validateNoConsecutiveDuplicates(tollsInput, collector);
     await validateTollNodesExist(tollsInput, collector);
+    await validateTollNodesAreTollbooths(tollsInput, collector);
 
     collector.throwIfErrors();
   }
@@ -458,6 +506,7 @@ export function createPathwayOptionEntity(
       validateNoDuplicateTollNodes,
       validateNoConsecutiveDuplicates,
       validateTollNodesExist,
+      validateTollNodesAreTollbooths,
     },
   };
 }

@@ -50,3 +50,6 @@ encore.gen.cue
 
 *storybook.log
 storybook-static
+
+# Spec
+specs/

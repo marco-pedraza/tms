@@ -1,5 +1,6 @@
 import type { TransactionalDB } from '@repo/base-repo';
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
+import { tollboothRepository } from '@/inventory/locations/tollbooths/tollbooths.repository';
 import { pathwayOptionTollRepository } from '../pathway-options-tolls/pathway-options-tolls.repository';
 import type {
   CreatePathwayOptionTollPayload,
@@ -32,6 +33,7 @@ export function createPathwayApplicationService() {
     pathwayOptionsRepository: pathwayOptionRepository,
     pathwayOptionTollsRepository: pathwayOptionTollRepository,
     nodesRepository: nodeRepository,
+    tollboothRepository,
   });
 
   // Note: pathwayOptionDomainService is not initialized here
@@ -82,6 +84,7 @@ export function createPathwayApplicationService() {
       pathwayOptionsRepository: txPathwayOptionRepo,
       pathwayOptionTollsRepository: txPathwayOptionTollRepo,
       nodesRepository: txNodeRepo,
+      tollboothRepository,
     });
 
     // Create transaction-aware domain service

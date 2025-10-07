@@ -41,6 +41,16 @@ const PATHWAY_OPTION_ERROR_CONFIG = {
     field: 'tolls',
     code: 'NODE_NOT_FOUND',
   },
+  tollNodeNotTollbooth: {
+    message: 'Node is not a valid tollbooth installation',
+    field: 'tolls',
+    code: 'NOT_TOLLBOOTH',
+  },
+  invalidTollboothData: {
+    message: 'Tollbooth has invalid data',
+    field: 'tolls',
+    code: 'INVALID_TOLLBOOTH_DATA',
+  },
   cannotSyncTollsOnNonPersisted: {
     message: 'Cannot sync tolls on non-persisted pathway option',
     field: 'tolls',

@@ -1,7 +1,23 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest';
 import { db } from '@/inventory/db-service';
 import { createSlug } from '@/shared/utils';
+import { installationPropertyRepository } from '@/inventory/locations/installation-properties/installation-properties.repository';
+import { installationRepository } from '@/inventory/locations/installations/installations.repository';
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
+import { tollboothRepository } from '@/inventory/locations/tollbooths/tollbooths.repository';
+import {
+  type TollboothInfrastructure,
+  createTestTollbooth as createTollboothHelper,
+  setupTollboothInfrastructure,
+} from '@/inventory/locations/tollbooths/tollbooths.test-utils';
 import { cityFactory, populationFactory } from '@/tests/factories';
 import { getFactoryDb } from '@/tests/factories/factory-utils';
 import {
@@ -41,6 +57,19 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
     return createSlug(`${baseName} ${testSuiteId} ${uniqueToken}`, 'n');
   }
 
+  // Global tollbooth infrastructure (created once for all tests)
+  let tollboothInfrastructure: TollboothInfrastructure;
+
+  const installationPropertyCleanup = createCleanupHelper(
+    ({ id }) => installationPropertyRepository.forceDelete(id),
+    'installation property',
+  );
+
+  const installationCleanup = createCleanupHelper(
+    ({ id }) => installationRepository.forceDelete(id),
+    'installation',
+  );
+
   let testData: {
     cityId: number;
     nodeIds: number[];
@@ -52,6 +81,20 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
     nodeCleanup: ReturnType<typeof createCleanupHelper>;
     domainService: ReturnType<typeof createPathwayOptionDomainService>;
   };
+
+  beforeAll(async () => {
+    // Setup tollbooth infrastructure (type and schemas) - handles race conditions
+    tollboothInfrastructure = await setupTollboothInfrastructure(
+      db,
+      testSuiteId,
+    );
+  });
+
+  afterAll(async () => {
+    // Global cleanup - installations created in beforeAll or tests
+    await installationPropertyCleanup.cleanupAll();
+    await installationCleanup.cleanupAll();
+  });
 
   beforeEach(async () => {
     // Create cleanup helpers
@@ -85,68 +128,74 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
     });
     const cityId = testCity.id;
 
-    // Create test nodes (origin, destination, and toll nodes)
-    const nodes = await Promise.all([
-      // Origin node
-      nodeRepository.create({
-        code: createUniqueCode('TN1', 3),
-        name: createUniqueName('Origin Node', testSuiteId),
+    // Create test nodes (origin and destination)
+    const originNode = await nodeRepository.create({
+      code: createUniqueCode('TN1', 3),
+      name: createUniqueName('Origin Node', testSuiteId),
+      cityId,
+      latitude: 19.4326,
+      longitude: -99.1332,
+      radius: 1000,
+      slug: createUniqueNodeSlug('Origin Node', testSuiteId),
+      populationId,
+      allowsBoarding: true,
+      allowsAlighting: true,
+      active: true,
+    });
+    nodeCleanup.track(originNode.id);
+
+    const destinationNode = await nodeRepository.create({
+      code: createUniqueCode('TN2', 3),
+      name: createUniqueName('Destination Node', testSuiteId),
+      cityId,
+      latitude: 20.4326,
+      longitude: -100.1332,
+      radius: 1000,
+      slug: createUniqueNodeSlug('Destination Node', testSuiteId),
+      populationId,
+      allowsBoarding: true,
+      allowsAlighting: true,
+      active: true,
+    });
+    nodeCleanup.track(destinationNode.id);
+
+    // Create toll nodes as VALID TOLLBOOTHS using helper
+    const toll1 = await createTollboothHelper(
+      {
         cityId,
-        latitude: 19.4326,
-        longitude: -99.1332,
-        radius: 1000,
-        slug: createUniqueNodeSlug('Origin Node', testSuiteId),
         populationId,
-        allowsBoarding: true,
-        allowsAlighting: true,
-        active: true,
-      }),
-      // Destination node
-      nodeRepository.create({
-        code: createUniqueCode('TN2', 3),
-        name: createUniqueName('Destination Node', testSuiteId),
-        cityId,
-        latitude: 20.4326,
-        longitude: -100.1332,
-        radius: 1000,
-        slug: createUniqueNodeSlug('Destination Node', testSuiteId),
-        populationId,
-        allowsBoarding: true,
-        allowsAlighting: true,
-        active: true,
-      }),
-      // Toll node 1
-      nodeRepository.create({
-        code: createUniqueCode('TN3', 3),
-        name: createUniqueName('Toll Node 1', testSuiteId),
-        cityId,
+        testSuiteId,
+        infrastructure: tollboothInfrastructure,
+        tollPrice: '100.00',
         latitude: 19.5326,
         longitude: -99.2332,
-        radius: 1000,
-        slug: createUniqueNodeSlug('Toll Node 1', testSuiteId),
-        populationId,
-        allowsBoarding: false,
-        allowsAlighting: false,
-        active: true,
-      }),
-      // Toll node 2
-      nodeRepository.create({
-        code: createUniqueCode('TN4', 3),
-        name: createUniqueName('Toll Node 2', testSuiteId),
+      },
+      installationPropertyCleanup,
+    );
+    nodeCleanup.track(toll1.nodeId);
+    installationCleanup.track(toll1.installationId);
+
+    const toll2 = await createTollboothHelper(
+      {
         cityId,
+        populationId,
+        testSuiteId,
+        infrastructure: tollboothInfrastructure,
+        tollPrice: '150.00',
         latitude: 19.6326,
         longitude: -99.3332,
-        radius: 1000,
-        slug: createUniqueNodeSlug('Toll Node 2', testSuiteId),
-        populationId,
-        allowsBoarding: false,
-        allowsAlighting: false,
-        active: true,
-      }),
-    ]);
+      },
+      installationPropertyCleanup,
+    );
+    nodeCleanup.track(toll2.nodeId);
+    installationCleanup.track(toll2.installationId);
 
-    const nodeIds = nodes.map((n) => n.id);
-    nodeIds.forEach((id) => nodeCleanup.track(id));
+    const nodeIds = [
+      originNode.id,
+      destinationNode.id,
+      toll1.nodeId,
+      toll2.nodeId,
+    ];
 
     // Create test pathway
     const pathwayEntity = createPathwayEntity({
@@ -157,6 +206,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
         pathwayOptionsRepository: pathwayOptionRepository,
         pathwayOptionTollsRepository: pathwayOptionTollRepository,
         nodesRepository: nodeRepository,
+        tollboothRepository,
       }),
     });
 
@@ -180,6 +230,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
       pathwayOptionsRepository: pathwayOptionRepository,
       pathwayOptionTollsRepository: pathwayOptionTollRepository,
       nodesRepository: nodeRepository,
+      tollboothRepository,
     });
 
     const domainService = createPathwayOptionDomainService({
@@ -254,6 +305,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -314,6 +366,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -371,6 +424,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -419,6 +473,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -483,6 +538,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -531,6 +587,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -582,6 +639,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -630,6 +688,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -693,6 +752,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -731,6 +791,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -771,6 +832,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -802,6 +864,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(activePathway);
 
@@ -846,6 +909,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -884,6 +948,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -937,6 +1002,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -1007,6 +1073,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -1057,6 +1124,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -1115,6 +1183,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -1166,6 +1235,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -1210,6 +1280,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -1259,6 +1330,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -1301,6 +1373,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -1346,6 +1419,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -1391,6 +1465,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 
@@ -1435,6 +1510,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
           pathwayOptionsRepository: pathwayOptionRepository,
           pathwayOptionTollsRepository: pathwayOptionTollRepository,
           nodesRepository: nodeRepository,
+          tollboothRepository,
         }),
       }).fromData(testData.pathway);
 

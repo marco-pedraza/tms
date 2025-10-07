@@ -49,6 +49,13 @@ export interface InstallationSchema {
   /** Whether the field is required */
   required: boolean;
 
+  /**
+   * Whether this installation schema is system-locked
+   * System-locked schemas cannot be modified or deleted through the API
+   * @default false
+   */
+  systemLocked: boolean;
+
   /** ID of the installation type this schema belongs to */
   installationTypeId: number;
 
@@ -73,6 +80,7 @@ export interface InstallationSchemaWithRelations extends InstallationSchema {
 
 /**
  * Input for creating a new installation schema
+ * Note: systemLocked is excluded as it's managed internally by the system
  */
 export interface CreateInstallationSchemaPayload {
   /**
@@ -84,7 +92,7 @@ export interface CreateInstallationSchemaPayload {
   /**
    * Optional description of the schema field
    */
-  description?: string;
+  description?: string | null;
 
   /**
    * Type of the field
@@ -110,6 +118,7 @@ export interface CreateInstallationSchemaPayload {
 
 /**
  * Input for updating an installation schema
+ * Note: systemLocked is excluded as it's managed internally by the system
  */
 export interface UpdateInstallationSchemaPayload {
   /**
@@ -121,7 +130,7 @@ export interface UpdateInstallationSchemaPayload {
   /**
    * Optional description of the schema field
    */
-  description?: string;
+  description?: string | null;
 
   /**
    * Type of the field

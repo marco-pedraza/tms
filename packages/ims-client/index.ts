@@ -185,6 +185,7 @@ export namespace inventory {
             this.getState = this.getState.bind(this)
             this.getTechnology = this.getTechnology.bind(this)
             this.getTimezone = this.getTimezone.bind(this)
+            this.getTollbooth = this.getTollbooth.bind(this)
             this.getTransporter = this.getTransporter.bind(this)
             this.listAmenities = this.listAmenities.bind(this)
             this.listAmenitiesPaginated = this.listAmenitiesPaginated.bind(this)
@@ -237,6 +238,7 @@ export namespace inventory {
             this.listTechnologies = this.listTechnologies.bind(this)
             this.listTechnologiesPaginated = this.listTechnologiesPaginated.bind(this)
             this.listTimezones = this.listTimezones.bind(this)
+            this.listTollbooths = this.listTollbooths.bind(this)
             this.listTransporters = this.listTransporters.bind(this)
             this.listTransportersPaginated = this.listTransportersPaginated.bind(this)
             this.listZonesByDiagram = this.listZonesByDiagram.bind(this)
@@ -1523,6 +1525,20 @@ export namespace inventory {
         }
 
         /**
+         * Retrieves a tollbooth by its node ID
+         * @param params - Object containing the tollbooth node ID
+         * @param params.id - The node ID of the tollbooth to retrieve
+         * @returns The found tollbooth
+         * @throws {NotFoundError} When the tollbooth is not found
+         * @throws {ValidationError} When the tollbooth data is invalid
+         */
+        public async getTollbooth(id: number): Promise<tollbooths.Tollbooth> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/tollbooths/${encodeURIComponent(id)}`)
+            return await resp.json() as tollbooths.Tollbooth
+        }
+
+        /**
          * Retrieves a transporter by its ID.
          * @param params - Object containing the transporter ID
          * @param params.id - The ID of the transporter to retrieve
@@ -2222,6 +2238,18 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/timezones`)
             return await resp.json() as timezones.Timezones
+        }
+
+        /**
+         * Retrieves all tollbooths without pagination
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns Unified response with data property containing array of tollbooths
+         * @throws {ValidationError} When any tollbooth data is invalid
+         */
+        public async listTollbooths(params: tollbooths.ListTollboothsQueryParams): Promise<tollbooths.ListTollboothsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/tollbooths/list`, JSON.stringify(params))
+            return await resp.json() as tollbooths.ListTollboothsResult
         }
 
         /**
@@ -3213,7 +3241,7 @@ export namespace inventory {
     /**
      * Optional description of the schema field
      */
-    description?: string
+    description?: string | null
 
     /**
      * Type of the field
@@ -8411,7 +8439,7 @@ export namespace installation_schemas {
         /**
          * Optional description of the schema field
          */
-        description?: string
+        description?: string | null
 
         /**
          * Type of the field
@@ -8465,6 +8493,13 @@ export namespace installation_schemas {
          * Whether the field is required
          */
         required: boolean
+
+        /**
+         * Whether this installation schema is system-locked
+         * System-locked schemas cannot be modified or deleted through the API
+         * @default false
+         */
+        systemLocked: boolean
 
         /**
          * ID of the installation type this schema belongs to
@@ -8532,6 +8567,13 @@ export namespace installation_schemas {
         required: boolean
 
         /**
+         * Whether this installation schema is system-locked
+         * System-locked schemas cannot be modified or deleted through the API
+         * @default false
+         */
+        systemLocked: boolean
+
+        /**
          * ID of the installation type this schema belongs to
          */
         installationTypeId: number
@@ -8549,7 +8591,7 @@ export namespace installation_schemas {
 
     export interface ListInstallationSchemasQueryParams {
         orderBy?: {
-            field: "id" | "name" | "description" | "type" | "options" | "required" | "installationTypeId" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "description" | "type" | "options" | "required" | "systemLocked" | "installationTypeId" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -8559,6 +8601,7 @@ export namespace installation_schemas {
             type?: InstallationSchemaFieldType
             options?: InstallationSchemaOptions
             required?: boolean
+            systemLocked?: boolean
             installationTypeId?: number
             createdAt?: string | string | null
             updatedAt?: string | string | null
@@ -8574,7 +8617,7 @@ export namespace installation_schemas {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "description" | "type" | "options" | "required" | "installationTypeId" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "description" | "type" | "options" | "required" | "systemLocked" | "installationTypeId" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -8584,6 +8627,7 @@ export namespace installation_schemas {
             type?: InstallationSchemaFieldType
             options?: InstallationSchemaOptions
             required?: boolean
+            systemLocked?: boolean
             installationTypeId?: number
             createdAt?: string | string | null
             updatedAt?: string | string | null
@@ -8645,6 +8689,13 @@ export namespace installation_types {
         description: string | null
 
         /**
+         * Whether this installation type is system-locked
+         * System-locked types cannot be modified or deleted through the API
+         * @default false
+         */
+        systemLocked: boolean
+
+        /**
          * Whether the installation type is active
          */
         active: boolean
@@ -8687,6 +8738,13 @@ export namespace installation_types {
         description: string | null
 
         /**
+         * Whether this installation type is system-locked
+         * System-locked types cannot be modified or deleted through the API
+         * @default false
+         */
+        systemLocked: boolean
+
+        /**
          * Whether the installation type is active
          */
         active: boolean
@@ -8704,7 +8762,7 @@ export namespace installation_types {
 
     export interface ListInstallationTypesQueryParams {
         orderBy?: {
-            field: "id" | "name" | "code" | "description" | "active" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "code" | "description" | "systemLocked" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -8712,6 +8770,7 @@ export namespace installation_types {
             name?: string
             code?: string
             description?: string | null
+            systemLocked?: boolean
             active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
@@ -8727,7 +8786,7 @@ export namespace installation_types {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "code" | "description" | "active" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "code" | "description" | "systemLocked" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -8735,6 +8794,7 @@ export namespace installation_types {
             name?: string
             code?: string
             description?: string | null
+            systemLocked?: boolean
             active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
@@ -8755,7 +8815,7 @@ export namespace installation_types {
         id?: number | null
 
         name: string
-        description?: string
+        description?: string | null
         type: installation_schemas.InstallationSchemaFieldType
         options?: installation_schemas.InstallationSchemaOptions
         required?: boolean
@@ -11273,6 +11333,108 @@ export namespace timezones {
          * List of timezones
          */
         timezones: Timezone[]
+    }
+}
+
+export namespace tollbooths {
+    export interface ListTollboothsQueryParams {
+        orderBy?: {
+            field: "id" | "code" | "name" | "latitude" | "longitude" | "radius" | "tollPrice" | "iaveEnabled" | "iaveProvider" | "active" | "cityId" | "populationId" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            code?: string
+            name?: string
+            latitude?: number
+            longitude?: number
+            radius?: number
+            tollPrice?: number | null
+            iaveEnabled?: boolean | null
+            iaveProvider?: string | null
+            active?: boolean
+            cityId?: number
+            populationId?: number | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListTollboothsResult {
+        data: Tollbooth[]
+    }
+
+    export interface Tollbooth {
+        /**
+         * Node ID
+         */
+        id: number
+
+        /**
+         * Node code
+         */
+        code: string
+
+        /**
+         * Node name
+         */
+        name: string
+
+        /**
+         * Latitude coordinate
+         */
+        latitude: number
+
+        /**
+         * Longitude coordinate
+         */
+        longitude: number
+
+        /**
+         * Coverage radius in meters
+         */
+        radius: number
+
+        /**
+         * Toll price in pesos (null if not set)
+         */
+        tollPrice: number | null
+
+        /**
+         * Whether IAVE payment is enabled (null if not set)
+         */
+        iaveEnabled: boolean | null
+
+        /**
+         * IAVE provider name (optional)
+         */
+        iaveProvider: string | null
+
+        /**
+         * Whether the tollbooth is active
+         */
+        active: boolean
+
+        /**
+         * City ID
+         */
+        cityId: number
+
+        /**
+         * Population ID (optional)
+         */
+        populationId: number | null
+
+        /**
+         * Created timestamp
+         */
+        createdAt: string | string | null
+
+        /**
+         * Updated timestamp
+         */
+        updatedAt: string | string | null
     }
 }
 

@@ -1,9 +1,24 @@
 import { schema } from '@/db';
 import { eq } from 'drizzle-orm';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from 'vitest';
 import { db } from '@/inventory/db-service';
+import { installationPropertyRepository } from '@/inventory/locations/installation-properties/installation-properties.repository';
+import { installationRepository } from '@/inventory/locations/installations/installations.repository';
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
 import { populationRepository } from '@/inventory/locations/populations/populations.repository';
+import {
+  type TollboothInfrastructure,
+  createTestTollbooth as createTollboothHelper,
+  setupTollboothInfrastructure,
+} from '@/inventory/locations/tollbooths/tollbooths.test-utils';
 import {
   createCleanupHelper,
   createTestSuiteId,
@@ -50,6 +65,34 @@ interface TestData {
 }
 
 describe('Pathways Controller', () => {
+  // Global tollbooth infrastructure for all tests
+  const mainTestSuiteId = createTestSuiteId('pathways-controller-main');
+  let tollboothInfrastructure: TollboothInfrastructure;
+
+  const installationPropertyCleanup = createCleanupHelper(
+    ({ id }) => installationPropertyRepository.forceDelete(id),
+    'installation property',
+  );
+
+  const installationCleanup = createCleanupHelper(
+    ({ id }) => installationRepository.forceDelete(id),
+    'installation',
+  );
+
+  beforeAll(async () => {
+    // Setup tollbooth infrastructure (type and schemas) - handles race conditions
+    tollboothInfrastructure = await setupTollboothInfrastructure(
+      db,
+      mainTestSuiteId,
+    );
+  });
+
+  afterAll(async () => {
+    // Global cleanup - installations created in tests
+    await installationPropertyCleanup.cleanupAll();
+    await installationCleanup.cleanupAll();
+  });
+
   // Tests that don't need test data - no beforeEach/afterEach
   describe('error scenarios', () => {
     test('should handle pathway not found', async () => {
@@ -937,38 +980,38 @@ describe('Pathways Controller', () => {
         );
         optionId = options[0]?.id as number;
 
-        // Create additional toll nodes
-        const tollNode1 = await nodeRepository.create({
-          code: `TOLL1-${Date.now()}`,
-          name: `Toll Node 1 ${Date.now()}`,
-          cityId: testData.cityId,
-          latitude: 19.5,
-          longitude: -99.5,
-          radius: 1000,
-          slug: `tn-toll-1-${Date.now()}`,
-          populationId: testData.populationId,
-          allowsBoarding: false,
-          allowsAlighting: false,
-          active: true,
-        });
-        testData.nodeCleanup.track(tollNode1.id);
+        // Create toll nodes as VALID TOLLBOOTHS using helper
+        const toll1 = await createTollboothHelper(
+          {
+            cityId: testData.cityId,
+            populationId: testData.populationId,
+            testSuiteId: mainTestSuiteId,
+            infrastructure: tollboothInfrastructure,
+            tollPrice: '100.00',
+            latitude: 19.5,
+            longitude: -99.5,
+          },
+          installationPropertyCleanup,
+        );
+        testData.nodeCleanup.track(toll1.nodeId);
+        installationCleanup.track(toll1.installationId);
 
-        const tollNode2 = await nodeRepository.create({
-          code: `TOLL2-${Date.now()}`,
-          name: `Toll Node 2 ${Date.now()}`,
-          cityId: testData.cityId,
-          latitude: 19.7,
-          longitude: -99.7,
-          radius: 1000,
-          slug: `tn-toll-2-${Date.now()}`,
-          populationId: testData.populationId,
-          allowsBoarding: false,
-          allowsAlighting: false,
-          active: true,
-        });
-        testData.nodeCleanup.track(tollNode2.id);
+        const toll2 = await createTollboothHelper(
+          {
+            cityId: testData.cityId,
+            populationId: testData.populationId,
+            testSuiteId: mainTestSuiteId,
+            infrastructure: tollboothInfrastructure,
+            tollPrice: '150.00',
+            latitude: 19.7,
+            longitude: -99.7,
+          },
+          installationPropertyCleanup,
+        );
+        testData.nodeCleanup.track(toll2.nodeId);
+        installationCleanup.track(toll2.installationId);
 
-        tollNodeIds = [tollNode1.id, tollNode2.id];
+        tollNodeIds = [toll1.nodeId, toll2.nodeId];
       });
 
       test('should sync tolls to pathway option', async () => {

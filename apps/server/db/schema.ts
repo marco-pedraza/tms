@@ -103,7 +103,10 @@ export {
   populationCities,
   populationCitiesRelations,
 } from '@/inventory/locations/populations/populations.schema';
-export { installations } from '@/inventory/locations/installations/installations.schema';
+export {
+  installations,
+  installationsRelations,
+} from '@/inventory/locations/installations/installations.schema';
 export {
   nodes,
   nodesRelations,

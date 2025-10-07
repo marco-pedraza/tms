@@ -8,6 +8,7 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { installationProperties } from '@/inventory/locations/installation-properties/installation-properties.schemas';
 import { installationTypes } from '@/inventory/locations/installation-types/installation-types.schema';
 import { installationAmenities } from '@/inventory/shared-entities/amenities/amenities.schema';
 
@@ -40,6 +41,7 @@ export const installationsRelations = relations(
       fields: [installations.installationTypeId],
       references: [installationTypes.id],
     }),
+    installationProperties: many(installationProperties),
     installationAmenities: many(installationAmenities),
   }),
 );

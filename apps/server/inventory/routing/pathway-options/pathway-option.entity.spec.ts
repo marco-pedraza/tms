@@ -1,9 +1,25 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FieldValidationError } from '@repo/base-repo';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest';
+import { FieldErrorCollector, FieldValidationError } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
 import { createSlug } from '@/shared/utils';
+import { installationPropertyRepository } from '@/inventory/locations/installation-properties/installation-properties.repository';
+import { installationRepository } from '@/inventory/locations/installations/installations.repository';
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
 import { populationRepository } from '@/inventory/locations/populations/populations.repository';
+import { tollboothRepository } from '@/inventory/locations/tollbooths/tollbooths.repository';
+import {
+  type TollboothInfrastructure,
+  createTestTollbooth as createTollboothHelper,
+  setupTollboothInfrastructure,
+} from '@/inventory/locations/tollbooths/tollbooths.test-utils';
 import { cityFactory, populationFactory } from '@/tests/factories';
 import { getFactoryDb } from '@/tests/factories/factory-utils';
 import {
@@ -31,6 +47,19 @@ describe('PathwayOptionEntity - Toll Management', () => {
     return createSlug(`${baseName} ${testSuiteId} ${uniqueToken}`, 'n');
   }
 
+  // Global tollbooth infrastructure (created once for all tests)
+  let tollboothInfrastructure: TollboothInfrastructure;
+
+  const installationPropertyCleanup = createCleanupHelper(
+    ({ id }) => installationPropertyRepository.forceDelete(id),
+    'installation property',
+  );
+
+  const installationCleanup = createCleanupHelper(
+    ({ id }) => installationRepository.forceDelete(id),
+    'installation',
+  );
+
   let testData: {
     cityId: number;
     nodeIds: number[];
@@ -41,6 +70,14 @@ describe('PathwayOptionEntity - Toll Management', () => {
     pathwayOptionCleanup: ReturnType<typeof createCleanupHelper>;
     pathwayOptionTollCleanup: ReturnType<typeof createCleanupHelper>;
   };
+
+  beforeAll(async () => {
+    // Setup tollbooth infrastructure (type and schemas) - handles race conditions
+    tollboothInfrastructure = await setupTollboothInfrastructure(
+      db,
+      testSuiteId,
+    );
+  });
 
   beforeEach(async () => {
     // Create cleanup helpers
@@ -70,62 +107,70 @@ describe('PathwayOptionEntity - Toll Management', () => {
     });
     const cityId = testCity.id;
 
-    // Create test nodes (including toll nodes)
-    const nodes = await Promise.all([
-      nodeRepository.create({
-        code: createUniqueCode('TN1', 3),
-        name: createUniqueName('Origin Node', testSuiteId),
+    // Create test nodes (origin and destination)
+    const originNode = await nodeRepository.create({
+      code: createUniqueCode('TN1', 3),
+      name: createUniqueName('Origin Node', testSuiteId),
+      cityId,
+      latitude: 19.4326,
+      longitude: -99.1332,
+      radius: 1000,
+      slug: createUniqueNodeSlug('Origin Node', testSuiteId),
+      populationId,
+      allowsBoarding: true,
+      allowsAlighting: true,
+      active: true,
+    });
+
+    const destinationNode = await nodeRepository.create({
+      code: createUniqueCode('TN2', 3),
+      name: createUniqueName('Destination Node', testSuiteId),
+      cityId,
+      latitude: 20.4326,
+      longitude: -100.1332,
+      radius: 1000,
+      slug: createUniqueNodeSlug('Destination Node', testSuiteId),
+      populationId,
+      allowsBoarding: true,
+      allowsAlighting: true,
+      active: true,
+    });
+
+    // Create toll nodes as VALID TOLLBOOTHS using helper
+    const toll1 = await createTollboothHelper(
+      {
         cityId,
-        latitude: 19.4326,
-        longitude: -99.1332,
-        radius: 1000,
-        slug: createUniqueNodeSlug('Origin Node', testSuiteId),
         populationId,
-        allowsBoarding: true,
-        allowsAlighting: true,
-        active: true,
-      }),
-      nodeRepository.create({
-        code: createUniqueCode('TN2', 3),
-        name: createUniqueName('Destination Node', testSuiteId),
-        cityId,
-        latitude: 20.4326,
-        longitude: -100.1332,
-        radius: 1000,
-        slug: createUniqueNodeSlug('Destination Node', testSuiteId),
-        populationId,
-        allowsBoarding: true,
-        allowsAlighting: true,
-        active: true,
-      }),
-      nodeRepository.create({
-        code: createUniqueCode('TN3', 3),
-        name: createUniqueName('Toll Node 1', testSuiteId),
-        cityId,
+        testSuiteId,
+        infrastructure: tollboothInfrastructure,
+        tollPrice: '100.00',
         latitude: 19.5,
         longitude: -99.5,
-        radius: 1000,
-        slug: createUniqueNodeSlug('Toll Node 1', testSuiteId),
-        populationId,
-        allowsBoarding: false,
-        allowsAlighting: false,
-        active: true,
-      }),
-      nodeRepository.create({
-        code: createUniqueCode('TN4', 3),
-        name: createUniqueName('Toll Node 2', testSuiteId),
+      },
+      installationPropertyCleanup,
+    );
+    installationCleanup.track(toll1.installationId);
+
+    const toll2 = await createTollboothHelper(
+      {
         cityId,
+        populationId,
+        testSuiteId,
+        infrastructure: tollboothInfrastructure,
+        tollPrice: '150.00',
         latitude: 19.7,
         longitude: -99.7,
-        radius: 1000,
-        slug: createUniqueNodeSlug('Toll Node 2', testSuiteId),
-        populationId,
-        allowsBoarding: false,
-        allowsAlighting: false,
-        active: true,
-      }),
-    ]);
-    const nodeIds = nodes.map((n) => n.id);
+      },
+      installationPropertyCleanup,
+    );
+    installationCleanup.track(toll2.installationId);
+
+    const nodeIds = [
+      originNode.id,
+      destinationNode.id,
+      toll1.nodeId,
+      toll2.nodeId,
+    ];
 
     // Create test pathway with fully unique identifiers
     // Note: We use entity creation which automatically retrieves city IDs from nodes
@@ -133,6 +178,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
       pathwayOptionsRepository: pathwayOptionRepository,
       pathwayOptionTollsRepository: pathwayOptionTollRepository,
       nodesRepository: nodeRepository,
+      tollboothRepository,
     });
 
     const pathwayEntity = createPathwayEntity({
@@ -157,11 +203,12 @@ describe('PathwayOptionEntity - Toll Management', () => {
     const pathway = savedPathway.toPathway();
     pathwayCleanup.track(pathway.id);
 
-    // Create option entity factory
+    // Create option entity factory with tollboothRepository
     const optionEntity = createPathwayOptionEntity({
       pathwayOptionsRepository: pathwayOptionRepository,
       pathwayOptionTollsRepository: pathwayOptionTollRepository,
       nodesRepository: nodeRepository,
+      tollboothRepository,
     });
 
     testData = {
@@ -216,7 +263,13 @@ describe('PathwayOptionEntity - Toll Management', () => {
         }
       }
 
-      // 5. Clean up population (now that nodes are deleted)
+      // 5. Clean up installation properties first (now that nodes are deleted)
+      await installationPropertyCleanup.cleanupAll();
+
+      // 6. Clean up installations (now that installation properties are deleted)
+      await installationCleanup.cleanupAll();
+
+      // 7. Clean up population (now that nodes are deleted)
       try {
         await populationRepository.forceDelete(testData.populationId);
       } catch {
@@ -225,6 +278,10 @@ describe('PathwayOptionEntity - Toll Management', () => {
 
       // Cities cleaned up by factories
     }
+  });
+
+  afterAll(async () => {
+    // Global cleanup - no longer needed since cleanup is handled in afterEach
   });
 
   describe('syncTolls', () => {
@@ -406,6 +463,303 @@ describe('PathwayOptionEntity - Toll Management', () => {
         const fieldError = error as FieldValidationError;
         expect(fieldError.fieldErrors.length).toBeGreaterThan(0);
       }
+    });
+  });
+
+  describe('validateTollNodesAreTollbooths', () => {
+    /**
+     * Helper function to create a valid tollbooth for testing
+     * Uses unique codes for parallel test safety
+     */
+    async function createTestTollbooth(overrides?: {
+      tollPrice?: string;
+      iaveEnabled?: string;
+    }) {
+      const tollbooth = await createTollboothHelper(
+        {
+          cityId: testData.cityId,
+          populationId: testData.populationId,
+          testSuiteId,
+          infrastructure: tollboothInfrastructure,
+          tollPrice: overrides?.tollPrice ?? '150.00',
+          iaveEnabled: overrides?.iaveEnabled === 'false' ? false : true,
+          latitude: 19.7431,
+          longitude: -99.2237,
+        },
+        installationPropertyCleanup,
+      );
+
+      testData.nodeIds.push(tollbooth.nodeId);
+      installationCleanup.track(tollbooth.installationId);
+
+      return tollbooth.nodeId;
+    }
+
+    it('should pass when all nodes are valid tollbooths', async () => {
+      // Arrange: Create a valid tollbooth
+      const tollboothNodeId = await createTestTollbooth({
+        tollPrice: '100.00',
+        iaveEnabled: 'true',
+      });
+
+      const tolls = [{ nodeId: tollboothNodeId, sequence: 1, passTimeMin: 5 }];
+      const collector = new FieldErrorCollector();
+
+      // Act
+      await testData.optionEntity.validators.validateTollNodesAreTollbooths(
+        tolls,
+        collector,
+      );
+
+      // Assert: Should not have errors
+      expect(collector.hasErrors()).toBe(false);
+    });
+
+    it('should fail when node is not a tollbooth', async () => {
+      // Arrange: Create a regular node (not a tollbooth)
+      const regularNodeCode = createUniqueCode('NODE', 5);
+      const regularNode = await nodeRepository.create({
+        code: regularNodeCode,
+        name: createUniqueName(
+          'Regular Node',
+          `${testSuiteId}-${regularNodeCode}`,
+        ),
+        slug: regularNodeCode.toLowerCase(),
+        latitude: 19.5,
+        longitude: -99.2,
+        radius: 100,
+        cityId: testData.cityId,
+        active: true,
+      });
+      testData.nodeIds.push(regularNode.id);
+
+      const tolls = [{ nodeId: regularNode.id, sequence: 1, passTimeMin: 5 }];
+      const collector = new FieldErrorCollector();
+
+      // Act
+      await testData.optionEntity.validators.validateTollNodesAreTollbooths(
+        tolls,
+        collector,
+      );
+
+      // Assert: Should have error with code 'NOT_TOLLBOOTH'
+      expect(collector.hasErrors()).toBe(true);
+      expect(collector.getErrors()[0]?.code).toBe('NOT_TOLLBOOTH');
+    });
+
+    it('should fail when tollbooth has invalid data (negative price)', async () => {
+      // Arrange: Create a tollbooth with negative price
+      const tollboothNodeId = await createTestTollbooth({
+        tollPrice: '-50.00', // ❌ Invalid: negative price
+        iaveEnabled: 'true',
+      });
+
+      const tolls = [{ nodeId: tollboothNodeId, sequence: 1, passTimeMin: 5 }];
+      const collector = new FieldErrorCollector();
+
+      // Act
+      await testData.optionEntity.validators.validateTollNodesAreTollbooths(
+        tolls,
+        collector,
+      );
+
+      // Assert: Should have error with code 'INVALID_TOLLBOOTH_DATA'
+      expect(collector.hasErrors()).toBe(true);
+      expect(collector.getErrors()[0]?.code).toBe('INVALID_TOLLBOOTH_DATA');
+    });
+
+    it('should fail when tollbooth is missing iave_enabled', async () => {
+      // Arrange: Create a tollbooth with iave_enabled
+      const tollbooth = await createTollboothHelper(
+        {
+          cityId: testData.cityId,
+          populationId: testData.populationId,
+          testSuiteId,
+          infrastructure: tollboothInfrastructure,
+          tollPrice: '100.00',
+          iaveEnabled: true,
+          latitude: 19.7431,
+          longitude: -99.2237,
+        },
+        installationPropertyCleanup,
+      );
+
+      testData.nodeIds.push(tollbooth.nodeId);
+      installationCleanup.track(tollbooth.installationId);
+
+      // Remove the iave_enabled property from installation
+      const properties =
+        await installationPropertyRepository.findByInstallationWithSchema(
+          tollbooth.installationId,
+        );
+      const iaveProperty = properties.find(
+        (p) =>
+          p.installationSchemaId ===
+          tollboothInfrastructure.iaveEnabledSchemaId,
+      );
+      if (iaveProperty) {
+        await installationPropertyRepository.forceDelete(iaveProperty.id);
+      }
+
+      const tolls = [{ nodeId: tollbooth.nodeId, sequence: 1, passTimeMin: 5 }];
+      const collector = new FieldErrorCollector();
+
+      // Act
+      await testData.optionEntity.validators.validateTollNodesAreTollbooths(
+        tolls,
+        collector,
+      );
+
+      // Assert: Should have error with code 'INVALID_TOLLBOOTH_DATA'
+      expect(collector.hasErrors()).toBe(true);
+      expect(collector.getErrors()[0]?.code).toBe('INVALID_TOLLBOOTH_DATA');
+      // The error value contains the detailed message from the guard
+      expect(collector.getErrors()[0]?.value).toContain('iave_enabled');
+    });
+
+    it('should collect all errors when multiple tolls are invalid', async () => {
+      // Arrange: Create a regular node and an invalid tollbooth
+      const regularNodeCode = createUniqueCode('NODE', 5);
+      const regularNode = await nodeRepository.create({
+        code: regularNodeCode,
+        name: createUniqueName(
+          'Regular Node',
+          `${testSuiteId}-${regularNodeCode}`,
+        ),
+        slug: regularNodeCode.toLowerCase(),
+        latitude: 19.5,
+        longitude: -99.2,
+        radius: 100,
+        cityId: testData.cityId,
+        active: true,
+      });
+      testData.nodeIds.push(regularNode.id);
+
+      const invalidTollboothId = await createTestTollbooth({
+        tollPrice: '-100.00', // ❌ Invalid: negative price
+        iaveEnabled: 'true',
+      });
+
+      const tolls = [
+        { nodeId: regularNode.id, sequence: 1, passTimeMin: 5 },
+        { nodeId: invalidTollboothId, sequence: 2, passTimeMin: 10 },
+      ];
+      const collector = new FieldErrorCollector();
+
+      // Act
+      await testData.optionEntity.validators.validateTollNodesAreTollbooths(
+        tolls,
+        collector,
+      );
+
+      // Assert: Should have at least 2 errors
+      expect(collector.hasErrors()).toBe(true);
+      expect(collector.getErrors().length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('syncTolls - tollbooth validation', () => {
+    /**
+     * Helper to create a tollbooth for syncTolls tests
+     */
+    async function createTestTollbooth() {
+      const tollbooth = await createTollboothHelper(
+        {
+          cityId: testData.cityId,
+          populationId: testData.populationId,
+          testSuiteId,
+          infrastructure: tollboothInfrastructure,
+          tollPrice: '150.00',
+          latitude: 19.7431,
+          longitude: -99.2237,
+        },
+        installationPropertyCleanup,
+      );
+
+      testData.nodeIds.push(tollbooth.nodeId);
+      installationCleanup.track(tollbooth.installationId);
+
+      return tollbooth.nodeId;
+    }
+
+    it('should fail to sync tolls when node is not a tollbooth', async () => {
+      // Arrange: Create pathway option
+      const option = testData.optionEntity.create({
+        pathwayId: testData.pathwayId,
+        name: createUniqueName(
+          'Test Option Sync',
+          `${testSuiteId}-${Date.now()}-${Math.random()}`,
+        ),
+        description: 'Option for toll sync validation',
+        distanceKm: 100,
+        typicalTimeMin: 120,
+        isPassThrough: false,
+        active: true,
+      });
+
+      const savedOption = await option.save();
+      testData.pathwayOptionCleanup.track(savedOption.id as number);
+
+      // Create a regular node (not a tollbooth)
+      const regularNodeCode = createUniqueCode('NODE', 5);
+      const regularNode = await nodeRepository.create({
+        code: regularNodeCode,
+        name: createUniqueName(
+          'Regular Node',
+          `${testSuiteId}-${regularNodeCode}`,
+        ),
+        slug: regularNodeCode.toLowerCase(),
+        latitude: 19.5,
+        longitude: -99.2,
+        radius: 100,
+        cityId: testData.cityId,
+        active: true,
+      });
+      testData.nodeIds.push(regularNode.id);
+
+      const tolls = [
+        { nodeId: regularNode.id, sequence: 1, passTimeMin: 5, distance: 10 },
+      ];
+
+      // Act & Assert
+      await expect(savedOption.syncTolls(tolls)).rejects.toThrow(
+        FieldValidationError,
+      );
+    });
+
+    it('should successfully sync tolls when nodes are valid tollbooths', async () => {
+      // Arrange: Create pathway option
+      const option = testData.optionEntity.create({
+        pathwayId: testData.pathwayId,
+        name: createUniqueName(
+          'Test Option Sync',
+          `${testSuiteId}-${Date.now()}-${Math.random()}`,
+        ),
+        description: 'Option for toll sync success',
+        distanceKm: 100,
+        typicalTimeMin: 120,
+        isPassThrough: false,
+        active: true,
+      });
+
+      const savedOption = await option.save();
+      testData.pathwayOptionCleanup.track(savedOption.id as number);
+
+      // Create valid tollbooth
+      const tollboothNodeId = await createTestTollbooth();
+
+      const tolls = [{ nodeId: tollboothNodeId, passTimeMin: 5, distance: 10 }];
+
+      // Act
+      const updatedOption = await savedOption.syncTolls(tolls);
+      const synced = await updatedOption.getTolls();
+
+      // Assert
+      expect(synced).toHaveLength(1);
+      expect(synced[0]?.nodeId).toBe(tollboothNodeId);
+      synced.forEach((toll) =>
+        testData.pathwayOptionTollCleanup.track(toll.id),
+      );
     });
   });
 

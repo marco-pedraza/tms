@@ -1,5 +1,6 @@
 import { TransactionalDB } from '@repo/base-repo';
 import type { BaseDomainEntity } from '@/shared/domain/base-entity';
+import type { TollboothRepository } from '@/inventory/locations/tollbooths/tollbooths.types';
 import type {
   CreatePathwayOptionTollPayload,
   PathwayOptionToll,
@@ -61,6 +62,7 @@ export interface PathwayOptionEntityDependencies {
       tx?: TransactionalDB,
     ) => Promise<{ id: number }[]>;
   };
+  tollboothRepository: TollboothRepository;
 }
 
 /**

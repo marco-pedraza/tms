@@ -4774,12 +4774,6 @@ export namespace users {
          */
         public async updateRole(id: number, params: {
     /**
-     * Unique code identifier for the role
-     * Must have at least 1 non-whitespace character
-     */
-    code?: string
-
-    /**
      * Human-readable name of the role
      * Must have at least 3 non-whitespace characters
      */
@@ -4789,6 +4783,11 @@ export namespace users {
      * Description of what the role represents
      */
     description?: string
+
+    /**
+     * Whether the role is active
+     */
+    active?: boolean
 }): Promise<roles.RoleWithPermissions> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/roles/${encodeURIComponent(id)}/update`, JSON.stringify(params))
@@ -10442,12 +10441,6 @@ export namespace populations {
 export namespace roles {
     export interface CreateRolePayload {
         /**
-         * Unique code identifier for the role
-         * Must have at least 1 non-whitespace character
-         */
-        code: string
-
-        /**
          * Human-readable name of the role
          * Must have at least 3 non-whitespace characters
          */
@@ -10462,18 +10455,24 @@ export namespace roles {
          * IDs of permissions to associate with this role
          */
         permissionIds?: number[]
+
+        /**
+         * Whether the role is active
+         * @default true
+         */
+        active?: boolean
     }
 
     export interface ListRolesQueryParams {
         orderBy?: {
-            field: "id" | "code" | "name" | "description" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "description" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
-            code?: string
             name?: string
             description?: string | null
+            active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }
@@ -10489,14 +10488,14 @@ export namespace roles {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "code" | "name" | "description" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "description" | "active" | "createdAt" | "updatedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
             id?: number
-            code?: string
             name?: string
             description?: string | null
+            active?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
         }
@@ -10516,11 +10515,6 @@ export namespace roles {
         id: number
 
         /**
-         * Unique code identifier for the role
-         */
-        code: string
-
-        /**
          * Human-readable name of the role
          */
         name: string
@@ -10529,6 +10523,11 @@ export namespace roles {
          * Description of what the role represents
          */
         description: string | null
+
+        /**
+         * Whether the role is active
+         */
+        active: boolean
 
         /**
          * Timestamp when the role was created
@@ -10553,11 +10552,6 @@ export namespace roles {
         id: number
 
         /**
-         * Unique code identifier for the role
-         */
-        code: string
-
-        /**
          * Human-readable name of the role
          */
         name: string
@@ -10566,6 +10560,11 @@ export namespace roles {
          * Description of what the role represents
          */
         description: string | null
+
+        /**
+         * Whether the role is active
+         */
+        active: boolean
 
         /**
          * Timestamp when the role was created

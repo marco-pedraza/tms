@@ -14,14 +14,14 @@ export interface Role {
   /** Unique identifier for the role */
   id: number;
 
-  /** Unique code identifier for the role */
-  code: string;
-
   /** Human-readable name of the role */
   name: string;
 
   /** Description of what the role represents */
   description: string | null;
+
+  /** Whether the role is active */
+  active: boolean;
 
   /** Timestamp when the role was created */
   createdAt: Date | string | null;
@@ -43,12 +43,6 @@ export interface RoleWithPermissions extends Role {
  */
 export interface CreateRolePayload {
   /**
-   * Unique code identifier for the role
-   * Must have at least 1 non-whitespace character
-   */
-  code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-
-  /**
    * Human-readable name of the role
    * Must have at least 3 non-whitespace characters
    */
@@ -63,18 +57,18 @@ export interface CreateRolePayload {
    * IDs of permissions to associate with this role
    */
   permissionIds?: number[];
+
+  /**
+   * Whether the role is active
+   * @default true
+   */
+  active?: boolean;
 }
 
 /**
  * Input for updating a role
  */
 export interface UpdateRolePayload {
-  /**
-   * Unique code identifier for the role
-   * Must have at least 1 non-whitespace character
-   */
-  code?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-
   /**
    * Human-readable name of the role
    * Must have at least 3 non-whitespace characters
@@ -85,6 +79,11 @@ export interface UpdateRolePayload {
    * Description of what the role represents
    */
   description?: string;
+
+  /**
+   * Whether the role is active
+   */
+  active?: boolean;
 }
 
 /**

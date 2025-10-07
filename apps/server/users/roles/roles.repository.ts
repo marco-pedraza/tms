@@ -29,7 +29,7 @@ export function createRoleRepository() {
     UpdateRolePayload,
     typeof roles
   >(db, roles, 'Role', {
-    searchableFields: [roles.name, roles.code],
+    searchableFields: [roles.name],
     softDeleteEnabled: true,
   });
 

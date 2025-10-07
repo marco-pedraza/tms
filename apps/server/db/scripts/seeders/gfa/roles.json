@@ -6,7 +6,6 @@
   },
   "roles": [
     {
-      "code": "admin",
       "name": "Administrator",
       "description": "Full system access with all permissions",
       "permissions": [
@@ -246,7 +245,6 @@
       ]
     },
     {
-      "code": "read_only",
       "name": "Read Only",
       "description": "Read-only access to the system",
       "permissions": [
@@ -360,7 +358,6 @@
       ]
     },
     {
-      "code": "editor",
       "name": "Editor",
       "description": "Editor access to the system",
       "permissions": [

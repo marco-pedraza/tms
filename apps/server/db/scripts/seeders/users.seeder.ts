@@ -1,3 +1,4 @@
+import { db } from '@/users/db-service';
 import type { Department } from '@/users/departments/departments.types';
 import { roleRepository } from '@/users/roles/roles.repository';
 import { roles } from '@/users/roles/roles.schema';
@@ -13,6 +14,29 @@ import {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FactoryDb = any;
+
+/**
+ * Creates a user using the factory and returns it with the correct database-generated ID
+ * This wrapper solves the issue where factories generate random IDs that don't match the database
+ */
+async function createUserWithFactory(
+  factoryDb: FactoryDb,
+  userData: Partial<User>,
+): Promise<User> {
+  // Use factory to generate data, but we'll get the real ID from the query
+  await userFactory(factoryDb).create(userData);
+
+  // Query the inserted user by username (which is unique)
+  const insertedUser = await db.query.users.findFirst({
+    where: (users, { eq }) => eq(users.username, userData.username as string),
+  });
+
+  if (!insertedUser) {
+    throw new Error(`Failed to retrieve created user: ${userData.username}`);
+  }
+
+  return insertedUser as User;
+}
 
 interface UserData {
   username: string;
@@ -48,7 +72,7 @@ const PREDEFINED_USERS: UserData[] = [
     employeeId: null,
     isSystemAdmin: true,
     departmentCode: 'it',
-    roles: ['admin'],
+    roles: ['Administrator'],
   },
   {
     username: 'fleet.manager',
@@ -59,7 +83,7 @@ const PREDEFINED_USERS: UserData[] = [
     employeeId: 'EMP003',
     isSystemAdmin: false,
     departmentCode: 'fleet',
-    roles: ['read_only', 'editor'],
+    roles: ['Read Only', 'Editor'],
   },
   {
     username: 'operations.manager',
@@ -70,7 +94,7 @@ const PREDEFINED_USERS: UserData[] = [
     employeeId: 'EMP004',
     isSystemAdmin: false,
     departmentCode: 'ops',
-    roles: ['read_only', 'editor'],
+    roles: ['Read Only', 'Editor'],
   },
   {
     username: 'read_only',
@@ -81,7 +105,7 @@ const PREDEFINED_USERS: UserData[] = [
     employeeId: 'EMP005',
     isSystemAdmin: false,
     departmentCode: 'it',
-    roles: ['read_only'],
+    roles: ['Read Only'],
   },
 ];
 
@@ -111,8 +135,8 @@ async function createUsersFromClientData(
         );
       }
 
-      // Create user using factory
-      const user = await userFactory(factoryDb).create({
+      // Create user using factory and retrieve with correct database ID
+      const user = await createUserWithFactory(factoryDb, {
         departmentId: department.id,
         username: userData.username,
         email: userData.email,
@@ -133,7 +157,7 @@ async function createUsersFromClientData(
 
           for (const roleCode of userData.roles) {
             try {
-              const role = await roleRepository.findBy(roles.code, roleCode);
+              const role = await roleRepository.findBy(roles.name, roleCode);
               if (!role) {
                 throw new Error(`Role '${roleCode}' not found`);
               }
@@ -239,15 +263,17 @@ export async function seedRandomUsers(
       const firstName = faker.person.firstName();
       const lastName = faker.person.lastName();
 
-      // Create random user using factory
-      const user = await userFactory(factoryDb).create({
+      const username = faker.internet
+        .username({
+          firstName,
+          lastName,
+        })
+        .toLowerCase();
+
+      // Create random user using factory and retrieve with correct database ID
+      const user = await createUserWithFactory(factoryDb, {
         departmentId: randomDepartment.id,
-        username: faker.internet
-          .username({
-            firstName,
-            lastName,
-          })
-          .toLowerCase(),
+        username,
         email: faker.internet
           .email({
             firstName,

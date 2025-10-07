@@ -26,13 +26,6 @@ export async function validateRoleUniqueness(
   // Prepare fields to check for uniqueness
   const fieldsToCheck = [];
 
-  if (payload.code) {
-    fieldsToCheck.push({
-      field: roles.code,
-      value: payload.code,
-    });
-  }
-
   if (payload.name) {
     fieldsToCheck.push({
       field: roles.name,

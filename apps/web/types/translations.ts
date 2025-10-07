@@ -73,3 +73,6 @@ export type UsePathwaysTranslationsResult = ReturnType<
 export type UseUsersTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'users'>
 >;
+export type UseRolesTranslationsResult = ReturnType<
+  typeof createTranslator<Messages, 'roles'>
+>;

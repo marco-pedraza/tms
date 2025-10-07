@@ -203,7 +203,8 @@
       "technology": "Tecnología",
       "chromatic": "Esquema Cromático",
       "user": "Usuario",
-      "pathway": "Trayecto"
+      "pathway": "Trayecto",
+      "role": "Rol"
     },
     "fields": {
       "name": "Nombre",
@@ -264,7 +265,8 @@
     },
     "users": {
       "title": "Organización",
-      "users": "Usuarios"
+      "users": "Usuarios",
+      "roles": "Roles"
     },
     "planning": {
       "title": "Planeación",
@@ -348,6 +350,53 @@
         "loading": "Eliminando usuario...",
         "success": "Usuario eliminado correctamente",
         "error": "No pudimos eliminar el usuario"
+      }
+    }
+  },
+  "roles": {
+    "title": "Roles",
+    "description": "Administra roles y permisos del sistema",
+    "actions": {
+      "create": "Crear Rol",
+      "update": "Actualizar Rol",
+      "backToList": "Volver a roles"
+    },
+    "form": {
+      "title": "Información del rol",
+      "placeholders": {
+        "name": "Ej: Administrador",
+        "description": "Descripción opcional del rol"
+      }
+    },
+    "details": {
+      "description": "Detalles del rol",
+      "permissionsTitle": "Permisos del Rol",
+      "noPermissionsAssigned": "No hay permisos asignados a este rol"
+    },
+    "edit": {
+      "title": "Editar Rol"
+    },
+    "errors": {
+      "notFound": {
+        "title": "Rol no encontrado",
+        "description": "No pudimos encontrar el rol que buscas. Es posible que haya sido eliminado o que no exista."
+      }
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando rol...",
+        "success": "Rol creado correctamente",
+        "error": "No pudimos crear el rol"
+      },
+      "update": {
+        "loading": "Actualizando rol...",
+        "success": "Rol actualizado correctamente",
+        "error": "No pudimos actualizar el rol"
+      },
+      "delete": {
+        "loading": "Eliminando rol...",
+        "success": "Rol eliminado correctamente",
+        "error": "No pudimos eliminar el rol"
       }
     }
   },

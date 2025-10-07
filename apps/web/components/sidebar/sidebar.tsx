@@ -21,6 +21,7 @@ import {
   Palette,
   Route,
   Settings,
+  ShieldCheck,
   Star,
   Tag,
   Truck,
@@ -207,6 +208,11 @@ export default function Sidebar() {
         icon={<House className="h-4 w-4" />}
         defaultOpen={true}
       >
+        <SidebarLink
+          href={routes.roles.index}
+          icon={ShieldCheck}
+          label={tSidebar('users.roles')}
+        />
         <SidebarLink
           href={routes.users.index}
           icon={UserRoundSearch}

@@ -12,7 +12,6 @@ import {
 type FactoryDb = any;
 
 interface RoleData {
-  code: string;
   name: string;
   description: string;
   permissions?: string[];
@@ -32,7 +31,6 @@ interface ClientRolesData {
  */
 const PREDEFINED_ROLES = [
   {
-    code: 'admin',
     name: 'Administrator',
     description: 'Full system access with all permissions',
     permissions: [
@@ -267,7 +265,6 @@ const PREDEFINED_ROLES = [
     ],
   },
   {
-    code: 'read_only',
     name: 'Read Only',
     description: 'Read-only access to the system',
     permissions: [
@@ -378,7 +375,6 @@ const PREDEFINED_ROLES = [
     ],
   },
   {
-    code: 'editor',
     name: 'Editor',
     description: 'Editor access to the system',
     permissions: [
@@ -456,7 +452,6 @@ async function createRolesFromClientData(
     try {
       // Create the role using the factory
       const role = await roleFactory(factoryDb).create({
-        code: roleData.code,
         name: roleData.name,
         description: roleData.description,
         deletedAt: null,

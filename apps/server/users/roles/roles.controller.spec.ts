@@ -32,9 +32,9 @@ describe('Roles Controller', () => {
   };
 
   const testRole: CreateRolePayload = {
-    code: 'TEST_ROLE',
     name: 'Test Role',
     description: 'A test role for automated testing',
+    active: true,
   };
 
   // Variables to store created IDs for cleanup
@@ -91,9 +91,9 @@ describe('Roles Controller', () => {
       // Assertions
       expect(response).toBeDefined();
       expect(response.id).toBeDefined();
-      expect(response.code).toBe(testRole.code);
       expect(response.name).toBe(testRole.name);
       expect(response.description).toBe(testRole.description);
+      expect(response.active).toBe(testRole.active);
       expect(response.createdAt).toBeDefined();
       expect(response.updatedAt).toBeDefined();
       expect(response.permissions).toBeDefined();
@@ -102,10 +102,10 @@ describe('Roles Controller', () => {
 
     test('should create a new role with permissions', async () => {
       const roleWithPermissions = {
-        code: 'TEST_ROLE_WITH_PERMS',
         name: 'Test Role With Permissions',
         description: 'A role with initial permissions',
         permissionIds: [permissionId1, permissionId2],
+        active: true,
       };
 
       const result = await createRole(roleWithPermissions);
@@ -114,6 +114,7 @@ describe('Roles Controller', () => {
       try {
         // Verify the role was created with permissions
         expect(result.id).toBeDefined();
+        expect(result.active).toBe(true);
         expect(result.permissions).toBeDefined();
         expect(result.permissions.length).toBe(2);
 
@@ -135,26 +136,25 @@ describe('Roles Controller', () => {
 
       expect(response).toBeDefined();
       expect(response.id).toBe(createdRoleId);
-      expect(response.code).toBe(testRole.code);
       expect(response.name).toBe(testRole.name);
       expect(response.description).toBe(testRole.description);
+      expect(response.active).toBe(testRole.active);
       expect(response.permissions).toBeDefined();
       expect(Array.isArray(response.permissions)).toBe(true);
     });
 
     test('should update a role', async () => {
       const updatedName = 'Updated Test Role';
-      const updatedCode = 'UPDATED_ROLE';
       const response = await updateRole({
         id: createdRoleId,
         name: updatedName,
-        code: updatedCode,
+        active: false,
       });
 
       expect(response).toBeDefined();
       expect(response.id).toBe(createdRoleId);
       expect(response.name).toBe(updatedName);
-      expect(response.code).toBe(updatedCode);
+      expect(response.active).toBe(false);
       expect(response.updatedAt).toBeDefined();
     });
 
@@ -177,7 +177,6 @@ describe('Roles Controller', () => {
     test('should delete a role', async () => {
       // Create a role specifically for deletion test
       const roleToDelete = await createRole({
-        code: 'ROLE_TO_DELETE',
         name: 'Role To Delete',
         description: 'A role to be deleted',
       });
@@ -196,14 +195,13 @@ describe('Roles Controller', () => {
     });
 
     test('should handle duplicate errors', async () => {
-      // Ensure the test role exists and get fresh data
+      // Get existing role
       const existingRole = await getRole({ id: createdRoleId });
 
-      // Try to create role with same code as existing one
+      // Try to create role with same name as existing one
       await expect(
         createRole({
-          code: existingRole.code,
-          name: 'Different Name',
+          name: existingRole.name,
           description: 'Duplicate test',
         }),
       ).rejects.toThrow();
@@ -232,23 +230,22 @@ describe('Roles Controller', () => {
     });
 
     describe('field validation errors', () => {
-      test('should throw detailed field validation error for duplicate code', async () => {
+      test('should throw detailed field validation error for duplicate name', async () => {
         // Ensure the test role exists and get fresh data
         const existingRole = await getRole({ id: createdRoleId });
 
-        const duplicateCodePayload = {
-          code: existingRole.code, // Same code as existing role
-          name: 'Different Role Name', // Different name
-          description: 'Duplicate code test',
+        const duplicateNamePayload = {
+          name: existingRole.name,
+          description: 'Duplicate name test',
         };
 
         // Verify that the function rejects
-        await expect(createRole(duplicateCodePayload)).rejects.toThrow();
+        await expect(createRole(duplicateNamePayload)).rejects.toThrow();
 
         // Capture the error to make specific assertions
         let validationError: FieldValidationError | undefined;
         try {
-          await createRole(duplicateCodePayload);
+          await createRole(duplicateNamePayload);
         } catch (error) {
           validationError = error as FieldValidationError;
         }
@@ -263,20 +260,17 @@ describe('Roles Controller', () => {
         expect(typedValidationError.fieldErrors).toBeDefined();
         expect(Array.isArray(typedValidationError.fieldErrors)).toBe(true);
         expect(typedValidationError.fieldErrors).toHaveLength(1);
-        expect(typedValidationError.fieldErrors[0].field).toBe('code');
-        expect(typedValidationError.fieldErrors[0].code).toBe('DUPLICATE');
         expect(typedValidationError.fieldErrors[0].message).toContain(
           'already exists',
         );
         expect(typedValidationError.fieldErrors[0].value).toBe(
-          existingRole.code,
+          existingRole.name,
         );
       });
 
       test('should handle update validation errors correctly', async () => {
         // Create another role to test duplicate on update
         const anotherRole = await createRole({
-          code: 'ANOTHER_TEST_ROLE',
           name: 'Another Test Role',
           description: 'Another role for testing',
         });
@@ -286,7 +280,7 @@ describe('Roles Controller', () => {
 
         const updatePayload = {
           id: anotherRole.id,
-          code: existingRole.code, // This should trigger duplicate validation
+          name: existingRole.name, // This should trigger duplicate validation
         };
 
         try {
@@ -306,8 +300,11 @@ describe('Roles Controller', () => {
           expect(typedValidationError.name).toBe('FieldValidationError');
           expect(typedValidationError.message).toContain('Validation failed');
           expect(typedValidationError.fieldErrors).toBeDefined();
-          expect(typedValidationError.fieldErrors[0].field).toBe('code');
+          expect(typedValidationError.fieldErrors[0].field).toBe('name');
           expect(typedValidationError.fieldErrors[0].code).toBe('DUPLICATE');
+          expect(typedValidationError.fieldErrors[0].value).toBe(
+            existingRole.name,
+          );
         } finally {
           // Clean up the additional role
           await roleRepository.forceDelete(anotherRole.id);
@@ -384,12 +381,10 @@ describe('Roles Controller', () => {
     test('should default sort by name in ascending order', async () => {
       // Create test roles with different names for verification of default sorting
       const roleA = await createRole({
-        code: 'AAA_TEST_ROLE',
         name: 'AAA Test Role',
         description: 'Test role A',
       });
       const roleZ = await createRole({
-        code: 'ZZZ_TEST_ROLE',
         name: 'ZZZ Test Role',
         description: 'Test role Z',
       });
@@ -441,7 +436,6 @@ describe('Roles Controller', () => {
     test('should search roles using searchTerm in list endpoint', async () => {
       // Create a unique role for search testing
       const searchableRole = await createRole({
-        code: 'SEARCHABLE_TEST_ROLE',
         name: 'Searchable Test Role',
         description: 'A searchable role for testing',
       });
@@ -475,40 +469,39 @@ describe('Roles Controller', () => {
       expect(response.pagination.pageSize).toBe(5);
     });
 
-    test('should search in both name and code', async () => {
-      // Create a role with searchable code
-      const codeSearchableRole = await createRole({
-        code: 'UNIQUE_CODE_SEARCHABLE',
-        name: 'Normal Role Name',
-        description: 'A role with searchable code',
+    test('should search by name', async () => {
+      // Create a role with searchable name
+      const nameSearchableRole = await createRole({
+        name: 'UNIQUE_NAME',
+        description: 'A role with searchable name',
       });
 
       try {
-        // Search for the keyword that's only in code
-        const response = await listRoles({ searchTerm: 'UNIQUE_CODE' });
+        // Search for the keyword that's only in name
+        const response = await listRoles({ searchTerm: 'UNIQUE_NAME' });
 
         expect(response.data).toBeDefined();
         expect(Array.isArray(response.data)).toBe(true);
-        expect(response.data.some((r) => r.id === codeSearchableRole.id)).toBe(
+        expect(response.data.some((r) => r.id === nameSearchableRole.id)).toBe(
           true,
         );
       } finally {
         // Clean up
-        await roleRepository.forceDelete(codeSearchableRole.id);
+        await roleRepository.forceDelete(nameSearchableRole.id);
       }
     });
   });
 
   describe('ordering and filtering', () => {
     // Test roles for ordering and filtering tests
-    const testRoles: { id: number; code: string; name: string }[] = [];
+    const testRoles: { id: number; name: string }[] = [];
 
     beforeAll(async () => {
       // Create test roles with different properties
       const rolesToCreate = [
-        { code: 'ALPHA_ROLE', name: 'Alpha Role', description: 'First role' },
-        { code: 'BETA_ROLE', name: 'Beta Role', description: 'Second role' },
-        { code: 'GAMMA_ROLE', name: 'Gamma Role', description: 'Third role' },
+        { name: 'Alpha Role', description: 'First role' },
+        { name: 'Beta Role', description: 'Second role' },
+        { name: 'Gamma Role', description: 'Third role' },
       ];
 
       for (const roleData of rolesToCreate) {
@@ -540,15 +533,15 @@ describe('Roles Controller', () => {
       }
     });
 
-    test('should order roles by code in ascending order', async () => {
+    test('should order roles by name in ascending order', async () => {
       const response = await listRoles({
-        orderBy: [{ field: 'code', direction: 'asc' }],
+        orderBy: [{ field: 'name', direction: 'asc' }],
       });
 
-      const codes = response.data.map((r) => r.code);
-      // Check if codes are in ascending order
-      for (let i = 0; i < codes.length - 1; i++) {
-        expect(codes[i] <= codes[i + 1]).toBe(true);
+      const names = response.data.map((r) => r.name);
+      // Check if names are in ascending order
+      for (let i = 0; i < names.length - 1; i++) {
+        expect(names[i] <= names[i + 1]).toBe(true);
       }
     });
 

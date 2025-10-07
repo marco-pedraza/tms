@@ -18,13 +18,21 @@ export function syncSeatsPerFloorWithConfiguration(
     spaces: SeatDiagramSpace[];
   }[],
 ) {
-  return seatsPerFloor.map((floorConfig) => {
-    const floorSpaces = seatConfiguration.find(
-      (floor) => floor.floorNumber === floorConfig.floorNumber,
+  return seatConfiguration.map((floorSpaces) => {
+    // Find existing config for this floor, or create default values
+    const existingConfig = seatsPerFloor.find(
+      (config) => config.floorNumber === floorSpaces.floorNumber,
     );
 
-    if (!floorSpaces || floorSpaces.spaces.length === 0) {
-      return floorConfig;
+    if (!floorSpaces.spaces || floorSpaces.spaces.length === 0) {
+      return (
+        existingConfig ?? {
+          floorNumber: floorSpaces.floorNumber,
+          numRows: 0,
+          seatsLeft: 0,
+          seatsRight: 0,
+        }
+      );
     }
 
     // Calculate actual dimensions from seatConfiguration
@@ -90,7 +98,8 @@ export function syncSeatsPerFloorWithConfiguration(
     }
 
     return {
-      ...floorConfig,
+      ...existingConfig,
+      floorNumber: floorSpaces.floorNumber,
       numRows: maxY + 1, // Convert from 0-based to 1-based
       seatsLeft,
       seatsRight,

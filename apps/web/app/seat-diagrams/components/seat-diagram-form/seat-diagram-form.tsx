@@ -474,6 +474,57 @@ export default function SeatDiagramForm({
     }
   };
 
+  const onAddFloor = () => {
+    const currentSeatConfiguration = form.getFieldValue('seatConfiguration');
+    const maxFloorNumber = Math.max(
+      // @ts-expect-error - @todo improve typing
+      ...currentSeatConfiguration.map((floor) => floor.floorNumber),
+      0,
+    );
+    const newFloorNumber = maxFloorNumber + 1;
+
+    // Create a new floor with 1 seat and 1 hallway space
+    const newFloorSpaces: SeatDiagramSpace[] = [
+      {
+        spaceType: SpaceType.SEAT,
+        seatType: SeatType.REGULAR,
+        seatNumber: '1',
+        floorNumber: newFloorNumber,
+        active: true,
+        reclinementAngle: '',
+        amenities: [],
+        position: {
+          x: 0,
+          y: 0,
+        },
+      },
+      {
+        spaceType: SpaceType.HALLWAY,
+        floorNumber: newFloorNumber,
+        active: true,
+        amenities: [],
+        position: {
+          x: 1,
+          y: 0,
+        },
+      },
+    ];
+
+    const newSeatConfiguration = [
+      ...currentSeatConfiguration,
+      {
+        floorNumber: newFloorNumber,
+        spaces: newFloorSpaces,
+      },
+    ];
+
+    const orderedByFloorNumber = newSeatConfiguration.sort(
+      (a, b) => a.floorNumber - b.floorNumber,
+    );
+    form.setFieldValue('seatConfiguration', orderedByFloorNumber);
+    setSelectedFloor(newFloorNumber);
+  };
+
   return (
     <Form onSubmit={form.handleSubmit} className="w-full max-w-none">
       {/* General Configuration Section */}
@@ -701,6 +752,16 @@ export default function SeatDiagramForm({
                             })}
                           </Button>
                         ))}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          type="button"
+                          disabled={seatConfiguration.length >= 2}
+                          onClick={onAddFloor}
+                        >
+                          <PlusIcon className="w-4 h-4" />
+                          {tSeatDiagrams('actions.addFloor')}
+                        </Button>
                       </div>
                       <div className="min-h-[500px] h-[70vh] max-h-[700px]">
                         <div className="grid gap-4 grid-cols-[3fr_auto_2fr] h-full">

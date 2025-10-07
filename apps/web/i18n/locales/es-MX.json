@@ -1464,7 +1464,8 @@
     "actions": {
       "create": "Crear Modelo de Autobús",
       "update": "Actualizar Modelo de Autobús",
-      "backToList": "Volver a modelos de autobuses"
+      "backToList": "Volver a modelos de autobuses",
+      "createNewDiagramBasedOnThis": "Crear Nuevo Diagrama Basado en Este"
     },
     "fields": {
       "description": "Descripción",
@@ -1875,10 +1876,15 @@
       "new": {
         "title": "Nuevo Diagrama de Asientos",
         "subtitle": "Crear nuevo diagrama de asientos para los autobuses"
+      },
+      "newBasedOn": {
+        "title": "Nuevo Diagrama Basado en Plantilla",
+        "subtitle": "Crear nuevo diagrama basado en: {templateName}"
       }
     },
     "form": {
       "title": "Información del diagrama de asientos",
+      "copySuffix": " - Copia",
       "placeholders": {
         "name": "Nombre",
         "description": "Descripción",

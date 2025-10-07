@@ -10,8 +10,10 @@ import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import AmenityCard from '@/components/ui/amenity-card';
+import { Button } from '@/components/ui/button';
 import useForm from '@/hooks/use-form';
 import { engineTypes } from '@/services/ims-client';
+import routes from '@/services/routes';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 
@@ -321,28 +323,42 @@ export default function BusModelForm({
               );
               return (
                 <>
-                  <field.ComboboxInput
-                    label={tBusModels('fields.busDiagramModel')}
-                    placeholder={tBusModels(
-                      'form.placeholders.busDiagramModel',
+                  <div className="flex gap-2 items-end flex-wrap">
+                    <field.ComboboxInput
+                      label={tBusModels('fields.busDiagramModel')}
+                      placeholder={tBusModels(
+                        'form.placeholders.busDiagramModel',
+                      )}
+                      emptyOptionsLabel={tBusModels(
+                        'form.placeholders.emptyOptionsLabel',
+                      )}
+                      searchPlaceholder={tBusModels(
+                        'form.placeholders.busDiagramModelSearch',
+                      )}
+                      noResultsLabel={tBusModels(
+                        'form.placeholders.noBusDiagramModelsFound',
+                      )}
+                      items={
+                        busDiagrams?.data.map((diagram) => ({
+                          id: diagram.id.toString(),
+                          name: diagram.name,
+                        })) || []
+                      }
+                      isRequired
+                    />
+                    {seatDiagram && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          const newDiagramUrl = `${routes.seatDiagrams.new}?templateId=${seatDiagram.id}`;
+                          window.open(newDiagramUrl, '_blank');
+                        }}
+                      >
+                        {tBusModels('actions.createNewDiagramBasedOnThis')}
+                      </Button>
                     )}
-                    emptyOptionsLabel={tBusModels(
-                      'form.placeholders.emptyOptionsLabel',
-                    )}
-                    searchPlaceholder={tBusModels(
-                      'form.placeholders.busDiagramModelSearch',
-                    )}
-                    noResultsLabel={tBusModels(
-                      'form.placeholders.noBusDiagramModelsFound',
-                    )}
-                    items={
-                      busDiagrams?.data.map((diagram) => ({
-                        id: diagram.id.toString(),
-                        name: diagram.name,
-                      })) || []
-                    }
-                    isRequired
-                  />
+                  </div>
                   {seatDiagram && (
                     <div className="space-y-4 pt-4">
                       {seatDiagram.seatsPerFloor.map((floor) => (

@@ -29,6 +29,22 @@ const createSeatSpaceTypeSchema = (
     seatNumber: z.string({ message: tValidations('required') }).min(1, {
       message: tValidations('required'),
     }),
+    amenities: z
+      .array(
+        z.union([
+          z
+            .string()
+            .transform((val) => (isNaN(parseInt(val)) ? '' : String(val))),
+          z.number().transform((val) => String(val)),
+        ]),
+      )
+      .default([]),
+    reclinementAngle: z.union([
+      z
+        .string()
+        .transform((val) => (isNaN(parseInt(val)) ? '' : parseInt(val))),
+      z.number().transform((val) => val),
+    ]),
   });
 
 type SeatSpaceType = z.output<ReturnType<typeof createSeatSpaceTypeSchema>>;

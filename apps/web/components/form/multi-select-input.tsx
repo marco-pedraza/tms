@@ -24,6 +24,7 @@ interface MultiSelectInputProps {
   description?: string;
   isRequired?: boolean;
   emptyOptionsLabel?: string;
+  previewItemsCount?: number;
 }
 
 export default function MultiSelectInput({
@@ -33,6 +34,7 @@ export default function MultiSelectInput({
   description,
   isRequired = false,
   emptyOptionsLabel,
+  previewItemsCount = 3,
 }: MultiSelectInputProps) {
   const field = useFieldContext<number[]>();
   const [isOpen, setIsOpen] = useState(false);
@@ -63,29 +65,31 @@ export default function MultiSelectInput({
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className="w-full justify-between"
+            className="w-full justify-between h-auto"
             aria-invalid={hasFieldErrors(field)}
           >
             <div className="flex items-center gap-2 flex-1 text-left">
               {selectedItems.length > 0 && (
                 <div className="flex items-center gap-1 flex-wrap">
-                  {selectedItems.slice(0, 3).map((item, index, arr) => (
-                    <div key={item.id} className="flex items-center gap-1">
-                      {item.color && (
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: item.color }}
-                        />
-                      )}
-                      <span className="text-sm">
-                        {item.name}
-                        {!item.color && index < arr.length - 1 && ', '}
-                      </span>
-                    </div>
-                  ))}
-                  {selectedItems.length > 3 && (
+                  {selectedItems
+                    .slice(0, previewItemsCount)
+                    .map((item, index, arr) => (
+                      <div key={item.id} className="flex items-center gap-1">
+                        {item.color && (
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: item.color }}
+                          />
+                        )}
+                        <span className="text-sm">
+                          {item.name}
+                          {!item.color && index < arr.length - 1 && ', '}
+                        </span>
+                      </div>
+                    ))}
+                  {selectedItems.length > previewItemsCount && (
                     <span className="text-sm text-muted-foreground">
-                      +{selectedItems.length - 3} more
+                      +{selectedItems.length - previewItemsCount} more
                     </span>
                   )}
                 </div>

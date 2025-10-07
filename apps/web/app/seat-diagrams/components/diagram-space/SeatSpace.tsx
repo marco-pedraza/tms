@@ -40,7 +40,11 @@ export default function SeatSpace({
       className={seatSpaceVariants({ seatType: space.seatType, isSelected })}
       disabled={!space.active}
     >
-      {space.seatNumber}
+      {space.seatNumber ? (
+        space.seatNumber
+      ) : (
+        <span className="text-gray-400">s/n</span>
+      )}
     </Button>
   );
 }

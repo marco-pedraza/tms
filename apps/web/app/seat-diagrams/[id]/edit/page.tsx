@@ -43,7 +43,15 @@ export default function EditSeatDiagramPage() {
         seatDiagramId: itemId,
         seats: values.seatConfiguration
           .map((floor) => floor.spaces.map((space) => space))
-          .flat(),
+          .flat()
+          .map((space) => ({
+            ...space,
+            // @ts-expect-error - @todo improve typing
+            reclinementAngle: space.reclinementAngle
+              ? // @ts-expect-error - @todo improve typing
+                parseInt(space.reclinementAngle)
+              : undefined,
+          })),
       },
       {
         standalone: false,

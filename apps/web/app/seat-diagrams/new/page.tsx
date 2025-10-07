@@ -25,7 +25,12 @@ export default function NewSeatDiagramPage() {
         seatDiagramId: seatDiagram.id,
         seats: data.seatConfiguration
           .map((floor) => floor.spaces.map((space) => space))
-          .flat(),
+          .flat()
+          .map((space) => ({
+            ...space,
+            // @ts-expect-error - @todo improve typing
+            reclinementAngle: space.reclinementAngle || undefined,
+          })),
       },
       {
         standalone: false,

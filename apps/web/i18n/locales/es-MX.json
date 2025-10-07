@@ -1862,6 +1862,8 @@
       "spaceType": "Tipo de Espacio",
       "seatType": "Tipo de Asiento",
       "seatNumber": "Número de Asiento",
+      "amenities": "Amenidades",
+      "reclinementAngle": "Ángulo de Inclinación (°)",
       "disableSpace": "Desactivar Espacio"
     },
     "sections": {
@@ -1891,12 +1893,16 @@
         "spaceType": "Selecciona el tipo de espacio",
         "seatType": "Selecciona uno",
         "seatNumber": "Ej: 1A",
+        "selectAmenities": "Seleccionar amenidades...",
+        "noAmenities": "No hay amenidades disponibles",
+        "reclinementAngle": "Ej: 120",
         "addColumnBeforeHallway": "Agregar columna antes del pasillo",
         "addColumnAfterHallway": "Agregar columna después del pasillo",
         "removeColumnBeforeHallway": "Eliminar columna antes del pasillo",
         "removeColumnAfterHallway": "Eliminar columna después del pasillo",
         "addRow": "Agregar fila",
-        "removeRow": "Eliminar fila"
+        "removeRow": "Eliminar fila",
+        "seatConfigurationErrors": "Existen errores en la configuración de los asientos. Rellena la información de todos los asientos."
       },
       "seatTypes": {
         "regular": "Regular",

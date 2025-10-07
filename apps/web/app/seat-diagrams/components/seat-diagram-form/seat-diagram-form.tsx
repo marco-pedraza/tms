@@ -11,6 +11,7 @@ import { BaseSwitchInput } from '@/components/form/switch-input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import useForm from '@/hooks/use-form';
+import { useQueryBusAmenities } from '@/hooks/use-query-bus-amenities';
 import { requiredIntegerSchema } from '@/schemas/number';
 import { optionalStringSchema, requiredStringSchema } from '@/schemas/string';
 import SeatDiagram from '@/seat-diagrams/components/seat-diagram';
@@ -22,6 +23,30 @@ import { SeatType, SpaceType } from '@/services/ims-client';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
 import createFloorsFromQuickConfig from './create-floors-from-quick-config';
+import { syncSeatsPerFloorWithConfiguration } from './sync-seats-per-floor';
+
+function initializeSeatFields(
+  spaceForm: ReturnType<typeof useForm>,
+  newSpaceType: SpaceType,
+  currentSeatNumber: string | undefined | null,
+  currentReclinementAngle: string | undefined | null,
+  currentAmenities: string[] | undefined | null,
+) {
+  if (newSpaceType === SpaceType.SEAT) {
+    if (currentSeatNumber === undefined || currentSeatNumber === null) {
+      spaceForm.setFieldValue('seatNumber', '');
+    }
+    if (
+      currentReclinementAngle === undefined ||
+      currentReclinementAngle === null
+    ) {
+      spaceForm.setFieldValue('reclinementAngle', '');
+    }
+    if (currentAmenities === undefined || currentAmenities === null) {
+      spaceForm.setFieldValue('amenities', []);
+    }
+  }
+}
 
 const createFloorSchema = (tValidations: UseValidationsTranslationsResult) =>
   z.object({
@@ -107,18 +132,38 @@ export default function SeatDiagramForm({
     tValidations,
   ).parse(defaultValues ?? {});
   const form = useForm({
-    defaultValues: rawDefaultValues,
+    defaultValues: {
+      ...rawDefaultValues,
+      seatConfiguration: rawDefaultValues.seatConfiguration.map((floor) => ({
+        ...floor,
+        spaces: floor.spaces.map((space) => ({
+          ...space,
+          // @ts-expect-error - space.amenities is optional
+          amenities: space.amenities?.map((amenity) =>
+            isNaN(parseInt(amenity)) ? amenity : parseInt(amenity),
+          ),
+        })),
+      })),
+    },
     validators: {
+      // @ts-expect-error - seatDiagramSchema is not typed correctly.
       onSubmit: seatDiagramSchema,
     },
     onSubmit: async ({ value }) => {
       try {
         const parsed = seatDiagramSchema.safeParse(value);
         if (parsed.success) {
+          // Sync seatsPerFloor with actual seatConfiguration before submit
+          const syncedSeatsPerFloor = syncSeatsPerFloorWithConfiguration(
+            parsed.data.seatsPerFloor,
+            parsed.data.seatConfiguration,
+          );
+
           const submitValues = {
             ...parsed.data,
-            numFloors: parsed.data.seatsPerFloor.length,
-            totalSeats: parsed.data.seatsPerFloor.reduce(
+            seatsPerFloor: syncedSeatsPerFloor,
+            numFloors: syncedSeatsPerFloor.length,
+            totalSeats: syncedSeatsPerFloor.reduce(
               (acc, floor) =>
                 acc + floor.numRows * (floor.seatsLeft + floor.seatsRight),
               0,
@@ -151,9 +196,17 @@ export default function SeatDiagramForm({
        * But we don't want the user to be able to edit it. We always set it to true.
        */
       active: true,
+      amenities: [] as string[],
+      reclinementAngle: '',
       position: {
         x: 0,
         y: 0,
+      },
+    },
+    listeners: {
+      // Autosave values on change
+      onChange: ({ formApi }) => {
+        formApi.handleSubmit();
       },
     },
     validators: {
@@ -167,10 +220,12 @@ export default function SeatDiagramForm({
     onSubmit: ({ value }) => {
       const currentSeatConfiguration = form.getFieldValue('seatConfiguration');
       const floorToModify = currentSeatConfiguration.find(
+        // @ts-expect-error - @todo improve typing
         (floor) => floor.floorNumber === value.floorNumber,
       );
       if (floorToModify) {
         const newSpacesForFloor = floorToModify.spaces.filter(
+          // @ts-expect-error - @todo improve typing
           (space) =>
             !(
               space.position.x === value.position.x &&
@@ -179,6 +234,7 @@ export default function SeatDiagramForm({
         );
         newSpacesForFloor.push(value);
         const newSeatConfiguration = currentSeatConfiguration.filter(
+          // @ts-expect-error - @todo improve typing
           (floor) => floor.floorNumber !== value.floorNumber,
         );
         newSeatConfiguration.push({
@@ -186,13 +242,25 @@ export default function SeatDiagramForm({
           spaces: newSpacesForFloor,
         });
         const orderedByFloorNumber = newSeatConfiguration.sort(
+          // @ts-expect-error - @todo improve typing
           (a, b) => a.floorNumber - b.floorNumber,
         );
         form.setFieldValue('seatConfiguration', orderedByFloorNumber);
+        // @todo validateSync is a private method of the form instance.
+        // This method is not documented in the tanstack-form library.
+        //
+        // There's an existent and documented method called validateAllFields,
+        // however, it's not working as expected.
+        //
+        // So we decided to use the private method validateSync instead.
+        // This method works as expected. But we need to be careful when
+        // updating the tanstack-form library in the future, because this
+        // method could be removed.
+        form.validateSync('change');
       }
     },
   });
-
+  const { data: busAmenities = [] } = useQueryBusAmenities();
   const [selectedFloor, setSelectedFloor] = useState<number>(1);
 
   const handleSpaceClick = (space: SeatDiagramSpace) => {
@@ -207,16 +275,20 @@ export default function SeatDiagramForm({
   const onAddColumn = (floorNumber: number, afterX: number) => {
     const currentSeatConfiguration = form.getFieldValue('seatConfiguration');
     const floorToModify = currentSeatConfiguration.find(
+      // @ts-expect-error - @todo improve typing
       (floor) => floor.floorNumber === floorNumber,
     );
 
     if (floorToModify) {
       // Get all unique Y positions (rows) for this floor
       const uniqueYPositions = Array.from(
+        // @ts-expect-error - @todo improve typing
         new Set(floorToModify.spaces.map((space) => space.position.y)),
+        // @ts-expect-error - @todo improve typing
       ).sort((a, b) => a - b);
 
       // Shift existing spaces to the right (x > afterX)
+      // @ts-expect-error - @todo improve typing
       const shiftedSpaces = floorToModify.spaces.map((space) => {
         if (space.position.x > afterX) {
           return {
@@ -231,12 +303,15 @@ export default function SeatDiagramForm({
       });
 
       // Create new spaces for the new column
+      // @ts-expect-error - @todo improve typing
       const newColumnSpaces: SeatDiagramSpace[] = uniqueYPositions.map((y) => ({
         spaceType: SpaceType.SEAT,
         seatType: SeatType.REGULAR,
         seatNumber: '', // Empty - user needs to set manually
         floorNumber,
         active: true,
+        amenities: [],
+        reclinementAngle: '',
         position: {
           x: afterX + 1,
           y,
@@ -245,6 +320,7 @@ export default function SeatDiagramForm({
 
       const newSpacesForFloor = [...shiftedSpaces, ...newColumnSpaces];
       const newSeatConfiguration = currentSeatConfiguration.filter(
+        // @ts-expect-error - @todo improve typing
         (floor) => floor.floorNumber !== floorNumber,
       );
       newSeatConfiguration.push({
@@ -253,6 +329,7 @@ export default function SeatDiagramForm({
       });
 
       const orderedByFloorNumber = newSeatConfiguration.sort(
+        // @ts-expect-error - @todo improve typing
         (a, b) => a.floorNumber - b.floorNumber,
       );
       form.setFieldValue('seatConfiguration', orderedByFloorNumber);
@@ -262,22 +339,27 @@ export default function SeatDiagramForm({
   const onAddRow = (floorNumber: number) => {
     const currentSeatConfiguration = form.getFieldValue('seatConfiguration');
     const floorToModify = currentSeatConfiguration.find(
+      // @ts-expect-error - @todo improve typing
       (floor) => floor.floorNumber === floorNumber,
     );
 
     if (floorToModify && floorToModify.spaces.length > 0) {
       // Find the maximum Y position to add the new row after it
       const maxY = Math.max(
+        // @ts-expect-error - @todo improve typing
         ...floorToModify.spaces.map((space) => space.position.y),
       );
       const newRowY = maxY + 1;
 
       // Get unique X positions from existing spaces to maintain structure
       const uniqueXPositions = Array.from(
+        // @ts-expect-error - @todo improve typing
         new Set(floorToModify.spaces.map((space) => space.position.x)),
+        // @ts-expect-error - @todo improve typing
       ).sort((a, b) => a - b);
 
       // Create new row with one seat and the rest as empty spaces
+      // @ts-expect-error - @todo improve typing
       const newRowSpaces: SeatDiagramSpace[] = uniqueXPositions.map((x) => {
         return {
           spaceType: SpaceType.SEAT,
@@ -285,12 +367,15 @@ export default function SeatDiagramForm({
           seatNumber: '', // Empty - user needs to set manually
           floorNumber,
           active: true,
+          amenities: [],
+          reclinementAngle: '',
           position: { x, y: newRowY },
         };
       });
 
       const newSpacesForFloor = [...floorToModify.spaces, ...newRowSpaces];
       const newSeatConfiguration = currentSeatConfiguration.filter(
+        // @ts-expect-error - @todo improve typing
         (floor) => floor.floorNumber !== floorNumber,
       );
       newSeatConfiguration.push({
@@ -299,6 +384,7 @@ export default function SeatDiagramForm({
       });
 
       const orderedByFloorNumber = newSeatConfiguration.sort(
+        // @ts-expect-error - @todo improve typing
         (a, b) => a.floorNumber - b.floorNumber,
       );
       form.setFieldValue('seatConfiguration', orderedByFloorNumber);
@@ -308,16 +394,19 @@ export default function SeatDiagramForm({
   const onRemoveColumn = (floorNumber: number, columnX: number) => {
     const currentSeatConfiguration = form.getFieldValue('seatConfiguration');
     const floorToModify = currentSeatConfiguration.find(
+      // @ts-expect-error - @todo improve typing
       (floor) => floor.floorNumber === floorNumber,
     );
 
     if (floorToModify) {
       // Remove spaces at the specified X position
       const spacesWithoutColumn = floorToModify.spaces.filter(
+        // @ts-expect-error - @todo improve typing
         (space) => space.position.x !== columnX,
       );
 
       // Shift spaces to the left (x > columnX)
+      // @ts-expect-error - @todo improve typing
       const shiftedSpaces = spacesWithoutColumn.map((space) => {
         if (space.position.x > columnX) {
           return {
@@ -332,6 +421,7 @@ export default function SeatDiagramForm({
       });
 
       const newSeatConfiguration = currentSeatConfiguration.filter(
+        // @ts-expect-error - @todo improve typing
         (floor) => floor.floorNumber !== floorNumber,
       );
       newSeatConfiguration.push({
@@ -340,6 +430,7 @@ export default function SeatDiagramForm({
       });
 
       const orderedByFloorNumber = newSeatConfiguration.sort(
+        // @ts-expect-error - @todo improve typing
         (a, b) => a.floorNumber - b.floorNumber,
       );
       form.setFieldValue('seatConfiguration', orderedByFloorNumber);
@@ -349,21 +440,25 @@ export default function SeatDiagramForm({
   const onRemoveRow = (floorNumber: number) => {
     const currentSeatConfiguration = form.getFieldValue('seatConfiguration');
     const floorToModify = currentSeatConfiguration.find(
+      // @ts-expect-error - @todo improve typing
       (floor) => floor.floorNumber === floorNumber,
     );
 
     if (floorToModify && floorToModify.spaces.length > 0) {
       // Find the maximum Y position (last row)
       const maxY = Math.max(
+        // @ts-expect-error - @todo improve typing
         ...floorToModify.spaces.map((space) => space.position.y),
       );
 
       // Remove spaces from the last row
       const spacesWithoutLastRow = floorToModify.spaces.filter(
+        // @ts-expect-error - @todo improve typing
         (space) => space.position.y !== maxY,
       );
 
       const newSeatConfiguration = currentSeatConfiguration.filter(
+        // @ts-expect-error - @todo improve typing
         (floor) => floor.floorNumber !== floorNumber,
       );
       newSeatConfiguration.push({
@@ -372,6 +467,7 @@ export default function SeatDiagramForm({
       });
 
       const orderedByFloorNumber = newSeatConfiguration.sort(
+        // @ts-expect-error - @todo improve typing
         (a, b) => a.floorNumber - b.floorNumber,
       );
       form.setFieldValue('seatConfiguration', orderedByFloorNumber);
@@ -436,6 +532,7 @@ export default function SeatDiagramForm({
             <form.AppField name="seatsPerFloor">
               {(field) => (
                 <div className="space-y-4">
+                  {/* @ts-expect-error - @todo improve typing */}
                   {field.state.value.map((floor, index) => (
                     <div className="grid gap-1" key={floor.floorNumber}>
                       <div className="flex justify-between">
@@ -451,6 +548,7 @@ export default function SeatDiagramForm({
                             type="button"
                             onClick={() => {
                               field.handleChange(
+                                // @ts-expect-error - @todo improve typing
                                 field.state.value.filter((_, i) => i !== index),
                               );
                             }}
@@ -604,11 +702,12 @@ export default function SeatDiagramForm({
                           </Button>
                         ))}
                       </div>
-                      <div className="h-[min(70vh,_700px)]">
+                      <div className="min-h-[500px] h-[70vh] max-h-[700px]">
                         <div className="grid gap-4 grid-cols-[3fr_auto_2fr] h-full">
                           <form.AppField name="seatConfiguration">
                             {(field) => {
                               const floor = field.state.value.find(
+                                // @ts-expect-error - @todo improve typing
                                 (floor) => floor.floorNumber === selectedFloor,
                               );
                               if (!floor) return null;
@@ -682,18 +781,30 @@ export default function SeatDiagramForm({
                               <spaceForm.Subscribe
                                 // @ts-expect-error - Form library expects FormState return but we need array destructuring pattern
                                 selector={(state) => {
+                                  const {
+                                    seatNumber,
+                                    reclinementAngle,
+                                    amenities,
+                                  } = state.values;
                                   return [
                                     state.values.spaceType,
-                                    state.canSubmit,
-                                    state.isSubmitting,
+                                    seatNumber,
+                                    reclinementAngle,
+                                    amenities,
                                   ];
                                 }}
                               >
-                                {/* @ts-expect-error - Form library expects FormState parameter but we use array destructuring */}
-                                {([spaceType, canSubmit, isSubmitting]: [
+                                {/* @ts-expect-error - Form library expects FormState return but we need array destructuring pattern */}
+                                {([
+                                  spaceType,
+                                  seatNumber,
+                                  reclinementAngle,
+                                  amenities,
+                                ]: [
                                   SpaceType,
-                                  boolean,
-                                  boolean,
+                                  string | undefined,
+                                  string | undefined,
+                                  string[] | undefined,
                                 ]) => (
                                   <>
                                     {!spaceType ? (
@@ -705,7 +816,32 @@ export default function SeatDiagramForm({
                                     ) : (
                                       <div className="flex flex-col gap-2 justify-between h-full">
                                         <div className="grid gap-2">
-                                          <spaceForm.AppField name="spaceType">
+                                          <spaceForm.AppField
+                                            name="spaceType"
+                                            listeners={{
+                                              onChange: (event) => {
+                                                /**
+                                                 * If the initial space type is not SEAT,
+                                                 * seatNumber and reclinementAngle should be undefined or null values.
+                                                 *
+                                                 * When updating the space type to SEAT, seatNumber and reclinementAngle fields
+                                                 * are gonna render with undefined values, which causes the form to be invalid,
+                                                 * and also an invalid html input state.
+                                                 *
+                                                 * To avoid this, we set the seatNumber and reclinementAngle fields to empty strings.
+                                                 */
+                                                initializeSeatFields(
+                                                  spaceForm as ReturnType<
+                                                    typeof useForm
+                                                  >,
+                                                  event.value,
+                                                  seatNumber,
+                                                  reclinementAngle,
+                                                  amenities,
+                                                );
+                                              },
+                                            }}
+                                          >
                                             {(field) => (
                                               <field.SelectInput
                                                 label={tSeatDiagrams(
@@ -767,10 +903,77 @@ export default function SeatDiagramForm({
                                                   />
                                                 )}
                                               </spaceForm.AppField>
+                                              <spaceForm.AppField name="amenities">
+                                                {(field) => (
+                                                  <field.MultiSelectInput
+                                                    label={tSeatDiagrams(
+                                                      'fields.amenities',
+                                                    )}
+                                                    placeholder={tSeatDiagrams(
+                                                      'form.placeholders.selectAmenities',
+                                                    )}
+                                                    items={busAmenities.map(
+                                                      (amenity) => ({
+                                                        id: amenity.id.toString(),
+                                                        name: amenity.name,
+                                                        description:
+                                                          amenity.description ||
+                                                          undefined,
+                                                        category:
+                                                          amenity.category,
+                                                      }),
+                                                    )}
+                                                    emptyOptionsLabel={tSeatDiagrams(
+                                                      'form.placeholders.noAmenities',
+                                                    )}
+                                                    previewItemsCount={1}
+                                                  />
+                                                )}
+                                              </spaceForm.AppField>
+
+                                              <spaceForm.AppField name="reclinementAngle">
+                                                {(field) => (
+                                                  <field.NumberInput
+                                                    label={tSeatDiagrams(
+                                                      'fields.reclinementAngle',
+                                                    )}
+                                                    placeholder={tSeatDiagrams(
+                                                      'form.placeholders.reclinementAngle',
+                                                    )}
+                                                    min={0}
+                                                    max={180}
+                                                  />
+                                                )}
+                                              </spaceForm.AppField>
                                             </>
                                           )}
                                           <div className="pt-2">
-                                            <spaceForm.AppField name="spaceType">
+                                            <spaceForm.AppField
+                                              name="spaceType"
+                                              listeners={{
+                                                onChange: (event) => {
+                                                  /**
+                                                   * If the initial space type is disabled (type EMPTY),
+                                                   * seatNumber and reclinementAngle should be undefined or null values.
+                                                   *
+                                                   * When updating the space type to SEAT (enabling the space), seatNumber and reclinementAngle fields
+                                                   * are gonna render with undefined values, which causes the form to be invalid,
+                                                   * and also an invalid html input state.
+                                                   *
+                                                   * To avoid this, we set the seatNumber and reclinementAngle fields to empty strings.
+                                                   */
+                                                  initializeSeatFields(
+                                                    spaceForm as ReturnType<
+                                                      typeof useForm
+                                                    >,
+                                                    event.value,
+                                                    seatNumber,
+                                                    reclinementAngle,
+                                                    amenities,
+                                                  );
+                                                },
+                                              }}
+                                            >
                                               {(field) => (
                                                 <BaseSwitchInput
                                                   label={tSeatDiagrams(
@@ -796,15 +999,6 @@ export default function SeatDiagramForm({
                                             </spaceForm.AppField>
                                           </div>
                                         </div>
-                                        <Button
-                                          variant="outline"
-                                          type="button"
-                                          onClick={spaceForm.handleSubmit}
-                                          disabled={!canSubmit || isSubmitting}
-                                          className="mt-4"
-                                        >
-                                          {tCommon('actions.save')}
-                                        </Button>
                                       </div>
                                     )}
                                   </>
@@ -812,6 +1006,37 @@ export default function SeatDiagramForm({
                               </spaceForm.Subscribe>
                             </CardContent>
                           </Card>
+                          <form.Subscribe
+                            // @ts-expect-error - Form library expects FormState return but we need array destructuring pattern
+                            selector={(state) => {
+                              const errorsKeys = state.errors.reduce(
+                                (acc, errorMap) => {
+                                  if (errorMap) {
+                                    const errorsKeys = Object.keys(errorMap);
+                                    acc.push(...errorsKeys);
+                                  }
+                                  return acc;
+                                },
+                                [] as string[],
+                              );
+                              const hasSeatConfigurationErrors =
+                                errorsKeys.some((key) =>
+                                  key.startsWith('seatConfiguration'),
+                                );
+                              return [hasSeatConfigurationErrors];
+                            }}
+                          >
+                            {/* @ts-expect-error - Form library expects FormState return but we need array destructuring pattern */}
+                            {([hasSeatConfigurationErrors]: [boolean]) =>
+                              hasSeatConfigurationErrors ? (
+                                <p className="text-sm text-red-500 p-2 pl-15">
+                                  {tSeatDiagrams(
+                                    'form.placeholders.seatConfigurationErrors',
+                                  )}
+                                </p>
+                              ) : null
+                            }
+                          </form.Subscribe>
                         </div>
                       </div>
                     </div>

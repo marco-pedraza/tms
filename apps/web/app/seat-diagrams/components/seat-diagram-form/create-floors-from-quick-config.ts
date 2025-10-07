@@ -84,6 +84,8 @@ export default function createFloorsFromQuickConfig(
           busDiagramModelId: 0,
           floorNumber: floor.floorNumber,
           amenities: [],
+          // @ts-expect-error - @todo improve typing
+          reclinementAngle: '',
           active: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -103,6 +105,8 @@ export default function createFloorsFromQuickConfig(
           busDiagramModelId: 0,
           floorNumber: floor.floorNumber,
           amenities: [],
+          // @ts-expect-error - @todo improve typing
+          reclinementAngle: '',
           active: true,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -152,7 +156,11 @@ export function createFloorsFromSeatConfiguration(
       (floor) => floor.floorNumber === seat.floorNumber,
     );
     if (floor) {
-      floor.spaces.push(seat);
+      floor.spaces.push({
+        ...seat,
+        // @ts-expect-error - @todo improve typing
+        reclinementAngle: seat.reclinementAngle ?? '',
+      });
     }
   });
 

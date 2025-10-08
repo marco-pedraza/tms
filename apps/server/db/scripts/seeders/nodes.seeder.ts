@@ -211,6 +211,24 @@ function validateNodeDependencies(
 }
 
 /**
+ * Finds an existing installation by name
+ */
+async function findInstallationByName(
+  installationName: string,
+): Promise<Installation | null> {
+  const installations = await installationRepository.findAll({
+    searchTerm: installationName,
+  });
+
+  // Find exact match (case-insensitive)
+  return (
+    installations.find(
+      (i) => i.name.toLowerCase() === installationName.toLowerCase(),
+    ) || null
+  );
+}
+
+/**
  * Creates a single node with its installation
  */
 async function createSingleNodeWithInstallation(
@@ -219,16 +237,40 @@ async function createSingleNodeWithInstallation(
   population: Population,
   installationTypes: InstallationType[],
 ): Promise<Node> {
-  const installationType = getInstallationTypeForNode(
-    installationTypes,
-    nodeData,
-  );
+  let installation: Installation;
 
-  const installation = await createInstallationForNode(
-    nodeData,
-    city,
-    installationType,
-  );
+  // If ID_Instalacion is provided, try to find existing installation
+  if (nodeData.ID_Instalacion) {
+    const existingInstallation = await findInstallationByName(
+      nodeData.ID_Instalacion,
+    );
+
+    if (existingInstallation) {
+      installation = existingInstallation;
+    } else {
+      // Create new installation if not found
+      const installationType = getInstallationTypeForNode(
+        installationTypes,
+        nodeData,
+      );
+      installation = await createInstallationForNode(
+        nodeData,
+        city,
+        installationType,
+      );
+    }
+  } else {
+    // No ID_Instalacion provided, create new installation
+    const installationType = getInstallationTypeForNode(
+      installationTypes,
+      nodeData,
+    );
+    installation = await createInstallationForNode(
+      nodeData,
+      city,
+      installationType,
+    );
+  }
 
   const nodeSlug = createSlug(
     `${nodeData.Nombre}-${nodeData.siglasNodo}`,

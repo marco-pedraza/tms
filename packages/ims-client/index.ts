@@ -298,7 +298,7 @@ export namespace inventory {
         typicalTimeMin?: number
         avgSpeedKmh?: number
         isPassThrough?: boolean
-        passThroughTimeMin?: number
+        passThroughTimeMin?: number | null
         sequence?: number
         active?: boolean
     }
@@ -3483,7 +3483,7 @@ export namespace inventory {
         typicalTimeMin?: number
         avgSpeedKmh?: number
         isPassThrough?: boolean
-        passThroughTimeMin?: number
+        passThroughTimeMin?: number | null
         sequence?: number
         active?: boolean
     }

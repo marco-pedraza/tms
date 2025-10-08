@@ -353,13 +353,13 @@ export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
 
       // Get existing options to determine default behavior
       const existingOptions = await loadOptions();
+      const isFirstOption = existingOptions.length === 0;
 
       // Determine isDefault value:
       // 1. If explicitly provided in optionData, use that value
       // 2. If not provided and this is the first option, make it default
       // 3. Otherwise, not default
-      const shouldBeDefault =
-        optionData.isDefault ?? existingOptions.length === 0;
+      const shouldBeDefault = optionData.isDefault ?? isFirstOption;
 
       // Create option using pathway option entity (includes validation and avgSpeed calculation)
       const optionEntity = pathwayOptionEntityFactory.create({
@@ -370,6 +370,16 @@ export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
 
       // Save the option entity (includes all validations and calculations)
       await optionEntity.save();
+
+      // If this is the first option, activate the pathway
+      if (isFirstOption) {
+        const updatedPathway = await pathwaysRepository.update(
+          pathwayData.id as number,
+          { active: true },
+        );
+        clearOptionsCache();
+        return createInstance(updatedPathway);
+      }
 
       clearOptionsCache();
       return createInstance(pathwayData);

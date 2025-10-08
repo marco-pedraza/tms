@@ -8146,5 +8146,65 @@
     "Radio": 1,
     "ciudad": "Cuyutlán",
     "estado": "Colima"
+  },
+  {
+    "ID": 9600,
+    "siglasNodo": "TBSAL",
+    "Nombre": "CASETA SALAMANCA",
+    "ID_Poblacion": "SAL - SALAMANCA",
+    "ID_Instalacion": "Caseta de Peaje Salamanca",
+    "Coord_Latitud": 20.5739,
+    "Coord_Longitud": -101.1956,
+    "Radio": 50,
+    "ciudad": "Salamanca",
+    "estado": "Guanajuato"
+  },
+  {
+    "ID": 9601,
+    "siglasNodo": "TBIRA",
+    "Nombre": "CASETA IRAPUATO",
+    "ID_Poblacion": "IRA - IRAPUATO",
+    "ID_Instalacion": "Caseta de Peaje Irapuato",
+    "Coord_Latitud": 20.6767,
+    "Coord_Longitud": -101.3542,
+    "Radio": 50,
+    "ciudad": "Irapuato",
+    "estado": "Guanajuato"
+  },
+  {
+    "ID": 9602,
+    "siglasNodo": "TBSIL",
+    "Nombre": "CASETA SILAO",
+    "ID_Poblacion": "SILAO - SILAO",
+    "ID_Instalacion": "Caseta de Peaje Silao",
+    "Coord_Latitud": 20.9438,
+    "Coord_Longitud": -101.4269,
+    "Radio": 50,
+    "ciudad": "Silao",
+    "estado": "Guanajuato"
+  },
+  {
+    "ID": 9603,
+    "siglasNodo": "TBLAG",
+    "Nombre": "CASETA LAGOS DE MORENO",
+    "ID_Poblacion": "LAG - LAGOS DE MORENO",
+    "ID_Instalacion": "Caseta de Peaje Lagos de Moreno",
+    "Coord_Latitud": 21.3556,
+    "Coord_Longitud": -101.9289,
+    "Radio": 50,
+    "ciudad": "Lagos de Moreno",
+    "estado": "Jalisco"
+  },
+  {
+    "ID": 9604,
+    "siglasNodo": "TBZAP",
+    "Nombre": "CASETA ZAPOTLANEJO",
+    "ID_Poblacion": "ZAP - ZAPOTLANEJO",
+    "ID_Instalacion": "Caseta de Peaje Zapotlanejo",
+    "Coord_Latitud": 20.6219,
+    "Coord_Longitud": -103.0647,
+    "Radio": 50,
+    "ciudad": "Zapotlanejo",
+    "estado": "Jalisco"
   }
 ]

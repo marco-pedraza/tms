@@ -301,7 +301,7 @@ export async function seedInstallationTypes(
 ): Promise<InstallationType[]> {
   const installationTypes = (await installationTypeFactory(factoryDb).create(
     INSTALLATION_TYPES_DATA,
-  )) as InstallationType[];
+  )) as unknown as InstallationType[];
 
   console.log(`Seeded ${installationTypes.length} installation types`);
   return installationTypes;
@@ -331,7 +331,7 @@ export async function seedInstallationSchemas(
 
   const installationSchemas = (await installationSchemaFactory(
     factoryDb,
-  ).create(schemaPayloads)) as InstallationSchema[];
+  ).create(schemaPayloads)) as unknown as InstallationSchema[];
 
   console.log(`Seeded ${installationSchemas.length} installation schemas`);
   return installationSchemas;
@@ -413,23 +413,43 @@ function findInstallationTypeByCode(
 }
 
 /**
+ * Interface for installation data from JSON with optional properties
+ */
+interface InstallationDataFromClient {
+  name: string;
+  installationTypeCode: string;
+  cityName: string;
+  address: string;
+  coordinates?: { lat: number; lng: number };
+  capacity?: number;
+  active?: boolean;
+  properties?: {
+    toll_price?: number;
+    iave_enabled?: boolean;
+    iave_provider?: string;
+    [key: string]: unknown;
+  };
+}
+
+/**
  * Creates installations from client JSON data
  */
+/**
+ * Result of creating installations with custom properties
+ */
+interface InstallationCreationResult {
+  installations: Installation[];
+  customProperties: Map<number, Record<string, unknown>>;
+}
+
 async function createInstallationsFromClientData(
-  installationsData: Array<{
-    name: string;
-    installationTypeCode: string;
-    cityName: string;
-    address: string;
-    coordinates?: { lat: number; lng: number };
-    capacity?: number;
-    active?: boolean;
-  }>,
+  installationsData: InstallationDataFromClient[],
   installationTypes: InstallationType[],
   cities: City[],
   factoryDb: FactoryDb,
-): Promise<Installation[]> {
+): Promise<InstallationCreationResult> {
   const installations: Installation[] = [];
+  const customProperties = new Map<number, Record<string, unknown>>();
   let successCount = 0;
   let errorCount = 0;
 
@@ -482,6 +502,12 @@ async function createInstallationsFromClientData(
       )) as unknown as Installation;
 
       installations.push(installation);
+
+      // Store custom properties if provided (for tollbooths, etc.)
+      if (installationData.properties) {
+        customProperties.set(installation.id, installationData.properties);
+      }
+
       successCount++;
     } catch (error) {
       console.error(
@@ -497,7 +523,15 @@ async function createInstallationsFromClientData(
     console.log(`   ⚠️ Failed to create ${errorCount} installations`);
   }
 
-  return installations;
+  return { installations, customProperties };
+}
+
+/**
+ * Result of seeding installations with optional custom properties
+ */
+export interface SeedInstallationsResult {
+  installations: Installation[];
+  customProperties?: Map<number, Record<string, unknown>>;
 }
 
 /**
@@ -509,7 +543,7 @@ export async function seedInstallations(
   cities: City[],
   factoryDb: FactoryDb,
   clientCode?: string,
-): Promise<Installation[]> {
+): Promise<SeedInstallationsResult> {
   console.log('🏢 Seeding installations...');
 
   // Try to use client data if available
@@ -526,15 +560,7 @@ export async function seedInstallations(
         clientCode,
         CLIENT_DATA_FILES.INSTALLATIONS,
       )) as {
-        installations: Array<{
-          name: string;
-          installationTypeCode: string;
-          cityName: string;
-          address: string;
-          coordinates?: { lat: number; lng: number };
-          capacity?: number;
-          active?: boolean;
-        }>;
+        installations: InstallationDataFromClient[];
       };
 
       if (installationsData.installations?.length > 0) {
@@ -542,12 +568,17 @@ export async function seedInstallations(
           `   📊 Found ${installationsData.installations.length} installations in JSON data`,
         );
 
-        return await createInstallationsFromClientData(
+        const result = await createInstallationsFromClientData(
           installationsData.installations,
           installationTypes,
           cities,
           factoryDb,
         );
+
+        return {
+          installations: result.installations,
+          customProperties: result.customProperties,
+        };
       }
     } catch (error) {
       console.warn(
@@ -583,16 +614,18 @@ export async function seedInstallations(
   console.log(
     `   ✅ Created ${installations.length} installations with random data`,
   );
-  return installations;
+  return { installations, customProperties: undefined };
 }
 
 /**
  * Seeds installation properties based on installations and schemas
+ * Uses custom properties when available (e.g., for tollbooths from JSON)
  */
 export async function seedInstallationProperties(
   installations: Installation[],
   installationSchemas: InstallationSchema[],
   factoryDb: FactoryDb,
+  customProperties?: Map<number, Record<string, unknown>>,
 ): Promise<InstallationProperty[]> {
   const propertyPayloads = [];
 
@@ -602,8 +635,21 @@ export async function seedInstallationProperties(
       (schema) => schema.installationTypeId === installation.installationTypeId,
     );
 
+    // Check if we have custom properties for this installation
+    const customProps = customProperties?.get(installation.id);
+
     for (const schema of relevantSchemas) {
-      const value = generatePropertyValue(schema);
+      // Use custom property value if available, otherwise generate
+      let value: string;
+
+      if (customProps && schema.name in customProps) {
+        // Convert custom property to string (all properties are stored as strings)
+        const customValue = customProps[schema.name];
+        value = String(customValue);
+      } else {
+        // Generate random value
+        value = generatePropertyValue(schema);
+      }
 
       propertyPayloads.push({
         value,

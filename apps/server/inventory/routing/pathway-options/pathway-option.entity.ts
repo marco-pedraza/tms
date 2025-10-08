@@ -384,21 +384,31 @@ export function createPathwayOptionEntity(
           throw new Error('Cannot update non-persisted PathwayOption');
         }
 
-        // Validate business rules with new data
-        const updatedData = { ...data, ...payload };
+        // Clean up passThroughTimeMin when isPassThrough is set to false
+        // This must be done BEFORE validation to avoid validation errors
+        let cleanedPayload = { ...payload };
+        if (payload.isPassThrough === false) {
+          cleanedPayload = {
+            ...cleanedPayload,
+            passThroughTimeMin: null,
+          };
+        }
+
+        // Validate business rules with cleaned data
+        const updatedData = { ...data, ...cleanedPayload };
         validatePathwayOptionRules(updatedData);
 
         // Calculate metrics if distance or time are being updated
-        let updatePayload = { ...payload };
+        let updatePayload = { ...cleanedPayload };
         if (
-          payload.distanceKm !== undefined ||
-          payload.typicalTimeMin !== undefined
+          cleanedPayload.distanceKm !== undefined ||
+          cleanedPayload.typicalTimeMin !== undefined
         ) {
           const calculatedMetrics = calculateAvgSpeed({
-            distanceKm: payload.distanceKm ?? data.distanceKm ?? null,
+            distanceKm: cleanedPayload.distanceKm ?? data.distanceKm ?? null,
             typicalTimeMin:
-              payload.typicalTimeMin ?? data.typicalTimeMin ?? null,
-            avgSpeedKmh: payload.avgSpeedKmh ?? null, // Force recalculation unless explicitly provided
+              cleanedPayload.typicalTimeMin ?? data.typicalTimeMin ?? null,
+            avgSpeedKmh: cleanedPayload.avgSpeedKmh ?? null, // Force recalculation unless explicitly provided
           });
 
           updatePayload = {

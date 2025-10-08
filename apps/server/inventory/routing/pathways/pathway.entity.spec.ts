@@ -4,6 +4,7 @@ import { db } from '@/inventory/db-service';
 import { createSlug } from '@/shared/utils';
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
 import { populationRepository } from '@/inventory/locations/populations/populations.repository';
+import { tollboothRepository } from '@/inventory/locations/tollbooths/tollbooths.repository';
 import { cityFactory, populationFactory } from '@/tests/factories';
 import { getFactoryDb } from '@/tests/factories/factory-utils';
 import {
@@ -12,6 +13,7 @@ import {
   createUniqueCode,
   createUniqueName,
 } from '@/tests/shared/test-utils';
+import { pathwayOptionTollRepository } from '../pathway-options-tolls/pathway-options-tolls.repository';
 import { createPathwayOptionEntity } from '../pathway-options/pathway-option.entity';
 import { pathwayOptionRepository } from '../pathway-options/pathway-options.repository';
 import { pathwayOptions } from '../pathway-options/pathway-options.schema';
@@ -114,6 +116,9 @@ describe('PathwayEntity', () => {
     // Create pathway option entity factory
     const pathwayOptionEntityFactory = createPathwayOptionEntity({
       pathwayOptionsRepository: pathwayOptionRepo,
+      pathwayOptionTollsRepository: pathwayOptionTollRepository,
+      nodesRepository: nodeRepository,
+      tollboothRepository,
     });
 
     const pathwayEntity = createPathwayEntity({
@@ -627,6 +632,166 @@ describe('PathwayEntity', () => {
         if (options[0]) {
           testData.pathwayOptionCleanup.track(options[0].id);
         }
+      });
+    });
+
+    describe('pathway activation on first option', () => {
+      it('should automatically activate pathway when adding first option', async () => {
+        // Verify pathway starts as inactive
+        expect(savedPathway.active).toBe(false);
+
+        const optionData = {
+          name: 'First Option',
+          distanceKm: 150,
+          typicalTimeMin: 120,
+          isPassThrough: false,
+          active: true,
+        };
+
+        const updatedPathway = await savedPathway.addOption(optionData);
+        const options = await updatedPathway.options;
+
+        // Verify pathway is now active
+        expect(updatedPathway.active).toBe(true);
+        expect(options).toHaveLength(1);
+        expect(options[0]?.name).toBe('First Option');
+        expect(options[0]?.isDefault).toBe(true);
+
+        // Cleanup
+        if (options[0]) {
+          testData.pathwayOptionCleanup.track(options[0].id);
+        }
+      });
+
+      it('should NOT change pathway status when adding second option', async () => {
+        // Add first option (this will activate the pathway)
+        const firstOptionData = {
+          name: 'First Option',
+          distanceKm: 150,
+          typicalTimeMin: 120,
+          isPassThrough: false,
+          active: true,
+        };
+
+        let updatedPathway = await savedPathway.addOption(firstOptionData);
+        let options = await updatedPathway.options;
+
+        // Verify pathway is active after first option
+        expect(updatedPathway.active).toBe(true);
+        expect(options).toHaveLength(1);
+
+        // Track first option for cleanup
+        if (options[0]) {
+          testData.pathwayOptionCleanup.track(options[0].id);
+        }
+
+        // Manually deactivate pathway to test that second option doesn't reactivate
+        updatedPathway = await updatedPathway.update({ active: false });
+        expect(updatedPathway.active).toBe(false);
+
+        // Add second option
+        const secondOptionData = {
+          name: 'Second Option',
+          distanceKm: 200,
+          typicalTimeMin: 150,
+          isPassThrough: false,
+          active: true,
+        };
+
+        const finalPathway = await updatedPathway.addOption(secondOptionData);
+        options = await finalPathway.options;
+
+        // Verify pathway remains inactive (second option doesn't change status)
+        expect(finalPathway.active).toBe(false);
+        expect(options).toHaveLength(2);
+        expect(options[1]?.name).toBe('Second Option');
+        expect(options[1]?.isDefault).toBe(false);
+
+        // Track second option for cleanup
+        if (options[1]) {
+          testData.pathwayOptionCleanup.track(options[1].id);
+        }
+      });
+
+      it('should NOT change pathway status when adding third option', async () => {
+        // Add first option
+        let updatedPathway = await savedPathway.addOption({
+          name: 'First Option',
+          distanceKm: 150,
+          typicalTimeMin: 120,
+          isPassThrough: false,
+          active: true,
+        });
+
+        let options = await updatedPathway.options;
+        if (options[0]) {
+          testData.pathwayOptionCleanup.track(options[0].id);
+        }
+
+        // Add second option
+        updatedPathway = await updatedPathway.addOption({
+          name: 'Second Option',
+          distanceKm: 200,
+          typicalTimeMin: 150,
+          isPassThrough: false,
+          active: true,
+        });
+
+        options = await updatedPathway.options;
+        if (options[1]) {
+          testData.pathwayOptionCleanup.track(options[1].id);
+        }
+
+        // Manually deactivate pathway
+        updatedPathway = await updatedPathway.update({ active: false });
+        expect(updatedPathway.active).toBe(false);
+
+        // Add third option
+        const finalPathway = await updatedPathway.addOption({
+          name: 'Third Option',
+          distanceKm: 250,
+          typicalTimeMin: 180,
+          isPassThrough: false,
+          active: true,
+        });
+
+        options = await finalPathway.options;
+
+        // Verify pathway remains inactive (third option doesn't change status)
+        expect(finalPathway.active).toBe(false);
+        expect(options).toHaveLength(3);
+
+        // Track third option for cleanup
+        if (options[2]) {
+          testData.pathwayOptionCleanup.track(options[2].id);
+        }
+      });
+
+      it('should persist activation status in database', async () => {
+        // Add first option to activate pathway
+        const updatedPathway = await savedPathway.addOption({
+          name: 'First Option',
+          distanceKm: 150,
+          typicalTimeMin: 120,
+          isPassThrough: false,
+          active: true,
+        });
+
+        const options = await updatedPathway.options;
+        if (options[0]) {
+          testData.pathwayOptionCleanup.track(options[0].id);
+        }
+
+        // Verify in-memory state
+        expect(updatedPathway.active).toBe(true);
+
+        // Re-fetch from database to verify persistence
+        const refetchedPathway = await testData.pathwayEntity.findOne(
+          savedPathway.id as number,
+        );
+
+        expect(refetchedPathway.active).toBe(true);
+        expect(refetchedPathway.id).toBe(savedPathway.id);
       });
     });
   });

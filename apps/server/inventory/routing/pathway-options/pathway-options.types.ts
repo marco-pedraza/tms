@@ -107,8 +107,9 @@ export interface CreatePathwayOptionPayload {
   /**
    * Pass-through time in minutes
    * Must be a positive number
+   * Can be set to null to explicitly clear the value
    */
-  passThroughTimeMin?: number & Min<0>;
+  passThroughTimeMin?: (number & Min<0>) | null;
 
   /**
    * Sequence order for this option
@@ -168,8 +169,9 @@ export interface UpdatePathwayOptionPayload {
 
   /**
    * Pass-through time in minutes
+   * Can be set to null to explicitly clear the value
    */
-  passThroughTimeMin?: number & Min<0>;
+  passThroughTimeMin?: (number & Min<0>) | null;
 
   /**
    * Sequence order for this option

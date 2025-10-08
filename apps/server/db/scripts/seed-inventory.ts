@@ -1,6 +1,8 @@
 import { db } from '@/inventory/db-service';
 import { countryRepository } from '@/inventory/locations/countries/countries.repository';
 import { Country } from '@/inventory/locations/countries/countries.types';
+import { installationSchemaRepository } from '@/inventory/locations/installation-schemas/installation-schemas.repository';
+import { installationTypeRepository } from '@/inventory/locations/installation-types/installation-types.repository';
 import { getFactoryDb } from '@/tests/factories/factory-utils';
 import { seedTollbooths } from './seed-tollbooths';
 import {
@@ -122,8 +124,14 @@ export async function seedInventory(clientCode?: string): Promise<void> {
 
     // === INSTALLATION TYPES & EVENT TYPES ===
     console.log('🏗️ Seeding installation and event types...');
-    const installationTypes = await seedInstallationTypes(factoryDb);
+    await seedInstallationTypes(factoryDb);
     const eventTypes = await seedEventTypes(factoryDb);
+
+    // Seed special installation types (TOLLBOOTH) with its schemas
+    await seedTollbooths();
+
+    // Query all installation types (including TOLLBOOTH)
+    const installationTypes = await installationTypeRepository.findAll();
 
     // Create associations between event types and installation types
     await seedEventTypeInstallationTypes(
@@ -132,19 +140,17 @@ export async function seedInventory(clientCode?: string): Promise<void> {
       factoryDb,
     );
 
-    // Create installation schemas for the installation types
-    const installationSchemas = await seedInstallationSchemas(
-      installationTypes,
-      factoryDb,
-    );
+    // Create installation schemas for base installation types
+    await seedInstallationSchemas(installationTypes, factoryDb);
 
-    // Seed special installation types (TOLLBOOTH)
-    await seedTollbooths();
+    // Query all installation schemas (including TOLLBOOTH schemas)
+    const installationSchemas = await installationSchemaRepository.findAll();
+
     console.log('✅ Installation and event types seeding completed\n');
 
     // === INSTALLATIONS ===
     console.log('🏢 Seeding installations...');
-    const installations = await seedInstallations(
+    const installationsResult = await seedInstallations(
       installationTypes,
       cities,
       factoryDb,
@@ -152,10 +158,12 @@ export async function seedInventory(clientCode?: string): Promise<void> {
     );
 
     // Create installation properties based on existing installations and schemas
+    // Use custom properties for tollbooths if available from JSON
     await seedInstallationProperties(
-      installations,
+      installationsResult.installations,
       installationSchemas,
       factoryDb,
+      installationsResult.customProperties,
     );
     console.log('✅ Installations seeding completed\n');
 
@@ -187,7 +195,7 @@ export async function seedInventory(clientCode?: string): Promise<void> {
     await seedAmenities(factoryDb);
 
     // Assign amenities to installations and service types
-    await seedInstallationAmenities(installations);
+    await seedInstallationAmenities(installationsResult.installations);
     await seedServiceTypeAmenities(serviceTypes);
     console.log('✅ Amenities seeding completed\n');
 

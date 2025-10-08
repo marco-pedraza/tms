@@ -1,7 +1,7 @@
 {
   "metadata": {
     "generated_at": "2024-01-01T00:00:00Z",
-    "total_installations": 15,
+    "total_installations": 20,
     "description": "Installations data for GFA based on nodes.json patterns",
     "source": "Extracted from nodes.json real GFA data"
   },
@@ -26,6 +26,10 @@
       {
         "name": "Punto de Control",
         "code": "CONTROL"
+      },
+      {
+        "name": "Caseta de Peaje",
+        "code": "TOLLBOOTH"
       }
     ]
   },
@@ -239,6 +243,101 @@
       "gfaInstallationId": null,
       "capacity": 10,
       "active": true
+    },
+    {
+      "name": "Caseta de Peaje Salamanca",
+      "installationTypeCode": "TOLLBOOTH",
+      "cityName": "Salamanca",
+      "address": "Autopista México-Guadalajara Km 283",
+      "coordinates": {
+        "lat": 20.5739,
+        "lng": -101.1956
+      },
+      "nodeCode": "TBSAL",
+      "gfaInstallationId": null,
+      "capacity": 8,
+      "active": true,
+      "properties": {
+        "toll_price": 85.0,
+        "iave_enabled": true,
+        "iave_provider": "CAPUFE"
+      }
+    },
+    {
+      "name": "Caseta de Peaje Irapuato",
+      "installationTypeCode": "TOLLBOOTH",
+      "cityName": "Irapuato",
+      "address": "Autopista León-Irapuato Km 15",
+      "coordinates": {
+        "lat": 20.6767,
+        "lng": -101.3542
+      },
+      "nodeCode": "TBIRA",
+      "gfaInstallationId": null,
+      "capacity": 10,
+      "active": true,
+      "properties": {
+        "toll_price": 95.0,
+        "iave_enabled": true,
+        "iave_provider": "CAPUFE"
+      }
+    },
+    {
+      "name": "Caseta de Peaje Silao",
+      "installationTypeCode": "TOLLBOOTH",
+      "cityName": "Silao",
+      "address": "Autopista León-Aguascalientes Km 45",
+      "coordinates": {
+        "lat": 20.9438,
+        "lng": -101.4269
+      },
+      "nodeCode": "TBSIL",
+      "gfaInstallationId": null,
+      "capacity": 12,
+      "active": true,
+      "properties": {
+        "toll_price": 110.0,
+        "iave_enabled": true,
+        "iave_provider": "CAPUFE"
+      }
+    },
+    {
+      "name": "Caseta de Peaje Lagos de Moreno",
+      "installationTypeCode": "TOLLBOOTH",
+      "cityName": "Lagos de Moreno",
+      "address": "Autopista Lagos-León Km 32",
+      "coordinates": {
+        "lat": 21.3556,
+        "lng": -101.9289
+      },
+      "nodeCode": "TBLAG",
+      "gfaInstallationId": null,
+      "capacity": 8,
+      "active": true,
+      "properties": {
+        "toll_price": 75.0,
+        "iave_enabled": true,
+        "iave_provider": "CAPUFE"
+      }
+    },
+    {
+      "name": "Caseta de Peaje Zapotlanejo",
+      "installationTypeCode": "TOLLBOOTH",
+      "cityName": "Zapotlanejo",
+      "address": "Autopista Guadalajara-Lagos Km 28",
+      "coordinates": {
+        "lat": 20.6219,
+        "lng": -103.0647
+      },
+      "nodeCode": "TBZAP",
+      "gfaInstallationId": null,
+      "capacity": 10,
+      "active": true,
+      "properties": {
+        "toll_price": 90.0,
+        "iave_enabled": true,
+        "iave_provider": "CAPUFE"
+      }
     }
   ]
 }

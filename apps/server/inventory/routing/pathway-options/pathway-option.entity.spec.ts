@@ -840,4 +840,142 @@ describe('PathwayOptionEntity - Toll Management', () => {
       tolls.forEach((toll) => testData.pathwayOptionTollCleanup.track(toll.id));
     });
   });
+
+  describe('Pass-through field cleanup on update', () => {
+    /**
+     * Helper to create and save a test option
+     */
+    async function createTestOption(
+      overrides?: Partial<{
+        isPassThrough: boolean;
+        passThroughTimeMin: number | null;
+      }>,
+    ): Promise<PathwayOptionEntity> {
+      const option = testData.optionEntity.create({
+        pathwayId: testData.pathwayId,
+        name: createUniqueName('Test Option', testSuiteId),
+        distanceKm: 100,
+        typicalTimeMin: 60,
+        isPassThrough: overrides?.isPassThrough ?? false,
+        passThroughTimeMin: overrides?.passThroughTimeMin ?? null,
+        active: true,
+      });
+
+      const savedOption = await option.save();
+      testData.pathwayOptionCleanup.track(savedOption.id as number);
+      return savedOption;
+    }
+
+    it('should clear passThroughTimeMin when isPassThrough is set to false', async () => {
+      // Create option with pass-through enabled and time set
+      const option = await createTestOption({
+        isPassThrough: true,
+        passThroughTimeMin: 15,
+      });
+
+      // Verify initial state
+      expect(option.isPassThrough).toBe(true);
+      expect(option.passThroughTimeMin).toBe(15);
+
+      // Update to disable pass-through
+      const updatedOption = await option.update({
+        isPassThrough: false,
+      });
+
+      // Verify passThroughTimeMin was cleared
+      expect(updatedOption.isPassThrough).toBe(false);
+      expect(updatedOption.passThroughTimeMin).toBe(null);
+    });
+
+    it('should persist the cleared passThroughTimeMin in database', async () => {
+      // Create option with pass-through enabled
+      const option = await createTestOption({
+        isPassThrough: true,
+        passThroughTimeMin: 20,
+      });
+
+      const optionId = option.id as number;
+
+      // Update to disable pass-through
+      await option.update({
+        isPassThrough: false,
+      });
+
+      // Re-fetch from database to verify persistence
+      const refetchedOption = await testData.optionEntity.findOne(optionId);
+
+      expect(refetchedOption.isPassThrough).toBe(false);
+      expect(refetchedOption.passThroughTimeMin).toBe(null);
+    });
+
+    it('should not affect passThroughTimeMin when isPassThrough remains true', async () => {
+      // Create option with pass-through enabled
+      const option = await createTestOption({
+        isPassThrough: true,
+        passThroughTimeMin: 25,
+      });
+
+      // Update other fields but keep isPassThrough as true
+      const updatedOption = await option.update({
+        name: 'Updated Name',
+      });
+
+      // Verify passThroughTimeMin is preserved
+      expect(updatedOption.isPassThrough).toBe(true);
+      expect(updatedOption.passThroughTimeMin).toBe(25);
+    });
+
+    it('should not set passThroughTimeMin when isPassThrough is not in payload', async () => {
+      // Create option with pass-through disabled and null time
+      const option = await createTestOption({
+        isPassThrough: false,
+        passThroughTimeMin: null,
+      });
+
+      // Update other fields without touching isPassThrough
+      const updatedOption = await option.update({
+        distanceKm: 150,
+      });
+
+      // Verify isPassThrough and passThroughTimeMin remain unchanged
+      expect(updatedOption.isPassThrough).toBe(false);
+      expect(updatedOption.passThroughTimeMin).toBe(null);
+    });
+
+    it('should allow updating passThroughTimeMin when isPassThrough is true', async () => {
+      // Create option with pass-through enabled
+      const option = await createTestOption({
+        isPassThrough: true,
+        passThroughTimeMin: 10,
+      });
+
+      // Update the pass-through time
+      const updatedOption = await option.update({
+        passThroughTimeMin: 30,
+      });
+
+      // Verify new time is set
+      expect(updatedOption.isPassThrough).toBe(true);
+      expect(updatedOption.passThroughTimeMin).toBe(30);
+    });
+
+    it('should clear passThroughTimeMin even when explicitly provided in payload', async () => {
+      // Create option with pass-through enabled
+      const option = await createTestOption({
+        isPassThrough: true,
+        passThroughTimeMin: 15,
+      });
+
+      // Try to update with isPassThrough false and a time value
+      // The cleanup logic should override the provided value
+      const updatedOption = await option.update({
+        isPassThrough: false,
+        passThroughTimeMin: 20, // This should be ignored and set to null
+      });
+
+      // Verify passThroughTimeMin was cleared (not set to 20)
+      expect(updatedOption.isPassThrough).toBe(false);
+      expect(updatedOption.passThroughTimeMin).toBe(null);
+    });
+  });
 });

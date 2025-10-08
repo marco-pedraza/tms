@@ -21,6 +21,7 @@ export const userFactory = defineFactory({
     const lastName = faker.person.lastName();
     return {
       id,
+      departmentId: null, // Will be set externally when needed
       username: faker.internet
         .username({
           firstName,
@@ -38,7 +39,7 @@ export const userFactory = defineFactory({
       mfaSettings: null,
       lastLogin: null,
       active: faker.datatype.boolean(0.5),
-      isSystemAdmin: faker.datatype.boolean(0.5),
+      isSystemAdmin: false,
       deletedAt: faker.helpers.maybe(() => faker.date.recent({ days: 30 }), {
         probability: 0.1,
       }),

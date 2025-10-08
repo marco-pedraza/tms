@@ -34,7 +34,9 @@ export {
 } from '../users/permission-groups/permission-groups.schema';
 export {
   userRoles,
+  userRolesRelations,
   userPermissions,
+  userPermissionsRelations,
 } from '../users/user-permissions/user-permissions.schema';
 export { refreshTokens } from '../users/auth/auth.schema';
 export { audits, auditRelations } from '../users/audits/audits.schema';

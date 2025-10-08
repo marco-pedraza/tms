@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { FieldValidationError } from '@repo/base-repo';
 import {
@@ -6,11 +7,14 @@ import {
   createUniqueCode,
   createUniqueName,
 } from '@/tests/shared/test-utils';
+import { db } from '../db-service';
 import {
   createDepartment,
   deleteDepartment,
 } from '../departments/departments.controller';
 import type { CreateDepartmentPayload } from '../departments/departments.types';
+import { createRole, deleteRole } from '../roles/roles.controller';
+import { userRoles } from '../user-permissions/user-permissions.schema';
 import type {
   ChangePasswordPayload,
   CreateUserPayload,
@@ -43,10 +47,17 @@ describe('Users Controller', () => {
     'department',
   );
 
+  const rolesCleanup = createCleanupHelper(
+    ({ id }) => deleteRole({ id }),
+    'role',
+  );
+
   // Test data and setup
   let departmentId = 0;
   let userId = 0;
   let passwordUserId = 0;
+  let testRole1: number;
+  let testRole2: number;
 
   const testDepartment: CreateDepartmentPayload = {
     name: createUniqueName('Test Department', testSuiteId),
@@ -74,19 +85,38 @@ describe('Users Controller', () => {
     departmentId = result.id;
     departmentsCleanup.track(departmentId);
     expect(departmentId).toBeGreaterThan(0);
+
+    // Create test roles for all tests
+    const role1 = await createRole({
+      name: createUniqueName('Test Role 1', testSuiteId),
+      description: 'First test role',
+      active: true,
+    });
+    testRole1 = role1.id;
+    rolesCleanup.track(testRole1);
+
+    const role2 = await createRole({
+      name: createUniqueName('Test Role 2', testSuiteId),
+      description: 'Second test role',
+      active: true,
+    });
+    testRole2 = role2.id;
+    rolesCleanup.track(testRole2);
   });
 
   // Clean up after all tests
   afterAll(async () => {
     await usersCleanup.cleanupAll();
+    await rolesCleanup.cleanupAll();
     await departmentsCleanup.cleanupAll();
   });
 
   describe('success scenarios', () => {
-    test('should create a new user', async () => {
+    test('should create a new user with roles', async () => {
       const result = await createUser({
         ...testUser,
         departmentId,
+        roleIds: [testRole1, testRole2],
       });
 
       // Save ID for other tests and track for cleanup
@@ -104,11 +134,17 @@ describe('Users Controller', () => {
       expect(result.employeeId).toBe(testUser.employeeId);
       expect(result.departmentId).toBe(departmentId);
       expect(result.active).toBe(true);
-      expect(result.isSystemAdmin).toBe(true);
+      expect(result.isSystemAdmin).toBe(false);
       expect(result.createdAt).toBeDefined();
       expect(result.updatedAt).toBeDefined();
       // Ensure passwordHash is not exposed
       expect(result).not.toHaveProperty('passwordHash');
+
+      // Verify roles are included in response
+      expect(result.roles).toBeDefined();
+      expect(result.roles).toHaveLength(2);
+      const roleIds = result.roles?.map((r) => r.id) ?? [];
+      expect(roleIds).toEqual(expect.arrayContaining([testRole1, testRole2]));
     });
 
     test('should retrieve a user by ID', async () => {
@@ -124,12 +160,13 @@ describe('Users Controller', () => {
       expect(response).not.toHaveProperty('passwordHash');
     });
 
-    test('should update a user', async () => {
+    test('should update a user and roles', async () => {
       const updateData: UpdateUserPayload = {
         firstName: 'Jane',
         lastName: 'Smith',
         position: 'Senior Test User',
         active: false,
+        roleIds: [testRole1], // Remove role2, keep role1
       };
 
       const response = await updateUser({
@@ -149,6 +186,11 @@ describe('Users Controller', () => {
       expect(response.departmentId).toBe(departmentId);
       expect(response.active).toBe(updateData.active);
       expect(response.updatedAt).toBeDefined();
+
+      // Verify roles are included in response
+      expect(response.roles).toBeDefined();
+      expect(response.roles).toHaveLength(1);
+      expect(response.roles?.[0]?.id).toBe(testRole1);
     });
 
     test('should delete a user', async () => {
@@ -377,6 +419,13 @@ describe('Users Controller', () => {
       expect(response.pagination.totalPages).toBeDefined();
       expect(typeof response.pagination.hasNextPage).toBe('boolean');
       expect(typeof response.pagination.hasPreviousPage).toBe('boolean');
+
+      // Verify that users include roles information
+      const userWithRoles = response.data.find((u) => u.id === userId);
+      expect(userWithRoles).toBeDefined();
+      expect(userWithRoles?.roles).toBeDefined();
+      expect(userWithRoles?.roles).toHaveLength(1);
+      expect(userWithRoles?.roles?.[0]?.id).toBe(testRole1);
     });
 
     test('should honor page and pageSize parameters', async () => {
@@ -656,6 +705,151 @@ describe('Users Controller', () => {
           ...passwordData,
         }),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('role assignment edge cases', () => {
+    test('should efficiently update roles without deleting unchanged ones', async () => {
+      const user = await createUser({
+        ...testUser,
+        username: 'user_efficiency_test',
+        email: 'user.efficiency@test.com',
+        departmentId,
+        roleIds: [testRole1, testRole2],
+      });
+
+      usersCleanup.track(user.id);
+
+      // Get initial user role assignment IDs from database to verify efficiency
+      const initialRoles = await db
+        .select()
+        .from(userRoles)
+        .where(eq(userRoles.userId, user.id));
+
+      const initialRole1Assignment = initialRoles.find(
+        (r) => r.roleId === testRole1,
+      );
+      expect(initialRole1Assignment).toBeDefined();
+      const initialRole1AssignmentId = initialRole1Assignment?.id;
+
+      // Create third role for testing
+      const role3 = await createRole({
+        name: createUniqueName('Test Role 3', testSuiteId),
+        description: 'Third test role',
+        active: true,
+      });
+      rolesCleanup.track(role3.id);
+
+      // Update: keep role1, remove role2, add role3
+      const updatedUser = await updateUser({
+        id: user.id,
+        roleIds: [testRole1, role3.id],
+      });
+
+      // Verify roles in response
+      expect(updatedUser.roles).toHaveLength(2);
+      const updatedRoleIds = updatedUser.roles?.map((r) => r.id) ?? [];
+      expect(updatedRoleIds).toEqual(
+        expect.arrayContaining([testRole1, role3.id]),
+      );
+
+      // Verify efficiency: role1 assignment was not deleted and recreated
+      const currentRoles = await db
+        .select()
+        .from(userRoles)
+        .where(eq(userRoles.userId, user.id));
+
+      const currentRole1Assignment = currentRoles.find(
+        (r) => r.roleId === testRole1,
+      );
+      expect(currentRole1Assignment?.id).toBe(initialRole1AssignmentId);
+    });
+
+    test('should handle empty array and preserve roles when not specified', async () => {
+      const user = await createUser({
+        ...testUser,
+        username: 'user_edge_cases',
+        email: 'user.edge.cases@test.com',
+        departmentId,
+        roleIds: [testRole1],
+      });
+
+      usersCleanup.track(user.id);
+
+      // Remove all roles with empty array
+      let updatedUser = await updateUser({
+        id: user.id,
+        roleIds: [],
+      });
+
+      expect(updatedUser.roles).toHaveLength(0);
+
+      // Add roles back
+      updatedUser = await updateUser({
+        id: user.id,
+        roleIds: [testRole2],
+      });
+
+      expect(updatedUser.roles).toHaveLength(1);
+      expect(updatedUser.roles?.[0]?.id).toBe(testRole2);
+
+      // Update user fields without touching roleIds - roles should be preserved
+      updatedUser = await updateUser({
+        id: user.id,
+        firstName: 'Updated Name',
+      });
+
+      expect(updatedUser.roles).toHaveLength(1);
+      expect(updatedUser.roles?.[0]?.id).toBe(testRole2);
+    });
+
+    test('should validate role existence on create and update', async () => {
+      const nonExistentRoleId = 999999;
+
+      // Should fail to create with non-existent role
+      try {
+        await createUser({
+          ...testUser,
+          username: 'user_invalid_role',
+          email: 'user.invalid.role@test.com',
+          departmentId,
+          roleIds: [nonExistentRoleId],
+        });
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        const validationError = error as FieldValidationError;
+        expect(validationError).toBeDefined();
+        expect(validationError.name).toBe('FieldValidationError');
+        expect(validationError.fieldErrors).toBeDefined();
+        expect(validationError.fieldErrors).toHaveLength(1);
+        expect(validationError.fieldErrors[0].field).toBe('roleIds');
+        expect(validationError.fieldErrors[0].code).toBe('NOT_FOUND');
+        expect(validationError.fieldErrors[0].message).toContain(
+          `Role with id ${nonExistentRoleId} not found`,
+        );
+        expect(validationError.fieldErrors[0].value).toBe(nonExistentRoleId);
+      }
+
+      // Should fail to update with non-existent role
+      try {
+        await updateUser({
+          id: userId,
+          roleIds: [nonExistentRoleId],
+        });
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        const validationError = error as FieldValidationError;
+        expect(validationError).toBeDefined();
+        expect(validationError.name).toBe('FieldValidationError');
+        expect(validationError.fieldErrors).toBeDefined();
+        expect(validationError.fieldErrors).toHaveLength(1);
+        expect(validationError.fieldErrors[0].field).toBe('roleIds');
+        expect(validationError.fieldErrors[0].code).toBe('NOT_FOUND');
+        expect(validationError.fieldErrors[0].message).toContain(
+          `Role with id ${nonExistentRoleId} not found`,
+        );
+        expect(validationError.fieldErrors[0].value).toBe(nonExistentRoleId);
+      }
     });
   });
 });

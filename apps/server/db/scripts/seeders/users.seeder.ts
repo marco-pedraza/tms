@@ -1,11 +1,10 @@
-import { db } from '@/users/db-service';
 import type { Department } from '@/users/departments/departments.types';
 import { roleRepository } from '@/users/roles/roles.repository';
 import { roles } from '@/users/roles/roles.schema';
 import { userPermissionsRepository } from '@/users/user-permissions/user-permissions.repository';
-import type { User } from '@/users/users/users.types';
+import type { SafeUser } from '@/users/users/users.types';
 import { faker } from '@faker-js/faker';
-import { userFactory } from '@/factories';
+import { userFactory } from '@/tests/factories/user.factory';
 import {
   CLIENT_DATA_FILES,
   hasClientData,
@@ -16,26 +15,40 @@ import {
 type FactoryDb = any;
 
 /**
- * Creates a user using the factory and returns it with the correct database-generated ID
- * This wrapper solves the issue where factories generate random IDs that don't match the database
+ * Creates a user using the factory with specific data
+ * This approach uses the factory for consistent test data generation with custom values
  */
 async function createUserWithFactory(
+  userData: {
+    departmentId: number;
+    username: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    position?: string;
+    employeeId?: string;
+    active: boolean;
+    isSystemAdmin: boolean;
+  },
   factoryDb: FactoryDb,
-  userData: Partial<User>,
-): Promise<User> {
-  // Use factory to generate data, but we'll get the real ID from the query
-  await userFactory(factoryDb).create(userData);
-
-  // Query the inserted user by username (which is unique)
-  const insertedUser = await db.query.users.findFirst({
-    where: (users, { eq }) => eq(users.username, userData.username as string),
+): Promise<SafeUser> {
+  // Create user using factory with specific data
+  const user = await userFactory(factoryDb).create({
+    departmentId: userData.departmentId,
+    username: userData.username,
+    email: userData.email,
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    phone: userData.phone,
+    position: userData.position ?? null,
+    employeeId: userData.employeeId ?? null,
+    active: userData.active,
+    isSystemAdmin: userData.isSystemAdmin,
+    deletedAt: null,
   });
 
-  if (!insertedUser) {
-    throw new Error(`Failed to retrieve created user: ${userData.username}`);
-  }
-
-  return insertedUser as User;
+  return user as unknown as SafeUser;
 }
 
 interface UserData {
@@ -64,13 +77,24 @@ interface ClientUsersData {
  */
 const PREDEFINED_USERS: UserData[] = [
   {
+    username: 'superadmin',
+    email: 'superadmin@company.com',
+    firstName: 'Super',
+    lastName: 'Administrator',
+    position: 'Super Administrator',
+    employeeId: null,
+    isSystemAdmin: true,
+    departmentCode: 'it',
+    roles: [],
+  },
+  {
     username: 'admin',
     email: 'admin@company.com',
     firstName: 'System',
     lastName: 'Administrator',
     position: 'System Administrator',
     employeeId: null,
-    isSystemAdmin: true,
+    isSystemAdmin: false,
     departmentCode: 'it',
     roles: ['Administrator'],
   },
@@ -112,16 +136,16 @@ const PREDEFINED_USERS: UserData[] = [
 /**
  * Creates users from client data and assigns roles
  * @param usersData - Array of user data from client JSON
- * @param factoryDb - Factory database instance
  * @param departments - Array of departments to assign users to
+ * @param factoryDb - Factory database instance
  * @returns Array of created users
  */
 async function createUsersFromClientData(
   usersData: UserData[],
-  factoryDb: FactoryDb,
   departments: Department[],
-): Promise<User[]> {
-  const users: User[] = [];
+  factoryDb: FactoryDb,
+): Promise<SafeUser[]> {
+  const users: SafeUser[] = [];
 
   for (const userData of usersData) {
     try {
@@ -135,55 +159,44 @@ async function createUsersFromClientData(
         );
       }
 
-      // Create user using factory and retrieve with correct database ID
-      const user = await createUserWithFactory(factoryDb, {
-        departmentId: department.id,
-        username: userData.username,
-        email: userData.email,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        phone: generateE164Phone('52', 10), // Mexico phone numbers
-        position: userData.position,
-        employeeId: userData.employeeId,
-        active: true,
-        isSystemAdmin: userData.isSystemAdmin,
-      });
-
-      // Assign roles if specified
+      // Get role IDs if roles are specified
+      let roleIds: number[] | undefined = undefined;
       if (userData.roles && userData.roles.length > 0) {
-        try {
-          // Get role IDs by their codes
-          const roleIds: number[] = [];
-
-          for (const roleCode of userData.roles) {
-            try {
-              const role = await roleRepository.findBy(roles.name, roleCode);
-              if (!role) {
-                throw new Error(`Role '${roleCode}' not found`);
-              }
-              roleIds.push(role.id);
-            } catch (error) {
-              console.error(
-                `    ❌ Role '${roleCode}' not found for user ${userData.username}: ${error instanceof Error ? error.message : error}`,
-              );
-              throw new Error('Role not found');
-            }
+        roleIds = [];
+        for (const roleCode of userData.roles) {
+          const role = await roleRepository.findBy(roles.name, roleCode);
+          if (!role) {
+            throw new Error(
+              `Role '${roleCode}' not found for user ${userData.username}`,
+            );
           }
-
-          // Assign roles to the user if any were found
-          if (roleIds.length > 0) {
-            await userPermissionsRepository.assignRoles(user.id, { roleIds });
-          }
-        } catch (error) {
-          console.error(
-            `    ❌ Failed to assign roles to user ${userData.username}:`,
-            error,
-          );
-          throw error;
+          roleIds.push(role.id);
         }
       }
 
-      users.push(user as unknown as User);
+      // Create user using factory
+      const user = await createUserWithFactory(
+        {
+          departmentId: department.id,
+          username: userData.username,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          phone: generateE164Phone('52', 10), // Mexico phone numbers
+          position: userData.position ?? undefined,
+          employeeId: userData.employeeId ?? undefined,
+          active: true,
+          isSystemAdmin: userData.isSystemAdmin,
+        },
+        factoryDb,
+      );
+
+      // Assign roles if specified
+      if (roleIds && roleIds.length > 0) {
+        await userPermissionsRepository.assignRoles(user.id, { roleIds });
+      }
+
+      users.push(user);
     } catch (error) {
       console.error(
         `    ❌ Failed to create user ${userData.username}:`,
@@ -198,16 +211,16 @@ async function createUsersFromClientData(
 
 /**
  * Seeds predefined users
- * @param factoryDb - Factory database instance
  * @param departments - Array of departments to assign users to
+ * @param factoryDb - Factory database instance
  * @param clientCode - Optional client code for client-specific data
  * @returns Array of created users
  */
 export async function seedUsers(
-  factoryDb: FactoryDb,
   departments: Department[],
+  factoryDb: FactoryDb,
   clientCode?: string,
-): Promise<User[]> {
+): Promise<SafeUser[]> {
   // Try to use client data if available
   if (clientCode && hasClientData(clientCode, CLIENT_DATA_FILES.USERS)) {
     try {
@@ -219,8 +232,8 @@ export async function seedUsers(
       if (usersData.users?.length > 0) {
         const users = await createUsersFromClientData(
           usersData.users,
-          factoryDb,
           departments,
+          factoryDb,
         );
         return users;
       }
@@ -235,25 +248,25 @@ export async function seedUsers(
   // Default behavior - use predefined users
   const users = await createUsersFromClientData(
     PREDEFINED_USERS,
-    factoryDb,
     departments,
+    factoryDb,
   );
   return users;
 }
 
 /**
  * Seeds additional random users for testing
- * @param factoryDb - Factory database instance
  * @param departments - Array of departments to assign users to
+ * @param factoryDb - Factory database instance
  * @param count - Number of random users to create
  * @returns Array of created users
  */
 export async function seedRandomUsers(
-  factoryDb: FactoryDb,
   departments: Department[],
+  factoryDb: FactoryDb,
   count = 10,
-): Promise<User[]> {
-  const users: User[] = [];
+): Promise<SafeUser[]> {
+  const users: SafeUser[] = [];
 
   for (let i = 0; i < count; i++) {
     try {
@@ -270,30 +283,35 @@ export async function seedRandomUsers(
         })
         .toLowerCase();
 
-      // Create random user using factory and retrieve with correct database ID
-      const user = await createUserWithFactory(factoryDb, {
-        departmentId: randomDepartment.id,
-        username,
-        email: faker.internet
-          .email({
-            firstName,
-            lastName,
-          })
-          .toLowerCase(),
-        firstName,
-        lastName,
-        phone: generateE164Phone('52', 10),
-        // Make position optional (70% chance of having a position)
-        position: faker.datatype.boolean({ probability: 0.7 })
-          ? faker.person.jobTitle()
-          : null,
-        // Make employeeId optional (60% chance of having an employee ID)
-        employeeId: faker.datatype.boolean({ probability: 0.6 })
-          ? `EMP${String(i + 100).padStart(3, '0')}`
-          : null,
-      });
+      // Create random user using factory
+      const user = await createUserWithFactory(
+        {
+          departmentId: randomDepartment.id,
+          username,
+          email: faker.internet
+            .email({
+              firstName,
+              lastName,
+            })
+            .toLowerCase(),
+          firstName,
+          lastName,
+          phone: generateE164Phone('52', 10),
+          // Make position optional (70% chance of having a position)
+          position: faker.datatype.boolean({ probability: 0.7 })
+            ? faker.person.jobTitle()
+            : undefined,
+          // Make employeeId optional (60% chance of having an employee ID)
+          employeeId: faker.datatype.boolean({ probability: 0.6 })
+            ? `EMP${String(i + 100).padStart(3, '0')}`
+            : undefined,
+          active: true,
+          isSystemAdmin: false,
+        },
+        factoryDb,
+      );
 
-      users.push(user as unknown as User);
+      users.push(user);
     } catch (error) {
       console.error(`    ❌ Failed to create random user ${i + 1}:`, error);
       throw error;

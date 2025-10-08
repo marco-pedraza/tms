@@ -75,15 +75,25 @@ function usersColumnsFactory({
       },
     },
     {
-      accessorKey: 'isSystemAdmin',
-      header: tUsers('fields.role'),
-      sortable: true,
+      accessorKey: 'roles',
+      header: tUsers('fields.roles'),
+      sortable: false,
       cell: ({ row }) => {
-        const isSystemAdmin = row.original.isSystemAdmin;
+        const roles = row.original.roles || [];
+
+        // Show only assigned roles
+        if (roles.length === 0) {
+          return <span className="text-muted-foreground">-</span>;
+        }
+
         return (
-          <Badge variant={isSystemAdmin ? 'default' : 'secondary'}>
-            {isSystemAdmin ? tUsers('roles.admin') : tUsers('roles.user')}
-          </Badge>
+          <div className="flex flex-wrap gap-1">
+            {roles.map((role) => (
+              <Badge key={role.id} variant="secondary">
+                {role.name}
+              </Badge>
+            ))}
+          </div>
         );
       },
     },
@@ -143,14 +153,6 @@ export default function UsersTable() {
       options: [
         { label: tCommon('status.active'), value: true },
         { label: tCommon('status.inactive'), value: false },
-      ],
-    },
-    {
-      name: tUsers('fields.role'),
-      key: 'isSystemAdmin',
-      options: [
-        { label: tUsers('roles.admin'), value: true },
-        { label: tUsers('roles.user'), value: false },
       ],
     },
   ];

@@ -101,7 +101,13 @@ export const listUsersPaginated = api(
   async (
     params: PaginatedListUsersQueryParams,
   ): Promise<PaginatedListUsersResult> => {
-    return await userRepository.findAllPaginated(params);
+    const usersResult = await userRepository.findAllPaginated(params);
+
+    return await userRepository.appendRelations(
+      usersResult.data,
+      usersResult.pagination,
+      params,
+    );
   },
 );
 

@@ -81,7 +81,7 @@ export default function UserSkeleton() {
             </div>
 
             <div className="flex justify-between items-start">
-              <div className="font-medium">{tUsers('fields.role')}:</div>
+              <div className="font-medium">{tUsers('fields.roles')}:</div>
               <Skeleton className="h-6 w-20 rounded-full" />
             </div>
 

@@ -30,13 +30,13 @@ export async function seedUsersData(clientCode?: string): Promise<void> {
 
     // === USERS SEEDING ===
     console.log('👥 Seeding users...');
-    const predefinedUsers = await seedUsers(factoryDb, departments, clientCode);
+    const predefinedUsers = await seedUsers(departments, factoryDb, clientCode);
     console.log('✅ Predefined users seeding completed\n');
 
     // === RANDOM USERS SEEDING (ONLY IF NO CLIENT CODE) ===
     if (!clientCode) {
       console.log('🎲 Seeding random users...');
-      await seedRandomUsers(factoryDb, departments, 10);
+      await seedRandomUsers(departments, factoryDb, 10);
       console.log('✅ Random users seeding completed\n');
     }
 

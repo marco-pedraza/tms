@@ -12,6 +12,7 @@ import {
 import { isNull, relations } from 'drizzle-orm';
 import { audits } from '../audits/audits.schema';
 import { departments } from '../departments/departments.schema';
+import { userRoles } from '../user-permissions/user-permissions.schema';
 
 export const users = pgTable(
   'users',
@@ -55,4 +56,5 @@ export const userRelations = relations(users, ({ one, many }) => ({
     references: [departments.id],
   }),
   audits: many(audits),
+  userRoles: many(userRoles),
 }));

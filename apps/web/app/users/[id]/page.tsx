@@ -90,13 +90,19 @@ export default function UserDetailsPage() {
               <dt className="font-medium">{tCommon('fields.phone')}:</dt>
               <dd>{user.phone || '-'}</dd>
 
-              <dt className="font-medium">{tUsers('fields.role')}:</dt>
+              <dt className="font-medium">{tUsers('fields.roles')}:</dt>
               <dd>
-                <Badge variant={user.isSystemAdmin ? 'default' : 'secondary'}>
-                  {user.isSystemAdmin
-                    ? tUsers('roles.admin')
-                    : tUsers('roles.user')}
-                </Badge>
+                <div className="flex flex-wrap gap-2">
+                  {user.roles && user.roles.length > 0 ? (
+                    user.roles.map((role) => (
+                      <Badge key={role.id} variant="secondary">
+                        {role.name}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
+                </div>
               </dd>
 
               <dt className="font-medium">{tCommon('fields.status')}:</dt>

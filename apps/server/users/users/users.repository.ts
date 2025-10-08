@@ -1,8 +1,11 @@
 import { secret } from 'encore.dev/config';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
 import { hashPassword, omitPasswordHash } from '@/shared/auth-utils';
+import { PaginationMeta } from '@/shared/types';
 import { db } from '../db-service';
+import type { Role } from '../roles/roles.types';
+import { userRoles } from '../user-permissions/user-permissions.schema';
 import { users } from './users.schema';
 import type {
   CreateUserPayload,
@@ -10,6 +13,7 @@ import type {
   PaginatedListUsersQueryParams,
   PaginatedListUsersResult,
   SafeUser,
+  SafeUserWithoutRoles,
   UpdateUserPayload,
   User,
   UserWithDepartment,
@@ -49,14 +53,49 @@ export function createUserRepository() {
    * @returns Created user (without password hash)
    */
   async function create(data: CreateUserPayload): Promise<SafeUser> {
-    const user = await baseRepository.create({
-      ...data,
-      passwordHash: await hashPassword(data.password, SALT_ROUNDS),
-      isSystemAdmin: true, // TODO: Remove this once we have a proper role system
-      active: data.active ?? true,
-    });
+    const { roleIds, ...userData } = data;
 
-    return await Promise.resolve(omitPasswordHash(user));
+    return await baseRepository
+      .transaction(async (txRepo, tx) => {
+        const user = await txRepo.create({
+          ...userData,
+          passwordHash: await hashPassword(data.password, SALT_ROUNDS),
+          isSystemAdmin: false,
+          active: data.active ?? true,
+        });
+
+        // Assign roles if provided
+        if (roleIds && roleIds.length > 0) {
+          await tx.insert(userRoles).values(
+            roleIds.map((roleId) => ({
+              userId: user.id,
+              roleId,
+            })),
+          );
+        }
+
+        const safeUser = omitPasswordHash(user);
+        return safeUser;
+      })
+      .then(async (safeUser) => {
+        // Fetch user with roles after transaction completes
+        const userWithRoles = await db.query.users.findFirst({
+          where: eq(users.id, safeUser.id),
+          with: {
+            userRoles: {
+              with: {
+                role: true,
+              },
+            },
+          },
+        });
+
+        return {
+          ...safeUser,
+          roles:
+            userWithRoles?.userRoles.map((ur: { role: Role }) => ur.role) || [],
+        };
+      });
   }
 
   /**
@@ -69,20 +108,93 @@ export function createUserRepository() {
     id: number,
     data: UpdateUserPayload,
   ): Promise<SafeUser> {
-    const user = await baseRepository.update(id, data);
-    return await Promise.resolve(omitPasswordHash(user));
+    const { roleIds, ...userData } = data;
+
+    return await baseRepository
+      .transaction(async (txRepo, tx) => {
+        // Update user data
+        const user = await txRepo.update(id, userData);
+
+        // Update roles if provided
+        if (roleIds !== undefined) {
+          // Get current role assignments
+          const currentRoles = await tx
+            .select()
+            .from(userRoles)
+            .where(eq(userRoles.userId, id));
+
+          const currentRoleIds = currentRoles.map((r) => r.roleId);
+
+          // Calculate roles to add and remove
+          const rolesToAdd = roleIds.filter(
+            (roleId) => !currentRoleIds.includes(roleId),
+          );
+          const rolesToRemove = currentRoleIds.filter(
+            (roleId) => !roleIds.includes(roleId),
+          );
+
+          // Remove roles that are no longer assigned (bulk operation)
+          if (rolesToRemove.length > 0) {
+            await tx
+              .delete(userRoles)
+              .where(
+                and(
+                  eq(userRoles.userId, id),
+                  inArray(userRoles.roleId, rolesToRemove),
+                ),
+              );
+          }
+
+          // Add new role assignments (bulk operation)
+          if (rolesToAdd.length > 0) {
+            await tx.insert(userRoles).values(
+              rolesToAdd.map((roleId) => ({
+                userId: id,
+                roleId,
+              })),
+            );
+          }
+        }
+
+        const safeUser = omitPasswordHash(user);
+        return safeUser;
+      })
+      .then(async (safeUser) => {
+        // Fetch user with roles after transaction completes
+        const userWithRoles = await db.query.users.findFirst({
+          where: eq(users.id, safeUser.id),
+          with: {
+            userRoles: {
+              with: {
+                role: true,
+              },
+            },
+          },
+        });
+
+        const { userRoles } = userWithRoles || {};
+        return {
+          ...safeUser,
+          roles: userRoles?.map((ur: { role: Role }) => ur.role) || [],
+        };
+      });
   }
 
   /**
-   * Finds a user by ID including department information
+   * Finds a user by ID including department and roles information
    * @param id User ID
-   * @returns User with department information (without password hash)
+   * @returns User with department and roles information (without password hash)
    */
   async function findOne(id: number): Promise<UserWithDepartment> {
     const result = await db.query.users.findFirst({
       where: and(eq(users.id, id), isNull(users.deletedAt)),
       with: {
         department: true,
+        userRoles: {
+          with: {
+            role: true,
+          },
+        },
       },
     });
 
@@ -90,11 +202,67 @@ export function createUserRepository() {
       throw new NotFoundError(`User with id ${id} not found`);
     }
 
-    const { department, ...userWithoutDepartment } = result;
+    const {
+      department,
+      userRoles: userRolesData,
+      ...userWithoutDepartment
+    } = result;
     const safeUser = omitPasswordHash(userWithoutDepartment as User);
     return {
       ...safeUser,
       department,
+      roles: userRolesData.map((ur) => ur.role),
+    };
+  }
+
+  /**
+   * Appends relations (roles) to users
+   *
+   * This function takes a list of users and enriches them with related roles information.
+   * It's designed to be used after getting paginated results from the base repository.
+   *
+   * @param usersResult - Array of users to append relations to
+   * @param pagination - Pagination metadata
+   * @param params - Query parameters for ordering
+   * @returns Users with relations and pagination metadata
+   */
+  async function appendRelations(
+    usersResult: SafeUserWithoutRoles[],
+    pagination: PaginationMeta,
+    params: ListUsersQueryParams,
+  ): Promise<PaginatedListUsersResult> {
+    // Return early if no users to process
+    if (usersResult.length === 0) {
+      return { data: [], pagination };
+    }
+
+    const { baseOrderBy } = baseRepository.buildQueryExpressions(params);
+    const ids = usersResult.map((user) => user.id);
+
+    const usersWithRelations = await db.query.users.findMany({
+      where: inArray(users.id, ids),
+      orderBy: baseOrderBy,
+      with: {
+        userRoles: {
+          with: {
+            role: true,
+          },
+        },
+      },
+    });
+
+    // Transform the users to include their roles and remove password hash
+    const usersWithRoles: SafeUser[] = usersWithRelations.map((user) => {
+      const { userRoles, ...userWithoutRoles } = user;
+      return {
+        ...omitPasswordHash(userWithoutRoles as User),
+        roles: userRoles.map((ur) => ur.role),
+      };
+    });
+
+    return {
+      data: usersWithRoles,
+      pagination,
     };
   }
 
@@ -105,7 +273,7 @@ export function createUserRepository() {
    */
   async function findAll(
     options: ListUsersQueryParams = {},
-  ): Promise<SafeUser[]> {
+  ): Promise<SafeUserWithoutRoles[]> {
     const allUsers = await baseRepository.findAll(options);
     return await Promise.resolve(allUsers.map(omitPasswordHash));
   }
@@ -167,6 +335,7 @@ export function createUserRepository() {
     create,
     update,
     findOne,
+    appendRelations,
     findAll,
     findAllPaginated,
     findByUsername,

@@ -50,6 +50,7 @@ export default function EditUserPage() {
           employeeId: data.employeeId ?? '',
           phone: data.phone ?? '',
           password: '',
+          roleIds: data.roles?.map((role) => role.id) || [],
         }}
         onSubmit={handleSubmit}
       />

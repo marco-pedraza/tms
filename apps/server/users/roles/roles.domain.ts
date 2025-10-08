@@ -103,6 +103,16 @@ export async function validateRole(
   currentId?: number,
 ): Promise<void> {
   const validator = await validateRoleUniqueness(payload, currentId);
+
+  // Validate permissions if they are provided (only for CreateRolePayload)
+  if (
+    'permissionIds' in payload &&
+    payload.permissionIds &&
+    payload.permissionIds.length > 0
+  ) {
+    await validatePermissionsExist(payload.permissionIds, validator);
+  }
+
   validator.throwIfErrors();
 }
 

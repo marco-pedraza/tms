@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
+import useQueryAllRoles from '@/app/roles/hooks/use-query-all-roles';
 import useQueryAllDepartments from '@/app/users/hooks/use-query-all-departments';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
@@ -49,7 +50,7 @@ const createUserFormSchema = (
     position: z.string().trim().optional(),
     employeeId: z.string().trim().optional(),
     phone: optionalPhoneSchema(tValidations),
-    isSystemAdmin: z.boolean(),
+    roleIds: z.array(z.number()).optional(),
     active: z.boolean(),
   });
 
@@ -71,11 +72,14 @@ export default function UserForm({ defaultValues, onSubmit }: UserFormProps) {
         ...defaultValues,
         departmentId: defaultValues.departmentId?.toString() || '',
         phone: defaultValues.phone ?? '',
+        roleIds: defaultValues.roleIds || [],
       }
     : undefined;
   const userFormSchema = createUserFormSchema(tValidations, isEditMode);
   const { data: departmentsData } = useQueryAllDepartments();
+  const { data: rolesData } = useQueryAllRoles();
   const departments = departmentsData?.departments || [];
+  const roles = rolesData?.data || [];
   const form = useForm({
     defaultValues: rawDefaultValues ?? {
       departmentId: '',
@@ -87,7 +91,7 @@ export default function UserForm({ defaultValues, onSubmit }: UserFormProps) {
       position: '',
       employeeId: '',
       phone: '',
-      isSystemAdmin: false,
+      roleIds: [],
       active: true,
     },
     validators: {
@@ -222,11 +226,16 @@ export default function UserForm({ defaultValues, onSubmit }: UserFormProps) {
         </div>
 
         <div className="space-y-4">
-          <form.AppField name="isSystemAdmin">
+          <form.AppField name="roleIds">
             {(field) => (
-              <field.SwitchInput
-                label={tUsers('fields.isSystemAdmin')}
-                description={tUsers('form.descriptions.isSystemAdmin')}
+              <field.MultiSelectInput
+                label={tUsers('fields.roles')}
+                placeholder={tUsers('form.placeholders.roles')}
+                items={roles.map((role) => ({
+                  id: role.id.toString(),
+                  name: role.name,
+                }))}
+                emptyOptionsLabel={tUsers('form.placeholders.emptyRolesList')}
               />
             )}
           </form.AppField>

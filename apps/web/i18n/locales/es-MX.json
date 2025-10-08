@@ -291,7 +291,7 @@
       "position": "Posición",
       "employeeId": "ID de Empleado",
       "phone": "Teléfono",
-      "role": "Rol",
+      "roles": "Roles",
       "department": "Departamento",
       "lastLogin": "Último Acceso",
       "isSystemAdmin": "Administrador del Sistema"
@@ -312,7 +312,9 @@
         "phone": "Ej: +52 (33) 1234-5678",
         "password": "Ingresa una contraseña",
         "department": "Selecciona un departamento",
-        "emptyDepartmentsList": "No hay departamentos disponibles"
+        "roles": "Selecciona roles",
+        "emptyDepartmentsList": "No hay departamentos disponibles",
+        "emptyRolesList": "No hay roles disponibles"
       },
       "descriptions": {
         "isSystemAdmin": "Concede privilegios de administrador del sistema"

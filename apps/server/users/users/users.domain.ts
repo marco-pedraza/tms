@@ -1,5 +1,6 @@
-import { FieldErrorCollector } from '@repo/base-repo';
+import { FieldErrorCollector, NotFoundError } from '@repo/base-repo';
 import { standardFieldErrors } from '@/shared/errors';
+import { roleRepository } from '../roles/roles.repository';
 import { users } from './users.schema';
 import type { CreateUserPayload, UpdateUserPayload } from './users.types';
 import { userRepository } from './users.repository';
@@ -60,6 +61,41 @@ export async function validateUserUniqueness(
 }
 
 /**
+ * Validates that all role IDs exist in the database
+ * @param roleIds - Array of role IDs to validate
+ * @param validator - Optional validator to reuse (for combining validations)
+ * @returns The validator instance for chaining
+ */
+export async function validateRolesExist(
+  roleIds: number[],
+  validator?: FieldErrorCollector,
+): Promise<FieldErrorCollector> {
+  const collector = validator || new FieldErrorCollector();
+
+  // Validate all roles exist
+  await Promise.all(
+    roleIds.map(async (roleId) => {
+      try {
+        await roleRepository.findOne(roleId);
+      } catch (error) {
+        if (error instanceof NotFoundError) {
+          collector.addError(
+            'roleIds',
+            'NOT_FOUND',
+            `Role with id ${roleId} not found`,
+            roleId,
+          );
+        } else {
+          throw error;
+        }
+      }
+    }),
+  );
+
+  return collector;
+}
+
+/**
  * Validates user data according to business rules
  * @param payload - User data to validate
  * @param currentId - ID of the current entity to exclude from uniqueness check (for updates)
@@ -70,5 +106,11 @@ export async function validateUser(
   currentId?: number,
 ): Promise<void> {
   const validator = await validateUserUniqueness(payload, currentId);
+
+  // Validate roles if they are provided
+  if (payload.roleIds && payload.roleIds.length > 0) {
+    await validateRolesExist(payload.roleIds, validator);
+  }
+
   validator.throwIfErrors();
 }

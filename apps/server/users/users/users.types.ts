@@ -6,6 +6,7 @@ import {
   PaginatedListQueryResult,
 } from '@/shared/types';
 import type { Department } from '../departments/departments.types';
+import type { Role } from '../roles/roles.types';
 
 /**
  * Base interface representing a user entity
@@ -58,12 +59,20 @@ export interface User {
 
   /** Timestamp when the user record was last updated */
   updatedAt: Date | string | null;
+
+  /** Roles assigned to the user (included in API responses) */
+  roles?: Role[];
 }
 
 /**
  * User without sensitive information for API responses
  */
 export type SafeUser = Omit<User, 'passwordHash'>;
+
+/**
+ * User without sensitive information and without roles (for performance in list operations)
+ */
+export type SafeUserWithoutRoles = Omit<SafeUser, 'roles'>;
 
 /**
  * User with department information for API responses
@@ -139,6 +148,11 @@ export interface CreateUserPayload {
    * @default false
    */
   isSystemAdmin?: boolean;
+
+  /**
+   * Array of role IDs to assign to the user
+   */
+  roleIds?: number[];
 }
 
 /**
@@ -192,6 +206,11 @@ export interface UpdateUserPayload {
    * Whether the user is a system-wide admin
    */
   isSystemAdmin?: boolean;
+
+  /**
+   * Array of role IDs to assign to the user
+   */
+  roleIds?: number[];
 }
 
 /**
@@ -218,8 +237,12 @@ export interface Users {
   users: SafeUser[];
 }
 
-export type ListUsersQueryParams = ListQueryParams<SafeUser>;
+// Database column fields only (excludes virtual fields like 'roles')
+type UserDatabaseFields = Omit<User, 'passwordHash' | 'roles'>;
+
+export type ListUsersQueryParams = ListQueryParams<UserDatabaseFields>;
 export type ListUsersResult = ListQueryResult<SafeUser>;
 
-export type PaginatedListUsersQueryParams = PaginatedListQueryParams<SafeUser>;
+export type PaginatedListUsersQueryParams =
+  PaginatedListQueryParams<UserDatabaseFields>;
 export type PaginatedListUsersResult = PaginatedListQueryResult<SafeUser>;

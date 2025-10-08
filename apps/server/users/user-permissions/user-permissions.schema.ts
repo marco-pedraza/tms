@@ -5,6 +5,7 @@ import {
   serial,
   timestamp,
 } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 import { permissions } from '../permissions/permissions.schema';
 import { roles } from '../roles/roles.schema';
 import { users } from '../users/users.schema';
@@ -48,4 +49,35 @@ export const userPermissions = pgTable(
     index().on(table.userId, table.permissionId),
     index().on(table.permissionId),
   ],
+);
+
+/**
+ * Defines the relations for the user_roles table
+ */
+export const userRolesRelations = relations(userRoles, ({ one }) => ({
+  user: one(users, {
+    fields: [userRoles.userId],
+    references: [users.id],
+  }),
+  role: one(roles, {
+    fields: [userRoles.roleId],
+    references: [roles.id],
+  }),
+}));
+
+/**
+ * Defines the relations for the user_permissions table
+ */
+export const userPermissionsRelations = relations(
+  userPermissions,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userPermissions.userId],
+      references: [users.id],
+    }),
+    permission: one(permissions, {
+      fields: [userPermissions.permissionId],
+      references: [permissions.id],
+    }),
+  }),
 );

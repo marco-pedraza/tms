@@ -14,5 +14,11 @@ export default createCollectionQuery<
   APIError
 >({
   queryKey: ['users'],
-  queryFn: (params) => imsClient.users.listUsersPaginated(params),
+  queryFn: (params) =>
+    imsClient.users.listUsersPaginated({
+      ...params,
+      orderBy: params.orderBy?.length
+        ? params.orderBy
+        : [{ field: 'id', direction: 'asc' }],
+    } as users.PaginatedListUsersQueryParams),
 });

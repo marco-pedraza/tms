@@ -13,7 +13,7 @@
       "position": "Administrador del Sistema",
       "employeeId": null,
       "isSystemAdmin": true,
-      "roles": ["admin"],
+      "roles": ["Administrator"],
       "departmentCode": "ti"
     },
     {
@@ -24,7 +24,7 @@
       "position": "Gerente de Operaciones",
       "employeeId": "EMP002",
       "isSystemAdmin": false,
-      "roles": ["read_only", "editor"],
+      "roles": ["Read Only", "Editor"],
       "departmentCode": "ops"
     },
     {
@@ -35,7 +35,7 @@
       "position": "Supervisora de Flota",
       "employeeId": "EMP003",
       "isSystemAdmin": false,
-      "roles": ["read_only", "editor"],
+      "roles": ["Read Only", "Editor"],
       "departmentCode": "flota"
     },
     {
@@ -46,7 +46,7 @@
       "position": "Coordinador de TI",
       "employeeId": "EMP004",
       "isSystemAdmin": false,
-      "roles": ["read_only"],
+      "roles": ["Read Only"],
       "departmentCode": "ti"
     }
   ]

@@ -11,7 +11,7 @@ import type {
   UserWithDepartment,
 } from './users.types';
 import { userRepository } from './users.repository';
-import { validateUser } from './users.domain';
+import { validatePasswordChange, validateUser } from './users.domain';
 import { userUseCases } from './users.use-cases';
 
 /**
@@ -124,6 +124,7 @@ export const changePassword = api(
     id,
     ...data
   }: ChangePasswordPayload & { id: number }): Promise<SafeUser> => {
+    await validatePasswordChange(id, data);
     return await userUseCases.changePassword(id, data);
   },
 );

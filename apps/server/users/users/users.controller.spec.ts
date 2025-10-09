@@ -685,12 +685,22 @@ describe('Users Controller', () => {
         newPassword: 'anotherPassword789',
       };
 
-      await expect(
-        changePassword({
+      // Capture the error to make specific assertions
+      let validationError: FieldValidationError | undefined;
+      try {
+        await changePassword({
           id: passwordUserId,
           ...passwordData,
-        }),
-      ).rejects.toThrow();
+        });
+      } catch (error) {
+        validationError = error as FieldValidationError;
+      }
+
+      // Verify the specific error code and field
+      expect(validationError).toBeDefined();
+      const typedValidationError = validationError as FieldValidationError;
+      expect(typedValidationError.fieldErrors[0].field).toBe('currentPassword');
+      expect(typedValidationError.fieldErrors[0].code).toBe('INVALID_PASSWORD');
     });
 
     test('should fail to change password for non-existent user', async () => {
@@ -699,12 +709,22 @@ describe('Users Controller', () => {
         newPassword: 'newPassword456',
       };
 
-      await expect(
-        changePassword({
+      // Capture the error to make specific assertions
+      let validationError: FieldValidationError | undefined;
+      try {
+        await changePassword({
           id: 999999,
           ...passwordData,
-        }),
-      ).rejects.toThrow();
+        });
+      } catch (error) {
+        validationError = error as FieldValidationError;
+      }
+
+      // Verify the specific error code and field
+      expect(validationError).toBeDefined();
+      const typedValidationError = validationError as FieldValidationError;
+      expect(typedValidationError.fieldErrors[0].field).toBe('userId');
+      expect(typedValidationError.fieldErrors[0].code).toBe('NOT_FOUND');
     });
   });
 

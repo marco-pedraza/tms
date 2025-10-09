@@ -1,4 +1,4 @@
-import { ArrowLeft, Pencil, Trash } from 'lucide-react';
+import { ArrowLeft, KeyRound, Pencil, Trash } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card, CardTitle } from '@/components/ui/card';
@@ -24,6 +24,10 @@ export default function UserSkeleton() {
 
       {/* Action buttons */}
       <div className="flex justify-end gap-2 mb-6">
+        <Button variant="outline" disabled className="gap-2">
+          <KeyRound className="h-4 w-4" />
+          <Skeleton className="h-4 w-32" />
+        </Button>
         <Button variant="outline" disabled className="gap-2">
           <Pencil className="h-4 w-4" />
           <Skeleton className="h-4 w-12" />

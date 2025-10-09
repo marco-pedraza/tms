@@ -1,12 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { KeyRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import ActionButtons from '@/components/action-buttons';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
 import IsActiveBadge from '@/components/is-active-badge';
 import PageHeader from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import routes from '@/services/routes';
@@ -50,7 +53,15 @@ export default function UserDetailsPage() {
         backHref={routes.users.index}
       />
 
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end gap-4 mb-6">
+        {routes.users.getChangePasswordRoute && (
+          <Link href={routes.users.getChangePasswordRoute(userId.toString())}>
+            <Button variant="outline">
+              <KeyRound className="h-4 w-4" />
+              {tUsers('changePassword.button')}
+            </Button>
+          </Link>
+        )}
         <ActionButtons
           editHref={routes.users.getEditRoute(userId.toString())}
           onDelete={handleDelete}

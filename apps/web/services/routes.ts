@@ -8,6 +8,7 @@ export interface CrudRoute {
   new: string;
   getDetailsRoute: (id: string) => string;
   getEditRoute: (id: string) => string;
+  getChangePasswordRoute?: (id: string) => string;
 }
 
 export type SingleRoute = string;
@@ -179,6 +180,7 @@ const routes: Routes = {
     new: '/users/new',
     getDetailsRoute: (id: string) => `/users/${id}`,
     getEditRoute: (id: string) => `/users/${id}/edit`,
+    getChangePasswordRoute: (id: string) => `/users/${id}/change-password`,
   },
   roles: {
     index: '/roles',

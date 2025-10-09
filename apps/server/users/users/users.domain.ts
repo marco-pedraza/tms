@@ -1,8 +1,13 @@
 import { FieldErrorCollector, NotFoundError } from '@repo/base-repo';
+import { comparePasswords } from '@/shared/auth-utils';
 import { standardFieldErrors } from '@/shared/errors';
 import { roleRepository } from '../roles/roles.repository';
 import { users } from './users.schema';
-import type { CreateUserPayload, UpdateUserPayload } from './users.types';
+import type {
+  ChangePasswordPayload,
+  CreateUserPayload,
+  UpdateUserPayload,
+} from './users.types';
 import { userRepository } from './users.repository';
 
 /**
@@ -113,4 +118,44 @@ export async function validateUser(
   }
 
   validator.throwIfErrors();
+}
+
+/**
+ * Validates password change operation
+ * @param userId - ID of the user changing password
+ * @param payload - Password change data
+ * @throws {FieldValidationError} If validation fails
+ */
+export async function validatePasswordChange(
+  userId: number,
+  payload: ChangePasswordPayload,
+): Promise<void> {
+  const collector = new FieldErrorCollector();
+
+  // Check if user exists
+  let user;
+  try {
+    user = await userRepository.findOneWithPassword(userId);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      collector.addError('userId', 'NOT_FOUND', 'User not found', userId);
+      collector.throwIfErrors();
+    }
+    throw error;
+  }
+
+  // Validate current password
+  const isValid = await comparePasswords(
+    payload.currentPassword,
+    user.passwordHash,
+  );
+  if (!isValid) {
+    collector.addError(
+      'currentPassword',
+      'INVALID_PASSWORD',
+      'Current password is invalid',
+    );
+  }
+
+  collector.throwIfErrors();
 }

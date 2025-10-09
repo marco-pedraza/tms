@@ -174,13 +174,15 @@
       "format": "El nombre de usuario solo puede contener letras, números, puntos, guiones y guiones bajos."
     },
     "password": {
-      "minLength": "La contraseña debe tener al menos {length} caracteres."
+      "minLength": "La contraseña debe tener al menos {length} caracteres.",
+      "mismatch": "Las contraseñas no coinciden."
     },
     "atLeastOneSeat": "Debe haber al menos un asiento (izquierdo o derecho).",
     "server": {
       "duplicate": "Ya existe un registro de {entity} con {property}: \"{value}\".",
       "invalid_format": "Formato inválido en el campo {fieldName}.",
-      "invalid_status": "Transición de estatus no válida. Verifica que el cambio de estatus sea permitido."
+      "invalid_status": "Transición de estatus no válida. Verifica que el cambio de estatus sea permitido.",
+      "invalid_password": "La contraseña actual es incorrecta."
     },
     "entities": {
       "country": "País",
@@ -212,7 +214,8 @@
       "operatingHours": "Horarios de Operación",
       "licensePlateNumber": "Número de Placa",
       "registrationNumber": "Número de Registro",
-      "status": "Estatus"
+      "status": "Estatus",
+      "currentPassword": "Contraseña Actual"
     }
   },
   "sidebar": {
@@ -331,6 +334,26 @@
     "edit": {
       "title": "Editar Usuario"
     },
+    "changePassword": {
+      "title": "Cambiar Contraseña",
+      "button": "Cambiar Contraseña",
+      "fields": {
+        "currentPassword": "Contraseña Actual",
+        "newPassword": "Nueva Contraseña",
+        "confirmPassword": "Confirmar Nueva Contraseña"
+      },
+      "form": {
+        "title": "Cambiar contraseña del usuario",
+        "placeholders": {
+          "currentPassword": "Ingresa tu contraseña actual",
+          "newPassword": "Ingresa la nueva contraseña",
+          "confirmPassword": "Confirma la nueva contraseña"
+        }
+      },
+      "actions": {
+        "submit": "Cambiar Contraseña"
+      }
+    },
     "errors": {
       "notFound": {
         "title": "Usuario no encontrado",
@@ -352,6 +375,11 @@
         "loading": "Eliminando usuario...",
         "success": "Usuario eliminado correctamente",
         "error": "No pudimos eliminar el usuario"
+      },
+      "changePassword": {
+        "loading": "Cambiando contraseña...",
+        "success": "Contraseña actualizada correctamente",
+        "error": "No pudimos cambiar la contraseña"
       }
     }
   },

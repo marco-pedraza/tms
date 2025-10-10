@@ -61,3 +61,6 @@ jobs:
 
       - name: Build Frontend Application
         run: cd apps/web && npm run build
+        env:
+          AUTH_SECRET: github-secret
+          AUTH_TRUST_HOST: true

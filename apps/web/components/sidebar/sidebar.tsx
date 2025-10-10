@@ -14,6 +14,7 @@ import {
   Globe,
   House,
   LayoutGrid,
+  LogOut,
   Map as MapIcon,
   MapPin,
   Navigation,
@@ -28,6 +29,7 @@ import {
   UserRoundSearch,
   Users,
 } from 'lucide-react';
+import { signOut, useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import routes from '@/services/routes';
 import SidebarLink from './sidebar-link';
@@ -35,9 +37,11 @@ import SidebarSection from './sidebar-section';
 
 export default function Sidebar() {
   const tSidebar = useTranslations('sidebar');
+  const tAuth = useTranslations('auth');
+  const { data: session } = useSession();
 
   return (
-    <nav className="grid items-start gap-2 px-4 py-4">
+    <nav className="flex flex-col h-full gap-2 px-4 py-4">
       <Link
         href={routes.index}
         className="mb-6 flex items-center rounded-md px-3 py-2 text-2xl font-bold text-primary hover:text-primary/90"
@@ -219,6 +223,25 @@ export default function Sidebar() {
           label={tSidebar('users.users')}
         />
       </SidebarSection>
+
+      {/* User Info and Logout */}
+      {session?.user && (
+        <div className="mt-4 border-t pt-4">
+          <div className="px-3 py-2 text-sm text-muted-foreground">
+            <div className="font-medium text-foreground">
+              {session.user.firstName} {session.user.lastName}
+            </div>
+            <div className="text-xs">{session.user.email}</div>
+          </div>
+          <button
+            onClick={() => signOut()}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            {tAuth('messages.logout.action')}
+          </button>
+        </div>
+      )}
     </nav>
   );
 }

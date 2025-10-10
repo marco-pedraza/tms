@@ -40,6 +40,7 @@
     "i18next-http-backend": "^3.0.2",
     "lucide-react": "^0.483.0",
     "next": "^15.2.3",
+    "next-auth": "^5.0.0-beta.29",
     "next-intl": "^4.0.2",
     "nuqs": "^2.4.3",
     "postcss": "^8.4.31",

@@ -1,5 +1,6 @@
 {
   "common": {
+    "loading": "Cargando...",
     "errors": {
       "default": "Ha ocurrido un error",
       "notFound": "No encontrado",
@@ -120,6 +121,39 @@
       "popularIcons": "Iconos Populares",
       "allIcons": "Todos los Iconos",
       "showMore": "Mostrar más iconos..."
+    }
+  },
+  "auth": {
+    "actions": {
+      "submit": "Iniciar Sesión"
+    },
+    "form": {
+      "placeholders": {
+        "username": "Usuario",
+        "password": "Contraseña"
+      },
+      "validations": {
+        "username": {
+          "required": "El usuario es obligatorio"
+        },
+        "password": {
+          "required": "La contraseña es obligatoria"
+        }
+      }
+    },
+    "errors": {
+      "invalidCredentials": "Usuario o contraseña incorrectos",
+      "loginFailed": "Error al iniciar sesión"
+    },
+    "messages": {
+      "logout": {
+        "action": "Cerrar Sesión",
+        "loading": "Cerrando sesión..."
+      },
+      "login": {
+        "loading": "Iniciando sesión...",
+        "verifying": "Verificando autenticación..."
+      }
     }
   },
   "validations": {

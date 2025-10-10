@@ -16,6 +16,9 @@ export type SingleRoute = string;
 
 export interface Routes {
   index: SingleRoute;
+  auth: {
+    login: SingleRoute;
+  };
   countries: CrudRoute;
   states: CrudRoute;
   cities: CrudRoute;
@@ -44,6 +47,9 @@ export interface Routes {
 
 const routes: Routes = {
   index: '/',
+  auth: {
+    login: '/auth/login',
+  },
   countries: {
     index: '/countries',
     new: '/countries/new',

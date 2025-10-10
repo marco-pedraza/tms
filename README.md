@@ -129,6 +129,7 @@ The frontend is built with Next.js 15 and React 19. To access the application lo
 
    ```bash
    NEXT_PUBLIC_IMS_API_URL=http://localhost:4000
+   AUTH_SECRET=test
    ```
 
 2. Start the development server:

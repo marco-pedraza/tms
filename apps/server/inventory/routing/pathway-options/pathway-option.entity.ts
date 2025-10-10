@@ -28,7 +28,7 @@ export function createPathwayOptionEntity(
     tollboothRepository,
   } = dependencies;
 
-  // Desestructurar las utilidades del mixin
+  // Destructure utilities from the mixin
   const { isEntityPersisted } = EntityUtils;
 
   /**

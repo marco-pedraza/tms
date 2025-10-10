@@ -1,11 +1,12 @@
 import localFont from 'next/font/local';
 import type { Metadata } from 'next';
+import { SessionProvider } from 'next-auth/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import AuthLayout from '@/components/auth-layout';
 import DateFnsLocaleProvider from '@/components/date-fns-locale-provider';
 import QueryClientProvider from '@/components/query-client-provider';
-import Sidebar from '@/components/sidebar';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
@@ -38,13 +39,10 @@ export default async function RootLayout({
           <NuqsAdapter>
             <QueryClientProvider>
               <NextIntlClientProvider>
-                <div className="flex min-h-screen">
-                  <aside className="w-64 border-r bg-background">
-                    <Sidebar />
-                  </aside>
-                  <main className="flex-1 p-6">{children}</main>
-                </div>
-                <Toaster richColors />
+                <SessionProvider>
+                  <AuthLayout>{children}</AuthLayout>
+                  <Toaster richColors />
+                </SessionProvider>
               </NextIntlClientProvider>
             </QueryClientProvider>
           </NuqsAdapter>

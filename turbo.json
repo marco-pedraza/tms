@@ -9,7 +9,8 @@
     "TEST_DB_NAME",
     "TEST_DB_USER",
     "TEST_DB_PASSWORD",
-    "NODE_ENV"
+    "NODE_ENV",
+    "AUTH_SECRET"
   ],
   "tasks": {
     "build": {

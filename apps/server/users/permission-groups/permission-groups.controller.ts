@@ -26,7 +26,7 @@ export const createPermissionGroup = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listPermissionGroups = api(
-  { method: 'GET', path: '/permission-groups', expose: true, auth: true },
+  { method: 'GET', path: '/permission-groups', expose: true, auth: false },
   async (): Promise<PermissionGroups> => {
     return await permissionGroupRepository.findAll();
   },

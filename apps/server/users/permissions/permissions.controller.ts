@@ -44,7 +44,7 @@ export const getPermission = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listPermissions = api(
-  { method: 'POST', path: '/get-permissions', expose: true, auth: true },
+  { method: 'POST', path: '/get-permissions', expose: true, auth: false },
   async (params: PermissionsQueryOptions): Promise<Permissions> => {
     const permissions = await permissionRepository.findAll(params);
     return {

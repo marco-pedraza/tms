@@ -88,7 +88,7 @@ export default function NewBusPage() {
   });
 
   return (
-    <div>
+    <div className="w-full max-w-5xl mx-auto">
       <PageHeader
         title={tBuses('actions.create')}
         backHref={routes.buses.index}

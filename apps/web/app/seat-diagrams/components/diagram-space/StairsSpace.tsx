@@ -10,6 +10,10 @@ const stairsSpaceVariants = cva(
       isSelected: {
         true: 'ring-2 shadow-md',
       },
+      readOnly: {
+        true: 'cursor-default',
+        false: 'cursor-pointer',
+      },
     },
   },
 );
@@ -17,12 +21,14 @@ interface StairsSpaceProps {
   space: SeatDiagramSpace;
   onClick: (space: SeatDiagramSpace) => void;
   isSelected: boolean;
+  readOnly?: boolean;
 }
 
 export default function StairsSpace({
   space,
   onClick,
   isSelected,
+  readOnly = false,
 }: StairsSpaceProps) {
   return (
     <Button
@@ -30,9 +36,14 @@ export default function StairsSpace({
       size="sm"
       type="button"
       onClick={() => {
-        onClick(space);
+        if (!readOnly) {
+          onClick(space);
+        }
       }}
-      className={stairsSpaceVariants({ isSelected })}
+      className={stairsSpaceVariants({ isSelected, readOnly })}
+      disabled={false}
+      aria-label="Stairs space"
+      aria-pressed={isSelected}
     >
       <MoveUpRight className="w-4 h-4" />
     </Button>

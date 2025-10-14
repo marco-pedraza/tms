@@ -5,6 +5,7 @@ import { useStore } from '@tanstack/react-form';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { buses, drivers } from '@repo/ims-client';
+import { bus_seat_models } from '@repo/ims-client';
 import useQueryAllDrivers from '@/app/drivers/hooks/use-query-all-drivers';
 import useQueryAllSeatDiagrams from '@/app/seat-diagrams/hooks/use-query-all-seat-diagrams';
 import useQueryAllTechnologies from '@/app/technologies/hooks/use-query-all-technologies';
@@ -28,6 +29,11 @@ import {
   requiredIntegerSchema,
 } from '@/schemas/number';
 import { optionalStringSchema, requiredStringSchema } from '@/schemas/string';
+import ReadOnlySeatDiagram from '@/seat-diagrams/components/read-only-seat-diagram';
+import { createFloorsFromSeatConfiguration } from '@/seat-diagrams/components/seat-diagram-form/create-floors-from-quick-config';
+import useQuerySeatConfiguration from '@/seat-diagrams/hooks/use-query-seat-configuration';
+import { SeatDiagramSpace } from '@/seat-diagrams/seat-diagrams.schemas';
+import { SeatType, SpaceType } from '@/services/ims-client';
 import {
   BusStatus,
   busLicensePlateTypes,
@@ -228,9 +234,57 @@ export default function BusForm({
   const { data: busLines } = useQueryAllBusLines();
   const { data: nodes } = useQueryAllNodes();
 
+  // Get the selected seat diagram ID from the form
+  const selectedSeatDiagramId = useStore(
+    form.store,
+    (state) => state.values.seatDiagramId,
+  );
+
+  // Query seat configuration for the selected diagram
+  const { data: seatConfiguration } = useQuerySeatConfiguration({
+    seatDiagramId: parseInt(selectedSeatDiagramId),
+    enabled:
+      Boolean(selectedSeatDiagramId) &&
+      Number.isInteger(parseInt(selectedSeatDiagramId)),
+  });
+
+  // Convert seat configuration to spaces format
+  const convertBusSeatModelToSeatDiagramSpace = (
+    busSeat: bus_seat_models.BusSeatModel,
+  ): SeatDiagramSpace => {
+    return {
+      floorNumber: busSeat.floorNumber,
+      active: busSeat.active,
+      position: {
+        x: busSeat.position.x,
+        y: busSeat.position.y,
+      },
+      spaceType: busSeat.spaceType as SpaceType,
+      ...(busSeat.spaceType === 'seat' && {
+        seatType: busSeat.seatType as SeatType,
+        seatNumber: busSeat.seatNumber ?? '',
+        amenities: busSeat.amenities ?? [],
+        reclinementAngle: busSeat.reclinementAngle ?? '',
+      }),
+    };
+  };
+
+  const seatSpaces =
+    seatConfiguration?.data && seatConfiguration.data.length > 0
+      ? createFloorsFromSeatConfiguration(seatConfiguration.data).map(
+          (floor) => ({
+            ...floor,
+            spaces: floor.spaces.map(convertBusSeatModelToSeatDiagramSpace),
+          }),
+        )
+      : [];
+
   return (
-    <Form onSubmit={form.handleSubmit}>
-      <FormLayout title={tBuses('sections.basicInfo')}>
+    <Form onSubmit={form.handleSubmit} className="w-full max-w-none">
+      <FormLayout
+        title={tBuses('sections.basicInfo')}
+        className="w-full max-w-none"
+      >
         <form.AppField name="economicNumber">
           {(field) => (
             <field.TextInput
@@ -375,7 +429,10 @@ export default function BusForm({
       </FormLayout>
 
       <div className="pt-4">
-        <FormLayout title={tBuses('sections.modelInfo')}>
+        <FormLayout
+          title={tBuses('sections.modelInfo')}
+          className="w-full max-w-none"
+        >
           <form.AppField
             name="modelId"
             listeners={{
@@ -443,7 +500,10 @@ export default function BusForm({
       </div>
 
       <div className="pt-4">
-        <FormLayout title={tBuses('sections.technicalInfo')}>
+        <FormLayout
+          title={tBuses('sections.technicalInfo')}
+          className="w-full max-w-none"
+        >
           <form.AppField name="vehicleId">
             {(field) => (
               <field.TextInput
@@ -499,7 +559,10 @@ export default function BusForm({
       </div>
 
       <div className="pt-4">
-        <FormLayout title={tBuses('sections.maintenanceInfo')}>
+        <FormLayout
+          title={tBuses('sections.maintenanceInfo')}
+          className="w-full max-w-none"
+        >
           <form.AppField name="currentKilometer">
             {(field) => (
               <field.NumberInput
@@ -538,7 +601,10 @@ export default function BusForm({
       </div>
 
       <div className="pt-4">
-        <FormLayout title={tBuses('sections.seatDiagram')}>
+        <FormLayout
+          title={tBuses('sections.seatDiagram')}
+          className="w-full max-w-none"
+        >
           <form.AppField name="seatDiagramId">
             {(field) => {
               const seatDiagram = seatDiagrams?.data.find(
@@ -567,28 +633,17 @@ export default function BusForm({
                       })) || []
                     }
                   />
-                  {seatDiagram && (
+                  {seatDiagram && seatSpaces.length > 0 && (
                     <div className="space-y-4 pt-4">
-                      {seatDiagram.seatsPerFloor.map((floor) => (
-                        <div
-                          key={floor.floorNumber}
-                          className="border rounded-lg p-4"
-                        >
-                          <h4 className="font-medium mb-2">
-                            {tSeatDiagrams('fields.floor', {
-                              floorNumber: floor.floorNumber,
-                            })}
-                          </h4>
-                          <dl className="grid grid-cols-[1fr_1fr] gap-2 text-sm">
-                            <dt>{tSeatDiagrams('fields.numRows')}:</dt>
-                            <dd>{floor.numRows || '-'}</dd>
-                            <dt>{tSeatDiagrams('fields.seatsLeft')}:</dt>
-                            <dd>{floor.seatsLeft || '-'}</dd>
-                            <dt>{tSeatDiagrams('fields.seatsRight')}:</dt>
-                            <dd>{floor.seatsRight || '-'}</dd>
-                          </dl>
+                      {/* Visual diagram */}
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-medium text-foreground">
+                          {tSeatDiagrams('readOnly.visualDiagram')}
+                        </h4>
+                        <div className="border rounded-lg p-4 bg-gray-50">
+                          <ReadOnlySeatDiagram seatSpaces={seatSpaces} />
                         </div>
-                      ))}
+                      </div>
                     </div>
                   )}
                 </>
@@ -599,7 +654,10 @@ export default function BusForm({
       </div>
 
       <div className="pt-4">
-        <FormLayout title={tTechnologies('sections.technologies')}>
+        <FormLayout
+          title={tTechnologies('sections.technologies')}
+          className="w-full max-w-none"
+        >
           <form.AppField name="technologyIds">
             {(field) => (
               <div className="space-y-4">
@@ -649,7 +707,10 @@ export default function BusForm({
       </div>
 
       <div className="pt-4">
-        <FormLayout title={tBuses('sections.chromatics')}>
+        <FormLayout
+          title={tBuses('sections.chromatics')}
+          className="w-full max-w-none"
+        >
           <form.AppField name="chromaticId">
             {(field) => (
               <field.SelectInput
@@ -672,7 +733,10 @@ export default function BusForm({
       </div>
 
       <div className="pt-4">
-        <FormLayout title={tBuses('sections.busCrew')}>
+        <FormLayout
+          title={tBuses('sections.busCrew')}
+          className="w-full max-w-none"
+        >
           <form.AppField name="driverIds">
             {(field) => (
               <div className="space-y-4">

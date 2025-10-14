@@ -122,7 +122,7 @@ export default function EditBusPage() {
   }
 
   return (
-    <div>
+    <div className="w-full max-w-5xl mx-auto">
       <PageHeader
         title={tBuses('edit.title')}
         description={data.registrationNumber}

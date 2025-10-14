@@ -9,6 +9,10 @@ const emptySpaceVariants = cva(
       isSelected: {
         true: 'ring-2 shadow-md',
       },
+      readOnly: {
+        true: 'cursor-default',
+        false: 'cursor-pointer',
+      },
     },
   },
 );
@@ -16,12 +20,14 @@ interface EmptySpaceProps {
   space: SeatDiagramSpace;
   onClick: (space: SeatDiagramSpace) => void;
   isSelected: boolean;
+  readOnly?: boolean;
 }
 
 export default function EmptySpace({
   space,
   onClick,
   isSelected,
+  readOnly = false,
 }: EmptySpaceProps) {
   return (
     <Button
@@ -29,9 +35,12 @@ export default function EmptySpace({
       size="sm"
       type="button"
       onClick={() => {
-        onClick(space);
+        if (!readOnly) {
+          onClick(space);
+        }
       }}
-      className={emptySpaceVariants({ isSelected })}
+      className={emptySpaceVariants({ isSelected, readOnly })}
+      disabled={false}
       aria-label="Empty space"
       aria-pressed={isSelected}
     />

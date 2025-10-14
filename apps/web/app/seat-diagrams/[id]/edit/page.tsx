@@ -47,7 +47,7 @@ export default function EditSeatDiagramPage() {
           .map((space) => ({
             ...space,
             // @ts-expect-error - @todo improve typing
-            reclinementAngle: space.reclinementAngle
+            reclinementAngle: !isNaN(parseInt(space.reclinementAngle))
               ? // @ts-expect-error - @todo improve typing
                 parseInt(space.reclinementAngle)
               : undefined,

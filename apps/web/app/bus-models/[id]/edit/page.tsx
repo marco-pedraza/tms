@@ -77,7 +77,7 @@ export default function EditBusModelPage() {
   };
 
   return (
-    <div>
+    <div className="w-full max-w-5xl mx-auto">
       <PageHeader
         title={tBusModels('edit.title')}
         description={`${data?.manufacturer} (${data?.model})`}

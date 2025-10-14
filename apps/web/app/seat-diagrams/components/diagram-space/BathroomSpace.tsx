@@ -10,6 +10,10 @@ const bathroomSpaceVariants = cva(
       isSelected: {
         true: 'ring-2 shadow-md',
       },
+      readOnly: {
+        true: 'cursor-default',
+        false: 'cursor-pointer',
+      },
     },
   },
 );
@@ -18,12 +22,14 @@ interface BathroomSpaceProps {
   space: SeatDiagramSpace;
   onClick: (space: SeatDiagramSpace) => void;
   isSelected: boolean;
+  readOnly?: boolean;
 }
 
 export default function BathroomSpace({
   space,
   onClick,
   isSelected,
+  readOnly = false,
 }: BathroomSpaceProps) {
   return (
     <Button
@@ -31,9 +37,12 @@ export default function BathroomSpace({
       size="sm"
       type="button"
       onClick={() => {
-        onClick(space);
+        if (!readOnly) {
+          onClick(space);
+        }
       }}
-      className={bathroomSpaceVariants({ isSelected })}
+      className={bathroomSpaceVariants({ isSelected, readOnly })}
+      disabled={false}
       aria-label="Bathroom space"
       aria-pressed={isSelected}
     >

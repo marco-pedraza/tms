@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { bus_seat_models } from '@repo/ims-client';
 import ActionButtons from '@/components/action-buttons';
 import AffirmationBadge from '@/components/affirmation-badge';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
@@ -9,9 +10,14 @@ import PageHeader from '@/components/page-header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
+import ReadOnlySeatDiagram from '@/seat-diagrams/components/read-only-seat-diagram';
+import { createFloorsFromSeatConfiguration } from '@/seat-diagrams/components/seat-diagram-form/create-floors-from-quick-config';
 import SeatDiagramSkeleton from '@/seat-diagrams/components/seat-diagram-skeleton';
+import useQuerySeatConfiguration from '@/seat-diagrams/hooks/use-query-seat-configuration';
 import useQuerySeatDiagram from '@/seat-diagrams/hooks/use-query-seat-diagram';
 import useSeatDiagramMutations from '@/seat-diagrams/hooks/use-seat-diagram-mutations';
+import { SeatDiagramSpace } from '@/seat-diagrams/seat-diagrams.schemas';
+import { SeatType, SpaceType } from '@/services/ims-client';
 import routes from '@/services/routes';
 
 export default function SeatDiagramDetailsPage() {
@@ -22,6 +28,43 @@ export default function SeatDiagramDetailsPage() {
     itemId,
     enabled: isValidId,
   });
+
+  // Query seat configuration for the diagram
+  const { data: seatConfiguration } = useQuerySeatConfiguration({
+    seatDiagramId: itemId,
+    enabled: isValidId,
+  });
+
+  // Convert seat configuration to spaces format
+  const convertBusSeatModelToSeatDiagramSpace = (
+    busSeat: bus_seat_models.BusSeatModel,
+  ): SeatDiagramSpace => {
+    return {
+      floorNumber: busSeat.floorNumber,
+      active: busSeat.active,
+      position: {
+        x: busSeat.position.x,
+        y: busSeat.position.y,
+      },
+      spaceType: busSeat.spaceType as SpaceType,
+      ...(busSeat.spaceType === 'seat' && {
+        seatType: busSeat.seatType as SeatType,
+        seatNumber: busSeat.seatNumber ?? '',
+        amenities: busSeat.amenities ?? [],
+        reclinementAngle: busSeat.reclinementAngle ?? '',
+      }),
+    };
+  };
+
+  const seatSpaces =
+    seatConfiguration?.data && seatConfiguration.data.length > 0
+      ? createFloorsFromSeatConfiguration(seatConfiguration.data).map(
+          (floor) => ({
+            ...floor,
+            spaces: floor.spaces.map(convertBusSeatModelToSeatDiagramSpace),
+          }),
+        )
+      : [];
   const { delete: deleteSeatDiagram } = useSeatDiagramMutations();
   const { deleteId, setDeleteId, onConfirmDelete, onCancelDelete } =
     useDeleteDialog({
@@ -116,37 +159,10 @@ export default function SeatDiagramDetailsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{tSeatDiagrams('fields.seatsPerFloor')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {seatDiagram.seatsPerFloor.map((floor) => (
-                <div key={floor.floorNumber} className="border rounded-lg p-4">
-                  <h4 className="font-medium mb-2">
-                    {tSeatDiagrams('fields.floor', {
-                      floorNumber: floor.floorNumber,
-                    })}
-                  </h4>
-                  <dl className="grid grid-cols-[1fr_1fr] gap-2 text-sm">
-                    <dt>{tSeatDiagrams('fields.numRows')}:</dt>
-                    <dd>{floor.numRows}</dd>
-                    <dt>{tSeatDiagrams('fields.seatsLeft')}:</dt>
-                    <dd>{floor.seatsLeft}</dd>
-                    <dt>{tSeatDiagrams('fields.seatsRight')}:</dt>
-                    <dd>{floor.seatsRight}</dd>
-                  </dl>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="md:col-span-2">
-          <CardHeader>
             <CardTitle>{tCommon('sections.systemInfo')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <dl className="grid grid-cols-[1fr_2fr] gap-4 md:grid-cols-[1fr_2fr_1fr_2fr]">
+            <dl className="grid grid-cols-[1fr_2fr] gap-4">
               <dt className="font-medium">{tCommon('fields.id')}:</dt>
               <dd>{seatDiagram.id}</dd>
 
@@ -159,6 +175,20 @@ export default function SeatDiagramDetailsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Visual diagram section */}
+      {seatSpaces.length > 0 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>{tSeatDiagrams('readOnly.visualDiagram')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <ReadOnlySeatDiagram seatSpaces={seatSpaces} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <ConfirmDeleteDialog
         isOpen={!!deleteId}

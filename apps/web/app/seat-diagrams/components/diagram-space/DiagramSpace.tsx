@@ -13,12 +13,14 @@ interface DiagramSpaceProps {
   space: SeatDiagramSpace;
   isSelected: boolean;
   onClick: (space: SeatDiagramSpace) => void;
+  readOnly?: boolean;
 }
 
 export default function DiagramSpace({
   space,
   isSelected,
   onClick,
+  readOnly = false,
 }: DiagramSpaceProps) {
   switch (space.spaceType) {
     case SpaceType.SEAT:
@@ -27,12 +29,18 @@ export default function DiagramSpace({
           space={space as SeatSpaceType}
           isSelected={isSelected}
           onClick={onClick}
+          readOnly={readOnly}
         />
       );
 
     case SpaceType.HALLWAY:
       return (
-        <HallwaySpace space={space} onClick={onClick} isSelected={isSelected} />
+        <HallwaySpace
+          space={space}
+          onClick={onClick}
+          isSelected={isSelected}
+          readOnly={readOnly}
+        />
       );
 
     case SpaceType.BATHROOM:
@@ -41,17 +49,28 @@ export default function DiagramSpace({
           space={space}
           onClick={onClick}
           isSelected={isSelected}
+          readOnly={readOnly}
         />
       );
 
     case SpaceType.STAIRS:
       return (
-        <StairsSpace space={space} onClick={onClick} isSelected={isSelected} />
+        <StairsSpace
+          space={space}
+          onClick={onClick}
+          isSelected={isSelected}
+          readOnly={readOnly}
+        />
       );
 
     case SpaceType.EMPTY:
       return (
-        <EmptySpace space={space} onClick={onClick} isSelected={isSelected} />
+        <EmptySpace
+          space={space}
+          onClick={onClick}
+          isSelected={isSelected}
+          readOnly={readOnly}
+        />
       );
   }
 }

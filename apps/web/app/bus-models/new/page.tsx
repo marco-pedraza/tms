@@ -46,7 +46,7 @@ export default function NewBusModelPage() {
   };
 
   return (
-    <div>
+    <div className="w-full max-w-5xl mx-auto">
       <PageHeader
         title={t('actions.create')}
         backHref={routes.busModels.index}

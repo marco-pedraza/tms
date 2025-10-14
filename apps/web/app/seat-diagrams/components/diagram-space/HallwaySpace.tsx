@@ -9,6 +9,10 @@ const hallwaySpaceVariants = cva(
       isSelected: {
         true: 'ring-2 shadow-md',
       },
+      readOnly: {
+        true: 'cursor-default',
+        false: 'cursor-pointer',
+      },
     },
   },
 );
@@ -16,12 +20,14 @@ interface HallwaySpaceProps {
   space: SeatDiagramSpace;
   onClick: (space: SeatDiagramSpace) => void;
   isSelected: boolean;
+  readOnly?: boolean;
 }
 
 export default function HallwaySpace({
   space,
   onClick,
   isSelected,
+  readOnly = false,
 }: HallwaySpaceProps) {
   return (
     <Button
@@ -29,9 +35,12 @@ export default function HallwaySpace({
       size="sm"
       type="button"
       onClick={() => {
-        onClick(space);
+        if (!readOnly) {
+          onClick(space);
+        }
       }}
-      className={hallwaySpaceVariants({ isSelected })}
+      className={hallwaySpaceVariants({ isSelected, readOnly })}
+      disabled={false}
       aria-label="Hallway space"
       aria-pressed={isSelected}
     />

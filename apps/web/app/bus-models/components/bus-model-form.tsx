@@ -1,8 +1,10 @@
 'use client';
 
+import { useStore } from '@tanstack/react-form';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { bus_models } from '@repo/ims-client';
+import { bus_seat_models } from '@repo/ims-client';
 import useQueryAllBusAmenities from '@/bus-models/hooks/use-query-all-bus-amenities';
 import { useQueryAllBusDiagrams } from '@/bus-models/hooks/use-query-all-bus-diagrams';
 import busEngineTypeTranslationKeys from '@/bus-models/translations/bus-engine-type-translation-keys';
@@ -12,6 +14,11 @@ import FormLayout from '@/components/form/form-layout';
 import AmenityCard from '@/components/ui/amenity-card';
 import { Button } from '@/components/ui/button';
 import useForm from '@/hooks/use-form';
+import ReadOnlySeatDiagram from '@/seat-diagrams/components/read-only-seat-diagram';
+import { createFloorsFromSeatConfiguration } from '@/seat-diagrams/components/seat-diagram-form/create-floors-from-quick-config';
+import useQuerySeatConfiguration from '@/seat-diagrams/hooks/use-query-seat-configuration';
+import { SeatDiagramSpace } from '@/seat-diagrams/seat-diagrams.schemas';
+import { SeatType, SpaceType } from '@/services/ims-client';
 import { engineTypes } from '@/services/ims-client';
 import routes from '@/services/routes';
 import { UseValidationsTranslationsResult } from '@/types/translations';
@@ -171,10 +178,58 @@ export default function BusModelForm({
     },
   });
 
+  // Get the selected diagram ID from the form
+  const selectedDiagramId = useStore(
+    form.store,
+    (state) => state.values.defaultBusDiagramModelId,
+  );
+
+  // Query seat configuration for the selected diagram
+  const { data: seatConfiguration } = useQuerySeatConfiguration({
+    seatDiagramId: parseInt(selectedDiagramId),
+    enabled:
+      Boolean(selectedDiagramId) &&
+      Number.isInteger(parseInt(selectedDiagramId)),
+  });
+
+  // Convert seat configuration to spaces format
+  const convertBusSeatModelToSeatDiagramSpace = (
+    busSeat: bus_seat_models.BusSeatModel,
+  ): SeatDiagramSpace => {
+    return {
+      floorNumber: busSeat.floorNumber,
+      active: busSeat.active,
+      position: {
+        x: busSeat.position.x,
+        y: busSeat.position.y,
+      },
+      spaceType: busSeat.spaceType as SpaceType,
+      ...(busSeat.spaceType === 'seat' && {
+        seatType: busSeat.seatType as SeatType,
+        seatNumber: busSeat.seatNumber ?? '',
+        amenities: busSeat.amenities ?? [],
+        reclinementAngle: busSeat.reclinementAngle ?? '',
+      }),
+    };
+  };
+
+  const seatSpaces =
+    seatConfiguration?.data && seatConfiguration.data.length > 0
+      ? createFloorsFromSeatConfiguration(seatConfiguration.data).map(
+          (floor) => ({
+            ...floor,
+            spaces: floor.spaces.map(convertBusSeatModelToSeatDiagramSpace),
+          }),
+        )
+      : [];
+
   return (
-    <Form onSubmit={form.handleSubmit}>
+    <Form onSubmit={form.handleSubmit} className="w-full max-w-none">
       <div className="space-y-4">
-        <FormLayout title={tBusModels('form.title')}>
+        <FormLayout
+          title={tBusModels('form.title')}
+          className="w-full max-w-none"
+        >
           <form.AppField name="manufacturer">
             {(field) => (
               <field.TextInput
@@ -271,7 +326,10 @@ export default function BusModelForm({
             {(field) => <field.SwitchInput label={tCommon('fields.active')} />}
           </form.AppField>
         </FormLayout>
-        <FormLayout title={tBusModels('sections.amenities')}>
+        <FormLayout
+          title={tBusModels('sections.amenities')}
+          className="w-full max-w-none"
+        >
           <form.AppField name="amenityIds">
             {(field) => (
               <div className="space-y-4">
@@ -315,7 +373,10 @@ export default function BusModelForm({
             )}
           </form.AppField>
         </FormLayout>
-        <FormLayout title={tBusModels('sections.diagram')}>
+        <FormLayout
+          title={tBusModels('sections.diagram')}
+          className="w-full max-w-none"
+        >
           <form.AppField name="defaultBusDiagramModelId">
             {(field) => {
               const seatDiagram = busDiagrams?.data.find(
@@ -359,28 +420,17 @@ export default function BusModelForm({
                       </Button>
                     )}
                   </div>
-                  {seatDiagram && (
+                  {seatDiagram && seatSpaces.length > 0 && (
                     <div className="space-y-4 pt-4">
-                      {seatDiagram.seatsPerFloor.map((floor) => (
-                        <div
-                          key={floor.floorNumber}
-                          className="border rounded-lg p-4"
-                        >
-                          <h4 className="font-medium mb-2">
-                            {tSeatDiagrams('fields.floor', {
-                              floorNumber: floor.floorNumber,
-                            })}
-                          </h4>
-                          <dl className="grid grid-cols-[1fr_1fr] gap-2 text-sm">
-                            <dt>{tSeatDiagrams('fields.numRows')}:</dt>
-                            <dd>{floor.numRows || '-'}</dd>
-                            <dt>{tSeatDiagrams('fields.seatsLeft')}:</dt>
-                            <dd>{floor.seatsLeft || '-'}</dd>
-                            <dt>{tSeatDiagrams('fields.seatsRight')}:</dt>
-                            <dd>{floor.seatsRight || '-'}</dd>
-                          </dl>
+                      {/* Visual diagram */}
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-medium text-foreground">
+                          {tSeatDiagrams('readOnly.visualDiagram')}
+                        </h4>
+                        <div className="border rounded-lg p-4 bg-gray-50">
+                          <ReadOnlySeatDiagram seatSpaces={seatSpaces} />
                         </div>
-                      ))}
+                      </div>
                     </div>
                   )}
                 </>

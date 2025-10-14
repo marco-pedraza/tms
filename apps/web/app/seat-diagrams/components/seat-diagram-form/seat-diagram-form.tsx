@@ -232,7 +232,12 @@ export default function SeatDiagramForm({
               space.position.y === value.position.y
             ),
         );
-        newSpacesForFloor.push(value);
+        // @todo modify backend to accept list of numbers instead of strings, array of numbers makes more sense
+        const newAmenities = value.amenities.map((amenity) => String(amenity));
+        newSpacesForFloor.push({
+          ...value,
+          amenities: newAmenities,
+        });
         const newSeatConfiguration = currentSeatConfiguration.filter(
           // @ts-expect-error - @todo improve typing
           (floor) => floor.floorNumber !== value.floorNumber,

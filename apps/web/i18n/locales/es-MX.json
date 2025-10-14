@@ -2257,6 +2257,27 @@
         "subtitle": "Crear nuevo diagrama basado en: {templateName}"
       }
     },
+    "readOnly": {
+      "spaceInfo": {
+        "title": "Información del espacio",
+        "selectPrompt": "Selecciona un espacio para ver su información",
+        "labels": {
+          "spaceType": "Tipo de espacio",
+          "seatType": "Tipo de asiento",
+          "seatNumber": "Número de asiento",
+          "reclinementAngle": "Ángulo de reclinación",
+          "amenities": "Amenidades",
+          "status": "Estado"
+        },
+        "values": {
+          "noNumber": "Sin número",
+          "active": "Activo",
+          "inactive": "Inactivo"
+        },
+        "emptySpaces": "No hay espacios configurados para este diagrama"
+      },
+      "visualDiagram": "Diagrama visual"
+    },
     "form": {
       "title": "Información del diagrama de asientos",
       "copySuffix": " - Copia",

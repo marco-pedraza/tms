@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { bus_seat_models } from '@repo/ims-client';
 import useQuerySeatDiagram from '@/app/seat-diagrams/hooks/use-query-seat-diagram';
 import BusSkeleton from '@/buses/components/bus-skeleton';
 import BusStatusBadge from '@/buses/components/bus-status-badge';
@@ -16,6 +17,11 @@ import DriverCard from '@/components/ui/driver-card';
 import TechnologyCard from '@/components/ui/technology-card';
 import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
+import ReadOnlySeatDiagram from '@/seat-diagrams/components/read-only-seat-diagram';
+import { createFloorsFromSeatConfiguration } from '@/seat-diagrams/components/seat-diagram-form/create-floors-from-quick-config';
+import useQuerySeatConfiguration from '@/seat-diagrams/hooks/use-query-seat-configuration';
+import { SeatDiagramSpace } from '@/seat-diagrams/seat-diagrams.schemas';
+import { SeatType, SpaceType } from '@/services/ims-client';
 import routes from '@/services/routes';
 import {
   parseAndFormatDateForHumans,
@@ -37,6 +43,43 @@ export default function BusDetailsPage() {
     itemId: bus?.seatDiagramId ?? 0,
     enabled: !!bus?.seatDiagramId,
   });
+
+  // Query seat configuration for the diagram
+  const { data: seatConfiguration } = useQuerySeatConfiguration({
+    seatDiagramId: bus?.seatDiagramId ?? 0,
+    enabled: !!bus?.seatDiagramId,
+  });
+
+  // Convert seat configuration to spaces format
+  const convertBusSeatModelToSeatDiagramSpace = (
+    busSeat: bus_seat_models.BusSeatModel,
+  ): SeatDiagramSpace => {
+    return {
+      floorNumber: busSeat.floorNumber,
+      active: busSeat.active,
+      position: {
+        x: busSeat.position.x,
+        y: busSeat.position.y,
+      },
+      spaceType: busSeat.spaceType as SpaceType,
+      ...(busSeat.spaceType === 'seat' && {
+        seatType: busSeat.seatType as SeatType,
+        seatNumber: busSeat.seatNumber ?? '',
+        amenities: busSeat.amenities ?? [],
+        reclinementAngle: busSeat.reclinementAngle ?? '',
+      }),
+    };
+  };
+
+  const seatSpaces =
+    seatConfiguration?.data && seatConfiguration.data.length > 0
+      ? createFloorsFromSeatConfiguration(seatConfiguration.data).map(
+          (floor) => ({
+            ...floor,
+            spaces: floor.spaces.map(convertBusSeatModelToSeatDiagramSpace),
+          }),
+        )
+      : [];
   const { delete: deleteBus } = useBusMutations();
   const { deleteId, setDeleteId, onConfirmDelete, onCancelDelete } =
     useDeleteDialog({
@@ -268,29 +311,27 @@ export default function BusDetailsPage() {
           <CardTitle>{tBuses('sections.seatDiagram')}</CardTitle>
         </CardHeader>
         <CardContent>
-          {seatDiagram && (
+          {seatDiagram && seatSpaces.length > 0 && (
             <div className="space-y-4 pt-4">
-              <dl>
-                <dt className="font-medium">{tSeatDiagrams('fields.name')}:</dt>
-                <dd>{seatDiagram.name}</dd>
-              </dl>
-              {seatDiagram.seatsPerFloor.map((floor) => (
-                <div key={floor.floorNumber} className="border rounded-lg p-4">
-                  <h4 className="font-medium mb-2">
-                    {tSeatDiagrams('fields.floor', {
-                      floorNumber: floor.floorNumber,
-                    })}
-                  </h4>
-                  <dl className="grid grid-cols-[1fr_1fr] gap-2 text-sm">
-                    <dt>{tSeatDiagrams('fields.numRows')}:</dt>
-                    <dd>{floor.numRows ?? '-'}</dd>
-                    <dt>{tSeatDiagrams('fields.seatsLeft')}:</dt>
-                    <dd>{floor.seatsLeft ?? '-'}</dd>
-                    <dt>{tSeatDiagrams('fields.seatsRight')}:</dt>
-                    <dd>{floor.seatsRight ?? '-'}</dd>
-                  </dl>
+              {/* Basic diagram information */}
+              <div className="space-y-4">
+                <dl>
+                  <dt className="font-medium">
+                    {tSeatDiagrams('fields.name')}:
+                  </dt>
+                  <dd>{seatDiagram.name}</dd>
+                </dl>
+              </div>
+
+              {/* Visual diagram */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium text-foreground">
+                  {tSeatDiagrams('readOnly.visualDiagram')}
+                </h4>
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <ReadOnlySeatDiagram seatSpaces={seatSpaces} />
                 </div>
-              ))}
+              </div>
             </div>
           )}
         </CardContent>

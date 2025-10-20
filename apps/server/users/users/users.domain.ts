@@ -122,32 +122,34 @@ export async function validateUser(
 
 /**
  * Validates password change operation
- * @param userId - ID of the user changing password
+ * @param targetUserId - ID of the user whose password will be changed
  * @param payload - Password change data
+ * @param loggedUserId - ID of the authenticated user performing the change
  * @throws {FieldValidationError} If validation fails
  */
 export async function validatePasswordChange(
-  userId: number,
+  targetUserId: number,
   payload: ChangePasswordPayload,
+  loggedUserId: number,
 ): Promise<void> {
   const collector = new FieldErrorCollector();
 
-  // Check if user exists
-  let user;
+  // Check if target user exists
   try {
-    user = await userRepository.findOneWithPassword(userId);
+    await userRepository.findOne(targetUserId);
   } catch (error) {
     if (error instanceof NotFoundError) {
-      collector.addError('userId', 'NOT_FOUND', 'User not found', userId);
+      collector.addError('id', 'NOT_FOUND', 'User not found', targetUserId);
       collector.throwIfErrors();
     }
     throw error;
   }
 
-  // Validate current password
+  // Validate that the logged user knows their own password
+  const loggedUser = await userRepository.findOneWithPassword(loggedUserId);
   const isValid = await comparePasswords(
     payload.currentPassword,
-    user.passwordHash,
+    loggedUser.passwordHash,
   );
   if (!isValid) {
     collector.addError(

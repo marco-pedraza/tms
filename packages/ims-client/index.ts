@@ -247,7 +247,6 @@ export namespace inventory {
             this.listZonesByDiagramPaginated = this.listZonesByDiagramPaginated.bind(this)
             this.regenerateSeats = this.regenerateSeats.bind(this)
             this.removeOptionFromPathway = this.removeOptionFromPathway.bind(this)
-            this.runAllSeeders = this.runAllSeeders.bind(this)
             this.setDefaultPathwayOption = this.setDefaultPathwayOption.bind(this)
             this.syncInstallationSchemas = this.syncInstallationSchemas.bind(this)
             this.syncPathwayOptionTolls = this.syncPathwayOptionTolls.bind(this)
@@ -2414,18 +2413,6 @@ export namespace inventory {
             return await resp.json() as pathways.Pathway
         }
 
-        public async runAllSeeders(params: seeds.SeedWithClientPayload): Promise<{
-    success: boolean
-    message: string
-}> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/seed`, JSON.stringify(params))
-            return await resp.json() as {
-    success: boolean
-    message: string
-}
-        }
-
         /**
          * Sets a specific option as the default option for a pathway.
          * @param params - Object containing pathway ID and option ID
@@ -4130,8 +4117,9 @@ export namespace users {
 
         /**
          * Changes a user's password.
+         * Requires the authenticated user to provide their own current password for security.
          * @param params - Object containing the user ID and password data
-         * @param params.id - The ID of the user to update
+         * @param params.id - The ID of the user whose password will be changed
          * @returns {Promise<SafeUser>} The updated user (without password hash)
          * @throws {APIError} If the user is not found, current password is invalid, or update fails
          */
@@ -4571,12 +4559,16 @@ export namespace users {
         public async refreshToken(params: auth.RefreshTokenPayload): Promise<{
     accessToken: string
     refreshToken: string
+    permissions: permissions.Permission[]
+    roles: roles.Role[]
 }> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/auth/refresh-token`, JSON.stringify(params))
             return await resp.json() as {
     accessToken: string
     refreshToken: string
+    permissions: permissions.Permission[]
+    roles: roles.Role[]
 }
         }
 
@@ -5138,6 +5130,16 @@ export namespace auth {
          * JWT refresh token
          */
         refreshToken: string
+
+        /**
+         * User's effective permissions (direct + role-based)
+         */
+        permissions: permissions.Permission[]
+
+        /**
+         * User's assigned roles
+         */
+        roles: roles.Role[]
     }
 
     export interface LogoutPayload {
@@ -10767,16 +10769,6 @@ export namespace seat_diagrams {
          * Timestamp when the seat diagram was last updated
          */
         updatedAt: string | string | null
-    }
-}
-
-export namespace seeds {
-    export interface SeedWithClientPayload {
-        /**
-         * Client code to use for seeding (e.g., 'GFA', 'CLIENT_B')
-         * If not provided, will use random/default data
-         */
-        clientCode?: string
     }
 }
 

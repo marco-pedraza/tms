@@ -28,7 +28,12 @@ import { populationUseCases } from './populations.use-cases';
  * @throws {APIError} If the population creation fails
  */
 export const createPopulation = api(
-  { expose: true, method: 'POST', path: '/populations/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/populations/create',
+    auth: true,
+  },
   async (params: CreatePopulationPayload): Promise<Population> => {
     await validatePopulation(params);
     return await populationRepository.create(params);
@@ -43,7 +48,12 @@ export const createPopulation = api(
  * @throws {APIError} If the population is not found or retrieval fails
  */
 export const getPopulation = api(
-  { expose: true, method: 'GET', path: '/populations/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/populations/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<PopulationWithRelations> => {
     return await populationRepository.findOneWithRelations(id);
   },
@@ -56,7 +66,12 @@ export const getPopulation = api(
  * @throws {APIError} If retrieval fails
  */
 export const listPopulations = api(
-  { expose: true, method: 'POST', path: '/populations/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/populations/list/all',
+    auth: true,
+  },
   async (
     params: ListPopulationsQueryParams,
   ): Promise<ListPopulationsResult> => {
@@ -74,7 +89,12 @@ export const listPopulations = api(
  * @throws {APIError} If retrieval fails
  */
 export const listPopulationsPaginated = api(
-  { expose: true, method: 'POST', path: '/populations/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/populations/list',
+    auth: true,
+  },
   async (
     params: PaginatedListPopulationsQueryParams,
   ): Promise<PaginatedListPopulationsResult> => {
@@ -95,7 +115,12 @@ export const listPopulationsPaginated = api(
  * @throws {APIError} If the population is not found or update fails
  */
 export const updatePopulation = api(
-  { expose: true, method: 'PUT', path: '/populations/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/populations/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -114,7 +139,12 @@ export const updatePopulation = api(
  * @throws {APIError} If the population or any city is not found, or if there are duplicate city IDs
  */
 export const assignCitiesToPopulation = api(
-  { expose: true, method: 'PUT', path: '/populations/:id/cities/assign' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/populations/:id/cities/assign',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -139,6 +169,7 @@ export const assignCityToPopulation = api(
     expose: true,
     method: 'PUT',
     path: '/populations/:id/cities/assign/one',
+    auth: true,
   },
   async ({
     id,
@@ -165,6 +196,7 @@ export const unassignCityFromPopulation = api(
     expose: true,
     method: 'PUT',
     path: '/populations/:id/cities/unassign/one',
+    auth: true,
   },
   async ({
     id,
@@ -187,7 +219,12 @@ export const unassignCityFromPopulation = api(
  * @throws {APIError} If retrieval fails
  */
 export const listAvailableCities = api(
-  { expose: true, method: 'GET', path: '/populations/cities' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/populations/cities',
+    auth: true,
+  },
   async (params: {
     populationId?: number;
   }): Promise<ListAvailableCitiesResult> => {
@@ -203,7 +240,12 @@ export const listAvailableCities = api(
  * @throws {APIError} If the population is not found or retrieval fails
  */
 export const getPopulationCities = api(
-  { expose: true, method: 'GET', path: '/populations/:id/cities' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/populations/:id/cities',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<ListCitiesResult> => {
     const cities = await populationUseCases.getPopulationCities(id);
     return {
@@ -220,7 +262,12 @@ export const getPopulationCities = api(
  * @throws {APIError} If the population is not found or deletion fails
  */
 export const deletePopulation = api(
-  { expose: true, method: 'DELETE', path: '/populations/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/populations/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Population> => {
     return await populationRepository.delete(id);
   },
@@ -234,7 +281,12 @@ export const deletePopulation = api(
  * @throws {APIError} If the population is not found or retrieval fails
  */
 export const findPopulationByAssignedCity = api(
-  { expose: true, method: 'GET', path: '/populations/find/:cityId' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/populations/find/:cityId',
+    auth: true,
+  },
   async (params: {
     cityId: number;
   }): Promise<FindPopulationByAssignedCityResult> => {

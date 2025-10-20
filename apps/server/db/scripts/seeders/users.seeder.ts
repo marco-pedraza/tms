@@ -107,7 +107,7 @@ const PREDEFINED_USERS: UserData[] = [
     employeeId: 'EMP003',
     isSystemAdmin: false,
     departmentCode: 'fleet',
-    roles: ['Read Only', 'Editor'],
+    roles: ['Fleet Manager'],
   },
   {
     username: 'operations.manager',
@@ -118,18 +118,7 @@ const PREDEFINED_USERS: UserData[] = [
     employeeId: 'EMP004',
     isSystemAdmin: false,
     departmentCode: 'ops',
-    roles: ['Read Only', 'Editor'],
-  },
-  {
-    username: 'read_only',
-    email: 'readonly.user@company.com',
-    firstName: 'María',
-    lastName: 'García',
-    position: 'Data Analyst',
-    employeeId: 'EMP005',
-    isSystemAdmin: false,
-    departmentCode: 'it',
-    roles: ['Read Only'],
+    roles: ['Operations Manager'],
   },
 ];
 

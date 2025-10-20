@@ -1,4 +1,3 @@
-import { omitPasswordHash } from '@/shared/auth-utils';
 import {
   getRelatedEntities,
   updateManyToManyRelation,
@@ -12,7 +11,6 @@ import { roleRepository } from '../roles/roles.repository';
 import { roles } from '../roles/roles.schema';
 import { Role, RoleWithPermissions } from '../roles/roles.types';
 import { userRepository } from '../users/users.repository';
-import { User } from '../users/users.types';
 import { userPermissions, userRoles } from './user-permissions.schema';
 import type {
   AssignPermissionsToUserPayload,
@@ -110,9 +108,6 @@ export const createUserPermissionsRepository = () => {
   const getUserWithRoles = async (userId: number): Promise<UserWithRoles> => {
     const user = await userRepository.findOne(userId);
 
-    // Create a safe user object without sensitive data
-    const safeUser = omitPasswordHash(user as User);
-
     const rolesList = await getRelatedEntities<Role>(
       db,
       roles,
@@ -123,7 +118,7 @@ export const createUserPermissionsRepository = () => {
     );
 
     return {
-      ...safeUser,
+      ...user,
       roles: rolesList,
     };
   };
@@ -138,9 +133,6 @@ export const createUserPermissionsRepository = () => {
     userId: number,
   ): Promise<UserWithPermissions> => {
     const user = await userRepository.findOne(userId);
-
-    // Create a safe user object without sensitive data
-    const safeUser = omitPasswordHash(user as User);
 
     // Get direct permissions
     const directPermissionsList = await getRelatedEntities<Permission>(
@@ -186,7 +178,7 @@ export const createUserPermissionsRepository = () => {
     ];
 
     return {
-      ...safeUser,
+      ...user,
       directPermissions: directPermissionsList,
       roles: rolesWithPermissions,
       effectivePermissions: uniquePermissions,

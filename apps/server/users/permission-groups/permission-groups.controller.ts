@@ -14,7 +14,12 @@ import { permissionGroupRepository } from './permission-groups.repository';
  * @throws {APIError} If the permission group creation fails
  */
 export const createPermissionGroup = api(
-  { method: 'POST', path: '/permission-groups', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/permission-groups',
+    auth: true,
+  },
   async (params: CreatePermissionGroupPayload): Promise<PermissionGroup> => {
     return await permissionGroupRepository.create(params);
   },
@@ -26,7 +31,12 @@ export const createPermissionGroup = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listPermissionGroups = api(
-  { method: 'GET', path: '/permission-groups', expose: true, auth: false },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/permission-groups',
+    auth: true,
+  },
   async (): Promise<PermissionGroups> => {
     return await permissionGroupRepository.findAll();
   },
@@ -40,7 +50,12 @@ export const listPermissionGroups = api(
  * @throws {APIError} If the permission group is not found or update fails
  */
 export const updatePermissionGroup = api(
-  { method: 'PUT', path: '/permission-groups/:id', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/permission-groups/:id',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -59,9 +74,9 @@ export const updatePermissionGroup = api(
  */
 export const deletePermissionGroup = api(
   {
+    expose: true,
     method: 'DELETE',
     path: '/permission-groups/:id',
-    expose: true,
     auth: true,
   },
   async ({ id }: { id: number }): Promise<PermissionGroup> => {

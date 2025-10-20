@@ -27,6 +27,7 @@ export const createBusDiagramModelZone = api(
     expose: true,
     method: 'POST',
     path: '/bus-diagram-models/:busDiagramModelId/zones',
+    auth: true,
   },
   async (
     params: CreateBusDiagramModelZonePayload & { busDiagramModelId: number },
@@ -55,6 +56,7 @@ export const getBusDiagramModelZone = api(
     expose: true,
     method: 'GET',
     path: '/bus-diagram-models/:busDiagramModelId/zones/:id',
+    auth: true,
   },
   async ({
     id,
@@ -88,6 +90,7 @@ export const listZonesByDiagramModel = api(
     expose: true,
     method: 'POST',
     path: '/bus-diagram-models/:busDiagramModelId/get-zones',
+    auth: true,
   },
   async (
     params: BusDiagramModelZoneQueryOptions & { busDiagramModelId: number },
@@ -118,6 +121,7 @@ export const listZonesByDiagramModelPaginated = api(
     expose: true,
     method: 'POST',
     path: '/bus-diagram-models/:busDiagramModelId/get-zones/paginated',
+    auth: true,
   },
   async (
     params: PaginationParamsBusDiagramModelZones & {
@@ -147,6 +151,7 @@ export const updateBusDiagramModelZone = api(
     expose: true,
     method: 'PATCH',
     path: '/bus-diagram-models/:busDiagramModelId/zones/:id',
+    auth: true,
   },
   async ({
     id,
@@ -184,6 +189,7 @@ export const deleteBusDiagramModelZone = api(
     expose: true,
     method: 'DELETE',
     path: '/bus-diagram-models/:busDiagramModelId/zones/:id',
+    auth: true,
   },
   async ({
     id,

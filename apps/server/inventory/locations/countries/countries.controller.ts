@@ -18,7 +18,12 @@ import { validateCountry } from './countries.domain';
  * @throws {APIError} If the country creation fails
  */
 export const createCountry = api(
-  { expose: true, method: 'POST', path: '/countries/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/countries/create',
+    auth: true,
+  },
   async (params: CreateCountryPayload): Promise<Country> => {
     await validateCountry(params);
     return await countryRepository.create(params);
@@ -33,7 +38,12 @@ export const createCountry = api(
  * @throws {APIError} If the country is not found or retrieval fails
  */
 export const getCountry = api(
-  { expose: true, method: 'GET', path: '/countries/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/countries/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Country> => {
     return await countryRepository.findOne(id);
   },
@@ -46,7 +56,12 @@ export const getCountry = api(
  * @throws {APIError} If retrieval fails
  */
 export const listCountries = api(
-  { expose: true, method: 'POST', path: '/countries/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/countries/list/all',
+    auth: true,
+  },
   async (params: ListCountriesQueryParams): Promise<ListCountriesResult> => {
     const countries = await countryRepository.findAll(params);
     return {
@@ -62,7 +77,12 @@ export const listCountries = api(
  * @throws {APIError} If retrieval fails
  */
 export const listCountriesPaginated = api(
-  { expose: true, method: 'POST', path: '/countries/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/countries/list',
+    auth: true,
+  },
   async (
     params: PaginatedListCountriesQueryParams,
   ): Promise<PaginatedListCountriesResult> => {
@@ -78,7 +98,12 @@ export const listCountriesPaginated = api(
  * @throws {APIError} If the country is not found or update fails
  */
 export const updateCountry = api(
-  { expose: true, method: 'PUT', path: '/countries/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/countries/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -96,7 +121,12 @@ export const updateCountry = api(
  * @throws {APIError} If the country is not found or deletion fails
  */
 export const deleteCountry = api(
-  { expose: true, method: 'DELETE', path: '/countries/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/countries/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Country> => {
     return await countryRepository.delete(id);
   },

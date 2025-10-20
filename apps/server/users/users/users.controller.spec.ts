@@ -23,7 +23,6 @@ import type {
 } from './users.types';
 import { userRepository } from './users.repository';
 import {
-  changePassword,
   createUser,
   deleteUser,
   getUser,
@@ -31,6 +30,7 @@ import {
   listUsersPaginated,
   updateUser,
 } from './users.controller';
+import { validatePasswordChange } from './users.domain';
 
 describe('Users Controller', () => {
   // Test configuration
@@ -55,7 +55,6 @@ describe('Users Controller', () => {
   // Test data and setup
   let departmentId = 0;
   let userId = 0;
-  let passwordUserId = 0;
   let testRole1: number;
   let testRole2: number;
 
@@ -650,48 +649,62 @@ describe('Users Controller', () => {
   });
 
   describe('password management', () => {
+    let authenticatedUserId = 0;
+    let targetUserId = 0;
+
     beforeAll(async () => {
-      // Create a user for password management tests
-      const pwdTestUser = await createUser({
+      // Create an authenticated user (the one who will change passwords)
+      const authUser = await createUser({
         ...testUser,
-        username: 'pwdtestuser',
-        email: 'password@test.com',
+        username: 'authuser',
+        email: 'auth@test.com',
         departmentId,
       });
 
-      passwordUserId = pwdTestUser.id;
-      usersCleanup.track(passwordUserId);
-      expect(passwordUserId).toBeGreaterThan(0);
-    });
+      authenticatedUserId = authUser.id;
+      usersCleanup.track(authenticatedUserId);
 
-    test('should successfully change a user password with correct credentials', async () => {
-      const passwordData: ChangePasswordPayload = {
-        currentPassword: 'password123',
-        newPassword: 'newPassword456',
-      };
-
-      const result = await changePassword({
-        id: passwordUserId,
-        ...passwordData,
+      // Create a target user (the one whose password will be changed)
+      const targetUser = await createUser({
+        ...testUser,
+        username: 'targetuser',
+        email: 'target@test.com',
+        departmentId,
       });
 
-      expect(result.id).toBe(passwordUserId);
-      expect(result).not.toHaveProperty('passwordHash');
+      targetUserId = targetUser.id;
+      usersCleanup.track(targetUserId);
+
+      expect(authenticatedUserId).toBeGreaterThan(0);
+      expect(targetUserId).toBeGreaterThan(0);
     });
 
-    test('should fail to change password with incorrect current password', async () => {
+    test('should successfully validate password change with correct authenticated user credentials', async () => {
       const passwordData: ChangePasswordPayload = {
-        currentPassword: 'wrongPassword',
+        currentPassword: 'password123', // Password of the authenticated user
+        newPassword: 'newPassword456', // New password for the target user
+      };
+
+      // Test the domain validation function directly
+      await expect(
+        validatePasswordChange(targetUserId, passwordData, authenticatedUserId),
+      ).resolves.not.toThrow();
+    });
+
+    test('should fail validation with incorrect authenticated user password', async () => {
+      const passwordData: ChangePasswordPayload = {
+        currentPassword: 'wrongPassword', // Wrong password for authenticated user
         newPassword: 'anotherPassword789',
       };
 
       // Capture the error to make specific assertions
       let validationError: FieldValidationError | undefined;
       try {
-        await changePassword({
-          id: passwordUserId,
-          ...passwordData,
-        });
+        await validatePasswordChange(
+          targetUserId,
+          passwordData,
+          authenticatedUserId,
+        );
       } catch (error) {
         validationError = error as FieldValidationError;
       }
@@ -703,19 +716,16 @@ describe('Users Controller', () => {
       expect(typedValidationError.fieldErrors[0].code).toBe('INVALID_PASSWORD');
     });
 
-    test('should fail to change password for non-existent user', async () => {
+    test('should fail validation for non-existent target user', async () => {
       const passwordData: ChangePasswordPayload = {
-        currentPassword: 'password123',
+        currentPassword: 'password123', // Correct password for authenticated user
         newPassword: 'newPassword456',
       };
 
       // Capture the error to make specific assertions
       let validationError: FieldValidationError | undefined;
       try {
-        await changePassword({
-          id: 999999,
-          ...passwordData,
-        });
+        await validatePasswordChange(999999, passwordData, authenticatedUserId); // Non-existent target user
       } catch (error) {
         validationError = error as FieldValidationError;
       }
@@ -723,7 +733,7 @@ describe('Users Controller', () => {
       // Verify the specific error code and field
       expect(validationError).toBeDefined();
       const typedValidationError = validationError as FieldValidationError;
-      expect(typedValidationError.fieldErrors[0].field).toBe('userId');
+      expect(typedValidationError.fieldErrors[0].field).toBe('id');
       expect(typedValidationError.fieldErrors[0].code).toBe('NOT_FOUND');
     });
   });

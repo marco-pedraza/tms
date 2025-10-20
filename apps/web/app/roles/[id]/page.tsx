@@ -87,29 +87,6 @@ export default function RoleDetailsPage() {
     setIsDeleteDialogOpen(false);
   };
 
-  // Helper function to get permission translation with type-safe key checking
-  const getPermissionTranslation = (code: string) => {
-    const translationKey = `permissions.${code}`;
-
-    try {
-      // Attempt to get the translation
-      const translation = tRoles(
-        translationKey as Parameters<typeof tRoles>[0],
-      );
-
-      // If next-intl returns the key path as-is, no translation exists
-      // This happens when the key doesn't exist in the translation file
-      if (translation.startsWith('permissions.')) {
-        return code;
-      }
-
-      return translation;
-    } catch {
-      // If there's any error (including type errors), fall back to the code
-      return code;
-    }
-  };
-
   if (isLoading || isLoadingGroups) {
     return <RoleSkeleton />;
   }
@@ -230,7 +207,7 @@ export default function RoleDetailsPage() {
                           <div className="h-1.5 w-1.5 rounded-full bg-primary/60" />
                         </div>
                         <span className="flex-1 leading-tight text-muted-foreground">
-                          {getPermissionTranslation(permission.code)}
+                          {permission.name}
                         </span>
                       </div>
                     ))}

@@ -19,7 +19,12 @@ import { validateBusLine } from './bus-lines.domain';
  * @throws {APIError} If the bus line creation fails
  */
 export const createBusLine = api(
-  { expose: true, method: 'POST', path: '/bus-lines/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/bus-lines/create',
+    auth: true,
+  },
   async (params: CreateBusLinePayload): Promise<BusLine> => {
     await validateBusLine(params);
     return await busLineRepository.create(params);
@@ -34,7 +39,12 @@ export const createBusLine = api(
  * @throws {APIError} If the bus line is not found or retrieval fails
  */
 export const getBusLine = api(
-  { expose: true, method: 'GET', path: '/bus-lines/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/bus-lines/:id',
+    auth: true,
+  },
   async ({
     id,
   }: {
@@ -51,7 +61,12 @@ export const getBusLine = api(
  * @throws {APIError} If retrieval fails
  */
 export const listBusLines = api(
-  { expose: true, method: 'POST', path: '/bus-lines/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/bus-lines/list/all',
+    auth: true,
+  },
   async (params: ListBusLinesQueryParams): Promise<ListBusLinesResult> => {
     const busLines = await busLineRepository.findAll(params);
     return {
@@ -67,7 +82,12 @@ export const listBusLines = api(
  * @throws {APIError} If retrieval fails
  */
 export const listBusLinesPaginated = api(
-  { expose: true, method: 'POST', path: '/bus-lines/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/bus-lines/list',
+    auth: true,
+  },
   async (
     params: PaginatedListBusLinesQueryParams,
   ): Promise<PaginatedListBusLinesResult> => {
@@ -89,7 +109,12 @@ export const listBusLinesPaginated = api(
  * @throws {APIError} If the bus line is not found or update fails
  */
 export const updateBusLine = api(
-  { expose: true, method: 'PUT', path: '/bus-lines/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/bus-lines/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -107,7 +132,12 @@ export const updateBusLine = api(
  * @throws {APIError} If the bus line is not found or deletion fails
  */
 export const deleteBusLine = api(
-  { expose: true, method: 'DELETE', path: '/bus-lines/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/bus-lines/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<BusLine> => {
     return await busLineRepository.delete(id);
   },

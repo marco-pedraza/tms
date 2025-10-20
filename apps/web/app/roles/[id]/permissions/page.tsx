@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Check, Search, ShieldCheck, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { permissions } from '@repo/ims-client';
@@ -94,32 +94,6 @@ export default function RolePermissionsPage() {
     });
   }, [permissionsData, groupsData, tRoles]);
 
-  // Helper function to get permission translation with type-safe key checking
-  const getPermissionTranslation = useCallback(
-    (code: string) => {
-      const translationKey = `permissions.${code}`;
-
-      try {
-        // Attempt to get the translation
-        const translation = tRoles(
-          translationKey as Parameters<typeof tRoles>[0],
-        );
-
-        // If next-intl returns the key path as-is, no translation exists
-        // This happens when the key doesn't exist in the translation file
-        if (translation.startsWith('permissions.')) {
-          return code;
-        }
-
-        return translation;
-      } catch {
-        // If there's any error (including type errors), fall back to the code
-        return code;
-      }
-    },
-    [tRoles],
-  );
-
   // Filter permissions based on search term
   const filteredGroupedPermissions = useMemo(() => {
     if (!searchTerm.trim()) return groupedPermissions;
@@ -130,14 +104,12 @@ export default function RolePermissionsPage() {
         ...group,
         permissions: group.permissions.filter(
           (p) =>
-            p.description?.toLowerCase().includes(lowerSearch) ||
-            getPermissionTranslation(p.code)
-              .toLowerCase()
-              .includes(lowerSearch),
+            p.name.toLowerCase().includes(lowerSearch) ||
+            p.description?.toLowerCase().includes(lowerSearch),
         ),
       }))
       .filter((group) => group.permissions.length > 0);
-  }, [groupedPermissions, searchTerm, getPermissionTranslation]);
+  }, [groupedPermissions, searchTerm]);
 
   // Calculate changes
   const originalPermissionIds = useMemo(
@@ -428,9 +400,7 @@ export default function RolePermissionsPage() {
                             aria-label={tRoles(
                               'permissionsPage.togglePermission',
                               {
-                                permissionName: getPermissionTranslation(
-                                  permission.code,
-                                ),
+                                permissionName: permission.name,
                               },
                             )}
                             onClick={() => {
@@ -453,7 +423,7 @@ export default function RolePermissionsPage() {
                             />
                             <div className="flex-1 min-w-0">
                               <div className="font-medium text-sm">
-                                {getPermissionTranslation(permission.code)}
+                                {permission.name}
                               </div>
                               {permission.description && (
                                 <div className="text-xs text-muted-foreground mt-1">

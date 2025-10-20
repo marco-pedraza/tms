@@ -20,7 +20,12 @@ import { validatePermissionsAssignment, validateRole } from './roles.domain';
  * @throws {APIError} If the role creation fails
  */
 export const createRole = api(
-  { expose: true, method: 'POST', path: '/roles/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/roles/create',
+    auth: true,
+  },
   async (params: CreateRolePayload): Promise<RoleWithPermissions> => {
     await validateRole(params);
     return await roleRepository.create(params);
@@ -35,7 +40,12 @@ export const createRole = api(
  * @throws {APIError} If the role is not found or retrieval fails
  */
 export const getRole = api(
-  { expose: true, method: 'GET', path: '/roles/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/roles/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<RoleWithPermissions> => {
     return await roleRepository.findOneWithPermissions(id);
   },
@@ -48,7 +58,12 @@ export const getRole = api(
  * @throws {APIError} If retrieval fails
  */
 export const listRoles = api(
-  { expose: true, method: 'POST', path: '/roles/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/roles/list/all',
+    auth: true,
+  },
   async (params: ListRolesQueryParams): Promise<ListRolesResult> => {
     const roles = await roleRepository.findAll(params);
     return {
@@ -64,7 +79,12 @@ export const listRoles = api(
  * @throws {APIError} If retrieval fails
  */
 export const listRolesPaginated = api(
-  { expose: true, method: 'POST', path: '/roles/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/roles/list',
+    auth: true,
+  },
   async (
     params: PaginatedListRolesQueryParams,
   ): Promise<PaginatedListRolesResult> => {
@@ -80,7 +100,12 @@ export const listRolesPaginated = api(
  * @throws {APIError} If the role is not found or update fails
  */
 export const updateRole = api(
-  { expose: true, method: 'PUT', path: '/roles/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/roles/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -99,7 +124,12 @@ export const updateRole = api(
  * @throws {APIError} If the role is not found or assignment fails
  */
 export const assignPermissionsToRole = api(
-  { expose: true, method: 'POST', path: '/roles/:id/permissions' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/roles/:id/permissions',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -119,7 +149,12 @@ export const assignPermissionsToRole = api(
  * @throws {APIError} If the role is not found or deletion fails
  */
 export const deleteRole = api(
-  { expose: true, method: 'DELETE', path: '/roles/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/roles/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Role> => {
     return await roleRepository.delete(id);
   },

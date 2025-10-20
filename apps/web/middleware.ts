@@ -1,24 +1,23 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { validateCallbackUrl } from '@/utils/validate-callback-url';
+import { canAccessRoute, isPublicRoute } from '@/utils/permissions';
 
 /**
  * Middleware to enforce authentication across routes using Auth.js
- * Redirects unauthenticated users to login and authenticated users away from login page.
+ * Redirects unauthenticated users to login and checks route permissions.
  * Preserves original request URL in callbackUrl parameter for deep linking support.
  */
 const middleware = auth((req) => {
   const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
+  const isLoggedIn =
+    !!req.auth && !!req.auth.user?.id && !req.auth.user?.invalid;
 
-  // Handle /auth/login specially - redirect authenticated users to callback URL or app root
-  if (nextUrl.pathname === '/auth/login' && isLoggedIn) {
-    const callbackUrl = nextUrl.searchParams.get('callbackUrl');
-    const redirectUrl = validateCallbackUrl(callbackUrl);
-    return NextResponse.redirect(new URL(redirectUrl, nextUrl));
+  // Allow public routes
+  if (isPublicRoute(nextUrl.pathname)) {
+    return NextResponse.next();
   }
 
-  // Allow unauthenticated access to all other auth routes
+  // Allow unauthenticated access to all auth routes
   if (nextUrl.pathname.startsWith('/auth/')) {
     return NextResponse.next();
   }
@@ -30,6 +29,15 @@ const middleware = auth((req) => {
     const originalUrl = nextUrl.pathname + nextUrl.search + nextUrl.hash;
     loginUrl.searchParams.set('callbackUrl', encodeURIComponent(originalUrl));
     return NextResponse.redirect(loginUrl);
+  }
+
+  // Check if user has permission for this route
+  const permissions = req.auth?.user?.permissions ?? [];
+  const isSystemAdmin = req.auth?.user?.isSystemAdmin ?? false;
+
+  if (!canAccessRoute(nextUrl.pathname, permissions, isSystemAdmin)) {
+    // Redirect to access denied page for unauthorized access
+    return NextResponse.redirect(new URL('/access-denied', nextUrl));
   }
 
   return NextResponse.next();

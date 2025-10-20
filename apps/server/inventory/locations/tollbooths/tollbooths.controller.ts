@@ -31,7 +31,12 @@ export function resetTollboothRepository() {
  * @throws {ValidationError} When the tollbooth data is invalid
  */
 export const getTollbooth = api(
-  { expose: true, method: 'GET', path: '/tollbooths/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/tollbooths/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Tollbooth> => {
     const tollbooth = await tollboothRepository.findOne(id);
     assertIsValidTollbooth(tollbooth);
@@ -46,7 +51,12 @@ export const getTollbooth = api(
  * @throws {ValidationError} When any tollbooth data is invalid
  */
 export const listTollbooths = api(
-  { expose: true, method: 'POST', path: '/tollbooths/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/tollbooths/list',
+    auth: true,
+  },
   async (params: ListTollboothsQueryParams): Promise<ListTollboothsResult> => {
     const tollbooths = await tollboothRepository.findAll(params);
     assertAreValidTollbooths(tollbooths);

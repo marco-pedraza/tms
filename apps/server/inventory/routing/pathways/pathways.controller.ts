@@ -27,7 +27,12 @@ import { pathwayApplicationService } from './pathways.application-service';
  * @throws {APIError} If the pathway creation fails
  */
 export const createPathway = api(
-  { expose: true, method: 'POST', path: '/pathways/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/pathways/create',
+    auth: true,
+  },
   async (params: CreatePathwayPayload): Promise<Pathway> => {
     return await pathwayApplicationService.createPathway(params);
   },
@@ -41,7 +46,12 @@ export const createPathway = api(
  * @throws {APIError} If the pathway is not found or retrieval fails
  */
 export const getPathway = api(
-  { expose: true, method: 'GET', path: '/pathways/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/pathways/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Pathway> => {
     return await pathwayApplicationService.findPathway(id);
   },
@@ -54,7 +64,12 @@ export const getPathway = api(
  * @throws {APIError} If retrieval fails
  */
 export const listPathways = api(
-  { expose: true, method: 'POST', path: '/pathways/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/pathways/list/all',
+    auth: true,
+  },
   async (params: ListPathwaysQueryParams): Promise<ListPathwaysResult> => {
     const pathways = await pathwayRepository.findAll(params);
     return {
@@ -70,7 +85,12 @@ export const listPathways = api(
  * @throws {APIError} If retrieval fails
  */
 export const listPathwaysPaginated = api(
-  { expose: true, method: 'POST', path: '/pathways/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/pathways/list',
+    auth: true,
+  },
   async (
     params: PaginatedListPathwaysQueryParams,
   ): Promise<PaginatedListPathwaysResult> => {
@@ -86,7 +106,12 @@ export const listPathwaysPaginated = api(
  * @throws {APIError} If the pathway is not found or update fails
  */
 export const updatePathway = api(
-  { expose: true, method: 'PUT', path: '/pathways/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/pathways/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -103,7 +128,12 @@ export const updatePathway = api(
  * @throws {APIError} If the pathway is not found or deletion fails
  */
 export const deletePathway = api(
-  { expose: true, method: 'DELETE', path: '/pathways/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/pathways/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Pathway> => {
     return await pathwayRepository.delete(id);
   },
@@ -120,7 +150,12 @@ export const deletePathway = api(
  * @throws {APIError} If the pathway is not found or operation fails
  */
 export const addOptionToPathway = api(
-  { expose: true, method: 'POST', path: '/pathways/:pathwayId/options/add' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/pathways/:pathwayId/options/add',
+    auth: true,
+  },
   async (
     params: { pathwayId: number } & {
       optionData: Omit<CreatePathwayOptionPayload, 'pathwayId' | 'isDefault'>;
@@ -144,6 +179,7 @@ export const removeOptionFromPathway = api(
     expose: true,
     method: 'DELETE',
     path: '/pathways/:pathwayId/options/:optionId/remove',
+    auth: true,
   },
   async (params: { pathwayId: number; optionId: number }): Promise<Pathway> => {
     return await pathwayApplicationService.removeOptionFromPathway(
@@ -164,6 +200,7 @@ export const updatePathwayOption = api(
     expose: true,
     method: 'PUT',
     path: '/pathways/:pathwayId/options/:optionId/update',
+    auth: true,
   },
   async (
     params: { pathwayId: number; optionId: number } & {
@@ -189,6 +226,7 @@ export const setDefaultPathwayOption = api(
     expose: true,
     method: 'PUT',
     path: '/pathways/:pathwayId/options/:optionId/set-default',
+    auth: true,
   },
   async (params: { pathwayId: number; optionId: number }): Promise<Pathway> => {
     return await pathwayApplicationService.setDefaultOption(
@@ -212,6 +250,7 @@ export const syncPathwayOptionTolls = api(
     expose: true,
     method: 'POST',
     path: '/pathways/:pathwayId/options/:optionId/tolls/sync',
+    auth: true,
   },
   async (params: {
     pathwayId: number;
@@ -239,6 +278,7 @@ export const listPathwayOptionTolls = api(
     expose: true,
     method: 'POST',
     path: '/pathways/:pathwayId/options/:optionId/tolls/list',
+    auth: true,
   },
   async (params: {
     pathwayId: number;
@@ -278,6 +318,7 @@ export const syncPathwayOptions = api(
     expose: true,
     method: 'POST',
     path: '/pathways/:pathwayId/options/sync',
+    auth: true,
   },
   async (params: {
     pathwayId: number;

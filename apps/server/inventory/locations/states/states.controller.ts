@@ -15,7 +15,12 @@ import { validateState } from './states.domain';
  * Creates a new state.
  */
 export const createState = api(
-  { expose: true, method: 'POST', path: '/states/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/states/create',
+    auth: true,
+  },
   async (params: CreateStatePayload): Promise<State> => {
     await validateState(params);
     return await stateRepository.create(params);
@@ -26,7 +31,12 @@ export const createState = api(
  * Retrieves a state by its ID.
  */
 export const getState = api(
-  { expose: true, method: 'GET', path: '/states/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/states/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<State> => {
     return await stateRepository.findOne(id);
   },
@@ -36,7 +46,12 @@ export const getState = api(
  * Retrieves all states without pagination (useful for dropdowns).
  */
 export const listStates = api(
-  { expose: true, method: 'POST', path: '/states/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/states/list/all',
+    auth: true,
+  },
   async (params: ListStatesQueryParams): Promise<ListStatesResult> => {
     const states = await stateRepository.findAll(params);
     return {
@@ -49,7 +64,12 @@ export const listStates = api(
  * Retrieves states with pagination (useful for tables).
  */
 export const listStatesPaginated = api(
-  { expose: true, method: 'POST', path: '/states/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/states/list',
+    auth: true,
+  },
   async (
     params: PaginatedListStatesQueryParams,
   ): Promise<PaginatedListStatesResult> => {
@@ -61,7 +81,12 @@ export const listStatesPaginated = api(
  * Updates an existing state.
  */
 export const updateState = api(
-  { expose: true, method: 'PUT', path: '/states/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/states/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -75,7 +100,12 @@ export const updateState = api(
  * Deletes a state by its ID.
  */
 export const deleteState = api(
-  { expose: true, method: 'DELETE', path: '/states/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/states/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<State> => {
     return await stateRepository.delete(id);
   },

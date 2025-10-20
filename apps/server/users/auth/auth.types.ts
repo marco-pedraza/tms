@@ -1,4 +1,6 @@
 import { MinLen } from 'encore.dev/validate';
+import { Permission } from '../permissions/permissions.types';
+import { Role } from '../roles/roles.types';
 import { SafeUser } from '../users/users.types';
 
 /**
@@ -34,6 +36,16 @@ export interface LoginResponse {
    * JWT refresh token
    */
   refreshToken: string;
+
+  /**
+   * User's effective permissions (direct + role-based)
+   */
+  permissions: Permission[];
+
+  /**
+   * User's assigned roles
+   */
+  roles: Role[];
 }
 
 /**

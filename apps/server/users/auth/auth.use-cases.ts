@@ -6,6 +6,7 @@ import {
   verifyToken,
 } from '@/shared/auth-utils';
 import { errors } from '@/shared/errors';
+import { userPermissionsRepository } from '../user-permissions/user-permissions.repository';
 import { userRepository } from '../users/users.repository';
 import { SafeUser } from '../users/users.types';
 import type {
@@ -86,6 +87,10 @@ export function createAuthUseCases() {
       lastLogin: new Date(),
     });
 
+    // Get user with permissions
+    const userWithPermissions =
+      await userPermissionsRepository.getUserWithPermissions(user.id);
+
     // Return user data and tokens
     return {
       user: {
@@ -94,6 +99,8 @@ export function createAuthUseCases() {
       },
       accessToken,
       refreshToken,
+      permissions: userWithPermissions.effectivePermissions,
+      roles: userWithPermissions.roles,
     };
   }
 

@@ -19,7 +19,12 @@ import { validateInstallationSchema } from './installation-schemas.domain';
  * @throws {APIError} If the installation schema creation fails
  */
 export const createInstallationSchema = api(
-  { expose: true, method: 'POST', path: '/installation/schemas/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/installation/schemas/create',
+    auth: true,
+  },
   async (
     params: CreateInstallationSchemaPayload,
   ): Promise<InstallationSchema> => {
@@ -36,7 +41,12 @@ export const createInstallationSchema = api(
  * @throws {APIError} If the installation schema is not found or retrieval fails
  */
 export const getInstallationSchema = api(
-  { expose: true, method: 'GET', path: '/installation/schemas/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/installation/schemas/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<InstallationSchemaWithRelations> => {
     return await installationSchemaRepository.findOneWithRelations(id);
   },
@@ -50,7 +60,12 @@ export const getInstallationSchema = api(
  * @throws {APIError} If the installation schema is not found or update fails
  */
 export const updateInstallationSchema = api(
-  { expose: true, method: 'PUT', path: '/installation/schemas/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/installation/schemas/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -69,7 +84,12 @@ export const updateInstallationSchema = api(
  * @throws {APIError} If retrieval fails
  */
 export const listInstallationSchemas = api(
-  { expose: true, method: 'POST', path: '/installation/schemas/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/installation/schemas/list/all',
+    auth: true,
+  },
   async (
     params: ListInstallationSchemasQueryParams,
   ): Promise<ListInstallationSchemasResult> => {
@@ -88,7 +108,12 @@ export const listInstallationSchemas = api(
  * @throws {APIError} If retrieval fails
  */
 export const listInstallationSchemasPaginated = api(
-  { expose: true, method: 'POST', path: '/installation/schemas/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/installation/schemas/list',
+    auth: true,
+  },
   async (
     params: PaginatedListInstallationSchemasQueryParams,
   ): Promise<PaginatedListInstallationSchemasResult> => {
@@ -111,7 +136,12 @@ export const listInstallationSchemasPaginated = api(
  * @throws {APIError} If the installation schema is not found or deletion fails
  */
 export const deleteInstallationSchema = api(
-  { expose: true, method: 'DELETE', path: '/installation/schemas/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/installation/schemas/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<InstallationSchema> => {
     return await installationSchemaRepository.delete(id);
   },

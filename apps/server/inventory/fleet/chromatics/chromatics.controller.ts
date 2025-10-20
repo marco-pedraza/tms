@@ -18,7 +18,12 @@ import { chromaticDomain } from './chromatics.domain';
  * @throws {APIError} If the chromatic creation fails
  */
 export const createChromatic = api(
-  { expose: true, method: 'POST', path: '/chromatics/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/chromatics/create',
+    auth: true,
+  },
   async (params: CreateChromaticPayload): Promise<Chromatic> => {
     await chromaticDomain.validateChromatic(params);
     return await chromaticsRepository.create(params);
@@ -33,7 +38,12 @@ export const createChromatic = api(
  * @throws {APIError} If the chromatic is not found or retrieval fails
  */
 export const getChromatic = api(
-  { expose: true, method: 'GET', path: '/chromatics/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/chromatics/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Chromatic> => {
     return await chromaticsRepository.findOne(id);
   },
@@ -46,7 +56,12 @@ export const getChromatic = api(
  * @throws {APIError} If retrieval fails
  */
 export const listChromatics = api(
-  { expose: true, method: 'POST', path: '/chromatics/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/chromatics/list/all',
+    auth: true,
+  },
   async (params: ListChromaticsQueryParams): Promise<ListChromaticsResult> => {
     const chromatics = await chromaticsRepository.findAll(params);
     return {
@@ -62,7 +77,12 @@ export const listChromatics = api(
  * @throws {APIError} If retrieval fails
  */
 export const listChromaticsPaginated = api(
-  { expose: true, method: 'POST', path: '/chromatics/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/chromatics/list',
+    auth: true,
+  },
   async (
     params: PaginatedListChromaticsQueryParams,
   ): Promise<PaginatedListChromaticsResult> => {
@@ -78,7 +98,12 @@ export const listChromaticsPaginated = api(
  * @throws {APIError} If the chromatic is not found or update fails
  */
 export const updateChromatic = api(
-  { expose: true, method: 'PUT', path: '/chromatics/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/chromatics/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -96,7 +121,12 @@ export const updateChromatic = api(
  * @throws {APIError} If the chromatic is not found or deletion fails
  */
 export const deleteChromatic = api(
-  { expose: true, method: 'DELETE', path: '/chromatics/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/chromatics/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Chromatic> => {
     return await chromaticsRepository.delete(id);
   },

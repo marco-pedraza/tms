@@ -8,7 +8,12 @@ import { auditsRepository } from './audits.repository';
  * @returns {Promise<PaginatedAudits>} Paginated list of audit entries
  */
 export const listAuditsPaginated = api(
-  { method: 'POST', path: '/audits/paginated', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/audits/paginated',
+    auth: true,
+  },
   async (params: PaginationParamsAudits): Promise<PaginatedAudits> => {
     return await auditsRepository.findAllPaginated(params);
   },

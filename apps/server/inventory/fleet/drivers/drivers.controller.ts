@@ -21,7 +21,12 @@ import { driverUseCases } from './drivers.use-cases';
  * @throws {APIError} If the driver creation fails
  */
 export const createDriver = api(
-  { expose: true, method: 'POST', path: '/drivers/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/drivers/create',
+    auth: true,
+  },
   async (params: CreateDriverPayload): Promise<DriverWithRelations> => {
     await validateDriver(params);
     return await driverUseCases.createDriverWithTransporter(params);
@@ -36,7 +41,12 @@ export const createDriver = api(
  * @throws {APIError} If the driver is not found or retrieval fails
  */
 export const getDriver = api(
-  { expose: true, method: 'GET', path: '/drivers/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/drivers/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<DriverWithRelations> => {
     return await driverRepository.findOneWithRelations(id);
   },
@@ -49,7 +59,12 @@ export const getDriver = api(
  * @throws {APIError} If retrieval fails
  */
 export const listDrivers = api(
-  { expose: true, method: 'POST', path: '/drivers/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/drivers/list/all',
+    auth: true,
+  },
   async (params: ListDriversQueryParams): Promise<ListDriversResult> => {
     const drivers = await driverRepository.findAll(params);
     return {
@@ -65,7 +80,12 @@ export const listDrivers = api(
  * @throws {APIError} If retrieval fails
  */
 export const listDriversPaginated = api(
-  { expose: true, method: 'POST', path: '/drivers/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/drivers/list',
+    auth: true,
+  },
   async (
     params: PaginatedListDriversQueryParams,
   ): Promise<PaginatedListDriversResult> => {
@@ -87,7 +107,12 @@ export const listDriversPaginated = api(
  * @throws {APIError} If the driver is not found or update fails
  */
 export const updateDriver = api(
-  { expose: true, method: 'PUT', path: '/drivers/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/drivers/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -105,7 +130,12 @@ export const updateDriver = api(
  * @throws {APIError} If the driver is not found or deletion fails
  */
 export const deleteDriver = api(
-  { expose: true, method: 'DELETE', path: '/drivers/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/drivers/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<DriverWithRelations> => {
     const driver = await driverRepository.findOneWithRelations(id);
     await driverRepository.delete(id);
@@ -120,7 +150,12 @@ export const deleteDriver = api(
  * @throws {APIError} If retrieval fails
  */
 export const listDriversAvailability = api(
-  { expose: true, method: 'POST', path: '/drivers/availability' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/drivers/availability',
+    auth: true,
+  },
   async (
     params: ListDriversAvailabilityQueryParams,
   ): Promise<ListDriversAvailabilityResult> => {

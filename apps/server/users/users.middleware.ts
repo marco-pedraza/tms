@@ -3,6 +3,7 @@ import log from 'encore.dev/log';
 import { APICallMeta } from 'encore.dev';
 import { getAuthData } from '~encore/auth';
 import { errors } from '@/shared/errors';
+import { ENDPOINT_TO_MODULES } from '@/shared/permissions';
 import { auditsRepository } from './audits/audits.repository';
 import { userPermissionsRepository } from './user-permissions/user-permissions.repository';
 
@@ -57,22 +58,39 @@ export const usersMiddleware = middleware(
         log.error('Failed to create audit entry', { error });
       });
 
-    // Create permission code in format "service:endpoint"
-    const requiredPermission = `${service}:${endpoint}`;
-
     // Skip permission check if user is system admin
     if (user.isSystemAdmin) {
+      req.data.currentUser = user;
       return await next(req);
     }
 
-    // Check if user has the required permission
-    const hasPermission = user.effectivePermissions.some(
-      (permission) => permission.code === requiredPermission,
+    // Get required module permissions for this endpoint
+    const requiredEndpointKey = `${service}:${endpoint}`;
+    const requiredModulePermissions = ENDPOINT_TO_MODULES[requiredEndpointKey];
+
+    // Check if endpoint is explicitly defined in the permissions mapping
+    if (!(requiredEndpointKey in ENDPOINT_TO_MODULES)) {
+      // If endpoint not mapped at all, deny access (fail-secure)
+      throw errors.permissionDenied(
+        `No permission mapping found for endpoint: ${requiredEndpointKey}`,
+      );
+    }
+
+    // If endpoint is explicitly defined with empty array, allow access
+    if (requiredModulePermissions.length === 0) {
+      // This handles public endpoints like login, logout, timezones, etc.
+      req.data.currentUser = user;
+      return await next(req);
+    }
+
+    // Check if user has any of the required module permissions
+    const hasPermission = user.effectivePermissions.some((permission) =>
+      requiredModulePermissions.includes(permission.code),
     );
 
     if (!hasPermission) {
       throw errors.permissionDenied(
-        ERROR_MESSAGES.PERMISSION_DENIED(requiredPermission),
+        ERROR_MESSAGES.PERMISSION_DENIED(requiredModulePermissions.join(', ')),
       );
     }
 

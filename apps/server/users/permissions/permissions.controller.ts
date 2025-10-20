@@ -17,7 +17,12 @@ import { permissionRepository } from './permissions.repository';
  * @throws {APIError} If the permission creation fails
  */
 export const createPermission = api(
-  { method: 'POST', path: '/permissions', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/permissions',
+    auth: true,
+  },
   async (params: CreatePermissionPayload): Promise<Permission> => {
     return await permissionRepository.create(params);
   },
@@ -31,7 +36,12 @@ export const createPermission = api(
  * @throws {APIError} If the permission is not found or retrieval fails
  */
 export const getPermission = api(
-  { method: 'GET', path: '/permissions/:id', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/permissions/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Permission> => {
     return await permissionRepository.findOne(id);
   },
@@ -44,7 +54,12 @@ export const getPermission = api(
  * @throws {APIError} If the retrieval fails
  */
 export const listPermissions = api(
-  { method: 'POST', path: '/get-permissions', expose: true, auth: false },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/get-permissions',
+    auth: true,
+  },
   async (params: PermissionsQueryOptions): Promise<Permissions> => {
     const permissions = await permissionRepository.findAll(params);
     return {
@@ -61,9 +76,9 @@ export const listPermissions = api(
  */
 export const listPermissionsWithPagination = api(
   {
+    expose: true,
     method: 'POST',
     path: '/get-permissions/paginated',
-    expose: true,
     auth: true,
   },
   async (
@@ -81,7 +96,12 @@ export const listPermissionsWithPagination = api(
  * @throws {APIError} If the permission is not found or update fails
  */
 export const updatePermission = api(
-  { method: 'PUT', path: '/permissions/:id', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/permissions/:id',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -98,7 +118,12 @@ export const updatePermission = api(
  * @throws {APIError} If the permission is not found or deletion fails
  */
 export const deletePermission = api(
-  { method: 'DELETE', path: '/permissions/:id', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/permissions/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Permission> => {
     return await permissionRepository.delete(id);
   },
@@ -112,7 +137,12 @@ export const deletePermission = api(
  * @throws {APIError} If search fails or no searchable fields are configured
  */
 export const searchPermissions = api(
-  { method: 'GET', path: '/permissions/search', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/permissions/search',
+    auth: true,
+  },
   async ({ term }: { term: string }): Promise<Permissions> => {
     const permissions = await permissionRepository.search(term);
     return {
@@ -134,9 +164,9 @@ export const searchPermissions = api(
  */
 export const searchPermissionsPaginated = api(
   {
+    expose: true,
     method: 'POST',
     path: '/permissions/search/paginated',
-    expose: true,
     auth: true,
   },
   async ({

@@ -1,8 +1,8 @@
 import NextAuth from 'next-auth';
 import { NextAuthConfig } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
-import Client from '@repo/ims-client';
-import environment from '@/services/environment';
+import type { auth as AuthTypes, permissions } from '@repo/ims-client';
+import { publicClient } from '@/services/ims-client';
 
 /**
  * Decodes a JWT token and extracts the expiration timestamp
@@ -58,12 +58,11 @@ export const authConfig: NextAuthConfig = {
         }
 
         try {
-          // Use existing IMS client for authentication
-          const client = new Client(environment.NEXT_PUBLIC_IMS_API_URL);
-          const response = await client.users.login({
+          // Use public client for login (no auth required)
+          const response = (await publicClient.users.login({
             username: credentials.username as string,
             password: credentials.password as string,
-          });
+          })) as AuthTypes.LoginResponse;
 
           if (response.user && response.accessToken) {
             return {
@@ -72,8 +71,11 @@ export const authConfig: NextAuthConfig = {
               name: `${response.user.firstName} ${response.user.lastName}`,
               firstName: response.user.firstName,
               lastName: response.user.lastName,
+              isSystemAdmin: response.user.isSystemAdmin,
               accessToken: response.accessToken,
               refreshToken: response.refreshToken,
+              permissions: response.permissions,
+              roles: response.roles,
             };
           }
 
@@ -92,6 +94,8 @@ export const authConfig: NextAuthConfig = {
         token.refreshToken = user.refreshToken;
         token.firstName = user.firstName;
         token.lastName = user.lastName;
+        token.isSystemAdmin = user.isSystemAdmin;
+        token.permissions = user.permissions;
         return token;
       }
 
@@ -102,8 +106,8 @@ export const authConfig: NextAuthConfig = {
 
         if (isTokenExpired(accessToken)) {
           try {
-            const client = new Client(environment.NEXT_PUBLIC_IMS_API_URL);
-            const response = await client.users.refreshToken({
+            // Use public client for token refresh (no auth required)
+            const response = await publicClient.users.refreshToken({
               refreshToken: refreshToken,
             });
 
@@ -117,10 +121,11 @@ export const authConfig: NextAuthConfig = {
               token.expiry = exp;
             }
           } catch {
-            // Clear tokens but keep the token structure intact
+            // If refresh fails, mark token as invalid but keep structure
             token.accessToken = '';
             token.refreshToken = '';
             token.expiry = undefined;
+            token.invalid = true;
           }
         }
       }
@@ -133,6 +138,13 @@ export const authConfig: NextAuthConfig = {
         session.user.id = token.sub ?? '';
         session.user.firstName = (token.firstName as string | undefined) ?? '';
         session.user.lastName = (token.lastName as string | undefined) ?? '';
+        session.user.isSystemAdmin = (token.isSystemAdmin as boolean) ?? false;
+        session.user.permissions =
+          (token.permissions as permissions.Permission[]) ?? [];
+        // Pass the invalid flag to the session
+        session.user.invalid = token.invalid;
+        // Pass the access token to the session for API calls
+        session.user.accessToken = (token.accessToken as string) ?? '';
       }
       return session;
     },
@@ -142,8 +154,8 @@ export const authConfig: NextAuthConfig = {
       // Call the server logout endpoint when user signs out
       if ('token' in params && params.token?.refreshToken) {
         try {
-          const client = new Client(environment.NEXT_PUBLIC_IMS_API_URL);
-          await client.users.logout({
+          // Use public client for logout (no auth required)
+          await publicClient.users.logout({
             refreshToken: params.token.refreshToken as string,
           });
         } catch {

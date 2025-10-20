@@ -24,7 +24,12 @@ import { installationTypeUseCases } from './installation-types.use-cases';
  * @throws {APIError} If the installation type creation fails
  */
 export const createInstallationType = api(
-  { expose: true, method: 'POST', path: '/installation/types/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/installation/types/create',
+    auth: true,
+  },
   async (params: CreateInstallationTypePayload): Promise<InstallationType> => {
     await validateInstallationType(params);
     return await installationTypeRepository.create(params);
@@ -39,7 +44,12 @@ export const createInstallationType = api(
  * @throws {APIError} If the installation type is not found or retrieval fails
  */
 export const getInstallationType = api(
-  { expose: true, method: 'GET', path: '/installation/types/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/installation/types/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<InstallationTypeWithRelations> => {
     return await installationTypeRepository.findOneWithRelations(id);
   },
@@ -53,7 +63,12 @@ export const getInstallationType = api(
  * @throws {APIError} If the installation type is not found or retrieval fails
  */
 export const getInstallationTypeSchema = api(
-  { expose: true, method: 'GET', path: '/installation/types/:id/schema' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/installation/types/:id/schema',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<ListInstallationSchemasResult> => {
     // First validate that the installation type exists
     await installationTypeRepository.findOne(id);
@@ -76,7 +91,12 @@ export const getInstallationTypeSchema = api(
  * @throws {APIError} If the installation type is not found or synchronization fails
  */
 export const syncInstallationSchemas = api(
-  { expose: true, method: 'PUT', path: '/installation/types/:id/schemas' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/installation/types/:id/schemas',
+    auth: true,
+  },
   async ({
     id,
     schemas,
@@ -100,7 +120,12 @@ export const syncInstallationSchemas = api(
  * @throws {APIError} If the installation type is not found or update fails
  */
 export const updateInstallationType = api(
-  { expose: true, method: 'PUT', path: '/installation/types/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/installation/types/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -119,7 +144,12 @@ export const updateInstallationType = api(
  * @throws {APIError} If retrieval fails
  */
 export const listInstallationTypes = api(
-  { expose: true, method: 'POST', path: '/installation/types/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/installation/types/list/all',
+    auth: true,
+  },
   async (
     params: ListInstallationTypesQueryParams,
   ): Promise<ListInstallationTypesResult> => {
@@ -137,7 +167,12 @@ export const listInstallationTypes = api(
  * @throws {APIError} If retrieval fails
  */
 export const listInstallationTypesPaginated = api(
-  { expose: true, method: 'POST', path: '/installation/types/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/installation/types/list',
+    auth: true,
+  },
   async (
     params: PaginatedListInstallationTypesQueryParams,
   ): Promise<PaginatedListInstallationTypesResult> => {
@@ -153,7 +188,12 @@ export const listInstallationTypesPaginated = api(
  * @throws {APIError} If the installation type is not found or deletion fails
  */
 export const deleteInstallationType = api(
-  { expose: true, method: 'DELETE', path: '/installation/types/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/installation/types/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<InstallationType> => {
     return await installationTypeRepository.delete(id);
   },
@@ -173,6 +213,7 @@ export const assignEventTypesToInstallationType = api(
     expose: true,
     method: 'POST',
     path: '/installation/types/:id/event-types/assign',
+    auth: true,
   },
   async ({
     id,

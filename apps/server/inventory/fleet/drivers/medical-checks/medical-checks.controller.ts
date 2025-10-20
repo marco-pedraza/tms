@@ -21,6 +21,7 @@ export const createDriverMedicalCheck = api(
     expose: true,
     method: 'POST',
     path: '/drivers/:driverId/medical-checks/create',
+    auth: true,
   },
   async ({
     driverId,
@@ -42,6 +43,7 @@ export const getDriverMedicalCheck = api(
     expose: true,
     method: 'GET',
     path: '/drivers/:driverId/medical-checks/:id',
+    auth: true,
   },
   async ({
     driverId,
@@ -72,6 +74,7 @@ export const listDriverMedicalChecks = api(
     expose: true,
     method: 'POST',
     path: '/drivers/:driverId/medical-checks/list/all',
+    auth: true,
   },
   async ({
     driverId,
@@ -110,6 +113,7 @@ export const listDriverMedicalChecksPaginated = api(
     expose: true,
     method: 'POST',
     path: '/drivers/:driverId/medical-checks/list',
+    auth: true,
   },
   async ({
     driverId,

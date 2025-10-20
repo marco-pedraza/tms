@@ -14,7 +14,7 @@ import { authUseCases } from './auth.use-cases';
  * @throws {APIError} If authentication fails
  */
 export const login = api(
-  { method: 'POST', path: '/auth/login', expose: true },
+  { method: 'POST', path: '/auth/login', expose: true, auth: false },
   async (params: LoginPayload): Promise<LoginResponse> => {
     return await authUseCases.authenticateUser(params);
   },
@@ -27,7 +27,7 @@ export const login = api(
  * @throws {APIError} If refresh token is invalid
  */
 export const refreshToken = api(
-  { method: 'POST', path: '/auth/refresh-token', expose: true },
+  { method: 'POST', path: '/auth/refresh-token', expose: true, auth: false },
   async (params: RefreshTokenPayload): Promise<Omit<LoginResponse, 'user'>> => {
     return await authUseCases.refreshUserToken(params);
   },
@@ -40,7 +40,7 @@ export const refreshToken = api(
  * @throws {APIError} If logout fails
  */
 export const logout = api(
-  { method: 'POST', path: '/auth/logout', expose: true },
+  { method: 'POST', path: '/auth/logout', expose: true, auth: false },
   async (params: LogoutPayload): Promise<{ message: string }> => {
     return await authUseCases.logoutUser(params);
   },

@@ -17,7 +17,12 @@ interface SeedWithClientPayload {
 }
 
 export const runAllSeeders = api(
-  { expose: true, method: 'POST', path: '/seed' },
+  {
+    expose: false,
+    method: 'POST',
+    path: '/seed',
+    auth: true,
+  },
   async (
     params: SeedWithClientPayload,
   ): Promise<{ success: boolean; message: string }> => {

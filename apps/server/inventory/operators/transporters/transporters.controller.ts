@@ -19,7 +19,12 @@ import { validateTransporter } from './transporters.domain';
  * @throws {APIError} If the transporter creation fails
  */
 export const createTransporter = api(
-  { expose: true, method: 'POST', path: '/transporters/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/transporters/create',
+    auth: true,
+  },
   async (params: CreateTransporterPayload): Promise<Transporter> => {
     await validateTransporter(params);
     return await transporterRepository.create(params);
@@ -34,7 +39,12 @@ export const createTransporter = api(
  * @throws {APIError} If the transporter is not found or retrieval fails
  */
 export const getTransporter = api(
-  { expose: true, method: 'GET', path: '/transporters/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/transporters/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<TransporterWithCity> => {
     return await transporterRepository.findOneWithCity(id);
   },
@@ -46,7 +56,12 @@ export const getTransporter = api(
  * @throws {APIError} If retrieval fails
  */
 export const listTransporters = api(
-  { expose: true, method: 'POST', path: '/transporters/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/transporters/list/all',
+    auth: true,
+  },
   async (
     params: ListTransportersQueryParams,
   ): Promise<ListTransportersResult> => {
@@ -62,7 +77,12 @@ export const listTransporters = api(
  * @throws {APIError} If retrieval fails
  */
 export const listTransportersPaginated = api(
-  { expose: true, method: 'POST', path: '/transporters/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/transporters/list',
+    auth: true,
+  },
   async (
     params: PaginatedListTransportersQueryParams,
   ): Promise<PaginatedListTransportersResult> => {
@@ -85,7 +105,12 @@ export const listTransportersPaginated = api(
  * @throws {APIError} If the transporter is not found or update fails
  */
 export const updateTransporter = api(
-  { expose: true, method: 'PUT', path: '/transporters/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/transporters/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -103,7 +128,12 @@ export const updateTransporter = api(
  * @throws {APIError} If the transporter is not found or deletion fails
  */
 export const deleteTransporter = api(
-  { expose: true, method: 'DELETE', path: '/transporters/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/transporters/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Transporter> => {
     return await transporterRepository.delete(id);
   },

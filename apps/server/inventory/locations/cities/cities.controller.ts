@@ -19,7 +19,12 @@ import { validateCity } from './cities.domain';
  * @throws {APIError} If the city creation fails
  */
 export const createCity = api(
-  { expose: true, method: 'POST', path: '/cities/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/cities/create',
+    auth: true,
+  },
   async (params: CreateCityPayload): Promise<City> => {
     await validateCity(params);
     return await cityRepository.create(params);
@@ -34,7 +39,12 @@ export const createCity = api(
  * @throws {APIError} If the city is not found or retrieval fails
  */
 export const getCity = api(
-  { expose: true, method: 'GET', path: '/cities/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/cities/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<CityWithRelations> => {
     return await cityRepository.findOneWithRelations(id);
   },
@@ -47,7 +57,12 @@ export const getCity = api(
  * @throws {APIError} If retrieval fails
  */
 export const listCities = api(
-  { expose: true, method: 'POST', path: '/cities/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/cities/list/all',
+    auth: true,
+  },
   async (params: ListCitiesQueryParams): Promise<ListCitiesResult> => {
     const cities = await cityRepository.findAll(params);
     return {
@@ -63,7 +78,12 @@ export const listCities = api(
  * @throws {APIError} If retrieval fails
  */
 export const listCitiesPaginated = api(
-  { expose: true, method: 'POST', path: '/cities/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/cities/list',
+    auth: true,
+  },
   async (
     params: PaginatedListCitiesQueryParams,
   ): Promise<PaginatedListCitiesResult> => {
@@ -85,7 +105,12 @@ export const listCitiesPaginated = api(
  * @throws {APIError} If the city is not found or update fails
  */
 export const updateCity = api(
-  { expose: true, method: 'PUT', path: '/cities/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/cities/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -103,7 +128,12 @@ export const updateCity = api(
  * @throws {APIError} If the city is not found or deletion fails
  */
 export const deleteCity = api(
-  { expose: true, method: 'DELETE', path: '/cities/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/cities/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<City> => {
     return await cityRepository.delete(id);
   },

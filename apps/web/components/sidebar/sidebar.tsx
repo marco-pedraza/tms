@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
+import { useUserPermissions } from '@/hooks/use-user-permissions';
 import routes from '@/services/routes';
 import SidebarLink from './sidebar-link';
 import SidebarSection from './sidebar-section';
@@ -38,7 +39,62 @@ import SidebarSection from './sidebar-section';
 export default function Sidebar() {
   const tSidebar = useTranslations('sidebar');
   const tAuth = useTranslations('auth');
+  const tCommon = useTranslations('common');
   const { data: session } = useSession();
+  const { hasModuleAccess, hasAnyAccess, isLoading } = useUserPermissions();
+
+  // Define module access checks
+  const hasLocalitiesAccess = hasAnyAccess([
+    'inventory_countries',
+    'inventory_states',
+    'inventory_cities',
+    'inventory_populations',
+    'inventory_nodes',
+    'inventory_installation_types',
+    'inventory_events',
+    'inventory_labels',
+  ]);
+
+  const hasOperatorsAccess = hasAnyAccess([
+    'inventory_transporters',
+    'inventory_service_types',
+    'inventory_bus_lines',
+  ]);
+
+  const hasFleetAccess = hasAnyAccess([
+    'inventory_buses',
+    'inventory_bus_models',
+    'inventory_seat_diagrams',
+    'inventory_drivers',
+    'inventory_technologies',
+    'inventory_chromatics',
+  ]);
+
+  const hasRoutingAccess = hasModuleAccess('inventory_pathways');
+  const hasConfigAccess = hasModuleAccess('inventory_amenities');
+  const hasUsersAccess = hasAnyAccess(['users_roles', 'users_users']);
+
+  const hasInventoryAccess =
+    hasLocalitiesAccess ||
+    hasOperatorsAccess ||
+    hasFleetAccess ||
+    hasRoutingAccess ||
+    hasConfigAccess;
+
+  if (isLoading) {
+    return (
+      <nav className="flex flex-col h-full gap-2 px-4 py-4">
+        <div className="mb-6 flex items-center rounded-md px-3 py-2 text-2xl font-bold text-primary">
+          <span>{tSidebar('title')}</span>
+        </div>
+        <div className="flex items-center justify-center h-32">
+          <div className="text-sm text-muted-foreground">
+            {tCommon('loading')}
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="flex flex-col h-full gap-2 px-4 py-4">
@@ -49,151 +105,186 @@ export default function Sidebar() {
         <span>{tSidebar('title')}</span>
       </Link>
 
-      <SidebarSection
-        title={tSidebar('inventory.title')}
-        icon={<Package className="h-4 w-4" />}
-        defaultOpen={true}
-      >
+      {hasInventoryAccess && (
         <SidebarSection
-          title={tSidebar('inventory.localities.title')}
-          icon={<MapPin className="h-4 w-4" />}
+          title={tSidebar('inventory.title')}
+          icon={<Package className="h-4 w-4" />}
+          defaultOpen={true}
         >
-          <SidebarLink
-            href={routes.countries.index}
-            icon={Globe}
-            label={tSidebar('inventory.localities.countries')}
-          />
-          <SidebarLink
-            href={routes.states.index}
-            icon={MapIcon}
-            label={tSidebar('inventory.localities.states')}
-          />
-          <SidebarLink
-            href={routes.cities.index}
-            icon={Building}
-            label={tSidebar('inventory.localities.cities')}
-          />
-          <SidebarLink
-            href={routes.populations.index}
-            icon={Building}
-            label={tSidebar('inventory.localities.populations')}
-          />
-          <SidebarLink
-            href={routes.nodes.index}
-            icon={Building2}
-            label={tSidebar('inventory.localities.nodes')}
-          />
-          <SidebarLink
-            href={routes.installationTypes.index}
-            icon={Settings}
-            label={tSidebar('inventory.localities.installationTypes')}
-          />
-          <SidebarLink
-            href={routes.events.index}
-            icon={Calendar}
-            label={tSidebar('inventory.localities.events')}
-          />
-          <SidebarLink
-            href={routes.labels.index}
-            icon={Tag}
-            label={tSidebar('inventory.localities.labels')}
-          />
-        </SidebarSection>
+          {hasLocalitiesAccess && (
+            <SidebarSection
+              title={tSidebar('inventory.localities.title')}
+              icon={<MapPin className="h-4 w-4" />}
+            >
+              {hasModuleAccess('inventory_countries') && (
+                <SidebarLink
+                  href={routes.countries.index}
+                  icon={Globe}
+                  label={tSidebar('inventory.localities.countries')}
+                />
+              )}
+              {hasModuleAccess('inventory_states') && (
+                <SidebarLink
+                  href={routes.states.index}
+                  icon={MapIcon}
+                  label={tSidebar('inventory.localities.states')}
+                />
+              )}
+              {hasModuleAccess('inventory_cities') && (
+                <SidebarLink
+                  href={routes.cities.index}
+                  icon={Building}
+                  label={tSidebar('inventory.localities.cities')}
+                />
+              )}
+              {hasModuleAccess('inventory_populations') && (
+                <SidebarLink
+                  href={routes.populations.index}
+                  icon={Building}
+                  label={tSidebar('inventory.localities.populations')}
+                />
+              )}
+              {hasModuleAccess('inventory_nodes') && (
+                <SidebarLink
+                  href={routes.nodes.index}
+                  icon={Building2}
+                  label={tSidebar('inventory.localities.nodes')}
+                />
+              )}
+              {hasModuleAccess('inventory_installation_types') && (
+                <SidebarLink
+                  href={routes.installationTypes.index}
+                  icon={Settings}
+                  label={tSidebar('inventory.localities.installationTypes')}
+                />
+              )}
+              {hasModuleAccess('inventory_events') && (
+                <SidebarLink
+                  href={routes.events.index}
+                  icon={Calendar}
+                  label={tSidebar('inventory.localities.events')}
+                />
+              )}
+              {hasModuleAccess('inventory_labels') && (
+                <SidebarLink
+                  href={routes.labels.index}
+                  icon={Tag}
+                  label={tSidebar('inventory.localities.labels')}
+                />
+              )}
+            </SidebarSection>
+          )}
 
-        <SidebarSection
-          title={tSidebar('inventory.operators.title')}
-          icon={<Users className="h-4 w-4" />}
-        >
-          <SidebarLink
-            href={routes.transporters.index}
-            icon={Briefcase}
-            label={tSidebar('inventory.operators.transporters')}
-          />
-          <SidebarLink
-            href={routes.serviceTypes.index}
-            icon={Flag}
-            label={tSidebar('inventory.operators.serviceTypes')}
-          />
-          <SidebarLink
-            href={routes.busLines.index}
-            icon={Bus}
-            label={tSidebar('inventory.operators.busLines')}
-          />
-        </SidebarSection>
+          {hasOperatorsAccess && (
+            <SidebarSection
+              title={tSidebar('inventory.operators.title')}
+              icon={<Users className="h-4 w-4" />}
+            >
+              {hasModuleAccess('inventory_transporters') && (
+                <SidebarLink
+                  href={routes.transporters.index}
+                  icon={Briefcase}
+                  label={tSidebar('inventory.operators.transporters')}
+                />
+              )}
+              {hasModuleAccess('inventory_service_types') && (
+                <SidebarLink
+                  href={routes.serviceTypes.index}
+                  icon={Flag}
+                  label={tSidebar('inventory.operators.serviceTypes')}
+                />
+              )}
+              {hasModuleAccess('inventory_bus_lines') && (
+                <SidebarLink
+                  href={routes.busLines.index}
+                  icon={Bus}
+                  label={tSidebar('inventory.operators.busLines')}
+                />
+              )}
+            </SidebarSection>
+          )}
 
-        {/* <SidebarLink
-          href={routes.routes.index}
-          icon={Route}
-          label={tSidebar('inventory.routes')}
-        />
-        <SidebarLink
-          href={routes.services.index}
-          icon={Bus}
-          label={tSidebar('inventory.services')}
-        />
-        <SidebarLink
-          href={routes.busModels.index}
-          icon={Bus}
-          label={tSidebar('inventory.busModels')}
-        /> */}
-        <SidebarSection
-          title={tSidebar('inventory.fleet.title')}
-          icon={<Bus className="h-4 w-4" />}
-        >
-          <SidebarLink
-            href={routes.buses.index}
-            icon={Bus}
-            label={tSidebar('inventory.fleet.buses')}
-          />
-          <SidebarLink
-            href={routes.busModels.index}
-            icon={Truck}
-            label={tSidebar('inventory.fleet.busModels')}
-          />
-          <SidebarLink
-            href={routes.seatDiagrams.index}
-            icon={LayoutGrid}
-            label={tSidebar('inventory.fleet.seatDiagrams')}
-          />
-          <SidebarLink
-            href={routes.drivers.index}
-            icon={Users}
-            label={tSidebar('inventory.fleet.drivers')}
-          />
-          <SidebarLink
-            href={routes.technologies.index}
-            icon={Cpu}
-            label={tSidebar('inventory.fleet.technologies')}
-          />
-          <SidebarLink
-            href={routes.chromatics.index}
-            icon={Palette}
-            label={tSidebar('inventory.fleet.chromatics')}
-          />
-        </SidebarSection>
+          {hasFleetAccess && (
+            <SidebarSection
+              title={tSidebar('inventory.fleet.title')}
+              icon={<Bus className="h-4 w-4" />}
+            >
+              {hasModuleAccess('inventory_buses') && (
+                <SidebarLink
+                  href={routes.buses.index}
+                  icon={Bus}
+                  label={tSidebar('inventory.fleet.buses')}
+                />
+              )}
+              {hasModuleAccess('inventory_bus_models') && (
+                <SidebarLink
+                  href={routes.busModels.index}
+                  icon={Truck}
+                  label={tSidebar('inventory.fleet.busModels')}
+                />
+              )}
+              {hasModuleAccess('inventory_seat_diagrams') && (
+                <SidebarLink
+                  href={routes.seatDiagrams.index}
+                  icon={LayoutGrid}
+                  label={tSidebar('inventory.fleet.seatDiagrams')}
+                />
+              )}
+              {hasModuleAccess('inventory_drivers') && (
+                <SidebarLink
+                  href={routes.drivers.index}
+                  icon={Users}
+                  label={tSidebar('inventory.fleet.drivers')}
+                />
+              )}
+              {hasModuleAccess('inventory_technologies') && (
+                <SidebarLink
+                  href={routes.technologies.index}
+                  icon={Cpu}
+                  label={tSidebar('inventory.fleet.technologies')}
+                />
+              )}
+              {hasModuleAccess('inventory_chromatics') && (
+                <SidebarLink
+                  href={routes.chromatics.index}
+                  icon={Palette}
+                  label={tSidebar('inventory.fleet.chromatics')}
+                />
+              )}
+            </SidebarSection>
+          )}
 
-        <SidebarSection
-          title={tSidebar('inventory.routing.title')}
-          icon={<Route className="h-4 w-4" />}
-        >
-          <SidebarLink
-            href={routes.pathways.index}
-            icon={Navigation}
-            label={tSidebar('inventory.routing.pathways')}
-          />
-        </SidebarSection>
+          {hasRoutingAccess && (
+            <SidebarSection
+              title={tSidebar('inventory.routing.title')}
+              icon={<Route className="h-4 w-4" />}
+            >
+              {hasModuleAccess('inventory_pathways') && (
+                <SidebarLink
+                  href={routes.pathways.index}
+                  icon={Navigation}
+                  label={tSidebar('inventory.routing.pathways')}
+                />
+              )}
+            </SidebarSection>
+          )}
 
-        <SidebarSection
-          title={tSidebar('inventory.generalConfig.title')}
-          icon={<Cog className="h-4 w-4" />}
-        >
-          <SidebarLink
-            href={routes.amenities.index}
-            icon={Star}
-            label={tSidebar('inventory.generalConfig.amenities')}
-          />
+          {hasConfigAccess && (
+            <SidebarSection
+              title={tSidebar('inventory.generalConfig.title')}
+              icon={<Cog className="h-4 w-4" />}
+            >
+              {hasModuleAccess('inventory_amenities') && (
+                <SidebarLink
+                  href={routes.amenities.index}
+                  icon={Star}
+                  label={tSidebar('inventory.generalConfig.amenities')}
+                />
+              )}
+            </SidebarSection>
+          )}
         </SidebarSection>
-      </SidebarSection>
+      )}
 
       {/* <SidebarSection
         title={tSidebar('planning.title')}
@@ -207,22 +298,28 @@ export default function Sidebar() {
         />
       </SidebarSection> */}
 
-      <SidebarSection
-        title={tSidebar('users.title')}
-        icon={<House className="h-4 w-4" />}
-        defaultOpen={true}
-      >
-        <SidebarLink
-          href={routes.roles.index}
-          icon={ShieldCheck}
-          label={tSidebar('users.roles')}
-        />
-        <SidebarLink
-          href={routes.users.index}
-          icon={UserRoundSearch}
-          label={tSidebar('users.users')}
-        />
-      </SidebarSection>
+      {hasUsersAccess && (
+        <SidebarSection
+          title={tSidebar('users.title')}
+          icon={<House className="h-4 w-4" />}
+          defaultOpen={true}
+        >
+          {hasModuleAccess('users_roles') && (
+            <SidebarLink
+              href={routes.roles.index}
+              icon={ShieldCheck}
+              label={tSidebar('users.roles')}
+            />
+          )}
+          {hasModuleAccess('users_users') && (
+            <SidebarLink
+              href={routes.users.index}
+              icon={UserRoundSearch}
+              label={tSidebar('users.users')}
+            />
+          )}
+        </SidebarSection>
+      )}
 
       {/* User Info and Logout */}
       {session?.user && (
@@ -234,7 +331,7 @@ export default function Sidebar() {
             <div className="text-xs">{session.user.email}</div>
           </div>
           <button
-            onClick={() => signOut()}
+            onClick={() => signOut({ callbackUrl: '' })}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
           >
             <LogOut className="h-4 w-4" />

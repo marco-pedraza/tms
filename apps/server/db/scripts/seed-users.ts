@@ -1,7 +1,7 @@
 import { db } from '@/users/db-service';
 import { getFactoryDb } from '@/tests/factories/factory-utils';
 import { seedDepartments } from './seeders/departments.seeder';
-import { seedPermissions } from './seeders/permissions.seeder';
+import { seedGroupPermissions } from './seeders/group-permissions.seeder';
 import { seedRoles } from './seeders/roles.seeder';
 import { seedRandomUsers, seedUsers } from './seeders/users.seeder';
 
@@ -13,10 +13,10 @@ const factoryDb = getFactoryDb(db);
  */
 export async function seedUsersData(clientCode?: string): Promise<void> {
   try {
-    // === PERMISSIONS SEEDING ===
-    console.log('🔑 Seeding permissions...');
-    const permissions = await seedPermissions();
-    console.log('✅ Permissions seeding completed\n');
+    // === GROUP PERMISSIONS SEEDING ===
+    console.log('🔑 Seeding permission groups with permissions...');
+    const groupPermissionsResult = await seedGroupPermissions();
+    console.log('✅ Group permissions seeding completed\n');
 
     // === ROLES SEEDING ===
     console.log('🔑 Seeding roles...');
@@ -41,7 +41,12 @@ export async function seedUsersData(clientCode?: string): Promise<void> {
     }
 
     console.log(`📊 Summary:`);
-    console.log(`   - Permissions: ${permissions.length}`);
+    console.log(
+      `   - Permission Groups: ${groupPermissionsResult.summary.totalGroups}`,
+    );
+    console.log(
+      `   - Permissions: ${groupPermissionsResult.summary.totalPermissions}`,
+    );
     console.log(`   - Roles: ${roles.length}`);
     console.log(`   - Departments: ${departments.length}`);
     console.log(`   - Predefined users: ${predefinedUsers.length}`);

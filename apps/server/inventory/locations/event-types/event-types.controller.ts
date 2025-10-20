@@ -18,7 +18,12 @@ import { validateEventType } from './event-types.domain';
  * @throws {APIError} If the event type creation fails
  */
 export const createEventType = api(
-  { expose: true, method: 'POST', path: '/event-types/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/event-types/create',
+    auth: true,
+  },
   async (params: CreateEventTypePayload): Promise<EventType> => {
     // Apply default value for baseTime if not provided
     const eventTypeData = {
@@ -39,7 +44,12 @@ export const createEventType = api(
  * @throws {APIError} If the event type is not found or retrieval fails
  */
 export const getEventType = api(
-  { expose: true, method: 'GET', path: '/event-types/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/event-types/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<EventType> => {
     return await eventTypeRepository.findOne(id);
   },
@@ -53,7 +63,12 @@ export const getEventType = api(
  * @throws {APIError} If the event type is not found or update fails
  */
 export const updateEventType = api(
-  { expose: true, method: 'PUT', path: '/event-types/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/event-types/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -76,7 +91,12 @@ export const updateEventType = api(
  * @throws {APIError} If retrieval fails
  */
 export const listEventTypes = api(
-  { expose: true, method: 'POST', path: '/event-types/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/event-types/list/all',
+    auth: true,
+  },
   async (params: ListEventTypesQueryParams): Promise<ListEventTypesResult> => {
     const eventTypes = await eventTypeRepository.findAll(params);
     return {
@@ -92,7 +112,12 @@ export const listEventTypes = api(
  * @throws {APIError} If retrieval fails
  */
 export const listEventTypesPaginated = api(
-  { expose: true, method: 'POST', path: '/event-types/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/event-types/list',
+    auth: true,
+  },
   async (
     params: PaginatedListEventTypesQueryParams,
   ): Promise<PaginatedListEventTypesResult> => {
@@ -108,7 +133,12 @@ export const listEventTypesPaginated = api(
  * @throws {APIError} If the event type is not found or deletion fails
  */
 export const deleteEventType = api(
-  { expose: true, method: 'DELETE', path: '/event-types/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/event-types/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<EventType> => {
     return await eventTypeRepository.delete(id);
   },

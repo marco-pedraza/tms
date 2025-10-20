@@ -16,7 +16,12 @@ import { userPermissionsRepository } from './user-permissions.repository';
  * @throws {APIError} If the user is not found or retrieval fails
  */
 export const getUserWithRoles = api(
-  { method: 'GET', path: '/users/:userId/roles', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/users/:userId/roles',
+    auth: true,
+  },
   async ({ userId }: { userId: number }): Promise<UserWithRoles> => {
     // Validate userId first
     if (!userId || isNaN(Number(userId))) {
@@ -36,9 +41,9 @@ export const getUserWithRoles = api(
  */
 export const getUserWithPermissions = api(
   {
+    expose: true,
     method: 'GET',
     path: '/users/:userId/permissions',
-    expose: true,
     auth: true,
   },
   async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
@@ -55,7 +60,12 @@ export const getUserWithPermissions = api(
  * @throws {APIError} If the user is not found or assignment fails
  */
 export const assignRolesToUser = api(
-  { method: 'POST', path: '/users/:userId/roles', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/users/:userId/roles',
+    auth: true,
+  },
   async ({
     userId,
     ...data
@@ -74,9 +84,9 @@ export const assignRolesToUser = api(
  */
 export const assignPermissionsToUser = api(
   {
+    expose: true,
     method: 'POST',
     path: '/users/:userId/permissions',
-    expose: true,
     auth: true,
   },
   async ({
@@ -99,9 +109,9 @@ export const assignPermissionsToUser = api(
  */
 export const checkUserPermission = api(
   {
+    expose: true,
     method: 'GET',
     path: '/users/:userId/permissions/:permissionCode/check',
-    expose: true,
     auth: true,
   },
   async ({
@@ -137,9 +147,9 @@ export const checkUserPermission = api(
  */
 export const checkUserRole = api(
   {
+    expose: true,
     method: 'GET',
     path: '/users/:userId/roles/:roleId/check',
-    expose: true,
     auth: true,
   },
   async ({
@@ -174,9 +184,9 @@ export const checkUserRole = api(
  */
 export const getUserPermissions = api(
   {
+    expose: true,
     method: 'GET',
     path: '/users/:userId/effective-permissions',
-    expose: true,
     auth: true,
   },
   async ({ userId }: { userId: number }): Promise<UserWithPermissions> => {
@@ -193,9 +203,9 @@ export const getUserPermissions = api(
  */
 export const getUserRoles = api(
   {
+    expose: true,
     method: 'GET',
     path: '/users/:userId/assigned-roles',
-    expose: true,
     auth: true,
   },
   async ({ userId }: { userId: number }): Promise<UserWithRoles> => {

@@ -37,7 +37,12 @@ import {
  * @throws {APIError} If the bus creation fails
  */
 export const createBus = api(
-  { method: 'POST', path: '/buses/create', expose: true },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/buses/create',
+    auth: true,
+  },
   async (params: CreateBusPayload): Promise<Bus> => {
     await validateBus(params);
     return await createBusWithSeatDiagram(params);
@@ -52,7 +57,12 @@ export const createBus = api(
  * @throws {APIError} If the bus is not found or retrieval fails
  */
 export const getBus = api(
-  { method: 'GET', path: '/buses/:id', expose: true },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/buses/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<ExtendedBusData> => {
     const bus = await busRepository.findOneWithRelations(id);
     const busModel = await busModelRepository.findOne(bus.modelId);
@@ -76,7 +86,12 @@ export const getBus = api(
  * @throws {APIError} If retrieval fails
  */
 export const listBuses = api(
-  { method: 'POST', path: '/buses/list/all', expose: true },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/buses/list/all',
+    auth: true,
+  },
   async (params: ListBusesQueryParams): Promise<ListBusesResult> => {
     const buses = await busRepository.findAll(params);
     return {
@@ -92,7 +107,12 @@ export const listBuses = api(
  * @throws {APIError} If retrieval fails
  */
 export const listBusesPaginated = api(
-  { method: 'POST', path: '/buses/list', expose: true },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/buses/list',
+    auth: true,
+  },
   async (
     params: PaginatedListBusesQueryParams,
   ): Promise<PaginatedListBusesResult> => {
@@ -109,7 +129,12 @@ export const listBusesPaginated = api(
  * @throws {APIError} If the bus is not found or update fails
  */
 export const updateBus = api(
-  { method: 'PUT', path: '/buses/:id/update', expose: true },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/buses/:id/update',
+    auth: true,
+  },
   async ({ id, ...data }: UpdateBusPayload & { id: number }): Promise<Bus> => {
     await validateBus(data, id);
     const bus = await busRepository.findOne(id);
@@ -125,7 +150,12 @@ export const updateBus = api(
  * @throws {APIError} If the bus is not found or deletion fails
  */
 export const deleteBus = api(
-  { method: 'DELETE', path: '/buses/:id/delete', expose: true },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/buses/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Bus> => {
     return await busRepository.delete(id);
   },
@@ -140,9 +170,10 @@ export const deleteBus = api(
  */
 export const listBusValidNextStatuses = api(
   {
+    expose: true,
     method: 'GET',
     path: '/buses/:id/valid-next-statuses',
-    expose: true,
+    auth: true,
   },
   async ({ id }: { id: number }): Promise<ListBusStatusesResult> => {
     const statuses = await busRepository.getAllowedStatusTransitions(id);
@@ -160,7 +191,12 @@ export const listBusValidNextStatuses = api(
  * @throws {APIError} If the bus is not found, validation fails, or assignment fails
  */
 export const assignTechnologiesToBus = api(
-  { expose: true, method: 'POST', path: '/buses/:id/technologies/assign' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/buses/:id/technologies/assign',
+    auth: true,
+  },
   async ({
     id,
     technologyIds,
@@ -185,9 +221,10 @@ export const assignTechnologiesToBus = api(
  */
 export const assignDriversToBusCrew = api(
   {
+    expose: true,
     method: 'POST',
     path: '/buses/:id/crew/assign',
-    expose: true,
+    auth: true,
   },
   async ({
     id,

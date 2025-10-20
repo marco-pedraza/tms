@@ -17,7 +17,12 @@ import { seatDiagramRepository } from './seat-diagrams.repository';
  * @throws {APIError} If retrieval fails or the seat diagram doesn't exist
  */
 export const getSeatDiagram = api(
-  { expose: true, method: 'GET', path: '/seat-diagrams/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/seat-diagrams/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<SeatDiagram> => {
     return await seatDiagramRepository.findOne(id);
   },
@@ -32,7 +37,12 @@ export const getSeatDiagram = api(
  * @throws {APIError} If update fails, validation fails, or the seat diagram doesn't exist
  */
 export const updateSeatDiagram = api(
-  { expose: true, method: 'PUT', path: '/seat-diagrams/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/seat-diagrams/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -57,7 +67,12 @@ export const updateSeatDiagram = api(
  * @throws {APIError} If deletion fails or the seat diagram doesn't exist
  */
 export const deleteSeatDiagram = api(
-  { expose: true, method: 'DELETE', path: '/seat-diagrams/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/seat-diagrams/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<SeatDiagram> => {
     return await seatDiagramRepository.delete(id);
   },
@@ -71,7 +86,12 @@ export const deleteSeatDiagram = api(
  * @throws {APIError} If retrieval fails or the seat diagram doesn't exist
  */
 export const listSeatDiagramSeats = api(
-  { expose: true, method: 'GET', path: '/seat-diagrams/:id/seats/list' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/seat-diagrams/:id/seats/list',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<ListSeatDiagramSeatsResult> => {
     // Verify the seat diagram exists first
     await seatDiagramRepository.findOne(id);
@@ -94,7 +114,12 @@ export const listSeatDiagramSeats = api(
  * @throws {APIError} If the update fails, validation fails, or the seat diagram doesn't exist
  */
 export const updateSeatDiagramConfiguration = api(
-  { expose: true, method: 'PUT', path: '/seat-diagrams/:id/seats/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/seat-diagrams/:id/seats/update',
+    auth: true,
+  },
   async ({
     id,
     seats,

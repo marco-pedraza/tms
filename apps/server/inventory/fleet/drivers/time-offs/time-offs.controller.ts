@@ -19,7 +19,12 @@ import { validateDriverTimeOff } from './time-offs.domain';
  * @throws {APIError} If the time-off creation fails
  */
 export const createDriverTimeOff = api(
-  { expose: true, method: 'POST', path: '/drivers/:driverId/time-offs/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/drivers/:driverId/time-offs/create',
+    auth: true,
+  },
   async ({
     driverId,
     ...data
@@ -37,7 +42,12 @@ export const createDriverTimeOff = api(
  * @throws {APIError} If the time-off is not found or doesn't belong to the driver
  */
 export const getDriverTimeOff = api(
-  { expose: true, method: 'GET', path: '/drivers/:driverId/time-offs/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/drivers/:driverId/time-offs/:id',
+    auth: true,
+  },
   async ({
     driverId,
     id,
@@ -67,6 +77,7 @@ export const listDriverTimeOffs = api(
     expose: true,
     method: 'POST',
     path: '/drivers/:driverId/time-offs/list/all',
+    auth: true,
   },
   async ({
     driverId,
@@ -100,7 +111,12 @@ export const listDriverTimeOffs = api(
  * @throws {APIError} If retrieval fails
  */
 export const listDriverTimeOffsPaginated = api(
-  { expose: true, method: 'POST', path: '/drivers/:driverId/time-offs/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/drivers/:driverId/time-offs/list',
+    auth: true,
+  },
   async ({
     driverId,
     ...params
@@ -133,6 +149,7 @@ export const updateDriverTimeOff = api(
     expose: true,
     method: 'PUT',
     path: '/drivers/:driverId/time-offs/:id/update',
+    auth: true,
   },
   async ({
     driverId,
@@ -165,6 +182,7 @@ export const deleteDriverTimeOff = api(
     expose: true,
     method: 'DELETE',
     path: '/drivers/:driverId/time-offs/:id/delete',
+    auth: true,
   },
   async ({
     driverId,

@@ -1,5 +1,6 @@
 import { DefaultSession, DefaultUser } from 'next-auth';
 import { DefaultJWT } from 'next-auth/jwt';
+import type { permissions, roles } from '@repo/ims-client';
 
 declare module 'next-auth' {
   interface Session {
@@ -9,6 +10,9 @@ declare module 'next-auth' {
       refreshToken: string;
       firstName: string;
       lastName: string;
+      isSystemAdmin: boolean;
+      permissions: permissions.Permission[];
+      invalid?: boolean;
     } & DefaultSession['user'];
   }
 
@@ -17,6 +21,9 @@ declare module 'next-auth' {
     refreshToken: string;
     firstName: string;
     lastName: string;
+    isSystemAdmin: boolean;
+    permissions: permissions.Permission[];
+    roles: roles.Role[];
   }
 }
 
@@ -26,5 +33,9 @@ declare module 'next-auth/jwt' {
     refreshToken: string;
     firstName: string;
     lastName: string;
+    isSystemAdmin: boolean;
+    permissions: permissions.Permission[];
+    expiry?: number;
+    invalid?: boolean;
   }
 }

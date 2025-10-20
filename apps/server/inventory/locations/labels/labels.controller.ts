@@ -20,7 +20,12 @@ import { validateLabel } from './labels.domain';
  * @throws {APIError} If the label creation fails
  */
 export const createLabel = api(
-  { expose: true, method: 'POST', path: '/labels/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/labels/create',
+    auth: true,
+  },
   async (params: CreateLabelPayload): Promise<Label> => {
     await validateLabel(params);
     return await labelRepository.create(params);
@@ -34,7 +39,12 @@ export const createLabel = api(
  * @throws {APIError} If the label update fails or label is not found
  */
 export const updateLabel = api(
-  { expose: true, method: 'PUT', path: '/labels/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/labels/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -51,7 +61,12 @@ export const updateLabel = api(
  * @throws {APIError} If the label is not found
  */
 export const deleteLabel = api(
-  { expose: true, method: 'DELETE', path: '/labels/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/labels/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Label> => {
     return await labelRepository.delete(id);
   },
@@ -64,7 +79,12 @@ export const deleteLabel = api(
  * @throws {APIError} If the label is not found
  */
 export const getLabel = api(
-  { expose: true, method: 'GET', path: '/labels/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/labels/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<LabelWithNodeCount> => {
     return await labelRepository.findOneWithNodeCount(id);
   },
@@ -76,7 +96,12 @@ export const getLabel = api(
  * @returns {Promise<PaginatedListLabelsResult>} Paginated list of labels with node count
  */
 export const listLabelsPaginated = api(
-  { expose: true, method: 'POST', path: '/labels/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/labels/list',
+    auth: true,
+  },
   async (
     params: PaginatedListLabelsQueryParams,
   ): Promise<PaginatedListLabelsResult> => {
@@ -90,7 +115,12 @@ export const listLabelsPaginated = api(
  * @returns {Promise<ListLabelsResult>} List of all labels with node count
  */
 export const listLabels = api(
-  { expose: true, method: 'POST', path: '/labels/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/labels/list/all',
+    auth: true,
+  },
   async (params: ListLabelsQueryParams): Promise<ListLabelsResult> => {
     const labels = await labelRepository.findAllWithNodeCount(params);
     return { data: labels };
@@ -102,7 +132,12 @@ export const listLabels = api(
  * @returns {Promise<LabelsMetrics>} Metrics including total labels, labels in use, and most used label info
  */
 export const getLabelsMetrics = api(
-  { expose: true, method: 'GET', path: '/labels/metrics' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/labels/metrics',
+    auth: true,
+  },
   async (): Promise<LabelsMetrics> => {
     return await labelRepository.getMetrics();
   },

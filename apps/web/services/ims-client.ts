@@ -1,7 +1,64 @@
 import Client from '@repo/ims-client';
 import environment from '@/services/environment';
 
-const client = new Client(environment.NEXT_PUBLIC_IMS_API_URL);
+/**
+ * Gets the current session's access token
+ * Works in both client and server components
+ */
+async function getAccessToken(): Promise<string | null> {
+  // Check if running on server-side
+  if (typeof window === 'undefined') {
+    // Server-side: dynamically import auth to avoid bundling server-only code
+    try {
+      const { auth } = await import('@/auth');
+      const session = await auth();
+      return session?.user?.accessToken ?? null;
+    } catch (error) {
+      // Log the error for debugging but return null instead of throwing
+      console.error('Error fetching access token on server:', error);
+      return null;
+    }
+  } else {
+    // Client-side: use fetch to get session from API
+    try {
+      const response = await fetch('/api/auth/session');
+      if (!response.ok) {
+        console.error('Failed to fetch session, status:', response.status);
+        return null;
+      }
+      const session = await response.json();
+      return session?.user?.accessToken ?? null;
+    } catch (error) {
+      // Log the error for debugging but return null instead of throwing
+      console.error('Error fetching access token on client:', error);
+      return null;
+    }
+  }
+}
+
+/**
+ * Authenticated IMS client - includes Bearer token in all requests
+ * This is the default client for protected endpoints
+ */
+const client = new Client(environment.NEXT_PUBLIC_IMS_API_URL, {
+  auth: async () => {
+    try {
+      const accessToken = await getAccessToken();
+
+      if (accessToken) {
+        return {
+          authorization: `Bearer ${accessToken}`,
+        };
+      }
+
+      return undefined;
+    } catch (error) {
+      // Log the error for debugging but don't throw to avoid breaking the client
+      console.error('Failed to get access token for IMS client:', error);
+      return undefined;
+    }
+  },
+});
 
 // @todo: restructure ims-client service, configure import from server
 enum BusStatus {
@@ -137,3 +194,14 @@ export {
   amenityTypes,
 };
 export default client;
+
+/**
+ * Export the authenticated IMS client
+ */
+export { client as imsClient };
+
+/**
+ * Public IMS client - no authentication headers
+ * Use this for public endpoints like login, refresh token, etc.
+ */
+export const publicClient = new Client(environment.NEXT_PUBLIC_IMS_API_URL);

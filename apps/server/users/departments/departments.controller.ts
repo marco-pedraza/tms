@@ -17,7 +17,12 @@ import { departmentRepository } from './departments.repository';
  * @throws {APIError} If the department creation fails
  */
 export const createDepartment = api(
-  { method: 'POST', path: '/departments', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/departments',
+    auth: true,
+  },
   async (params: CreateDepartmentPayload): Promise<Department> => {
     return await departmentRepository.create(params);
   },
@@ -31,7 +36,12 @@ export const createDepartment = api(
  * @throws {APIError} If the department is not found or retrieval fails
  */
 export const getDepartment = api(
-  { method: 'GET', path: '/departments/:id', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/departments/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Department> => {
     return await departmentRepository.findOne(id);
   },
@@ -44,7 +54,12 @@ export const getDepartment = api(
  * @throws {APIError} If retrieval fails
  */
 export const listDepartments = api(
-  { method: 'POST', path: '/get-departments', expose: true, auth: false },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/get-departments',
+    auth: true,
+  },
   async (params: DepartmentsQueryOptions): Promise<Departments> => {
     const departments = await departmentRepository.findAll(params);
     return { departments };
@@ -59,9 +74,9 @@ export const listDepartments = api(
  */
 export const listDepartmentsPaginated = api(
   {
+    expose: true,
     method: 'POST',
     path: '/get-departments/paginated',
-    expose: true,
     auth: true,
   },
   async (
@@ -79,7 +94,12 @@ export const listDepartmentsPaginated = api(
  * @throws {APIError} If the department is not found or update fails
  */
 export const updateDepartment = api(
-  { method: 'PUT', path: '/departments/:id', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/departments/:id',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -96,7 +116,12 @@ export const updateDepartment = api(
  * @throws {APIError} If the department is not found or deletion fails
  */
 export const deleteDepartment = api(
-  { method: 'DELETE', path: '/departments/:id', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/departments/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Department> => {
     return await departmentRepository.delete(id);
   },
@@ -110,7 +135,12 @@ export const deleteDepartment = api(
  * @throws {APIError} If search fails or no searchable fields are configured
  */
 export const searchDepartments = api(
-  { method: 'GET', path: '/departments/search', expose: true, auth: true },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/departments/search',
+    auth: true,
+  },
   async ({ term }: { term: string }): Promise<Departments> => {
     const departments = await departmentRepository.search(term);
     return { departments };
@@ -126,9 +156,9 @@ export const searchDepartments = api(
  */
 export const searchDepartmentsPaginated = api(
   {
+    expose: true,
     method: 'POST',
     path: '/departments/search/paginated',
-    expose: true,
     auth: true,
   },
   async ({

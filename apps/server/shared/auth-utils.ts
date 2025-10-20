@@ -38,7 +38,7 @@ export const comparePasswords = async (
  */
 export const omitPasswordHash = (user: User): SafeUser => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { passwordHash, mfaSettings, lastLogin, deletedAt, ...safeUser } = user;
+  const { passwordHash, ...safeUser } = user;
   return safeUser;
 };
 

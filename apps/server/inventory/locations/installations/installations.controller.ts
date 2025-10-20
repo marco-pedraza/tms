@@ -25,7 +25,12 @@ import { installationUseCases } from './installations.use-cases';
  * @throws {APIError} If the node is not found, already has an installation, or creation fails
  */
 export const createInstallation = api(
-  { expose: true, method: 'POST', path: '/installations/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/installations/create',
+    auth: true,
+  },
   async (
     params: CreateNodeInstallationPayload,
   ): Promise<InstallationWithDetails> => {
@@ -44,7 +49,12 @@ export const createInstallation = api(
  * @throws {APIError} If the installation is not found or retrieval fails
  */
 export const getInstallation = api(
-  { expose: true, method: 'GET', path: '/installations/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/installations/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<InstallationWithDetails> => {
     return await installationUseCases.findOneWithLocation(id);
   },
@@ -58,7 +68,12 @@ export const getInstallation = api(
  * @throws {APIError} If the installation is not found or update fails
  */
 export const updateInstallation = api(
-  { expose: true, method: 'PUT', path: '/installations/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/installations/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -78,7 +93,12 @@ export const updateInstallation = api(
  * @throws {APIError} If retrieval fails
  */
 export const listInstallations = api(
-  { expose: true, method: 'POST', path: '/installations/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/installations/list/all',
+    auth: true,
+  },
   async (
     params: ListInstallationsQueryParams,
   ): Promise<ListInstallationsResult> => {
@@ -96,7 +116,12 @@ export const listInstallations = api(
  * @throws {APIError} If retrieval fails
  */
 export const listInstallationsPaginated = api(
-  { expose: true, method: 'POST', path: '/installations/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/installations/list',
+    auth: true,
+  },
   async (
     params: PaginatedListInstallationsQueryParams,
   ): Promise<PaginatedListInstallationsResult> => {
@@ -118,7 +143,12 @@ export const listInstallationsPaginated = api(
  * @throws {APIError} If the installation is not found or deletion fails
  */
 export const deleteInstallation = api(
-  { expose: true, method: 'DELETE', path: '/installations/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/installations/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Installation> => {
     return await installationRepository.delete(id);
   },
@@ -135,6 +165,7 @@ export const updateInstallationProperties = api(
     expose: true,
     method: 'POST',
     path: '/installations/:id/properties/update',
+    auth: true,
   },
   async ({
     id,
@@ -164,6 +195,7 @@ export const assignAmenitiesToInstallation = api(
     expose: true,
     method: 'PUT',
     path: '/installations/:id/amenities/assign',
+    auth: true,
   },
   async ({
     id,

@@ -12,7 +12,10 @@ import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-fo
 
 const createRoleFormSchema = (tValidations: UseValidationsTranslationsResult) =>
   z.object({
-    name: nameSchema(tValidations),
+    name: nameSchema(tValidations).min(
+      3,
+      tValidations('minLength', { length: 3 }),
+    ),
     description: z.string().trim().optional(),
     active: z.boolean(),
   });

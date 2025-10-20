@@ -18,7 +18,12 @@ import { technologyDomain } from './technologies.domain';
  * @throws {APIError} If the technology creation fails
  */
 export const createTechnology = api(
-  { expose: true, method: 'POST', path: '/technologies/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/technologies/create',
+    auth: true,
+  },
   async (params: CreateTechnologyPayload): Promise<Technology> => {
     await technologyDomain.validateTechnology(params);
     return await technologiesRepository.create(params);
@@ -33,7 +38,12 @@ export const createTechnology = api(
  * @throws {APIError} If the technology is not found or retrieval fails
  */
 export const getTechnology = api(
-  { expose: true, method: 'GET', path: '/technologies/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/technologies/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Technology> => {
     return await technologiesRepository.findOne(id);
   },
@@ -46,7 +56,12 @@ export const getTechnology = api(
  * @throws {APIError} If retrieval fails
  */
 export const listTechnologies = api(
-  { expose: true, method: 'POST', path: '/technologies/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/technologies/list/all',
+    auth: true,
+  },
   async (
     params: ListTechnologiesQueryParams,
   ): Promise<ListTechnologiesResult> => {
@@ -64,7 +79,12 @@ export const listTechnologies = api(
  * @throws {APIError} If retrieval fails
  */
 export const listTechnologiesPaginated = api(
-  { expose: true, method: 'POST', path: '/technologies/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/technologies/list',
+    auth: true,
+  },
   async (
     params: PaginatedListTechnologiesQueryParams,
   ): Promise<PaginatedListTechnologiesResult> => {
@@ -80,7 +100,12 @@ export const listTechnologiesPaginated = api(
  * @throws {APIError} If the technology is not found or update fails
  */
 export const updateTechnology = api(
-  { expose: true, method: 'PUT', path: '/technologies/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/technologies/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -98,7 +123,12 @@ export const updateTechnology = api(
  * @throws {APIError} If the technology is not found or deletion fails
  */
 export const deleteTechnology = api(
-  { expose: true, method: 'DELETE', path: '/technologies/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/technologies/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Technology> => {
     return await technologiesRepository.delete(id);
   },

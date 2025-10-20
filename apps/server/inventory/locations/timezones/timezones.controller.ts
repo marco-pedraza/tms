@@ -10,7 +10,12 @@ import { timezoneRepository } from './timezones.repository';
  * @throws {Error} If the timezone is not found
  */
 export const getTimezone = api(
-  { expose: true, method: 'GET', path: '/timezones/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/timezones/:id',
+    auth: true,
+  },
   ({ id }: { id: string }): Timezone => {
     return timezoneRepository.findOne(id);
   },
@@ -21,7 +26,12 @@ export const getTimezone = api(
  * @returns {Timezones} An object containing an array of timezones
  */
 export const listTimezones = api(
-  { expose: true, method: 'GET', path: '/timezones' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/timezones',
+    auth: true,
+  },
   (): Timezones => {
     return timezoneRepository.findAll();
   },

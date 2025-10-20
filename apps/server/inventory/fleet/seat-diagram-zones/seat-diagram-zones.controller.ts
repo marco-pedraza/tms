@@ -23,7 +23,12 @@ type CreateZoneWithDiagramId = CreateSeatDiagramZonePayload & {
  * @throws {APIError} If creation fails
  */
 export const createSeatDiagramZone = api(
-  { expose: true, method: 'POST', path: '/seat-diagrams/:seatDiagramId/zones' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/seat-diagrams/:seatDiagramId/zones',
+    auth: true,
+  },
   async (
     params: CreateSeatDiagramZonePayload & { seatDiagramId: number },
   ): Promise<SeatDiagramZone> => {
@@ -51,6 +56,7 @@ export const getSeatDiagramZone = api(
     expose: true,
     method: 'GET',
     path: '/seat-diagrams/:seatDiagramId/zones/:id',
+    auth: true,
   },
   async ({
     id,
@@ -84,6 +90,7 @@ export const listZonesByDiagram = api(
     expose: true,
     method: 'POST',
     path: '/seat-diagrams/:seatDiagramId/get-zones',
+    auth: true,
   },
   async (
     params: SeatDiagramZoneQueryOptions & { seatDiagramId: number },
@@ -114,6 +121,7 @@ export const listZonesByDiagramPaginated = api(
     expose: true,
     method: 'POST',
     path: '/seat-diagrams/:seatDiagramId/get-zones/paginated',
+    auth: true,
   },
   async (
     params: PaginationParamsSeatDiagramZones & {
@@ -141,6 +149,7 @@ export const updateSeatDiagramZone = api(
     expose: true,
     method: 'PATCH',
     path: '/seat-diagrams/:seatDiagramId/zones/:id',
+    auth: true,
   },
   async ({
     id,
@@ -178,6 +187,7 @@ export const deleteSeatDiagramZone = api(
     expose: true,
     method: 'DELETE',
     path: '/seat-diagrams/:seatDiagramId/zones/:id',
+    auth: true,
   },
   async ({
     id,

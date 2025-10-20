@@ -18,7 +18,12 @@ import { amenityDomain } from './amenities.domain';
  * @throws {APIError} If the amenity creation fails
  */
 export const createAmenity = api(
-  { expose: true, method: 'POST', path: '/amenities/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/amenities/create',
+    auth: true,
+  },
   async (params: CreateAmenityPayload): Promise<Amenity> => {
     await amenityDomain.validateAmenity(params);
     return await amenitiesRepository.create(params);
@@ -33,7 +38,12 @@ export const createAmenity = api(
  * @throws {APIError} If the amenity is not found or retrieval fails
  */
 export const getAmenity = api(
-  { expose: true, method: 'GET', path: '/amenities/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/amenities/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Amenity> => {
     return await amenitiesRepository.findOne(id);
   },
@@ -46,7 +56,12 @@ export const getAmenity = api(
  * @throws {APIError} If retrieval fails
  */
 export const listAmenities = api(
-  { expose: true, method: 'POST', path: '/amenities/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/amenities/list/all',
+    auth: true,
+  },
   async (params: ListAmenitiesQueryParams): Promise<ListAmenitiesResult> => {
     const amenities = await amenitiesRepository.findAll(params);
     return {
@@ -62,7 +77,12 @@ export const listAmenities = api(
  * @throws {APIError} If retrieval fails
  */
 export const listAmenitiesPaginated = api(
-  { expose: true, method: 'POST', path: '/amenities/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/amenities/list',
+    auth: true,
+  },
   async (
     params: PaginatedListAmenitiesQueryParams,
   ): Promise<PaginatedListAmenitiesResult> => {
@@ -78,7 +98,12 @@ export const listAmenitiesPaginated = api(
  * @throws {APIError} If the amenity is not found or update fails
  */
 export const updateAmenity = api(
-  { expose: true, method: 'PUT', path: '/amenities/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/amenities/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -96,7 +121,12 @@ export const updateAmenity = api(
  * @throws {APIError} If the amenity is not found or deletion fails
  */
 export const deleteAmenity = api(
-  { expose: true, method: 'DELETE', path: '/amenities/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/amenities/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Amenity> => {
     return await amenitiesRepository.delete(id);
   },

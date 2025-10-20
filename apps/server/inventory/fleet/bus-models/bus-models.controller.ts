@@ -21,7 +21,12 @@ import { busModelUseCases } from './bus-models.use-cases';
  * @throws {APIError} If the bus model creation fails
  */
 export const createBusModel = api(
-  { method: 'POST', path: '/bus-models/create', expose: true },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/bus-models/create',
+    auth: true,
+  },
   async (params: CreateBusModelPayload): Promise<BusModel> => {
     await busModelDomain.validateBusModel(params);
     return await busModelRepository.create(params);
@@ -36,7 +41,12 @@ export const createBusModel = api(
  * @throws {APIError} If the bus model is not found or retrieval fails
  */
 export const getBusModel = api(
-  { method: 'GET', path: '/bus-models/:id', expose: true },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/bus-models/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<BusModelWithDetails> => {
     return await busModelRepository.findOneWithRelations(id);
   },
@@ -48,7 +58,12 @@ export const getBusModel = api(
  * @throws {APIError} If retrieval fails
  */
 export const listBusModels = api(
-  { method: 'POST', path: '/bus-models/list/all', expose: true },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/bus-models/list/all',
+    auth: true,
+  },
   async (params: ListBusModelsQueryParams): Promise<ListBusModelsResult> => {
     const busModels = await busModelRepository.findAll(params);
     return {
@@ -64,7 +79,12 @@ export const listBusModels = api(
  * @throws {APIError} If retrieval fails
  */
 export const listBusModelsPaginated = api(
-  { method: 'POST', path: '/bus-models/list', expose: true },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/bus-models/list',
+    auth: true,
+  },
   async (
     params: PaginatedListBusModelsQueryParams,
   ): Promise<PaginatedListBusModelsResult> => {
@@ -81,7 +101,12 @@ export const listBusModelsPaginated = api(
  * @throws {APIError} If the bus model is not found or update fails
  */
 export const updateBusModel = api(
-  { method: 'PUT', path: '/bus-models/:id/update', expose: true },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/bus-models/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -99,7 +124,12 @@ export const updateBusModel = api(
  * @throws {APIError} If the bus model is not found or deletion fails
  */
 export const deleteBusModel = api(
-  { method: 'DELETE', path: '/bus-models/:id/delete', expose: true },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/bus-models/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<BusModel> => {
     return await busModelRepository.delete(id);
   },
@@ -114,7 +144,12 @@ export const deleteBusModel = api(
  * @throws {APIError} If the bus model is not found or assignment fails
  */
 export const assignAmenitiesToBusModel = api(
-  { method: 'PUT', path: '/bus-models/:id/amenities/assign', expose: true },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/bus-models/:id/amenities/assign',
+    auth: true,
+  },
   async ({
     id,
     amenityIds,

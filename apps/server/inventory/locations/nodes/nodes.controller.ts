@@ -22,7 +22,12 @@ import { nodeUseCases } from './nodes.use-cases';
  * @throws {APIError} If the node creation fails
  */
 export const createNode = api(
-  { expose: true, method: 'POST', path: '/nodes/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/nodes/create',
+    auth: true,
+  },
   async (params: CreateNodePayload): Promise<Node> => {
     return await nodeDomain.createNode(params);
   },
@@ -36,7 +41,12 @@ export const createNode = api(
  * @throws {APIError} If the node is not found or retrieval fails
  */
 export const getNode = api(
-  { expose: true, method: 'GET', path: '/nodes/:id' },
+  {
+    expose: true,
+    method: 'GET',
+    path: '/nodes/:id',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<NodeWithRelations> => {
     return await nodeRepository.findOneWithRelations(id);
   },
@@ -49,7 +59,12 @@ export const getNode = api(
  * @throws {APIError} If retrieval fails
  */
 export const listNodes = api(
-  { expose: true, method: 'POST', path: '/nodes/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/nodes/list/all',
+    auth: true,
+  },
   async (params: ListNodesQueryParams): Promise<ListNodesResult> => {
     const nodes = await nodeRepository.findAll(params);
     return {
@@ -65,7 +80,12 @@ export const listNodes = api(
  * @throws {APIError} If retrieval fails
  */
 export const listNodesPaginated = api(
-  { expose: true, method: 'POST', path: '/nodes/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/nodes/list',
+    auth: true,
+  },
   async (
     params: PaginatedListNodesQueryParams,
   ): Promise<PaginatedListNodesResult> => {
@@ -87,7 +107,12 @@ export const listNodesPaginated = api(
  * @throws {APIError} If the node is not found or update fails
  */
 export const updateNode = api(
-  { expose: true, method: 'PUT', path: '/nodes/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/nodes/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -104,7 +129,12 @@ export const updateNode = api(
  * @throws {APIError} If the node is not found or deletion fails
  */
 export const deleteNode = api(
-  { expose: true, method: 'DELETE', path: '/nodes/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/nodes/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<Node> => {
     return await nodeRepository.delete(id);
   },
@@ -120,7 +150,12 @@ export const deleteNode = api(
  * @throws {APIError} If the node is not found, validation fails, or assignment fails
  */
 export const assignEventsToNode = api(
-  { expose: true, method: 'POST', path: '/nodes/:id/events/assign' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/nodes/:id/events/assign',
+    auth: true,
+  },
   async ({
     id,
     events,
@@ -144,7 +179,12 @@ export const assignEventsToNode = api(
  * @throws {APIError} If the node is not found, validation fails, or assignment fails
  */
 export const assignLabelsToNode = api(
-  { expose: true, method: 'PUT', path: '/nodes/:id/labels/assign' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/nodes/:id/labels/assign',
+    auth: true,
+  },
   async ({
     id,
     ...data

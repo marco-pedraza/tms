@@ -20,7 +20,12 @@ import { serviceTypeUseCases } from './service-types.use-cases';
  * @returns The newly created service type
  */
 export const createServiceType = api(
-  { expose: true, method: 'POST', path: '/service-types/create' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/service-types/create',
+    auth: true,
+  },
   async (payload: CreateServiceTypePayload): Promise<ServiceType> => {
     await validateServiceType(payload);
     return await serviceTypeRepository.create(payload);
@@ -37,6 +42,7 @@ export const getServiceType = api(
     expose: true,
     method: 'GET',
     path: '/service-types/:id',
+    auth: true,
   },
   async ({ id }: { id: number }): Promise<ServiceTypeWithAmenities> => {
     return await serviceTypeUseCases.findOneWithAmenities(id);
@@ -49,7 +55,12 @@ export const getServiceType = api(
  * @returns List of service types
  */
 export const listServiceTypes = api(
-  { expose: true, method: 'POST', path: '/service-types/list/all' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/service-types/list/all',
+    auth: true,
+  },
   async (
     params: ListServiceTypesQueryParams,
   ): Promise<ListServiceTypesResult> => {
@@ -64,7 +75,12 @@ export const listServiceTypes = api(
  * @returns Paginated list of service types
  */
 export const listServiceTypesPaginated = api(
-  { expose: true, method: 'POST', path: '/service-types/list' },
+  {
+    expose: true,
+    method: 'POST',
+    path: '/service-types/list',
+    auth: true,
+  },
   async (
     params: PaginatedListServiceTypesQueryParams,
   ): Promise<PaginatedListServiceTypesResult> => {
@@ -78,7 +94,12 @@ export const listServiceTypesPaginated = api(
  * @returns The updated service type
  */
 export const updateServiceType = api(
-  { expose: true, method: 'PUT', path: '/service-types/:id/update' },
+  {
+    expose: true,
+    method: 'PUT',
+    path: '/service-types/:id/update',
+    auth: true,
+  },
   async ({
     id,
     ...data
@@ -94,7 +115,12 @@ export const updateServiceType = api(
  * @returns The deleted service type
  */
 export const deleteServiceType = api(
-  { expose: true, method: 'DELETE', path: '/service-types/:id/delete' },
+  {
+    expose: true,
+    method: 'DELETE',
+    path: '/service-types/:id/delete',
+    auth: true,
+  },
   async ({ id }: { id: number }): Promise<ServiceType> => {
     return await serviceTypeRepository.delete(id);
   },
@@ -109,6 +135,7 @@ export const assignAmenitiesToServiceType = api(
     expose: true,
     method: 'PUT',
     path: '/service-types/:id/amenities/assign',
+    auth: true,
   },
   async ({
     id,

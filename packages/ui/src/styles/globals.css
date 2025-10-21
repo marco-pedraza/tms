@@ -46,6 +46,9 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-primary-pastel: var(--primary-pastel);
+  --color-accent-pastel: var(--accent-pastel);
+
 
   /* Interactive Elements */
   --color-border: var(--border);

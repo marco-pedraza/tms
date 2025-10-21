@@ -61,6 +61,11 @@
   --secondary: oklch(0.97 0 0); /* Light gray */
   --secondary-foreground: var(--ims-primary); /* Use IMS primary for text */
 
+  /* Secondary Colors (keep existing neutral palette) */
+  --primary-pastel: oklch(0.9384 0.0319 169.2); /* Primary Pastel */
+  --accent-pastel: oklch(0.964 0.0219 58.79); /* Accent Pastel */
+
+
   /* Background & Surface Colors */
   --background: oklch(1 0 0); /* White */
   --foreground: var(--ims-gray-600); /* Use IMS darkest gray for main text */

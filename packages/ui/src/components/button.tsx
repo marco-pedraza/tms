@@ -24,7 +24,7 @@ const buttonVariants = cva(
 
         // ---  DEFAULLT BUTTONS ---
         gradient:
-          'border-none text-white bg-linear-to-r from-primary to-primary-light hover:text-white hover:scale-105',
+          'border-none text-white bg-gradient-to-r from-primary to-primary-light hover:text-white hover:scale-105',
         primary:
           'border-none text-primary-foreground bg-primary hover:bg-primary-light hover:scale-105',
         destructive:

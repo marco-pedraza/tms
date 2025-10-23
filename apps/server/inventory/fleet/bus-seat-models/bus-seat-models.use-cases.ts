@@ -15,6 +15,7 @@ import { busSeatModelRepository } from './bus-seat-models.repository';
 import {
   createNewSeatPayload,
   createSeatUpdateData,
+  createTemporarySeatNumber,
   generateAllSeatModels,
   getPositionKey,
   needsSeatUpdate,
@@ -198,6 +199,77 @@ export function createBusSeatModelUseCases() {
   }
 
   /**
+   * Temporizes seat numbers for seats that will have number changes
+   * This prevents unique constraint violations during batch updates by assigning
+   * temporary unique numbers before applying final seat numbers
+   *
+   * Strategy: Temporize ALL existing SEAT type spaces to create a clean slate
+   * for number assignment. This handles cases where:
+   * 1. Seats are being renumbered (original use case)
+   * 2. Auto-generated seats have different numbering than incoming payload
+   * 3. Complex renumbering scenarios with potential collisions
+   *
+   * @param existingSeats - Array of all existing seat models
+   * @param txRepo - Transaction repository
+   * @returns Set of seat IDs that were temporized
+   */
+  async function temporizeSeatsWithNumberChanges(
+    existingSeats: BusSeatModel[],
+    txRepo: ReturnType<typeof busSeatModelRepository.withTransaction>,
+  ): Promise<Set<number>> {
+    const temporizedSeatIds = new Set<number>();
+
+    // Temporize ALL existing SEAT type spaces to avoid any potential conflicts
+    for (const existingSeat of existingSeats) {
+      if (existingSeat.spaceType === SpaceType.SEAT) {
+        const tempNumber = createTemporarySeatNumber(existingSeat.id);
+        await txRepo.update(existingSeat.id, { seatNumber: tempNumber });
+        temporizedSeatIds.add(existingSeat.id);
+      }
+    }
+
+    return temporizedSeatIds;
+  }
+
+  /**
+   * Applies final seat updates and creates new seats
+   * This is the second phase of the two-phase update process
+   * @param incomingSeats - Array of incoming seat configurations with position keys
+   * @param existingSeatMap - Map of existing seats indexed by position key
+   * @param busDiagramModelId - Bus diagram model ID
+   * @param diagramModel - Bus diagram model for meta calculations
+   * @param txRepo - Transaction repository
+   * @returns Promise with statistics about created and updated seats
+   */
+  async function applyFinalSeatUpdates(
+    incomingSeats: (SeatConfigurationInput & { seatKey: string })[],
+    existingSeatMap: Map<string, BusSeatModel>,
+    busDiagramModelId: number,
+    diagramModel: BusDiagramModel,
+    txRepo: ReturnType<typeof busSeatModelRepository.withTransaction>,
+  ): Promise<{ seatsCreated: number; seatsUpdated: number }> {
+    let seatsCreated = 0;
+    let seatsUpdated = 0;
+
+    for (const incomingSeat of incomingSeats) {
+      const existingSeat = existingSeatMap.get(incomingSeat.seatKey);
+
+      const result = await processIncomingSeatConfiguration(
+        incomingSeat,
+        existingSeat,
+        busDiagramModelId,
+        diagramModel,
+        txRepo,
+      );
+
+      if (result.created) seatsCreated++;
+      if (result.updated) seatsUpdated++;
+    }
+
+    return { seatsCreated, seatsUpdated };
+  }
+
+  /**
    * Updates seat configuration of a template seat layout in a single batch operation
    * @param busDiagramModelId - The ID of the bus diagram model to update
    * @param seatConfigurations - Array of seat configurations to process
@@ -240,24 +312,32 @@ export function createBusSeatModelUseCases() {
         return { ...config, seatKey: key };
       });
 
-      let seatsCreated = 0;
-      let seatsUpdated = 0;
+      // TWO-PHASE UPDATE PROCESS:
+      // Phase 1: Temporize ALL existing seat numbers to create a clean slate
+      // This prevents unique constraint violations by ensuring no conflicts during updates
+      // Handles both renumbering scenarios and cases where auto-generated seat numbers
+      // differ from incoming payload numbering
+      await temporizeSeatsWithNumberChanges(existingSeats, txRepo);
 
-      // Process each incoming seat configuration
-      for (const incomingSeat of incomingSeats) {
-        const existingSeat = existingSeatMap.get(incomingSeat.seatKey);
-
-        const result = await processIncomingSeatConfiguration(
-          incomingSeat,
-          existingSeat,
-          busDiagramModelId,
-          diagramModel,
-          txRepo,
-        );
-
-        if (result.created) seatsCreated++;
-        if (result.updated) seatsUpdated++;
+      // CRITICAL: Refresh the existing seat map after temporization
+      const refreshedSeats = await txRepo.findAllBy(
+        busSeatModels.busDiagramModelId,
+        busDiagramModelId,
+      );
+      const refreshedSeatMap = new Map<string, BusSeatModel>();
+      for (const seat of refreshedSeats) {
+        const key = getPositionKey(seat.floorNumber, seat.position);
+        refreshedSeatMap.set(key, seat);
       }
+
+      // Phase 2: Apply final updates with correct seat numbers and create new seats
+      const { seatsCreated, seatsUpdated } = await applyFinalSeatUpdates(
+        incomingSeats,
+        refreshedSeatMap,
+        busDiagramModelId,
+        diagramModel,
+        txRepo,
+      );
 
       // Deactivate seats not in payload
       const seatsDeactivated = await deactivateUnusedSeats(

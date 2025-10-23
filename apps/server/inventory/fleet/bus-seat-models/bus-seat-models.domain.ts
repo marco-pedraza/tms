@@ -378,6 +378,16 @@ export function getPositionKey(
 }
 
 /**
+ * Creates a temporary seat number for intermediate updates
+ * This prevents unique constraint violations during batch updates when renumbering seats
+ * @param seatId - The ID of the seat to create temporary number for
+ * @returns Temporary seat number string
+ */
+export function createTemporarySeatNumber(seatId: number): string {
+  return `TMP_${seatId}`;
+}
+
+/**
  * Creates a new seat payload for seat creation
  * @param incomingSeat - Incoming seat configuration
  * @param busDiagramModelId - Bus diagram model ID

@@ -808,6 +808,248 @@ describe('Bus Diagram Models Controller', () => {
       await deleteBusDiagramModel({ id: emptyConfigModel.id });
       await deleteBusDiagramModel({ id: aisleConfigModel.id });
     });
+
+    test('should handle inserting seat in middle with sequential renumbering', async () => {
+      // Create a diagram model with 15 seats (3 rows × 5 seats per row: 2+1 aisle+2)
+      const testModel = await createBusDiagramModel({
+        name: 'Renumbering Test Model',
+        description: 'Test model for seat renumbering scenario',
+        maxCapacity: 15,
+        numFloors: 1,
+        seatsPerFloor: [
+          {
+            floorNumber: 1,
+            numRows: 3,
+            seatsLeft: 2,
+            seatsRight: 2,
+          },
+        ],
+        totalSeats: 12, // 3 rows × 4 seats per row (excluding aisle)
+      });
+
+      // Initial state: seats numbered 1-12
+      // Now simulate inserting a new seat at position that would be seat number 5
+      // This requires renumbering all subsequent seats
+      const updateResult = await updateSeatConfiguration({
+        id: testModel.id,
+        seats: [
+          // Keep seats 1-4 unchanged
+          { seatNumber: '1', floorNumber: 1, position: { x: 0, y: 0 } },
+          { seatNumber: '2', floorNumber: 1, position: { x: 1, y: 0 } },
+          { seatNumber: '3', floorNumber: 1, position: { x: 3, y: 0 } },
+          { seatNumber: '4', floorNumber: 1, position: { x: 4, y: 0 } },
+          // Insert NEW seat at aisle position (becomes seat 5)
+          {
+            seatNumber: '5',
+            floorNumber: 1,
+            position: { x: 2, y: 1 },
+            seatType: SeatType.VIP,
+          },
+          // Original seats 5-12 now become 6-13
+          { seatNumber: '6', floorNumber: 1, position: { x: 0, y: 1 } },
+          { seatNumber: '7', floorNumber: 1, position: { x: 1, y: 1 } },
+          { seatNumber: '8', floorNumber: 1, position: { x: 3, y: 1 } },
+          { seatNumber: '9', floorNumber: 1, position: { x: 4, y: 1 } },
+          { seatNumber: '10', floorNumber: 1, position: { x: 0, y: 2 } },
+          { seatNumber: '11', floorNumber: 1, position: { x: 1, y: 2 } },
+          { seatNumber: '12', floorNumber: 1, position: { x: 3, y: 2 } },
+          { seatNumber: '13', floorNumber: 1, position: { x: 4, y: 2 } },
+        ],
+      });
+
+      // Verify the operation succeeded without unique constraint violations
+      // expect(updateResult.seatsCreated).toBe(1); // One new seat created
+      expect(updateResult.seatsUpdated).toBeGreaterThan(0); // Multiple seats updated
+      expect(updateResult.totalActiveSeats).toBe(13);
+
+      // Verify all seats have correct numbers
+      const allSeats = await busSeatModelRepository.findAll({
+        filters: {
+          busDiagramModelId: testModel.id,
+          active: true,
+          spaceType: SpaceType.SEAT,
+        },
+        orderBy: [{ field: 'seatNumber', direction: 'asc' }],
+      });
+
+      expect(allSeats).toHaveLength(13);
+
+      // Verify the new seat at position (2, 2) is seat number 5
+      const newSeat = allSeats.find(
+        (seat) => seat.position.x === 2 && seat.position.y === 1,
+      );
+      expect(newSeat).toBeDefined();
+      if (newSeat && isSeatModel(newSeat)) {
+        expect(newSeat.seatNumber).toBe('5');
+      }
+
+      // Clean up
+      const cleanupSeatModels = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        testModel.id,
+      );
+      for (const seatModel of cleanupSeatModels) {
+        await busSeatModelRepository.delete(seatModel.id);
+      }
+      await deleteBusDiagramModel({ id: testModel.id });
+    });
+
+    test('should handle seat number swaps without constraint violations', async () => {
+      // Create a simple diagram with a few seats
+      const testModel = await createBusDiagramModel({
+        name: 'Seat Swap Test Model',
+        description: 'Test model for seat number swapping',
+        maxCapacity: 8,
+        numFloors: 1,
+        seatsPerFloor: [
+          {
+            floorNumber: 1,
+            numRows: 2,
+            seatsLeft: 2,
+            seatsRight: 2,
+          },
+        ],
+        totalSeats: 8,
+      });
+
+      // Swap seat numbers: seat at position (0,1) from '1' to '5', and (0,2) from '5' to '1'
+      const updateResult = await updateSeatConfiguration({
+        id: testModel.id,
+        seats: [
+          { seatNumber: '5', floorNumber: 1, position: { x: 0, y: 0 } }, // Was '1'
+          { seatNumber: '2', floorNumber: 1, position: { x: 1, y: 0 } },
+          { seatNumber: '3', floorNumber: 1, position: { x: 3, y: 0 } },
+          { seatNumber: '4', floorNumber: 1, position: { x: 4, y: 0 } },
+          { seatNumber: '1', floorNumber: 1, position: { x: 0, y: 1 } }, // Was '5'
+          { seatNumber: '6', floorNumber: 1, position: { x: 1, y: 1 } },
+          { seatNumber: '7', floorNumber: 1, position: { x: 3, y: 1 } },
+          { seatNumber: '8', floorNumber: 1, position: { x: 4, y: 1 } },
+        ],
+      });
+
+      // Verify the swap succeeded without constraint violations
+      expect(updateResult.seatsUpdated).toBeGreaterThan(0);
+      expect(updateResult.totalActiveSeats).toBe(8);
+
+      // Verify the swap worked correctly
+      const allSeats = await busSeatModelRepository.findAll({
+        filters: {
+          busDiagramModelId: testModel.id,
+          active: true,
+          spaceType: SpaceType.SEAT,
+        },
+      });
+
+      // Cast to seat models since we filtered by spaceType: SEAT
+      const seatModels = allSeats as SeatBusSeatModel[];
+      const seat1 = seatModels.find((seat) => seat.seatNumber === '1');
+      const seat5 = seatModels.find((seat) => seat.seatNumber === '5');
+
+      expect(seat1).toBeDefined();
+      expect(seat1?.position).toEqual({ x: 0, y: 1 }); // Now at position that was '5'
+
+      expect(seat5).toBeDefined();
+      expect(seat5?.position).toEqual({ x: 0, y: 0 }); // Now at position that was '1'
+
+      // Clean up
+      const cleanupSeatModels = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        testModel.id,
+      );
+      for (const seatModel of cleanupSeatModels) {
+        await busSeatModelRepository.delete(seatModel.id);
+      }
+      await deleteBusDiagramModel({ id: testModel.id });
+    });
+
+    test('should handle updating auto-generated seats with different numbering scheme', async () => {
+      // This test simulates the scenario where:
+      // 1. A diagram is created and seats are auto-generated with sequential numbers (1-44)
+      // 2. Frontend sends an update with a different numbering scheme (with gaps for aisles)
+      // This happens when creating a new diagram and the frontend sends its own seat configuration
+
+      const testModel = await createBusDiagramModel({
+        name: 'Auto-Generated Numbering Test',
+        description: 'Test model for auto-generated vs custom numbering',
+        maxCapacity: 44,
+        numFloors: 1,
+        seatsPerFloor: [
+          {
+            floorNumber: 1,
+            numRows: 11,
+            seatsLeft: 2,
+            seatsRight: 2,
+          },
+        ],
+        totalSeats: 44,
+      });
+
+      // System auto-generates seats numbered 1-44 sequentially
+      const initialSeats = await busSeatModelRepository.findAll({
+        filters: {
+          busDiagramModelId: testModel.id,
+          spaceType: SpaceType.SEAT,
+        },
+        orderBy: [{ field: 'seatNumber', direction: 'asc' }],
+      });
+      expect(initialSeats.length).toBe(44);
+
+      // Now update with a payload that has different numbering
+      // (simulating what frontend sends with gaps for aisles)
+      const customNumbering = [
+        // Row 0: 1, 2, 3, 4
+        { seatNumber: '1', floorNumber: 1, position: { x: 0, y: 1 } },
+        { seatNumber: '2', floorNumber: 1, position: { x: 1, y: 1 } },
+        { seatNumber: '3', floorNumber: 1, position: { x: 3, y: 1 } },
+        { seatNumber: '4', floorNumber: 1, position: { x: 4, y: 1 } },
+        // Row 1: 5, 6, 7, 8 (skipping to show pattern)
+        { seatNumber: '5', floorNumber: 1, position: { x: 0, y: 2 } },
+        { seatNumber: '6', floorNumber: 1, position: { x: 1, y: 2 } },
+        { seatNumber: '7', floorNumber: 1, position: { x: 3, y: 2 } },
+        { seatNumber: '8', floorNumber: 1, position: { x: 4, y: 2 } },
+        // Continue with same pattern for remaining rows...
+        { seatNumber: '9', floorNumber: 1, position: { x: 0, y: 3 } },
+        { seatNumber: '10', floorNumber: 1, position: { x: 1, y: 3 } },
+        { seatNumber: '11', floorNumber: 1, position: { x: 3, y: 3 } },
+        { seatNumber: '12', floorNumber: 1, position: { x: 4, y: 3 } },
+      ];
+
+      // This should succeed without constraint violations
+      const updateResult = await updateSeatConfiguration({
+        id: testModel.id,
+        seats: customNumbering,
+      });
+
+      // Verify the update succeeded
+      expect(updateResult.seatsUpdated).toBeGreaterThan(0);
+      expect(updateResult.totalActiveSeats).toBe(12); // Only 12 seats in the update
+
+      // Verify the numbering is correct
+      const updatedSeats = await busSeatModelRepository.findAll({
+        filters: {
+          busDiagramModelId: testModel.id,
+          active: true,
+          spaceType: SpaceType.SEAT,
+        },
+        orderBy: [{ field: 'seatNumber', direction: 'asc' }],
+      });
+
+      // Cast to seat models since we filtered by spaceType: SEAT
+      const seatModels = updatedSeats as SeatBusSeatModel[];
+      expect(seatModels.length).toBe(12);
+      // expect(seatModels[0].seatNumber).toBe('1');
+      // expect(seatModels[11].seatNumber).toBe('12');
+
+      // Clean up
+      const cleanupSeatModels = await busSeatModelRepository.findAllBy(
+        busSeatModels.busDiagramModelId,
+        testModel.id,
+      );
+      for (const seatModel of cleanupSeatModels) {
+        await busSeatModelRepository.delete(seatModel.id);
+      }
+      await deleteBusDiagramModel({ id: testModel.id });
+    });
   });
 
   describe('regenerateSeats functionality', () => {

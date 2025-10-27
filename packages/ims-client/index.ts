@@ -125,6 +125,7 @@ export namespace inventory {
             this.createNode = this.createNode.bind(this)
             this.createPathway = this.createPathway.bind(this)
             this.createPopulation = this.createPopulation.bind(this)
+            this.createRoute = this.createRoute.bind(this)
             this.createSeatDiagramZone = this.createSeatDiagramZone.bind(this)
             this.createServiceType = this.createServiceType.bind(this)
             this.createState = this.createState.bind(this)
@@ -149,6 +150,7 @@ export namespace inventory {
             this.deleteNode = this.deleteNode.bind(this)
             this.deletePathway = this.deletePathway.bind(this)
             this.deletePopulation = this.deletePopulation.bind(this)
+            this.deleteRoute = this.deleteRoute.bind(this)
             this.deleteSeatDiagram = this.deleteSeatDiagram.bind(this)
             this.deleteSeatDiagramZone = this.deleteSeatDiagramZone.bind(this)
             this.deleteServiceType = this.deleteServiceType.bind(this)
@@ -179,6 +181,7 @@ export namespace inventory {
             this.getPathway = this.getPathway.bind(this)
             this.getPopulation = this.getPopulation.bind(this)
             this.getPopulationCities = this.getPopulationCities.bind(this)
+            this.getRoute = this.getRoute.bind(this)
             this.getSeatDiagram = this.getSeatDiagram.bind(this)
             this.getSeatDiagramZone = this.getSeatDiagramZone.bind(this)
             this.getServiceType = this.getServiceType.bind(this)
@@ -230,6 +233,8 @@ export namespace inventory {
             this.listPathwaysPaginated = this.listPathwaysPaginated.bind(this)
             this.listPopulations = this.listPopulations.bind(this)
             this.listPopulationsPaginated = this.listPopulationsPaginated.bind(this)
+            this.listRoutes = this.listRoutes.bind(this)
+            this.listRoutesPaginated = this.listRoutesPaginated.bind(this)
             this.listSeatDiagramSeats = this.listSeatDiagramSeats.bind(this)
             this.listServiceTypes = this.listServiceTypes.bind(this)
             this.listServiceTypesPaginated = this.listServiceTypesPaginated.bind(this)
@@ -273,6 +278,7 @@ export namespace inventory {
             this.updatePathway = this.updatePathway.bind(this)
             this.updatePathwayOption = this.updatePathwayOption.bind(this)
             this.updatePopulation = this.updatePopulation.bind(this)
+            this.updateRoute = this.updateRoute.bind(this)
             this.updateSeatConfiguration = this.updateSeatConfiguration.bind(this)
             this.updateSeatDiagram = this.updateSeatDiagram.bind(this)
             this.updateSeatDiagramConfiguration = this.updateSeatDiagramConfiguration.bind(this)
@@ -754,6 +760,18 @@ export namespace inventory {
         }
 
         /**
+         * Creates a new route with legs.
+         * @param params - The route data to create
+         * @returns {Promise<RouteEnriched>} The created route
+         * @throws {APIError} If the route creation fails
+         */
+        public async createRoute(params: routes.CreateRoutePayload): Promise<routes.RouteEnriched> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/routes/create`, JSON.stringify(params))
+            return await resp.json() as routes.RouteEnriched
+        }
+
+        /**
          * Creates a new seat diagram zone.
          * @param params - The zone data to create
          * @returns {Promise<SeatDiagramZone>} The created zone
@@ -1070,6 +1088,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("DELETE", `/populations/${encodeURIComponent(id)}/delete`)
             return await resp.json() as populations.Population
+        }
+
+        /**
+         * Deletes a route by its ID.
+         * @param params - Object containing the route ID
+         * @param params.id - The ID of the route to delete
+         * @returns {Promise<Route>} The deleted route
+         * @throws {APIError} If the route is not found or deletion fails
+         */
+        public async deleteRoute(id: number): Promise<routes.Route> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/routes/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as routes.Route
         }
 
         /**
@@ -1448,6 +1479,19 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/populations/${encodeURIComponent(id)}/cities`)
             return await resp.json() as cities.ListCitiesResult
+        }
+
+        /**
+         * Retrieves a route by its ID with enriched data.
+         * @param params - Object containing the route ID
+         * @param params.id - The ID of the route to retrieve
+         * @returns {Promise<RouteEnriched>} The found route with enriched data
+         * @throws {APIError} If the route is not found or retrieval fails
+         */
+        public async getRoute(id: number): Promise<routes.RouteEnriched> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/routes/${encodeURIComponent(id)}`)
+            return await resp.json() as routes.RouteEnriched
         }
 
         /**
@@ -2150,6 +2194,30 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/populations/list`, JSON.stringify(params))
             return await resp.json() as populations.PaginatedListPopulationsResult
+        }
+
+        /**
+         * Retrieves all routes without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListRoutesResult>} Unified response with data property containing array of routes
+         * @throws {APIError} If retrieval fails
+         */
+        public async listRoutes(params: routes.ListRoutesQueryParams): Promise<routes.ListRoutesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/routes/list/all`, JSON.stringify(params))
+            return await resp.json() as routes.ListRoutesResult
+        }
+
+        /**
+         * Retrieves routes with pagination and filters.
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListRoutesResult>} Unified paginated response with data and pagination properties
+         * @throws {APIError} If retrieval fails
+         */
+        public async listRoutesPaginated(params: routes.PaginatedListRoutesQueryParams): Promise<routes.PaginatedListRoutesResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/routes/list`, JSON.stringify(params))
+            return await resp.json() as routes.PaginatedListRoutesResult
         }
 
         /**
@@ -3513,6 +3581,61 @@ export namespace inventory {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/populations/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as populations.Population
+        }
+
+        /**
+         * Updates an existing route.
+         * @param params - Object containing the route ID and update data
+         * @param params.id - The ID of the route to update
+         * @returns {Promise<RouteEnriched>} The updated route
+         * @throws {APIError} If the route is not found or update fails
+         */
+        public async updateRoute(id: number, params: {
+    /**
+     * Unique code for the route
+     * Must have at least 1 character
+     */
+    code?: string
+
+    /**
+     * Name of the route
+     */
+    name?: string
+
+    /**
+     * Service type ID
+     */
+    serviceTypeId?: number
+
+    /**
+     * Bus line ID
+     */
+    buslineId?: number
+
+    /**
+     * Origin node ID
+     */
+    originNodeId?: number
+
+    /**
+     * Destination node ID
+     */
+    destinationNodeId?: number
+
+    /**
+     * Array of route legs
+     * Must have at least 1 leg
+     */
+    legs?: route_legs.UpdateRouteLegPayload[]
+
+    /**
+     * Whether the route is active
+     */
+    active?: boolean
+}): Promise<routes.RouteEnriched> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/routes/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as routes.RouteEnriched
         }
 
         /**
@@ -10647,6 +10770,820 @@ export namespace roles {
 
         /**
          * Timestamp when the role was last updated
+         */
+        updatedAt: string | string | null
+    }
+}
+
+export namespace route_legs {
+    export interface CreateRouteLegPayload {
+        /**
+         * Position in the route sequence
+         * Must be a positive number
+         */
+        position: number
+
+        /**
+         * Pathway ID
+         * Must be a positive number
+         */
+        pathwayId: number
+
+        /**
+         * Pathway option ID
+         * Must be a positive number
+         */
+        pathwayOptionId: number
+
+        /**
+         * Whether this leg is derived (e.g., toll booths)
+         * @default false
+         */
+        isDerived?: boolean
+
+        /**
+         * Whether the leg is active
+         * @default true
+         */
+        active?: boolean
+    }
+
+    export interface RouteLeg {
+        /**
+         * Unique identifier for the route leg
+         */
+        id: number
+
+        /**
+         * Position in the route sequence
+         */
+        position: number
+
+        /**
+         * Route ID this leg belongs to
+         */
+        routeId: number
+
+        /**
+         * Origin node ID
+         */
+        originNodeId: number
+
+        /**
+         * Destination node ID
+         */
+        destinationNodeId: number
+
+        /**
+         * Pathway ID
+         */
+        pathwayId: number
+
+        /**
+         * Pathway option ID
+         */
+        pathwayOptionId: number
+
+        /**
+         * Whether this leg is derived (e.g., toll booths)
+         */
+        isDerived: boolean
+
+        /**
+         * Whether the leg is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the leg was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the leg was last updated
+         */
+        updatedAt: string | string | null
+    }
+
+    export interface RouteLegWithRelations {
+        /**
+         * Pathway information
+         */
+        pathway: pathways.Pathway
+
+        /**
+         * Pathway option information with tollbooths
+         */
+        option: {
+            /**
+             * Unique identifier for the pathway option
+             */
+            id: number
+
+            /**
+             * ID of the pathway this option belongs to
+             */
+            pathwayId: number
+
+            /**
+             * Name of the pathway option
+             */
+            name: string | null
+
+            /**
+             * Description of the pathway option
+             */
+            description: string | null
+
+            /**
+             * Distance in kilometers
+             */
+            distanceKm: number | null
+
+            /**
+             * Typical time in minutes
+             */
+            typicalTimeMin: number | null
+
+            /**
+             * Average speed in kilometers per hour
+             */
+            avgSpeedKmh: number | null
+
+            /**
+             * Whether this is the default option for the pathway
+             */
+            isDefault: boolean | null
+
+            /**
+             * Whether this option allows pass-through
+             */
+            isPassThrough: boolean | null
+
+            /**
+             * Pass-through time in minutes
+             */
+            passThroughTimeMin: number | null
+
+            /**
+             * Sequence order for this option
+             */
+            sequence: number | null
+
+            /**
+             * Whether the pathway option is active
+             */
+            active: boolean | null
+
+            /**
+             * Timestamp when the pathway option was created
+             */
+            createdAt: string | string | null
+
+            /**
+             * Timestamp when the pathway option was last updated
+             */
+            updatedAt: string | string | null
+
+            /**
+             * Timestamp when the pathway option was deleted
+             */
+            deletedAt: string | string | null
+
+            /**
+             * Tollbooths along this pathway option
+             */
+            tollbooths: {
+                /**
+                 * Unique identifier for the pathway option toll
+                 */
+                id: number
+
+                /**
+                 * ID of the pathway option this toll belongs to
+                 */
+                pathwayOptionId: number
+
+                /**
+                 * ID of the node where the toll is located
+                 */
+                nodeId: number
+
+                /**
+                 * Sequence order of this toll in the pathway option
+                 */
+                sequence: number
+
+                /**
+                 * Time to pass through this toll in minutes
+                 */
+                passTimeMin: number
+
+                /**
+                 * Distance to this toll point
+                 */
+                distance: number | null
+
+                /**
+                 * Timestamp when the pathway option toll was created
+                 */
+                createdAt: string | string | null
+
+                /**
+                 * Timestamp when the pathway option toll was last updated
+                 */
+                updatedAt: string | string | null
+
+                /**
+                 * Tollbooth node information
+                 */
+                tollbooth: nodes.Node
+            }[]
+        }
+
+        /**
+         * Unique identifier for the route leg
+         */
+        id: number
+
+        /**
+         * Position in the route sequence
+         */
+        position: number
+
+        /**
+         * Route ID this leg belongs to
+         */
+        routeId: number
+
+        /**
+         * Origin node ID
+         */
+        originNodeId: number
+
+        /**
+         * Destination node ID
+         */
+        destinationNodeId: number
+
+        /**
+         * Pathway ID
+         */
+        pathwayId: number
+
+        /**
+         * Pathway option ID
+         */
+        pathwayOptionId: number
+
+        /**
+         * Whether this leg is derived (e.g., toll booths)
+         */
+        isDerived: boolean
+
+        /**
+         * Whether the leg is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the leg was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the leg was last updated
+         */
+        updatedAt: string | string | null
+    }
+
+    export interface UpdateRouteLegPayload {
+        /**
+         * Position in the route sequence
+         * Must be a positive number
+         */
+        position: number
+
+        /**
+         * Pathway ID
+         * Must be a positive number
+         */
+        pathwayId: number
+
+        /**
+         * Pathway option ID
+         * Must be a positive number
+         */
+        pathwayOptionId: number
+
+        /**
+         * Whether this leg is derived (e.g., toll booths)
+         */
+        isDerived?: boolean
+
+        /**
+         * Whether the leg is active
+         */
+        active?: boolean
+    }
+}
+
+export namespace routes {
+    export interface CreateRoutePayload {
+        /**
+         * Unique code for the route
+         * Must have at least 1 character
+         */
+        code: string
+
+        /**
+         * Name of the route
+         * Must have at least 1 character
+         */
+        name: string
+
+        /**
+         * Service type ID
+         * Must be a positive number
+         */
+        serviceTypeId: number
+
+        /**
+         * Bus line ID
+         * Must be a positive number
+         */
+        buslineId: number
+
+        /**
+         * Origin node ID
+         * Must be a positive number
+         */
+        originNodeId: number
+
+        /**
+         * Destination node ID
+         * Must be a positive number
+         */
+        destinationNodeId: number
+
+        /**
+         * Array of route legs
+         * Must have at least 1 leg
+         */
+        legs: route_legs.CreateRouteLegPayload[]
+
+        /**
+         * Whether the route is active
+         * @default true
+         */
+        active?: boolean
+    }
+
+    export interface ListRoutesQueryParams {
+        orderBy?: {
+            field: "id" | "code" | "name" | "serviceTypeId" | "buslineId" | "originNodeId" | "destinationNodeId" | "originCityId" | "destinationCityId" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            code?: string
+            name?: string
+            serviceTypeId?: number
+            buslineId?: number
+            originNodeId?: number
+            destinationNodeId?: number
+            originCityId?: number
+            destinationCityId?: number
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListRoutesResult {
+        data: Route[]
+    }
+
+    export interface PaginatedListRoutesQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "code" | "name" | "serviceTypeId" | "buslineId" | "originNodeId" | "destinationNodeId" | "originCityId" | "destinationCityId" | "active" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            code?: string
+            name?: string
+            serviceTypeId?: number
+            buslineId?: number
+            originNodeId?: number
+            destinationNodeId?: number
+            originCityId?: number
+            destinationCityId?: number
+            active?: boolean
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListRoutesResult {
+        pagination: shared.PaginationMeta
+        data: RouteWithRelations[]
+    }
+
+    export interface Route {
+        /**
+         * Unique identifier for the route
+         */
+        id: number
+
+        /**
+         * Unique code for the route
+         */
+        code: string
+
+        /**
+         * Name of the route
+         */
+        name: string
+
+        /**
+         * Service type ID
+         */
+        serviceTypeId: number
+
+        /**
+         * Bus line ID
+         */
+        buslineId: number
+
+        /**
+         * Origin node ID
+         */
+        originNodeId: number
+
+        /**
+         * Destination node ID
+         */
+        destinationNodeId: number
+
+        /**
+         * Origin city ID
+         */
+        originCityId: number
+
+        /**
+         * Destination city ID
+         */
+        destinationCityId: number
+
+        /**
+         * Whether the route is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the route was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the route was last updated
+         */
+        updatedAt: string | string | null
+    }
+
+    export interface RouteEnriched {
+        /**
+         * Service type
+         */
+        serviceType: service_types.ServiceType
+
+        /**
+         * Bus line
+         */
+        busline: bus_lines.BusLine
+
+        /**
+         * Origin node with city information
+         */
+        originNode: {
+            /**
+             * Unique identifier for the node
+             */
+            id: number
+
+            /**
+             * Unique code identifier for the node
+             */
+            code: string
+
+            /**
+             * Name of the node
+             */
+            name: string
+
+            /**
+             * Latitude coordinate of the node
+             */
+            latitude: number
+
+            /**
+             * Longitude coordinate of the node
+             */
+            longitude: number
+
+            /**
+             * Radius of coverage for the node in meters
+             */
+            radius: number
+
+            /**
+             * URL-friendly identifier for the node
+             */
+            slug: string
+
+            /**
+             * Whether passengers can board at this node
+             */
+            allowsBoarding: boolean
+
+            /**
+             * Whether passengers can alight at this node
+             */
+            allowsAlighting: boolean
+
+            /**
+             * Whether the node is active or not
+             */
+            active: boolean
+
+            /**
+             * ID of the city this node belongs to
+             */
+            cityId: number
+
+            /**
+             * ID of the population this node belongs to
+             */
+            populationId: number | null
+
+            /**
+             * Optional ID of the installation associated with this node
+             */
+            installationId: number | null
+
+            /**
+             * Timestamp when the node record was created
+             */
+            createdAt: string | string | null
+
+            /**
+             * Timestamp when the node record was last updated
+             */
+            updatedAt: string | string | null
+
+            city: cities.City
+        }
+
+        /**
+         * Destination node with city information
+         */
+        destinationNode: {
+            /**
+             * Unique identifier for the node
+             */
+            id: number
+
+            /**
+             * Unique code identifier for the node
+             */
+            code: string
+
+            /**
+             * Name of the node
+             */
+            name: string
+
+            /**
+             * Latitude coordinate of the node
+             */
+            latitude: number
+
+            /**
+             * Longitude coordinate of the node
+             */
+            longitude: number
+
+            /**
+             * Radius of coverage for the node in meters
+             */
+            radius: number
+
+            /**
+             * URL-friendly identifier for the node
+             */
+            slug: string
+
+            /**
+             * Whether passengers can board at this node
+             */
+            allowsBoarding: boolean
+
+            /**
+             * Whether passengers can alight at this node
+             */
+            allowsAlighting: boolean
+
+            /**
+             * Whether the node is active or not
+             */
+            active: boolean
+
+            /**
+             * ID of the city this node belongs to
+             */
+            cityId: number
+
+            /**
+             * ID of the population this node belongs to
+             */
+            populationId: number | null
+
+            /**
+             * Optional ID of the installation associated with this node
+             */
+            installationId: number | null
+
+            /**
+             * Timestamp when the node record was created
+             */
+            createdAt: string | string | null
+
+            /**
+             * Timestamp when the node record was last updated
+             */
+            updatedAt: string | string | null
+
+            city: cities.City
+        }
+
+        /**
+         * Route legs with enriched data
+         */
+        legs: route_legs.RouteLegWithRelations[]
+
+        /**
+         * Route metrics
+         */
+        metrics: RouteMetrics
+
+        /**
+         * Unique identifier for the route
+         */
+        id: number
+
+        /**
+         * Unique code for the route
+         */
+        code: string
+
+        /**
+         * Name of the route
+         */
+        name: string
+
+        /**
+         * Service type ID
+         */
+        serviceTypeId: number
+
+        /**
+         * Bus line ID
+         */
+        buslineId: number
+
+        /**
+         * Origin node ID
+         */
+        originNodeId: number
+
+        /**
+         * Destination node ID
+         */
+        destinationNodeId: number
+
+        /**
+         * Origin city ID
+         */
+        originCityId: number
+
+        /**
+         * Destination city ID
+         */
+        destinationCityId: number
+
+        /**
+         * Whether the route is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the route was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the route was last updated
+         */
+        updatedAt: string | string | null
+    }
+
+    export interface RouteMetrics {
+        /**
+         * Total distance in kilometers
+         */
+        totalDistance: number
+
+        /**
+         * Total time in minutes
+         */
+        totalTime: number
+
+        /**
+         * Number of legs (excluding derived legs)
+         */
+        legCount: number
+    }
+
+    export interface RouteWithRelations {
+        serviceType: service_types.ServiceType
+        busline: bus_lines.BusLine
+        originNode: nodes.Node
+        destinationNode: nodes.Node
+        originCity: cities.City
+        destinationCity: cities.City
+        routeLegs: route_legs.RouteLeg[]
+        /**
+         * Unique identifier for the route
+         */
+        id: number
+
+        /**
+         * Unique code for the route
+         */
+        code: string
+
+        /**
+         * Name of the route
+         */
+        name: string
+
+        /**
+         * Service type ID
+         */
+        serviceTypeId: number
+
+        /**
+         * Bus line ID
+         */
+        buslineId: number
+
+        /**
+         * Origin node ID
+         */
+        originNodeId: number
+
+        /**
+         * Destination node ID
+         */
+        destinationNodeId: number
+
+        /**
+         * Origin city ID
+         */
+        originCityId: number
+
+        /**
+         * Destination city ID
+         */
+        destinationCityId: number
+
+        /**
+         * Whether the route is active
+         */
+        active: boolean
+
+        /**
+         * Timestamp when the route was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the route was last updated
          */
         updatedAt: string | string | null
     }

@@ -82,25 +82,26 @@ export async function setupTollboothInfrastructure(
   db: typeof dbType,
   testSuiteId: string,
 ): Promise<TollboothInfrastructure> {
-  // Find or create TOLLBOOTH installation type
-  const existingTollboothType = await db.query.installationTypes.findFirst({
-    where: (installationTypes, { eq, and, isNull }) =>
-      and(
-        eq(installationTypes.code, 'TOLLBOOTH'),
-        isNull(installationTypes.deletedAt),
-      ),
-  });
+  // Find or create TOLLBOOTH installation type (handles race conditions)
+  const tollboothType = await findOrCreate<{ id: number }>(
+    async () => {
+      const type = await db.query.installationTypes.findFirst({
+        where: (installationTypes, { eq, and, isNull }) =>
+          and(
+            eq(installationTypes.code, 'TOLLBOOTH'),
+            isNull(installationTypes.deletedAt),
+          ),
+      });
+      return type ?? undefined;
+    },
+    () =>
+      createInstallationType({
+        name: createUniqueName('Tollbooth Type', testSuiteId),
+        code: 'TOLLBOOTH', // Must be 'TOLLBOOTH' to match tollboothRepository default
+      }),
+  );
 
-  let tollboothTypeId: number;
-  if (existingTollboothType) {
-    tollboothTypeId = existingTollboothType.id;
-  } else {
-    const tollboothType = await createInstallationType({
-      name: createUniqueName('Tollbooth Type', testSuiteId),
-      code: 'TOLLBOOTH', // Must be 'TOLLBOOTH' to match tollboothRepository default
-    });
-    tollboothTypeId = tollboothType.id;
-  }
+  const tollboothTypeId = tollboothType.id;
 
   // Find or create toll_price schema
   const tollPriceSchema = await findOrCreate<{ id: number }>(

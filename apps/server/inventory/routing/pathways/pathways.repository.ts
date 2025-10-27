@@ -1,5 +1,6 @@
-import { inArray } from 'drizzle-orm';
+import { and, inArray, isNull } from 'drizzle-orm';
 import { NotFoundError, createBaseRepository } from '@repo/base-repo';
+import type { TransactionalDB } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
 import { nodes } from '@/inventory/locations/nodes/nodes.schema';
 import type { Node } from '@/inventory/locations/nodes/nodes.types';
@@ -89,9 +90,34 @@ export function createPathwayRepository() {
     };
   }
 
+  /**
+   * Finds pathways by their IDs
+   * @param ids - Array of pathway IDs to find
+   * @param tx - Optional transaction instance
+   * @returns Array of found pathways (may be less than requested if some don't exist or are deleted)
+   */
+  async function findByIds(
+    ids: number[],
+    tx?: TransactionalDB,
+  ): Promise<Pathway[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const dbInstance = tx || db;
+
+    const results = await dbInstance
+      .select()
+      .from(pathways)
+      .where(and(inArray(pathways.id, ids), isNull(pathways.deletedAt)));
+
+    return results;
+  }
+
   return {
     ...baseRepository,
     findAllPaginatedWithRelations,
+    findByIds,
   };
 }
 

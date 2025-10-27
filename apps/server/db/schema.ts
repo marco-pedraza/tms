@@ -157,3 +157,11 @@ export {
   chromatics,
   chromaticsRelations,
 } from '@/inventory/fleet/chromatics/chromatics.schema';
+export {
+  routes,
+  routesRelations,
+} from '@/inventory/routing/routes/routes.schema';
+export {
+  routeLegs,
+  routeLegsRelations,
+} from '@/inventory/routing/route-legs/route-legs.schema';

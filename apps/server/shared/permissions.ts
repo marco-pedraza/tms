@@ -359,6 +359,14 @@ export const ENDPOINT_TO_MODULES: Record<string, string[]> = {
   'inventory:listPathwayOptionTolls': [MODULE_PERMISSIONS.PATHWAYS],
   'inventory:syncPathwayOptions': [MODULE_PERMISSIONS.PATHWAYS],
 
+  // Routes
+  'inventory:createRoute': [MODULE_PERMISSIONS.ROUTES],
+  'inventory:getRoute': [MODULE_PERMISSIONS.ROUTES],
+  'inventory:listRoutes': [MODULE_PERMISSIONS.ROUTES],
+  'inventory:listRoutesPaginated': [MODULE_PERMISSIONS.ROUTES],
+  'inventory:updateRoute': [MODULE_PERMISSIONS.ROUTES],
+  'inventory:deleteRoute': [MODULE_PERMISSIONS.ROUTES],
+
   // Inventory - Shared Entities
   // Amenities
   'inventory:createAmenity': [MODULE_PERMISSIONS.AMENITIES],

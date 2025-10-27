@@ -421,6 +421,13 @@
       "when": 1759856623429,
       "tag": "20251007170343_add_active_to_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1760988412000,
+      "tag": "20251020192652_create_routes_and_route_legs_tables",
+      "breakpoints": true
     }
   ]
 }

@@ -10,6 +10,10 @@ import type {
   Pathway,
   UpdatePathwayPayload,
 } from '@/inventory/routing/pathways/pathways.types';
+import {
+  validateNodesAndGetCities,
+  validateOriginDestinationRule,
+} from '../shared/node-validation.utils';
 import type {
   AddPathwayOptionPayload,
   PathwayEntity,
@@ -28,26 +32,6 @@ export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
 
   // Desestructurar las utilidades del mixin
   const { isEntityPersisted } = EntityUtils;
-
-  /**
-   * Validates origin and destination are different
-   * @param data - Data containing origin and destination node IDs
-   * @throws {FieldValidationError} If origin equals destination
-   */
-  function validateOriginDestinationRule(data: {
-    originNodeId?: number;
-    destinationNodeId?: number;
-  }): void {
-    if (
-      data.originNodeId &&
-      data.destinationNodeId &&
-      data.originNodeId === data.destinationNodeId
-    ) {
-      const collector = new FieldErrorCollector();
-      pathwayErrors.sameOriginDestination(collector, data.destinationNodeId);
-      collector.throwIfErrors();
-    }
-  }
 
   /**
    * Validates empty trip business rule: empty trip cannot be sellable
@@ -73,53 +57,14 @@ export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
   function validatePathwayRules(
     data: CreatePathwayPayload | UpdatePathwayPayload | Partial<Pathway>,
   ): void {
-    validateOriginDestinationRule(data);
-    validateEmptyTripRule(data);
-  }
-
-  /**
-   * Validates that nodes exist and returns their city IDs
-   * @param originNodeId - The origin node ID
-   * @param destinationNodeId - The destination node ID
-   * @returns Object with origin and destination city IDs
-   * @throws {FieldValidationError} If any node is not found
-   */
-  async function validateNodesAndGetCities(
-    originNodeId: number,
-    destinationNodeId: number,
-  ): Promise<{ originCityId: number; destinationCityId: number }> {
     const collector = new FieldErrorCollector();
-    let originNode: { id: number; cityId: number } | null = null;
-    let destinationNode: { id: number; cityId: number } | null = null;
-
-    // Try to find origin node
-    try {
-      originNode = await nodesRepository.findOne(originNodeId);
-    } catch {
-      // Node not found, add specific error to collector
-      pathwayErrors.originNodeNotFound(collector, originNodeId);
-    }
-
-    // Try to find destination node
-    try {
-      destinationNode = await nodesRepository.findOne(destinationNodeId);
-    } catch {
-      // Node not found, add specific error to collector
-      pathwayErrors.destinationNodeNotFound(collector, destinationNodeId);
-    }
-
-    // Throw all collected errors
+    validateOriginDestinationRule(
+      data,
+      collector,
+      pathwayErrors.sameOriginDestination,
+    );
     collector.throwIfErrors();
-
-    // At this point, if we haven't thrown, both nodes must exist
-    if (!originNode || !destinationNode) {
-      throw new Error('Internal error: nodes should exist after validation');
-    }
-
-    return {
-      originCityId: originNode.cityId,
-      destinationCityId: destinationNode.cityId,
-    };
+    validateEmptyTripRule(data);
   }
 
   /**
@@ -236,11 +181,22 @@ export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
       validatePathwayRules(payload);
 
       // Validate nodes exist and get city IDs
-      const { originCityId, destinationCityId } =
-        await validateNodesAndGetCities(
-          payload.originNodeId,
-          payload.destinationNodeId,
-        );
+      const nodeValidationResult = await validateNodesAndGetCities(
+        payload.originNodeId,
+        payload.destinationNodeId,
+        nodesRepository,
+        new FieldErrorCollector(),
+        {
+          originNodeNotFound: pathwayErrors.originNodeNotFound,
+          destinationNodeNotFound: pathwayErrors.destinationNodeNotFound,
+        },
+      );
+
+      if (!nodeValidationResult) {
+        throw new Error('Node validation failed');
+      }
+
+      const { originCityId, destinationCityId } = nodeValidationResult;
 
       // Create enhanced payload with city IDs
       const enhancedPayload = {
@@ -289,8 +245,22 @@ export function createPathwayEntity(dependencies: PathwayEntityDependencies) {
         }
 
         // Validate nodes exist and get city IDs
-        const { originCityId, destinationCityId } =
-          await validateNodesAndGetCities(originNodeId, destinationNodeId);
+        const nodeValidationResult = await validateNodesAndGetCities(
+          originNodeId,
+          destinationNodeId,
+          nodesRepository,
+          new FieldErrorCollector(),
+          {
+            originNodeNotFound: pathwayErrors.originNodeNotFound,
+            destinationNodeNotFound: pathwayErrors.destinationNodeNotFound,
+          },
+        );
+
+        if (!nodeValidationResult) {
+          throw new Error('Node validation failed');
+        }
+
+        const { originCityId, destinationCityId } = nodeValidationResult;
 
         // Create enhanced payload with city IDs
         enhancedPayload = {

@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { createBaseRepository } from '@repo/base-repo';
 import type { TransactionalDB } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
@@ -84,10 +84,35 @@ export function createRouteLegsRepository() {
     await (tx || db).delete(routeLegs).where(eq(routeLegs.routeId, routeId));
   }
 
+  /**
+   * Finds active route legs using a specific pathway option
+   * @param pathwayId - The pathway ID
+   * @param optionId - The pathway option ID
+   * @returns Array of active route legs using this pathway option
+   */
+  async function findActiveLegsByPathwayOption(
+    pathwayId: number,
+    optionId: number,
+    tx?: TransactionalDB,
+  ): Promise<RouteLeg[]> {
+    return await (tx || db)
+      .select()
+      .from(routeLegs)
+      .where(
+        and(
+          eq(routeLegs.pathwayId, pathwayId),
+          eq(routeLegs.pathwayOptionId, optionId),
+          eq(routeLegs.active, true),
+          isNull(routeLegs.deletedAt),
+        ),
+      );
+  }
+
   return {
     ...baseRepository,
     createLegs,
     deleteByRouteId,
+    findActiveLegsByPathwayOption,
   };
 }
 

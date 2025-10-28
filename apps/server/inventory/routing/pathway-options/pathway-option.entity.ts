@@ -5,6 +5,7 @@ import type {
   PathwayOptionToll,
   SyncTollsInput,
 } from '@/inventory/routing/pathway-options-tolls/pathway-options-tolls.types';
+import { pathwayUsageValidationService } from '../shared/pathway-usage-validation.service';
 import type {
   MetricsCalculationInput,
   MetricsCalculationResult,
@@ -398,6 +399,34 @@ export function createPathwayOptionEntity(
         const updatedData = { ...data, ...cleanedPayload };
         validatePathwayOptionRules(updatedData);
 
+        // Check if metrics are being modified
+        const isModifyingMetrics =
+          (cleanedPayload.distanceKm !== undefined &&
+            cleanedPayload.distanceKm !== data.distanceKm) ||
+          (cleanedPayload.typicalTimeMin !== undefined &&
+            cleanedPayload.typicalTimeMin !== data.typicalTimeMin) ||
+          (cleanedPayload.avgSpeedKmh !== undefined &&
+            cleanedPayload.avgSpeedKmh !== data.avgSpeedKmh);
+
+        // If modifying metrics, validate that option is not in use by active legs
+        if (isModifyingMetrics) {
+          const usageInfo =
+            await pathwayUsageValidationService.checkPathwayOptionUsage(
+              data.pathwayId,
+              data.id,
+            );
+
+          if (usageInfo.inUse) {
+            const collector = new FieldErrorCollector();
+            pathwayOptionErrors.cannotModifyMetricsInUse(collector, {
+              routeIds: usageInfo.routeIds,
+              activeLegsCount: usageInfo.activeLegsCount,
+            });
+            collector.throwIfErrors();
+            throw new Error('Unreachable'); // TypeScript guard
+          }
+        }
+
         // Calculate metrics if distance or time are being updated
         let updatePayload = { ...cleanedPayload };
         if (
@@ -457,12 +486,29 @@ export function createPathwayOptionEntity(
       ): Promise<PathwayOptionEntity> => {
         if (!isPersisted || !data.id) {
           const collector = new FieldErrorCollector();
-          pathwayOptionErrors.cannotSyncTollsOnNonPersisted(collector, null);
+          pathwayOptionErrors.cannotSyncTollsOnNonPersisted(collector);
           collector.throwIfErrors();
           throw new Error('Unreachable'); // TypeScript guard
         }
 
         const optionId = data.id;
+
+        // Validate that option is not in use by active legs before syncing tolls
+        const usageInfo =
+          await pathwayUsageValidationService.checkPathwayOptionUsage(
+            data.pathwayId,
+            data.id,
+          );
+
+        if (usageInfo.inUse) {
+          const collector = new FieldErrorCollector();
+          pathwayOptionErrors.cannotSyncTollsInUse(collector, {
+            routeIds: usageInfo.routeIds,
+            activeLegsCount: usageInfo.activeLegsCount,
+          });
+          collector.throwIfErrors();
+          throw new Error('Unreachable'); // TypeScript guard
+        }
 
         // Validate business rules
         await validateTollsBusinessRules(tollsInput);

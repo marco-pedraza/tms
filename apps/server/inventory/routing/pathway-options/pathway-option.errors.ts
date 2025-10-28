@@ -61,6 +61,18 @@ const PATHWAY_OPTION_ERROR_CONFIG = {
     field: 'tolls',
     code: 'NOT_PERSISTED',
   },
+  cannotModifyMetricsInUse: {
+    message:
+      'Cannot modify metrics for pathway option that is in use by active legs',
+    field: 'metrics',
+    code: 'IN_USE',
+  },
+  cannotSyncTollsInUse: {
+    message:
+      'Cannot synchronize toll booths for pathway option that is in use by active legs',
+    field: 'tolls',
+    code: 'IN_USE',
+  },
 } as const;
 
 // Generate error helpers automatically

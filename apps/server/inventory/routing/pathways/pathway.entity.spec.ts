@@ -67,10 +67,10 @@ describe('PathwayEntity', () => {
     // Create test cities using factories
     const cities = await Promise.all([
       cityFactory(factoryDb).create({
-        name: createUniqueName('Test City 1', testSuiteId),
+        name: createUniqueName('Test City Pathway 1', testSuiteId),
       }),
       cityFactory(factoryDb).create({
-        name: createUniqueName('Test City 2', testSuiteId),
+        name: createUniqueName('Test City Pathway 2', testSuiteId),
       }),
     ]);
     const cityIds = cities.map((city) => city.id);

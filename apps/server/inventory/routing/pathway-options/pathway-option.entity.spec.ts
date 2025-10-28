@@ -20,7 +20,13 @@ import {
   createTestTollbooth as createTollboothHelper,
   setupTollboothInfrastructure,
 } from '@/inventory/locations/tollbooths/tollbooths.test-utils';
-import { cityFactory, populationFactory } from '@/tests/factories';
+import {
+  busLineFactory,
+  cityFactory,
+  populationFactory,
+  serviceTypeFactory,
+  transporterFactory,
+} from '@/tests/factories';
 import { getFactoryDb } from '@/tests/factories/factory-utils';
 import {
   createCleanupHelper,
@@ -31,6 +37,8 @@ import {
 import { pathwayOptionTollRepository } from '../pathway-options-tolls/pathway-options-tolls.repository';
 import { createPathwayEntity } from '../pathways/pathway.entity';
 import { pathwayRepository } from '../pathways/pathways.repository';
+import { routeLegsRepository } from '../route-legs/route-legs.repository';
+import { routesRepository } from '../routes/routes.repository';
 import type { PathwayOptionEntity } from './pathway-option.entity.types';
 import { pathwayOptionRepository } from './pathway-options.repository';
 import { createPathwayOptionEntity } from './pathway-option.entity';
@@ -976,6 +984,241 @@ describe('PathwayOptionEntity - Toll Management', () => {
       // Verify passThroughTimeMin was cleared (not set to 20)
       expect(updatedOption.isPassThrough).toBe(false);
       expect(updatedOption.passThroughTimeMin).toBe(null);
+    });
+  });
+
+  describe('Usage Validation - Modify Metrics and Sync Tolls', () => {
+    /**
+     * Helper to create a test option
+     */
+    async function createTestOption(): Promise<PathwayOptionEntity> {
+      const option = testData.optionEntity.create({
+        pathwayId: testData.pathwayId,
+        name: createUniqueName(
+          'Test Option Usage',
+          `${testSuiteId}-${Date.now()}-${Math.random()}`,
+        ),
+        description: 'Option for usage validation tests',
+        distanceKm: 150,
+        typicalTimeMin: 120,
+        isPassThrough: false,
+        active: true,
+      });
+
+      const saved = await option.save();
+      testData.pathwayOptionCleanup.track(saved.id as number);
+      return saved;
+    }
+
+    /**
+     * Helper to create a route with a leg using the pathway option
+     */
+    async function createRouteWithLeg(
+      pathwayId: number,
+      pathwayOptionId: number,
+    ) {
+      const uniqueSuffix = Date.now() + Math.random().toString(36).slice(2, 11);
+
+      // Create transporter first (required by bus line)
+      const transporter = await transporterFactory(factoryDb).create({
+        name: createUniqueName(
+          'Test Transporter',
+          `${testSuiteId}-${uniqueSuffix}`,
+        ),
+        code: createUniqueCode('TR', 4),
+        active: true,
+      });
+
+      const serviceType = await serviceTypeFactory(factoryDb).create({
+        name: createUniqueName(
+          'Test Service Type',
+          `${testSuiteId}-${uniqueSuffix}`,
+        ),
+        code: createUniqueCode('ST', 4),
+        active: true,
+      });
+
+      const busline = await busLineFactory(factoryDb).create({
+        name: createUniqueName(
+          'Test Busline',
+          `${testSuiteId}-${uniqueSuffix}`,
+        ),
+        code: createUniqueCode('BL', 4),
+        active: true,
+        transporterId: transporter.id,
+        serviceTypeId: serviceType.id,
+      });
+
+      const route = await routesRepository.create({
+        code: createUniqueCode('RT', 4),
+        name: createUniqueName('Test Route', testSuiteId),
+        originNodeId: testData.nodeIds[0],
+        destinationNodeId: testData.nodeIds[1],
+        buslineId: busline.id,
+        serviceTypeId: serviceType.id,
+        active: true,
+        originCityId: testData.cityId,
+        destinationCityId: testData.cityId,
+      });
+
+      // Create route legs separately
+      await routeLegsRepository.createLegs([
+        {
+          position: 1,
+          routeId: route.id,
+          originNodeId: testData.nodeIds[0],
+          destinationNodeId: testData.nodeIds[1],
+          pathwayId,
+          pathwayOptionId,
+        },
+      ]);
+
+      return { route, busline, serviceType, transporter };
+    }
+
+    it('should allow modifying metrics when option is not in use', async () => {
+      const savedOption = await createTestOption();
+
+      // Update metrics - should succeed
+      const updatedOption = await savedOption.update({
+        distanceKm: 200,
+        typicalTimeMin: 150,
+      });
+
+      expect(updatedOption.distanceKm).toBe(200);
+      expect(updatedOption.typicalTimeMin).toBe(150);
+    });
+
+    it('should throw error when modifying metrics while option is in use by active leg', async () => {
+      const savedOption = await createTestOption();
+      const optionId = savedOption.id as number;
+
+      // Create a route with leg using this option
+      const { route } = await createRouteWithLeg(testData.pathwayId, optionId);
+
+      // Try to update metrics - should fail with specific error code
+      try {
+        await savedOption.update({
+          distanceKm: 200,
+        });
+        expect.fail('Should have thrown FieldValidationError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(FieldValidationError);
+        const fieldError = error as FieldValidationError;
+        expect(fieldError.fieldErrors).toHaveLength(1);
+        expect(fieldError.fieldErrors[0]?.code).toBe('IN_USE');
+        expect(fieldError.fieldErrors[0]?.field).toBe('metrics');
+      }
+
+      // Cleanup route
+      try {
+        await routeLegsRepository.deleteByRouteId(route.id);
+        await routesRepository.delete(route.id);
+      } catch {
+        // Ignore cleanup errors
+      }
+    });
+
+    it('should allow syncing tolls when option is not in use', async () => {
+      const savedOption = await createTestOption();
+
+      const tollsInput = [
+        {
+          nodeId: testData.nodeIds[2],
+          passTimeMin: 5,
+          distance: 10,
+        },
+      ];
+
+      const updatedOption = await savedOption.syncTolls(tollsInput);
+      const tolls = await updatedOption.getTolls();
+
+      expect(tolls).toHaveLength(1);
+
+      // Track tolls for cleanup
+      tolls.forEach((toll) => testData.pathwayOptionTollCleanup.track(toll.id));
+    });
+
+    it('should throw error when syncing tolls while option is in use by active leg', async () => {
+      const savedOption = await createTestOption();
+      const optionId = savedOption.id as number;
+
+      // Create a route with leg using this option
+      const { route } = await createRouteWithLeg(testData.pathwayId, optionId);
+
+      const tollsInput = [
+        {
+          nodeId: testData.nodeIds[2],
+          passTimeMin: 5,
+          distance: 10,
+        },
+      ];
+
+      // Try to sync tolls - should fail with specific error code
+      try {
+        await savedOption.syncTolls(tollsInput);
+        expect.fail('Should have thrown FieldValidationError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(FieldValidationError);
+        const fieldError = error as FieldValidationError;
+        expect(fieldError.fieldErrors).toHaveLength(1);
+        expect(fieldError.fieldErrors[0]?.code).toBe('IN_USE');
+        expect(fieldError.fieldErrors[0]?.field).toBe('tolls');
+      }
+
+      // Cleanup route
+      try {
+        await routeLegsRepository.deleteByRouteId(route.id);
+        await routesRepository.delete(route.id);
+      } catch {
+        // Ignore cleanup errors
+      }
+    });
+
+    it('should allow updating non-metric fields when option is in use', async () => {
+      const savedOption = await createTestOption();
+      const optionId = savedOption.id as number;
+
+      // Create a route with leg using this option
+      const { route } = await createRouteWithLeg(testData.pathwayId, optionId);
+
+      // Update name - should succeed
+      const updatedOption = await savedOption.update({
+        name: 'Updated Name',
+      });
+
+      expect(updatedOption.name).toBe('Updated Name');
+
+      // Cleanup route
+      try {
+        await routeLegsRepository.deleteByRouteId(route.id);
+        await routesRepository.delete(route.id);
+      } catch {
+        // Ignore cleanup errors
+      }
+    });
+
+    it('should allow deactivating option when it is in use', async () => {
+      const savedOption = await createTestOption();
+      const optionId = savedOption.id as number;
+
+      // Create a route with leg using this option
+      const { route } = await createRouteWithLeg(testData.pathwayId, optionId);
+
+      // Deactivate option - should succeed
+      const updatedOption = await savedOption.update({
+        active: false,
+      });
+
+      expect(updatedOption.active).toBe(false);
+
+      // Cleanup route
+      try {
+        await routeLegsRepository.deleteByRouteId(route.id);
+        await routesRepository.delete(route.id);
+      } catch {
+        // Ignore cleanup errors
+      }
     });
   });
 });

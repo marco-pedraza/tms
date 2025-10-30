@@ -1,3 +1,4 @@
+import { inArray } from 'drizzle-orm';
 import { createBaseRepository } from '@repo/base-repo';
 import type { TransactionalDB } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
@@ -46,6 +47,30 @@ export function createPathwayOptionTollRepository() {
     return await repo.findAllBy(pathwayOptionTolls.pathwayOptionId, optionId, {
       orderBy: [{ field: 'sequence', direction: 'asc' }],
     });
+  }
+
+  /**
+   * Finds all tolls for multiple pathway options in a single query, ordered by sequence
+   * Efficiently avoids N+1 query problem when loading tolls for multiple options
+   * @param optionIds - Array of pathway option IDs to find tolls for
+   * @param tx - Optional transaction instance
+   * @returns Array of pathway option tolls ordered by sequence
+   */
+  async function findByOptionIds(
+    optionIds: number[],
+    tx?: TransactionalDB,
+  ): Promise<PathwayOptionToll[]> {
+    if (optionIds.length === 0) {
+      return [];
+    }
+
+    const dbInstance = tx ?? db;
+
+    return await dbInstance
+      .select()
+      .from(pathwayOptionTolls)
+      .where(inArray(pathwayOptionTolls.pathwayOptionId, optionIds))
+      .orderBy(pathwayOptionTolls.sequence);
   }
 
   /**
@@ -100,6 +125,7 @@ export function createPathwayOptionTollRepository() {
   return {
     ...baseRepository,
     findByOptionId,
+    findByOptionIds,
     deleteByOptionId,
     createMany,
   };

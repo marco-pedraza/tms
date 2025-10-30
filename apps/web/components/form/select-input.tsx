@@ -34,6 +34,7 @@ export default function SelectInput({
   description,
   isRequired = false,
   emptyOptionsLabel,
+  className,
   ...inputProps
 }: SelectInputProps) {
   const field = useFieldContext<string>();
@@ -50,7 +51,10 @@ export default function SelectInput({
         onValueChange={field.handleChange}
         {...inputProps}
       >
-        <SelectTrigger aria-invalid={hasFieldErrors(field)}>
+        <SelectTrigger
+          aria-invalid={hasFieldErrors(field)}
+          className={className}
+        >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>

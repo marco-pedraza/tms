@@ -246,7 +246,8 @@
       "chromatic": "Esquema Cromático",
       "user": "Usuario",
       "pathway": "Trayecto",
-      "role": "Rol"
+      "role": "Rol",
+      "pathwayOption": "Opción de Trayecto"
     },
     "fields": {
       "name": "Nombre",
@@ -2136,7 +2137,9 @@
       "create": "Crear Trayecto",
       "update": "Actualizar Trayecto",
       "backToList": "Volver a trayectos",
-      "regenerateName": "Regenerar Nombre"
+      "regenerateName": "Regenerar Nombre",
+      "addOption": "Agregar Opción",
+      "addTollBooth": "Agregar Caseta"
     },
     "fields": {
       "name": "Nombre",
@@ -2167,21 +2170,70 @@
       }
     },
     "details": {
-      "description": "Detalles del trayecto"
+      "description": "Detalles del trayecto",
+      "optionsDescription": "Opciones disponibles para este trayecto",
+      "tollBooth": "Caseta {tollBooth}",
+      "price": "Precio:",
+      "iave": "IAVE:",
+      "sequence": "Secuencia:",
+      "passTime": "Tiempo:",
+      "kilometers": "Distancia: {distance} km",
+      "minutes": "Minutos",
+      "kmh": "Km/h",
+      "totalTollCost": "Costo total de peajes:",
+      "noOptions": "No hay opciones configuradas para este trayecto"
     },
     "edit": {
       "title": "Editar Trayecto"
     },
     "sections": {
-      "info": "Información"
+      "info": "Información",
+      "options": "Opciones del trayecto"
     },
     "errors": {
       "notFound": {
         "title": "Trayecto no encontrado",
         "description": "No pudimos encontrar el trayecto que buscas. Es posible que haya sido eliminado o que no exista."
+      },
+      "savePathwayFirst": "Para agregar opciones primero debes guardar el trayecto"
+    },
+    "pathwayOptions": {
+      "sections": {
+        "tollBooths": "Casetas de Peaje"
+      },
+      "fields": {
+        "option": "Opción {index}",
+        "isDefault": "Por Defecto",
+        "name": "Nombre",
+        "description": "Descripción",
+        "distance": "Distancia (km)",
+        "typicalTime": "Tiempo típico (min)",
+        "avgSpeed": "Velocidad promedio (km/h)",
+        "isPassThrough": "Trayecto de paso",
+        "passThroughTime": "Tiempo de paso (minutos)",
+        "passThroughTimeInfo": "Tiempo adicional que se suma al tiempo típico del trayecto (incluye ascenso y descenso)",
+        "tollBooth": "Caseta",
+        "passTime": "Tiempo Estimado"
+      },
+      "placeholders": {
+        "name": "Nueva Opción",
+        "description": "Descripción",
+        "noDescription": "Sin descripción",
+        "distance": "Distancia",
+        "typicalTime": "Tiempo típico",
+        "avgSpeed": "Velocidad promedio",
+        "isPassThrough": "Trayecto de paso",
+        "passThroughTime": "Tiempo de paso",
+        "noTollBooths": "No hay casetas configuradas para esta opción",
+        "tollBooth": "Caseta",
+        "passTime": "Tiempo Estimado (min)"
+      },
+      "errors": {
+        "cannotRemoveDefaultOption": "No se puede eliminar la opción por defecto"
       }
     },
     "messages": {
+      "pathwayStatusInfo": "El trayecto podra activarse una vez que se agreguen opciones",
       "create": {
         "loading": "Creando trayecto...",
         "success": "Trayecto creado correctamente",
@@ -2196,6 +2248,16 @@
         "loading": "Eliminando trayecto...",
         "success": "Trayecto eliminado correctamente",
         "error": "No pudimos eliminar el trayecto"
+      },
+      "syncPathwayOptions": {
+        "loading": "Sincronizando opciones del trayecto...",
+        "success": "Opciones del trayecto sincronizadas correctamente",
+        "error": "No pudimos sincronizar las opciones del trayecto"
+      },
+      "syncPathwayTolls": {
+        "loading": "Sincronizando casetas del trayecto...",
+        "success": "Casetas del trayecto sincronizadas correctamente",
+        "error": "No pudimos sincronizar las casetas del trayecto"
       }
     }
   }

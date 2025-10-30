@@ -5,6 +5,7 @@ import {
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '@/shared/types';
+import type { PathwayOptionToll } from '../pathway-options-tolls/pathway-options-tolls.types';
 
 /**
  * Base interface representing a pathway option entity
@@ -54,6 +55,9 @@ export interface PathwayOption {
 
   /** Timestamp when the pathway option was deleted */
   deletedAt: Date | string | null;
+
+  /** Array of tolls associated with this pathway option (optional, populated when needed) */
+  tolls?: PathwayOptionToll[];
 }
 
 /**

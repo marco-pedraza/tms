@@ -8,6 +8,7 @@ interface BaseSwitchInputProps {
   value: boolean;
   onChange: (value: boolean) => void;
   description?: string;
+  disabled?: boolean;
 }
 
 export function BaseSwitchInput({
@@ -16,16 +17,22 @@ export function BaseSwitchInput({
   name,
   value,
   onChange,
+  disabled,
 }: BaseSwitchInputProps) {
   return (
     <div className="space-x-2">
       <div className="flex items-center space-x-2">
         <Label htmlFor={name}>{label}</Label>
-        <Switch id={name} checked={value} onCheckedChange={onChange} />
+        <Switch
+          id={name}
+          checked={value}
+          onCheckedChange={onChange}
+          disabled={disabled}
+        />
       </div>
 
       {description && (
-        <p className="text-sm text-muted-foreground">{description}</p>
+        <p className="pt-4 text-sm text-muted-foreground">{description}</p>
       )}
     </div>
   );
@@ -33,9 +40,14 @@ export function BaseSwitchInput({
 interface SwitchInputProps {
   label: string;
   description?: string;
+  disabled?: boolean;
 }
 
-export default function SwitchInput({ label, description }: SwitchInputProps) {
+export default function SwitchInput({
+  label,
+  description,
+  disabled,
+}: SwitchInputProps) {
   const field = useFieldContext<boolean>();
   return (
     <BaseSwitchInput
@@ -44,6 +56,7 @@ export default function SwitchInput({ label, description }: SwitchInputProps) {
       name={field.name}
       value={field.state.value}
       onChange={field.handleChange}
+      disabled={disabled}
     />
   );
 }

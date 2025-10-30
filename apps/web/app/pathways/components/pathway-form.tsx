@@ -6,11 +6,18 @@ import { RefreshCcwIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import useQueryAllNodes from '@/app/nodes/hooks/use-query-all-nodes';
+import PathwayOptionsList from '@/app/pathways/components/pathway-options-list';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
+import useQueryAllTollbooths from '@/pathways/hooks/use-query-all-tollbooths';
 import { requiredIntegerSchema } from '@/schemas/number';
+import {
+  PathwayOption,
+  PathwayOptionRaw,
+  createPathwayOptionSchema,
+} from '@/schemas/pathway-options';
 import { optionalStringSchema, requiredStringSchema } from '@/schemas/string';
 import { UseValidationsTranslationsResult } from '@/types/translations';
 import injectTranslatedErrorsToForm from '@/utils/inject-translated-errors-to-form';
@@ -19,6 +26,7 @@ const createPathwayFormSchema = (
   tValidations: UseValidationsTranslationsResult,
 ) =>
   z.object({
+    id: z.number().optional(),
     originNodeId: requiredIntegerSchema(tValidations),
     destinationNodeId: requiredIntegerSchema(tValidations),
     name: requiredStringSchema(tValidations),
@@ -27,6 +35,7 @@ const createPathwayFormSchema = (
     isEmptyTrip: z.boolean().default(false),
     isSellable: z.boolean().default(false),
     active: z.boolean().default(false),
+    options: z.array(createPathwayOptionSchema(tValidations)).default([]),
   });
 
 export type PathwayFormValues = z.output<
@@ -50,9 +59,11 @@ export default function PathwayForm({
   const pathwaySchema = createPathwayFormSchema(tValidations);
   const { data: originNodes } = useQueryAllNodes();
   const { data: destinationNodes } = useQueryAllNodes();
+  const { data: tollbooths } = useQueryAllTollbooths();
   const rawDefaultValues: PathwayFormRawValues = defaultValues
     ? {
         ...defaultValues,
+        id: defaultValues.id,
         originNodeId: defaultValues.originNodeId.toString() || '',
         destinationNodeId: defaultValues.destinationNodeId.toString() || '',
         name: defaultValues.name || '',
@@ -61,6 +72,20 @@ export default function PathwayForm({
         isEmptyTrip: defaultValues.isEmptyTrip || false,
         isSellable: defaultValues.isSellable || false,
         active: defaultValues.active,
+        options: (defaultValues.options || []).map((option) => ({
+          ...option,
+          description: option.description || '',
+          distanceKm: option.distanceKm?.toString() ?? '',
+          typicalTimeMin: option.typicalTimeMin?.toString() ?? '',
+          avgSpeedKmh: option.avgSpeedKmh?.toString() ?? '',
+          passThroughTimeMin: option.passThroughTimeMin?.toString() || '',
+          tolls: (option.tolls || []).map((toll) => ({
+            ...toll,
+            nodeId: toll.nodeId?.toString() ?? '',
+            passTimeMin: toll.passTimeMin?.toString() ?? '',
+            distance: toll.distance?.toString() ?? '',
+          })),
+        })),
       }
     : {
         originNodeId: '',
@@ -71,6 +96,7 @@ export default function PathwayForm({
         isEmptyTrip: false,
         isSellable: false,
         active: false,
+        options: [],
       };
 
   const form = useForm({
@@ -82,6 +108,16 @@ export default function PathwayForm({
       try {
         const parsed = pathwaySchema.safeParse(value);
         if (parsed.success) {
+          let sequence = 1;
+          parsed.data.options = parsed.data.options.map(
+            (option: PathwayOption) => ({
+              ...option,
+              sequence: sequence++,
+              passThroughTimeMin: option.isPassThrough
+                ? option.passThroughTimeMin
+                : null,
+            }),
+          );
           await onSubmit(parsed.data);
         }
       } catch (error: unknown) {
@@ -96,6 +132,19 @@ export default function PathwayForm({
       }
     },
   });
+
+  const newOption: PathwayOptionRaw = {
+    name: '',
+    description: '',
+    distanceKm: '',
+    typicalTimeMin: '',
+    avgSpeedKmh: '',
+    isPassThrough: false,
+    passThroughTimeMin: '',
+    isDefault: false,
+    active: true,
+    tolls: [],
+  };
 
   const originNodeId = useStore(
     form.store,
@@ -149,6 +198,7 @@ export default function PathwayForm({
                 )}
                 label={tPathways('fields.origin')}
                 placeholder={tPathways('form.placeholders.origin')}
+                className="w-full"
                 isRequired
               />
             )}
@@ -169,6 +219,7 @@ export default function PathwayForm({
                 )}
                 label={tPathways('fields.destination')}
                 placeholder={tPathways('form.placeholders.destination')}
+                className="w-full"
                 isRequired
               />
             )}
@@ -228,19 +279,74 @@ export default function PathwayForm({
           </form.AppField>
 
           <form.AppField name="active">
-            {(field) => <field.SwitchInput label={tCommon('fields.active')} />}
+            {(field) => (
+              <field.SwitchInput
+                label={tCommon('fields.active')}
+                disabled={(form.store.state.values.options?.length ?? 0) === 0}
+                description={tPathways('messages.pathwayStatusInfo')}
+              />
+            )}
           </form.AppField>
-
-          <FormFooter>
-            <form.AppForm>
-              <form.SubmitButton>
-                {defaultValues
-                  ? tPathways('actions.update')
-                  : tPathways('actions.create')}
-              </form.SubmitButton>
-            </form.AppForm>
-          </FormFooter>
         </FormLayout>
+
+        <div className="pt-4">
+          <FormLayout title={tPathways('sections.options')}>
+            {defaultValues?.id ? (
+              <form.AppField name="options" mode="array">
+                {(field) => (
+                  <PathwayOptionsList
+                    form={form as unknown as ReturnType<typeof useForm>}
+                    options={
+                      (field.state.value as PathwayOptionRaw[]).map(
+                        (option) => ({
+                          ...option,
+                          id: option.id ? Number(option.id) : undefined,
+                          distanceKm: Number(option.distanceKm),
+                          typicalTimeMin: Number(option.typicalTimeMin),
+                          avgSpeedKmh: Number(option.avgSpeedKmh),
+                          passThroughTimeMin: option.passThroughTimeMin
+                            ? Number(option.passThroughTimeMin)
+                            : null,
+                          tolls: option.tolls?.map((toll) => ({
+                            ...toll,
+                            id: toll.id ? Number(toll.id) : undefined,
+                            nodeId: Number(toll.nodeId),
+                            passTimeMin: Number(toll.passTimeMin),
+                            distance: Number(toll.distance),
+                          })),
+                        }),
+                      ) || []
+                    }
+                    newOption={newOption}
+                    nodes={
+                      tollbooths?.data.map((tollbooth) => ({
+                        id: tollbooth.id,
+                        name: tollbooth.name,
+                        code: tollbooth.code,
+                        tollPrice: tollbooth.tollPrice ?? 0,
+                        iaveEnabled: tollbooth.iaveEnabled ?? false,
+                      })) || []
+                    }
+                  />
+                )}
+              </form.AppField>
+            ) : (
+              <div className="text-sm text-gray-500">
+                {tPathways('errors.savePathwayFirst')}
+              </div>
+            )}
+          </FormLayout>
+        </div>
+
+        <FormFooter>
+          <form.AppForm>
+            <form.SubmitButton>
+              {defaultValues
+                ? tPathways('actions.update')
+                : tPathways('actions.create')}
+            </form.SubmitButton>
+          </form.AppForm>
+        </FormFooter>
       </Form>
     </div>
   );

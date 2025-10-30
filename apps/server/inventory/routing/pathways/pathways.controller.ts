@@ -5,6 +5,7 @@ import type {
 } from '../pathway-options-tolls/pathway-options-tolls.types';
 import type {
   CreatePathwayOptionPayload,
+  ListPathwayOptionsResult,
   UpdatePathwayOptionPayload,
 } from '../pathway-options/pathway-options.types';
 import type {
@@ -15,6 +16,7 @@ import type {
   PaginatedListPathwaysQueryParams,
   PaginatedListPathwaysResult,
   Pathway,
+  PathwayWithRelations,
   UpdatePathwayPayload,
 } from './pathways.types';
 import { pathwayRepository } from './pathways.repository';
@@ -39,10 +41,10 @@ export const createPathway = api(
 );
 
 /**
- * Retrieves a pathway by its ID.
+ * Retrieves a pathway by its ID with its relations (origin, destination, and options).
  * @param params - Object containing the pathway ID
  * @param params.id - The ID of the pathway to retrieve
- * @returns {Promise<Pathway>} The found pathway
+ * @returns {Promise<PathwayWithRelations>} The found pathway with relations
  * @throws {APIError} If the pathway is not found or retrieval fails
  */
 export const getPathway = api(
@@ -52,8 +54,8 @@ export const getPathway = api(
     path: '/pathways/:id',
     auth: true,
   },
-  async ({ id }: { id: number }): Promise<Pathway> => {
-    return await pathwayApplicationService.findPathway(id);
+  async ({ id }: { id: number }): Promise<PathwayWithRelations> => {
+    return await pathwayRepository.findOneWithRelations(id);
   },
 );
 
@@ -142,6 +144,30 @@ export const deletePathway = api(
 // =============================================================================
 // PATHWAY OPTION ENDPOINTS
 // =============================================================================
+
+/**
+ * Retrieves all options for a pathway.
+ * @param params - Object containing the pathway ID
+ * @param params.pathwayId - The ID of the pathway to retrieve options for
+ * @returns {Promise<ListPathwayOptionsResult>} The found pathway options
+ * @throws {APIError} If the pathway or options are not found or retrieval fails
+ */
+export const getPathwayOptions = api(
+  {
+    expose: true,
+    method: 'GET',
+    path: '/pathways/:pathwayId/options/list',
+    auth: true,
+  },
+  async ({
+    pathwayId,
+  }: {
+    pathwayId: number;
+  }): Promise<ListPathwayOptionsResult> => {
+    const options = await pathwayApplicationService.findAllOptions(pathwayId);
+    return { data: options };
+  },
+);
 
 /**
  * Adds an option to a pathway.

@@ -48,6 +48,34 @@ export function createPathwayOptionRepository() {
   }
 
   /**
+   * Finds all pathway options for multiple pathways in a single query (excluding soft-deleted)
+   * @param pathwayIds - Array of pathway IDs to find options for
+   * @param tx - Optional transaction instance
+   * @returns Array of pathway options (only non-deleted)
+   */
+  async function findByPathwayIds(
+    pathwayIds: number[],
+    tx?: TransactionalDB,
+  ): Promise<PathwayOption[]> {
+    if (pathwayIds.length === 0) {
+      return [];
+    }
+
+    const dbInstance = tx || db;
+
+    // Single query to fetch all options for multiple pathways
+    return await dbInstance
+      .select()
+      .from(pathwayOptions)
+      .where(
+        and(
+          inArray(pathwayOptions.pathwayId, pathwayIds),
+          isNull(pathwayOptions.deletedAt),
+        ),
+      );
+  }
+
+  /**
    * Finds multiple pathway options by their IDs
    * @param ids - Array of option IDs to find
    * @param tx - Optional transaction instance
@@ -128,6 +156,7 @@ export function createPathwayOptionRepository() {
   return {
     ...baseRepository,
     findByPathwayId,
+    findByPathwayIds,
     findByIds,
     setDefaultOption,
   };

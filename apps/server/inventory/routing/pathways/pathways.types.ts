@@ -66,11 +66,19 @@ export interface Pathway {
 }
 
 /**
+ * Interface for a pathway option with tolls
+ */
+export interface PathwayOptionWithTolls extends PathwayOption {
+  tolls: PathwayOptionToll[];
+}
+
+/**
  * Interface for a pathway with relations
  */
 export interface PathwayWithRelations extends Pathway {
   origin: Node;
   destination: Node;
+  options?: PathwayOptionWithTolls[];
 }
 
 /**

@@ -3,7 +3,7 @@ import createCollectionItemQuery from '@/hooks/use-query-collection-item';
 import imsClient from '@/services/ims-client';
 
 export default createCollectionItemQuery<
-  pathways.Pathway,
+  pathways.PathwayWithRelations,
   pathways.PaginatedListPathwaysResult,
   APIError
 >({

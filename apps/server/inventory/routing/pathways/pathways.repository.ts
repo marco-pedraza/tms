@@ -4,12 +4,15 @@ import type { TransactionalDB } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
 import { nodes } from '@/inventory/locations/nodes/nodes.schema';
 import type { Node } from '@/inventory/locations/nodes/nodes.types';
+import { pathwayOptionTollRepository } from '@/inventory/routing/pathway-options-tolls/pathway-options-tolls.repository';
+import { pathwayOptionRepository } from '@/inventory/routing/pathway-options/pathway-options.repository';
 import { pathways } from './pathways.schema';
 import type {
   CreatePathwayPayload,
   PaginatedListPathwaysQueryParams,
   PaginatedListPathwaysResult,
   Pathway,
+  PathwayOptionWithTolls,
   PathwayWithRelations,
   UpdatePathwayPayload,
 } from './pathways.types';
@@ -56,10 +59,53 @@ export function createPathwayRepository() {
       nodesMap.set(node.id, node);
     });
 
-    // Enrich pathways with their origin and destination nodes
+    // Collect all pathway IDs to fetch options
+    const pathwayIds = data.map((pathway) => pathway.id);
+
+    // Fetch all pathway options for all pathways in a single query
+    const allOptions =
+      await pathwayOptionRepository.findByPathwayIds(pathwayIds);
+
+    // Collect all option IDs to fetch tolls
+    const optionIds = allOptions.map((option) => option.id);
+
+    // Fetch all tolls for all options in a single query
+    const allTolls =
+      optionIds.length > 0
+        ? await pathwayOptionTollRepository.findByOptionIds(optionIds)
+        : [];
+
+    // Create maps for quick lookup
+    const optionsMap = new Map<number, PathwayOptionWithTolls[]>();
+    const tollsMap = new Map<number, typeof allTolls>();
+
+    // Group options by pathway ID
+    allOptions.forEach((option) => {
+      const list = optionsMap.get(option.pathwayId) ?? [];
+      list.push({ ...option, tolls: [] });
+      optionsMap.set(option.pathwayId, list);
+    });
+
+    // Group tolls by option ID
+    allTolls.forEach((toll) => {
+      const list = tollsMap.get(toll.pathwayOptionId) ?? [];
+      list.push(toll);
+      tollsMap.set(toll.pathwayOptionId, list);
+    });
+
+    // Enrich options with their tolls
+    optionsMap.forEach((options) => {
+      options.forEach((option) => {
+        const tolls = tollsMap.get(option.id) || [];
+        option.tolls = tolls.sort((a, b) => a.sequence - b.sequence);
+      });
+    });
+
+    // Enrich pathways with their origin, destination nodes, and options
     return data.map((pathway) => {
       const originNode = nodesMap.get(pathway.originNodeId);
       const destinationNode = nodesMap.get(pathway.destinationNodeId);
+      const options = optionsMap.get(pathway.id);
 
       if (!originNode || !destinationNode) {
         throw new NotFoundError(
@@ -71,6 +117,11 @@ export function createPathwayRepository() {
         ...pathway,
         origin: originNode,
         destination: destinationNode,
+        options:
+          options?.map((option) => ({
+            ...option,
+            tolls: option.tolls ?? [],
+          })) ?? [],
       };
     });
   }
@@ -87,6 +138,49 @@ export function createPathwayRepository() {
     return {
       data: enrichedData,
       pagination: result.pagination,
+    };
+  }
+
+  async function findOneWithRelations(
+    id: number,
+  ): Promise<PathwayWithRelations> {
+    const { baseWhere } = baseRepository.buildQueryExpressions({
+      filters: { id },
+    });
+
+    const pathway = await db.query.pathways.findFirst({
+      where: baseWhere,
+      with: {
+        originNode: true,
+        destinationNode: true,
+        options: {
+          where: (option, { isNull }) => isNull(option.deletedAt),
+          orderBy: (option, { asc }) => [asc(option.sequence)],
+          with: {
+            pathwayOptionTolls: {
+              orderBy: (toll, { asc }) => [asc(toll.sequence)],
+            },
+          },
+        },
+      },
+    });
+
+    if (!pathway) {
+      throw new NotFoundError(`Pathway with id ${id} not found`);
+    }
+
+    const options = pathway.options?.map(
+      ({ pathwayOptionTolls, ...option }) => ({
+        ...option,
+        tolls: pathwayOptionTolls ?? [],
+      }),
+    );
+
+    return {
+      ...pathway,
+      origin: pathway.originNode,
+      destination: pathway.destinationNode,
+      options: options ?? [],
     };
   }
 
@@ -117,6 +211,7 @@ export function createPathwayRepository() {
   return {
     ...baseRepository,
     findAllPaginatedWithRelations,
+    findOneWithRelations,
     findByIds,
   };
 }

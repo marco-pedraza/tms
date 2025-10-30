@@ -11,6 +11,7 @@ interface NumberInputProps
   description?: string;
   isRequired?: boolean;
   allowDecimals?: boolean;
+  className?: string;
 }
 
 export default function NumberInput({
@@ -18,6 +19,7 @@ export default function NumberInput({
   description,
   isRequired = false,
   allowDecimals = true,
+  className,
   ...inputProps
 }: NumberInputProps) {
   const field = useFieldContext<string>();
@@ -66,6 +68,7 @@ export default function NumberInput({
         type="number"
         name={field.name}
         value={field.state.value}
+        className={className}
         onChange={(e) => field.handleChange(positiveNumber(e.target.value))}
         onKeyDown={(e) => {
           if (!allowDecimals && e.key === '.') {

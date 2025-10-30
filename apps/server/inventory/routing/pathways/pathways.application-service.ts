@@ -17,6 +17,7 @@ import type {
   CreatePathwayPayload,
   Pathway,
   PathwayEntity,
+  PathwayOptionWithTolls,
   UpdatePathwayOptionPayloadClean,
   UpdatePathwayPayload,
 } from './pathways.types';
@@ -184,6 +185,20 @@ export function createPathwayApplicationService() {
    */
   function createPathwayFromData(pathway: Pathway) {
     return pathwayEntity.fromData(pathway);
+  }
+
+  /**
+   * Finds all options for a pathway with their associated tolls
+   * Efficiently loads all tolls in a single query to avoid N+1 problem
+   * @param pathwayId - The ID of the pathway to find options for
+   * @returns The pathway options with tolls included
+   * @throws {NotFoundError} If pathway is not found
+   */
+  async function findAllOptions(
+    pathwayId: number,
+  ): Promise<PathwayOptionWithTolls[]> {
+    const pathway = await pathwayRepository.findOneWithRelations(pathwayId);
+    return pathway.options ?? [];
   }
 
   /**
@@ -369,6 +384,7 @@ export function createPathwayApplicationService() {
     updatePathway,
     findPathway,
     createPathwayFromData,
+    findAllOptions,
     addOptionToPathway,
     removeOptionFromPathway,
     updatePathwayOption,

@@ -2139,7 +2139,8 @@
       "backToList": "Volver a trayectos",
       "regenerateName": "Regenerar Nombre",
       "addOption": "Agregar Opción",
-      "addTollBooth": "Agregar Caseta"
+      "addTollBooth": "Agregar Caseta",
+      "generateReturnPathway": "Generar Trayecto de Regreso"
     },
     "fields": {
       "name": "Nombre",
@@ -2195,7 +2196,8 @@
         "title": "Trayecto no encontrado",
         "description": "No pudimos encontrar el trayecto que buscas. Es posible que haya sido eliminado o que no exista."
       },
-      "savePathwayFirst": "Para agregar opciones primero debes guardar el trayecto"
+      "savePathwayFirst": "Para agregar opciones primero debes guardar el trayecto",
+      "alreadyExists": "El trayecto de regreso ya existe"
     },
     "pathwayOptions": {
       "sections": {

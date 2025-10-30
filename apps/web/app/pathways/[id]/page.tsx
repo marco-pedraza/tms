@@ -1,7 +1,10 @@
 'use client';
 
-import { Check, Clock, Gauge, MapPin, Route } from 'lucide-react';
+import { Check, Clock, Gauge, MapPin, RefreshCw, Route } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
+import { ErrCode } from '@repo/ims-client';
+import type { APIError, pathways } from '@repo/ims-client';
 import ActionButtons from '@/components/action-buttons';
 import AffirmationBadge from '@/components/affirmation-badge';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
@@ -16,6 +19,7 @@ import usePathwayMutations from '@/pathways/hooks/use-pathway-mutations';
 import useQueryAllTollbooths from '@/pathways/hooks/use-query-all-tollbooths';
 import useQueryPathway from '@/pathways/hooks/use-query-pathway';
 import routes from '@/services/routes';
+import usePathwayOptionMutations from '../hooks/use-pathway-option-mutations';
 
 /**
  * Formats a number to Mexican Peso currency format
@@ -50,6 +54,8 @@ export default function PathwayDetailsPage() {
   });
   const { data: tollboothsData } = useQueryAllTollbooths();
   const { delete: deletePathway } = usePathwayMutations();
+  const { create: createPathway } = usePathwayMutations();
+  const { syncPathwayOptions } = usePathwayOptionMutations();
   const { deleteId, setDeleteId, onConfirmDelete, onCancelDelete } =
     useDeleteDialog({
       onConfirm: deletePathway.mutateWithToast,
@@ -58,6 +64,73 @@ export default function PathwayDetailsPage() {
   const onDelete = () => {
     if (!pathwayId) return;
     setDeleteId(pathwayId);
+  };
+
+  const generateReturnPathway = () => {
+    if (!pathwayId) return;
+
+    // Create inverted pathway data
+    const invertedPathwayData: pathways.CreatePathwayPayload = {
+      originNodeId: Number(pathway?.destinationNodeId),
+      destinationNodeId: Number(pathway?.originNodeId),
+      name: `${pathway?.destination?.name} - ${pathway?.origin?.name}`,
+      code: `${pathway?.destination?.code}-${pathway?.origin?.code}`,
+      description: pathway?.description ?? null,
+      isEmptyTrip: pathway?.isEmptyTrip ?? false,
+      isSellable: pathway?.isSellable ?? false,
+      active: false, // New pathway starts as inactive
+    };
+
+    // Create the return pathway
+    createPathway.mutateWithToast(invertedPathwayData, {
+      standalone: false,
+      onError: (error) => {
+        if ((error as APIError).code === ErrCode.AlreadyExists) {
+          toast.error(tPathways('errors.alreadyExists'));
+        }
+      },
+      onSuccess: (data) => {
+        const options: pathways.BulkSyncOptionInput[] =
+          pathway?.options
+            ?.slice()
+            .reverse()
+            .map((option, index) => {
+              // Invert tolls order within each option
+              const invertedTolls = option.tolls
+                ? option.tolls.slice().reverse()
+                : [];
+
+              return {
+                name: option.name ?? '',
+                description: option.description ?? null,
+                distanceKm: Number(option.distanceKm ?? 0),
+                typicalTimeMin: Number(option.typicalTimeMin ?? 0),
+                avgSpeedKmh: Number(option.avgSpeedKmh ?? 0),
+                passThroughTimeMin: option.passThroughTimeMin
+                  ? Number(option.passThroughTimeMin)
+                  : null,
+                isPassThrough: option.isPassThrough ?? false,
+                isDefault: option.isDefault ?? false,
+                active: option.active ?? false,
+                tolls: invertedTolls.map((toll, tollIndex) => ({
+                  ...toll,
+                  nodeId: Number(toll.nodeId ?? 0),
+                  passTimeMin: Number(toll.passTimeMin ?? 0),
+                  distance: Number(toll.distance ?? 0),
+                  sequence: tollIndex + 1,
+                })),
+                sequence: index + 1,
+              };
+            }) ?? [];
+
+        if (options.length > 0) {
+          syncPathwayOptions.mutateWithToast({
+            pathwayId: data.id,
+            options,
+          });
+        }
+      },
+    });
   };
 
   // Create a map of tollbooths for quick lookup
@@ -81,7 +154,19 @@ export default function PathwayDetailsPage() {
         backHref={routes.pathways.index}
       />
 
-      <div className="flex justify-end mb-6">
+      <div className="flex gap-2 justify-end mb-6">
+        <button
+          type="button"
+          onClick={() => {
+            generateReturnPathway();
+          }}
+          disabled={!pathwayId}
+          className="border border-gray-300 text-sm px-4 py-2 rounded-md flex items-center gap-2 cursor-pointer hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RefreshCw className="w-4 h-4" />{' '}
+          {tPathways('actions.generateReturnPathway')}
+        </button>
+
         <ActionButtons
           editHref={routes.pathways.getEditRoute(pathway.id.toString())}
           onDelete={onDelete}

@@ -108,14 +108,17 @@ export default function PathwayForm({
       try {
         const parsed = pathwaySchema.safeParse(value);
         if (parsed.success) {
-          let sequence = 1;
           parsed.data.options = parsed.data.options.map(
-            (option: PathwayOption) => ({
+            (option: PathwayOption, optionIndex: number) => ({
               ...option,
-              sequence: sequence++,
+              sequence: optionIndex + 1,
               passThroughTimeMin: option.isPassThrough
                 ? option.passThroughTimeMin
                 : null,
+              tolls: option.tolls?.map((toll, tollIndex) => ({
+                ...toll,
+                sequence: tollIndex + 1,
+              })),
             }),
           );
           await onSubmit(parsed.data);

@@ -38,14 +38,9 @@ export default function EditPathwayPage() {
       },
     );
 
-    let sequence = 1;
-
     await syncPathwayOptions.mutateWithToast({
       pathwayId,
-      options: values.options.map((option) => ({
-        ...option,
-        sequence: sequence++,
-      })),
+      options: values.options,
     });
 
     // Navigate to the pathway details page after all operations are complete

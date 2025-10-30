@@ -26,6 +26,7 @@ export function createPathwayRepository() {
   >(db, pathways, 'Pathway', {
     searchableFields: [pathways.name, pathways.code],
     softDeleteEnabled: true,
+    checkDependenciesOnSoftDelete: false,
   });
 
   /**

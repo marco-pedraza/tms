@@ -428,6 +428,13 @@
       "when": 1760988412000,
       "tag": "20251020192652_create_routes_and_route_legs_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1761777706913,
+      "tag": "20251029224146_create_rolling_plans_table",
+      "breakpoints": true
     }
   ]
 }

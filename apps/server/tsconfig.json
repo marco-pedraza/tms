@@ -12,6 +12,8 @@
       "@/db/*": ["./db/*"],
       "@/inventory": ["./inventory"],
       "@/inventory/*": ["./inventory/*"],
+      "@/planning": ["./planning"],
+      "@/planning/*": ["./planning/*"],
       "@/shared": ["./shared"],
       "@/shared/*": ["./shared/*"],
       "@/users": ["./users"],

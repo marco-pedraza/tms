@@ -33,11 +33,12 @@ export default defineConfig({
         // Specific files
         '**/*.types.ts',
         'inventory/secrets.ts',
-        'inventory/encore.service.ts',
+        '**/encore.service.ts',
       ],
       include: [
         // Include application code
         'inventory/**/*.ts',
+        'planning/**/*.ts',
         'users/**/*.ts',
         'shared/**/*.ts',
         'test-service/**/*.ts',
@@ -69,7 +70,9 @@ export default defineConfig({
       '~encore': path.resolve(__dirname, './encore.gen'),
       '@/db': path.resolve(__dirname, './db'),
       '@/inventory': path.resolve(__dirname, './inventory'),
+      '@/planning': path.resolve(__dirname, './planning'),
       '@/shared': path.resolve(__dirname, './shared'),
+      '@/users': path.resolve(__dirname, './users'),
       '@/factories': path.resolve(__dirname, './tests/factories'),
       '@/tests': path.resolve(__dirname, './tests'),
     },

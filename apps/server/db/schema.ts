@@ -165,3 +165,7 @@ export {
   routeLegs,
   routeLegsRelations,
 } from '@/inventory/routing/route-legs/route-legs.schema';
+export {
+  rollingPlans,
+  rollingPlansRelations,
+} from '@/planning/rolling-plans/rolling-plans.schema';

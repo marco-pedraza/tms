@@ -153,8 +153,6 @@ export interface CreateBusPayload {
   gpsId?: string | null;
   lastMaintenanceDate?: Date | string | null;
   nextMaintenanceDate?: Date | string | null;
-  // Seat Diagram
-  seatDiagramId: number;
   // Chromatic
   chromaticId?: number | null;
   // System information
@@ -190,8 +188,6 @@ export interface UpdateBusPayload {
   gpsId?: string | null;
   lastMaintenanceDate?: Date | string | null;
   nextMaintenanceDate?: Date | string | null;
-  // Seat Diagram
-  seatDiagramId?: number;
   // Chromatic
   chromaticId?: number | null;
   // System information

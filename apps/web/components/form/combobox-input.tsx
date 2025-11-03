@@ -28,6 +28,7 @@ export function ComboboxInput({
   items,
   description,
   isRequired = false,
+  disabled = false,
   emptyOptionsLabel,
   searchPlaceholder,
   noResultsLabel,
@@ -48,6 +49,7 @@ export function ComboboxInput({
         <PopoverTrigger asChild>
           <Button
             id={field.name}
+            disabled={disabled}
             variant="outline"
             role="combobox"
             aria-expanded={open}

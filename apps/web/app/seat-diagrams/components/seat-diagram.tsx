@@ -239,6 +239,8 @@ interface SeatDiagramProps {
   onAddRow: (floorNumber: number) => void;
   onRemoveColumn: (floorNumber: number, columnX: number) => void;
   onRemoveRow: (floorNumber: number) => void;
+  allowColumnEdition?: boolean;
+  allowRowEdition?: boolean;
 }
 
 /**
@@ -256,6 +258,8 @@ export default function SeatDiagram({
   onAddRow,
   onRemoveColumn,
   onRemoveRow,
+  allowColumnEdition = true,
+  allowRowEdition = true,
 }: SeatDiagramProps) {
   const tSeatDiagrams = useTranslations('seatDiagrams');
   // Step 1: Filter spaces for specific floor
@@ -305,7 +309,7 @@ export default function SeatDiagram({
     <div className="space-y-4 p-15 pr-0 w-full h-full overflow-x-auto justify-items-center-safe">
       <div className="relative">
         {/* Add Column button - positioned at the border, before main hallway */}
-        {mainHallwayX !== null && (
+        {mainHallwayX !== null && allowColumnEdition && (
           <div
             className="absolute -top-11 flex justify-center gap-2"
             style={{
@@ -359,7 +363,12 @@ export default function SeatDiagram({
           }}
         >
           {/* Only show remove button if there are columns after hallway */}
-          <div className={cn(!showRemoveColAfter && 'hidden')}>
+          <div
+            className={cn(
+              !showRemoveColAfter && 'hidden',
+              !allowColumnEdition && 'hidden',
+            )}
+          >
             <Button
               variant="outline"
               size="icon"
@@ -379,22 +388,24 @@ export default function SeatDiagram({
               <Minus className="w-3 h-3 text-gray-400" />
             </Button>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            className="border-dashed border-gray-400 bg-transparent hover:bg-gray-50 text-xs px-2 py-1"
-            type="button"
-            disabled={!canAddColAfter}
-            onClick={() => {
-              onAddColumn(floorNumber, maxX);
-            }}
-            title={tSeatDiagrams('form.placeholders.addColumnAfterHallway')}
-            aria-label={tSeatDiagrams(
-              'form.placeholders.addColumnAfterHallway',
-            )}
-          >
-            <PlusIcon className="w-3 h-3 text-gray-400" />
-          </Button>
+          <div className={cn(!allowColumnEdition && 'hidden')}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="border-dashed border-gray-400 bg-transparent hover:bg-gray-50 text-xs px-2 py-1"
+              type="button"
+              disabled={!canAddColAfter}
+              onClick={() => {
+                onAddColumn(floorNumber, maxX);
+              }}
+              title={tSeatDiagrams('form.placeholders.addColumnAfterHallway')}
+              aria-label={tSeatDiagrams(
+                'form.placeholders.addColumnAfterHallway',
+              )}
+            >
+              <PlusIcon className="w-3 h-3 text-gray-400" />
+            </Button>
+          </div>
         </div>
 
         <div
@@ -408,7 +419,12 @@ export default function SeatDiagram({
         </div>
 
         {/* Add Row button - positioned at the border, below the grid */}
-        <div className="absolute -bottom-11 -left-2  transform -translate-x-2/2 flex flex-col justify-center gap-2">
+        <div
+          className={cn(
+            'absolute -bottom-11 -left-2  transform -translate-x-2/2 flex flex-col justify-center gap-2',
+            !allowRowEdition && 'hidden',
+          )}
+        >
           <Button
             variant="outline"
             size="icon"

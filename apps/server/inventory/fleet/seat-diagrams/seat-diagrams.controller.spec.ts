@@ -298,7 +298,7 @@ describe('Seat Diagrams Controller', () => {
             floorNumber: 1,
             seatType: SeatType.VIP,
             amenities: ['WiFi', 'Power Outlet'],
-            position: { x: 1, y: 3 }, // Existing position - will update existing seat
+            position: { x: 1, y: 2 }, // Existing position - will update existing seat
             active: true,
           },
           // Update existing seat at position (4, 3) with new seat number and properties
@@ -306,7 +306,7 @@ describe('Seat Diagrams Controller', () => {
             seatNumber: 'NEW2',
             floorNumber: 1,
             seatType: SeatType.EXECUTIVE,
-            position: { x: 4, y: 3 }, // Existing position - will update existing seat
+            position: { x: 4, y: 2 }, // Existing position - will update existing seat
             active: true,
           },
         ],
@@ -369,7 +369,7 @@ describe('Seat Diagrams Controller', () => {
       const vipSeat = seatModels.find((seat) => seat.seatNumber === 'NEW1');
       expect(vipSeat).toBeDefined();
       expect(vipSeat?.seatType).toBe(SeatType.VIP);
-      expect(vipSeat?.position).toEqual({ x: 1, y: 3 });
+      expect(vipSeat?.position).toEqual({ x: 1, y: 2 });
       expect(vipSeat?.amenities).toEqual(['WiFi', 'Power Outlet']);
 
       // Find and verify updated executive seat (was existing seat, now updated with NEW2 number)
@@ -378,7 +378,7 @@ describe('Seat Diagrams Controller', () => {
       );
       expect(executiveSeat).toBeDefined();
       expect(executiveSeat?.seatType).toBe(SeatType.EXECUTIVE);
-      expect(executiveSeat?.position).toEqual({ x: 4, y: 3 });
+      expect(executiveSeat?.position).toEqual({ x: 4, y: 2 });
 
       // Verify that the diagram was updated with new total seats
       const updatedDiagram = await getSeatDiagram({ id: initialDiagram.id });
@@ -517,11 +517,11 @@ describe('Seat Diagrams Controller', () => {
           { seatNumber: 'D1', floorNumber: 1, position: { x: 3, y: 1 } },
           { seatNumber: 'E1', floorNumber: 1, position: { x: 4, y: 1 } },
           // Last row spanning full width (typical in buses)
-          { seatNumber: 'BACK1', floorNumber: 1, position: { x: 0, y: 3 } },
-          { seatNumber: 'BACK2', floorNumber: 1, position: { x: 1, y: 3 } },
-          { seatNumber: 'BACK3', floorNumber: 1, position: { x: 2, y: 3 } }, // Aisle position in last row
-          { seatNumber: 'BACK4', floorNumber: 1, position: { x: 3, y: 3 } },
-          { seatNumber: 'BACK5', floorNumber: 1, position: { x: 4, y: 3 } },
+          { seatNumber: 'BACK1', floorNumber: 1, position: { x: 0, y: 2 } },
+          { seatNumber: 'BACK2', floorNumber: 1, position: { x: 1, y: 2 } },
+          { seatNumber: 'BACK3', floorNumber: 1, position: { x: 2, y: 2 } }, // Aisle position in last row
+          { seatNumber: 'BACK4', floorNumber: 1, position: { x: 3, y: 2 } },
+          { seatNumber: 'BACK5', floorNumber: 1, position: { x: 4, y: 2 } },
         ],
       });
 

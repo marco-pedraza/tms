@@ -1853,6 +1853,11 @@
         "loading": "Eliminando autobús...",
         "success": "Autobús eliminado correctamente",
         "error": "No pudimos eliminar el autobús"
+      },
+      "updateBusSeatConfiguration": {
+        "loading": "Actualizando configuración de asientos...",
+        "success": "Configuración de asientos actualizada correctamente",
+        "error": "No pudimos actualizar la configuración de asientos"
       }
     }
   },

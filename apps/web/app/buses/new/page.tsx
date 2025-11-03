@@ -1,15 +1,18 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import BusForm, { BusFormValues } from '@/buses/components/bus-form';
+import useUpdateBusSeatConfiguration from '@/buses/hooks/use-update-bus-seat-config';
 import PageHeader from '@/components/page-header';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
-import imsClient from '@/services/ims-client';
+import imsClient, { SpaceType } from '@/services/ims-client';
 import routes from '@/services/routes';
 
 export default function NewBusPage() {
   const tBuses = useTranslations('buses');
+  const router = useRouter();
 
   const assignTechnologiesMutation = useMutation({
     mutationKey: ['buses', 'assignTechnologies'],
@@ -68,13 +71,15 @@ export default function NewBusPage() {
     },
   });
 
+  const updateBusSeatConfiguration = useUpdateBusSeatConfiguration();
+
   const createBusWithToast = useToastMutation({
-    onSuccess: (data) => {
-      assignTechnologies.mutateWithToast({
+    onSuccess: async (data) => {
+      await assignTechnologies.mutateWithToast({
         busId: data.bus.id,
         technologyIds: data.technologyIds ?? [],
       });
-      assignDrivers.mutateWithToast({
+      await assignDrivers.mutateWithToast({
         busId: data.bus.id,
         driverIds: data.driverIds ?? [],
       });
@@ -87,6 +92,30 @@ export default function NewBusPage() {
     },
   });
 
+  const onSubmit = async (values: BusFormValues) => {
+    const data = await createBusWithToast.mutateWithToast(values);
+    await updateBusSeatConfiguration.mutateWithToast({
+      seatDiagramId: data.bus.seatDiagramId,
+      seats: values.seatConfiguration.flatMap((floor) =>
+        floor.spaces.map((space) => {
+          // Only include reclinementAngle for seat type spaces
+          if (
+            space.spaceType === SpaceType.SEAT &&
+            'reclinementAngle' in space
+          ) {
+            return {
+              ...space,
+              reclinementAngle: space.reclinementAngle || undefined,
+            };
+          }
+          return space;
+        }),
+      ),
+    });
+    router.push(routes.buses.getDetailsRoute(data.bus.id.toString()));
+    return data;
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto">
       <PageHeader
@@ -95,7 +124,7 @@ export default function NewBusPage() {
         backLabel={tBuses('actions.backToList')}
       />
 
-      <BusForm onSubmit={createBusWithToast.mutateWithToast} />
+      <BusForm onSubmit={onSubmit} />
     </div>
   );
 }

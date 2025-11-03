@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useStore } from '@tanstack/react-form';
+import { Bath, MoveUpRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
 import { buses, drivers } from '@repo/ims-client';
-import { bus_seat_models } from '@repo/ims-client';
 import useQueryAllDrivers from '@/app/drivers/hooks/use-query-all-drivers';
 import useQueryAllSeatDiagrams from '@/app/seat-diagrams/hooks/use-query-all-seat-diagrams';
 import useQueryAllTechnologies from '@/app/technologies/hooks/use-query-all-technologies';
@@ -13,13 +13,20 @@ import useQueryAllBusLines from '@/bus-lines/hooks/use-query-all-bus-lines';
 import useQueryAllBusModels from '@/bus-models/hooks/use-query-all-bus-models';
 import busLicensePlateTypesTranslationKeys from '@/buses/translations/bus-license-plate-types-translations-keys';
 import busStatusTranslationKeys from '@/buses/translations/bus-status-translations-keys';
+import { convertBusSeatModelToSeatDiagramSpace } from '@/buses/utils/convert-bus-seat-model-to-diagram-space';
+import { createFloorsFromSeatModels } from '@/buses/utils/create-floors-from-seat-models';
+import { initializeSeatFields } from '@/buses/utils/initialize-seat-fields';
 import useQueryAllChromatics from '@/chromatics/hooks/use-query-all-chromatics';
 import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
+import { BaseSwitchInput } from '@/components/form/switch-input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DriverCard from '@/components/ui/driver-card';
 import TechnologyCard from '@/components/ui/technology-card';
 import useForm from '@/hooks/use-form';
+import { useQueryBusAmenities } from '@/hooks/use-query-bus-amenities';
 import useQueryAllNodes from '@/nodes/hooks/use-query-all-nodes';
 import { optionalDateSchema, requiredDateSchema } from '@/schemas/date';
 import {
@@ -29,10 +36,12 @@ import {
   requiredIntegerSchema,
 } from '@/schemas/number';
 import { optionalStringSchema, requiredStringSchema } from '@/schemas/string';
-import ReadOnlySeatDiagram from '@/seat-diagrams/components/read-only-seat-diagram';
-import { createFloorsFromSeatConfiguration } from '@/seat-diagrams/components/seat-diagram-form/create-floors-from-quick-config';
+import SeatDiagram from '@/seat-diagrams/components/seat-diagram';
 import useQuerySeatConfiguration from '@/seat-diagrams/hooks/use-query-seat-configuration';
-import { SeatDiagramSpace } from '@/seat-diagrams/seat-diagrams.schemas';
+import {
+  SeatDiagramSpace,
+  createSeatDiagramSpaceSchema,
+} from '@/seat-diagrams/seat-diagrams.schemas';
 import { SeatType, SpaceType } from '@/services/ims-client';
 import {
   BusStatus,
@@ -73,7 +82,7 @@ const createBusFormSchema = (tValidations: UseValidationsTranslationsResult) =>
     erpClientNumber: optionalStringSchema(),
     modelId: requiredIntegerSchema(tValidations),
     // Seat diagram
-    seatDiagramId: requiredIntegerSchema(tValidations),
+    seatDiagramModelId: requiredIntegerSchema(tValidations),
     // Technical information
     vehicleId: optionalStringSchema(),
     serialNumber: requiredStringSchema(tValidations),
@@ -89,6 +98,16 @@ const createBusFormSchema = (tValidations: UseValidationsTranslationsResult) =>
     technologyIds: z.array(z.number()).optional(),
     chromaticId: z.string().transform((val) => (val ? parseInt(val) : null)),
     driverIds: z.array(z.number()).optional(),
+    // Seat configuration for bus-specific diagram customization
+    seatConfiguration: z
+      .array(
+        z.object({
+          floorNumber: z.number(),
+          spaces: z.array(createSeatDiagramSpaceSchema(tValidations)),
+        }),
+      )
+      .optional()
+      .default([]),
   });
 
 export type BusFormValues = z.output<ReturnType<typeof createBusFormSchema>>;
@@ -143,10 +162,22 @@ export default function BusForm({
         nextMaintenanceDate: defaultValues.nextMaintenanceDate
           ? parseAndFormatDateForInput(defaultValues.nextMaintenanceDate)
           : '',
-        seatDiagramId: defaultValues.seatDiagramId?.toString() || '',
+        seatDiagramModelId: '',
         technologyIds: defaultValues.technologyIds || [],
         chromaticId: defaultValues.chromaticId?.toString() || '',
         driverIds: defaultValues.driverIds || [],
+        seatConfiguration: defaultValues.seatConfiguration
+          ? defaultValues.seatConfiguration.map((floor) => ({
+              ...floor,
+              spaces: floor.spaces.map((space) => ({
+                ...space,
+                // @ts-expect-error - discriminated unions typing issue
+                amenities: space.amenities
+                  ?.filter((amenity: string) => !isNaN(parseInt(amenity)))
+                  .map((amenity: string) => parseInt(amenity)),
+              })),
+            }))
+          : [],
       }
     : {
         economicNumber: '',
@@ -174,11 +205,12 @@ export default function BusForm({
         gpsId: '',
         lastMaintenanceDate: '',
         nextMaintenanceDate: '',
-        seatDiagramId: '',
+        seatDiagramModelId: '',
         active: true,
         technologyIds: [],
         chromaticId: '',
         driverIds: [],
+        seatConfiguration: [],
       };
 
   const form = useForm({
@@ -190,7 +222,7 @@ export default function BusForm({
       try {
         const parsed = busSchema.safeParse(value);
         if (parsed.success) {
-          await onSubmit(parsed.data);
+          return await onSubmit(parsed.data);
         }
       } catch (error: unknown) {
         injectTranslatedErrorsToForm({
@@ -203,6 +235,76 @@ export default function BusForm({
       }
     },
   });
+
+  // Second form for editing individual spaces in the seat diagram
+  const spaceForm = useForm({
+    defaultValues: {
+      spaceType: '' as SpaceType,
+      seatType: '' as SeatType,
+      seatNumber: '',
+      floorNumber: 1,
+      active: true,
+      amenities: [] as number[],
+      reclinementAngle: '',
+      position: {
+        x: 0,
+        y: 0,
+      },
+    },
+    listeners: {
+      // Autosave values on change
+      onChange: ({ formApi }) => {
+        formApi.handleSubmit();
+      },
+    },
+    validators: {
+      // @ts-expect-error - discriminated unions typing issue
+      onSubmit: createSeatDiagramSpaceSchema(tValidations),
+    },
+    onSubmit: ({ value }) => {
+      const currentSeatConfiguration = form.getFieldValue('seatConfiguration');
+      if (!currentSeatConfiguration) return;
+
+      const floorToModify = currentSeatConfiguration.find(
+        (floor) => floor.floorNumber === value.floorNumber,
+      );
+      if (floorToModify) {
+        const newSpacesForFloor = floorToModify.spaces.filter(
+          (space) =>
+            !(
+              space.position.x === value.position.x &&
+              space.position.y === value.position.y
+            ),
+        );
+        const newAmenities = value.amenities ?? [];
+        newSpacesForFloor.push({
+          ...value,
+          amenities: newAmenities,
+        });
+        const newSeatConfiguration = currentSeatConfiguration.filter(
+          (floor) => floor.floorNumber !== value.floorNumber,
+        );
+        newSeatConfiguration.push({
+          floorNumber: value.floorNumber,
+          spaces: newSpacesForFloor,
+        });
+        const orderedByFloorNumber = newSeatConfiguration.sort(
+          (a, b) => a.floorNumber - b.floorNumber,
+        );
+        form.setFieldValue('seatConfiguration', orderedByFloorNumber);
+        form.validateSync('change');
+      }
+    },
+  });
+
+  const [selectedFloor, setSelectedFloor] = useState<number>(1);
+  const { data: busAmenities = [] } = useQueryBusAmenities();
+
+  // Handler for clicking on a space in the diagram
+  const handleSpaceClick = (space: SeatDiagramSpace) => {
+    // @ts-expect-error - discriminated unions typing issue
+    spaceForm.reset(space);
+  };
 
   const [selectedDrivers, setSelectedDrivers] = useState<drivers.Driver[]>([]);
   const busLineId = useStore(form.store, (state) => state.values.busLineId);
@@ -234,50 +336,55 @@ export default function BusForm({
   const { data: busLines } = useQueryAllBusLines();
   const { data: nodes } = useQueryAllNodes();
 
-  // Get the selected seat diagram ID from the form
-  const selectedSeatDiagramId = useStore(
-    form.store,
-    (state) => state.values.seatDiagramId,
-  );
+  const [modelHasChanged, setModelHasChanged] = useState(false);
 
-  // Query seat configuration for the selected diagram
-  const { data: seatConfiguration } = useQuerySeatConfiguration({
-    seatDiagramId: parseInt(selectedSeatDiagramId),
+  // Get the selected seat diagram ID from the form (this is the template ID)
+  const selectedSeatDiagramModelId = useStore(
+    form.store,
+    (state) => state.values.seatDiagramModelId,
+  );
+  const { data: templateSeatConfiguration } = useQuerySeatConfiguration({
+    seatDiagramId: parseInt(selectedSeatDiagramModelId),
     enabled:
-      Boolean(selectedSeatDiagramId) &&
-      Number.isInteger(parseInt(selectedSeatDiagramId)),
+      Boolean(selectedSeatDiagramModelId) &&
+      Number.isInteger(parseInt(selectedSeatDiagramModelId)),
   });
 
-  // Convert seat configuration to spaces format
-  const convertBusSeatModelToSeatDiagramSpace = (
-    busSeat: bus_seat_models.BusSeatModel,
-  ): SeatDiagramSpace => {
-    return {
-      floorNumber: busSeat.floorNumber,
-      active: busSeat.active,
-      position: {
-        x: busSeat.position.x,
-        y: busSeat.position.y,
-      },
-      spaceType: busSeat.spaceType as SpaceType,
-      ...(busSeat.spaceType === 'seat' && {
-        seatType: busSeat.seatType as SeatType,
-        seatNumber: busSeat.seatNumber ?? '',
-        amenities: busSeat.amenities ?? [],
-        reclinementAngle: busSeat.reclinementAngle ?? '',
-      }),
-    };
-  };
+  // Load template seat configuration into form
+  useEffect(() => {
+    const isInitialModel =
+      form.getFieldValue('modelId') === defaultValues?.modelId?.toString();
+    if (
+      (!isInitialModel || modelHasChanged) &&
+      templateSeatConfiguration?.data &&
+      templateSeatConfiguration.data.length > 0
+    ) {
+      const floors = createFloorsFromSeatModels(
+        templateSeatConfiguration.data,
+      ).map((floor) => ({
+        ...floor,
+        spaces: floor.spaces.map(convertBusSeatModelToSeatDiagramSpace),
+      }));
+      form.setFieldValue('seatConfiguration', floors);
+      setModelHasChanged(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [templateSeatConfiguration, form, selectedSeatDiagramModelId]);
 
-  const seatSpaces =
-    seatConfiguration?.data && seatConfiguration.data.length > 0
-      ? createFloorsFromSeatConfiguration(seatConfiguration.data).map(
-          (floor) => ({
-            ...floor,
-            spaces: floor.spaces.map(convertBusSeatModelToSeatDiagramSpace),
-          }),
-        )
-      : [];
+  // Set the default seat diagram model ID at mount
+  useEffect(() => {
+    const model = busModels?.data.find(
+      (model) => model.id.toString() === form.getFieldValue('modelId'),
+    );
+    if (model) {
+      if (model.defaultBusDiagramModelId) {
+        form.setFieldValue(
+          'seatDiagramModelId',
+          model.defaultBusDiagramModelId.toString(),
+        );
+      }
+    }
+  }, [busModels, form]);
 
   return (
     <Form onSubmit={form.handleSubmit} className="w-full max-w-none">
@@ -443,7 +550,7 @@ export default function BusForm({
                 if (model) {
                   if (model.defaultBusDiagramModelId) {
                     form.setFieldValue(
-                      'seatDiagramId',
+                      'seatDiagramModelId',
                       model.defaultBusDiagramModelId.toString(),
                     );
                   }
@@ -605,51 +712,360 @@ export default function BusForm({
           title={tBuses('sections.seatDiagram')}
           className="w-full max-w-none"
         >
-          <form.AppField name="seatDiagramId">
-            {(field) => {
-              const seatDiagram = seatDiagrams?.data.find(
-                (seatDiagram) =>
-                  seatDiagram.id.toString() === field.state.value,
-              );
-              return (
-                <>
-                  <field.ComboboxInput
-                    label={tBuses('fields.seatDiagram')}
-                    placeholder={tBuses('form.placeholders.seatDiagram')}
-                    emptyOptionsLabel={tBuses(
-                      'form.placeholders.emptyOptionsLabel',
-                    )}
-                    searchPlaceholder={tBuses(
-                      'form.placeholders.seatDiagramSearch',
-                    )}
-                    noResultsLabel={tBuses(
-                      'form.placeholders.noSeatDiagramsFound',
-                    )}
-                    isRequired
-                    items={
-                      seatDiagrams?.data.map((seatDiagram) => ({
-                        id: seatDiagram.id.toString(),
-                        name: seatDiagram.name,
-                      })) || []
-                    }
-                  />
-                  {seatDiagram && seatSpaces.length > 0 && (
-                    <div className="space-y-4 pt-4">
-                      {/* Visual diagram */}
-                      <div className="space-y-4">
-                        <h4 className="text-sm font-medium text-foreground">
-                          {tSeatDiagrams('readOnly.visualDiagram')}
-                        </h4>
-                        <div className="border rounded-lg p-4 bg-gray-50">
-                          <ReadOnlySeatDiagram seatSpaces={seatSpaces} />
+          <form.AppField name="seatDiagramModelId">
+            {(field) => (
+              <field.ComboboxInput
+                // This field is only modified through the bus model field
+                disabled
+                label={tBuses('fields.seatDiagram')}
+                placeholder={tBuses('form.placeholders.seatDiagram')}
+                emptyOptionsLabel={tBuses(
+                  'form.placeholders.emptyOptionsLabel',
+                )}
+                searchPlaceholder={tBuses(
+                  'form.placeholders.seatDiagramSearch',
+                )}
+                noResultsLabel={tBuses('form.placeholders.noSeatDiagramsFound')}
+                isRequired
+                items={
+                  seatDiagrams?.data.map((seatDiagram) => ({
+                    id: seatDiagram.id.toString(),
+                    name: seatDiagram.name,
+                  })) || []
+                }
+              />
+            )}
+          </form.AppField>
+
+          {/* Editable seat diagram */}
+          <spaceForm.Subscribe
+            // @ts-expect-error - Form library typing
+            selector={(state) => [state.values]}
+          >
+            {/* @ts-expect-error - Form library typing */}
+            {([selectedSpace]: [SeatDiagramSpace]) => (
+              <form.Subscribe
+                // @ts-expect-error - Form library typing
+                selector={(state) => [state.values.seatConfiguration]}
+              >
+                {/* @ts-expect-error - Form library typing */}
+                {([seatConfiguration]: [SeatDiagramSpace[]]) =>
+                  seatConfiguration.length === 0 ? null : (
+                    <div className="grid gap-4 w-full pt-4">
+                      <div className="flex gap-1">
+                        {seatConfiguration.map((floor) => (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            key={floor.floorNumber}
+                            onClick={() => {
+                              setSelectedFloor(floor.floorNumber);
+                            }}
+                            type="button"
+                            className={
+                              selectedFloor === floor.floorNumber
+                                ? 'bg-primary text-primary-foreground ring'
+                                : ''
+                            }
+                          >
+                            {tSeatDiagrams('fields.floor', {
+                              floorNumber: floor.floorNumber,
+                            })}
+                          </Button>
+                        ))}
+                      </div>
+                      <div className="min-h-[500px] h-[70vh] max-h-[700px]">
+                        <div className="grid gap-4 grid-cols-[3fr_auto_2fr] h-full">
+                          <form.AppField name="seatConfiguration">
+                            {(field) => {
+                              if (!field.state.value) return null;
+                              const floor = field.state.value.find(
+                                (floor) => floor.floorNumber === selectedFloor,
+                              );
+                              if (!floor) return null;
+                              return (
+                                // @todo implement discriminated unions typing for SeatDiagram component
+                                // @ts-expect-error - Missing event handlers props because we don't need them
+                                <SeatDiagram
+                                  spaces={floor.spaces as SeatDiagramSpace[]}
+                                  floorNumber={floor.floorNumber}
+                                  onClick={handleSpaceClick}
+                                  selectedSpace={selectedSpace}
+                                  allowColumnEdition={false}
+                                  allowRowEdition={false}
+                                />
+                              );
+                            }}
+                          </form.AppField>
+                          <div className="p-4 pt-20 text-sm ">
+                            <ul>
+                              <li className="flex items-center gap-2">
+                                <span className="w-3 h-3 bg-white border border-gray-300 rounded-full" />
+                                {tSeatDiagrams('form.placeholders.seatTypes', {
+                                  seatType: SeatType.REGULAR,
+                                })}
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="w-3 h-3 bg-purple-100 border border-purple-500 rounded-full" />
+                                {tSeatDiagrams('form.placeholders.seatTypes', {
+                                  seatType: SeatType.PREMIUM,
+                                })}
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="w-3 h-3 bg-green-100 border border-green-500 rounded-full" />
+                                {tSeatDiagrams('form.placeholders.seatTypes', {
+                                  seatType: SeatType.VIP,
+                                })}
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="w-3 h-3 bg-blue-100 border border-blue-500 rounded-full" />
+                                {tSeatDiagrams('form.placeholders.seatTypes', {
+                                  seatType: SeatType.BUSINESS,
+                                })}
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="w-3 h-3 bg-yellow-100 border border-yellow-500 rounded-full" />
+                                {tSeatDiagrams('form.placeholders.seatTypes', {
+                                  seatType: SeatType.EXECUTIVE,
+                                })}
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <Bath className="w-3 h-3" />
+                                {tSeatDiagrams('form.spaceTypes.bathroom')}
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <MoveUpRight className="w-3 h-3" />
+                                {tSeatDiagrams('form.spaceTypes.stairs')}
+                              </li>
+                              <li className="flex items-center gap-2">
+                                <span className="w-3 h-3 bg-white border-dashed border-2 border-gray-300 rounded-full" />
+                                {tSeatDiagrams('form.spaceTypes.empty')}
+                              </li>
+                            </ul>
+                          </div>
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>
+                                {tSeatDiagrams('form.placeholders.editSpace')}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="h-full">
+                              <spaceForm.Subscribe
+                                // @ts-expect-error - Form library typing
+                                selector={(state) => {
+                                  const {
+                                    seatNumber,
+                                    reclinementAngle,
+                                    amenities,
+                                  } = state.values;
+                                  return [
+                                    state.values.spaceType,
+                                    seatNumber,
+                                    reclinementAngle,
+                                    amenities,
+                                  ];
+                                }}
+                              >
+                                {/* @ts-expect-error - Form library typing */}
+                                {([
+                                  spaceType,
+                                  seatNumber,
+                                  reclinementAngle,
+                                  amenities,
+                                ]: [
+                                  SpaceType,
+                                  string | undefined,
+                                  string | undefined,
+                                  string[] | undefined,
+                                ]) => (
+                                  <>
+                                    {!spaceType ? (
+                                      <div>
+                                        {tSeatDiagrams(
+                                          'form.placeholders.selectSpace',
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <div className="flex flex-col gap-2 justify-between h-full">
+                                        <div className="grid gap-2">
+                                          <spaceForm.AppField
+                                            name="spaceType"
+                                            listeners={{
+                                              onChange: (event) => {
+                                                initializeSeatFields(
+                                                  spaceForm as ReturnType<
+                                                    typeof useForm
+                                                  >,
+                                                  event.value,
+                                                  seatNumber,
+                                                  reclinementAngle,
+                                                  amenities,
+                                                );
+                                              },
+                                            }}
+                                          >
+                                            {(field) => (
+                                              <field.SelectInput
+                                                label={tSeatDiagrams(
+                                                  'fields.spaceType',
+                                                )}
+                                                isRequired
+                                                placeholder={tSeatDiagrams(
+                                                  'form.placeholders.spaceType',
+                                                )}
+                                                disabled={
+                                                  spaceType === SpaceType.EMPTY
+                                                }
+                                                items={Object.values(
+                                                  SpaceType,
+                                                ).map((type) => ({
+                                                  id: type,
+                                                  name: tSeatDiagrams(
+                                                    `form.spaceTypes.${type}`,
+                                                  ),
+                                                  hidden:
+                                                    type === SpaceType.EMPTY,
+                                                }))}
+                                              />
+                                            )}
+                                          </spaceForm.AppField>
+                                          {spaceType === SpaceType.SEAT && (
+                                            <>
+                                              <spaceForm.AppField name="seatType">
+                                                {(field) => (
+                                                  <field.SelectInput
+                                                    label={tSeatDiagrams(
+                                                      'fields.seatType',
+                                                    )}
+                                                    isRequired
+                                                    placeholder={tSeatDiagrams(
+                                                      'form.placeholders.seatType',
+                                                    )}
+                                                    items={Object.values(
+                                                      SeatType,
+                                                    ).map((type) => ({
+                                                      id: type,
+                                                      name: tSeatDiagrams(
+                                                        `form.seatTypes.${type}`,
+                                                      ),
+                                                    }))}
+                                                  />
+                                                )}
+                                              </spaceForm.AppField>
+                                              <spaceForm.AppField name="seatNumber">
+                                                {(field) => (
+                                                  <field.TextInput
+                                                    label={tSeatDiagrams(
+                                                      'fields.seatNumber',
+                                                    )}
+                                                    isRequired
+                                                    placeholder={tSeatDiagrams(
+                                                      'form.placeholders.seatNumber',
+                                                    )}
+                                                  />
+                                                )}
+                                              </spaceForm.AppField>
+                                              <spaceForm.AppField name="amenities">
+                                                {(field) => (
+                                                  <field.MultiSelectInput
+                                                    label={tSeatDiagrams(
+                                                      'fields.amenities',
+                                                    )}
+                                                    placeholder={tSeatDiagrams(
+                                                      'form.placeholders.selectAmenities',
+                                                    )}
+                                                    items={busAmenities.map(
+                                                      (amenity) => ({
+                                                        id: amenity.id.toString(),
+                                                        name: amenity.name,
+                                                        description:
+                                                          amenity.description ||
+                                                          undefined,
+                                                        category:
+                                                          amenity.category,
+                                                      }),
+                                                    )}
+                                                    emptyOptionsLabel={tSeatDiagrams(
+                                                      'form.placeholders.noAmenities',
+                                                    )}
+                                                    previewItemsCount={1}
+                                                  />
+                                                )}
+                                              </spaceForm.AppField>
+
+                                              <spaceForm.AppField name="reclinementAngle">
+                                                {(field) => (
+                                                  <field.NumberInput
+                                                    label={tSeatDiagrams(
+                                                      'fields.reclinementAngle',
+                                                    )}
+                                                    placeholder={tSeatDiagrams(
+                                                      'form.placeholders.reclinementAngle',
+                                                    )}
+                                                    min={0}
+                                                    max={180}
+                                                  />
+                                                )}
+                                              </spaceForm.AppField>
+                                            </>
+                                          )}
+                                          <div className="pt-2">
+                                            <spaceForm.AppField
+                                              name="spaceType"
+                                              listeners={{
+                                                onChange: (event) => {
+                                                  initializeSeatFields(
+                                                    spaceForm as ReturnType<
+                                                      typeof useForm
+                                                    >,
+                                                    event.value,
+                                                    seatNumber,
+                                                    reclinementAngle,
+                                                    amenities,
+                                                  );
+                                                },
+                                              }}
+                                            >
+                                              {(field) => (
+                                                <BaseSwitchInput
+                                                  label={tSeatDiagrams(
+                                                    'fields.disableSpace',
+                                                  )}
+                                                  name="disable-space"
+                                                  value={
+                                                    field.state.value ===
+                                                    SpaceType.EMPTY
+                                                  }
+                                                  onChange={(value) => {
+                                                    field.handleChange(
+                                                      value
+                                                        ? SpaceType.EMPTY
+                                                        : SpaceType.SEAT,
+                                                    );
+                                                    spaceForm.validateSync(
+                                                      'change',
+                                                    );
+                                                  }}
+                                                />
+                                              )}
+                                            </spaceForm.AppField>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </spaceForm.Subscribe>
+                            </CardContent>
+                          </Card>
                         </div>
                       </div>
                     </div>
-                  )}
-                </>
-              );
-            }}
-          </form.AppField>
+                  )
+                }
+              </form.Subscribe>
+            )}
+          </spaceForm.Subscribe>
         </FormLayout>
       </div>
 

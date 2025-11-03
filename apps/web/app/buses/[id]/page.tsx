@@ -1,12 +1,13 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { bus_seat_models } from '@repo/ims-client';
-import useQuerySeatDiagram from '@/app/seat-diagrams/hooks/use-query-seat-diagram';
 import BusSkeleton from '@/buses/components/bus-skeleton';
 import BusStatusBadge from '@/buses/components/bus-status-badge';
 import useBusMutations from '@/buses/hooks/use-bus-mutations';
 import useQueryBus from '@/buses/hooks/use-query-bus';
+import useQueryBusSeatConfiguration from '@/buses/hooks/use-query-bus-seat-config';
+import { convertBusSeatToSeatDiagramSpace } from '@/buses/utils/convert-bus-seat-to-diagram-space';
+import { createFloorsFromBusSeats } from '@/buses/utils/create-floors-from-bus-seats';
 import ActionButtons from '@/components/action-buttons';
 import AffirmationBadge from '@/components/affirmation-badge';
 import ConfirmDeleteDialog from '@/components/confirm-delete-dialog';
@@ -18,10 +19,6 @@ import TechnologyCard from '@/components/ui/technology-card';
 import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import useDeleteDialog from '@/hooks/use-delete-dialog';
 import ReadOnlySeatDiagram from '@/seat-diagrams/components/read-only-seat-diagram';
-import { createFloorsFromSeatConfiguration } from '@/seat-diagrams/components/seat-diagram-form/create-floors-from-quick-config';
-import useQuerySeatConfiguration from '@/seat-diagrams/hooks/use-query-seat-configuration';
-import { SeatDiagramSpace } from '@/seat-diagrams/seat-diagrams.schemas';
-import { SeatType, SpaceType } from '@/services/ims-client';
 import routes from '@/services/routes';
 import {
   parseAndFormatDateForHumans,
@@ -32,53 +29,25 @@ import busLicensePlateTypesTranslationKeys from '../translations/bus-license-pla
 export default function BusDetailsPage() {
   const tBuses = useTranslations('buses');
   const tCommon = useTranslations('common');
-  const tSeatDiagrams = useTranslations('seatDiagrams');
   const tChromatics = useTranslations('chromatics');
   const { itemId: busId, isValidId } = useCollectionItemDetailsParams();
   const { data: bus, isLoading } = useQueryBus({
     busId,
     enabled: isValidId,
   });
-  const { data: seatDiagram } = useQuerySeatDiagram({
-    itemId: bus?.seatDiagramId ?? 0,
-    enabled: !!bus?.seatDiagramId,
-  });
-
-  // Query seat configuration for the diagram
-  const { data: seatConfiguration } = useQuerySeatConfiguration({
+  // Query seat configuration for the bus (bus_seats, not bus_seat_models)
+  const { data: busSeatConfiguration } = useQueryBusSeatConfiguration({
     seatDiagramId: bus?.seatDiagramId ?? 0,
     enabled: !!bus?.seatDiagramId,
   });
 
-  // Convert seat configuration to spaces format
-  const convertBusSeatModelToSeatDiagramSpace = (
-    busSeat: bus_seat_models.BusSeatModel,
-  ): SeatDiagramSpace => {
-    return {
-      floorNumber: busSeat.floorNumber,
-      active: busSeat.active,
-      position: {
-        x: busSeat.position.x,
-        y: busSeat.position.y,
-      },
-      spaceType: busSeat.spaceType as SpaceType,
-      ...(busSeat.spaceType === 'seat' && {
-        seatType: busSeat.seatType as SeatType,
-        seatNumber: busSeat.seatNumber ?? '',
-        amenities: busSeat.amenities ?? [],
-        reclinementAngle: busSeat.reclinementAngle ?? '',
-      }),
-    };
-  };
-
+  // Convert bus seat configuration to spaces format
   const seatSpaces =
-    seatConfiguration?.data && seatConfiguration.data.length > 0
-      ? createFloorsFromSeatConfiguration(seatConfiguration.data).map(
-          (floor) => ({
-            ...floor,
-            spaces: floor.spaces.map(convertBusSeatModelToSeatDiagramSpace),
-          }),
-        )
+    busSeatConfiguration?.data && busSeatConfiguration.data.length > 0
+      ? createFloorsFromBusSeats(busSeatConfiguration.data).map((floor) => ({
+          ...floor,
+          spaces: floor.spaces.map(convertBusSeatToSeatDiagramSpace),
+        }))
       : [];
   const { delete: deleteBus } = useBusMutations();
   const { deleteId, setDeleteId, onConfirmDelete, onCancelDelete } =
@@ -311,26 +280,10 @@ export default function BusDetailsPage() {
           <CardTitle>{tBuses('sections.seatDiagram')}</CardTitle>
         </CardHeader>
         <CardContent>
-          {seatDiagram && seatSpaces.length > 0 && (
-            <div className="space-y-4 pt-4">
-              {/* Basic diagram information */}
-              <div className="space-y-4">
-                <dl>
-                  <dt className="font-medium">
-                    {tSeatDiagrams('fields.name')}:
-                  </dt>
-                  <dd>{seatDiagram.name}</dd>
-                </dl>
-              </div>
-
-              {/* Visual diagram */}
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium text-foreground">
-                  {tSeatDiagrams('readOnly.visualDiagram')}
-                </h4>
-                <div className="border rounded-lg p-4 bg-gray-50">
-                  <ReadOnlySeatDiagram seatSpaces={seatSpaces} />
-                </div>
+          {seatSpaces.length > 0 && (
+            <div className="space-y-4">
+              <div className="border rounded-lg p-4 bg-gray-50">
+                <ReadOnlySeatDiagram seatSpaces={seatSpaces} />
               </div>
             </div>
           )}

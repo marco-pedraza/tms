@@ -9,11 +9,15 @@ import BusFormSkeleton from '@/buses/components/bus-form-skeleton';
 import useQueryBus from '@/buses/hooks/use-query-bus';
 import useQueryBusTechnologies from '@/buses/hooks/use-query-bus-technologies';
 import useQueryNextValidBusStatuses from '@/buses/hooks/use-query-next-valid-bus-statuses';
+import useUpdateBusSeatConfiguration from '@/buses/hooks/use-update-bus-seat-config';
 import PageHeader from '@/components/page-header';
 import useCollectionItemDetailsParams from '@/hooks/use-collection-item-details-params';
 import { useToastMutation } from '@/hooks/use-toast-mutation';
-import imsClient from '@/services/ims-client';
+import imsClient, { SpaceType } from '@/services/ims-client';
 import routes from '@/services/routes';
+import useQueryBusSeatConfiguration from '../../hooks/use-query-bus-seat-config';
+import { convertBusSeatToSeatDiagramSpace } from '../../utils/convert-bus-seat-to-diagram-space';
+import { createFloorsFromBusSeats } from '../../utils/create-floors-from-bus-seats';
 
 export default function EditBusPage() {
   const tBuses = useTranslations('buses');
@@ -34,6 +38,13 @@ export default function EditBusPage() {
       busId,
       enabled: isValidId,
     });
+  const {
+    data: busSeatConfiguration,
+    isLoading: isLoadingBusSeatConfiguration,
+  } = useQueryBusSeatConfiguration({
+    seatDiagramId: data?.seatDiagramId ?? 0,
+    enabled: !!data?.seatDiagramId && isValidId,
+  });
 
   const assignTechnologiesMutation = useMutation({
     mutationKey: ['buses', 'assignTechnologies'],
@@ -99,21 +110,51 @@ export default function EditBusPage() {
       success: tBuses('messages.update.success'),
       error: tBuses('messages.update.error'),
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['buses'] });
-      assignDrivers.mutateWithToast({
+    onSuccess: async (data) => {
+      await assignDrivers.mutateWithToast({
         busId: data.bus.id,
         driverIds: data.driverIds ?? [],
       });
-      assignTechnologies.mutateWithToast({
+      await assignTechnologies.mutateWithToast({
         busId: data.bus.id,
         technologyIds: data.technologyIds ?? [],
       });
-      router.push(routes.buses.getDetailsRoute(data.bus.id.toString()));
+      queryClient.invalidateQueries({ queryKey: ['buses'] });
     },
   });
 
-  if (isLoading || isNextValidStatusesLoading || isLoadingTechnologies) {
+  const updateBusSeatConfiguration = useUpdateBusSeatConfiguration();
+
+  const onSubmit = async (values: BusFormValues) => {
+    const data = await updateBusWithToast.mutateWithToast(values);
+    await updateBusSeatConfiguration.mutateWithToast({
+      seatDiagramId: data.bus.seatDiagramId,
+      seats: values.seatConfiguration.flatMap((floor) =>
+        floor.spaces.map((space) => {
+          // Only include reclinementAngle for seat type spaces
+          if (
+            space.spaceType === SpaceType.SEAT &&
+            'reclinementAngle' in space
+          ) {
+            return {
+              ...space,
+              reclinementAngle: space.reclinementAngle || undefined,
+            };
+          }
+          return space;
+        }),
+      ),
+    });
+    router.push(routes.buses.getDetailsRoute(data.bus.id.toString()));
+    return data;
+  };
+
+  if (
+    isLoading ||
+    isNextValidStatusesLoading ||
+    isLoadingTechnologies ||
+    isLoadingBusSeatConfiguration
+  ) {
     return <BusFormSkeleton />;
   }
 
@@ -131,10 +172,17 @@ export default function EditBusPage() {
       <BusForm
         defaultValues={{
           ...data,
+          seatDiagramModelId: 0,
           driverIds: data.busCrew?.map((driver) => driver.driverId) ?? [],
           technologyIds: technologies?.map((technology) => technology.id) ?? [],
+          seatConfiguration: createFloorsFromBusSeats(
+            busSeatConfiguration?.data ?? [],
+          ).map((floor) => ({
+            ...floor,
+            spaces: floor.spaces.map(convertBusSeatToSeatDiagramSpace),
+          })),
         }}
-        onSubmit={updateBusWithToast.mutateWithToast}
+        onSubmit={onSubmit}
         nextValidStatuses={nextValidStatuses?.data}
       />
     </div>

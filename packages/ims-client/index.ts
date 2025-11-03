@@ -2679,11 +2679,6 @@ export namespace inventory {
     lastMaintenanceDate?: string | string | null
     nextMaintenanceDate?: string | string | null
     /**
-     * Seat Diagram
-     */
-    seatDiagramId?: number
-
-    /**
      * Chromatic
      */
     chromaticId?: number | null
@@ -6991,11 +6986,6 @@ export namespace buses {
         gpsId?: string | null
         lastMaintenanceDate?: string | string | null
         nextMaintenanceDate?: string | string | null
-        /**
-         * Seat Diagram
-         */
-        seatDiagramId: number
-
         /**
          * Chromatic
          */

@@ -1,9 +1,12 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 language: en-US
-tone_instructions: 'You are an expert code reviewer in TypeScript, JavaScript, and NodeJS. You work in an enterprise software developer team, providing concise and clear code review advice. You only elaborate or provide detailed explanations when requested.'
+tone_instructions: >-
+  You are an expert code reviewer in TypeScript, JavaScript, and NodeJS. You
+  work in an enterprise software developer team, providing concise and clear
+  code review advice. You only elaborate or provide detailed explanations when
+  requested.
 early_access: true
 enable_free_tier: true
-
 reviews:
   profile: chill
   request_changes_workflow: true
@@ -11,42 +14,58 @@ reviews:
   high_level_summary_placeholder: '@coderabbitai summary'
   high_level_summary_in_walkthrough: false
   auto_title_placeholder: '@coderabbitai'
-  auto_title_instructions: 'Generate concise titles that describe the main change'
+  auto_title_instructions: Generate concise titles that describe the main change
   review_status: true
   commit_status: true
   fail_commit_status: false
   collapse_walkthrough: false
   changed_files_summary: true
   sequence_diagrams: true
+  estimate_code_review_effort: true
   assess_linked_issues: true
   related_issues: true
   related_prs: true
   suggested_labels: false
+  labeling_instructions: []
   auto_apply_labels: false
   suggested_reviewers: true
   auto_assign_reviewers: true
+  in_progress_fortune: true
   poem: true
-  labeling_instructions: []
   path_filters:
-    - "!packages/ims-client/index.ts"
+    - '!packages/ims-client/index.ts'
   path_instructions:
-    - path: "**/*.{ts,tsx}"
-      instructions: |
-        Prefer code and comments in English for team readability and focus on architectural patterns.
-
-    - path: "apps/web/**/*.{ts,tsx}"
-      instructions: |
-        Frontend Next.js application - verify component composition, state management,
-        error boundaries, performance optimizations, and accessibility best practices.
-
-    - path: "apps/server/**/*schema.ts"
+    - path: '**/*.{ts,tsx}'
+      instructions: >
+        Prefer code and comments in English for team readability and focus on
+        architectural patterns.
+    - path: apps/web/**/*.{ts,tsx}
+      instructions: >
+        Frontend Next.js application - verify component composition, state
+        management,error boundaries, performance optimizations, and accessibility 
+        best practices.
+    - path: apps/server/**/*schema.ts
       instructions: |
         Verify that appropriate database indexes are defined for:
         - Foreign keys
         - Queried columns
         Ensure indexes improve query performance without over-indexing.
-
+    - path: apps/server/**/*.controller.ts
+      instructions: |
+        **Permission Requirements for New Endpoints/Modules:**
+        - Verify permissions added for new endpoints/modules: `apps/server/shared/permissions.ts` (MODULE_PERMISSIONS + ENDPOINT_TO_MODULES), `group-permissions.seeder.ts`, `roles.seeder.ts`
+        - Ensure all endpoints have `auth: true` (defaults to `false` if missing)
+        - Module naming: `{service}_{module}` (e.g., `inventory_buses`)
+        - Use `/add-permissions` command (`.claude/commands/add-permissions.md`) for automatic setup
+    - path: apps/web/app/**/*
+      instructions: |
+        **Permission Requirements for New Routes/Menus:**
+        - Verify routes mapped in `apps/web/utils/permissions.ts` with permission code matching backend (if applicable)
+        - Ensure new menu sections/navigation items have corresponding permissions
+        - Route patterns: `/{route}`, `/{route}/new`, `/{route}/[id]`, `/{route}/[id]/edit`
+        - Use `/add-permissions` command (`.claude/commands/add-permissions.md`) for automatic setup
   abort_on_close: true
+  disable_cache: false
   auto_review:
     enabled: true
     auto_incremental_review: true
@@ -54,65 +73,154 @@ reviews:
     labels: []
     drafts: true
     base_branches:
-      - "enhancement/*"
-      - "feature/*"
-      - "fix/*"
-      - "ft/*"
-      - "refactor/*"
-      - "release/*"
-      - "web/*"
-
+      - enhancement/*
+      - feature/*
+      - fix/*
+      - ft/*
+      - refactor/*
+      - release/*
+      - web/*
+    ignore_usernames: []
   finishing_touches:
     docstrings:
       enabled: false
     unit_tests:
       enabled: false
-
+  pre_merge_checks:
+    docstrings:
+      mode: warning
+      threshold: 80
+    title:
+      mode: warning
+      requirements: ''
+    description:
+      mode: warning
+    issue_assessment:
+      mode: warning
+    custom_checks: []
   tools:
-    ast-grep:       { essential_rules: true, rule_dirs: [], util_dirs: [], packages: [] }
-    shellcheck:     { enabled: false }
-    ruff:           { enabled: false }
-    markdownlint:   { enabled: true }
-    github-checks:  { enabled: true, timeout_ms: 90000 }
-    languagetool:   { enabled: true, enabled_only: false, level: default }
-    biome:          { enabled: true }
-    hadolint:       { enabled: false }
-    swiftlint:      { enabled: false }
-    phpstan:        { enabled: false }
-    golangci-lint:  { enabled: false }
-    yamllint:       { enabled: true }
-    gitleaks:       { enabled: true }
-    checkov:        { enabled: false }
-    detekt:         { enabled: false }
-    eslint:         { enabled: true }
-    rubocop:        { enabled: false }
-    buf:            { enabled: false }
-    regal:          { enabled: false }
-    actionlint:     { enabled: true }
-    pmd:            { enabled: false }
-    cppcheck:       { enabled: false }
-    semgrep:        { enabled: true }
-    circleci:       { enabled: false }
-    sqlfluff:       { enabled: false }
-    prismaLint:     { enabled: false }
-    oxc:            { enabled: true }
-    shopifyThemeCheck: { enabled: false }
-
+    ast-grep:
+      rule_dirs: []
+      util_dirs: []
+      essential_rules: true
+      packages: []
+    shellcheck:
+      enabled: false
+    ruff:
+      enabled: false
+    markdownlint:
+      enabled: true
+    github-checks:
+      enabled: true
+      timeout_ms: 90000
+    languagetool:
+      enabled: true
+      enabled_rules: []
+      disabled_rules: []
+      enabled_categories: []
+      disabled_categories: []
+      enabled_only: false
+      level: default
+    biome:
+      enabled: true
+    hadolint:
+      enabled: false
+    swiftlint:
+      enabled: false
+    phpstan:
+      enabled: false
+      level: default
+    phpmd:
+      enabled: false
+    phpcs:
+      enabled: false
+    golangci-lint:
+      enabled: false
+    yamllint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    checkov:
+      enabled: false
+    detekt:
+      enabled: false
+    eslint:
+      enabled: true
+    flake8:
+      enabled: false
+    rubocop:
+      enabled: false
+    buf:
+      enabled: false
+    regal:
+      enabled: false
+    actionlint:
+      enabled: true
+    pmd:
+      enabled: false
+    clang:
+      enabled: true
+    cppcheck:
+      enabled: false
+    semgrep:
+      enabled: true
+    circleci:
+      enabled: false
+    clippy:
+      enabled: false
+    sqlfluff:
+      enabled: false
+    prismaLint:
+      enabled: false
+    pylint:
+      enabled: false
+    oxc:
+      enabled: true
+    shopifyThemeCheck:
+      enabled: false
+    luacheck:
+      enabled: false
+    brakeman:
+      enabled: false
+    dotenvLint:
+      enabled: true
+    htmlhint:
+      enabled: true
+    checkmake:
+      enabled: false
+    osvScanner:
+      enabled: true
 chat:
+  art: true
   auto_reply: true
   integrations:
-    jira:   { usage: disabled }
-    linear: { usage: enabled}
-
+    jira:
+      usage: disabled
+    linear:
+      usage: enabled
 knowledge_base:
   opt_out: false
-  web_search:       { enabled: true }
-  learnings:        { scope: local }
-  issues:           { scope: local }
-  jira:             { usage: disabled, project_keys: [] }
-  linear:           { usage: enabled, team_keys: ['IMS'] }
-  pull_requests:    { scope: local }
-
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: true
+    filePatterns: []
+  learnings:
+    scope: local
+  issues:
+    scope: local
+  jira:
+    usage: disabled
+    project_keys: []
+  linear:
+    usage: enabled
+    team_keys:
+      - IMS
+  pull_requests:
+    scope: local
+  mcp:
+    usage: auto
+    disabled_servers: []
 code_generation:
   docstrings:
     language: en-US

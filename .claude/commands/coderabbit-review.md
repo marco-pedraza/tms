@@ -8,5 +8,5 @@ After running this command:
 - Do not try to fix the errors, just list them
 
 ```bash
-coderabbit review --plain
+coderabbit --prompt-only --type uncommitted
 ```

@@ -21,7 +21,7 @@ export const runAllSeeders = api(
     expose: false,
     method: 'POST',
     path: '/seed',
-    auth: true,
+    auth: false,
   },
   async (
     params: SeedWithClientPayload,
@@ -36,9 +36,8 @@ export const runAllSeeders = api(
 
     const clientCode = params.clientCode;
 
-    // await seedAdmin();
     await seedInventory(clientCode);
-    await seedUsersData();
+    await seedUsersData(clientCode);
 
     return {
       success: true,

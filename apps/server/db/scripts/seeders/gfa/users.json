@@ -24,7 +24,7 @@
       "position": "Gerente de Operaciones",
       "employeeId": "EMP002",
       "isSystemAdmin": false,
-      "roles": ["Read Only", "Editor"],
+      "roles": ["Operations Manager"],
       "departmentCode": "ops"
     },
     {
@@ -35,7 +35,7 @@
       "position": "Supervisora de Flota",
       "employeeId": "EMP003",
       "isSystemAdmin": false,
-      "roles": ["Read Only", "Editor"],
+      "roles": ["Fleet Manager"],
       "departmentCode": "flota"
     },
     {
@@ -46,7 +46,7 @@
       "position": "Coordinador de TI",
       "employeeId": "EMP004",
       "isSystemAdmin": false,
-      "roles": ["Read Only"],
+      "roles": ["Operations Manager"],
       "departmentCode": "ti"
     }
   ]

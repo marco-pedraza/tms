@@ -331,7 +331,7 @@ export default function Sidebar() {
             <div className="text-xs">{session.user.email}</div>
           </div>
           <button
-            onClick={() => signOut({ callbackUrl: '' })}
+            onClick={() => signOut({ callbackUrl: '/auth/login' })}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
           >
             <LogOut className="h-4 w-4" />

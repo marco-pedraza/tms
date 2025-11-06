@@ -178,6 +178,7 @@ export interface BaseRepository<
     fields: FieldConfig<TTable> | FieldConfig<TTable>[],
   ): Promise<T | null>;
   findAll(options?: QueryOptions<T, TTable>): Promise<T[]>;
+  findByIds(ids: number[]): Promise<T[]>;
   findAllBy(
     field: PgColumn,
     value: unknown,

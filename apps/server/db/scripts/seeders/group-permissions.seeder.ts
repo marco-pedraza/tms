@@ -191,6 +191,20 @@ const PREDEFINED_PERMISSION_GROUPS: GroupPermissionDefinition[] = [
     ],
   },
   {
+    groupCode: 'planning',
+    groupName: 'Roles',
+    groupDescription:
+      'Permisos para gestionar planificación y programación de roles',
+    permissions: [
+      {
+        code: 'planning_rolling_plans',
+        name: 'Planificación de Roles',
+        description:
+          'Gestiona la planificación de roles que define la programación periódica de servicios de autobuses.',
+      },
+    ],
+  },
+  {
     groupCode: 'users',
     groupName: 'Organización',
     groupDescription: 'Permisos para gestionar usuarios y roles',

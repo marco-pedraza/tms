@@ -1,0 +1,123 @@
+{
+  "metadata": {
+    "generated_at": "2024-01-01T00:00:00Z",
+    "total_rolling_plans": 9,
+    "description": "Rolling plans data for GFA (Grupo Flecha Amarilla) seeding purposes"
+  },
+  "rolling_plans": [
+    {
+      "name": "Primera Plus - Ruta Continua México-Guadalajara",
+      "busLineCode": "PPLUS",
+      "serviceTypeCode": "LUX",
+      "busModelManufacturer": "Volvo",
+      "busModelModel": "9700",
+      "baseNodeCode": "MEX",
+      "operationType": "continuous",
+      "cycleDurationDays": 7,
+      "active": true,
+      "notes": "Plan rodante semanal para servicio de lujo entre Ciudad de México y Guadalajara"
+    },
+    {
+      "name": "Primera Plus - Ruta Continua Guadalajara-Manzanillo",
+      "busLineCode": "PPLUS",
+      "serviceTypeCode": "LUX",
+      "busModelManufacturer": "Volvo",
+      "busModelModel": "9700",
+      "baseNodeCode": "MANZ",
+      "operationType": "continuous",
+      "cycleDurationDays": 14,
+      "active": true,
+      "notes": "Plan rodante quincenal para servicio costero de lujo"
+    },
+    {
+      "name": "Coordinados - Ruta Semanal Aguascalientes",
+      "busLineCode": "COORD",
+      "serviceTypeCode": "STD",
+      "busModelManufacturer": "Mercedes Benz",
+      "busModelModel": "O500",
+      "baseNodeCode": "AGS",
+      "operationType": "continuous",
+      "cycleDurationDays": 7,
+      "active": true,
+      "notes": "Servicio estándar semanal desde Aguascalientes"
+    },
+    {
+      "name": "Coordinados - Días Específicos San Miguel",
+      "busLineCode": "COORD",
+      "serviceTypeCode": "STD",
+      "busModelManufacturer": "Mercedes Benz",
+      "busModelModel": "O500",
+      "baseNodeCode": "SMA",
+      "operationType": "specific_days",
+      "operationDays": {
+        "days": [1, 3, 5]
+      },
+      "active": true,
+      "notes": "Servicio lunes, miércoles y viernes desde San Miguel de Allende"
+    },
+    {
+      "name": "Coordinados - Ruta Continua Tecomán",
+      "busLineCode": "COORD",
+      "serviceTypeCode": "STD",
+      "busModelManufacturer": "Mercedes Benz",
+      "busModelModel": "O500",
+      "baseNodeCode": "TECO",
+      "operationType": "continuous",
+      "cycleDurationDays": 21,
+      "active": true,
+      "notes": "Plan rodante mensual desde Tecomán"
+    },
+    {
+      "name": "Roll & Bits - Económico Semanal",
+      "busLineCode": "ROLLBITS",
+      "serviceTypeCode": "ECO",
+      "busModelManufacturer": "Scania",
+      "busModelModel": "Irizar i6",
+      "baseNodeCode": "MEX",
+      "operationType": "continuous",
+      "cycleDurationDays": 7,
+      "active": true,
+      "notes": "Servicio económico semanal desde Ciudad de México"
+    },
+    {
+      "name": "Roll & Bits - Económico Fines de Semana",
+      "busLineCode": "ROLLBITS",
+      "serviceTypeCode": "ECO",
+      "busModelManufacturer": "Scania",
+      "busModelModel": "Irizar i6",
+      "baseNodeCode": "AGS",
+      "operationType": "specific_days",
+      "operationDays": {
+        "days": [6, 7]
+      },
+      "active": true,
+      "notes": "Servicio económico solo sábados y domingos desde Aguascalientes"
+    },
+    {
+      "name": "Primera Plus - Ruta Continua Aguascalientes",
+      "busLineCode": "PPLUS",
+      "serviceTypeCode": "LUX",
+      "busModelManufacturer": "Volvo",
+      "busModelModel": "9700",
+      "baseNodeCode": "AGS",
+      "operationType": "continuous",
+      "cycleDurationDays": 28,
+      "active": true,
+      "notes": "Plan rodante mensual para servicio premium desde Aguascalientes"
+    },
+    {
+      "name": "Coordinados - Días Laborables",
+      "busLineCode": "COORD",
+      "serviceTypeCode": "STD",
+      "busModelManufacturer": "Mercedes Benz",
+      "busModelModel": "O500",
+      "baseNodeCode": "MEX",
+      "operationType": "specific_days",
+      "operationDays": {
+        "days": [1, 2, 3, 4, 5]
+      },
+      "active": true,
+      "notes": "Servicio de lunes a viernes desde Ciudad de México"
+    }
+  ]
+}

@@ -33,6 +33,9 @@ export const MODULE_PERMISSIONS = {
   // Inventory - General Config
   AMENITIES: 'inventory_amenities',
 
+  // Planning
+  ROLLING_PLANS: 'planning_rolling_plans',
+
   // Users
   DEPARTMENTS: 'users_departments',
   PERMISSIONS: 'users_permissions',
@@ -380,6 +383,15 @@ export const ENDPOINT_TO_MODULES: Record<string, string[]> = {
   'inventory:listAmenitiesPaginated': [MODULE_PERMISSIONS.AMENITIES],
   'inventory:updateAmenity': [MODULE_PERMISSIONS.AMENITIES],
   'inventory:deleteAmenity': [MODULE_PERMISSIONS.AMENITIES],
+
+  // ============================================================================
+  // PLANNING SYSTEM
+  // ============================================================================
+
+  // Planning - Rolling Plans
+  'planning:listRollingPlans': [MODULE_PERMISSIONS.ROLLING_PLANS],
+  'planning:listRollingPlansPaginated': [MODULE_PERMISSIONS.ROLLING_PLANS],
+  'planning:getRollingPlan': [MODULE_PERMISSIONS.ROLLING_PLANS],
 
   // ============================================================================
   // USERS SYSTEM

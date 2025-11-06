@@ -335,6 +335,32 @@ export const createBaseRepository = <
   };
 
   /**
+   * Finds multiple entities by their IDs in a single query
+   * Respects soft delete filter
+   * @param {number[]} ids - Array of entity IDs to find
+   * @returns {Promise<T[]>} Array of found entities (only existing, non-deleted entities)
+   */
+  const findByIds = async (ids: number[]): Promise<T[]> => {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    try {
+      let query = db.select().from(table).where(inArray(table.id, ids));
+
+      // Apply soft delete filter if enabled
+      if (isSoftDeleteEnabled) {
+        query = applySoftDeleteFilter(query, table, true);
+      }
+
+      const entities = await query;
+      return entities as T[];
+    } catch (error) {
+      throw handlePostgresError(error, entityName, 'findByIds');
+    }
+  };
+
+  /**
    * Retrieves all entities filtered by a specific field value and optional filters
    * @param {PgColumn} field - The field to filter by
    * @param {unknown} value - The value to filter for
@@ -1170,6 +1196,7 @@ export const createBaseRepository = <
     findOne,
     findOneBy,
     findAll,
+    findByIds,
     findAllBy,
     findAllPaginated,
     create,

@@ -29,6 +29,7 @@
         "inventory_pathways",
         "inventory_routes",
         "inventory_amenities",
+        "planning_rolling_plans",
         "users_departments",
         "users_permissions",
         "users_roles",

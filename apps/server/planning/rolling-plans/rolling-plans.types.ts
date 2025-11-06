@@ -1,14 +1,16 @@
 import { MatchesRegexp, Min, MinLen } from 'encore.dev/validate';
+import type {
+  PlanningBusLine,
+  PlanningBusModel,
+  PlanningNode,
+  PlanningServiceType,
+} from '@/planning/adapters/inventory.adapter';
 import {
   ListQueryParams,
   ListQueryResult,
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '@/shared/types';
-import { BusModel } from '@/inventory/fleet/bus-models/bus-models.types';
-import { Node } from '@/inventory/locations/nodes/nodes.types';
-import { BusLine } from '@/inventory/operators/bus-lines/bus-lines.types';
-import { ServiceType } from '@/inventory/operators/service-types/service-types.types';
 
 /**
  * Operation type for rolling plans
@@ -63,13 +65,13 @@ export interface RollingPlan {
 }
 
 /**
- * Rolling plan with all related entities
+ * Rolling plan with all related entities (using planning-specific types)
  */
 export interface RollingPlanWithRelations extends RollingPlan {
-  busline: BusLine;
-  serviceType: ServiceType;
-  busModel: BusModel;
-  baseNode: Node;
+  busline: PlanningBusLine;
+  serviceType: PlanningServiceType;
+  busModel: PlanningBusModel;
+  baseNode: PlanningNode;
 }
 
 /**

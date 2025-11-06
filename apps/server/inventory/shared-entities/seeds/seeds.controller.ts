@@ -2,6 +2,7 @@ import { api } from 'encore.dev/api';
 import { APIError } from 'encore.dev/api';
 // import { seedAdmin } from '../../db/scripts/seed-admin';
 import { seedInventory } from '@/db/scripts/seed-inventory';
+import { seedPlanning } from '@/db/scripts/seed-planning';
 import { seedUsersData } from '@/db/scripts/seed-users';
 import { appMeta } from 'encore.dev';
 
@@ -37,6 +38,7 @@ export const runAllSeeders = api(
     const clientCode = params.clientCode;
 
     await seedInventory(clientCode);
+    await seedPlanning(clientCode);
     await seedUsersData(clientCode);
 
     return {

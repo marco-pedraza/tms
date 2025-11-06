@@ -33,6 +33,7 @@ const BROWSER = typeof globalThis === "object" && ("window" in globalThis);
  */
 export default class Client {
     public readonly inventory: inventory.ServiceClient
+    public readonly planning: planning.ServiceClient
     public readonly users: users.ServiceClient
     private readonly options: ClientOptions
     private readonly target: string
@@ -49,6 +50,7 @@ export default class Client {
         this.options = options ?? {}
         const base = new BaseClient(this.target, this.options)
         this.inventory = new inventory.ServiceClient(base)
+        this.planning = new planning.ServiceClient(base)
         this.users = new users.ServiceClient(base)
     }
 
@@ -3957,6 +3959,57 @@ export namespace inventory {
     }
 }
 
+export namespace planning {
+
+    export class ServiceClient {
+        private baseClient: BaseClient
+
+        constructor(baseClient: BaseClient) {
+            this.baseClient = baseClient
+            this.getRollingPlan = this.getRollingPlan.bind(this)
+            this.listRollingPlans = this.listRollingPlans.bind(this)
+            this.listRollingPlansPaginated = this.listRollingPlansPaginated.bind(this)
+        }
+
+        /**
+         * Retrieves a rolling plan by its ID with all related entities.
+         * @param params - Object containing the rolling plan ID
+         * @param params.id - The ID of the rolling plan to retrieve
+         * @returns {Promise<RollingPlanWithRelations>} The found rolling plan with relations (busline, serviceType, busModel, baseNode)
+         * @throws {APIError} If the rolling plan is not found or retrieval fails
+         */
+        public async getRollingPlan(id: number): Promise<rolling_plans.RollingPlanWithRelations> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/rolling-plans/${encodeURIComponent(id)}`)
+            return await resp.json() as rolling_plans.RollingPlanWithRelations
+        }
+
+        /**
+         * Retrieves all rolling plans without pagination (useful for dropdowns).
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @returns {Promise<ListRollingPlansResult>} Unified response with data property containing array of rolling plans
+         * @throws {APIError} If retrieval fails
+         */
+        public async listRollingPlans(params: rolling_plans.ListRollingPlansQueryParams): Promise<rolling_plans.ListRollingPlansResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/rolling-plans/list/all`, JSON.stringify(params))
+            return await resp.json() as rolling_plans.ListRollingPlansResult
+        }
+
+        /**
+         * Retrieves rolling plans with pagination and includes related information.
+         * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
+         * @returns {Promise<PaginatedListRollingPlansResult>} Unified paginated response with data and pagination properties including related entities (busline, serviceType, busModel, baseNode)
+         * @throws {APIError} If retrieval fails
+         */
+        public async listRollingPlansPaginated(params: rolling_plans.PaginatedListRollingPlansQueryParams): Promise<rolling_plans.PaginatedListRollingPlansResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/rolling-plans/list`, JSON.stringify(params))
+            return await resp.json() as rolling_plans.PaginatedListRollingPlansResult
+        }
+    }
+}
+
 export namespace users {
     export interface AuthParams {
         authorization: string
@@ -5018,6 +5071,58 @@ export namespace users {
             const resp = await this.baseClient.callTypedAPI("PUT", `/users/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as SafeUser
         }
+    }
+}
+
+export namespace adapters {
+    export interface PlanningBusLine {
+        id: number
+        name: string
+        code: string
+        pricePerKilometer: number
+        description: string | null
+        fleetSize: number | null
+        website: string | null
+        email: string | null
+        phone: string | null
+        active: boolean
+    }
+
+    export interface PlanningBusModel {
+        id: number
+        manufacturer: string
+        model: string
+        year: number
+        seatingCapacity: number
+        trunkCapacity: number | null
+        fuelEfficiency: number | null
+        maxCapacity: number | null
+        numFloors: number
+        engineType: string
+        active: boolean
+    }
+
+    export interface PlanningNode {
+        id: number
+        code: string
+        name: string
+        coordinates: {
+            latitude: number
+            longitude: number
+        }
+        permissions: {
+            canBoard: boolean
+            canAlight: boolean
+        }
+        active: boolean
+    }
+
+    export interface PlanningServiceType {
+        id: number
+        name: string
+        code: string
+        description: string | null
+        active: boolean
     }
 }
 
@@ -10981,6 +11086,207 @@ export namespace roles {
 
         /**
          * Timestamp when the role was last updated
+         */
+        updatedAt: string | string | null
+    }
+}
+
+export namespace rolling_plans {
+    export interface ListRollingPlansQueryParams {
+        orderBy?: {
+            field: "id" | "name" | "buslineId" | "serviceTypeId" | "busModelId" | "baseNodeId" | "operationType" | "cycleDurationDays" | "operationDays" | "active" | "notes" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            buslineId?: number
+            serviceTypeId?: number
+            busModelId?: number
+            baseNodeId?: number
+            operationType?: RollingPlanOperationType
+            cycleDurationDays?: number | null
+            operationDays?: { [key: string]: any } | null
+            active?: boolean
+            notes?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface ListRollingPlansResult {
+        data: RollingPlan[]
+    }
+
+    export interface PaginatedListRollingPlansQueryParams {
+        page?: number
+        pageSize?: number
+        orderBy?: {
+            field: "id" | "name" | "buslineId" | "serviceTypeId" | "busModelId" | "baseNodeId" | "operationType" | "cycleDurationDays" | "operationDays" | "active" | "notes" | "createdAt" | "updatedAt"
+            direction: "asc" | "desc"
+        }[]
+        filters?: {
+            id?: number
+            name?: string
+            buslineId?: number
+            serviceTypeId?: number
+            busModelId?: number
+            baseNodeId?: number
+            operationType?: RollingPlanOperationType
+            cycleDurationDays?: number | null
+            operationDays?: { [key: string]: any } | null
+            active?: boolean
+            notes?: string | null
+            createdAt?: string | string | null
+            updatedAt?: string | string | null
+        }
+        searchTerm?: string
+    }
+
+    export interface PaginatedListRollingPlansResult {
+        pagination: shared.PaginationMeta
+        data: RollingPlanWithRelations[]
+    }
+
+    export interface RollingPlan {
+        /**
+         * Unique identifier for the rolling plan
+         */
+        id: number
+
+        /**
+         * Name of the rolling plan
+         */
+        name: string
+
+        /**
+         * ID of the bus line this rolling plan belongs to
+         */
+        buslineId: number
+
+        /**
+         * ID of the service type
+         */
+        serviceTypeId: number
+
+        /**
+         * ID of the bus model
+         */
+        busModelId: number
+
+        /**
+         * ID of the base node
+         */
+        baseNodeId: number
+
+        /**
+         * Operation type: 'continuous' or 'specific_days'
+         */
+        operationType: RollingPlanOperationType
+
+        /**
+         * Cycle duration in days (nullable, used for continuous operation)
+         */
+        cycleDurationDays: number | null
+
+        /**
+         * Operation days configuration (nullable, used for specific_days operation)
+         * Stored as JSONB in the database
+         */
+        operationDays: { [key: string]: any } | null
+
+        /**
+         * Whether the rolling plan is currently active
+         */
+        active: boolean
+
+        /**
+         * Optional notes about the rolling plan
+         */
+        notes: string | null
+
+        /**
+         * Timestamp when the rolling plan record was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the rolling plan record was last updated
+         */
+        updatedAt: string | string | null
+    }
+
+    export type RollingPlanOperationType = "continuous" | "specific_days"
+
+    export interface RollingPlanWithRelations {
+        busline: adapters.PlanningBusLine
+        serviceType: adapters.PlanningServiceType
+        busModel: adapters.PlanningBusModel
+        baseNode: adapters.PlanningNode
+        /**
+         * Unique identifier for the rolling plan
+         */
+        id: number
+
+        /**
+         * Name of the rolling plan
+         */
+        name: string
+
+        /**
+         * ID of the bus line this rolling plan belongs to
+         */
+        buslineId: number
+
+        /**
+         * ID of the service type
+         */
+        serviceTypeId: number
+
+        /**
+         * ID of the bus model
+         */
+        busModelId: number
+
+        /**
+         * ID of the base node
+         */
+        baseNodeId: number
+
+        /**
+         * Operation type: 'continuous' or 'specific_days'
+         */
+        operationType: RollingPlanOperationType
+
+        /**
+         * Cycle duration in days (nullable, used for continuous operation)
+         */
+        cycleDurationDays: number | null
+
+        /**
+         * Operation days configuration (nullable, used for specific_days operation)
+         * Stored as JSONB in the database
+         */
+        operationDays: { [key: string]: any } | null
+
+        /**
+         * Whether the rolling plan is currently active
+         */
+        active: boolean
+
+        /**
+         * Optional notes about the rolling plan
+         */
+        notes: string | null
+
+        /**
+         * Timestamp when the rolling plan record was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the rolling plan record was last updated
          */
         updatedAt: string | string | null
     }

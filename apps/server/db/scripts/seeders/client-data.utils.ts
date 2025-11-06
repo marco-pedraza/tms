@@ -174,6 +174,9 @@ export const CLIENT_DATA_FILES = {
   INSTALLATIONS: 'installations.json',
   NODES: 'nodes.json',
 
+  // Planning
+  ROLLING_PLANS: 'rolling-plans.json',
+
   // Users
   DEPARTMENTS: 'departments.json',
   ROLES: 'roles.json',

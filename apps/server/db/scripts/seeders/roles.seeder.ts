@@ -59,6 +59,8 @@ const PREDEFINED_ROLES = [
       'inventory_routes',
       // Inventory - General Config
       'inventory_amenities',
+      // Planning
+      'planning_rolling_plans',
       // Users - Organization
       'users_departments',
       'users_permissions',

@@ -1642,21 +1642,34 @@ describe('Bus Diagram Models Controller', () => {
       const initialCount = initialDiagramModels.data.length;
 
       // Mock the seat model use case to fail using vi.spyOn
-      vi.spyOn(
-        busSeatModelUseCases,
-        'createSeatModelsFromDiagramModel',
-      ).mockRejectedValue(new Error('Seat models creation failed'));
+      const mockSpy = vi
+        .spyOn(busSeatModelUseCases, 'createSeatModelsFromDiagramModel')
+        .mockRejectedValue(new Error('Seat models creation failed'));
+
+      // Verify the mock is active before proceeding
+      expect(mockSpy).toBeDefined();
+      expect(mockSpy.getMockImplementation()).toBeDefined();
 
       try {
         // Attempt to create a diagram model - this should fail and rollback
         await createBusDiagramModel(testBusDiagramModel);
 
-        // If we reach here, the test should fail
-        expect('Transaction should have failed').toBe(false);
+        // If we reach here, the mock did not work - fail the test immediately
+        // This is a test design issue, not a cleanup issue
+        throw new Error(
+          'TEST DESIGN ERROR: Mock did not intercept the call. The transaction should have failed.',
+        );
       } catch (error) {
-        // Expected error
+        // Verify the error is from our mock
         expect(error).toBeInstanceOf(Error);
-        expect((error as Error).message).toBe('Seat models creation failed');
+        const errorMessage = (error as Error).message;
+        expect(errorMessage).toBe('Seat models creation failed');
+
+        // Verify the mock was called (this confirms the mock worked)
+        expect(mockSpy).toHaveBeenCalled();
+      } finally {
+        // Always restore the mock
+        mockSpy.mockRestore();
       }
 
       // Verify that no new diagram model was created (transaction was rolled back)
@@ -1664,6 +1677,12 @@ describe('Bus Diagram Models Controller', () => {
         orderBy: [{ field: 'name', direction: 'asc' }],
       });
       expect(finalDiagramModels.data).toHaveLength(initialCount);
+
+      // Double-check: verify no model with the test name exists
+      const testModelExists = finalDiagramModels.data.some(
+        (model) => model.name === testBusDiagramModel.name,
+      );
+      expect(testModelExists).toBe(false);
     });
 
     // NOTE: We are not testing validation errors because they're handled by Encore's rust runtime

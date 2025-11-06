@@ -10,10 +10,16 @@ import {
   test,
 } from 'vitest';
 import { db } from '@/inventory/db-service';
+import { createCity } from '@/inventory/locations/cities/cities.controller';
+import { cityRepository } from '@/inventory/locations/cities/cities.repository';
+import { createCountry } from '@/inventory/locations/countries/countries.controller';
+import { countryRepository } from '@/inventory/locations/countries/countries.repository';
 import { installationPropertyRepository } from '@/inventory/locations/installation-properties/installation-properties.repository';
 import { installationRepository } from '@/inventory/locations/installations/installations.repository';
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
 import { populationRepository } from '@/inventory/locations/populations/populations.repository';
+import { createState } from '@/inventory/locations/states/states.controller';
+import { stateRepository } from '@/inventory/locations/states/states.repository';
 import {
   type TollboothInfrastructure,
   createTestTollbooth as createTollboothHelper,
@@ -24,7 +30,7 @@ import {
   createTestSuiteId,
   createUniqueEntity,
 } from '@/tests/shared/test-utils';
-import { cityFactory, populationFactory } from '@/factories';
+import { populationFactory } from '@/factories';
 import { getFactoryDb } from '@/factories/factory-utils';
 import { pathwayOptionRepository } from '../pathway-options/pathway-options.repository';
 import type {
@@ -55,6 +61,8 @@ interface TestData {
   suiteId: string;
   factoryDb: ReturnType<typeof getFactoryDb>;
   cityId: number;
+  stateId: number;
+  countryId: number;
   populationId: number;
   originNodeId: number;
   destinationNodeId: number;
@@ -255,13 +263,49 @@ describe('Pathways Controller', () => {
         return db.delete(schema.nodes).where(eq(schema.nodes.id, id));
       }, 'node');
 
-      // Create test dependencies using hybrid strategy:
-      // - Factories for cities/states/countries (now with improved randomness)
-      // - Repository direct for nodes (to ensure transaction visibility)
-      const testCity = await cityFactory(factoryDb).create({
-        name: createUniqueEntity({ baseName: 'Test City', suiteId }).name,
+      // Create test dependencies explicitly using controllers (similar to transporters test)
+      // This ensures proper transaction visibility and avoids factory transaction issues
+      const countryEntity = createUniqueEntity({
+        baseName: 'Test Country',
+        baseCode: 'TC',
+        suiteId,
       });
-      const cityId = testCity.id;
+
+      const country = await createCountry({
+        name: countryEntity.name,
+        code: countryEntity.code || 'TC001',
+        active: true,
+      });
+      const countryId = country.id;
+
+      const stateEntity = createUniqueEntity({
+        baseName: 'Test State',
+        baseCode: 'TS',
+        suiteId,
+      });
+
+      const state = await createState({
+        name: stateEntity.name,
+        code: stateEntity.code || 'TS001',
+        countryId: country.id,
+        active: true,
+      });
+      const stateId = state.id;
+
+      const cityEntity = createUniqueEntity({
+        baseName: 'Test City',
+        suiteId,
+      });
+
+      const city = await createCity({
+        name: cityEntity.name,
+        stateId: state.id,
+        latitude: 19.4326 + Math.random() * 0.01, // Small variation to avoid conflicts
+        longitude: -99.1332 + Math.random() * 0.01,
+        timezone: 'America/Mexico_City',
+        active: true,
+      });
+      const cityId = city.id;
 
       const populationEntity = createUniqueEntity({
         baseName: 'Test Population',
@@ -323,6 +367,8 @@ describe('Pathways Controller', () => {
         suiteId,
         factoryDb,
         cityId,
+        stateId,
+        countryId,
         populationId,
         originNodeId,
         destinationNodeId,
@@ -387,7 +433,26 @@ describe('Pathways Controller', () => {
       // 5. Clean up populations (now that nodes are deleted)
       await data.populationCleanup.cleanupAll();
 
-      // Cities are cleaned up automatically by factories
+      // 6. Clean up city (now that nodes are deleted)
+      try {
+        await cityRepository.forceDelete(data.cityId);
+      } catch {
+        // Ignore cleanup errors for city
+      }
+
+      // 7. Clean up state (now that city is deleted)
+      try {
+        await stateRepository.forceDelete(data.stateId);
+      } catch {
+        // Ignore cleanup errors for state
+      }
+
+      // 8. Clean up country (now that state is deleted)
+      try {
+        await countryRepository.forceDelete(data.countryId);
+      } catch {
+        // Ignore cleanup errors for country
+      }
     }
 
     /**

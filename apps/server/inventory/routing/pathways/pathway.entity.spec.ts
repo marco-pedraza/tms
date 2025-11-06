@@ -1,9 +1,14 @@
+import { schema } from '@/db';
+import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FieldValidationError } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
 import { createSlug } from '@/shared/utils';
+import { cityRepository } from '@/inventory/locations/cities/cities.repository';
+import { countryRepository } from '@/inventory/locations/countries/countries.repository';
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
 import { populationRepository } from '@/inventory/locations/populations/populations.repository';
+import { stateRepository } from '@/inventory/locations/states/states.repository';
 import { tollboothRepository } from '@/inventory/locations/tollbooths/tollbooths.repository';
 import { cityFactory, populationFactory } from '@/tests/factories';
 import { getFactoryDb } from '@/tests/factories/factory-utils';
@@ -12,6 +17,7 @@ import {
   createTestSuiteId,
   createUniqueCode,
   createUniqueName,
+  safeCleanup,
 } from '@/tests/shared/test-utils';
 import { pathwayOptionTollRepository } from '../pathway-options-tolls/pathway-options-tolls.repository';
 import { createPathwayOptionEntity } from '../pathway-options/pathway-option.entity';
@@ -38,6 +44,8 @@ describe('PathwayEntity', () => {
 
   let testData: {
     cityIds: number[];
+    stateIds: number[];
+    countryIds: number[];
     nodeIds: number[];
     populationId: number;
     pathwayEntity: ReturnType<typeof createPathwayEntity>;
@@ -74,6 +82,37 @@ describe('PathwayEntity', () => {
       }),
     ]);
     const cityIds = cities.map((city) => city.id);
+
+    // Get stateIds and countryIds from cities for cleanup
+    // The factory creates state and country automatically, so we need to fetch them
+    // Use direct database query with JOINs to avoid transaction visibility issues
+    const stateIds: number[] = [];
+    const countryIds: number[] = [];
+
+    for (const cityId of cityIds) {
+      // Query city with state and country relations using Drizzle query API
+      const cityWithRelations = await db.query.cities.findFirst({
+        where: eq(schema.cities.id, cityId),
+        with: {
+          state: {
+            with: {
+              country: true,
+            },
+          },
+        },
+      });
+
+      if (!cityWithRelations?.state?.country) {
+        throw new Error(`Failed to find city ${cityId} with relations`);
+      }
+
+      stateIds.push(cityWithRelations.state.id);
+      countryIds.push(cityWithRelations.state.country.id);
+    }
+
+    // Remove duplicates from arrays in case cities share the same state/country
+    const uniqueStateIds = [...new Set(stateIds)];
+    const uniqueCountryIds = [...new Set(countryIds)];
 
     // Create test nodes using repository directly (hybrid strategy for transaction visibility)
     const originNode = await nodeRepository.create({
@@ -130,6 +169,8 @@ describe('PathwayEntity', () => {
 
     testData = {
       cityIds,
+      stateIds: uniqueStateIds,
+      countryIds: uniqueCountryIds,
       nodeIds,
       populationId,
       pathwayEntity,
@@ -167,21 +208,46 @@ describe('PathwayEntity', () => {
 
       // Clean up nodes (created by repository)
       for (const nodeId of testData.nodeIds) {
-        try {
-          await nodeRepository.forceDelete(nodeId);
-        } catch (error) {
-          console.log('Error cleaning up test node:', error);
-        }
+        await safeCleanup(
+          () => nodeRepository.forceDelete(nodeId),
+          'test node',
+          nodeId,
+        );
       }
 
       // Clean up entities in dependency order (reverse of creation)
-      try {
-        await populationRepository.forceDelete(testData.populationId);
-      } catch (error) {
-        console.log('Error cleaning up test population:', error);
+      await safeCleanup(
+        () => populationRepository.forceDelete(testData.populationId),
+        'test population',
+        testData.populationId,
+      );
+
+      // Clean up cities (now that nodes are deleted)
+      for (const cityId of testData.cityIds) {
+        try {
+          await cityRepository.forceDelete(cityId);
+        } catch {
+          // Ignore cleanup errors for city
+        }
       }
 
-      // Cities are cleaned up automatically by factories
+      // Clean up states (now that cities are deleted)
+      for (const stateId of testData.stateIds) {
+        try {
+          await stateRepository.forceDelete(stateId);
+        } catch {
+          // Ignore cleanup errors for state
+        }
+      }
+
+      // Clean up countries (now that states are deleted)
+      for (const countryId of testData.countryIds) {
+        try {
+          await countryRepository.forceDelete(countryId);
+        } catch {
+          // Ignore cleanup errors for country
+        }
+      }
     }
   });
 

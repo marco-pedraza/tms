@@ -89,6 +89,7 @@ describe('Nodes Controller', () => {
       name: createUniqueName('Test Installation', testSuiteId),
       address: '123 Test Street',
       description: 'Test installation for nodes',
+      deletedAt: null,
     });
     testInstallationId = testInstallation.id;
 
@@ -1496,6 +1497,7 @@ describe('Nodes Controller', () => {
         name: createUniqueName('Test Installation for Relations', testSuiteId),
         address: '456 Relations Street',
         description: 'Test installation for node relations',
+        deletedAt: null,
       });
       const installationId = installationCleanup.track(testInstallation.id);
 

@@ -545,16 +545,38 @@ describe('Labels Controller', () => {
     });
 
     test('should return consistent results when called multiple times', async () => {
-      // Get metrics twice in succession without any data changes
+      // Create test labels to establish a controlled baseline
+      // This helps reduce interference from other tests running concurrently
+      const testLabel1 = await createLabel({
+        name: `Consistency Test Label 1 ${testSuiteId}`,
+        color: '#AAAAAA',
+      });
+      const testLabel2 = await createLabel({
+        name: `Consistency Test Label 2 ${testSuiteId}`,
+        color: '#BBBBBB',
+      });
+      labelsCleanup.track(testLabel1.id);
+      labelsCleanup.track(testLabel2.id);
+
+      // Get metrics twice in immediate succession without any data changes
+      // The test verifies that getLabelsMetrics() returns consistent results
+      // when called consecutively with no changes in between our calls.
+      // Note: While we can't fully prevent concurrent test interference,
+      // creating our own test labels helps establish a more controlled baseline.
       const firstResponse = await getLabelsMetrics();
       const secondResponse = await getLabelsMetrics();
 
-      // Results should be identical
+      // Results should be identical when called consecutively
+      // This verifies the metrics function is deterministic and doesn't
+      // have internal state that causes inconsistency
       expect(secondResponse.totalLabels).toBe(firstResponse.totalLabels);
       expect(secondResponse.labelsInUse).toBe(firstResponse.labelsInUse);
       expect(secondResponse.mostUsedLabels).toEqual(
         firstResponse.mostUsedLabels,
       );
+
+      // Verify our test labels are included in the count
+      expect(firstResponse.totalLabels).toBeGreaterThanOrEqual(2);
     });
 
     test('should accurately count labels and usage', async () => {

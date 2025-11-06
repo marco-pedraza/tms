@@ -1,3 +1,5 @@
+import { schema } from '@/db';
+import { eq } from 'drizzle-orm';
 import {
   afterAll,
   afterEach,
@@ -10,10 +12,13 @@ import {
 import { FieldErrorCollector, FieldValidationError } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
 import { createSlug } from '@/shared/utils';
+import { cityRepository } from '@/inventory/locations/cities/cities.repository';
+import { countryRepository } from '@/inventory/locations/countries/countries.repository';
 import { installationPropertyRepository } from '@/inventory/locations/installation-properties/installation-properties.repository';
 import { installationRepository } from '@/inventory/locations/installations/installations.repository';
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
 import { populationRepository } from '@/inventory/locations/populations/populations.repository';
+import { stateRepository } from '@/inventory/locations/states/states.repository';
 import { tollboothRepository } from '@/inventory/locations/tollbooths/tollbooths.repository';
 import {
   type TollboothInfrastructure,
@@ -70,6 +75,8 @@ describe('PathwayOptionEntity - Toll Management', () => {
 
   let testData: {
     cityId: number;
+    stateId: number;
+    countryId: number;
     nodeIds: number[];
     populationId: number;
     pathwayId: number;
@@ -77,6 +84,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
     pathwayCleanup: ReturnType<typeof createCleanupHelper>;
     pathwayOptionCleanup: ReturnType<typeof createCleanupHelper>;
     pathwayOptionTollCleanup: ReturnType<typeof createCleanupHelper>;
+    routeCleanup: ReturnType<typeof createCleanupHelper>;
   };
 
   beforeAll(async () => {
@@ -101,6 +109,12 @@ describe('PathwayOptionEntity - Toll Management', () => {
       ({ id }) => pathwayOptionTollRepository.delete(id),
       'pathway option toll',
     );
+    const routeCleanup = createCleanupHelper(async ({ id }) => {
+      // Delete route legs first using repository method
+      await routeLegsRepository.deleteByRouteId(id);
+      // Then delete the route using forceDelete to bypass soft delete
+      return routesRepository.forceDelete(id);
+    }, 'route');
 
     // Create test dependencies
     const testPopulation = await populationFactory(factoryDb).create({
@@ -114,6 +128,27 @@ describe('PathwayOptionEntity - Toll Management', () => {
       name: createUniqueName('Test City', testSuiteId),
     });
     const cityId = testCity.id;
+
+    // Get stateId and countryId from city for cleanup
+    // The factory creates state and country automatically, so we need to fetch them
+    // Use direct database query with JOINs to avoid transaction visibility issues
+    const cityWithRelations = await db.query.cities.findFirst({
+      where: eq(schema.cities.id, cityId),
+      with: {
+        state: {
+          with: {
+            country: true,
+          },
+        },
+      },
+    });
+
+    if (!cityWithRelations?.state?.country) {
+      throw new Error(`Failed to find city ${cityId} with relations`);
+    }
+
+    const stateId = cityWithRelations.state.id;
+    const countryId = cityWithRelations.state.country.id;
 
     // Create test nodes (origin and destination)
     const originNode = await nodeRepository.create({
@@ -221,6 +256,8 @@ describe('PathwayOptionEntity - Toll Management', () => {
 
     testData = {
       cityId,
+      stateId,
+      countryId,
       nodeIds,
       populationId,
       pathwayId: pathway.id,
@@ -228,16 +265,20 @@ describe('PathwayOptionEntity - Toll Management', () => {
       pathwayCleanup,
       pathwayOptionCleanup,
       pathwayOptionTollCleanup,
+      routeCleanup,
     };
   });
 
   afterEach(async () => {
     if (testData) {
       // Cleanup in dependency order (deepest first)
-      // 1. Clean up pathway option tolls first
+      // 1. Clean up routes first (they reference pathways and nodes)
+      await testData.routeCleanup.cleanupAll();
+
+      // 2. Clean up pathway option tolls
       await testData.pathwayOptionTollCleanup.cleanupAll();
 
-      // 2. Clean up pathway options (all options for this pathway)
+      // 3. Clean up pathway options (all options for this pathway)
       try {
         // Get all options for this pathway and delete them
         const options = await pathwayOptionRepository.findByPathwayId(
@@ -255,36 +296,55 @@ describe('PathwayOptionEntity - Toll Management', () => {
         // Ignore if pathway doesn't exist
       }
 
-      // 3. Clean up pathway (now that all options are deleted)
+      // 4. Clean up pathway (now that routes, tolls, and options are deleted)
       try {
         await pathwayRepository.forceDelete(testData.pathwayId);
       } catch {
         // Ignore errors
       }
 
-      // 4. Clean up nodes (now that pathway and tolls are deleted)
+      // 5. Clean up nodes (now that pathway, routes, and tolls are deleted)
       for (const nodeId of testData.nodeIds) {
         try {
           await nodeRepository.forceDelete(nodeId);
         } catch {
-          // Ignore errors
+          // Ignore cleanup errors for nodes
         }
       }
 
-      // 5. Clean up installation properties first (now that nodes are deleted)
+      // 6. Clean up installation properties first (now that nodes are deleted)
       await installationPropertyCleanup.cleanupAll();
 
-      // 6. Clean up installations (now that installation properties are deleted)
+      // 7. Clean up installations (now that installation properties are deleted)
       await installationCleanup.cleanupAll();
 
-      // 7. Clean up population (now that nodes are deleted)
+      // 8. Clean up population (now that nodes are deleted)
       try {
         await populationRepository.forceDelete(testData.populationId);
       } catch {
-        // Ignore errors
+        // Ignore cleanup errors for population
       }
 
-      // Cities cleaned up by factories
+      // 9. Clean up city (now that nodes are deleted)
+      try {
+        await cityRepository.forceDelete(testData.cityId);
+      } catch {
+        // Ignore cleanup errors for city
+      }
+
+      // 10. Clean up state (now that city is deleted)
+      try {
+        await stateRepository.forceDelete(testData.stateId);
+      } catch {
+        // Ignore cleanup errors for state
+      }
+
+      // 11. Clean up country (now that state is deleted)
+      try {
+        await countryRepository.forceDelete(testData.countryId);
+      } catch {
+        // Ignore cleanup errors for country
+      }
     }
   });
 
@@ -1061,6 +1121,9 @@ describe('PathwayOptionEntity - Toll Management', () => {
         destinationCityId: testData.cityId,
       });
 
+      // Track route for cleanup
+      testData.routeCleanup.track(route.id);
+
       // Create route legs separately
       await routeLegsRepository.createLegs([
         {
@@ -1094,7 +1157,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
       const optionId = savedOption.id as number;
 
       // Create a route with leg using this option
-      const { route } = await createRouteWithLeg(testData.pathwayId, optionId);
+      await createRouteWithLeg(testData.pathwayId, optionId);
 
       // Try to update metrics - should fail with specific error code
       try {
@@ -1108,14 +1171,6 @@ describe('PathwayOptionEntity - Toll Management', () => {
         expect(fieldError.fieldErrors).toHaveLength(1);
         expect(fieldError.fieldErrors[0]?.code).toBe('IN_USE');
         expect(fieldError.fieldErrors[0]?.field).toBe('metrics');
-      }
-
-      // Cleanup route
-      try {
-        await routeLegsRepository.deleteByRouteId(route.id);
-        await routesRepository.delete(route.id);
-      } catch {
-        // Ignore cleanup errors
       }
     });
 
@@ -1144,7 +1199,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
       const optionId = savedOption.id as number;
 
       // Create a route with leg using this option
-      const { route } = await createRouteWithLeg(testData.pathwayId, optionId);
+      await createRouteWithLeg(testData.pathwayId, optionId);
 
       const tollsInput = [
         {
@@ -1165,14 +1220,6 @@ describe('PathwayOptionEntity - Toll Management', () => {
         expect(fieldError.fieldErrors[0]?.code).toBe('IN_USE');
         expect(fieldError.fieldErrors[0]?.field).toBe('tolls');
       }
-
-      // Cleanup route
-      try {
-        await routeLegsRepository.deleteByRouteId(route.id);
-        await routesRepository.delete(route.id);
-      } catch {
-        // Ignore cleanup errors
-      }
     });
 
     it('should allow updating non-metric fields when option is in use', async () => {
@@ -1180,7 +1227,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
       const optionId = savedOption.id as number;
 
       // Create a route with leg using this option
-      const { route } = await createRouteWithLeg(testData.pathwayId, optionId);
+      await createRouteWithLeg(testData.pathwayId, optionId);
 
       // Update name - should succeed
       const updatedOption = await savedOption.update({
@@ -1188,14 +1235,6 @@ describe('PathwayOptionEntity - Toll Management', () => {
       });
 
       expect(updatedOption.name).toBe('Updated Name');
-
-      // Cleanup route
-      try {
-        await routeLegsRepository.deleteByRouteId(route.id);
-        await routesRepository.delete(route.id);
-      } catch {
-        // Ignore cleanup errors
-      }
     });
 
     it('should allow deactivating option when it is in use', async () => {
@@ -1203,7 +1242,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
       const optionId = savedOption.id as number;
 
       // Create a route with leg using this option
-      const { route } = await createRouteWithLeg(testData.pathwayId, optionId);
+      await createRouteWithLeg(testData.pathwayId, optionId);
 
       // Deactivate option - should succeed
       const updatedOption = await savedOption.update({
@@ -1211,14 +1250,6 @@ describe('PathwayOptionEntity - Toll Management', () => {
       });
 
       expect(updatedOption.active).toBe(false);
-
-      // Cleanup route
-      try {
-        await routeLegsRepository.deleteByRouteId(route.id);
-        await routesRepository.delete(route.id);
-      } catch {
-        // Ignore cleanup errors
-      }
     });
   });
 });

@@ -22,6 +22,7 @@ import {
 } from '@/factories';
 import { getFactoryDb } from '@/factories/factory-utils';
 import type { City } from './cities.types';
+import { cityRepository } from './cities.repository';
 import {
   createCity,
   deleteCity,
@@ -40,8 +41,11 @@ describe('Cities Controller', () => {
   let testState2: State; // Second state for testing cross-state scenarios
   let testCity: City;
 
-  // Cleanup helpers using test-utils
-  const cityCleanup = createCleanupHelper(deleteCity, 'city');
+  // Cleanup helpers using test-utils - use forceDelete to ensure hard delete
+  const cityCleanup = createCleanupHelper(
+    ({ id }) => cityRepository.forceDelete(id),
+    'city',
+  );
 
   const createTestCity = async (baseName: string, options = {}) => {
     const uniqueName = createUniqueName(baseName, testSuiteId);
@@ -96,9 +100,10 @@ describe('Cities Controller', () => {
     await cityCleanup.cleanupAll();
 
     // Cleanup factory-created entities in reverse order of dependencies
+    // Use forceDelete to bypass dependency checks since we've already cleaned up cities
     if (testState?.id) {
       try {
-        await stateRepository.delete(testState.id);
+        await stateRepository.forceDelete(testState.id);
       } catch (error) {
         console.log('Error cleaning up test state:', error);
       }
@@ -106,7 +111,7 @@ describe('Cities Controller', () => {
 
     if (testState2?.id) {
       try {
-        await stateRepository.delete(testState2.id);
+        await stateRepository.forceDelete(testState2.id);
       } catch (error) {
         console.log('Error cleaning up test state 2:', error);
       }
@@ -114,7 +119,7 @@ describe('Cities Controller', () => {
 
     if (testCountry?.id) {
       try {
-        await countryRepository.delete(testCountry.id);
+        await countryRepository.forceDelete(testCountry.id);
       } catch (error) {
         console.log('Error cleaning up test country:', error);
       }
@@ -542,8 +547,11 @@ describe('Cities Controller', () => {
   });
 
   describe('search functionality', () => {
-    // Add cleanup helper for search tests
-    const searchCleanup = createCleanupHelper(deleteCity, 'search-city');
+    // Add cleanup helper for search tests - use forceDelete to ensure hard delete
+    const searchCleanup = createCleanupHelper(
+      ({ id }) => cityRepository.forceDelete(id),
+      'search-city',
+    );
 
     afterAll(async () => {
       await searchCleanup.cleanupAll();
@@ -583,7 +591,7 @@ describe('Cities Controller', () => {
 
   describe('ordering and filtering', () => {
     const orderingCityCleanup = createCleanupHelper(
-      deleteCity,
+      ({ id }) => cityRepository.forceDelete(id),
       'ordering-city',
     );
 
@@ -675,7 +683,7 @@ describe('Cities Controller', () => {
 
     test('should allow multi-field ordering', async () => {
       const multiFieldCleanup = createCleanupHelper(
-        deleteCity,
+        ({ id }) => cityRepository.forceDelete(id),
         'multi-field-city',
       );
 

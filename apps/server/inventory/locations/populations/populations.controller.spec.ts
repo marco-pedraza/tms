@@ -1385,13 +1385,13 @@ describe('Populations Controller', () => {
         await deletePopulation({ id: testPopulation.id });
       }
       if (testCity?.id) {
-        await cityRepository.delete(testCity.id);
+        await cityRepository.forceDelete(testCity.id);
       }
       if (testState?.id) {
-        await stateRepository.delete(testState.id);
+        await stateRepository.forceDelete(testState.id);
       }
       if (testCountry?.id) {
-        await countryRepository.delete(testCountry.id);
+        await countryRepository.forceDelete(testCountry.id);
       }
     });
 

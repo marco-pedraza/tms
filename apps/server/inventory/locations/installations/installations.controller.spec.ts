@@ -15,6 +15,7 @@ import { createNode } from '@/inventory/locations/nodes/nodes.controller';
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
 import { nodes } from '@/inventory/locations/nodes/nodes.schema';
 import { populationRepository } from '@/inventory/locations/populations/populations.repository';
+import { populationCities } from '@/inventory/locations/populations/populations.schema';
 import {
   createAmenity,
   deleteAmenity,
@@ -160,6 +161,15 @@ describe('Installations Controller', () => {
     await installationCleanup.cleanupAll();
 
     // Clean up factory-created entities by specific IDs to avoid affecting other tests
+    if (testCityId) {
+      try {
+        await db
+          .delete(populationCities)
+          .where(eq(populationCities.cityId, testCityId));
+      } catch (error) {
+        console.log('Error cleaning up population_cities:', error);
+      }
+    }
     if (testPopulationId) {
       try {
         await populationRepository.forceDelete(testPopulationId);

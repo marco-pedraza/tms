@@ -222,7 +222,8 @@
       "duplicate": "Ya existe un registro de {entity} con {property}: \"{value}\".",
       "invalid_format": "Formato inválido en el campo {fieldName}.",
       "invalid_status": "Transición de estatus no válida. Verifica que el cambio de estatus sea permitido.",
-      "invalid_password": "La contraseña actual es incorrecta."
+      "invalid_password": "La contraseña actual es incorrecta.",
+      "same_origin_destination": "Los nodos de origen y destino no pueden ser iguales"
     },
     "entities": {
       "country": "País",
@@ -256,7 +257,9 @@
       "licensePlateNumber": "Número de Placa",
       "registrationNumber": "Número de Registro",
       "status": "Estatus",
-      "currentPassword": "Contraseña Actual"
+      "currentPassword": "Contraseña Actual",
+      "originNodeId": "Origen",
+      "destinationNodeId": "Destino"
     }
   },
   "sidebar": {
@@ -2169,7 +2172,10 @@
         "isEmptyTrip": "Trayecto vacío",
         "isSellable": "Trayecto vendible",
         "description": "Descripción opcional del trayecto",
-        "emptyOptionsLabel": "No hay trayectos disponibles"
+        "emptyOptionsLabel": "No hay trayectos disponibles",
+        "nodeSearchPlaceholder": "Buscar nodo",
+        "noNodesFound": "No se encontraron nodos",
+        "emptyNodesLabel": "No hay nodos disponibles"
       },
       "sections": {
         "info": "Información"
@@ -2233,6 +2239,9 @@
         "passThroughTime": "Tiempo de paso",
         "noTollBooths": "No hay casetas configuradas para esta opción",
         "tollBooth": "Caseta",
+        "tollBoothSearch": "Buscar caseta",
+        "emptyTollBoothsList": "No hay casetas disponibles",
+        "noTollBoothsFound": "No se encontraron casetas",
         "passTime": "Tiempo Estimado (min)"
       },
       "errors": {

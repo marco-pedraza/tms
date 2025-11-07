@@ -93,12 +93,6 @@ export interface CreatePathwayOptionPayload {
   typicalTimeMin?: number & Min<0>;
 
   /**
-   * Average speed in kilometers per hour
-   * Must be a positive number
-   */
-  avgSpeedKmh?: number & Min<0>;
-
-  /**
    * Whether this is the default option for the pathway
    */
   isDefault?: boolean;
@@ -155,11 +149,6 @@ export interface UpdatePathwayOptionPayload {
    * Typical time in minutes
    */
   typicalTimeMin?: number & Min<0>;
-
-  /**
-   * Average speed in kilometers per hour
-   */
-  avgSpeedKmh?: number & Min<0>;
 
   /**
    * Whether this is the default option for the pathway

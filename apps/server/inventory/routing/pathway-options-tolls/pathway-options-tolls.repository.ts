@@ -1,4 +1,4 @@
-import { inArray } from 'drizzle-orm';
+import { SQL, inArray, sql } from 'drizzle-orm';
 import { createBaseRepository } from '@repo/base-repo';
 import type { TransactionalDB } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
@@ -66,11 +66,14 @@ export function createPathwayOptionTollRepository() {
 
     const dbInstance = tx ?? db;
 
-    return await dbInstance
+    const results = await dbInstance
       .select()
       .from(pathwayOptionTolls)
       .where(inArray(pathwayOptionTolls.pathwayOptionId, optionIds))
       .orderBy(pathwayOptionTolls.sequence);
+
+    // Cast to PathwayOptionToll[] - distance should never be null in practice
+    return results as PathwayOptionToll[];
   }
 
   /**
@@ -119,7 +122,65 @@ export function createPathwayOptionTollRepository() {
       .values(tollsPayload)
       .returning();
 
-    return createdTolls;
+    // Cast to PathwayOptionToll[] - distance should never be null in practice
+    return createdTolls as PathwayOptionToll[];
+  }
+
+  /**
+   * Updates passTimeMin for multiple tolls in a single batch operation
+   * Pure update method - receives pre-calculated values, no business logic
+   * Uses CASE expression for efficient batch update in a single query
+   * @param updates - Array of toll updates with id and passTimeMin
+   * @param tx - Optional transaction instance
+   */
+  async function updateMany(
+    updates: { id: number; passTimeMin: number }[],
+    tx?: TransactionalDB,
+  ): Promise<void> {
+    if (updates.length === 0) {
+      return;
+    }
+
+    const dbInstance = tx ?? db;
+
+    const ids = updates.map((item) => item.id);
+    const sqlChunks: SQL[] = [sql`(case`];
+
+    for (const item of updates) {
+      sqlChunks.push(
+        sql`when ${pathwayOptionTolls.id} = ${item.id} then ${item.passTimeMin}`,
+      );
+    }
+
+    sqlChunks.push(sql`end)`);
+
+    const passTimeSql = sql.join(sqlChunks, sql.raw(' '));
+
+    await dbInstance
+      .update(pathwayOptionTolls)
+      .set({ passTimeMin: passTimeSql })
+      .where(inArray(pathwayOptionTolls.id, ids));
+  }
+
+  /**
+   * Creates a transaction-scoped version of this repository
+   * Overrides baseRepository.withTransaction to preserve custom methods
+   * @param tx - Transaction instance
+   * @returns Transaction-scoped repository with all custom methods
+   */
+  function withTransaction(tx: TransactionalDB) {
+    const txBaseRepository = baseRepository.withTransaction(tx);
+    return {
+      ...txBaseRepository,
+      findByOptionId: (optionId: number) => findByOptionId(optionId, tx),
+      findByOptionIds: (optionIds: number[]) => findByOptionIds(optionIds, tx),
+      deleteByOptionId: (optionId: number) => deleteByOptionId(optionId, tx),
+      createMany: (tollsPayload: CreatePathwayOptionTollPayload[]) =>
+        createMany(tollsPayload, tx),
+      updateMany: (updates: { id: number; passTimeMin: number }[]) =>
+        updateMany(updates, tx),
+      withTransaction: (newTx: TransactionalDB) => withTransaction(newTx),
+    };
   }
 
   return {
@@ -128,6 +189,8 @@ export function createPathwayOptionTollRepository() {
     findByOptionIds,
     deleteByOptionId,
     createMany,
+    updateMany,
+    withTransaction,
   };
 }
 

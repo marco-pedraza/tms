@@ -238,9 +238,6 @@ export interface BulkSyncOptionInput {
   /** Typical time in minutes */
   typicalTimeMin: number;
 
-  /** Average speed in km/h (calculated automatically if not provided) */
-  avgSpeedKmh?: number;
-
   /** Whether this is a pass-through option */
   isPassThrough: boolean;
 

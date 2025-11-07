@@ -17,12 +17,11 @@ import type {
 // =============================================================================
 
 /**
- * Input for metrics calculation - exactly 2 of 3 values must be provided
+ * Input for metrics calculation - distance and time are both required
  */
 export interface MetricsCalculationInput {
-  distanceKm: number | null;
-  typicalTimeMin: number | null;
-  avgSpeedKmh: number | null;
+  distanceKm: number;
+  typicalTimeMin: number;
 }
 
 /**
@@ -54,6 +53,9 @@ export interface PathwayOptionEntityDependencies {
     createMany: (
       tolls: CreatePathwayOptionTollPayload[],
     ) => Promise<PathwayOptionToll[]>;
+    updateMany: (
+      updates: { id: number; passTimeMin: number }[],
+    ) => Promise<void>;
   };
   nodesRepository: {
     findOne: (id: number) => Promise<{ id: number }>;

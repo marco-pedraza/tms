@@ -13,7 +13,6 @@ import { optionalStringSchema, requiredStringSchema } from './string';
 export const tollDefaultValuesSchema = z.object({
   id: z.coerce.number().optional(),
   nodeId: z.coerce.number().default(0),
-  passTimeMin: z.coerce.string().default(''),
   distance: z.coerce.string().default(''),
 });
 
@@ -26,7 +25,6 @@ export function createTollSchema(
   return z.object({
     id: z.coerce.number().optional(),
     nodeId: requiredIntegerSchema(tValidations),
-    passTimeMin: requiredFloatSchema(tValidations),
     distance: requiredFloatSchema(tValidations),
   });
 }
@@ -40,7 +38,6 @@ export const pathwayOptionDefaultValuesSchema = z.object({
   description: z.coerce.string().default(''),
   distanceKm: z.coerce.string().default(''),
   typicalTimeMin: z.coerce.string().default(''),
-  avgSpeedKmh: z.coerce.string().default(''),
   isPassThrough: z.boolean().default(false),
   passThroughTimeMin: z.coerce.string().default(''),
   isDefault: z.boolean().default(false),
@@ -61,7 +58,6 @@ export function createPathwayOptionSchema(
       description: optionalStringSchema(),
       distanceKm: requiredFloatSchema(tValidations),
       typicalTimeMin: requiredFloatSchema(tValidations),
-      avgSpeedKmh: requiredFloatSchema(tValidations),
       isDefault: z.boolean(),
       isPassThrough: z.boolean(),
       passThroughTimeMin: optionalFloatSchema(),

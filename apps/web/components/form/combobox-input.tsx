@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { Label } from '@radix-ui/react-label';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { SelectInputProps } from '@/components/form/select-input';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,6 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { Label } from '@/components/ui/label';
 import {
   Popover,
   PopoverContent,
@@ -55,7 +55,7 @@ export function ComboboxInput({
             aria-expanded={open}
             aria-invalid={hasFieldErrors(field)}
             className={cn(
-              'justify-between font-normal',
+              'w-full justify-between font-normal',
               !field.state.value && 'text-muted-foreground',
             )}
           >
@@ -65,7 +65,7 @@ export function ComboboxInput({
             <ChevronsUpDown className="opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-0">
+        <PopoverContent className="w-full p-0" align="start">
           <Command>
             <CommandInput placeholder={searchPlaceholder} className="h-9" />
             <CommandList>

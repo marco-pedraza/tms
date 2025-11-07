@@ -73,6 +73,12 @@ const PATHWAY_OPTION_ERROR_CONFIG = {
     field: 'tolls',
     code: 'IN_USE',
   },
+  avgSpeedKmhRequiredForTolls: {
+    message:
+      'Cannot sync tolls: pathway option must have a valid average speed (avgSpeedKmh)',
+    field: 'avgSpeedKmh',
+    code: 'INVALID_AVG_SPEED_KMH',
+  },
 } as const;
 
 // Generate error helpers automatically

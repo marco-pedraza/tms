@@ -981,12 +981,10 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
             tolls: [
               {
                 nodeId: testData.nodeIds[2] as number, // Toll node 1
-                passTimeMin: 10,
                 distance: 50,
               },
               {
                 nodeId: testData.nodeIds[3] as number, // Toll node 2
-                passTimeMin: 15,
                 distance: 75,
               },
             ],
@@ -1032,10 +1030,13 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
       const toll2 = tolls.find((t) => t.sequence === 2);
 
       expect(toll1?.nodeId).toBe(testData.nodeIds[2]);
-      expect(toll1?.passTimeMin).toBe(10);
+      // Option has avgSpeedKmh = 100 (150km / 90min * 60)
+      // For distance 50: passTimeMin = round((50 * 60) / 100) = 30
+      expect(toll1?.passTimeMin).toBe(30);
       expect(toll1?.distance).toBe(50);
       expect(toll2?.nodeId).toBe(testData.nodeIds[3]);
-      expect(toll2?.passTimeMin).toBe(15);
+      // For distance 75: passTimeMin = round((75 * 60) / 100) = 45
+      expect(toll2?.passTimeMin).toBe(45);
       expect(toll2?.distance).toBe(75);
 
       // Track tolls for cleanup
@@ -1057,7 +1058,6 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
             tolls: [
               {
                 nodeId: testData.nodeIds[2] as number,
-                passTimeMin: 10,
                 distance: 50,
               },
             ],
@@ -1108,7 +1108,6 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
             tolls: [
               {
                 nodeId: testData.nodeIds[3] as number, // Different toll node
-                passTimeMin: 20,
                 distance: 100,
               },
             ],
@@ -1145,7 +1144,9 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
 
       const toll = updatedTolls[0];
       expect(toll?.nodeId).toBe(testData.nodeIds[3]);
-      expect(toll?.passTimeMin).toBe(20);
+      // Option has avgSpeedKmh = 100 (150km / 90min * 60)
+      // For distance 100: passTimeMin = round((100 * 60) / 100) = 60
+      expect(toll?.passTimeMin).toBe(60);
       expect(toll?.distance).toBe(100);
 
       // Track new toll for cleanup
@@ -1167,7 +1168,6 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
             tolls: [
               {
                 nodeId: 999999, // Non-existent node ID
-                passTimeMin: 10,
                 distance: 50,
               },
             ],
@@ -1264,7 +1264,6 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
             tolls: [
               {
                 nodeId: 999999, // Non-existent node ID
-                passTimeMin: 10,
                 distance: 50,
               },
             ],
@@ -1309,12 +1308,10 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
             tolls: [
               {
                 nodeId: testData.nodeIds[2] as number,
-                passTimeMin: 10,
                 distance: 50,
               },
               {
                 nodeId: testData.nodeIds[2] as number, // Same node ID (duplicate)
-                passTimeMin: 12,
                 distance: 60,
               },
             ],
@@ -1494,7 +1491,6 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
             tolls: [
               {
                 nodeId: 999999, // Invalid node ID
-                passTimeMin: 10,
                 distance: 50,
               },
             ],

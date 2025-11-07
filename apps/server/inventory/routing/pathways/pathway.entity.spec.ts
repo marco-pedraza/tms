@@ -209,7 +209,9 @@ describe('PathwayEntity', () => {
       // Clean up nodes (created by repository)
       for (const nodeId of testData.nodeIds) {
         await safeCleanup(
-          () => nodeRepository.forceDelete(nodeId),
+          async () => {
+            await nodeRepository.forceDelete(nodeId);
+          },
           'test node',
           nodeId,
         );
@@ -217,7 +219,9 @@ describe('PathwayEntity', () => {
 
       // Clean up entities in dependency order (reverse of creation)
       await safeCleanup(
-        () => populationRepository.forceDelete(testData.populationId),
+        async () => {
+          await populationRepository.forceDelete(testData.populationId);
+        },
         'test population',
         testData.populationId,
       );
@@ -676,27 +680,6 @@ describe('PathwayEntity', () => {
           const fieldNames = fieldError.fieldErrors.map((e) => e.field);
           expect(fieldNames).toContain('distanceKm');
           expect(fieldNames).toContain('typicalTimeMin');
-        }
-      });
-
-      it('should preserve avgSpeedKmh when provided explicitly', async () => {
-        const optionData = {
-          name: 'Custom Speed Option',
-          distanceKm: 150,
-          typicalTimeMin: 120,
-          avgSpeedKmh: 80, // Explicit speed (different from calculated 75)
-          isPassThrough: false,
-          active: true,
-        };
-
-        const updatedPathway = await savedPathway.addOption(optionData);
-        const options = await updatedPathway.options;
-
-        expect(options[0]?.avgSpeedKmh).toBe(80); // Should preserve explicit value
-
-        // Cleanup
-        if (options[0]) {
-          testData.pathwayOptionCleanup.track(options[0].id);
         }
       });
     });

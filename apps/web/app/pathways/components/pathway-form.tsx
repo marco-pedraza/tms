@@ -77,12 +77,10 @@ export default function PathwayForm({
           description: option.description || '',
           distanceKm: option.distanceKm?.toString() ?? '',
           typicalTimeMin: option.typicalTimeMin?.toString() ?? '',
-          avgSpeedKmh: option.avgSpeedKmh?.toString() ?? '',
           passThroughTimeMin: option.passThroughTimeMin?.toString() || '',
           tolls: (option.tolls || []).map((toll) => ({
             ...toll,
             nodeId: toll.nodeId?.toString() ?? '',
-            passTimeMin: toll.passTimeMin?.toString() ?? '',
             distance: toll.distance?.toString() ?? '',
           })),
         })),
@@ -141,7 +139,6 @@ export default function PathwayForm({
     description: '',
     distanceKm: '',
     typicalTimeMin: '',
-    avgSpeedKmh: '',
     isPassThrough: false,
     passThroughTimeMin: '',
     isDefault: false,
@@ -178,6 +175,19 @@ export default function PathwayForm({
     }
   }, [originNodeId, destinationNodeId, originNodes, destinationNodes, form]);
 
+  const clearServerErrors = useCallback(
+    (fieldName: 'originNodeId' | 'destinationNodeId') => {
+      form.setFieldMeta(fieldName, (meta) => ({
+        ...meta,
+        errorMap: {
+          ...(meta.errorMap ?? {}),
+          onServer: [],
+        },
+      }));
+    },
+    [form],
+  );
+
   useEffect(() => {
     regenerateName();
   }, [originNodeId, destinationNodeId, form, regenerateName]);
@@ -186,43 +196,61 @@ export default function PathwayForm({
     <div className="max-w-7xl">
       <Form onSubmit={form.handleSubmit}>
         <FormLayout title={tPathways('form.title')}>
-          <form.AppField name="originNodeId">
+          <form.AppField
+            name="originNodeId"
+            listeners={{
+              onChange: () => {
+                clearServerErrors('originNodeId');
+              },
+            }}
+          >
             {(field) => (
-              <field.SelectInput
+              <field.ComboboxInput
                 items={
                   originNodes?.data.map((node) => ({
                     id: node.id.toString(),
                     name: `${node.name} (${node.code})`,
-                    value: node.id.toString(),
                   })) ?? []
                 }
                 emptyOptionsLabel={tPathways(
-                  'form.placeholders.emptyOptionsLabel',
+                  'form.placeholders.emptyNodesLabel',
                 )}
                 label={tPathways('fields.origin')}
                 placeholder={tPathways('form.placeholders.origin')}
-                className="w-full"
+                searchPlaceholder={tPathways(
+                  'form.placeholders.nodeSearchPlaceholder',
+                )}
+                noResultsLabel={tPathways('form.placeholders.noNodesFound')}
                 isRequired
               />
             )}
           </form.AppField>
 
-          <form.AppField name="destinationNodeId">
+          <form.AppField
+            name="destinationNodeId"
+            listeners={{
+              onChange: () => {
+                clearServerErrors('destinationNodeId');
+              },
+            }}
+          >
             {(field) => (
-              <field.SelectInput
+              <field.ComboboxInput
                 items={
                   destinationNodes?.data.map((node) => ({
                     id: node.id.toString(),
                     name: `${node.name} (${node.code})`,
-                    value: node.id.toString(),
                   })) ?? []
                 }
                 emptyOptionsLabel={tPathways(
-                  'form.placeholders.emptyOptionsLabel',
+                  'form.placeholders.emptyNodesLabel',
                 )}
                 label={tPathways('fields.destination')}
                 placeholder={tPathways('form.placeholders.destination')}
-                className="w-full"
+                searchPlaceholder={tPathways(
+                  'form.placeholders.nodeSearchPlaceholder',
+                )}
+                noResultsLabel={tPathways('form.placeholders.noNodesFound')}
                 isRequired
               />
             )}
@@ -306,7 +334,6 @@ export default function PathwayForm({
                           id: option.id ? Number(option.id) : undefined,
                           distanceKm: Number(option.distanceKm),
                           typicalTimeMin: Number(option.typicalTimeMin),
-                          avgSpeedKmh: Number(option.avgSpeedKmh),
                           passThroughTimeMin: option.passThroughTimeMin
                             ? Number(option.passThroughTimeMin)
                             : null,
@@ -314,7 +341,6 @@ export default function PathwayForm({
                             ...toll,
                             id: toll.id ? Number(toll.id) : undefined,
                             nodeId: Number(toll.nodeId),
-                            passTimeMin: Number(toll.passTimeMin),
                             distance: Number(toll.distance),
                           })),
                         }),

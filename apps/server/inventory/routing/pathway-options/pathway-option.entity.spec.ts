@@ -375,15 +375,16 @@ describe('PathwayOptionEntity - Toll Management', () => {
 
     it('should sync tolls successfully with valid data', async () => {
       const savedOption = await createTestOption();
+      // Option has avgSpeedKmh = 75 (150km / 120min * 60)
+      // For distance 10: passTimeMin = round((10 * 60) / 75) = 8
+      // For distance 15: passTimeMin = round((15 * 60) / 75) = 12
       const tollsInput = [
         {
           nodeId: testData.nodeIds[2], // Toll Node 1
-          passTimeMin: 5,
           distance: 10,
         },
         {
           nodeId: testData.nodeIds[3], // Toll Node 2
-          passTimeMin: 7,
           distance: 15,
         },
       ];
@@ -394,11 +395,11 @@ describe('PathwayOptionEntity - Toll Management', () => {
       expect(tolls).toHaveLength(2);
       expect(tolls[0]?.nodeId).toBe(testData.nodeIds[2]);
       expect(tolls[0]?.sequence).toBe(1);
-      expect(tolls[0]?.passTimeMin).toBe(5);
+      expect(tolls[0]?.passTimeMin).toBe(8); // Calculated: (10 * 60) / 75 = 8
       expect(tolls[0]?.distance).toBe(10);
       expect(tolls[1]?.nodeId).toBe(testData.nodeIds[3]);
       expect(tolls[1]?.sequence).toBe(2);
-      expect(tolls[1]?.passTimeMin).toBe(7);
+      expect(tolls[1]?.passTimeMin).toBe(12); // Calculated: (15 * 60) / 75 = 12
       expect(tolls[1]?.distance).toBe(15);
 
       // Track tolls for cleanup
@@ -408,9 +409,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
     it('should sync with empty array to remove all tolls', async () => {
       const savedOption = await createTestOption();
       // First add some tolls
-      const tollsInput = [
-        { nodeId: testData.nodeIds[2], passTimeMin: 5, distance: 10 },
-      ];
+      const tollsInput = [{ nodeId: testData.nodeIds[2], distance: 10 }];
       let updatedOption = await savedOption.syncTolls(tollsInput);
       let tolls = await updatedOption.getTolls();
       expect(tolls).toHaveLength(1);
@@ -425,9 +424,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
     it('should replace existing tolls (destructive sync)', async () => {
       const savedOption = await createTestOption();
       // First sync
-      const initialTolls = [
-        { nodeId: testData.nodeIds[2], passTimeMin: 5, distance: 10 },
-      ];
+      const initialTolls = [{ nodeId: testData.nodeIds[2], distance: 10 }];
       let updatedOption = await savedOption.syncTolls(initialTolls);
       let tolls = await updatedOption.getTolls();
       expect(tolls).toHaveLength(1);
@@ -435,9 +432,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
       const firstTollId = tolls[0]?.id;
 
       // Second sync (should replace)
-      const newTolls = [
-        { nodeId: testData.nodeIds[3], passTimeMin: 7, distance: 15 },
-      ];
+      const newTolls = [{ nodeId: testData.nodeIds[3], distance: 15 }];
       updatedOption = await updatedOption.syncTolls(newTolls);
       tolls = await updatedOption.getTolls();
 
@@ -450,8 +445,8 @@ describe('PathwayOptionEntity - Toll Management', () => {
     it('should assign sequence automatically based on array order', async () => {
       const savedOption = await createTestOption();
       const tollsInput = [
-        { nodeId: testData.nodeIds[2], passTimeMin: 5 },
-        { nodeId: testData.nodeIds[3], passTimeMin: 7 },
+        { nodeId: testData.nodeIds[2], distance: 10 },
+        { nodeId: testData.nodeIds[3], distance: 15 },
       ];
 
       const updatedOption = await savedOption.syncTolls(tollsInput);
@@ -474,7 +469,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
         active: true,
       });
 
-      const tollsInput = [{ nodeId: testData.nodeIds[2], passTimeMin: 5 }];
+      const tollsInput = [{ nodeId: testData.nodeIds[2], distance: 10 }];
 
       await expect(newOption.syncTolls(tollsInput)).rejects.toThrow(
         FieldValidationError,
@@ -484,8 +479,8 @@ describe('PathwayOptionEntity - Toll Management', () => {
     it('should validate no duplicate toll nodes', async () => {
       const savedOption = await createTestOption();
       const tollsInput = [
-        { nodeId: testData.nodeIds[2], passTimeMin: 5 },
-        { nodeId: testData.nodeIds[2], passTimeMin: 7 }, // Duplicate
+        { nodeId: testData.nodeIds[2], distance: 10 },
+        { nodeId: testData.nodeIds[2], distance: 15 }, // Duplicate
       ];
 
       await expect(savedOption.syncTolls(tollsInput)).rejects.toThrow(
@@ -496,9 +491,9 @@ describe('PathwayOptionEntity - Toll Management', () => {
     it('should validate no consecutive duplicate toll nodes', async () => {
       const savedOption = await createTestOption();
       const tollsInput = [
-        { nodeId: testData.nodeIds[2], passTimeMin: 5 },
-        { nodeId: testData.nodeIds[3], passTimeMin: 7 },
-        { nodeId: testData.nodeIds[3], passTimeMin: 10 }, // Consecutive duplicate
+        { nodeId: testData.nodeIds[2], distance: 10 },
+        { nodeId: testData.nodeIds[3], distance: 15 },
+        { nodeId: testData.nodeIds[3], distance: 20 }, // Consecutive duplicate
       ];
 
       await expect(savedOption.syncTolls(tollsInput)).rejects.toThrow(
@@ -509,7 +504,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
     it('should validate toll nodes exist', async () => {
       const savedOption = await createTestOption();
       const tollsInput = [
-        { nodeId: 99999, passTimeMin: 5 }, // Non-existent node
+        { nodeId: 99999, distance: 10 }, // Non-existent node
       ];
 
       await expect(savedOption.syncTolls(tollsInput)).rejects.toThrow();
@@ -518,9 +513,9 @@ describe('PathwayOptionEntity - Toll Management', () => {
     it('should validate multiple errors at once', async () => {
       const savedOption = await createTestOption();
       const tollsInput = [
-        { nodeId: testData.nodeIds[2], passTimeMin: 5 },
-        { nodeId: testData.nodeIds[2], passTimeMin: 7 }, // Error 1: Duplicate
-        { nodeId: testData.nodeIds[2], passTimeMin: 10 }, // Error 2: Consecutive duplicate
+        { nodeId: testData.nodeIds[2], distance: 10 },
+        { nodeId: testData.nodeIds[2], distance: 15 }, // Error 1: Duplicate
+        { nodeId: testData.nodeIds[2], distance: 20 }, // Error 2: Consecutive duplicate
       ];
 
       try {
@@ -570,7 +565,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
         iaveEnabled: 'true',
       });
 
-      const tolls = [{ nodeId: tollboothNodeId, sequence: 1, passTimeMin: 5 }];
+      const tolls = [{ nodeId: tollboothNodeId, distance: 10 }];
       const collector = new FieldErrorCollector();
 
       // Act
@@ -601,7 +596,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
       });
       testData.nodeIds.push(regularNode.id);
 
-      const tolls = [{ nodeId: regularNode.id, sequence: 1, passTimeMin: 5 }];
+      const tolls = [{ nodeId: regularNode.id, distance: 10 }];
       const collector = new FieldErrorCollector();
 
       // Act
@@ -622,7 +617,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
         iaveEnabled: 'true',
       });
 
-      const tolls = [{ nodeId: tollboothNodeId, sequence: 1, passTimeMin: 5 }];
+      const tolls = [{ nodeId: tollboothNodeId, distance: 10 }];
       const collector = new FieldErrorCollector();
 
       // Act
@@ -669,7 +664,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
         await installationPropertyRepository.forceDelete(iaveProperty.id);
       }
 
-      const tolls = [{ nodeId: tollbooth.nodeId, sequence: 1, passTimeMin: 5 }];
+      const tolls = [{ nodeId: tollbooth.nodeId, distance: 10 }];
       const collector = new FieldErrorCollector();
 
       // Act
@@ -709,8 +704,8 @@ describe('PathwayOptionEntity - Toll Management', () => {
       });
 
       const tolls = [
-        { nodeId: regularNode.id, sequence: 1, passTimeMin: 5 },
-        { nodeId: invalidTollboothId, sequence: 2, passTimeMin: 10 },
+        { nodeId: regularNode.id, distance: 10 },
+        { nodeId: invalidTollboothId, distance: 20 },
       ];
       const collector = new FieldErrorCollector();
 
@@ -785,9 +780,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
       });
       testData.nodeIds.push(regularNode.id);
 
-      const tolls = [
-        { nodeId: regularNode.id, sequence: 1, passTimeMin: 5, distance: 10 },
-      ];
+      const tolls = [{ nodeId: regularNode.id, distance: 10 }];
 
       // Act & Assert
       await expect(savedOption.syncTolls(tolls)).rejects.toThrow(
@@ -816,7 +809,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
       // Create valid tollbooth
       const tollboothNodeId = await createTestTollbooth();
 
-      const tolls = [{ nodeId: tollboothNodeId, passTimeMin: 5, distance: 10 }];
+      const tolls = [{ nodeId: tollboothNodeId, distance: 10 }];
 
       // Act
       const updatedOption = await savedOption.syncTolls(tolls);
@@ -855,8 +848,8 @@ describe('PathwayOptionEntity - Toll Management', () => {
     it('should get tolls ordered by sequence', async () => {
       const savedOption = await createTestOption();
       const tollsInput = [
-        { nodeId: testData.nodeIds[2], passTimeMin: 5 },
-        { nodeId: testData.nodeIds[3], passTimeMin: 7 },
+        { nodeId: testData.nodeIds[2], distance: 10 },
+        { nodeId: testData.nodeIds[3], distance: 15 },
       ];
 
       const updatedOption = await savedOption.syncTolls(tollsInput);
@@ -892,7 +885,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
       const savedOption = await createTestOption();
       // Initial sync
       let updatedOption = await savedOption.syncTolls([
-        { nodeId: testData.nodeIds[2], passTimeMin: 5 },
+        { nodeId: testData.nodeIds[2], distance: 10 },
       ]);
       let tolls = await updatedOption.getTolls();
       expect(tolls).toHaveLength(1);
@@ -900,8 +893,8 @@ describe('PathwayOptionEntity - Toll Management', () => {
 
       // Sync with more tolls
       updatedOption = await updatedOption.syncTolls([
-        { nodeId: testData.nodeIds[2], passTimeMin: 5 },
-        { nodeId: testData.nodeIds[3], passTimeMin: 7 },
+        { nodeId: testData.nodeIds[2], distance: 10 },
+        { nodeId: testData.nodeIds[3], distance: 15 },
       ]);
       tolls = await updatedOption.getTolls();
       expect(tolls).toHaveLength(2);
@@ -1180,7 +1173,6 @@ describe('PathwayOptionEntity - Toll Management', () => {
       const tollsInput = [
         {
           nodeId: testData.nodeIds[2],
-          passTimeMin: 5,
           distance: 10,
         },
       ];
@@ -1204,7 +1196,6 @@ describe('PathwayOptionEntity - Toll Management', () => {
       const tollsInput = [
         {
           nodeId: testData.nodeIds[2],
-          passTimeMin: 5,
           distance: 10,
         },
       ];

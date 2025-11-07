@@ -17,7 +17,6 @@ interface FormValues {
  */
 const createDefaultTollBooth = (): TollRaw => ({
   nodeId: '',
-  passTimeMin: '',
   distance: '',
 });
 
@@ -147,19 +146,6 @@ export default function PathwayOptionItem({
             <field.NumberInput
               label={tPathways('pathwayOptions.fields.typicalTime')}
               placeholder={tPathways('pathwayOptions.placeholders.typicalTime')}
-              isRequired
-              type="number"
-              min="0"
-            />
-          )}
-        </form.AppField>
-
-        {/* Average Speed */}
-        <form.AppField name={`options[${index}].avgSpeedKmh`}>
-          {(field) => (
-            <field.NumberInput
-              label={tPathways('pathwayOptions.fields.avgSpeed')}
-              placeholder={tPathways('pathwayOptions.placeholders.avgSpeed')}
               isRequired
               type="number"
               min="0"
@@ -312,13 +298,13 @@ function TollBoothSection({
           {tPathways('pathwayOptions.placeholders.noTollBooths')}
         </p>
       ) : (
-        <div className="space-y-3 mb-4">
+        <div className="space-y-4 mb-4">
           {tolls.map((_, tollIndex) => (
             <div
               key={tollIndex}
-              className="flex flex-col p-2 border border-gray-200 rounded-md text-xs"
+              className="flex flex-col p-3 border border-gray-200 rounded-md"
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3">
+              <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4">
                 <form.AppField
                   name={`options[${index}].tolls[${tollIndex}].nodeId`}
                   listeners={{
@@ -328,7 +314,7 @@ function TollBoothSection({
                   }}
                 >
                   {(field) => (
-                    <field.SelectInput
+                    <field.ComboboxInput
                       label={tPathways('pathwayOptions.fields.tollBooth')}
                       placeholder={tPathways(
                         'pathwayOptions.placeholders.tollBooth',
@@ -336,10 +322,17 @@ function TollBoothSection({
                       items={nodes.map((node) => ({
                         id: node.id.toString(),
                         name: `${node.name} (${node.code})`,
-                        value: node.id.toString(),
                       }))}
+                      searchPlaceholder={tPathways(
+                        'pathwayOptions.placeholders.tollBoothSearch',
+                      )}
+                      emptyOptionsLabel={tPathways(
+                        'pathwayOptions.placeholders.emptyTollBoothsList',
+                      )}
+                      noResultsLabel={tPathways(
+                        'pathwayOptions.placeholders.noTollBoothsFound',
+                      )}
                       isRequired
-                      className="w-full"
                     />
                   )}
                 </form.AppField>
@@ -359,22 +352,7 @@ function TollBoothSection({
                   )}
                 </form.AppField>
 
-                <div className="space-y-2 flex items-end gap-2">
-                  <form.AppField
-                    name={`options[${index}].tolls[${tollIndex}].passTimeMin`}
-                  >
-                    {(field) => (
-                      <field.NumberInput
-                        label={tPathways('pathwayOptions.fields.passTime')}
-                        placeholder={tPathways(
-                          'pathwayOptions.placeholders.passTime',
-                        )}
-                        isRequired
-                        className="w-full"
-                      />
-                    )}
-                  </form.AppField>
-
+                <div className="flex items-start pt-6 md:pt-0 md:items-center">
                   <Button
                     type="button"
                     variant="ghost"
@@ -385,23 +363,27 @@ function TollBoothSection({
                         tollIndex,
                       );
                     }}
-                    className="text-gray-400 hover:text-red-600 p-1 mb-2"
+                    className="text-gray-400 hover:text-red-600 p-1 h-auto"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
               {tollBoothDetails.get(tollIndex) && (
-                <div className="flex flex-row gap-2 items-center px-3">
-                  <div>
+                <div className="flex flex-row gap-4 items-center mt-2 pt-2 border-t border-gray-100">
+                  <div className="text-xs text-gray-600">
                     {tPathways('details.price')}{' '}
-                    {priceFormat(tollBoothDetails.get(tollIndex)?.price ?? 0)}
+                    <span className="font-medium">
+                      {priceFormat(tollBoothDetails.get(tollIndex)?.price ?? 0)}
+                    </span>
                   </div>
-                  <div>
+                  <div className="text-xs text-gray-600">
                     {tPathways('details.iave')}{' '}
-                    {tollBoothDetails.get(tollIndex)?.iave
-                      ? tCommon('status.yes')
-                      : tCommon('status.no')}
+                    <span className="font-medium">
+                      {tollBoothDetails.get(tollIndex)?.iave
+                        ? tCommon('status.yes')
+                        : tCommon('status.no')}
+                    </span>
                   </div>
                 </div>
               )}

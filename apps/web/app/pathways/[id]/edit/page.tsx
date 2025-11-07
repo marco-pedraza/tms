@@ -71,7 +71,6 @@ export default function EditPathwayPage() {
             description: option.description ?? '',
             distanceKm: option.distanceKm ?? 0,
             typicalTimeMin: option.typicalTimeMin ?? 0,
-            avgSpeedKmh: option.avgSpeedKmh ?? 0,
             isDefault: option.isDefault ?? false,
             isPassThrough: option.isPassThrough ?? false,
             passThroughTimeMin: option.passThroughTimeMin ?? null,

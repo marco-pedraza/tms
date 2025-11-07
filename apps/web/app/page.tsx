@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Briefcase, Building, Bus, Globe, Map, Route } from 'lucide-react';
+import { Briefcase, Building, Bus, Globe, Map as MapIcon } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,7 +34,7 @@ export default async function HomePage() {
             <CardTitle className="text-lg font-medium">
               {tStates('title')}
             </CardTitle>
-            <Map className="h-5 w-5 text-muted-foreground" />
+            <MapIcon className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
@@ -93,21 +93,6 @@ export default async function HomePage() {
             </p>
             <Link href={routes.busLines.index}>
               <Button className="w-full">Ver Líneas de Autobus</Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-medium">Rutas</CardTitle>
-            <Route className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Administra información de rutas
-            </p>
-            <Link href={routes.routes.index}>
-              <Button className="w-full">Ver Rutas</Button>
             </Link>
           </CardContent>
         </Card>

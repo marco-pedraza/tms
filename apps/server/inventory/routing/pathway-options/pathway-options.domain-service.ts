@@ -407,6 +407,60 @@ export function createPathwayOptionDomainService(
   }
 
   /**
+   * Deactivates old default options before creating new ones to avoid unique constraint violation
+   * If a new default option will be created and old defaults will be deleted, temporarily sets
+   * a non-default option as default to deactivate the old ones
+   *
+   * @param pathwayEntity - The pathway entity instance
+   * @param operations - Categorized operations
+   * @returns Updated pathway entity with old defaults deactivated (if needed)
+   */
+  async function deactivateOldDefaultsBeforeCreatingNew(
+    pathwayEntity: PathwayEntity,
+    operations: CategorizedOperations,
+  ): Promise<PathwayEntity> {
+    const hasNewDefaultToCreate = operations.toCreate.some(
+      ([, o]) => o.isDefault === true,
+    );
+
+    if (!hasNewDefaultToCreate) {
+      return pathwayEntity;
+    }
+
+    const oldDefaultsToDelete = operations.toDelete.filter((o) => o.isDefault);
+
+    if (oldDefaultsToDelete.length === 0) {
+      return pathwayEntity;
+    }
+
+    const nonDefaultToKeep = operations.toUpdate.find(
+      (o) => !o.isDefault && !operations.toDelete.some((d) => d.id === o.id),
+    );
+
+    if (nonDefaultToKeep?.id) {
+      return await pathwayEntity.setDefaultOption(nonDefaultToKeep.id);
+    }
+
+    return pathwayEntity;
+  }
+
+  /**
+   * Determines if an option should be created without isDefault flag
+   * to avoid unique constraint violation when old defaults exist
+   *
+   * @param optionInput - The option input to check
+   * @param operations - Categorized operations
+   * @returns true if the option should be created without isDefault
+   */
+  function shouldCreateWithoutDefault(
+    optionInput: BulkSyncOptionInputInternal,
+    operations: CategorizedOperations,
+  ): boolean {
+    const hasOldDefaultsToDelete = operations.toDelete.some((o) => o.isDefault);
+    return optionInput.isDefault === true && hasOldDefaultsToDelete;
+  }
+
+  /**
    * Executes bulk sync operations in the SAFE order
    * NEW ORDER - Creates/updates FIRST, then deletes (safer for default option handling)
    *
@@ -426,28 +480,29 @@ export function createPathwayOptionDomainService(
     operations: CategorizedOperations,
   ): Promise<[PathwayEntity, Map<number, number>]> {
     const optionIdsMap = new Map<number, number>();
-    let currentEntity = pathwayEntity;
+    let currentEntity = await deactivateOldDefaultsBeforeCreatingNew(
+      pathwayEntity,
+      operations,
+    );
 
-    // ───────────────────────────────────────────────────────────
-    // STEP 1: Create new options FIRST
-    // ───────────────────────────────────────────────────────────
+    // STEP 1: Create new options
     for (const [tempId, optionInput] of operations.toCreate) {
       const optionPayload: AddPathwayOptionPayload = {
         name: optionInput.name,
         description: optionInput.description ?? undefined,
         distanceKm: optionInput.distanceKm,
         typicalTimeMin: optionInput.typicalTimeMin,
-        avgSpeedKmh: optionInput.avgSpeedKmh,
         isPassThrough: optionInput.isPassThrough,
         passThroughTimeMin: optionInput.passThroughTimeMin ?? undefined,
         sequence: optionInput.sequence ?? undefined,
         active: optionInput.active,
-        isDefault: optionInput.isDefault,
+        isDefault: shouldCreateWithoutDefault(optionInput, operations)
+          ? false
+          : optionInput.isDefault,
       };
 
       currentEntity = await currentEntity.addOption(optionPayload);
 
-      // Get the ID of the newly created option
       const createdOptions = await currentEntity.options;
       const createdOption = createdOptions.find(
         (o) =>
@@ -460,16 +515,13 @@ export function createPathwayOptionDomainService(
       }
     }
 
-    // ───────────────────────────────────────────────────────────
     // STEP 2: Update existing options
-    // ───────────────────────────────────────────────────────────
     for (const optionInput of operations.toUpdate) {
       const updatePayload: UpdatePathwayOptionPayloadClean = {
         name: optionInput.name,
         description: optionInput.description ?? undefined,
         distanceKm: optionInput.distanceKm,
         typicalTimeMin: optionInput.typicalTimeMin,
-        avgSpeedKmh: optionInput.avgSpeedKmh,
         isPassThrough: optionInput.isPassThrough,
         passThroughTimeMin: optionInput.passThroughTimeMin ?? undefined,
         sequence: optionInput.sequence ?? undefined,
@@ -482,9 +534,7 @@ export function createPathwayOptionDomainService(
       );
     }
 
-    // ───────────────────────────────────────────────────────────
-    // STEP 3: Set new default option (BEFORE deleting anything)
-    // ───────────────────────────────────────────────────────────
+    // STEP 3: Set new default option
     const newDefaultInput =
       operations.toUpdate.find((o) => o.isDefault === true) ??
       operations.toCreate
@@ -506,17 +556,17 @@ export function createPathwayOptionDomainService(
       }
     }
 
-    // ───────────────────────────────────────────────────────────
-    // STEP 4: Delete non-default options (safe now)
-    // ───────────────────────────────────────────────────────────
-    for (const option of operations.toDelete.filter((o) => !o.isDefault)) {
+    // STEP 4: Delete non-default options
+    const nonDefaultToDelete = operations.toDelete.filter((o) => !o.isDefault);
+
+    for (const option of nonDefaultToDelete) {
       currentEntity = await currentEntity.removeOption(option.id);
     }
 
-    // ───────────────────────────────────────────────────────────
-    // STEP 5: Delete old default option (safe because new default is set)
-    // ───────────────────────────────────────────────────────────
-    for (const option of operations.toDelete.filter((o) => o.isDefault)) {
+    // STEP 5: Delete old default option
+    const defaultToDelete = operations.toDelete.filter((o) => o.isDefault);
+
+    for (const option of defaultToDelete) {
       currentEntity = await currentEntity.removeOption(option.id);
     }
 

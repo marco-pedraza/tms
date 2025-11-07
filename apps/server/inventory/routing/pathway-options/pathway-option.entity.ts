@@ -19,6 +19,24 @@ import type {
 } from './pathway-options.types';
 import { pathwayOptionErrors } from './pathway-option.errors';
 
+/**
+ * Internal payload type for creating pathway options with calculated avgSpeedKmh
+ * Used internally to pass calculated avgSpeedKmh to repository
+ */
+type CreatePathwayOptionPayloadWithCalculatedSpeed =
+  CreatePathwayOptionPayload & {
+    avgSpeedKmh?: number;
+  };
+
+/**
+ * Internal payload type for updating pathway options with calculated avgSpeedKmh
+ * Used internally to pass calculated avgSpeedKmh to repository
+ */
+type UpdatePathwayOptionPayloadWithCalculatedSpeed =
+  UpdatePathwayOptionPayload & {
+    avgSpeedKmh?: number;
+  };
+
 export function createPathwayOptionEntity(
   dependencies: PathwayOptionEntityDependencies,
 ) {
@@ -34,14 +52,14 @@ export function createPathwayOptionEntity(
 
   /**
    * Validates and calculates average speed from required distance and time
-   * @param input - Object with metrics values
+   * @param input - Object with distance and time values
    * @returns Object with calculated avgSpeedKmh
    * @throws {FieldValidationError} If distanceKm or typicalTimeMin are missing or invalid
    */
   function calculateAvgSpeed(
     input: MetricsCalculationInput,
   ): MetricsCalculationResult {
-    const { distanceKm, typicalTimeMin, avgSpeedKmh } = input;
+    const { distanceKm, typicalTimeMin } = input;
     const collector = new FieldErrorCollector();
 
     // Validate distanceKm is provided and positive
@@ -71,8 +89,51 @@ export function createPathwayOptionEntity(
     return {
       distanceKm,
       typicalTimeMin,
-      avgSpeedKmh: avgSpeedKmh ?? Number(calculatedSpeed.toFixed(2)),
+      avgSpeedKmh: Number(calculatedSpeed.toFixed(2)),
     };
+  }
+
+  /**
+   * Calculates pass time in minutes for a toll based on distance and average speed
+   * @param distance - Distance to the toll point in kilometers
+   * @param avgSpeedKmh - Average speed in kilometers per hour
+   * @returns Calculated pass time in minutes (rounded to nearest integer)
+   * @throws {Error} If avgSpeedKmh is not positive
+   */
+  function calculatePassTimeMin(distance: number, avgSpeedKmh: number): number {
+    if (!avgSpeedKmh || avgSpeedKmh <= 0) {
+      throw new Error(
+        'avgSpeedKmh must be a positive number to calculate passTimeMin',
+      );
+    }
+
+    return Math.round((distance * 60) / avgSpeedKmh);
+  }
+
+  /**
+   * Calculates and adds avgSpeedKmh to a payload if distanceKm and typicalTimeMin are available
+   * Returns a new object with the calculated avgSpeedKmh, maintaining immutability
+   * @param payload - Payload to enrich with calculated avgSpeedKmh
+   * @returns New payload object with calculated avgSpeedKmh if applicable
+   */
+  function addCalculatedAvgSpeedToPayload<
+    T extends {
+      distanceKm?: number;
+      typicalTimeMin?: number;
+      avgSpeedKmh?: number;
+    },
+  >(payload: T): T {
+    if (payload.distanceKm && payload.typicalTimeMin) {
+      const calculatedMetrics = calculateAvgSpeed({
+        distanceKm: payload.distanceKm,
+        typicalTimeMin: payload.typicalTimeMin,
+      });
+      return {
+        ...payload,
+        avgSpeedKmh: calculatedMetrics.avgSpeedKmh,
+      };
+    }
+    return payload;
   }
 
   /**
@@ -279,10 +340,28 @@ export function createPathwayOptionEntity(
     validatePathwayOptionRules(payload);
 
     // Always validate and calculate metrics (distanceKm and typicalTimeMin are required)
+    if (!payload.distanceKm || !payload.typicalTimeMin) {
+      const collector = new FieldErrorCollector();
+      if (!payload.distanceKm) {
+        pathwayOptionErrors.distanceRequired(collector, payload.distanceKm);
+      }
+      if (!payload.typicalTimeMin) {
+        pathwayOptionErrors.timeRequired(collector, payload.typicalTimeMin);
+      }
+      collector.throwIfErrors();
+    }
+
+    // Type guard: After validation above, both values should be available.
+    // This check helps TypeScript narrow the types and throws if validation somehow failed.
+    if (!payload.distanceKm || !payload.typicalTimeMin) {
+      throw new Error(
+        'Internal error: distanceKm and typicalTimeMin must be defined after validation',
+      );
+    }
+
     const calculatedMetrics = calculateAvgSpeed({
-      distanceKm: payload.distanceKm ?? null,
-      typicalTimeMin: payload.typicalTimeMin ?? null,
-      avgSpeedKmh: payload.avgSpeedKmh ?? null,
+      distanceKm: payload.distanceKm,
+      typicalTimeMin: payload.typicalTimeMin,
     });
 
     // Create entity data with calculated metrics
@@ -359,13 +438,12 @@ export function createPathwayOptionEntity(
           throw new Error('PathwayOption is already persisted');
         }
 
-        const payload: CreatePathwayOptionPayload = {
+        const basePayload: CreatePathwayOptionPayloadWithCalculatedSpeed = {
           pathwayId: data.pathwayId,
           name: data.name ?? undefined,
           description: data.description ?? undefined,
           distanceKm: data.distanceKm ?? undefined,
           typicalTimeMin: data.typicalTimeMin ?? undefined,
-          avgSpeedKmh: data.avgSpeedKmh ?? undefined,
           isDefault: data.isDefault ?? undefined,
           isPassThrough: data.isPassThrough ?? undefined,
           passThroughTimeMin: data.passThroughTimeMin ?? undefined,
@@ -373,8 +451,11 @@ export function createPathwayOptionEntity(
           active: data.active ?? undefined,
         };
 
-        const savedPathwayOption =
-          await pathwayOptionsRepository.create(payload);
+        const payload = addCalculatedAvgSpeedToPayload(basePayload);
+
+        const savedPathwayOption = await pathwayOptionsRepository.create(
+          payload as CreatePathwayOptionPayload,
+        );
         return createEntityFromData(savedPathwayOption);
       },
 
@@ -404,9 +485,7 @@ export function createPathwayOptionEntity(
           (cleanedPayload.distanceKm !== undefined &&
             cleanedPayload.distanceKm !== data.distanceKm) ||
           (cleanedPayload.typicalTimeMin !== undefined &&
-            cleanedPayload.typicalTimeMin !== data.typicalTimeMin) ||
-          (cleanedPayload.avgSpeedKmh !== undefined &&
-            cleanedPayload.avgSpeedKmh !== data.avgSpeedKmh);
+            cleanedPayload.typicalTimeMin !== data.typicalTimeMin);
 
         // If modifying metrics, validate that option is not in use by active legs
         if (isModifyingMetrics) {
@@ -428,30 +507,70 @@ export function createPathwayOptionEntity(
         }
 
         // Calculate metrics if distance or time are being updated
-        let updatePayload = { ...cleanedPayload };
+        let updatePayload: UpdatePathwayOptionPayloadWithCalculatedSpeed = {
+          ...cleanedPayload,
+        };
         if (
           cleanedPayload.distanceKm !== undefined ||
           cleanedPayload.typicalTimeMin !== undefined
         ) {
-          const calculatedMetrics = calculateAvgSpeed({
-            distanceKm: cleanedPayload.distanceKm ?? data.distanceKm ?? null,
-            typicalTimeMin:
-              cleanedPayload.typicalTimeMin ?? data.typicalTimeMin ?? null,
-            avgSpeedKmh: cleanedPayload.avgSpeedKmh ?? null, // Force recalculation unless explicitly provided
-          });
+          // Get the values to use for calculation (from payload or existing data)
+          const distanceKm =
+            cleanedPayload.distanceKm ?? data.distanceKm ?? null;
+          const typicalTimeMin =
+            cleanedPayload.typicalTimeMin ?? data.typicalTimeMin ?? null;
 
-          updatePayload = {
-            ...updatePayload,
-            distanceKm: calculatedMetrics.distanceKm,
-            typicalTimeMin: calculatedMetrics.typicalTimeMin,
-            avgSpeedKmh: calculatedMetrics.avgSpeedKmh,
-          };
+          // Only calculate if both values are available
+          if (distanceKm !== null && typicalTimeMin !== null) {
+            const calculatedMetrics = calculateAvgSpeed({
+              distanceKm,
+              typicalTimeMin,
+            });
+
+            updatePayload = {
+              ...updatePayload,
+              distanceKm: calculatedMetrics.distanceKm,
+              typicalTimeMin: calculatedMetrics.typicalTimeMin,
+              avgSpeedKmh: calculatedMetrics.avgSpeedKmh,
+            };
+          }
         }
 
         const updatedPathwayOption = await pathwayOptionsRepository.update(
           data.id,
-          updatePayload,
+          updatePayload as UpdatePathwayOptionPayload,
         );
+
+        // If avgSpeedKmh changed, recalculate passTimeMin for all existing tolls
+        const oldAvgSpeedKmh = data.avgSpeedKmh ?? null;
+        const newAvgSpeedKmh = updatedPathwayOption.avgSpeedKmh ?? null;
+
+        if (
+          newAvgSpeedKmh &&
+          newAvgSpeedKmh > 0 &&
+          oldAvgSpeedKmh !== newAvgSpeedKmh
+        ) {
+          // Get all existing tolls for this option
+          const existingTolls =
+            await pathwayOptionTollsRepository.findByOptionId(data.id);
+
+          // Calculate new passTimeMin for each toll with valid distance
+          const tollUpdates = existingTolls
+            .filter((toll) => toll.distance !== null && toll.distance > 0)
+            .map((toll) => ({
+              id: toll.id,
+              passTimeMin: calculatePassTimeMin(
+                toll.distance as number,
+                newAvgSpeedKmh,
+              ),
+            }));
+
+          // Update all tolls in batch
+          if (tollUpdates.length > 0) {
+            await pathwayOptionTollsRepository.updateMany(tollUpdates);
+          }
+        }
+
         return createEntityFromData(updatedPathwayOption);
       },
 
@@ -513,18 +632,39 @@ export function createPathwayOptionEntity(
         // Validate business rules
         await validateTollsBusinessRules(tollsInput);
 
+        // Get avgSpeedKmh from current option to calculate passTimeMin
+        if (!data.avgSpeedKmh || data.avgSpeedKmh <= 0) {
+          const collector = new FieldErrorCollector();
+          pathwayOptionErrors.avgSpeedKmhRequiredForTolls(
+            collector,
+            data.avgSpeedKmh ?? null,
+          );
+          collector.throwIfErrors();
+          throw new Error('Unreachable'); // TypeScript guard
+        }
+
+        const avgSpeedKmh = data.avgSpeedKmh;
+
         // Destructive sync: delete all existing tolls
         await pathwayOptionTollsRepository.deleteByOptionId(optionId);
 
-        // Create new tolls with auto-assigned sequence (1..N)
+        // Create new tolls with auto-assigned sequence (1..N) and calculated passTimeMin
         if (tollsInput.length > 0) {
-          const tollPayloads = tollsInput.map((toll, index) => ({
-            pathwayOptionId: optionId,
-            nodeId: toll.nodeId,
-            sequence: index + 1,
-            passTimeMin: toll.passTimeMin,
-            distance: toll.distance,
-          }));
+          const tollPayloads = tollsInput.map((toll, index) => {
+            // Calculate passTimeMin automatically from distance and avgSpeedKmh
+            const calculatedPassTimeMin = calculatePassTimeMin(
+              toll.distance,
+              avgSpeedKmh,
+            );
+
+            return {
+              pathwayOptionId: optionId,
+              nodeId: toll.nodeId,
+              sequence: index + 1,
+              passTimeMin: calculatedPassTimeMin,
+              distance: toll.distance,
+            };
+          });
 
           await pathwayOptionTollsRepository.createMany(tollPayloads);
         }

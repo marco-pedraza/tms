@@ -304,7 +304,6 @@ export namespace inventory {
         description?: string
         distanceKm?: number
         typicalTimeMin?: number
-        avgSpeedKmh?: number
         isPassThrough?: boolean
         passThroughTimeMin?: number | null
         sequence?: number
@@ -3547,7 +3546,6 @@ export namespace inventory {
         description?: string
         distanceKm?: number
         typicalTimeMin?: number
-        avgSpeedKmh?: number
         isPassThrough?: boolean
         passThroughTimeMin?: number | null
         sequence?: number
@@ -10148,7 +10146,7 @@ export namespace pathway_options_tolls {
         /**
          * Distance to this toll point
          */
-        distance: number | null
+        distance: number
 
         /**
          * Timestamp when the pathway option toll was created
@@ -10168,14 +10166,9 @@ export namespace pathway_options_tolls {
         nodeId: number
 
         /**
-         * Time to pass through this toll in minutes
+         * Distance to this toll point
          */
-        passTimeMin: number
-
-        /**
-         * Distance to this toll point (optional)
-         */
-        distance?: number
+        distance: number
     }
 }
 
@@ -10205,11 +10198,6 @@ export namespace pathways {
          * Typical time in minutes
          */
         typicalTimeMin: number
-
-        /**
-         * Average speed in km/h (calculated automatically if not provided)
-         */
-        avgSpeedKmh?: number
 
         /**
          * Whether this is a pass-through option
@@ -10449,7 +10437,7 @@ export namespace pathways {
             /**
              * Distance to this toll point
              */
-            distance: number | null
+            distance: number
 
             /**
              * Timestamp when the pathway option toll was created
@@ -11504,7 +11492,7 @@ export namespace route_legs {
                 /**
                  * Distance to this toll point
                  */
-                distance: number | null
+                distance: number
 
                 /**
                  * Timestamp when the pathway option toll was created

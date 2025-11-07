@@ -6,7 +6,7 @@ const PATHWAY_ERROR_CONFIG = {
   sameOriginDestination: {
     message: 'Origin and destination nodes cannot be the same',
     field: 'destinationNodeId',
-    code: 'INVALID_VALUE',
+    code: 'SAME_ORIGIN_DESTINATION',
   },
   emptyTripSellable: {
     message: 'Empty trip pathways cannot be sellable',

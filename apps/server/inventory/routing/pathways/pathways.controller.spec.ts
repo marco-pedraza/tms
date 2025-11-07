@@ -50,6 +50,7 @@ import {
   removeOptionFromPathway,
   setDefaultPathwayOption,
   syncPathwayOptionTolls,
+  syncPathwayOptions,
   updatePathway,
   updatePathwayOption,
 } from './pathways.controller';
@@ -1083,12 +1084,10 @@ describe('Pathways Controller', () => {
         const tollsInput = [
           {
             nodeId: tollNodeIds[0],
-            passTimeMin: 5,
             distance: 10,
           },
           {
             nodeId: tollNodeIds[1],
-            passTimeMin: 7,
             distance: 15,
           },
         ];
@@ -1105,12 +1104,15 @@ describe('Pathways Controller', () => {
 
       test('should list tolls for pathway option', async () => {
         // First sync some tolls
+        // Option has avgSpeedKmh = 75 (150km / 120min * 60)
+        // For distance 10: passTimeMin = round((10 * 60) / 75) = 8
+        // For distance 15: passTimeMin = round((15 * 60) / 75) = 12
         await syncPathwayOptionTolls({
           pathwayId: createdPathway.id,
           optionId,
           tolls: [
-            { nodeId: tollNodeIds[0], passTimeMin: 5, distance: 10 },
-            { nodeId: tollNodeIds[1], passTimeMin: 7, distance: 15 },
+            { nodeId: tollNodeIds[0], distance: 10 },
+            { nodeId: tollNodeIds[1], distance: 15 },
           ],
         });
 
@@ -1123,11 +1125,11 @@ describe('Pathways Controller', () => {
         expect(result.data).toHaveLength(2);
         expect(result.data[0]?.nodeId).toBe(tollNodeIds[0]);
         expect(result.data[0]?.sequence).toBe(1);
-        expect(result.data[0]?.passTimeMin).toBe(5);
+        expect(result.data[0]?.passTimeMin).toBe(8); // Calculated: (10 * 60) / 75 = 8
         expect(result.data[0]?.distance).toBe(10);
         expect(result.data[1]?.nodeId).toBe(tollNodeIds[1]);
         expect(result.data[1]?.sequence).toBe(2);
-        expect(result.data[1]?.passTimeMin).toBe(7);
+        expect(result.data[1]?.passTimeMin).toBe(12); // Calculated: (15 * 60) / 75 = 12
         expect(result.data[1]?.distance).toBe(15);
       });
 
@@ -1136,7 +1138,7 @@ describe('Pathways Controller', () => {
         await syncPathwayOptionTolls({
           pathwayId: createdPathway.id,
           optionId,
-          tolls: [{ nodeId: tollNodeIds[0], passTimeMin: 5 }],
+          tolls: [{ nodeId: tollNodeIds[0], distance: 10 }],
         });
 
         // Verify tolls exist
@@ -1166,14 +1168,14 @@ describe('Pathways Controller', () => {
         await syncPathwayOptionTolls({
           pathwayId: createdPathway.id,
           optionId,
-          tolls: [{ nodeId: tollNodeIds[0], passTimeMin: 5 }],
+          tolls: [{ nodeId: tollNodeIds[0], distance: 10 }],
         });
 
         // Second sync with different tolls
         await syncPathwayOptionTolls({
           pathwayId: createdPathway.id,
           optionId,
-          tolls: [{ nodeId: tollNodeIds[1], passTimeMin: 7 }],
+          tolls: [{ nodeId: tollNodeIds[1], distance: 15 }],
         });
 
         // Verify only new toll exists
@@ -1191,7 +1193,7 @@ describe('Pathways Controller', () => {
           syncPathwayOptionTolls({
             pathwayId: 999999,
             optionId,
-            tolls: [{ nodeId: tollNodeIds[0], passTimeMin: 5 }],
+            tolls: [{ nodeId: tollNodeIds[0], distance: 10 }],
           }),
         ).rejects.toThrow();
 
@@ -1205,8 +1207,8 @@ describe('Pathways Controller', () => {
 
       test('should propagate validation errors for duplicate toll nodes', async () => {
         const invalidTolls = [
-          { nodeId: tollNodeIds[0], passTimeMin: 5 },
-          { nodeId: tollNodeIds[0], passTimeMin: 7 }, // Duplicate
+          { nodeId: tollNodeIds[0], distance: 10 },
+          { nodeId: tollNodeIds[0], distance: 15 }, // Duplicate
         ];
 
         await expect(
@@ -1220,9 +1222,9 @@ describe('Pathways Controller', () => {
 
       test('should propagate validation errors for consecutive duplicate toll nodes', async () => {
         const invalidTolls = [
-          { nodeId: tollNodeIds[0], passTimeMin: 5 },
-          { nodeId: tollNodeIds[1], passTimeMin: 7 },
-          { nodeId: tollNodeIds[1], passTimeMin: 10 }, // Consecutive duplicate
+          { nodeId: tollNodeIds[0], distance: 10 },
+          { nodeId: tollNodeIds[1], distance: 15 },
+          { nodeId: tollNodeIds[1], distance: 20 }, // Consecutive duplicate
         ];
 
         await expect(
@@ -1236,7 +1238,7 @@ describe('Pathways Controller', () => {
 
       test('should propagate validation errors for non-existent toll nodes', async () => {
         const invalidTolls = [
-          { nodeId: 999999, passTimeMin: 5 }, // Non-existent node
+          { nodeId: 999999, distance: 10 }, // Non-existent node
         ];
 
         await expect(
@@ -1246,6 +1248,163 @@ describe('Pathways Controller', () => {
             tolls: invalidTolls,
           }),
         ).rejects.toThrow();
+      });
+    });
+
+    describe('bulk sync pathway options', () => {
+      let createdPathway: Pathway;
+
+      beforeEach(async () => {
+        createdPathway = await createTestPathway(testData);
+
+        // Setup: Create initial two options
+        await syncPathwayOptions({
+          pathwayId: createdPathway.id,
+          options: [
+            {
+              name: 'Opcion 1',
+              description: 'Desc',
+              distanceKm: 100,
+              typicalTimeMin: 60,
+              isDefault: false,
+              isPassThrough: false,
+              passThroughTimeMin: null,
+              active: true,
+              tolls: [],
+              sequence: 1,
+            },
+            {
+              name: 'Opcion 2',
+              description: 'desc',
+              distanceKm: 100,
+              typicalTimeMin: 60,
+              isDefault: false,
+              isPassThrough: false,
+              passThroughTimeMin: null,
+              active: true,
+              tolls: [],
+              sequence: 2,
+            },
+          ],
+        });
+      });
+
+      test('should sync options when deleting default and creating new default in same operation', async () => {
+        // Get initial options to get their IDs
+        const initialOptions = await pathwayOptionRepository.findByPathwayId(
+          createdPathway.id,
+        );
+        const option1 = initialOptions.find((o) => o.name === 'Opcion 1');
+        const option2 = initialOptions.find((o) => o.name === 'Opcion 2');
+
+        expect(option1).toBeDefined();
+        expect(option2).toBeDefined();
+        expect(option1?.isDefault).toBe(true);
+        expect(option2?.isDefault).toBe(false);
+
+        // Sync: Remove Opcion 1 (default), update Opcion 2, add new Opcion 3 (default)
+        const result = await syncPathwayOptions({
+          pathwayId: createdPathway.id,
+          options: [
+            {
+              id: option2?.id,
+              name: 'Opcion 2',
+              description: 'desc',
+              distanceKm: 100,
+              typicalTimeMin: 60,
+              isDefault: false,
+              isPassThrough: false,
+              passThroughTimeMin: null,
+              active: true,
+              tolls: [],
+              sequence: 1,
+            },
+            {
+              name: 'Opcion 3',
+              description: 'desc',
+              distanceKm: 100,
+              typicalTimeMin: 60,
+              isDefault: true,
+              isPassThrough: false,
+              passThroughTimeMin: null,
+              active: true,
+              tolls: [],
+              sequence: 2,
+            },
+          ],
+        });
+
+        expect(result).toBeDefined();
+        expect(result.id).toBe(createdPathway.id);
+
+        // Verify final state
+        const finalOptions = await pathwayOptionRepository.findByPathwayId(
+          createdPathway.id,
+        );
+        expect(finalOptions).toHaveLength(2);
+
+        const finalOpcion2 = finalOptions.find((o) => o.name === 'Opcion 2');
+        const finalOpcion3 = finalOptions.find((o) => o.name === 'Opcion 3');
+        const finalOpcion1 = finalOptions.find((o) => o.name === 'Opcion 1');
+
+        expect(finalOpcion2).toBeDefined();
+        expect(finalOpcion2?.isDefault).toBe(false);
+        expect(finalOpcion3).toBeDefined();
+        expect(finalOpcion3?.isDefault).toBe(true);
+        expect(finalOpcion1).toBeUndefined();
+
+        // Verify only one default exists
+        const defaultOptions = finalOptions.filter((o) => o.isDefault === true);
+        expect(defaultOptions.length).toBe(1);
+        expect(defaultOptions[0]?.name).toBe('Opcion 3');
+      });
+
+      test('should sync when updating existing option to default while deleting current default', async () => {
+        const initialOptions = await pathwayOptionRepository.findByPathwayId(
+          createdPathway.id,
+        );
+        const option1 = initialOptions.find((o) => o.name === 'Opcion 1');
+        const option2 = initialOptions.find((o) => o.name === 'Opcion 2');
+
+        expect(option1?.isDefault).toBe(true);
+        expect(option2?.isDefault).toBe(false);
+
+        // Update Opcion 2 to be default while removing Opcion 1
+        const result = await syncPathwayOptions({
+          pathwayId: createdPathway.id,
+          options: [
+            {
+              id: option2?.id,
+              name: 'Opcion 2 Updated',
+              description: 'Updated desc',
+              distanceKm: 150,
+              typicalTimeMin: 75,
+              isDefault: true,
+              isPassThrough: false,
+              passThroughTimeMin: null,
+              active: true,
+              tolls: [],
+              sequence: 1,
+            },
+          ],
+        });
+
+        expect(result).toBeDefined();
+
+        const finalOptions = await pathwayOptionRepository.findByPathwayId(
+          createdPathway.id,
+        );
+        expect(finalOptions).toHaveLength(1);
+
+        const finalOpcion2 = finalOptions.find(
+          (o) => o.name === 'Opcion 2 Updated',
+        );
+        const finalOpcion1 = finalOptions.find((o) => o.name === 'Opcion 1');
+
+        expect(finalOpcion2).toBeDefined();
+        expect(finalOpcion2?.isDefault).toBe(true);
+        expect(finalOpcion2?.distanceKm).toBe(150);
+        expect(finalOpcion1).toBeUndefined();
       });
     });
 

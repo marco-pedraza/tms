@@ -26,7 +26,7 @@ export interface PathwayOptionToll {
   passTimeMin: number;
 
   /** Distance to this toll point */
-  distance: number | null;
+  distance: number;
 
   /** Timestamp when the pathway option toll was created */
   createdAt: Date | string | null;
@@ -67,7 +67,7 @@ export interface CreatePathwayOptionTollPayload {
    * Distance to this toll point
    * Must be a non-negative number
    */
-  distance?: number & Min<0>;
+  distance: number & Min<0>;
 }
 
 /**
@@ -112,14 +112,12 @@ export type PaginatedListPathwayOptionTollsResult =
 /**
  * Input for syncing tolls to a pathway option
  * Sequence is assigned automatically based on array order (1..N)
+ * passTimeMin is calculated automatically from distance and avgSpeedKmh
  */
 export interface SyncTollsInput {
   /** ID of the node where the toll is located */
   nodeId: number & Min<1>;
 
-  /** Time to pass through this toll in minutes */
-  passTimeMin: number & Min<1>;
-
-  /** Distance to this toll point (optional) */
-  distance?: number & Min<0>;
+  /** Distance to this toll point */
+  distance: number & Min<0>;
 }

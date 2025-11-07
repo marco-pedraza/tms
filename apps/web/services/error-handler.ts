@@ -85,6 +85,7 @@ export function getTranslatedValidationError({
     ),
     invalid_status: tValidations('server.invalid_status'),
     invalid_password: tValidations('server.invalid_password'),
+    same_origin_destination: tValidations('server.same_origin_destination'),
   };
   const errorCode = error.code.toLowerCase();
   const isKnownServerError = Object.keys(translatedValidationErrors).includes(

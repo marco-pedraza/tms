@@ -31,6 +31,7 @@ import {
 } from './seeders/installations.seeder';
 import { seedLabelNodes, seedLabels } from './seeders/labels.seeder';
 import { seedNodes } from './seeders/nodes.seeder';
+import { seedPathways } from './seeders/pathways.seeder';
 import {
   seedBusLines,
   seedBusModels,
@@ -183,6 +184,13 @@ export async function seedInventory(clientCode?: string): Promise<void> {
       clientCode,
     );
     console.log('✅ Populations and nodes seeding completed\n');
+
+    // === PATHWAYS ===
+    console.log('🛣️ Seeding pathways...');
+    if (clientCode) {
+      await seedPathways(clientCode, factoryDb);
+    }
+    console.log('✅ Pathways seeding completed\n');
 
     // === LABELS ===
     console.log('🏷️ Seeding labels...');

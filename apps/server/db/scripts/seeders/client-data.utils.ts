@@ -177,6 +177,9 @@ export const CLIENT_DATA_FILES = {
   // Planning
   ROLLING_PLANS: 'rolling-plans.json',
 
+  // Routing
+  PATHWAYS: 'pathways.json',
+
   // Users
   DEPARTMENTS: 'departments.json',
   ROLES: 'roles.json',

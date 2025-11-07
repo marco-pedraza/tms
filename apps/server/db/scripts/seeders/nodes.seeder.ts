@@ -49,50 +49,6 @@ function findCityByName(cities: City[], cityName: string): City | null {
 }
 
 /**
- * Finds a population by code or name
- * Handles both formats: "CODE" and "CODE-STATE"
- */
-function findPopulationByCodeOrName(
-  populations: Population[],
-  idPoblacion: string,
-): Population | null {
-  if (!idPoblacion) return null;
-
-  // Extract code and name from "CODE - NAME" format
-  const parts = idPoblacion.split(' - ');
-  const code = parts[0]?.trim();
-  const name = parts[1]?.trim();
-
-  if (!code) return null;
-
-  // Try to find by exact code first (e.g., "MANZ-CO")
-  let population = populations.find((p) => p.code === code);
-
-  // If not found, try to find by code prefix (e.g., "MANZ" matches "MANZ-CO")
-  if (!population) {
-    population = populations.find((p) => p.code.startsWith(code + '-'));
-  }
-
-  // If still not found and we have a name, try by name
-  if (!population && name) {
-    const searchName = normalizeText(name);
-    population = populations.find((p) => normalizeText(p.name) === searchName);
-  }
-
-  // If still not found, try partial name matching
-  if (!population && name) {
-    const searchName = normalizeText(name);
-    population = populations.find(
-      (p) =>
-        normalizeText(p.name).includes(searchName) ||
-        searchName.includes(normalizeText(p.name)),
-    );
-  }
-
-  return population || null;
-}
-
-/**
  * Gets a random installation type, preferring "PARADA" for most nodes
  */
 function getInstallationTypeForNode(
@@ -182,12 +138,12 @@ interface NodeDataFromClient {
 
 /**
  * Validates and finds dependencies for a node
+ * NOTE: Population assignment is temporarily omitted
  */
 function validateNodeDependencies(
   nodeData: NodeDataFromClient,
   cities: City[],
-  populations: Population[],
-): { city: City; population: Population } | null {
+): { city: City; population: Population | null } | null {
   const city = findCityByName(cities, nodeData.ciudad);
   if (!city) {
     console.warn(
@@ -196,18 +152,19 @@ function validateNodeDependencies(
     return null;
   }
 
-  const population = findPopulationByCodeOrName(
-    populations,
-    nodeData.ID_Poblacion,
-  );
-  if (!population) {
-    console.warn(
-      `   ⚠️ Population not found: ${nodeData.ID_Poblacion} for node ${nodeData.siglasNodo}`,
-    );
-    return null;
-  }
+  // Population assignment is temporarily omitted
+  // const population = findPopulationByCodeOrName(
+  //   populations,
+  //   nodeData.ID_Poblacion,
+  // );
+  // if (!population) {
+  //   console.warn(
+  //     `   ⚠️ Population not found: ${nodeData.ID_Poblacion} for node ${nodeData.siglasNodo}`,
+  //   );
+  //   return null;
+  // }
 
-  return { city, population };
+  return { city, population: null };
 }
 
 /**
@@ -230,11 +187,12 @@ async function findInstallationByName(
 
 /**
  * Creates a single node with its installation
+ * NOTE: Population assignment is temporarily omitted
  */
 async function createSingleNodeWithInstallation(
   nodeData: NodeDataFromClient,
   city: City,
-  population: Population,
+  population: Population | null,
   installationTypes: InstallationType[],
 ): Promise<Node> {
   let installation: Installation;
@@ -292,7 +250,8 @@ async function createSingleNodeWithInstallation(
     allowsAlighting: true,
     active: true,
     cityId: city.id,
-    populationId: population.id,
+    // Population assignment is temporarily omitted
+    // populationId: population?.id,
     installationId: installation.id,
     deletedAt: null,
   };
@@ -334,11 +293,7 @@ async function createNodesFromClientData(
     // Process each node in the batch sequentially
     for (const nodeData of batch) {
       try {
-        const dependencies = validateNodeDependencies(
-          nodeData,
-          cities,
-          populations,
-        );
+        const dependencies = validateNodeDependencies(nodeData, cities);
         if (!dependencies) {
           errorCount++;
           continue;
@@ -388,8 +343,9 @@ export async function seedNodes(
   console.log('🚏 Seeding nodes with installations...');
 
   // Fail fast when prerequisites are empty
-  if (!cities.length || !populations.length) {
-    throw new Error('seedNodes requires non-empty cities and populations.');
+  // NOTE: Population requirement is temporarily removed
+  if (!cities.length) {
+    throw new Error('seedNodes requires non-empty cities.');
   }
 
   // Try to use client data if available
@@ -426,7 +382,8 @@ export async function seedNodes(
   const NODE_COUNT = 10;
   const nodePayloads = Array.from({ length: NODE_COUNT }, (_, index) => {
     const city = cities[index % cities.length];
-    const population = populations[index % populations.length];
+    // Population assignment is temporarily omitted
+    // const population = populations[index % populations.length];
 
     return {
       code: `NODE${index + 1}`,
@@ -439,7 +396,8 @@ export async function seedNodes(
       allowsAlighting: true,
       active: true,
       cityId: city.id,
-      populationId: population.id,
+      // Population assignment is temporarily omitted
+      // populationId: population.id,
       // installationId: null, // No installation for random nodes - omit for undefined
       deletedAt: null,
     };

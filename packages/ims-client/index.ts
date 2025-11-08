@@ -3964,9 +3964,37 @@ export namespace planning {
 
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
+            this.createRollingPlan = this.createRollingPlan.bind(this)
+            this.deleteRollingPlan = this.deleteRollingPlan.bind(this)
             this.getRollingPlan = this.getRollingPlan.bind(this)
             this.listRollingPlans = this.listRollingPlans.bind(this)
             this.listRollingPlansPaginated = this.listRollingPlansPaginated.bind(this)
+            this.updateRollingPlan = this.updateRollingPlan.bind(this)
+        }
+
+        /**
+         * Creates a new rolling plan.
+         * @param params - The rolling plan data to create
+         * @returns {Promise<RollingPlanWithRelations>} The created rolling plan with relations
+         * @throws {APIError} If the rolling plan creation fails
+         */
+        public async createRollingPlan(params: rolling_plans.CreateRollingPlanPayload): Promise<rolling_plans.RollingPlanWithRelations> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/rolling-plans/create`, JSON.stringify(params))
+            return await resp.json() as rolling_plans.RollingPlanWithRelations
+        }
+
+        /**
+         * Deletes a rolling plan by its ID.
+         * @param params - Object containing the rolling plan ID
+         * @param params.id - The ID of the rolling plan to delete
+         * @returns {Promise<RollingPlan>} The deleted rolling plan
+         * @throws {APIError} If the rolling plan is not found or deletion fails
+         */
+        public async deleteRollingPlan(id: number): Promise<rolling_plans.RollingPlan> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/rolling-plans/${encodeURIComponent(id)}/delete`)
+            return await resp.json() as rolling_plans.RollingPlan
         }
 
         /**
@@ -4004,6 +4032,76 @@ export namespace planning {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/rolling-plans/list`, JSON.stringify(params))
             return await resp.json() as rolling_plans.PaginatedListRollingPlansResult
+        }
+
+        /**
+         * Updates an existing rolling plan.
+         * @param params - Object containing the rolling plan ID and update data
+         * @param params.id - The ID of the rolling plan to update
+         * @returns {Promise<RollingPlanWithRelations>} The updated rolling plan with relations
+         * @throws {APIError} If the rolling plan is not found or update fails
+         */
+        public async updateRollingPlan(id: number, params: {
+    /**
+     * The name of the rolling plan
+     * Must have at least 1 non-whitespace character
+     */
+    name?: string
+
+    /**
+     * ID of the bus line this rolling plan belongs to
+     * Must be a positive number
+     */
+    buslineId?: number
+
+    /**
+     * ID of the service type
+     * Must be a positive number
+     */
+    serviceTypeId?: number
+
+    /**
+     * ID of the bus model
+     * Must be a positive number
+     */
+    busModelId?: number
+
+    /**
+     * ID of the base node
+     * Must be a positive number
+     */
+    baseNodeId?: number
+
+    /**
+     * Operation type
+     * Must be either 'continuous' or 'specific_days'
+     */
+    operationType?: rolling_plans.RollingPlanOperationType
+
+    /**
+     * Cycle duration in days (for continuous operation)
+     */
+    cycleDurationDays?: number | null
+
+    /**
+     * Operation days configuration (for specific_days operation)
+     * Stored as JSONB in the database
+     */
+    operationDays?: { [key: string]: any } | null
+
+    /**
+     * Whether the rolling plan is active
+     */
+    active?: boolean
+
+    /**
+     * Optional notes about the rolling plan
+     */
+    notes?: string | null
+}): Promise<rolling_plans.RollingPlanWithRelations> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("PUT", `/rolling-plans/${encodeURIComponent(id)}/update`, JSON.stringify(params))
+            return await resp.json() as rolling_plans.RollingPlanWithRelations
         }
     }
 }
@@ -11080,6 +11178,66 @@ export namespace roles {
 }
 
 export namespace rolling_plans {
+    export interface CreateRollingPlanPayload {
+        /**
+         * The name of the rolling plan
+         * Must have at least 1 non-whitespace character
+         */
+        name: string
+
+        /**
+         * ID of the bus line this rolling plan belongs to
+         * Must be a positive number
+         */
+        buslineId: number
+
+        /**
+         * ID of the service type
+         * Must be a positive number
+         */
+        serviceTypeId: number
+
+        /**
+         * ID of the bus model
+         * Must be a positive number
+         */
+        busModelId: number
+
+        /**
+         * ID of the base node
+         * Must be a positive number
+         */
+        baseNodeId: number
+
+        /**
+         * Operation type
+         * Must be either 'continuous' or 'specific_days'
+         */
+        operationType: RollingPlanOperationType
+
+        /**
+         * Cycle duration in days (required for continuous operation)
+         */
+        cycleDurationDays?: number
+
+        /**
+         * Operation days configuration (required for specific_days operation)
+         * Stored as JSONB in the database
+         */
+        operationDays?: { [key: string]: any }
+
+        /**
+         * Whether the rolling plan is active
+         * @default true
+         */
+        active?: boolean
+
+        /**
+         * Optional notes about the rolling plan
+         */
+        notes?: string
+    }
+
     export interface ListRollingPlansQueryParams {
         orderBy?: {
             field: "id" | "name" | "buslineId" | "serviceTypeId" | "busModelId" | "baseNodeId" | "operationType" | "cycleDurationDays" | "operationDays" | "active" | "notes" | "createdAt" | "updatedAt"

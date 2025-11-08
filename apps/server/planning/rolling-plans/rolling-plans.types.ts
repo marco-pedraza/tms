@@ -5,12 +5,15 @@ import type {
   PlanningNode,
   PlanningServiceType,
 } from '@/planning/adapters/inventory.adapter';
+import type { TableColumn, TransactionalDB } from '@repo/base-repo';
+import type { BaseDomainEntity } from '@/shared/domain/base-entity';
 import {
   ListQueryParams,
   ListQueryResult,
   PaginatedListQueryParams,
   PaginatedListQueryResult,
 } from '@/shared/types';
+import type { rollingPlans } from './rolling-plans.schema';
 
 /**
  * Operation type for rolling plans
@@ -220,3 +223,79 @@ export type PaginatedListRollingPlansQueryParams =
  */
 export type PaginatedListRollingPlansResult =
   PaginatedListQueryResult<RollingPlanWithRelations>;
+
+// =============================================================================
+// ROLLING PLAN ENTITY DEPENDENCIES AND INTERFACE
+// =============================================================================
+
+/**
+ * Rolling plan entity with domain behavior
+ * Extends all rolling plan properties for direct access (e.g., instance.name instead of instance.data.name)
+ */
+export interface RollingPlanEntity
+  extends Omit<RollingPlan, 'id'>,
+    Omit<
+      BaseDomainEntity<RollingPlanEntity, UpdateRollingPlanPayload>,
+      'save' | 'update'
+    > {
+  /**
+   * Extracts plain rolling plan data from the entity
+   * @returns Plain rolling plan object without entity methods
+   */
+  toRollingPlan: () => RollingPlan;
+
+  /**
+   * Saves the rolling plan to the database
+   * @param tx - Database transaction instance (required)
+   * @returns The saved rolling plan entity
+   */
+  save(tx: TransactionalDB): Promise<RollingPlanEntity>;
+
+  /**
+   * Updates the rolling plan in the database
+   * @param payload - The update data
+   * @param tx - Database transaction instance (required)
+   * @returns The updated rolling plan entity
+   */
+  update(
+    payload: UpdateRollingPlanPayload,
+    tx: TransactionalDB,
+  ): Promise<RollingPlanEntity>;
+}
+
+/**
+ * Dependencies required by the rolling plan entity
+ */
+export interface RollingPlanEntityDependencies {
+  rollingPlansRepository: {
+    create: (
+      payload: CreateRollingPlanPayload,
+      tx?: TransactionalDB,
+    ) => Promise<RollingPlan>;
+    update: (
+      id: number,
+      payload: UpdateRollingPlanPayload,
+      tx?: TransactionalDB,
+    ) => Promise<RollingPlan>;
+    findOne: (id: number, tx?: TransactionalDB) => Promise<RollingPlan>; // Throws NotFoundError if not found
+    checkUniqueness: (
+      fields: {
+        field: TableColumn<typeof rollingPlans>;
+        value: unknown;
+        scope?: { field: TableColumn<typeof rollingPlans>; value: unknown };
+      }[],
+      excludeId?: number,
+    ) => Promise<
+      {
+        field: string;
+        value: unknown;
+      }[]
+    >;
+  };
+  inventoryAdapter: {
+    getBusLine: (id: number) => Promise<PlanningBusLine>;
+    getServiceType: (id: number) => Promise<PlanningServiceType>;
+    getBusModel: (id: number) => Promise<PlanningBusModel>;
+    getNode: (id: number) => Promise<PlanningNode>;
+  };
+}

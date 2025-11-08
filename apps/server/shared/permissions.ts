@@ -389,9 +389,12 @@ export const ENDPOINT_TO_MODULES: Record<string, string[]> = {
   // ============================================================================
 
   // Planning - Rolling Plans
+  'planning:createRollingPlan': [MODULE_PERMISSIONS.ROLLING_PLANS],
   'planning:listRollingPlans': [MODULE_PERMISSIONS.ROLLING_PLANS],
   'planning:listRollingPlansPaginated': [MODULE_PERMISSIONS.ROLLING_PLANS],
   'planning:getRollingPlan': [MODULE_PERMISSIONS.ROLLING_PLANS],
+  'planning:updateRollingPlan': [MODULE_PERMISSIONS.ROLLING_PLANS],
+  'planning:deleteRollingPlan': [MODULE_PERMISSIONS.ROLLING_PLANS],
 
   // ============================================================================
   // USERS SYSTEM

@@ -20,6 +20,19 @@ export function createRollingPlanEntity(
   const { isEntityPersisted } = EntityUtils;
 
   /**
+   * Internal payload types that include the derived serviceTypeId field
+   * These types are used internally when creating/updating rolling plans
+   * to pass the inferred serviceTypeId to the repository
+   */
+  type InternalCreatePayload = CreateRollingPlanPayload & {
+    serviceTypeId: number;
+  };
+
+  type InternalUpdatePayload = UpdateRollingPlanPayload & {
+    serviceTypeId: number;
+  };
+
+  /**
    * Validates that related entities exist using inventory adapter
    * @param payload - Rolling plan payload to validate
    * @param collector - Error collector to accumulate validation errors
@@ -32,13 +45,6 @@ export function createRollingPlanEntity(
     if (payload.buslineId) {
       await inventoryAdapter.getBusLine(payload.buslineId).catch(() => {
         rollingPlanErrors.buslineNotFound(collector, payload.buslineId);
-      });
-    }
-
-    // Validate service type exists
-    if (payload.serviceTypeId) {
-      await inventoryAdapter.getServiceType(payload.serviceTypeId).catch(() => {
-        rollingPlanErrors.serviceTypeNotFound(collector, payload.serviceTypeId);
       });
     }
 
@@ -290,14 +296,22 @@ export function createRollingPlanEntity(
 
   /**
    * Sanitizes payload by nullifying incompatible fields based on effective operation type
-   * @param payload - The rolling plan payload to sanitize
+   * @param payload - The rolling plan payload to sanitize (may include internal types with serviceTypeId)
    * @param existingRollingPlan - Optional existing rolling plan data to compute effective operation type
    * @returns Sanitized payload with incompatible fields nullified
    */
   function sanitizePayloadByOperationType(
-    payload: CreateRollingPlanPayload | UpdateRollingPlanPayload,
+    payload:
+      | CreateRollingPlanPayload
+      | UpdateRollingPlanPayload
+      | InternalCreatePayload
+      | InternalUpdatePayload,
     existingRollingPlan?: Partial<RollingPlan>,
-  ): CreateRollingPlanPayload | UpdateRollingPlanPayload {
+  ):
+    | CreateRollingPlanPayload
+    | UpdateRollingPlanPayload
+    | InternalCreatePayload
+    | InternalUpdatePayload {
     // Compute effective operation type: use payload if provided, otherwise fall back to existing
     const effectiveOperationType =
       payload.operationType ?? existingRollingPlan?.operationType;
@@ -335,8 +349,6 @@ export function createRollingPlanEntity(
   ): Promise<void> {
     // Determine which IDs to validate based on what's being updated
     const buslineId = payload.buslineId ?? existingRollingPlan?.buslineId;
-    const serviceTypeId =
-      payload.serviceTypeId ?? existingRollingPlan?.serviceTypeId;
     const busModelId = payload.busModelId ?? existingRollingPlan?.busModelId;
     const baseNodeId = payload.baseNodeId ?? existingRollingPlan?.baseNodeId;
     const operationType =
@@ -347,7 +359,6 @@ export function createRollingPlanEntity(
     const payloadToValidate = {
       ...payload,
       buslineId,
-      serviceTypeId,
       busModelId,
       baseNodeId,
       operationType,
@@ -399,10 +410,19 @@ export function createRollingPlanEntity(
       // Throw all collected errors at once
       collector.throwIfErrors();
 
+      // Get bus line to infer serviceTypeId (already validated, so it exists)
+      const busline = await inventoryAdapter.getBusLine(payload.buslineId);
+
+      // Create internal payload with inferred serviceTypeId
+      const internalPayload: InternalCreatePayload = {
+        ...payload,
+        serviceTypeId: busline.serviceTypeId,
+      };
+
       // Sanitize payload by nullifying incompatible fields based on effective operation type
       const sanitizedPayload = sanitizePayloadByOperationType(
-        payload,
-      ) as CreateRollingPlanPayload;
+        internalPayload,
+      ) as InternalCreatePayload;
 
       // Create in database (repository already has transaction if needed)
       const rollingPlan = await rollingPlansRepository.create(
@@ -436,12 +456,28 @@ export function createRollingPlanEntity(
       // Throw all collected errors at once
       collector.throwIfErrors();
 
+      // Infer serviceTypeId from bus line only if buslineId is being updated
+      // If buslineId is not being updated, serviceTypeId remains unchanged in the database
+      let payloadWithServiceType:
+        | UpdateRollingPlanPayload
+        | InternalUpdatePayload = payload;
+
+      if (payload.buslineId !== undefined) {
+        // buslineId is being updated, get bus line to infer serviceTypeId (already validated, so it exists)
+        const busline = await inventoryAdapter.getBusLine(payload.buslineId);
+        // Create internal payload with inferred serviceTypeId
+        payloadWithServiceType = {
+          ...payload,
+          serviceTypeId: busline.serviceTypeId,
+        } as InternalUpdatePayload;
+      }
+
       // Sanitize payload by nullifying incompatible fields based on effective operation type
       // This happens after validation but before saving to database
       const sanitizedPayload = sanitizePayloadByOperationType(
-        payload,
+        payloadWithServiceType,
         rollingPlanData,
-      ) as UpdateRollingPlanPayload;
+      ) as UpdateRollingPlanPayload | InternalUpdatePayload;
 
       // Update in database (repository already has transaction if needed)
       const updatedRollingPlan = await rollingPlansRepository.update(

@@ -1,3 +1,4 @@
+import { inventoryAdapter } from '@/planning/adapters/inventory.adapter';
 import { db } from '@/planning/db-service';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { FieldValidationError } from '@repo/base-repo';
@@ -167,17 +168,20 @@ describe('Rolling Plans Controller', () => {
         suiteId,
       });
 
+      // Get bus line to extract serviceTypeId (required for repository.create)
+      const busLine = await inventoryAdapter.getBusLine(testBusLine.id);
+
       const testRollingPlan = await rollingPlanRepository.create({
         name: rollingPlanEntity.name,
         buslineId: testBusLine.id,
-        serviceTypeId: testServiceType.id,
+        serviceTypeId: busLine.serviceTypeId,
         busModelId: testBusModel.id,
         baseNodeId: testBaseNode.id,
         operationType: 'continuous',
         cycleDurationDays: 7,
         active: true,
         notes: 'Test rolling plan for controller tests',
-      });
+      } as CreateRollingPlanPayload & { serviceTypeId: number });
       rollingPlanCleanup.track(testRollingPlan.id);
 
       return {
@@ -294,10 +298,13 @@ describe('Rolling Plans Controller', () => {
       operationType: 'continuous' | 'specific_days' = 'continuous',
       options: Partial<CreateRollingPlanPayload> = {},
     ): Promise<RollingPlan> {
+      // Get bus line to extract serviceTypeId (required for repository.create)
+      const busLine = await inventoryAdapter.getBusLine(data.buslineId);
+
       const rollingPlan = await rollingPlanRepository.create({
         name,
         buslineId: data.buslineId,
-        serviceTypeId: data.serviceTypeId,
+        serviceTypeId: busLine.serviceTypeId,
         busModelId: data.busModelId,
         baseNodeId: data.baseNodeId,
         operationType,
@@ -308,7 +315,7 @@ describe('Rolling Plans Controller', () => {
             : undefined,
         active: true,
         ...options,
-      });
+      } as CreateRollingPlanPayload & { serviceTypeId: number });
       data.rollingPlanCleanup.track(rollingPlan.id);
       return rollingPlan;
     }
@@ -358,7 +365,7 @@ describe('Rolling Plans Controller', () => {
         if (response.data.length > 0) {
           const firstPlan = response.data[0] as RollingPlanWithRelations;
           expect(firstPlan.busline).toBeDefined();
-          expect(firstPlan.serviceType).toBeDefined();
+          expect(firstPlan.busline.serviceType).toBeDefined();
           expect(firstPlan.busModel).toBeDefined();
           expect(firstPlan.baseNode).toBeDefined();
         }
@@ -375,7 +382,6 @@ describe('Rolling Plans Controller', () => {
         const payload: CreateRollingPlanPayload = {
           name: rollingPlanEntity.name,
           buslineId: testData.buslineId,
-          serviceTypeId: testData.serviceTypeId,
           busModelId: testData.busModelId,
           baseNodeId: testData.baseNodeId,
           operationType: 'continuous',
@@ -393,7 +399,7 @@ describe('Rolling Plans Controller', () => {
         expect(response.id).toBeDefined();
         expect(response.name).toBe(payload.name);
         expect(response.buslineId).toBe(payload.buslineId);
-        expect(response.serviceTypeId).toBe(payload.serviceTypeId);
+        expect(response.serviceTypeId).toBe(testData.serviceTypeId);
         expect(response.busModelId).toBe(payload.busModelId);
         expect(response.baseNodeId).toBe(payload.baseNodeId);
         expect(response.operationType).toBe('continuous');
@@ -405,8 +411,8 @@ describe('Rolling Plans Controller', () => {
         // Verify relations are included
         expect(response.busline).toBeDefined();
         expect(response.busline.id).toBe(testData.buslineId);
-        expect(response.serviceType).toBeDefined();
-        expect(response.serviceType.id).toBe(testData.serviceTypeId);
+        expect(response.busline.serviceType).toBeDefined();
+        expect(response.busline.serviceType.id).toBe(testData.serviceTypeId);
         expect(response.busModel).toBeDefined();
         expect(response.busModel.id).toBe(testData.busModelId);
         expect(response.baseNode).toBeDefined();
@@ -428,7 +434,6 @@ describe('Rolling Plans Controller', () => {
         const payload: CreateRollingPlanPayload = {
           name: rollingPlanEntity.name,
           buslineId: testData.buslineId,
-          serviceTypeId: testData.serviceTypeId,
           busModelId: testData.busModelId,
           baseNodeId: testData.baseNodeId,
           operationType: 'specific_days',
@@ -472,8 +477,8 @@ describe('Rolling Plans Controller', () => {
         // Verify relations are included
         expect(response.busline).toBeDefined();
         expect(response.busline.id).toBe(testData.buslineId);
-        expect(response.serviceType).toBeDefined();
-        expect(response.serviceType.id).toBe(testData.serviceTypeId);
+        expect(response.busline.serviceType).toBeDefined();
+        expect(response.busline.serviceType.id).toBe(testData.serviceTypeId);
         expect(response.busModel).toBeDefined();
         expect(response.busModel.id).toBe(testData.busModelId);
         expect(response.baseNode).toBeDefined();
@@ -505,7 +510,7 @@ describe('Rolling Plans Controller', () => {
 
         // Verify relations are still included
         expect(response.busline).toBeDefined();
-        expect(response.serviceType).toBeDefined();
+        expect(response.busline.serviceType).toBeDefined();
         expect(response.busModel).toBeDefined();
         expect(response.baseNode).toBeDefined();
       });
@@ -573,7 +578,6 @@ describe('Rolling Plans Controller', () => {
             suiteId: testData.suiteId,
           }).name,
           buslineId: testData.buslineId,
-          serviceTypeId: testData.serviceTypeId,
           busModelId: testData.busModelId,
           baseNodeId: testData.baseNodeId,
           operationType: 'continuous',
@@ -760,7 +764,6 @@ describe('Rolling Plans Controller', () => {
         test('should return NOT_FOUND errors for non-existent related entities', async () => {
           const invalidPayload = createBasePayload({
             buslineId: 999999,
-            serviceTypeId: 999998,
             busModelId: 999997,
             baseNodeId: 999996,
           });
@@ -770,11 +773,6 @@ describe('Rolling Plans Controller', () => {
               field: 'buslineId',
               code: 'NOT_FOUND',
               message: 'Bus line',
-            },
-            {
-              field: 'serviceTypeId',
-              code: 'NOT_FOUND',
-              message: 'Service type',
             },
             {
               field: 'busModelId',
@@ -817,7 +815,6 @@ describe('Rolling Plans Controller', () => {
               suiteId: testData.suiteId,
             }).name,
             buslineId: testData.buslineId,
-            serviceTypeId: testData.serviceTypeId,
             busModelId: testData.busModelId,
             baseNodeId: testData.baseNodeId,
             operationType: 'continuous' as const,
@@ -842,7 +839,6 @@ describe('Rolling Plans Controller', () => {
               suiteId: testData.suiteId,
             }).name,
             buslineId: testData.buslineId,
-            serviceTypeId: testData.serviceTypeId,
             busModelId: testData.busModelId,
             baseNodeId: testData.baseNodeId,
             operationType: 'specific_days' as const,
@@ -874,7 +870,6 @@ describe('Rolling Plans Controller', () => {
               suiteId: testData.suiteId,
             }).name,
             buslineId: testData.buslineId,
-            serviceTypeId: testData.serviceTypeId,
             busModelId: testData.busModelId,
             baseNodeId: testData.baseNodeId,
             operationType: 'specific_days',
@@ -1061,7 +1056,6 @@ describe('Rolling Plans Controller', () => {
           // Test multiple errors
           const multipleErrorsPayload: UpdateRollingPlanPayload = {
             buslineId: 999999,
-            serviceTypeId: 999998,
             busModelId: 999997,
           };
 
@@ -1072,11 +1066,6 @@ describe('Rolling Plans Controller', () => {
                 field: 'buslineId',
                 code: 'NOT_FOUND',
                 message: 'Bus line',
-              },
-              {
-                field: 'serviceTypeId',
-                code: 'NOT_FOUND',
-                message: 'Service type',
               },
               {
                 field: 'busModelId',

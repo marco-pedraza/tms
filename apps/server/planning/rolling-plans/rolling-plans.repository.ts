@@ -30,7 +30,7 @@ export function createRollingPlanRepository() {
    * @param id - The ID of the rolling plan to find
    * @returns The rolling plan with related entities
    * @throws {NotFoundError} If the rolling plan is not found
-   * @throws {NotFoundError} If any related entity (busline, serviceType, busModel, baseNode) is not found via inventory adapter
+   * @throws {NotFoundError} If any related entity (busline, busModel, baseNode) is not found via inventory adapter
    * @throws {Error} If any inventory adapter call fails (network errors, runtime errors, etc.)
    */
   async function findOneWithRelations(
@@ -40,9 +40,8 @@ export function createRollingPlanRepository() {
     const plan = await baseRepository.findOne(id);
 
     // Fetch related entities using inventory adapter (ACL)
-    const [busline, serviceType, busModel, baseNode] = await Promise.all([
+    const [busline, busModel, baseNode] = await Promise.all([
       inventoryAdapter.getBusLine(plan.buslineId),
-      inventoryAdapter.getServiceType(plan.serviceTypeId),
       inventoryAdapter.getBusModel(plan.busModelId),
       inventoryAdapter.getNode(plan.baseNodeId),
     ]);
@@ -50,7 +49,6 @@ export function createRollingPlanRepository() {
     return {
       ...plan,
       busline,
-      serviceType,
       busModel,
       baseNode,
     };
@@ -76,48 +74,40 @@ export function createRollingPlanRepository() {
 
     // Extract unique IDs for batch fetching
     const buslineIds = [...new Set(rollingPlansResult.map((p) => p.buslineId))];
-    const serviceTypeIds = [
-      ...new Set(rollingPlansResult.map((p) => p.serviceTypeId)),
-    ];
     const busModelIds = [
       ...new Set(rollingPlansResult.map((p) => p.busModelId)),
     ];
     const nodeIds = [...new Set(rollingPlansResult.map((p) => p.baseNodeId))];
 
     // Fetch all related entities in parallel using inventory adapter (ACL)
-    const [buslines, serviceTypes, busModels, nodes] = await Promise.all([
+    const [buslines, busModels, nodes] = await Promise.all([
       inventoryAdapter.getBusLinesByIds(buslineIds),
-      inventoryAdapter.getServiceTypesByIds(serviceTypeIds),
       inventoryAdapter.getBusModelsByIds(busModelIds),
       inventoryAdapter.getNodesByIds(nodeIds),
     ]);
 
     // Create lookup maps for efficient matching
     const buslineMap = new Map(buslines.map((b) => [b.id, b]));
-    const serviceTypeMap = new Map(serviceTypes.map((s) => [s.id, s]));
     const busModelMap = new Map(busModels.map((b) => [b.id, b]));
     const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 
     // Combine data
     const rollingPlansWithRelations = rollingPlansResult.map((plan) => {
       const busline = buslineMap.get(plan.buslineId);
-      const serviceType = serviceTypeMap.get(plan.serviceTypeId);
       const busModel = busModelMap.get(plan.busModelId);
       const baseNode = nodeMap.get(plan.baseNodeId);
 
       // Validate that all required relations were found
-      if (!busline || !serviceType || !busModel || !baseNode) {
+      if (!busline || !busModel || !baseNode) {
         throw new NotFoundError(
           `Missing related entities for rolling plan ${plan.id}: ` +
-            `busline=${!!busline}, serviceType=${!!serviceType}, ` +
-            `busModel=${!!busModel}, baseNode=${!!baseNode}`,
+            `busline=${!!busline}, busModel=${!!busModel}, baseNode=${!!baseNode}`,
         );
       }
 
       return {
         ...plan,
         busline,
-        serviceType,
         busModel,
         baseNode,
       };

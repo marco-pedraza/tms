@@ -18,7 +18,7 @@
  *   nodesIntegration
  * } from '@/inventory/integration';
  *
- * const busLine = await busLinesIntegration.getBusLine(1);
+ * const busLine = await busLinesIntegration.getBusLineWithServiceType(1);
  * const node = await nodesIntegration.getNode(10);
  * ```
  */

@@ -4001,7 +4001,7 @@ export namespace planning {
          * Retrieves a rolling plan by its ID with all related entities.
          * @param params - Object containing the rolling plan ID
          * @param params.id - The ID of the rolling plan to retrieve
-         * @returns {Promise<RollingPlanWithRelations>} The found rolling plan with relations (busline, serviceType, busModel, baseNode)
+         * @returns {Promise<RollingPlanWithRelations>} The found rolling plan with relations (busline, busModel, baseNode)
          * @throws {APIError} If the rolling plan is not found or retrieval fails
          */
         public async getRollingPlan(id: number): Promise<rolling_plans.RollingPlanWithRelations> {
@@ -4025,7 +4025,7 @@ export namespace planning {
         /**
          * Retrieves rolling plans with pagination and includes related information.
          * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
-         * @returns {Promise<PaginatedListRollingPlansResult>} Unified paginated response with data and pagination properties including related entities (busline, serviceType, busModel, baseNode)
+         * @returns {Promise<PaginatedListRollingPlansResult>} Unified paginated response with data and pagination properties including related entities (busline, busModel, baseNode)
          * @throws {APIError} If retrieval fails
          */
         public async listRollingPlansPaginated(params: rolling_plans.PaginatedListRollingPlansQueryParams): Promise<rolling_plans.PaginatedListRollingPlansResult> {
@@ -4053,12 +4053,6 @@ export namespace planning {
      * Must be a positive number
      */
     buslineId?: number
-
-    /**
-     * ID of the service type
-     * Must be a positive number
-     */
-    serviceTypeId?: number
 
     /**
      * ID of the bus model
@@ -5175,6 +5169,7 @@ export namespace adapters {
         id: number
         name: string
         code: string
+        serviceTypeId: number
         pricePerKilometer: number
         description: string | null
         fleetSize: number | null
@@ -5182,6 +5177,7 @@ export namespace adapters {
         email: string | null
         phone: string | null
         active: boolean
+        serviceType: PlanningServiceType
     }
 
     export interface PlanningBusModel {
@@ -11192,12 +11188,6 @@ export namespace rolling_plans {
         buslineId: number
 
         /**
-         * ID of the service type
-         * Must be a positive number
-         */
-        serviceTypeId: number
-
-        /**
          * ID of the bus model
          * Must be a positive number
          */
@@ -11367,7 +11357,6 @@ export namespace rolling_plans {
 
     export interface RollingPlanWithRelations {
         busline: adapters.PlanningBusLine
-        serviceType: adapters.PlanningServiceType
         busModel: adapters.PlanningBusModel
         baseNode: adapters.PlanningNode
         /**

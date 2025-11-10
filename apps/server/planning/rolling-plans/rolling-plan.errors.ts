@@ -7,11 +7,6 @@ const ROLLING_PLAN_ERROR_CONFIG = {
     field: 'buslineId',
     code: 'NOT_FOUND',
   },
-  serviceTypeNotFound: {
-    message: 'Service type not found',
-    field: 'serviceTypeId',
-    code: 'NOT_FOUND',
-  },
   busModelNotFound: {
     message: 'Bus model not found',
     field: 'busModelId',

@@ -3,7 +3,6 @@ import type {
   PlanningBusLine,
   PlanningBusModel,
   PlanningNode,
-  PlanningServiceType,
 } from '@/planning/adapters/inventory.adapter';
 import type { TableColumn, TransactionalDB } from '@repo/base-repo';
 import type { BaseDomainEntity } from '@/shared/domain/base-entity';
@@ -72,7 +71,6 @@ export interface RollingPlan {
  */
 export interface RollingPlanWithRelations extends RollingPlan {
   busline: PlanningBusLine;
-  serviceType: PlanningServiceType;
   busModel: PlanningBusModel;
   baseNode: PlanningNode;
 }
@@ -92,12 +90,6 @@ export interface CreateRollingPlanPayload {
    * Must be a positive number
    */
   buslineId: number & Min<1>;
-
-  /**
-   * ID of the service type
-   * Must be a positive number
-   */
-  serviceTypeId: number & Min<1>;
 
   /**
    * ID of the bus model
@@ -155,12 +147,6 @@ export interface UpdateRollingPlanPayload {
    * Must be a positive number
    */
   buslineId?: number & Min<1>;
-
-  /**
-   * ID of the service type
-   * Must be a positive number
-   */
-  serviceTypeId?: number & Min<1>;
 
   /**
    * ID of the bus model
@@ -294,7 +280,6 @@ export interface RollingPlanEntityDependencies {
   };
   inventoryAdapter: {
     getBusLine: (id: number) => Promise<PlanningBusLine>;
-    getServiceType: (id: number) => Promise<PlanningServiceType>;
     getBusModel: (id: number) => Promise<PlanningBusModel>;
     getNode: (id: number) => Promise<PlanningNode>;
   };

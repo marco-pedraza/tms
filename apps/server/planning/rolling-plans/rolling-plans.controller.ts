@@ -58,7 +58,7 @@ export const listRollingPlans = api(
 /**
  * Retrieves rolling plans with pagination and includes related information.
  * @param params - Pagination and query parameters including page, pageSize, orderBy, filters, and searchTerm
- * @returns {Promise<PaginatedListRollingPlansResult>} Unified paginated response with data and pagination properties including related entities (busline, serviceType, busModel, baseNode)
+ * @returns {Promise<PaginatedListRollingPlansResult>} Unified paginated response with data and pagination properties including related entities (busline, busModel, baseNode)
  * @throws {APIError} If retrieval fails
  */
 export const listRollingPlansPaginated = api(
@@ -84,7 +84,7 @@ export const listRollingPlansPaginated = api(
  * Retrieves a rolling plan by its ID with all related entities.
  * @param params - Object containing the rolling plan ID
  * @param params.id - The ID of the rolling plan to retrieve
- * @returns {Promise<RollingPlanWithRelations>} The found rolling plan with relations (busline, serviceType, busModel, baseNode)
+ * @returns {Promise<RollingPlanWithRelations>} The found rolling plan with relations (busline, busModel, baseNode)
  * @throws {APIError} If the rolling plan is not found or retrieval fails
  */
 export const getRollingPlan = api(

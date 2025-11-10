@@ -2,13 +2,11 @@ import {
   busLinesIntegration,
   busModelsIntegration,
   nodesIntegration,
-  serviceTypesIntegration,
 } from '@/inventory/integration';
 import type {
   BusLineIntegration,
   BusModelIntegration,
   NodeIntegration,
-  ServiceTypeIntegration,
 } from '@/inventory/integration';
 
 /**
@@ -18,10 +16,19 @@ import type {
  * They may have different structures or additional computed fields.
  */
 
+export interface PlanningServiceType {
+  id: number;
+  name: string;
+  code: string;
+  description: string | null;
+  active: boolean;
+}
+
 export interface PlanningBusLine {
   id: number;
   name: string;
   code: string;
+  serviceTypeId: number;
   pricePerKilometer: number;
   description: string | null;
   fleetSize: number | null;
@@ -29,6 +36,7 @@ export interface PlanningBusLine {
   email: string | null;
   phone: string | null;
   active: boolean;
+  serviceType: PlanningServiceType;
 }
 
 export interface PlanningNode {
@@ -60,14 +68,6 @@ export interface PlanningBusModel {
   active: boolean;
 }
 
-export interface PlanningServiceType {
-  id: number;
-  name: string;
-  code: string;
-  description: string | null;
-  active: boolean;
-}
-
 /**
  * Inventory Adapter - Anti-Corruption Layer
  *
@@ -83,13 +83,30 @@ function createInventoryAdapter() {
   // ==================== TRANSLATION FUNCTIONS ====================
 
   /**
+   * Translates ServiceType from inventory to planning domain
+   */
+  function translateServiceType(
+    st: BusLineIntegration['serviceType'],
+  ): PlanningServiceType {
+    return {
+      id: st.id,
+      name: st.name,
+      code: st.code,
+      description: st.description,
+      active: st.active,
+    };
+  }
+
+  /**
    * Translates BusLine from inventory to planning domain
+   * Includes serviceType from the bus line relation
    */
   function translateBusLine(busLine: BusLineIntegration): PlanningBusLine {
     return {
       id: busLine.id,
       name: busLine.name,
       code: busLine.code,
+      serviceTypeId: busLine.serviceTypeId,
       pricePerKilometer: busLine.pricePerKilometer,
       description: busLine.description,
       fleetSize: busLine.fleetSize,
@@ -97,6 +114,7 @@ function createInventoryAdapter() {
       email: busLine.email,
       phone: busLine.phone,
       active: busLine.active,
+      serviceType: translateServiceType(busLine.serviceType),
     };
   }
 
@@ -140,28 +158,13 @@ function createInventoryAdapter() {
     };
   }
 
-  /**
-   * Translates ServiceType from inventory to planning domain
-   */
-  function translateServiceType(
-    st: ServiceTypeIntegration,
-  ): PlanningServiceType {
-    return {
-      id: st.id,
-      name: st.name,
-      code: st.code,
-      description: st.description,
-      active: st.active,
-    };
-  }
-
   // ==================== PUBLIC ADAPTER METHODS ====================
 
   /**
-   * Retrieves a bus line adapted to planning domain
+   * Retrieves a bus line adapted to planning domain with service type included
    */
   async function getBusLine(id: number): Promise<PlanningBusLine> {
-    const busLine = await busLinesIntegration.getBusLine(id);
+    const busLine = await busLinesIntegration.getBusLineWithServiceType(id);
     return translateBusLine(busLine);
   }
 
@@ -205,37 +208,16 @@ function createInventoryAdapter() {
     return models.map(translateBusModel);
   }
 
-  /**
-   * Retrieves a service type adapted to planning domain
-   */
-  async function getServiceType(id: number): Promise<PlanningServiceType> {
-    const serviceType = await serviceTypesIntegration.getServiceType(id);
-    return translateServiceType(serviceType);
-  }
-
-  /**
-   * Retrieves multiple service types by IDs
-   */
-  async function getServiceTypesByIds(
-    ids: number[],
-  ): Promise<PlanningServiceType[]> {
-    const serviceTypes =
-      await serviceTypesIntegration.getServiceTypesByIds(ids);
-    return serviceTypes.map(translateServiceType);
-  }
-
   return {
     // Single entity operations
     getBusLine,
     getBusModel,
     getNode,
-    getServiceType,
 
     // Batch operations
     getBusLinesByIds,
     getBusModelsByIds,
     getNodesByIds,
-    getServiceTypesByIds,
   };
 }
 

@@ -25,6 +25,8 @@
     "seed:planning:gfa": "encore exec -- npx tsx db/scripts/seed-planning.ts --seed --client gfa",
     "seed:users": "encore exec -- npx tsx db/scripts/seed-users.ts --seed",
     "seed:users:gfa": "encore exec -- npx tsx db/scripts/seed-users.ts --seed --client gfa",
+    "seed:all": "npm run seed:inventory && npm run seed:planning && npm run seed:users",
+    "seed:all:gfa": "npm run seed:inventory:gfa && npm run seed:planning:gfa && npm run seed:users:gfa",
     "generate-postman-collection": "tsx tools/postman-generator/src/index.ts"
   },
   "devDependencies": {

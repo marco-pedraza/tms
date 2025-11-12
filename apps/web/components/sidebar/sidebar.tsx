@@ -70,7 +70,10 @@ export default function Sidebar() {
     'inventory_chromatics',
   ]);
 
-  const hasRoutingAccess = hasModuleAccess('inventory_pathways');
+  const hasRoutingAccess = hasAnyAccess([
+    'inventory_pathways',
+    'inventory_routes',
+  ]);
   const hasConfigAccess = hasModuleAccess('inventory_amenities');
   const hasUsersAccess = hasAnyAccess(['users_roles', 'users_users']);
 
@@ -264,6 +267,13 @@ export default function Sidebar() {
                   href={routes.pathways.index}
                   icon={Navigation}
                   label={tSidebar('inventory.routing.pathways')}
+                />
+              )}
+              {hasModuleAccess('inventory_routes') && (
+                <SidebarLink
+                  href={routes.routes.index}
+                  icon={Route}
+                  label={tSidebar('inventory.routing.routes')}
                 />
               )}
             </SidebarSection>

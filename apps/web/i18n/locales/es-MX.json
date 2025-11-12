@@ -2276,5 +2276,48 @@
         "error": "No pudimos sincronizar las casetas del trayecto"
       }
     }
+  },
+  "routes": {
+    "title": "Rutas",
+    "description": "Gestiona las rutas de autobuses con sus trayectos y configuraciones",
+    "actions": {
+      "create": "Crear Ruta",
+      "update": "Actualizar Ruta",
+      "backToList": "Volver a rutas"
+    },
+    "fields": {
+      "name": "Nombre",
+      "code": "Código",
+      "origin": "Origen",
+      "destination": "Destino",
+      "busline": "Línea de Autobús",
+      "serviceType": "Tipo de Servicio"
+    },
+    "filters": {
+      "active": "Activo"
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando ruta...",
+        "success": "Ruta creada correctamente",
+        "error": "No pudimos crear la ruta"
+      },
+      "update": {
+        "loading": "Actualizando ruta...",
+        "success": "Ruta actualizada correctamente",
+        "error": "No pudimos actualizar la ruta"
+      },
+      "delete": {
+        "loading": "Eliminando ruta...",
+        "success": "Ruta eliminada correctamente",
+        "error": "No pudimos eliminar la ruta"
+      }
+    },
+    "errors": {
+      "notFound": {
+        "title": "Ruta no encontrada",
+        "description": "No pudimos encontrar la ruta que buscas. Es posible que haya sido eliminada o que no exista."
+      }
+    }
   }
 }

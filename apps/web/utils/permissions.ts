@@ -23,6 +23,7 @@ export const ROUTE_TO_MODULE: Record<string, string> = {
   '/technologies': 'inventory_technologies',
   '/chromatics': 'inventory_chromatics',
   '/pathways': 'inventory_pathways',
+  '/routes': 'inventory_routes',
   '/amenities': 'inventory_amenities',
   '/roles': 'users_roles',
   '/users': 'users_users',

@@ -70,6 +70,9 @@ export type UseChromaticsTranslationsResult = ReturnType<
 export type UsePathwaysTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'pathways'>
 >;
+export type UseRoutesTranslationsResult = ReturnType<
+  typeof createTranslator<Messages, 'routes'>
+>;
 export type UseUsersTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'users'>
 >;

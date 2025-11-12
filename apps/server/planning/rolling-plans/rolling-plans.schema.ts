@@ -9,6 +9,8 @@ import {
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
+import { rollingPlanVersions } from '@/planning/rolling-plan-versions/rolling-plan-versions.schema';
+import { relations } from 'drizzle-orm';
 import { isNull } from 'drizzle-orm';
 import { busModels } from '@/inventory/fleet/bus-models/bus-models.schema';
 import { nodes } from '@/inventory/locations/nodes/nodes.schema';
@@ -58,3 +60,10 @@ export const rollingPlans = pgTable(
       .where(isNull(table.deletedAt)),
   ],
 );
+
+/**
+ * Relations for the rolling plans table
+ */
+export const rollingPlansRelations = relations(rollingPlans, ({ many }) => ({
+  versions: many(rollingPlanVersions),
+}));

@@ -3967,6 +3967,8 @@ export namespace planning {
             this.createRollingPlan = this.createRollingPlan.bind(this)
             this.deleteRollingPlan = this.deleteRollingPlan.bind(this)
             this.getRollingPlan = this.getRollingPlan.bind(this)
+            this.getRollingPlanVersion = this.getRollingPlanVersion.bind(this)
+            this.listRollingPlanVersions = this.listRollingPlanVersions.bind(this)
             this.listRollingPlans = this.listRollingPlans.bind(this)
             this.listRollingPlansPaginated = this.listRollingPlansPaginated.bind(this)
             this.updateRollingPlan = this.updateRollingPlan.bind(this)
@@ -4008,6 +4010,55 @@ export namespace planning {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/rolling-plans/${encodeURIComponent(id)}`)
             return await resp.json() as rolling_plans.RollingPlanWithRelations
+        }
+
+        /**
+         * Retrieves a rolling plan version by its ID within a specific rolling plan.
+         * @param params - Object containing the rolling plan ID and version ID
+         * @param params.id - The ID of the rolling plan
+         * @param params.versionId - The ID of the rolling plan version to retrieve
+         * @returns {Promise<RollingPlanVersion>} The found rolling plan version
+         * @throws {NotFoundError} If the rolling plan or version is not found
+         * @throws {APIError} If retrieval fails
+         */
+        public async getRollingPlanVersion(id: number, versionId: number): Promise<rolling_plan_versions.RollingPlanVersion> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("GET", `/rolling-plans/${encodeURIComponent(id)}/versions/${encodeURIComponent(versionId)}`)
+            return await resp.json() as rolling_plan_versions.RollingPlanVersion
+        }
+
+        /**
+         * Retrieves all rolling plan versions for a specific rolling plan without pagination.
+         * @param params - Object containing the rolling plan ID and query parameters
+         * @param params.id - The ID of the rolling plan to get versions for
+         * @param params.orderBy - Optional ordering configuration
+         * @param params.filters - Optional filters to apply
+         * @param params.searchTerm - Optional search term to match against version names
+         * @returns {Promise<ListRollingPlanVersionsResult>} Unified response with data property containing array of rolling plan versions
+         * @throws {NotFoundError} If the rolling plan is not found
+         * @throws {APIError} If retrieval fails
+         */
+        public async listRollingPlanVersions(id: number, params: {
+    orderBy?: {
+        field: "id" | "rollingPlanId" | "name" | "state" | "notes" | "activatedAt" | "deactivatedAt" | "createdAt" | "updatedAt"
+        direction: "asc" | "desc"
+    }[]
+    filters?: {
+        id?: number
+        rollingPlanId?: number
+        name?: string
+        state?: rolling_plan_versions.RollingPlanVersionState
+        notes?: string | null
+        activatedAt?: string | string | null
+        deactivatedAt?: string | string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
+    }
+    searchTerm?: string
+}): Promise<rolling_plan_versions.ListRollingPlanVersionsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/rolling-plans/${encodeURIComponent(id)}/versions`, JSON.stringify(params))
+            return await resp.json() as rolling_plan_versions.ListRollingPlanVersionsResult
         }
 
         /**
@@ -11171,6 +11222,61 @@ export namespace roles {
          */
         updatedAt: string | string | null
     }
+}
+
+export namespace rolling_plan_versions {
+    export interface ListRollingPlanVersionsResult {
+        data: RollingPlanVersion[]
+    }
+
+    export interface RollingPlanVersion {
+        /**
+         * Unique identifier for the rolling plan version
+         */
+        id: number
+
+        /**
+         * ID of the rolling plan this version belongs to
+         */
+        rollingPlanId: number
+
+        /**
+         * Name of the rolling plan version
+         */
+        name: string
+
+        /**
+         * State of the version: 'draft' | 'active' | 'inactive'
+         */
+        state: RollingPlanVersionState
+
+        /**
+         * Optional notes about the version
+         */
+        notes: string | null
+
+        /**
+         * Timestamp when the version was activated
+         */
+        activatedAt: string | string | null
+
+        /**
+         * Timestamp when the version was deactivated
+         */
+        deactivatedAt: string | string | null
+
+        /**
+         * Timestamp when the version record was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the version record was last updated
+         */
+        updatedAt: string | string | null
+    }
+
+    export type RollingPlanVersionState = "draft" | "active" | "inactive"
 }
 
 export namespace rolling_plans {

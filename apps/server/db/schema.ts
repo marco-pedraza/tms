@@ -165,4 +165,15 @@ export {
   routeLegs,
   routeLegsRelations,
 } from '@/inventory/routing/route-legs/route-legs.schema';
-export { rollingPlans } from '@/planning/rolling-plans/rolling-plans.schema';
+export {
+  rollingPlans,
+  rollingPlansRelations,
+} from '@/planning/rolling-plans/rolling-plans.schema';
+export {
+  rollingPlanVersions,
+  rollingPlanVersionsRelations,
+} from '@/planning/rolling-plan-versions/rolling-plan-versions.schema';
+export {
+  rollingPlanVersionActivationLogs,
+  rollingPlanVersionActivationLogsRelations,
+} from '@/planning/rolling-plan-version-activation-logs/rolling-plan-version-activation-logs.schema';

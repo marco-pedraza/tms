@@ -2,6 +2,8 @@ import { busModelRepository } from '@/inventory/fleet/bus-models/bus-models.repo
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
 import { busLineRepository } from '@/inventory/operators/bus-lines/bus-lines.repository';
 import { serviceTypeRepository } from '@/inventory/operators/service-types/service-types.repository';
+import { seedRollingPlanVersionActivationLogs } from './seeders/rolling-plan-version-activation-logs.seeder';
+import { seedRollingPlanVersions } from './seeders/rolling-plan-versions.seeder';
 import { seedRollingPlans } from './seeders/rolling-plans.seeder';
 
 /**
@@ -48,8 +50,21 @@ export async function seedPlanning(clientCode?: string): Promise<void> {
     );
     console.log('✅ Rolling plans seeding completed\n');
 
+    // === ROLLING PLAN VERSIONS SEEDING ===
+    console.log('📋 Seeding rolling plan versions...');
+    const rollingPlanVersions = await seedRollingPlanVersions(rollingPlans);
+    console.log('✅ Rolling plan versions seeding completed\n');
+
+    // === ROLLING PLAN VERSION ACTIVATION LOGS SEEDING ===
+    console.log('📋 Seeding rolling plan version activation logs...');
+    const activationLogs =
+      await seedRollingPlanVersionActivationLogs(rollingPlans);
+    console.log('✅ Rolling plan version activation logs seeding completed\n');
+
     console.log(`📊 Summary:`);
     console.log(`   - Rolling Plans: ${rollingPlans.length}`);
+    console.log(`     - Versions: ${rollingPlanVersions.length}`);
+    console.log(`     - Activation Logs: ${activationLogs.length}`);
 
     console.log('🎉 Planning seeding completed successfully!');
   } catch (error) {

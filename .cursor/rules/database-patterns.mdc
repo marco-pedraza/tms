@@ -1,667 +1,125 @@
 ---
-description: define how to manages database schemas
-globs: **/server/db/**
+description: Database patterns and repository implementation
+globs: **/server/**/*.repository.ts,**/server/**/*.schema.ts
 alwaysApply: false
 ---
-# Database Organization Patterns
 
-## Overview
+# Database Patterns
 
-This document defines database patterns in our Encore application, following the Repository pattern and Locality of Behavior (LoB) principle. Each feature defines its schema in its own directory, while a central schema.ts file aggregates them for migrations.
+> **📖 See `AGENTS.md` for complete database patterns and available base repository methods**
 
-### Key Principles:
+## Essential Description
 
-1. **Complete Base Repository**: Base implementation encapsulates CRUD operations and common functionality. Don't create unnecessary wrappers.
+Each feature defines its schema locally. Base repository (`@repo/base-repo`) provides complete CRUD. Only extend when you need specific methods (relationships, transformations). Use `function` declarations, not arrow functions.
 
-2. **Minimal Extension**: Only implement custom methods when needed:
-   - Loading relationships (with Drizzle's relations)
-   - Validating domain-specific rules
-   - Transforming data before/after database operations
+## Practical Examples
 
-3. **Function Declarations**: Use `function` declarations instead of arrow functions
-
-4. **Configuration Over Implementation**: Use options to configure behavior rather than overriding methods
-
-## Directory Structure
-
-```
-apps/server/
-├── db/                       # Root-level database configuration
-│   ├── database.ts          # Database connection configuration
-│   ├── schema.ts            # Schema exports aggregation
-│   ├── index.ts             # Database exports aggregation
-│   └── migrations/          # Database migrations
-├── shared/                  # Shared utilities
-│   └── base-repository.ts   # Base repository implementation
-└── [subsystem]/[feature]/   # Feature-specific implementations
-    ├── [feature].schema.ts  # Schema definition
-    └── [feature].repository.ts # Repository implementation
-```
-
-## Core Components
-
-### 1. Base Repository Implementation and Available Methods
-
-The base repository provides a complete set of CRUD operations and common functionality. **You should not re-implement these methods** in feature repositories unless you need to add specific validation or transformation logic.
-
-The base repository provides a comprehensive set of methods for database operations. **All methods are fully implemented** - you should not re-implement them unless you need specific validation or transformation logic.
-
-**Complete Method Reference**: For the full interface definition and JSDoc documentation of all methods, see `packages/base-repo/src/base-repository.ts`.
-
-#### Core CRUD Operations
-```typescript
-findOne(id: number): Promise<TEntity>                    // Find entity by ID
-create(data: TCreatePayload): Promise<TEntity>           // Create new entity  
-update(id: number, data: TUpdatePayload): Promise<TEntity> // Update existing entity
-delete(id: number): Promise<TEntity>                     // Delete entity (soft/hard based on config)
-```
-
-#### Bulk Operations  
-```typescript
-findAll(params?: QueryOptions): Promise<TEntity[]>      // Get all entities with filters/search/ordering
-findAllPaginated(params?: PaginationParams): Promise<PaginatedResult> // Paginated results
-deleteAll(): Promise<number>                            // Delete all records (returns count)
-deleteMany(ids: number[]): Promise<TEntity[]>           // Delete multiple entities by IDs
-```
-
-#### Field-Based Queries
-```typescript
-findBy(field: PgColumn, value: unknown): Promise<TEntity | null>     // Find single entity by field
-findAllBy(field: PgColumn, value: unknown, options?: QueryOptions): Promise<TEntity[]> // Find all by field
-findByPaginated(field: PgColumn, value: unknown, params?: PaginationParams): Promise<PaginatedResult> // Paginated field search
-```
-
-#### Validation & Existence Checks
-```typescript
-existsBy(field: PgColumn, value: unknown, excludeId?: number): Promise<boolean> // Check if entity exists by field
-countAll(options?: QueryOptions): Promise<number>       // Count entities with filters/search
-checkUniqueness(fields: UniqueFieldConfig[], excludeId?: number): Promise<ConflictInfo[]> // Validate uniqueness
-validateRelationExists(relatedTable, relationId, relationName?, hasSoftDelete?): Promise<void> // Validate FK
-```
-
-#### Soft Delete Operations (requires `softDeleteEnabled: true`)
-```typescript
-forceDelete(id: number): Promise<TEntity>               // Permanently delete (hard delete)
-restore(id: number): Promise<TEntity>                   // Restore soft-deleted entity
-```
-
-#### Search Operations (DEPRECATED - requires `searchableFields` configuration)
-```typescript
-search(term: string): Promise<TEntity[]>                // ⚠️ DEPRECATED: Use findAll({ searchTerm })
-searchPaginated(term: string, params?: PaginationParams): Promise<PaginatedResult> // ⚠️ DEPRECATED: Use findAllPaginated({ searchTerm })
-```
-
-**⚠️ Important**: These methods are deprecated and should be removed when possible. Use `findAll({ searchTerm })` and `findAllPaginated({ searchTerm })` instead.
-
-#### Transaction Support
-```typescript
-transaction<T>(callback: (txRepo, tx) => Promise<T>): Promise<T> // Execute in transaction
-withTransaction(tx: TransactionalDB): BaseRepository     // Create transaction-scoped repository
-```
-
-#### Advanced Query Building
-```typescript
-buildQueryExpressions(params?: QueryOptions): { baseWhere?: SQL, baseOrderBy?: SQL[] } // Build reusable query conditions
-```
-
-#### Configuration Options
-```typescript
-export interface BaseRepositoryOptions<TSchema> {
-  searchableFields?: TSchema[];        // Fields to search against (required for search methods)
-  softDeleteEnabled?: boolean;         // Enable soft delete functionality
-  orderByField?: TSchema;             // Default ordering field
-  orderDirection?: 'asc' | 'desc';    // Default ordering direction
-}
-```
-
-### 2. Creating Feature Repositories
-
-When creating a feature repository, follow these guidelines:
+### Minimal Repository
 
 ```typescript
-import { featureSchema } from './feature.schema';
-import type { FeatureEntity, CreateFeaturePayload, UpdateFeaturePayload } from './feature.types';
 import { createBaseRepository } from '@repo/base-repo';
 import { db } from '../db-service';
+import { featureSchema } from './feature.schema';
+import type { Feature, CreatePayload, UpdatePayload } from './feature.types';
 
-// Use function declaration instead of arrow functions
 export function createFeatureRepository() {
-  // Configure the base repository with types and options
-  const baseRepository = createBaseRepository<
-    FeatureEntity,                // Import from types.ts, don't redefine
-    CreateFeaturePayload,         // Import from types.ts
-    UpdateFeaturePayload,         // Import from types.ts
-    typeof featureSchema          // Schema from schema.ts
-  >(db, featureSchema, 'Feature', {
-    searchableFields: [featureSchema.name], // Fields for text search
-  });
-
-  // ONLY add custom methods when needed, such as:
-  // 1. Loading relationships (with Drizzle's "with" functionality)
-  async function findOneWithRelations(id: number) {
-    const result = await db.query.features.findFirst({
-      where: eq(featureSchema.id, id),
-      with: {
-        relatedEntity: true,
-      },
-    });
-
-    if (!result) throw new NotFoundError(`Feature not found`);
-    return result;
-  }
-
-  // 2. Custom validations/transformations before database operations
-  async function create(data: CreateFeaturePayload) {
-    // Validate or transform data before creating
-    validateData(data);
-
-    // No need to create a wrapper if no additional logic is needed
-    return baseRepository.create(data);
-  }
-
-  return {
-    ...baseRepository,           // Spread ALL base repository methods
-    findOneWithRelations,        // Add custom methods only when needed
-    create,                      // Override base methods only when necessary
-  };
+  return createBaseRepository<Feature, CreatePayload, UpdatePayload, typeof featureSchema>(
+    db,
+    featureSchema,
+    'Feature',
+    {
+      searchableFields: [featureSchema.name],
+      softDeleteEnabled: true,
+    }
+  );
 }
 
-// Export the instance to use throughout the application
 export const featureRepository = createFeatureRepository();
 ```
 
-### 3. Minimal Repository Example (Countries)
+### Repository with Relationships
 
 ```typescript
-// inventory/countries/countries.repository.ts
-import { countries } from './countries.schema';
-import type {
-  Country,
-  CreateCountryPayload,
-  UpdateCountryPayload,
-} from './countries.types';
-import { createBaseRepository } from '@repo/base-repo';
-import { db } from '../db-service';
+export function createFeatureRepository() {
+  const baseRepository = createBaseRepository<Feature, CreatePayload, UpdatePayload, typeof schema>(
+    db,
+    schema,
+    'Feature',
+    { searchableFields: [schema.name] }
+  );
 
-/**
- * Creates a repository for managing country entities
- */
-export function createCountryRepository() {
-  // No custom methods needed - just configure the base repository
-  return createBaseRepository<
-    Country,
-    CreateCountryPayload,
-    UpdateCountryPayload,
-    typeof countries
-  >(db, countries, 'Country', {
-    searchableFields: [countries.name, countries.code],
-    softDeleteEnabled: true,
-  });
-}
-
-export const countryRepository = createCountryRepository();
-```
-
-### 4. Repository with Relationships (Cities)
-
-```typescript
-// inventory/cities/cities.repository.ts
-import { inArray } from 'drizzle-orm';
-import { NotFoundError, createBaseRepository } from '@repo/base-repo';
-import { PaginationMeta } from '../../shared/types';
-import { createSlug } from '../../shared/utils';
-import { db } from '../db-service';
-import { stateRepository } from '../states/states.repository';
-import { cities } from './cities.schema';
-import type {
-  City,
-  CityWithRelations,
-  CreateCityPayload,
-  PaginatedListCitiesQueryParams,
-  PaginatedListCitiesResult,
-  UpdateCityPayload,
-} from './cities.types';
-
-/**
- * Creates a repository for managing city entities
- * @returns {Object} An object containing city-specific operations and base CRUD operations
- */
-export function createCityRepository() {
-  const baseRepository = createBaseRepository<
-    City,
-    CreateCityPayload & { slug: string },
-    UpdateCityPayload & { slug?: string },
-    typeof cities
-  >(db, cities, 'City', {
-    searchableFields: [cities.name, cities.slug],
-    softDeleteEnabled: true,
-  });
-
-  /**
-   * Creates a new city with auto-generated slug using state code as prefix
-   * @param data - The city data to create
-   * @returns The created city
-   */
-  const create = async (data: CreateCityPayload): Promise<City> => {
-    const stateCode = await stateRepository.getStateCode(data.stateId);
-    const slug = createSlug(data.name, stateCode);
-    return await baseRepository.create({ ...data, slug });
-  };
-
-  /**
-   * Updates a city
-   * @param id - The ID of the city to update
-   * @param data - The city data to update
-   * @returns The updated city
-   */
-  const update = async (id: number, data: UpdateCityPayload): Promise<City> => {
-    const updateData: UpdateCityPayload & { slug?: string } = { ...data };
-
-    // If name or stateId is being updated, regenerate slug
-    if (data.name || data.stateId !== undefined) {
-      // Get current city to determine state
-      const currentCity = await baseRepository.findOne(id);
-      const stateId = data.stateId ?? currentCity.stateId;
-      const name = data.name ?? currentCity.name;
-
-      const stateCode = await stateRepository.getStateCode(stateId);
-      updateData.slug = createSlug(name, stateCode);
-    }
-
-    return await baseRepository.update(id, updateData);
-  };
-
-  /**
-   * Finds a single city with its relations (state, country, and populations)
-   * @param id - The ID of the city to find
-   * @returns The city with state, country, and population information
-   * @throws {NotFoundError} If the city is not found
-   */
-  const findOneWithRelations = async (
-    id: number,
-  ): Promise<CityWithRelations> => {
-    const city = await db.query.cities.findFirst({
-      where: (cities, { eq, and, isNull }) =>
-        and(eq(cities.id, id), isNull(cities.deletedAt)),
-      with: {
-        state: {
-          with: {
-            country: true,
-          },
-        },
-        populationCities: {
-          with: {
-            population: true,
-          },
-        },
-      },
+  async function findOneWithRelations(id: number): Promise<FeatureWithRelations> {
+    const result = await db.query.features.findFirst({
+      where: eq(schema.id, id),
+      with: { relatedEntity: true },
     });
-
-    if (!city) {
-      throw new NotFoundError(`City with id ${id} not found`);
-    }
-
-    // Transform the data to return populations directly
-    const { populationCities, ...cityData } = city;
-
-    return {
-      ...cityData,
-      populations: populationCities.map((pc) => pc.population),
-    };
-  };
-
-  /**
-   * Appends relations (state and country) to cities
-   *
-   * This function takes a list of cities and enriches them with related state and country information.
-   * It's designed to be used after getting paginated results from the base repository.
-   *
-   * @param citiesResult - Array of cities to append relations to
-   * @param pagination - Pagination metadata
-   * @param params - Query parameters for ordering
-   * @returns Cities with relations and pagination metadata
-   */
-  const appendRelations = async (
-    citiesResult: City[],
-    pagination: PaginationMeta,
-    params: PaginatedListCitiesQueryParams,
-  ): Promise<PaginatedListCitiesResult> => {
-    // Return early if no cities to process
-    if (citiesResult.length === 0) {
-      return {
-        data: [],
-        pagination,
-      };
-    }
-
-    const { baseOrderBy } = baseRepository.buildQueryExpressions(params);
-    const ids = citiesResult.map((city) => city.id);
-
-    const citiesWithRelations = await db.query.cities.findMany({
-      where: (cities, { inArray, and, isNull }) =>
-        and(inArray(cities.id, ids), isNull(cities.deletedAt)),
-      orderBy: baseOrderBy,
-      with: {
-        state: {
-          with: {
-            country: true,
-          },
-        },
-      },
-    });
-
-    return {
-      data: citiesWithRelations,
-      pagination,
-    };
-  };
-
-  /**
-   * Validates that all provided city IDs exist
-   * @param cityIds - Array of city IDs to validate
-   * @returns Array of non-existent city IDs (empty if all exist)
-   */
-  const validateCitiesExist = async (cityIds: number[]): Promise<number[]> => {
-    if (cityIds.length === 0) {
-      return [];
-    }
-
-    const existingCities = await db
-      .select({ id: cities.id })
-      .from(cities)
-      .where(inArray(cities.id, cityIds));
-
-    const existingCityIds = existingCities.map((city) => city.id);
-    const nonExistentCityIds = cityIds.filter(
-      (id: number) => !existingCityIds.includes(id),
-    );
-
-    return nonExistentCityIds;
-  };
+    if (!result) throw new NotFoundError(`Feature ${id} not found`);
+    return result;
+  }
 
   return {
     ...baseRepository,
-    create,
-    update,
     findOneWithRelations,
-    appendRelations,
-    validateCitiesExist,
   };
-};
-
-// Export the city repository instance
-export const cityRepository = createCityRepository();
-```
-
-### 5. Transaction and Compound Operations
-
-```typescript
-// Example using transaction for operations across multiple repositories
-async function createCompoundEntity(data) {
-  // Use transaction to ensure all-or-nothing operation
-  return mainRepository.transaction(async (txMainRepo, tx) => {
-    // Create transaction-scoped repositories
-    const txRelatedRepo = relatedRepository.withTransaction(tx);
-
-    // Create main entity
-    const entity = await txMainRepo.create({
-      name: data.name,
-      // other fields
-    });
-
-    // Create related entities in the same transaction
-    await txRelatedRepo.create({
-      mainEntityId: entity.id,
-      // other fields
-    });
-
-    // Return only the ID from within the transaction
-    return entity.id;
-  }).then(id => {
-    // After transaction completes successfully, retrieve with full details
-    return mainRepository.findOneWithDetails(id);
-  });
 }
 ```
 
-## Common Method Usage Examples
-
-### Validation and Existence Checks
+### Simple Schema
 
 ```typescript
-// Check if a country code already exists (for validation)
-const codeExists = await countryRepository.existsBy(countries.code, 'US');
-
-// Check uniqueness excluding current record (for updates)
-const conflicts = await countryRepository.checkUniqueness([
-  { field: countries.code, value: 'US' },
-  { field: countries.name, value: 'United States' }
-], excludeId);
-
-// Count active countries
-const activeCount = await countryRepository.countAll({ 
-  filters: { active: true } 
-});
-
-// Validate that a related state exists before creating a city
-await cityRepository.validateRelationExists(
-  cities, 
-  cityData.stateId, 
-  'City',
-  true // City table has soft delete enabled
-);
-```
-
-### Field-Based Queries
-
-```typescript
-// Find all cities in a specific state
-const cityCities = await cityRepository.findAllBy(
-  cities.stateId, 
-  stateId,
-  { orderBy: [{ field: cities.name, direction: 'asc' }] }
-);
-
-// Find a country by code
-const country = await countryRepository.findBy(countries.code, 'MX');
-
-// Paginated search by field
-const result = await cityRepository.findByPaginated(
-  cities.stateId,
-  cityId,
-  { page: 1, pageSize: 10 }
-);
-```
-
-### Bulk Operations
-
-```typescript
-// Delete multiple countries by IDs
-const deletedCountries = await countryRepository.deleteMany([1, 2, 3]);
-
-// Count total records
-const totalCount = await countryRepository.countAll();
-
-// Get all active entities with search (preferred method)
-const activeEntities = await entityRepository.findAll({
-  filters: { active: true },
-  searchTerm: 'search term',
-  orderBy: [{ field: schema.name, direction: 'asc' }]
-});
-
-// Paginated search (preferred method)
-const searchResults = await entityRepository.findAllPaginated({
-  searchTerm: 'search term',
-  filters: { active: true },
-  page: 1,
-  pageSize: 10
-});
-```
-
-### Soft Delete Operations
-
-```typescript
-// Permanently delete a soft-deleted record
-await countryRepository.forceDelete(countryId);
-
-// Restore a soft-deleted record
-const restoredCountry = await countryRepository.restore(countryId);
-```
-
-### Advanced Query Building
-
-```typescript
-// Build reusable query conditions for complex queries with relations
-const { baseWhere, baseOrderBy } = cityRepository.buildQueryExpressions({
-  filters: { active: true },
-  searchTerm: 'central',
-  orderBy: [{ field: cities.name, direction: 'asc' }]
-});
-
-// Use in a complex query with relations
-const citiesWithStates = await db.query.cities.findMany({
-  where: baseWhere,
-  orderBy: baseOrderBy,
-  with: { city: true }
-});
-```
-
-## Repository Best Practices
-
-1. **Use Function Declarations**: Prefer `function createRepository()` over arrow functions
-2. **Import Types**: Get types from `types.ts`, not inline declarations
-3. **Configure Options**: Set `searchableFields` instead of overriding search methods
-4. **Minimal Extensions**: Only add methods when base repository is insufficient
-5. **Clear Purpose**: Each custom method should solve a specific use case
-6. **Transaction Support**: Use `withTransaction` to coordinate complex operations
-7. **Handle Relations**: Use Drizzle's `with` functionality to load relationships
-8. **Leverage Built-in Methods**: Use `existsBy`, `countAll`, `deleteMany` instead of custom implementations
-9. **Avoid Deprecated Methods**: Use `findAll({ searchTerm })` and `findAllPaginated({ searchTerm })` instead of `search()` and `searchPaginated()`
-
-## Common Repository Patterns
-
-1. **Minimal Repository**: Just configure base repository, no custom methods (Countries)
-2. **Repository with Relationships**: Add methods for eager-loading relations (Cities, Routes)
-3. **Repository with Transformations**: Transform data before/after operations (Slugs)
-4. **Repository with Transactions**: Coordinate operations across repositories (RouteSegments)
-
-## Schema Definition Patterns
-
-### 1. Simple Schema (No Relations)
-
-```typescript
-// inventory/countries/countries.schema.ts
-import { pgTable, serial, text, timestamp, boolean, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, boolean, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { isNull } from 'drizzle-orm';
 
-export const countries = pgTable('countries', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(), // Don't use .unique() with soft delete
-  code: text('code').notNull(), // Don't use .unique() with soft delete
-  active: boolean('active').notNull().default(true),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-  deletedAt: timestamp('deleted_at'), // Optional: for soft delete
-}, (table) => [
-  // If using soft delete, use conditional unique indexes instead of .unique()
-  uniqueIndex().on(table.name).where(isNull(table.deletedAt)),
-  uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
-  index().on(table.deletedAt) // Index for soft delete performance
-]);
+export const features = pgTable(
+  'features',
+  {
+    id: serial('id').primaryKey(),
+    name: text('name').notNull(),
+    code: text('code').notNull(),
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => [
+    uniqueIndex().on(table.name).where(isNull(table.deletedAt)),
+    uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
+  ]
+);
 ```
 
-### 2. Schema with Soft Delete
+### Schema with Relations
 
 ```typescript
-// inventory/features/features.schema.ts
-import { pgTable, serial, text, timestamp, boolean, index, uniqueIndex } from 'drizzle-orm/pg-core';
-import { isNull } from 'drizzle-orm';
+import { pgTable, serial, integer, text } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { cities } from '../cities/cities.schema';
 
 export const features = pgTable('features', {
   id: serial('id').primaryKey(),
-  name: text('name').notNull(), // Remove .unique() for soft delete compatibility
-  code: text('code').notNull(), // Remove .unique() for soft delete compatibility
-  active: boolean('active').notNull().default(true),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-  deletedAt: timestamp('deleted_at'), // Required for soft delete
-}, (table) => [
-  // Conditional unique indexes - only apply to non-soft-deleted records
-  uniqueIndex().on(table.name).where(isNull(table.deletedAt)),
-  uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
-  index().on(table.deletedAt) // Index for performance
-]);
-```
-
-**Critical**: When using soft delete, replace `.unique()` constraints with conditional `uniqueIndex` to avoid conflicts with soft-deleted records.
-
-### 3. Schema with Relations
-
-```typescript
-// inventory/routes/routes.schema.ts
-import { pgTable, serial, text, integer, real, boolean, timestamp } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
-import { cities } from '../cities/cities.schema';
-import { pathways } from '../pathways/pathways.schema';
-
-// Define the table schema
-export const routes = pgTable('routes', {
-  id: serial('id').primaryKey(),
   name: text('name').notNull(),
-  originCityId: integer('origin_city_id')
-    .notNull()
-    .references(() => cities.id),
-  destinationCityId: integer('destination_city_id')
-    .notNull()
-    .references(() => cities.id),
-  distance: real('distance').notNull(),
-  // Other fields...
+  cityId: integer('city_id').references(() => cities.id),
 });
 
-// Define relations (for Drizzle ORM's relationship loading)
-export const routesRelations = relations(routes, ({ one, many }) => ({
-  originCity: one(cities, {
-    fields: [routes.originCityId],
+export const featuresRelations = relations(features, ({ one }) => ({
+  city: one(cities, {
+    fields: [features.cityId],
     references: [cities.id],
   }),
-  destinationCity: one(cities, {
-    fields: [routes.destinationCityId],
-    references: [cities.id],
-  }),
-  // Other relations...
 }));
 ```
 
-### 4. Aggregating Schemas for Migrations
-
-All schemas are exported in `db/schema.ts` for Drizzle to generate migrations:
+### Transactions
 
 ```typescript
-// db/schema.ts
-export { countries } from '../inventory/countries/countries.schema';
-export { states } from '../inventory/states/states.schema';
-export { cities } from '../inventory/cities/cities.schema';
-export {
-  labels,
-  labelNodes,
-  labelNodesRelations,
-} from '../inventory/labels/labels.schema';
-// ... other exports
+await repository.transaction(async (txRepo, tx) => {
+  const entity = await txRepo.create(data1);
+  const txRelatedRepo = relatedRepository.withTransaction(tx);
+  await txRelatedRepo.create({ ...data2, entityId: entity.id });
+});
 ```
 
+## References
 
-## Adding New Features
-
-1. Create schema in feature directory (`feature.schema.ts`)
-2. Export schema in central `db/schema.ts`
-3. Create repository (`function createRepository()`)
-4. Generate migrations (`drizzle-kit generate`)
-5. Implement controller with Encore APIs
-
-## Repository Creation Checklist
-
-- [ ] Import types from `.types.ts` file
-- [ ] Use function declaration, not arrow function
-- [ ] Configure searchable fields appropriately
-- [ ] Only add custom methods when needed
-- [ ] Export singleton instance
+- See `AGENTS.md` section "Database" for complete patterns
+- See `packages/base-repo/src/base-repository.ts` for available base repository methods

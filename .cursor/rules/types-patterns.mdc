@@ -1,188 +1,78 @@
 ---
-description: 
+description: Type definitions patterns
 globs: *.types.ts
 alwaysApply: false
 ---
+
 # Types Patterns
 
-## Core Type Structure
+> **📖 See `AGENTS.md` for complete type conventions and patterns**
 
-Each feature should have these core type definitions:
+## Essential Description
 
-1. **Base Entity Interface** - Represents the database entity
-   ```typescript
-   export interface Country {
-     id: number;
-     name: string;
-     code: string;
-     active: boolean;
-     createdAt: Date | string | null;
-     updatedAt: Date | string | null;
-   }
-   ```
+Each feature must have: base entity, CreatePayload, UpdatePayload, list types. Use shared types from `shared/types.ts` for unified responses. Use Encore validation decorators on DTOs.
 
-2. **Create Payload** - DTO for creating new entities with validations
-   ```typescript
-   export interface CreateCountryPayload {
-     name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-     code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
-     active?: boolean;
-   }
-   ```
+## Practical Examples
 
-3. **Update Payload** - DTO for updating entities with all fields optional
-   ```typescript
-   export interface UpdateCountryPayload {
-     name?: string & MinLen<1>;
-     code?: string & MinLen<1>;
-     active?: boolean;
-   }
-   ```
-
-## Unified API Response Patterns
-
-Use standardized response patterns from shared types for consistency:
-
-4. **List Query Parameters** - Non-paginated list queries
-   ```typescript
-   import {
-     ListQueryParams,
-     ListQueryResult,
-     PaginatedListQueryParams,
-     PaginatedListQueryResult,
-   } from '../../shared/types';
-
-  export type ListCountriesQueryParams = ListQueryParams<Country>;
-  export type ListCountriesResult = ListQueryResult<Country>;
-   ```
-
-5. **Paginated Query Parameters** - Paginated queries
-   ```typescript
-  export type PaginatedListCountriesQueryParams =
-    PaginatedListQueryParams<Country>;
-  export type PaginatedListCountriesResult = PaginatedListQueryResult<Country>;
-   ```
-
-## Additional Type Patterns
-
-### 1. Entity Relationships
-
-For entities with relationships, define extended interfaces:
+### Base Types
 
 ```typescript
-// Base entity
-export interface State {
+export interface Feature {
   id: number;
   name: string;
-  countryId: number;
-  // ...other properties
+  code: string;
+  active: boolean;
+  createdAt: Date | string | null;
+  updatedAt: Date | string | null;
 }
 
-// Extended entity with relationships
-export interface StateWithCountry extends State {
-  country: Country;
+export interface CreateFeaturePayload {
+  name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  code: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+  active?: boolean;
+}
+
+export interface UpdateFeaturePayload {
+  name?: string & MinLen<1>;
+  code?: string & MinLen<1>;
+  active?: boolean;
 }
 ```
 
-### 2. Compound Types
-
-When a feature has complex operations, define specialized payload types:
+### List Types (Unified)
 
 ```typescript
-// Basic route creation payload
-export interface CreateRoutePayload {
-  name: string;
-  distance: number;
-  // ...other fields
-}
+import {
+  ListQueryParams,
+  ListQueryResult,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '../../shared/types';
 
-// Specialized payload for creating a simple route with pathway
-export interface CreateSimpleRoutePayload
-  extends Omit<
-    CreateRoutePayload,
-    'pathwayId' | 'distance' | 'totalDistance'
-  > {
-  // Additional fields specific to this operation
-  pathwayName?: string;
-  isCompound: false;
-}
+export type ListFeaturesQueryParams = ListQueryParams<Feature>;
+export type ListFeaturesResult = ListQueryResult<Feature>;
+export type PaginatedListFeaturesQueryParams = PaginatedListQueryParams<Feature>;
+export type PaginatedListFeaturesResult = PaginatedListQueryResult<Feature>;
 ```
 
-### 3. Complex Entity Types
-
-For entities with nested structures, define helper interfaces:
+### With Relations
 
 ```typescript
-// Helper interface for nested structure
-export interface TimeSlot {
-  open: string;
-  close: string;
-}
-
-// Helper interface for nested structure
-export interface OperatingHours {
-  monday?: TimeSlot | TimeSlot[];
-  tuesday?: TimeSlot | TimeSlot[];
-  wednesday?: TimeSlot | TimeSlot[];
-  thursday?: TimeSlot | TimeSlot[];
-  friday?: TimeSlot | TimeSlot[];
-}
-
-// Main entity interface using nested types
-export interface Installation {
-  // ...base fields
-  operatingHours?: OperatingHours;
+export interface FeatureWithRelations extends Feature {
+  relatedEntity: RelatedEntity;
 }
 ```
 
-## Type Best Practices
+### Compound Types
 
-1. **Documentation**
-   - Use JSDoc comments for all entity interfaces and complex types
-   - Document validation constraints directly in JSDoc
-   - Add `@default` tags for fields with default values
+```typescript
+export interface CreateSimpleFeaturePayload extends Omit<CreateFeaturePayload, 'complexField'> {
+  simpleField: string;
+  isSimple: false;
+}
+```
 
-2. **Validation**
-   - Use Encore's validation decorators on input DTOs:
-     - `MinLen<1>` for required string fields
-     - `MatchesRegexp<'.*\\S.*'>` for non-empty strings
-     - `Min<1>` for required IDs
-     - `Min<0>` for non-negative numeric values
+## References
 
-3. **Naming Conventions**
-   - Use consistent naming patterns:
-     - Entity interface: `Feature` (ex: `Country`, `State`)
-     - Create DTO: `CreateFeaturePayload` (ex: `CreateCountryPayload`)
-     - Update DTO: `UpdateFeaturePayload` (ex: `UpdateStatePayload`)
-     - List params: `ListFeaturesQueryParams` (ex: `ListCountriesQueryParams`)
-     - List result: `ListFeaturesResult` (ex: `ListCountriesResult`)
-     - Paginated params: `PaginatedListFeaturesQueryParams`
-     - Paginated result: `PaginatedListFeaturesResult`
-     - With relations: `FeatureWithRelation` (ex: `StateWithCountry`)
-
-4. **Type Composition**
-   - Use `extends` for specializing interfaces
-   - Use `Omit<T, K>` to exclude fields when extending
-   - Use `Partial<T>` for making all fields optional
-   - Use `Pick<T, K>` to select specific fields
-   - Use union types for fields with multiple possible values
-
-5. **Shared Types**
-   - Always import shared types from `../../shared/types.ts`
-   - Import related entity types (ex: `import { City } from '../cities/cities.types';`)
-   - Use unified response patterns with `data` property
-   - Use `ListQueryResult<T>` and `PaginatedListQueryResult<T>` consistently
-
-## Type Creation Checklist
-
-- [ ] Create base entity interface with all DB fields
-- [ ] Add detailed JSDoc comments to all entity properties
-- [ ] Create CreateXPayload with appropriate validations
-- [ ] Create UpdateXPayload with all fields optional
-- [ ] Create unified list query parameters type alias using ListQueryParams<T>
-- [ ] Create unified list result type alias using ListQueryResult<T>
-- [ ] Create unified paginated parameters type alias using PaginatedListQueryParams<T>
-- [ ] Create unified paginated result type alias using PaginatedListQueryResult<T>
-- [ ] Create extended interfaces for entities with relationships
-- [ ] Import all shared types from ../../shared/types.ts
-
+- See `AGENTS.md` section "Code Conventions" for type conventions
+- See `apps/server/shared/types.ts` for available shared types

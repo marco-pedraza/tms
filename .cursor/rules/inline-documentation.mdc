@@ -1,263 +1,73 @@
 ---
+description: Inline documentation standards
+globs: *.ts,*.tsx
 alwaysApply: true
 ---
 
 # Inline Documentation Standards
 
-This document outlines the standards for inline documentation in our codebase, applicable to both web and server projects.
+> **📖 See `AGENTS.md` for complete code and documentation conventions**
 
-## TypeScript and JSDoc
+## Essential Description
 
-Since our project is fully typed with TypeScript, we follow these principles for documentation:
+Avoid duplicating TypeScript types in JSDoc. Focus on "why" and "what", not "how". Document only when the purpose isn't obvious from the name and signature.
 
-1. **Avoid Redundant Type Definitions**: Do not duplicate TypeScript types in JSDoc comments.
+## Practical Examples
 
-   ```typescript
-   // ❌ Avoid
-   /**
-    * @param {string} name - The name of the user
-    * @returns {User} The created user
-    */
-   function createUser(name: string): User {
-     // ...
-   }
-
-   // ✅ Preferred
-   /**
-    * Creates a new user with the given name
-    */
-   function createUser(name: string): User {
-     // ...
-   }
-   ```
-
-2. **Focus on Intent and Behavior**: Comments should explain "why" and "what" rather than "how".
-
-   ```typescript
-   // ❌ Avoid
-   /**
-    * This function iterates through users, filters by active status,
-    * maps to names, and returns the array
-    */
-
-   // ✅ Preferred
-   /**
-    * Returns a list of active user names for display in the dashboard dropdown
-    */
-   ```
-
-3. **Document Complex Logic**: For non-obvious implementations, explain the reasoning.
-   ```typescript
-   /**
-    * Retrieves a city by ID with optimistic rendering
-    * - First attempts to use cached data from collection query
-    * - Then fetches fresh data in the background
-    */
-   ```
-
-## Function and Hook Documentation
-
-For functions and hooks, follow this format:
-
-````typescript
-/**
- * [Brief description of purpose]
- *
- * [Additional context or implementation details if needed]
- *
- * Example usage:
- * ```typescript
- * const { data, isLoading } = useQueryResource({ resourceId: 123 });
- * ```
- */
-````
-
-## Component Documentation
-
-For React components:
+### Function
 
 ```typescript
 /**
- * [Brief description of the component's purpose]
- *
- * [Any implementation details, context, or props behavior that isn't obvious]
+ * Creates a new user with the given name
  */
-```
-
-## When to Add Documentation
-
-Add inline documentation when:
-
-1. The purpose of the code isn't immediately obvious from its name and signature
-2. The implementation has nuances that future developers should understand
-3. There are special usage considerations or edge cases
-4. The function has side effects that aren't immediately clear
-
-## Examples
-
-### Hook Documentation
-
-```typescript
-/**
- * Custom hook for querying a resource by ID with cache integration
- *
- * Uses the collection cache as initial data for immediate rendering
- * while fetching the complete data in the background
- */
-export default function useQueryResource({ resourceId, enabled = true }) {
-  // Implementation
+function createUser(name: string): User {
+  // ...
 }
 ```
 
-### Complex Function Documentation
+### Hook
 
-````typescript
+```typescript
 /**
- * Validates and normalizes a phone number to E.164 format
+ * Hook for querying a resource by ID with cache integration
+ *
+ * Uses collection cache as initial data for immediate rendering
+ * while fetching complete data in the background
+ */
+export default function useQueryResource({ resourceId, enabled = true }) {
+  // ...
+}
+```
+
+### Component
+
+```typescript
+/**
+ * Form for creating or editing an entity
+ *
+ * Handles validation with Zod and state with TanStack Form
+ */
+export default function EntityForm({ defaultValues, onSubmit }: Props) {
+  // ...
+}
+```
+
+### Complex Logic
+
+```typescript
+/**
+ * Normalizes a phone number to E.164 format
  *
  * Handles various input formats:
  * - Local numbers with country code detection
  * - International numbers with or without plus sign
  * - Numbers with spaces, dashes, or parentheses
- *
- * Example:
- * ```
- * normalizePhoneNumber("+1 (555) 123-4567") // Returns "+15551234567"
- * ```
  */
 export function normalizePhoneNumber(input: string): string {
-  // Implementation
-}
-````
-
-By following these standards, we create documentation that adds value without redundancy, making our codebase more maintainable and easier to understand.
-
-# Inline Documentation Standards
-
-This document outlines the standards for inline documentation in our codebase, applicable to both web and server projects.
-
-## TypeScript and JSDoc
-
-Since our project is fully typed with TypeScript, we follow these principles for documentation:
-
-1. **Avoid Redundant Type Definitions**: Do not duplicate TypeScript types in JSDoc comments.
-
-   ```typescript
-   // ❌ Avoid
-   /**
-    * @param {string} name - The name of the user
-    * @returns {User} The created user
-    */
-   function createUser(name: string): User {
-     // ...
-   }
-
-   // ✅ Preferred
-   /**
-    * Creates a new user with the given name
-    */
-   function createUser(name: string): User {
-     // ...
-   }
-   ```
-
-2. **Focus on Intent and Behavior**: Comments should explain "why" and "what" rather than "how".
-
-   ```typescript
-   // ❌ Avoid
-   /**
-    * This function iterates through users, filters by active status,
-    * maps to names, and returns the array
-    */
-
-   // ✅ Preferred
-   /**
-    * Returns a list of active user names for display in the dashboard dropdown
-    */
-   ```
-
-3. **Document Complex Logic**: For non-obvious implementations, explain the reasoning.
-   ```typescript
-   /**
-    * Retrieves a city by ID with optimistic rendering
-    * - First attempts to use cached data from collection query
-    * - Then fetches fresh data in the background
-    */
-   ```
-
-## Function and Hook Documentation
-
-For functions and hooks, follow this format:
-
-````typescript
-/**
- * [Brief description of purpose]
- *
- * [Additional context or implementation details if needed]
- *
- * Example usage:
- * ```typescript
- * const { data, isLoading } = useQueryResource({ resourceId: 123 });
- * ```
- */
-````
-
-## Component Documentation
-
-For React components:
-
-```typescript
-/**
- * [Brief description of the component's purpose]
- *
- * [Any implementation details, context, or props behavior that isn't obvious]
- */
-```
-
-## When to Add Documentation
-
-Add inline documentation when:
-
-1. The purpose of the code isn't immediately obvious from its name and signature
-2. The implementation has nuances that future developers should understand
-3. There are special usage considerations or edge cases
-4. The function has side effects that aren't immediately clear
-
-## Examples
-
-### Hook Documentation
-
-```typescript
-/**
- * Custom hook for querying a resource by ID with cache integration
- *
- * Uses the collection cache as initial data for immediate rendering
- * while fetching the complete data in the background
- */
-export default function useQueryResource({ resourceId, enabled = true }) {
-  // Implementation
+  // ...
 }
 ```
 
-### Complex Function Documentation
+## References
 
-````typescript
-/**
- * Validates and normalizes a phone number to E.164 format
- *
- * Handles various input formats:
- * - Local numbers with country code detection
- * - International numbers with or without plus sign
- * - Numbers with spaces, dashes, or parentheses
- *
- * Example:
- * ```
- * normalizePhoneNumber("+1 (555) 123-4567") // Returns "+15551234567"
- * ```
- */
-export function normalizePhoneNumber(input: string): string {
-  // Implementation
-}
-````
-
-By following these standards, we create documentation that adds value without redundancy, making our codebase more maintainable and easier to understand.
+- See `AGENTS.md` section "Code Conventions" > "Documentation" for complete standards

@@ -85,6 +85,23 @@ Run backend tests:
 npm run server:test
 ```
 
+## Development Tools
+
+### OpenSpec (Optional)
+
+OpenSpec is an **optional** tool for spec-driven development. Developers can work without it. Use OpenSpec when planning new features, making breaking changes, or creating change proposals for complex work.
+
+**Installation**:
+
+```bash
+npm install -g @fission-ai/openspec@latest
+```
+
+**Usage**:
+
+- See `openspec/AGENTS.md` for OpenSpec usage and workflows
+- See `AGENTS.md` section "Development Tools" for when to use OpenSpec
+
 ### Type Checking
 
 Check types across the project:

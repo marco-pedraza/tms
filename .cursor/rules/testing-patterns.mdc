@@ -1,298 +1,96 @@
 ---
-description: Patterns for testing in Encore applications
+description: Testing patterns for Encore applications
 globs: apps/server/*/*/*.spec.ts
 alwaysApply: false
 ---
+
 # Testing Patterns
 
-## Overview
+> **📖 See `AGENTS.md` for complete testing strategy and commands**
 
-Tests in our Encore application focus on integration testing with real databases rather than mocking repositories. We use Vitest as our testing framework and follow consistent patterns for test organization.
+## Essential Description
 
-## Framework and Structure
+Integration tests with real database (no mocks). Use Vitest. One `feature.controller.spec.ts` file per feature. Use factories for test data. Clean up data in `afterAll`.
 
-```typescript
-import { expect, describe, test, beforeAll, afterAll } from 'vitest';
-```
+## Practical Examples
 
-Tests are organized into:
-
-- One `feature.controller.spec.ts` file per feature
-- Test data setup using factory patterns or direct creation
-- Thorough cleanup in `afterAll`
-- Logical test groups by scenario (success, error, pagination, etc.)
-
-## Testing Approaches
-
-We use two main approaches for test setup:
-
-### 1. Direct API Testing
-
-Simple features are tested by calling controller methods directly and verifying results:
+### Basic Structure
 
 ```typescript
+import { expect, describe, test, afterAll } from 'vitest';
+import { createFeature, deleteFeature } from './feature.controller';
+
 describe('Feature Controller', () => {
-  // Test data
-  const testData = {
-    name: 'Test Entity',
-    code: 'TE',
-  };
-
-  // IDs for cleanup
   let createdId: number;
 
-  // Cleanup
   afterAll(async () => {
     if (createdId) {
       try {
-        await deleteEntity({ id: createdId });
+        await deleteFeature({ id: createdId });
       } catch (error) {
         console.log('Error cleaning up:', error);
       }
     }
   });
 
-  describe('success scenarios', () => {
-    test('should create a new entity', async () => {
-      const response = await createEntity(testData);
-      createdId = response.id;
-      expect(response.name).toBe(testData.name);
-    });
+  test('should create a new feature', async () => {
+    const response = await createFeature({ name: 'Test' });
+    createdId = response.id;
+    expect(response.name).toBe('Test');
   });
 });
 ```
 
-### 2. Factory-Based Testing
-
-Complex features with dependencies use factories for test data creation:
+### With Factories
 
 ```typescript
-describe('Complex Feature Controller', () => {
+import { getFactoryDb } from '@/tests/factories';
+import { stateFactory } from '@/tests/factories/states.factory';
+
+describe('Feature Controller', () => {
   const factoryDb = getFactoryDb(db);
   let testState: State;
-  let testCity: City;
-  let createdEntityId: number;
+  let createdId: number;
 
   beforeAll(async () => {
-    // Create test dependencies using factories
-    testState = (await stateFactory(factoryDb).create()) as State;
-    testCity = (await cityFactory(factoryDb).create({
-      stateId: testState.id,
-      name: 'Test City',
-    })) as City;
+    testState = await stateFactory(factoryDb).create();
   });
 
   afterAll(async () => {
-    // Clean up in reverse order of creation
-    if (createdEntityId) {
-      try {
-        await deleteEntity({ id: createdEntityId });
-      } catch (error) {
-        console.log('Error cleaning up:', error);
-      }
+    if (createdId) {
+      await deleteFeature({ id: createdId });
     }
-    await cityRepository.deleteAll();
     await stateRepository.deleteAll();
   });
 
-  // Test scenarios...
-});
-```
-
-## Testing Complex Relationships
-
-For features with complex relationships, we test both basic functionality and relationship integrity:
-
-```typescript
-describe('relationship tests', () => {
-  test('should retrieve entity with its associated relations', async () => {
-    const entityWithRelations = await getEntity({ id: createdEntityId });
-
-    // Verify the entity data
-    expect(entityWithRelations).toBeDefined();
-    expect(entityWithRelations.id).toBe(createdEntityId);
-
-    // Verify the related data is loaded
-    expect(entityWithRelations.relatedEntity).toBeDefined();
-    expect(entityWithRelations.relatedEntity.id).toBe(relatedEntityId);
-    expect(entityWithRelations.relatedEntity.name).toBe('Related Entity');
-  });
-});
-```
-
-## Business Logic Testing
-
-For complex business logic in use cases, we test the full flow through controllers:
-
-```typescript
-describe('Complex Business Logic', () => {
-  test('should handle complex business rules correctly', async () => {
-    // Setup preconditions
-    const entityA = await createEntityA({ name: 'Entity A' });
-    const entityB = await createEntityB({ name: 'Entity B' });
-
-    // Execute business operation that involves complex logic
-    const result = await performComplexOperation({
-      entityAId: entityA.id,
-      entityBId: entityB.id,
-      additionalData: 'test',
+  test('should create feature with dependencies', async () => {
+    const response = await createFeature({
+      name: 'Test',
+      stateId: testState.id,
     });
-
-    // Verify results match business rules
-    expect(result.status).toBe('processed');
-    expect(result.calculatedValue).toBe(expectedValue);
-
-    // Verify side effects occurred correctly
-    const updatedEntityA = await getEntityA({ id: entityA.id });
-    expect(updatedEntityA.processedStatus).toBe(true);
+    createdId = response.id;
+    expect(response.stateId).toBe(testState.id);
   });
 });
 ```
 
-## Test Data Management
-
-We follow these principles for test data:
-
-1. **Factory Pattern**: Use factories for creating test entities with consistent defaults
-
-   ```typescript
-   // Factory definition
-   export const entityFactory = defineFactory({
-     schema: extractTablesFromSchema(schema),
-     table: 'entities',
-     resolver: ({ sequence }) => ({
-       id: sequence + ID_OFFSET,
-       name: `Entity ${sequence + ID_OFFSET}`,
-       code: `E${sequence + ID_OFFSET}`,
-       active: true,
-     }),
-   });
-
-   // Usage in tests
-   const testEntity = await entityFactory(factoryDb).create({
-     name: 'Custom Entity Name',
-   });
-   ```
-
-2. **Complete Cleanup**: Always clean up all created test data
-
-3. **Realistic Data**: Test with realistic scenarios that match production use cases
-
-## Testing Advanced Features
-
-### Pagination, Filtering and Ordering
+### Pagination and Filters
 
 ```typescript
-describe('pagination and filtering', () => {
-  test('should return paginated results with filters', async () => {
-    const response = await listEntitiesPaginated({
-      filters: { active: true },
-      orderBy: [{ field: 'name', direction: 'asc' }],
-      page: 1,
-      pageSize: 10,
-    });
-
-    // Verify pagination metadata
-    expect(response.pagination.currentPage).toBe(1);
-    expect(response.pagination.pageSize).toBe(10);
-
-    // Verify filters applied correctly
-    expect(response.data.every(entity => entity.active === true)).toBe(true);
-
-    // Verify ordering
-    const names = response.data.map(entity => entity.name);
-    for (let i = 0; i < names.length - 1; i++) {
-      expect(names[i] <= names[i + 1]).toBe(true);
-    }
+test('should return paginated results with filters', async () => {
+  const response = await listFeaturesPaginated({
+    filters: { active: true },
+    orderBy: [{ field: schema.name, direction: 'asc' }],
+    page: 1,
+    pageSize: 10,
   });
+
+  expect(response.pagination.currentPage).toBe(1);
+  expect(response.data.every((f) => f.active === true)).toBe(true);
 });
 ```
 
-### Search Functionality
+## References
 
-```typescript
-describe('search functionality', () => {
-  test('should search entities by term', async () => {
-    // Create entity with searchable name
-    const searchableEntity = await createEntity({
-      name: 'Unique Searchable Entity',
-      code: 'USE',
-    });
-
-    try {
-      const response = await searchEntities({ term: 'Searchable' });
-
-      expect(response.entities).toBeDefined();
-      expect(response.entities.some(e => e.id === searchableEntity.id)).toBe(true);
-    } finally {
-      // Clean up
-      await deleteEntity({ id: searchableEntity.id });
-    }
-  });
-});
-```
-
-## Transaction Testing
-
-For operations involving transactions, we test both success and rollback scenarios:
-
-```typescript
-describe('transactional operations', () => {
-  test('should roll back all changes when operation fails', async () => {
-    // Create a spy on transaction method
-    const transactionSpy = vi.spyOn(entityRepository, 'transaction');
-    transactionSpy.mockImplementation(async (callback) => {
-      // Mock implementation that simulates failure
-      throw new Error('Simulated transaction failure');
-    });
-
-    try {
-      await complexOperation(payload);
-      expect(true).toBe(false); // Should not reach here
-    } catch (error) {
-      expect(error).toBeDefined();
-    }
-
-    // Verify database state remained consistent
-    const entities = await listEntities({});
-    expect(entities.length).toBe(initialCount);
-
-    // Restore original implementation
-    transactionSpy.mockRestore();
-  });
-});
-```
-
-## Best Practices
-
-1. **Test Independence**
-   - Each test should be independent
-   - Setup and teardown handled appropriately
-   - Clean up all created resources
-
-2. **Test Organization**
-   - Group related tests logically
-   - Separate success and error scenarios
-   - Use descriptive test names
-
-3. **Assertions**
-   - Make specific assertions about response structure
-   - Test both presence and values of fields
-   - Use appropriate matchers
-   - Verify side effects when relevant
-
-4. **Dependencies**
-   - Create required dependencies in `beforeAll`
-   - Clean up in reverse order in `afterAll`
-   - Handle resource dependencies explicitly using factories
-
-5. **Data Management**
-   - Use realistic test data
-   - Clean up all created data
-   - Keep track of IDs for cleanup
-   - Avoid test data pollution
-   - Use factories for consistent test data generation
-
-6. **Test execution**
-   - Always run tests with npm run server:test command
-   - Tests use a separate test database
+- See `AGENTS.md` section "Testing" for complete strategy
+- Run tests: `encore test` from project root

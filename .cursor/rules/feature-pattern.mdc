@@ -3,347 +3,127 @@ description: Structure and patterns for features in Encore-based applications
 globs: **/server/**
 alwaysApply: false
 ---
+
 # Feature Structure Pattern
 
-## Overview
+> **📖 See `AGENTS.md` for complete pattern selection guide (Entity vs Repository Pattern) and DDD philosophy**
 
-This document defines the standard structure and implementation patterns for features in our Encore-based application. The codebase is organized hierarchically with systems, subsystems, and features. Following the Locality of Behavior (LoB) principle, each feature includes its own database schema alongside its data access layer.
+## Essential Description
 
-## Directory Structure
+Features follow hierarchical structure (subsystem/feature). Each feature defines its own schema following Locality of Behavior. **Entity Pattern is the standard** for domain entities; **Repository Pattern only for value objects**. See `AGENTS.md` for decision criteria.
 
-```
-apps/
-└── server/                   # Main system
-    ├── db/                   # Root-level database configuration and aggregation
-    │   ├── database.ts       # Database connection configuration
-    │   ├── schema.ts         # Schema exports aggregation
-    │   ├── index.ts          # Database exports aggregation
-    │   ├── scripts/          # Database scripts (seeding, etc.)
-    │   │   ├── seed-inventory.ts    # Inventory data seeding
-    │   │   └── seed-users.ts  # Users seeding
-    │   └── migrations/       # Database migrations
-    ├── inventory/            # Subsystem for inventory management
-    │   ├── countries/        # Feature: countries management
-    │   │   ├── countries.repository.ts       # Data access layer (Repository)
-    │   │   ├── countries.controller.ts       # API endpoints (Controller)
-    │   │   ├── countries.domain.ts           # Domain validation and business rules
-    │   │   ├── countries.types.ts            # Type definitions
-    │   │   ├── countries.schema.ts           # Database schema definition
-    │   │   └── countries.controller.spec.ts  # Unit tests
-    │   └── states/           # Feature: states management
-    │       ├── states.repository.ts
-    │       ├── states.controller.ts
-    │       ├── states.domain.ts
-    │       ├── states.types.ts
-    │       ├── states.schema.ts
-    │       └── states.controller.spec.ts
-    ├── users/                # Another subsystem
-    │   └── ...
-    └── shared/               # Utilities shared across subsystems
-        ├── errors.ts         # Centralized error handling
-        ├── types.ts          # Shared utility types
-```
+## File Structure
 
-## Feature Structure
-
-Each feature follows this structure:
+### Entity Pattern (Standard for domain entities)
 
 ```
-feature-name/                        # Example: countries/
-├── feature-name.repository.ts       # Data access layer (Repository)
-├── feature-name.controller.ts       # Encore API endpoints
-├── feature-name.domain.ts           # Domain validation and business rules
-├── feature-name.types.ts            # Type definitions
-├── feature-name.schema.ts           # Database schema definition
-├── feature-name.use-cases.ts        # Complex business logic (optional)
-└── feature-name.controller.spec.ts  # Unit tests for controller
+feature-name/
+├── feature-name.entity.ts              # Entity factory with behavior
+├── feature-name.application-service.ts  # Orchestration and transactions
+├── feature-name.domain-service.ts       # Complex operations (optional)
+├── feature-name.controller.ts           # API endpoints
+├── feature-name.repository.ts           # Data access
+├── feature-name.types.ts                # Types (includes Entity types)
+├── feature-name.schema.ts               # Database schema
+├── feature-name.errors.ts               # Domain-specific errors
+└── feature-name.controller.spec.ts      # Integration tests
 ```
 
-### Required Files
-
-All features must include:
-- **Repository**: Data access layer extending base repository
-- **Controller**: API endpoints following REST conventions
-- **Domain**: Validation logic and business rules
-- **Types**: TypeScript interfaces and type definitions
-- **Schema**: Database table definition
-- **Tests**: Unit tests for controller endpoints
-
-### Optional Files
-
-- **Use Cases**: Only for complex business logic that goes beyond CRUD + validation
-
-## Domain Layer Pattern
-
-The domain layer handles validation and business rules:
-
-### Domain Structure
+**Minimal entity.ts example**:
 
 ```typescript
-// feature-name.domain.ts
-import { FieldErrorCollector } from '@repo/base-repo';
-import { standardFieldErrors } from '../../shared/errors';
-import { featureRepository } from './feature-name.repository';
-
-/**
- * Validate uniqueness constraints for feature data
- */
-export async function validateFeatureUniqueness(
-  payload: CreateFeaturePayload | UpdateFeaturePayload,
-  currentId?: number,
-  validator?: FieldErrorCollector,
-): Promise<FieldErrorCollector> {
-  const collector = validator || new FieldErrorCollector();
-  
-  // Prepare fields to check and use checkUniqueness
-  const fieldsToCheck = [/* field configurations */];
-  const conflicts = await featureRepository.checkUniqueness(fieldsToCheck, currentId);
-  
-  // Add standardized errors for conflicts
-  for (const conflict of conflicts) {
-    const error = standardFieldErrors.duplicate('EntityName', conflict.field, conflict.value);
-    collector.addError(error.field, error.code, error.message, error.value);
+export function createFeatureEntity(dependencies) {
+  function create(payload): FeatureEntity {
+    validateBusinessRules(payload);
+    return createInstance(payload);
   }
-  
-  return collector;
-}
 
-/**
- * Main validation function that combines all business rules
- */
-export async function validateFeature(
-  payload: CreateFeaturePayload | UpdateFeaturePayload,
-  currentId?: number,
-): Promise<void> {
-  const validator = await validateFeatureUniqueness(payload, currentId);
-  // Add other validation rules here as needed
-  validator.throwIfErrors();
+  function fromData(data): FeatureEntity {
+    return createInstance(data);
+  }
+
+  async function findOne(id): Promise<FeatureEntity> {
+    const data = await repository.findOne(id);
+    return createInstance(data);
+  }
+
+  return { create, fromData, findOne };
 }
 ```
 
-### Domain Integration
-
-Controllers call domain validation before repository operations:
+**Minimal application-service.ts example**:
 
 ```typescript
-// feature-name.controller.ts
-import { validateFeature } from './feature-name.domain';
+export function createFeatureApplicationService() {
+  const entityFactory = createFeatureEntity({ repository });
 
+  return {
+    create: (payload) => {
+      const entity = entityFactory.create(payload);
+      return entity.save();
+    },
+    // ... other methods
+  };
+}
+```
+
+### Repository Pattern (Only for value objects)
+
+```
+feature-name/
+├── feature-name.repository.ts    # Data access (extends base repo)
+├── feature-name.controller.ts     # API endpoints
+├── feature-name.domain.ts         # Validation and business rules
+├── feature-name.types.ts          # TypeScript types
+├── feature-name.schema.ts         # Database schema
+└── feature-name.controller.spec.ts # Tests
+```
+
+**Minimal repository.ts example**:
+
+```typescript
+export function createFeatureRepository() {
+  return createBaseRepository<Feature, CreatePayload, UpdatePayload, typeof schema>(
+    db,
+    schema,
+    'Feature',
+    { searchableFields: [schema.name] }
+  );
+}
+
+export const featureRepository = createFeatureRepository();
+```
+
+**Minimal domain.ts example**:
+
+```typescript
+export async function validateFeature(payload: CreatePayload, currentId?: number): Promise<void> {
+  const collector = new FieldErrorCollector();
+  const conflicts = await repository.checkUniqueness(
+    [{ field: schema.name, value: payload.name }],
+    currentId
+  );
+  conflicts.forEach((conflict) => {
+    standardFieldErrors.duplicate('Feature', conflict.field, conflict.value, collector);
+  });
+  collector.throwIfErrors();
+}
+```
+
+**Minimal controller.ts example**:
+
+```typescript
 export const createFeature = api(
-  { method: 'POST', path: '/features/create', expose: true },
-  async (params: CreateFeaturePayload): Promise<Feature> => {
+  { method: 'POST', path: '/features/create', auth: true },
+  async (params: CreatePayload): Promise<Feature> => {
     await validateFeature(params);
-    return await featureRepository.create(params);
+    return await repository.create(params);
   }
 );
 ```
 
-## Repository Pattern
+## References
 
-The Repository pattern is used for features that primarily deal with CRUD operations. This pattern:
-
-1. **Encapsulates Data Access**: All database operations are contained within the repository
-2. **Provides Clean API**: Offers a clear interface for data operations
-3. **Handles Validation**: Manages data validation and uniqueness constraints
-4. **Reuses Common Logic**: Extends from base repository for standard CRUD operations
-
-### Repository as Primary Pattern
-
-The Repository pattern should be the default choice for all features. Most features will only need a repository since they primarily deal with CRUD operations and data validation.
-
-### When to Add a Use Case
-
-Use cases are optional and should only be added when:
-
-- Complex business logic that goes beyond CRUD operations is needed
-- Operations need to coordinate multiple repositories
-- Feature requires orchestration of multiple services or external integrations
-- There's significant data transformation or business rules processing
-- Operations require transactional integrity across multiple entities
-- Features need compound operations that create or manipulate multiple related entities
-- Complex validation rules that span multiple entities are required
-
-In most cases, a repository alone is sufficient. Only create a use case when there's a clear need for complex business logic that can't be handled appropriately in the repository layer.
-
-Use cases should be implemented in a separate `feature-name.use-cases.ts` file with the following structure:
-
-```typescript
-import { featureRepository } from './feature-name.repository';
-import { relatedRepository } from '../related-feature/related-feature.repository';
-import { ValidationError } from '../../shared/errors';
-import type { FeatureType, RelatedType } from './feature-name.types';
-
-// Feature-specific error messages
-const FEATURE_ERRORS = {
-  VALIDATION_ERROR: 'Specific validation error message',
-  RELATION_ERROR: 'Error message about relations',
-  // Other domain-specific error messages
-};
-
-/**
- * Creates use cases for the feature
- * @returns Object with feature-specific use case functions
- */
-export function createFeatureUseCases() {
-  // Initialize repositories
-  const repository = featureRepository;
-  const relatedRepo = relatedRepository;
-
-  // Private helper functions
-  async function validateSomething(data) {
-    // Validation logic
-  }
-
-  // Public use case functions
-  async function complexOperation(data) {
-    // Use repository.transaction for transactional operations
-    return repository.transaction(async function(txRepo, tx) {
-      // Use withTransaction for related repositories
-      const txRelatedRepo = relatedRepo.withTransaction(tx);
-
-      // Perform operations
-
-      // Return minimal data (usually just ID)
-      return result.id;
-    }).then(function(id) {
-      // After transaction completes, fetch complete entity
-      return repository.findOneWithDetails(id);
-    });
-  }
-
-  return {
-    complexOperation,
-    // Other public use case functions
-  };
-}
-
-// Export the use case instance
-export const featureUseCases = createFeatureUseCases();
-```
-
-## Type Structure
-
-Each feature should have the following type definitions:
-
-1. Base entity interface (e.g., `Country`, `State`)
-2. Creation payload (e.g., `CreateCountryPayload`, `CreateStatePayload`)
-3. Update payload (e.g., `UpdateCountryPayload`, `UpdateStatePayload`)
-4. List response (e.g., `Countries`, `States`)
-5. Repository interface (e.g., `CountryRepository`, `StateRepository`)
-
-## Specific Rules
-
-### General Rules
-
-1. Each feature should be contained in its own directory inside the relevant subsystem
-2. All files in a feature should be prefixed with the feature name
-3. Keep feature-specific code, including schema definitions, within the feature directory
-4. Maximum file size should not exceed 500 lines
-5. Use meaningful and descriptive names for all entities
-6. Follow TypeScript naming conventions strictly
-7. Extend from base repository for common CRUD operations
-8. Implement feature-specific validations in the repository
-
-For detailed documentation of each component, see:
-
-- [typescript-patterns.mdc](mdc:.cursor/rules/typescript-patterns.mdc) - General TypeScript patterns
-- [controller-patterns.mdc](mdc:.cursor/rules/controller-patterns.mdc) - Patterns for controllers
-- [types-patterns.mdc](mdc:.cursor/rules/types-patterns.mdc) - Patterns for type definitions
-- [error-handling.mdc](mdc:.cursor/rules/error-handling.mdc) - Error handling
-- [testing-patterns.mdc](mdc:.cursor/rules/testing-patterns.mdc) - Testing standards and patterns
-- [database-patterns.mdc](mdc:.cursor/rules/database-patterns.mdc) - - Database standards and patterns
-
-## Creating New Features
-
-### Adding a New Feature to an Existing Subsystem
-
-1. Create a new directory with the feature name inside the subsystem (e.g., `inventory/cities/`)
-2. Create the standard feature files with appropriate naming:
-   - `cities.repository.ts` (Repository)
-   - `cities.controller.ts` (API endpoints)
-   - `cities.types.ts` (Types and DTOs)
-   - `cities.schema.ts` (Database schema)
-   - `cities.controller.spec.ts` (Tests)
-3. Export the schema in the root `db/schema.ts` file
-4. Implement the feature following the established patterns
-
-### Creating a New Subsystem
-
-1. Create a new directory in `apps/server/` for the subsystem (e.g., `logistics/`)
-2. Add feature directories inside the subsystem
-3. Reuse the shared utilities from `server/shared/`
-4. Utilize the root-level database configuration
-
-### Repository Implementation Best Practices
-
-1. **Base Repository Usage**:
-
-   - Extend from base repository for common CRUD operations
-   - Override methods only when custom behavior is needed
-   - Implement feature-specific validations
-
-2. **Validation Rules**:
-
-   - Implement uniqueness constraints
-   - Add field-level validations
-   - Handle complex validation scenarios
-
-3. **Error Handling**:
-   - Use standard error types from shared error utilities
-   - Provide clear error messages
-   - Handle edge cases appropriately
-
-### Database Schema Best Practices
-
-1. **Schema Definition**:
-
-   - Define tables with clear, descriptive column names
-   - Use appropriate data types for columns
-   - Define relationships using foreign keys
-   - Document complex relationships or constraints
-
-2. **Schema References**:
-
-   - When referencing schemas from other features, import them directly
-   - Example: `import { countries } from '../countries/countries.schema';`
-
-3. **Schema Exports**:
-   - Export schema definitions for use in other features
-   - Add new schema exports to `db/schema.ts` for migration generation
-
-## Important Guidelines
-
-1. Code Organization
-
-   - Maintain consistent file structure
-   - Follow naming conventions
-   - Keep responsibilities separated
-   - Document complex logic
-   - Use strict TypeScript types
-   - Handle errors consistently
-   - Follow Locality of Behavior by keeping related code together
-
-2. Code Quality
-
-   - Write unit tests for all features
-   - Maintain 80% or higher test coverage
-   - Use TypeScript strict mode
-   - Follow ESLint rules
-   - Use Prettier for formatting
-   - Review code before committing
-
-3. Performance
-
-   - Optimize database queries
-   - Use proper indexing
-   - Implement caching when necessary
-   - Handle pagination properly
-
-4. Security
-   - Validate all inputs
-   - Sanitize all outputs
-   - Use proper authentication
-   - Implement authorization
-   - Handle sensitive data appropriately
-   - Follow security best practices
-
+- See `AGENTS.md` section "Backend Pattern Selection: Entity vs Repository" for decision criteria
+- See `AGENTS.md` section "Entity Pattern Components" for Application Service and Domain Service details
+- See `AGENTS.md` section "Domain Validation" for validation patterns

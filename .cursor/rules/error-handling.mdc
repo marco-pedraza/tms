@@ -1,365 +1,108 @@
 ---
-description: Patterns for error handling in Encore applications
-globs: *.controller.ts,**/server/**
+description: Error handling patterns in Encore applications
+globs: *.controller.ts,**/server/**/*.domain.ts,**/server/**/*.entity.ts
 alwaysApply: false
 ---
+
 # Error Handling Patterns
 
-## Overview
+> **📖 See `AGENTS.md` for complete error handling and validation patterns**
 
-This document defines the centralized error handling approach used in our Encore application. We use a middleware-based system that automatically transforms domain errors to appropriate API responses.
+## Essential Description
 
-## Centralized Error Handling
+Use `FieldErrorCollector` for validation. Middleware automatically transforms domain errors to API errors. Don't use try/catch in controllers. **Entity Pattern**: use `feature-name.errors.ts` with `createDomainErrorHelpersWithFields`. **Repository Pattern**: use `standardFieldErrors` from `shared/errors.ts`.
 
-### Error Types
+## Practical Examples
 
-We use domain-specific error classes imported from base utilities:
-
-```typescript
-// From shared/errors.ts
-import {
-  NotFoundError,
-  ValidationError,
-  FieldValidationError,
-  DuplicateError,
-  ForeignKeyError
-} from '@repo/base-repo';
-import { InvalidStateTransitionError } from '@repo/state-machine';
-
-// Custom authentication/authorization errors
-export class AuthenticationError extends Error {
-  constructor(message: string = 'Authentication failed') {
-    super(message);
-    this.name = 'AuthenticationError';
-  }
-}
-
-export class UnauthorizedError extends Error {
-  constructor(message: string = 'Access denied: insufficient permissions') {
-    super(message);
-    this.name = 'UnauthorizedError';
-  }
-}
-```
-
-### Standardized API Error Factory
-
-We provide a utility for creating consistent API errors:
+### Domain Validation (Repository Pattern)
 
 ```typescript
-export const errors = {
-  notFound: (message = 'Resource not found', details?: Record<string, any>) =>
-    APIError.notFound(message).withDetails(details ?? {}),
-
-  invalidArgument: (message = 'Invalid argument provided', details?) =>
-    APIError.invalidArgument(message).withDetails(details ?? {}),
-
-  alreadyExists: (message = 'Resource already exists', details?) =>
-    APIError.alreadyExists(message).withDetails(details ?? {}),
-
-  // ...other API error factories
-};
-```
-
-### Error Mapping Function
-
-The central error mapping function converts domain errors to API errors:
-
-```typescript
-export const parseApiError = (error: unknown): APIError => {
-  if (error instanceof NotFoundError) {
-    return errors.notFound(error.message);
-  }
-  if (error instanceof ValidationError) {
-    return errors.invalidArgument(error.message);
-  }
-  if (error instanceof FieldValidationError) {
-    // Field validation errors contain detailed field-level information
-    return errors.invalidArgument(error.message, {
-      fieldErrors: error.fieldErrors
-    });
-  }
-  if (error instanceof DuplicateError) {
-    return errors.alreadyExists(error.message);
-  }
-  if (error instanceof ForeignKeyError) {
-    // Map foreign key errors to NotFound for consistent API behavior
-    return errors.notFound(error.message);
-  }
-  if (error instanceof AuthenticationError) {
-    return errors.unauthenticated(error.message);
-  }
-  if (error instanceof UnauthorizedError) {
-    return errors.permissionDenied(error.message);
-  }
-  if (error instanceof InvalidStateTransitionError) {
-    return errors.failedPrecondition(error.message);
-  }
-  return errors.internal(
-    error instanceof Error ? error.message : 'An unexpected error occurred',
-  );
-};
-```
-
-## Middleware-Based Error Handling
-
-Our application uses a middleware to centralize error handling across all endpoints:
-
-```typescript
-// shared/errors.middleware.ts
-export const errorsMiddleware = middleware(
-  {},
-  async (req: MiddlewareRequest, next: Next) => {
-    try {
-      // Continue to the next middleware or controller
-      return await next(req);
-    } catch (error) {
-      // Get request metadata for logging
-      const apiCallMeta = req.requestMeta as APICallMeta;
-      const path = apiCallMeta.pathAndQuery || 'unknown';
-
-      // Log the error with structured metadata
-      logError(error, path, apiCallMeta.api.service, apiCallMeta.headers.host);
-
-      // Report error to monitoring system (if applicable)
-      if (!shouldExcludeFromSentry(error)) {
-        captureException(error, {
-          path,
-          service: apiCallMeta.api.service,
-          // Additional context
-        });
-      }
-
-      // If the error is already an APIError, rethrow it
-      if (error instanceof Error && error.name === 'APIError') {
-        throw error;
-      }
-
-      // Otherwise, transform it to the appropriate APIError
-      throw parseApiError(error);
-    }
-  },
-);
-```
-
-## Usage Patterns
-
-### 1. In Domain Layer
-
-Domain layer handles validation using `FieldErrorCollector` and `checkUniqueness`:
-
-```typescript
-// feature/domain.ts
 import { FieldErrorCollector } from '@repo/base-repo';
 import { standardFieldErrors } from '../../shared/errors';
 
-export async function validateFeatureUniqueness(
-  payload: CreateFeaturePayload | UpdateFeaturePayload,
-  currentId?: number,
-  validator?: FieldErrorCollector,
-): Promise<FieldErrorCollector> {
-  const collector = validator || new FieldErrorCollector();
+export async function validateFeature(payload: CreatePayload, currentId?: number): Promise<void> {
+  const collector = new FieldErrorCollector();
 
-  const fieldsToCheck = [];
-  if (payload.uniqueField) {
-    fieldsToCheck.push({
-      field: featureSchema.uniqueField,
-      value: payload.uniqueField,
-    });
-  }
+  const conflicts = await repository.checkUniqueness(
+    [{ field: schema.name, value: payload.name }],
+    currentId
+  );
 
-  const conflicts = await featureRepository.checkUniqueness(fieldsToCheck, currentId);
+  conflicts.forEach((conflict) => {
+    standardFieldErrors.duplicate('Feature', conflict.field, conflict.value, collector);
+  });
 
-  for (const conflict of conflicts) {
-    const error = standardFieldErrors.duplicate(
-      'FeatureName',
-      conflict.field,
-      conflict.value as string,
-    );
-    collector.addError(error.field, error.code, error.message, error.value);
-  }
-
-  return collector;
-}
-
-export async function validateFeature(
-  payload: CreateFeaturePayload | UpdateFeaturePayload,
-  currentId?: number,
-): Promise<void> {
-  const validator = await validateFeatureUniqueness(payload, currentId);
-  validator.throwIfErrors(); // Throws FieldValidationError if validation fails
+  collector.throwIfErrors();
 }
 ```
 
-### 2. In Repositories
-
-Repositories use domain-specific errors directly from `@repo/base-repo`:
+### Domain Errors (Entity Pattern)
 
 ```typescript
-// feature/repository.ts
-export function createFeatureRepository() {
-  // Base repository provides standard CRUD operations with error handling
+// feature.errors.ts
+import { FieldErrorCollector } from '@repo/base-repo';
+import { createDomainErrorHelpersWithFields } from '@/shared/domain/domain-errors';
 
-  // Add custom methods that throw domain-specific errors
-  async function findOneWithRelations(id: number) {
-    const result = await db.query.features.findFirst({
-      where: eq(features.id, id),
-      with: { relatedEntity: true },
-    });
+const FEATURE_ERROR_CONFIG = {
+  invalidState: {
+    message: 'Invalid state for this operation',
+    field: 'state',
+    code: 'INVALID_STATE',
+  },
+} as const;
 
-    if (!result) {
-      throw new NotFoundError(`Feature with id ${id} not found`);
-    }
+const baseErrors = createDomainErrorHelpersWithFields(FEATURE_ERROR_CONFIG);
 
-    return result;
+export const featureErrors = {
+  ...baseErrors,
+};
+```
+
+**Usage in Entity**:
+
+```typescript
+function validateBusinessRules(data: Payload): void {
+  const collector = new FieldErrorCollector();
+  if (invalidCondition) {
+    featureErrors.invalidState(collector, data.state);
   }
-
-  return {
-    ...baseRepository,
-    findOneWithRelations,
-  };
+  collector.throwIfErrors();
 }
 ```
 
-### 3. In Controllers
-
-Controllers use domain validation and let middleware handle error transformation:
+### Repository Errors
 
 ```typescript
-// feature/controller.ts
-import { validateFeature } from './feature.domain';
+async function findOneWithRelations(id: number) {
+  const result = await db.query.features.findFirst({ where: eq(schema.id, id) });
+  if (!result) {
+    throw new NotFoundError(`Feature ${id} not found`);
+  }
+  return result;
+}
+```
 
+### Controller (No try/catch)
+
+```typescript
 export const createFeature = api(
-  { method: 'POST', path: '/features/create', expose: true },
-  async (params: CreateFeaturePayload): Promise<Feature> => {
-    await validateFeature(params); // Throws FieldValidationError if validation fails
-    return await featureRepository.create(params);
-  }
-);
-
-export const updateFeature = api(
-  { method: 'PUT', path: '/features/:id/update', expose: true },
-  async ({ id, ...data }: { id: number } & UpdateFeaturePayload): Promise<Feature> => {
-    await validateFeature(data, id);
-    return await featureRepository.update(id, data);
-  }
-);
-
-export const getFeature = api(
-  { method: 'GET', path: '/features/:id', expose: true },
-  async ({ id }: { id: number }): Promise<Feature> => {
-    // No try/catch needed - errors propagate to middleware
-    return await featureRepository.findOne(id);
+  { method: 'POST', path: '/features/create', auth: true },
+  async (params: CreatePayload): Promise<Feature> => {
+    await validateFeature(params); // Throws FieldValidationError if fails
+    return await repository.create(params); // Throws NotFoundError if fails
   }
 );
 ```
 
-### 4. In Use Cases
+## Error Mapping
 
-Use cases throw domain-specific errors to indicate business rule violations:
+| Domain Error         | API Error       | HTTP Status |
+| -------------------- | --------------- | ----------- |
+| NotFoundError        | NotFound        | 404         |
+| FieldValidationError | InvalidArgument | 400         |
+| DuplicateError       | AlreadyExists   | 409         |
 
-```typescript
-// feature/use-cases.ts
-export function createFeatureUseCases() {
-  async function complexOperation(data) {
-    // Validate business rules
-    if (!isValidOperation(data)) {
-      throw new ValidationError('Operation not allowed: invalid parameters');
-    }
+## References
 
-    // For domain-specific error messages, use constants
-    const ERRORS = {
-      INVALID_CONNECTION: (idA, idB) =>
-        `Invalid connection between ${idA} and ${idB}: mismatched nodes`,
-    };
-
-    if (someBusinessRuleViolation) {
-      throw new ValidationError(ERRORS.INVALID_CONNECTION(data.sourceId, data.targetId));
-    }
-
-    // Transactions with error handling
-    return repository.transaction(async (txRepo, tx) => {
-      // Operation logic using txRepo
-      // Errors will cause transaction rollback
-    });
-  }
-
-  return { complexOperation };
-}
-```
-
-## Error Mapping Table
-
-| Domain Error              | API Error Code          | HTTP Status | Use Case                        |
-| ------------------------- | ----------------------- | ----------- | ------------------------------- |
-| NotFoundError             | ErrCode.NotFound        | 404         | Resource doesn't exist          |
-| ValidationError           | ErrCode.InvalidArgument | 400         | Invalid input/parameters        |
-| FieldValidationError      | ErrCode.InvalidArgument | 400         | Field-level validation failures |
-| DuplicateError            | ErrCode.AlreadyExists   | 409         | Unique constraint violation     |
-| ForeignKeyError           | ErrCode.NotFound        | 404         | Referenced entity doesn't exist |
-| AuthenticationError       | ErrCode.Unauthenticated | 401         | Authentication failure          |
-| UnauthorizedError         | ErrCode.PermissionDenied| 403         | Insufficient permissions        |
-| InvalidStateTransitionError | ErrCode.FailedPrecondition | 400   | Invalid state/operation         |
-| Other Errors              | ErrCode.Internal        | 500         | Unexpected errors               |
-
-## Sentry Integration
-
-We use Sentry for error tracking with selective error reporting:
-
-```typescript
-// List of error types that should not be sent to Sentry
-const EXCLUDED_SENTRY_ERRORS = [
-  'NotFoundError',   // Resource not found errors (404)
-  'ValidationError', // Validation errors (400)
-  'DuplicateError',  // Duplicate resource errors (409)
-];
-
-// Checks if an error should be excluded from Sentry reporting
-function shouldExcludeFromSentry(error: Error | unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  return EXCLUDED_SENTRY_ERRORS.includes(error.name);
-}
-```
-
-## Error Handling Best Practices
-
-1. **Domain Error Usage**
-   - Use domain-specific errors from `@repo/base-repo`
-   - Throw `NotFoundError` when entities don't exist
-   - Throw `ValidationError` for validation failures
-   - Use `FieldValidationError` for field-level validation with detailed error information
-   - Throw `DuplicateError` for unique constraint violations
-   - Use meaningful error messages with specific details
-
-2. **Domain Validation Pattern**
-   - Implement validation in domain layer using `FieldErrorCollector`
-   - Use `checkUniqueness` for efficient multi-field validation
-   - Create `validateEntityUniqueness` and `validateEntity` functions per feature
-   - Use `standardFieldErrors.duplicate` for consistent error messages
-   - Call domain validation in controllers before repository operations
-
-3. **Business Rule Validation**
-   - Define error message constants in feature scope
-   - Use error message templates with specific values
-   - Throw `ValidationError` for business rule violations
-   - Combine multiple validations using `FieldErrorCollector`
-
-4. **Controller Implementation**
-   - Keep controllers simple and lean
-   - Call domain validation before repository operations
-   - Let middleware handle error transformation
-   - No need for try/catch blocks in most cases
-   - Document possible error scenarios in JSDoc
-
-5. **Use Case Error Handling**
-   - Focus on business-specific error scenarios
-   - Use meaningful error messages with context
-   - Define error constants near relevant operations
-   - Ensure error messages are user-friendly
-
-6. **General Guidelines**
-   - Never expose sensitive information in errors
-   - Use structured logging for all errors
-   - Include request context in error logs
-   - Test error cases in integration tests
-   - Prefer field-level validation over generic validation errors
+- See `AGENTS.md` section "Error Handling" for complete patterns
+- See `AGENTS.md` section "Domain-Specific Errors" for Entity Pattern

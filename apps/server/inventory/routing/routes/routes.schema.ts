@@ -22,6 +22,7 @@ export const routes = pgTable(
     id: serial('id').primaryKey(),
     code: text('code').notNull(),
     name: text('name').notNull(),
+    description: text('description'),
     serviceTypeId: integer('service_type_id')
       .notNull()
       .references(() => serviceTypes.id),

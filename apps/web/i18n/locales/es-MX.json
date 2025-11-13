@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Cargando...",
+    "unknown": "Desconocido",
     "errors": {
       "default": "Ha ocurrido un error",
       "notFound": "No encontrado",
@@ -249,6 +250,7 @@
       "pathway": "Trayecto",
       "role": "Rol",
       "pathwayOption": "Opción de Trayecto",
+      "route": "Ruta",
       "department": "Departamento"
     },
     "fields": {
@@ -2336,6 +2338,14 @@
       "update": "Actualizar Ruta",
       "backToList": "Volver a rutas"
     },
+    "types": {
+      "noDefined": "No definido",
+      "direct": "Directa",
+      "withStops": "Con escalas"
+    },
+    "edit": {
+      "title": "Editar Ruta"
+    },
     "fields": {
       "name": "Nombre",
       "code": "Código",
@@ -2343,6 +2353,69 @@
       "destination": "Destino",
       "busline": "Línea de Autobús",
       "serviceType": "Tipo de Servicio"
+    },
+    "form": {
+      "title": "Información de la ruta",
+      "subtitle": "La información básica de la ruta será actualizada automáticamente cuando se agreguen o eliminen trayectos",
+      "fields": {
+        "routeName": "Nombre de la ruta",
+        "routeCode": "Código de la ruta",
+        "auto": "Auto",
+        "description": "Descripción",
+        "busLine": "Línea de Autobús",
+        "activeRoute": "Ruta activa",
+        "autoUpdateNameCode": "Actualizar nombre/código automáticamente"
+      },
+      "placeholders": {
+        "routeName": "Ej: Ruta México - Querétaro Directo",
+        "routeCode": "Ej: MEX-QRO-DIR",
+        "description": "Describe brevemente esta ruta",
+        "noBusLine": "Sin línea de autobús",
+        "originNode": "Nodo de origen",
+        "destinationNode": "Nodo de destino",
+        "noOriginNode": "No hay nodos disponibles",
+        "noDestinationNode": "No hay nodos disponibles"
+      },
+      "error": {
+        "serviceTypeRequired": "La línea de autobús debe tener un tipo de servicio",
+        "invalidOriginDestination": "El origen y destino deben determinarse a partir de los trayectos de la ruta",
+        "tripContinuityErrorGeneric": "Los trayectos no tienen continuidad. Verifica que el destino de cada trayecto coincida con el origen del siguiente.",
+        "tripContinuityErrorSpecific": "Los trayectos no tienen continuidad. El trayecto {index} debe comenzar en \"{expected}\" pero el trayecto anterior termina en \"{actual}\"."
+      }
+    },
+    "summary": {
+      "title": "Resumen de la ruta",
+      "subtitle": "Información calculada automáticamente",
+      "fields": {
+        "routeType": "Tipo de ruta",
+        "totalDistance": "Distancia total",
+        "estimatedDuration": "Duración estimada",
+        "originCity": "Ciudad Origen",
+        "destinationCity": "Ciudad Destino",
+        "originNode": "Nodo Origen",
+        "destinationNode": "Nodo Destino",
+        "numberOfSegments": "Número de trayectos"
+      }
+    },
+    "routeLegs": {
+      "title": "Trayectos de la ruta",
+      "subtitle": "Trayectos que componen esta ruta",
+      "description": "Selecciona los trayectos que componen esta ruta",
+      "selectPlaceholder": "Selecciona un trayecto",
+      "addButton": "Agregar trayecto",
+      "searchPlaceholder": "Buscar por nombre, origen o destino...",
+      "selectedTitle": "Trayectos seleccionados",
+      "segmentLabel": "Trayecto {number}",
+      "selectedOption": "Opción seleccionada",
+      "totalTolls": "Total",
+      "tollBooths": "casetas",
+      "tollHighway": "Autopista de peaje",
+      "noLegs": "Esta ruta no tiene trayectos asignados",
+      "validation": {
+        "title": "Trayectos consecutivos",
+        "message": "El siguiente trayecto debe comenzar donde termina el anterior. Necesitas un trayecto que comience en \"{city}\"."
+      },
+      "continuityError": "Este trayecto no tiene continuidad. El trayecto anterior termina en \"{expectedOrigin}\" pero este trayecto comienza en \"{actualOrigin}\". No está permitido agregar los trayectos en este orden."
     },
     "filters": {
       "active": "Activo"
@@ -2364,11 +2437,18 @@
         "error": "No pudimos eliminar la ruta"
       }
     },
+    "sections": {
+      "info": "Información de la Ruta"
+    },
+    "details": {
+      "description": "Información detallada de la ruta y sus trayectos"
+    },
     "errors": {
       "notFound": {
         "title": "Ruta no encontrada",
         "description": "No pudimos encontrar la ruta que buscas. Es posible que haya sido eliminada o que no exista."
-      }
+      },
+      "alreadyExists": "Ya existe una ruta con el mismo nombre o código."
     }
   }
 }

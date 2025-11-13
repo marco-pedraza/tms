@@ -9,6 +9,7 @@ import { pathwayOptionRepository } from '@/inventory/routing/pathway-options/pat
 import { pathways } from './pathways.schema';
 import type {
   CreatePathwayPayload,
+  ListPathwaysQueryParams,
   PaginatedListPathwaysQueryParams,
   PaginatedListPathwaysResult,
   Pathway,
@@ -142,6 +143,13 @@ export function createPathwayRepository() {
     };
   }
 
+  async function findAllWithRelations(
+    params: ListPathwaysQueryParams,
+  ): Promise<PathwayWithRelations[]> {
+    const result = await baseRepository.findAll(params);
+    return enrichWithRelations(result);
+  }
+
   async function findOneWithRelations(
     id: number,
   ): Promise<PathwayWithRelations> {
@@ -212,6 +220,7 @@ export function createPathwayRepository() {
   return {
     ...baseRepository,
     findAllPaginatedWithRelations,
+    findAllWithRelations,
     findOneWithRelations,
     findByIds,
   };

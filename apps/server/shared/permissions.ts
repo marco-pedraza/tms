@@ -350,6 +350,7 @@ export const ENDPOINT_TO_MODULES: Record<string, string[]> = {
   // Pathways
   'inventory:createPathway': [MODULE_PERMISSIONS.PATHWAYS],
   'inventory:getPathway': [MODULE_PERMISSIONS.PATHWAYS],
+  'inventory:getPathwayOptions': [MODULE_PERMISSIONS.PATHWAYS],
   'inventory:listPathways': [MODULE_PERMISSIONS.PATHWAYS],
   'inventory:listPathwaysPaginated': [MODULE_PERMISSIONS.PATHWAYS],
   'inventory:updatePathway': [MODULE_PERMISSIONS.PATHWAYS],

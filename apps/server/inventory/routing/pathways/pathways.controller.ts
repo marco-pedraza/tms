@@ -73,7 +73,7 @@ export const listPathways = api(
     auth: true,
   },
   async (params: ListPathwaysQueryParams): Promise<ListPathwaysResult> => {
-    const pathways = await pathwayRepository.findAll(params);
+    const pathways = await pathwayRepository.findAllWithRelations(params);
     return {
       data: pathways,
     };

@@ -33,6 +33,9 @@ export interface Route {
   /** Name of the route */
   name: string;
 
+  /** Description of the route */
+  description: string | null;
+
   /** Service type ID */
   serviceTypeId: number;
 
@@ -91,6 +94,11 @@ export interface CreateRoutePayload {
   name: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
 
   /**
+   * Description of the route
+   */
+  description?: string | null;
+
+  /**
    * Service type ID
    * Must be a positive number
    */
@@ -141,6 +149,11 @@ export interface UpdateRoutePayload {
    * Name of the route
    */
   name?: string & MinLen<1> & MatchesRegexp<'.*\\S.*'>;
+
+  /**
+   * Description of the route
+   */
+  description?: string | null;
 
   /**
    * Service type ID

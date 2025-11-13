@@ -20,7 +20,7 @@ export const createDepartment = api(
   {
     expose: true,
     method: 'POST',
-    path: '/departments',
+    path: '/departments/create',
     auth: true,
   },
   async (params: CreateDepartmentPayload): Promise<Department> => {
@@ -57,7 +57,7 @@ export const listDepartments = api(
   {
     expose: true,
     method: 'POST',
-    path: '/get-departments',
+    path: '/departments/list/all',
     auth: true,
   },
   async (params: DepartmentsQueryOptions): Promise<Departments> => {
@@ -76,7 +76,7 @@ export const listDepartmentsPaginated = api(
   {
     expose: true,
     method: 'POST',
-    path: '/get-departments/paginated',
+    path: '/departments/list',
     auth: true,
   },
   async (
@@ -97,7 +97,7 @@ export const updateDepartment = api(
   {
     expose: true,
     method: 'PUT',
-    path: '/departments/:id',
+    path: '/departments/:id/update',
     auth: true,
   },
   async ({
@@ -119,54 +119,10 @@ export const deleteDepartment = api(
   {
     expose: true,
     method: 'DELETE',
-    path: '/departments/:id',
+    path: '/departments/:id/delete',
     auth: true,
   },
   async ({ id }: { id: number }): Promise<Department> => {
     return await departmentRepository.delete(id);
-  },
-);
-
-/**
- * Searches for departments by matching a search term against name, code, and description.
- * @param params - Search parameters
- * @param params.term - The search term to match against department fields
- * @returns {Promise<Departments>} List of matching departments
- * @throws {APIError} If search fails or no searchable fields are configured
- */
-export const searchDepartments = api(
-  {
-    expose: true,
-    method: 'GET',
-    path: '/departments/search',
-    auth: true,
-  },
-  async ({ term }: { term: string }): Promise<Departments> => {
-    const departments = await departmentRepository.search(term);
-    return { departments };
-  },
-);
-
-/**
- * Searches for departments with pagination by matching a search term against name, code, and description.
- * @param params - Search and pagination parameters
- * @param params.term - The search term to match against department fields
- * @returns {Promise<PaginatedDepartments>} Paginated list of matching departments
- * @throws {APIError} If search fails or no searchable fields are configured
- */
-export const searchDepartmentsPaginated = api(
-  {
-    expose: true,
-    method: 'POST',
-    path: '/departments/search/paginated',
-    auth: true,
-  },
-  async ({
-    term,
-    ...params
-  }: PaginationParamsDepartments & {
-    term: string;
-  }): Promise<PaginatedDepartments> => {
-    return await departmentRepository.searchPaginated(term, params);
   },
 );

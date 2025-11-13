@@ -19,6 +19,7 @@ export function createDepartmentRepository() {
     typeof departments
   >(db, departments, 'Department', {
     searchableFields: [departments.name, departments.code],
+    softDeleteEnabled: true,
   });
 
   return {

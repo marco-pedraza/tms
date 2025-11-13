@@ -25,6 +25,7 @@ export const ROUTE_TO_MODULE: Record<string, string> = {
   '/pathways': 'inventory_pathways',
   '/routes': 'inventory_routes',
   '/amenities': 'inventory_amenities',
+  '/departments': 'users_departments',
   '/roles': 'users_roles',
   '/users': 'users_users',
 };

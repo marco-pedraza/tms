@@ -10,15 +10,15 @@ export default function useQueryAllDepartments(): UseQueryResult<
     queryKey: ['allDepartments'],
     queryFn: () =>
       imsClient.users.listDepartments({
-        // orderBy: [
-        //   {
-        //     field: 'name',
-        //     direction: 'asc',
-        //   },
-        // ],
-        // filters: {
-        //   active: true,
-        // },
+        orderBy: [
+          {
+            field: 'name',
+            direction: 'asc',
+          },
+        ],
+        filters: {
+          isActive: true,
+        },
       }),
   });
 }

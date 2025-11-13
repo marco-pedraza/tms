@@ -10,8 +10,6 @@ import {
   getDepartment,
   listDepartments,
   listDepartmentsPaginated,
-  searchDepartments,
-  searchDepartmentsPaginated,
   updateDepartment,
 } from './departments.controller';
 
@@ -59,6 +57,7 @@ describe('Departments Controller', () => {
       expect(result.isActive).toBe(true);
       expect(result.createdAt).toBeDefined();
       expect(result.updatedAt).toBeDefined();
+      expect(result.deletedAt).toBeNull();
     });
 
     test('should retrieve a department by ID', async () => {
@@ -90,7 +89,7 @@ describe('Departments Controller', () => {
       expect(response.updatedAt).toBeDefined();
     });
 
-    test('should delete a department', async () => {
+    test('should soft delete a department', async () => {
       // Create a department specifically for deletion test
       const departmentToDelete = await createDepartment({
         ...testDepartment,
@@ -98,15 +97,23 @@ describe('Departments Controller', () => {
         code: 'DEPT-DELETE',
       });
 
-      // Delete should not throw an error
-      await expect(
-        deleteDepartment({ id: departmentToDelete.id }),
-      ).resolves.not.toThrow();
+      // Soft delete should not throw an error
+      const deletedDepartment = await deleteDepartment({
+        id: departmentToDelete.id,
+      });
+      expect(deletedDepartment).toBeDefined();
+      expect(deletedDepartment.id).toBe(departmentToDelete.id);
 
-      // Attempt to get should throw a not found error
+      // Attempt to get should throw a not found error (soft deleted records are filtered out)
       await expect(
         getDepartment({ id: departmentToDelete.id }),
       ).rejects.toThrow();
+
+      // Soft deleted department should not appear in lists
+      const allDepartments = await listDepartments({});
+      expect(
+        allDepartments.departments.some((d) => d.id === departmentToDelete.id),
+      ).toBe(false);
     });
   });
 
@@ -116,8 +123,34 @@ describe('Departments Controller', () => {
     });
 
     test('should handle duplicate errors', async () => {
-      // Try to create department with same code
+      // Try to create department with same code (should fail due to unique constraint)
       await expect(createDepartment(testDepartment)).rejects.toThrow();
+    });
+
+    test('should allow recreating department with same name/code after soft delete', async () => {
+      // Create and soft delete a department
+      const departmentToRecreate = await createDepartment({
+        ...testDepartment,
+        name: 'Department To Recreate',
+        code: 'DEPT-RECREATE',
+      });
+
+      await deleteDepartment({ id: departmentToRecreate.id });
+
+      // Should be able to recreate with same name and code (soft deleted records excluded from uniqueness)
+      const recreatedDepartment = await createDepartment({
+        name: 'Department To Recreate',
+        code: 'DEPT-RECREATE',
+        description: 'Recreated department',
+      });
+
+      expect(recreatedDepartment).toBeDefined();
+      expect(recreatedDepartment.name).toBe('Department To Recreate');
+      expect(recreatedDepartment.code).toBe('DEPT-RECREATE');
+      expect(recreatedDepartment.id).not.toBe(departmentToRecreate.id);
+
+      // Clean up
+      createdDepartmentIds.push(recreatedDepartment.id);
     });
   });
 
@@ -245,7 +278,7 @@ describe('Departments Controller', () => {
   });
 
   describe('search functionality', () => {
-    test('should search departments', async () => {
+    test('should search departments using searchTerm', async () => {
       // Create a unique department for search testing
       const searchableDepartment = await createDepartment({
         ...testDepartment,
@@ -256,8 +289,10 @@ describe('Departments Controller', () => {
       createdDepartmentIds.push(searchableDepartment.id);
 
       try {
-        // Search for the department by term
-        const response = await searchDepartments({ term: 'Searchable' });
+        // Search for the department by term using searchTerm parameter
+        const response = await listDepartments({
+          searchTerm: 'Searchable',
+        });
 
         expect(response.departments).toBeDefined();
         expect(Array.isArray(response.departments)).toBe(true);
@@ -271,9 +306,9 @@ describe('Departments Controller', () => {
       }
     });
 
-    test('should search departments with pagination', async () => {
-      const response = await searchDepartmentsPaginated({
-        term: 'Department',
+    test('should search departments with pagination using searchTerm', async () => {
+      const response = await listDepartmentsPaginated({
+        searchTerm: 'Department',
         page: 1,
         pageSize: 5,
       });

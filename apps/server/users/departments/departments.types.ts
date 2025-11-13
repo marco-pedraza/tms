@@ -1,4 +1,8 @@
-import { PaginatedResult, PaginationParams } from '@/shared/types';
+import type {
+  ListQueryParams,
+  PaginatedListQueryParams,
+  PaginatedListQueryResult,
+} from '@/shared/types';
 
 // API types
 
@@ -26,6 +30,9 @@ export interface Department {
 
   /** Timestamp when the department record was last updated */
   updatedAt: Date | string | null;
+
+  /** Timestamp when the department record was soft deleted (null if not deleted) */
+  deletedAt?: Date | string | null;
 }
 
 /**
@@ -80,29 +87,24 @@ export interface UpdateDepartmentPayload {
 }
 
 /**
- * Response for listing all departments
+ * Query options for departments (non-paginated)
+ */
+export type DepartmentsQueryOptions = ListQueryParams<Department>;
+
+/**
+ * Response for listing all departments (non-paginated)
+ * Maintains backward compatibility with existing code that expects { departments }
  */
 export interface Departments {
-  /** List of departments */
   departments: Department[];
 }
 
 /**
- * Query options for departments
+ * Query options for departments (paginated)
  */
-export interface DepartmentsQueryOptions {
-  orderBy?: { field: keyof Department; direction: 'asc' | 'desc' }[];
-  filters?: Partial<Department>;
-}
+export type PaginationParamsDepartments = PaginatedListQueryParams<Department>;
 
 /**
  * Paginated response type for the list departments endpoint
  */
-export type PaginatedDepartments = PaginatedResult<Department>;
-
-/**
- * Combined pagination and query options for departments
- */
-export interface PaginationParamsDepartments
-  extends PaginationParams,
-    DepartmentsQueryOptions {}
+export type PaginatedDepartments = PaginatedListQueryResult<Department>;

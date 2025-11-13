@@ -4389,8 +4389,6 @@ export namespace users {
             this.logout = this.logout.bind(this)
             this.refreshToken = this.refreshToken.bind(this)
             this.revokeAllTokens = this.revokeAllTokens.bind(this)
-            this.searchDepartments = this.searchDepartments.bind(this)
-            this.searchDepartmentsPaginated = this.searchDepartmentsPaginated.bind(this)
             this.searchPermissions = this.searchPermissions.bind(this)
             this.searchPermissionsPaginated = this.searchPermissionsPaginated.bind(this)
             this.updateDepartment = this.updateDepartment.bind(this)
@@ -4526,7 +4524,7 @@ export namespace users {
          */
         public async createDepartment(params: departments.CreateDepartmentPayload): Promise<departments.Department> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/departments`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("POST", `/departments/create`, JSON.stringify(params))
             return await resp.json() as departments.Department
         }
 
@@ -4587,7 +4585,7 @@ export namespace users {
          */
         public async deleteDepartment(id: number): Promise<departments.Department> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("DELETE", `/departments/${encodeURIComponent(id)}`)
+            const resp = await this.baseClient.callTypedAPI("DELETE", `/departments/${encodeURIComponent(id)}/delete`)
             return await resp.json() as departments.Department
         }
 
@@ -4765,7 +4763,7 @@ export namespace users {
          */
         public async listDepartments(params: departments.DepartmentsQueryOptions): Promise<departments.Departments> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-departments`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("POST", `/departments/list/all`, JSON.stringify(params))
             return await resp.json() as departments.Departments
         }
 
@@ -4777,7 +4775,7 @@ export namespace users {
          */
         public async listDepartmentsPaginated(params: departments.PaginationParamsDepartments): Promise<departments.PaginatedDepartments> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/get-departments/paginated`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("POST", `/departments/list`, JSON.stringify(params))
             return await resp.json() as departments.PaginatedDepartments
         }
 
@@ -4931,56 +4929,6 @@ export namespace users {
         }
 
         /**
-         * Searches for departments by matching a search term against name, code, and description.
-         * @param params - Search parameters
-         * @param params.term - The search term to match against department fields
-         * @returns {Promise<Departments>} List of matching departments
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchDepartments(params: {
-    term: string
-}): Promise<departments.Departments> {
-            // Convert our params into the objects we need for the request
-            const query = makeRecord<string, string | string[]>({
-                term: params.term,
-            })
-
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("GET", `/departments/search`, undefined, {query})
-            return await resp.json() as departments.Departments
-        }
-
-        /**
-         * Searches for departments with pagination by matching a search term against name, code, and description.
-         * @param params - Search and pagination parameters
-         * @param params.term - The search term to match against department fields
-         * @returns {Promise<PaginatedDepartments>} Paginated list of matching departments
-         * @throws {APIError} If search fails or no searchable fields are configured
-         */
-        public async searchDepartmentsPaginated(params: {
-    page?: number
-    pageSize?: number
-    orderBy?: {
-        field: "id" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
-        direction: "asc" | "desc"
-    }[]
-    filters?: {
-        id?: number
-        name?: string
-        code?: string
-        description?: string | null
-        isActive?: boolean
-        createdAt?: string | string | null
-        updatedAt?: string | string | null
-    }
-    term: string
-}): Promise<departments.PaginatedDepartments> {
-            // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("POST", `/departments/search/paginated`, JSON.stringify(params))
-            return await resp.json() as departments.PaginatedDepartments
-        }
-
-        /**
          * Searches for permissions by matching a search term against name, code, and description.
          * @param params - Search parameters
          * @param params.term - The search term to match against permission fields
@@ -5066,7 +5014,7 @@ export namespace users {
     isActive?: boolean
 }): Promise<departments.Department> {
             // Now make the actual call to the API
-            const resp = await this.baseClient.callTypedAPI("PUT", `/departments/${encodeURIComponent(id)}`, JSON.stringify(params))
+            const resp = await this.baseClient.callTypedAPI("PUT", `/departments/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as departments.Department
         }
 
@@ -8025,18 +7973,20 @@ export namespace departments {
          * Timestamp when the department record was last updated
          */
         updatedAt: string | string | null
+
+        /**
+         * Timestamp when the department record was soft deleted (null if not deleted)
+         */
+        deletedAt?: string | string | null
     }
 
     export interface Departments {
-        /**
-         * List of departments
-         */
         departments: Department[]
     }
 
     export interface DepartmentsQueryOptions {
         orderBy?: {
-            field: "id" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt" | "deletedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -8047,7 +7997,9 @@ export namespace departments {
             isActive?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
+            deletedAt?: string | string | null
         }
+        searchTerm?: string
     }
 
     export interface PaginatedDepartments {
@@ -8059,7 +8011,7 @@ export namespace departments {
         page?: number
         pageSize?: number
         orderBy?: {
-            field: "id" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt"
+            field: "id" | "name" | "code" | "description" | "isActive" | "createdAt" | "updatedAt" | "deletedAt"
             direction: "asc" | "desc"
         }[]
         filters?: {
@@ -8070,7 +8022,9 @@ export namespace departments {
             isActive?: boolean
             createdAt?: string | string | null
             updatedAt?: string | string | null
+            deletedAt?: string | string | null
         }
+        searchTerm?: string
     }
 }
 

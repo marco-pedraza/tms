@@ -43,6 +43,7 @@ export interface Routes {
   chromatics: CrudRoute;
   users: CrudRoute;
   roles: CrudRoute;
+  departments: CrudRoute;
 }
 
 const routes: Routes = {
@@ -195,6 +196,12 @@ const routes: Routes = {
     getDetailsRoute: (id: string) => `/roles/${id}`,
     getEditRoute: (id: string) => `/roles/${id}/edit`,
     getPermissionsRoute: (id: string) => `/roles/${id}/permissions`,
+  },
+  departments: {
+    index: '/departments',
+    new: '/departments/new',
+    getDetailsRoute: (id: string) => `/departments/${id}`,
+    getEditRoute: (id: string) => `/departments/${id}/edit`,
   },
 };
 

@@ -442,6 +442,13 @@
       "when": 1762887339806,
       "tag": "20251111185539_create_rolling_plan_version_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1763060478322,
+      "tag": "20251113190118_add_soft_delete_to_departments",
+      "breakpoints": true
     }
   ]
 }

@@ -7,7 +7,7 @@ import {
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { isNull, relations } from 'drizzle-orm';
 import { users } from '../users/users.schema';
 
 export const departments = pgTable(
@@ -20,8 +20,13 @@ export const departments = pgTable(
     isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
+    deletedAt: timestamp('deleted_at'),
   },
-  (table) => [uniqueIndex().on(table.code), index().on(table.name)],
+  (table) => [
+    index().on(table.deletedAt),
+    uniqueIndex().on(table.name).where(isNull(table.deletedAt)),
+    uniqueIndex().on(table.code).where(isNull(table.deletedAt)),
+  ],
 );
 
 /**

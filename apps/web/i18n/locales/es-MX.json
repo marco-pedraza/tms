@@ -248,7 +248,8 @@
       "user": "Usuario",
       "pathway": "Trayecto",
       "role": "Rol",
-      "pathwayOption": "Opción de Trayecto"
+      "pathwayOption": "Opción de Trayecto",
+      "department": "Departamento"
     },
     "fields": {
       "name": "Nombre",
@@ -313,7 +314,8 @@
     "users": {
       "title": "Organización",
       "users": "Usuarios",
-      "roles": "Roles"
+      "roles": "Roles",
+      "departments": "Departamentos"
     },
     "planning": {
       "title": "Planeación",
@@ -501,6 +503,55 @@
       "permissionsSelected": "permisos seleccionados",
       "toggleGroup": "Alternar grupo de permisos {groupName}",
       "togglePermission": "Alternar permiso {permissionName}"
+    }
+  },
+  "departments": {
+    "title": "Departamentos",
+    "description": "Administra departamentos organizacionales del sistema",
+    "actions": {
+      "create": "Crear Departamento",
+      "update": "Actualizar Departamento",
+      "backToList": "Volver a departamentos"
+    },
+    "fields": {
+      "name": "Nombre",
+      "code": "Código",
+      "description": "Descripción"
+    },
+    "form": {
+      "title": "Información del departamento",
+      "placeholders": {
+        "name": "Ej: Tecnologías de la Información",
+        "code": "Ej: IT-001",
+        "description": "Descripción opcional del departamento"
+      }
+    },
+    "details": {
+      "description": "Detalles del departamento"
+    },
+    "edit": {
+      "title": "Editar Departamento"
+    },
+    "notFound": {
+      "title": "Departamento no encontrado",
+      "description": "No pudimos encontrar el departamento que buscas. Es posible que haya sido eliminado o que no exista."
+    },
+    "messages": {
+      "create": {
+        "loading": "Creando departamento...",
+        "success": "Departamento creado correctamente",
+        "error": "No pudimos crear el departamento"
+      },
+      "update": {
+        "loading": "Actualizando departamento...",
+        "success": "Departamento actualizado correctamente",
+        "error": "No pudimos actualizar el departamento"
+      },
+      "delete": {
+        "loading": "Eliminando departamento...",
+        "success": "Departamento eliminado correctamente",
+        "error": "No pudimos eliminar el departamento"
+      }
     }
   },
   "countries": {

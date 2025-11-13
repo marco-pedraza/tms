@@ -79,3 +79,6 @@ export type UseUsersTranslationsResult = ReturnType<
 export type UseRolesTranslationsResult = ReturnType<
   typeof createTranslator<Messages, 'roles'>
 >;
+export type UseDepartmentsTranslationsResult = ReturnType<
+  typeof createTranslator<Messages, 'departments'>
+>;

@@ -75,7 +75,11 @@ export default function Sidebar() {
     'inventory_routes',
   ]);
   const hasConfigAccess = hasModuleAccess('inventory_amenities');
-  const hasUsersAccess = hasAnyAccess(['users_roles', 'users_users']);
+  const hasUsersAccess = hasAnyAccess([
+    'users_roles',
+    'users_users',
+    'users_departments',
+  ]);
 
   const hasInventoryAccess =
     hasLocalitiesAccess ||
@@ -326,6 +330,13 @@ export default function Sidebar() {
               href={routes.users.index}
               icon={UserRoundSearch}
               label={tSidebar('users.users')}
+            />
+          )}
+          {hasModuleAccess('users_departments') && (
+            <SidebarLink
+              href={routes.departments.index}
+              icon={Building2}
+              label={tSidebar('users.departments')}
             />
           )}
         </SidebarSection>

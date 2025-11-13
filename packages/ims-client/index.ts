@@ -3965,6 +3965,7 @@ export namespace planning {
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
             this.createRollingPlan = this.createRollingPlan.bind(this)
+            this.createRollingPlanVersion = this.createRollingPlanVersion.bind(this)
             this.deleteRollingPlan = this.deleteRollingPlan.bind(this)
             this.getRollingPlan = this.getRollingPlan.bind(this)
             this.getRollingPlanVersion = this.getRollingPlanVersion.bind(this)
@@ -3984,6 +3985,21 @@ export namespace planning {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/rolling-plans/create`, JSON.stringify(params))
             return await resp.json() as rolling_plans.RollingPlanWithRelations
+        }
+
+        /**
+         * Creates a new rolling plan version.
+         * @param params - The rolling plan version data to create
+         * @returns {Promise<RollingPlanVersion>} The created rolling plan version
+         * @throws {APIError} If the rolling plan version creation fails
+         */
+        public async createRollingPlanVersion(id: number, params: {
+    name: string
+    notes?: string
+}): Promise<rolling_plan_versions.RollingPlanVersion> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/rolling-plans/${encodeURIComponent(id)}/versions/create`, JSON.stringify(params))
+            return await resp.json() as rolling_plan_versions.RollingPlanVersion
         }
 
         /**

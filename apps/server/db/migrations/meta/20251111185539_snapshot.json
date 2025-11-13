@@ -6355,7 +6355,8 @@
           "name": "state",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": true,
+          "default": "'draft'"
         },
         "notes": {
           "name": "notes",

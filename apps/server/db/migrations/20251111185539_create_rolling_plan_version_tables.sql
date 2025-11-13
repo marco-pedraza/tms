@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS "rolling_plan_versions" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"rolling_plan_id" integer NOT NULL,
 	"name" text NOT NULL,
-	"state" text NOT NULL,
+	"state" text DEFAULT 'draft' NOT NULL,
 	"notes" text,
 	"activated_at" timestamp,
 	"deactivated_at" timestamp,

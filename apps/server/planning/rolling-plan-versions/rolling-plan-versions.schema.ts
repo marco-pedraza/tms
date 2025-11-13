@@ -24,7 +24,7 @@ export const rollingPlanVersions = pgTable(
       .notNull()
       .references(() => rollingPlans.id),
     name: text('name').notNull(),
-    state: text('state').notNull(), // 'draft' | 'active' | 'inactive'
+    state: text('state').notNull().default('draft'), // 'draft' | 'active' | 'inactive'
     notes: text('notes'),
     activatedAt: timestamp('activated_at'),
     deactivatedAt: timestamp('deactivated_at'),

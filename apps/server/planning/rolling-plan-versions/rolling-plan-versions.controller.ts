@@ -2,11 +2,48 @@ import { api } from 'encore.dev/api';
 import { rollingPlanRepository } from '@/planning/rolling-plans/rolling-plans.repository';
 import { NotFoundError } from '@/shared/errors';
 import type {
+  CreateRollingPlanVersionPayload,
   ListRollingPlanVersionsQueryParams,
   ListRollingPlanVersionsResult,
   RollingPlanVersion,
 } from './rolling-plan-versions.types';
 import { rollingPlanVersionRepository } from './rolling-plan-versions.repository';
+import { rollingPlanVersionApplicationService } from './rolling-plan-versions.application-service';
+
+/**
+ * Creates a new rolling plan version.
+ * @param params - The rolling plan version data to create
+ * @returns {Promise<RollingPlanVersion>} The created rolling plan version
+ * @throws {APIError} If the rolling plan version creation fails
+ */
+export const createRollingPlanVersion = api(
+  {
+    expose: true,
+    method: 'POST',
+    path: '/rolling-plans/:id/versions/create',
+    auth: true,
+  },
+  async ({
+    id,
+    ...data
+  }: Omit<CreateRollingPlanVersionPayload, 'rollingPlanId'> & {
+    id: number;
+  }): Promise<RollingPlanVersion> => {
+    // Validate that the rolling plan exists
+    await rollingPlanRepository.findOne(id);
+
+    // Prepare payload with rollingPlanId from path parameter
+    const payload: CreateRollingPlanVersionPayload = {
+      ...data,
+      rollingPlanId: id,
+    };
+
+    // Create using application service
+    return await rollingPlanVersionApplicationService.createRollingPlanVersion(
+      payload,
+    );
+  },
+);
 
 /**
  * Retrieves a rolling plan version by its ID within a specific rolling plan.

@@ -4,13 +4,25 @@ import Filter from '../components/icons/Filter';
 import { MultiSelect } from '../components/multiselect';
 
 const meta = {
-  title: 'Components/MultiSelect',
+  title: 'Form Components/MultiSelect',
   component: MultiSelect,
   tags: ['autodocs'],
   argTypes: {
     placeholder: {
       control: { type: 'text' },
       description: 'Placeholder text for the multiselect',
+    },
+    label: {
+      control: { type: 'text' },
+      description: 'Label text for the multiselect',
+    },
+    staticLabel: {
+      control: { type: 'boolean' },
+      description: 'Whether the label is always visible (permanent) or dynamic',
+    },
+    feedback: {
+      control: { type: 'text' },
+      description: 'Error feedback message (always destructive)',
     },
     disabled: {
       control: { type: 'boolean' },
@@ -130,6 +142,9 @@ function MultiSelectWithPreselectedWrapper({
   );
 }
 
+/**
+ * MultiSelect without label - just placeholder
+ */
 export const Default: Story = {
   render: (args) => <MultiSelectWrapper args={args} />,
   args: {
@@ -140,6 +155,39 @@ export const Default: Story = {
   },
 };
 
+/**
+ * MultiSelect with dynamic floating label (appears when focused or has value)
+ */
+export const DynamicLabel: Story = {
+  render: (args) => <MultiSelectWithLabelWrapper args={args} />,
+  args: {
+    options: sampleOptions,
+    placeholder: 'Select multiple options...',
+    label: 'Tags',
+    staticLabel: false,
+    value: [],
+    onChange: () => {},
+  },
+};
+
+/**
+ * MultiSelect with permanent floating label (always visible)
+ */
+export const PermanentLabel: Story = {
+  render: (args) => <MultiSelectWithLabelWrapper args={args} />,
+  args: {
+    options: sampleOptions,
+    placeholder: 'Select multiple options...',
+    label: 'Tags',
+    staticLabel: true,
+    value: [],
+    onChange: () => {},
+  },
+};
+
+/**
+ * MultiSelect with left icon
+ */
 export const WithFilterIcon: Story = {
   render: (args) => <MultiSelectWithFilterWrapper args={args} />,
   args: {
@@ -151,23 +199,16 @@ export const WithFilterIcon: Story = {
   },
 };
 
-export const WithFloatingLabel: Story = {
-  render: (args) => <MultiSelectWithLabelWrapper args={args} />,
-  args: {
-    options: sampleOptions,
-    placeholder: 'Select multiple options...',
-    label: 'Tags',
-    value: [],
-    onChange: () => {},
-  },
-};
-
-export const WithFloatingLabelAndIcon: Story = {
+/**
+ * MultiSelect with dynamic label and icon
+ */
+export const DynamicLabelAndIcon: Story = {
   render: (args) => <MultiSelectWithLabelAndIconWrapper args={args} />,
   args: {
     options: sampleOptions,
     placeholder: 'Filtrar por estados...',
     label: 'Filter',
+    staticLabel: false,
     leftIcon: Filter,
     value: [],
     onChange: () => {},
@@ -191,6 +232,77 @@ export const WithPreselectedValues: Story = {
     options: sampleOptions,
     placeholder: 'Select multiple options...',
     value: ['option1', 'option3'],
+    onChange: () => {},
+  },
+};
+
+function MultiSelectSearchableWrapper({
+  args,
+}: {
+  args: Partial<React.ComponentProps<typeof MultiSelect>>;
+}) {
+  const [value, setValue] = useState<string[]>([]);
+  return (
+    <MultiSelect
+      {...args}
+      value={value}
+      onChange={setValue}
+      options={args.options || []}
+    />
+  );
+}
+
+export const WithSearch: Story = {
+  render: (args) => <MultiSelectSearchableWrapper args={args} />,
+  args: {
+    options: [
+      { value: 'ex-mexico', label: 'ex-México' },
+      { value: 'ex-usa', label: 'ex-USA' },
+      { value: 'ex-canada', label: 'ex-Canadá' },
+      { value: 'guadalajara', label: 'Guadalajara' },
+      { value: 'monterrey', label: 'Monterrey' },
+      { value: 'tijuana', label: 'Tijuana' },
+      { value: 'cancun', label: 'Cancún' },
+      { value: 'puebla', label: 'Puebla' },
+      { value: 'queretaro', label: 'Querétaro' },
+      { value: 'merida', label: 'Mérida' },
+    ],
+    placeholder: 'Seleccionar ciudades...',
+    searchable: true,
+    searchPlaceholder: 'Buscar ciudad...',
+    value: [],
+    onChange: () => {},
+  },
+};
+
+export const WithSearchAndIcon: Story = {
+  render: (args) => <MultiSelectSearchableWrapper args={args} />,
+  args: {
+    options: [
+      { value: 'ex-frontend', label: 'ex-Frontend Developer' },
+      { value: 'ex-backend', label: 'ex-Backend Developer' },
+      { value: 'designer', label: 'Designer' },
+      { value: 'product-manager', label: 'Product Manager' },
+      { value: 'devops', label: 'DevOps Engineer' },
+      { value: 'qa-engineer', label: 'QA Engineer' },
+    ],
+    placeholder: 'Filtrar por roles...',
+    leftIcon: Filter,
+    label: 'Roles',
+    searchable: true,
+    searchPlaceholder: 'Buscar rol...',
+    value: [],
+    onChange: () => {},
+  },
+};
+
+export const WithFeedback: Story = {
+  render: (args) => <MultiSelectWrapper args={args} />,
+  args: {
+    options: sampleOptions,
+    placeholder: 'Select at least one option...',
+    feedback: 'At least one option is required',
+    value: [],
     onChange: () => {},
   },
 };

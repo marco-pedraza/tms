@@ -14,7 +14,7 @@ import { Switch } from '../components/switch';
  * - Smooth animations and transitions
  */
 const meta: Meta<typeof Switch> = {
-  title: 'Components/Switch',
+  title: 'Form Components/Switch',
   component: Switch,
   parameters: {
     layout: 'padded',

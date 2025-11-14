@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { type HTMLAttributes } from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { cn } from '@repo/ui/lib/utils';
@@ -49,7 +49,7 @@ const cardVariants = cva('bg-card', {
 });
 
 interface CardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof cardVariants> {
   asChild?: boolean;
 }

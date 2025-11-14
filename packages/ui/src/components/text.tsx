@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { type ElementType, type HTMLAttributes } from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { cn } from '../lib/utils';
@@ -50,10 +50,10 @@ const textVariants = cva('', {
 });
 
 interface TextProps
-  extends Omit<React.HTMLAttributes<HTMLElement>, 'color'>,
+  extends Omit<HTMLAttributes<HTMLElement>, 'color'>,
     VariantProps<typeof textVariants> {
   asChild?: boolean;
-  as?: React.ElementType;
+  as?: ElementType;
 }
 
 /**
@@ -78,7 +78,7 @@ function Text({
   /**
    * Determines the appropriate HTML element based on variant
    */
-  function getTagName(): React.ElementType {
+  function getTagName(): ElementType {
     if (as) return as;
 
     switch (variant) {
@@ -97,7 +97,7 @@ function Text({
     }
   }
 
-  const Comp = asChild ? Slot : (getTagName() as React.ElementType);
+  const Comp = asChild ? Slot : (getTagName() as ElementType);
 
   return (
     <Comp

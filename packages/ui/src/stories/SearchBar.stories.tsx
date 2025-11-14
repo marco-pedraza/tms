@@ -3,13 +3,21 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { SearchBar } from '../components/searchbar';
 
 const meta = {
-  title: 'Components/SearchBar',
+  title: 'Form Components/SearchBar',
   component: SearchBar,
   tags: ['autodocs'],
   argTypes: {
     placeholder: {
       control: { type: 'text' },
       description: 'Placeholder text for the input',
+    },
+    label: {
+      control: { type: 'text' },
+      description: 'Label text for the search bar',
+    },
+    staticLabel: {
+      control: { type: 'boolean' },
+      description: 'Whether the label is always visible (permanent) or dynamic',
     },
     disabled: {
       control: { type: 'boolean' },
@@ -60,6 +68,9 @@ function SearchBarWithValueWrapper({
   );
 }
 
+/**
+ * SearchBar without label - just placeholder
+ */
 export const Default: Story = {
   render: (args) => <SearchBarWrapper args={args} />,
   args: {
@@ -69,15 +80,37 @@ export const Default: Story = {
   },
 };
 
-export const WithCustomPlaceholder: Story = {
+/**
+ * SearchBar with dynamic floating label (appears when focused or has value)
+ */
+export const DynamicLabel: Story = {
   render: (args) => <SearchBarWrapper args={args} />,
   args: {
-    placeholder: 'Buscar autobuses...',
+    placeholder: 'Search...',
+    label: 'Search',
+    staticLabel: false,
     value: '',
     onChange: () => {},
   },
 };
 
+/**
+ * SearchBar with permanent floating label (always visible)
+ */
+export const PermanentLabel: Story = {
+  render: (args) => <SearchBarWrapper args={args} />,
+  args: {
+    placeholder: 'Buscar autobuses...',
+    label: 'Búsqueda',
+    staticLabel: true,
+    value: '',
+    onChange: () => {},
+  },
+};
+
+/**
+ * Disabled state
+ */
 export const Disabled: Story = {
   render: (args) => <SearchBarWrapper args={args} />,
   args: {
@@ -88,6 +121,9 @@ export const Disabled: Story = {
   },
 };
 
+/**
+ * SearchBar with value
+ */
 export const WithValue: Story = {
   render: (args) => <SearchBarWithValueWrapper args={args} />,
   args: {

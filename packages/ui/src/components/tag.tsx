@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { type HTMLAttributes, type ReactNode, useMemo } from 'react';
 import { type VariantProps, cva } from 'class-variance-authority';
 import { cn } from '@repo/ui/lib/utils';
 import { Text } from './text';
@@ -39,12 +39,11 @@ const tagVariants = cva(
 );
 
 // Base interface for common props
-interface BaseTagProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'color'> {
+interface BaseTagProps extends Omit<HTMLAttributes<HTMLDivElement>, 'color'> {
   /**
    * The content to display inside the tag
    */
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 // Interface for variant-based tags
@@ -98,7 +97,7 @@ function Tag(props: VariantTagProps | CustomColorTagProps) {
   const isCustomColor = 'color' in props && props.color !== undefined;
 
   // Generate styles based on custom color (overrides variant)
-  const customStyles = React.useMemo(() => {
+  const customStyles = useMemo(() => {
     if (!isCustomColor || !props.color) return {};
 
     const rgb = hexToRgb(props.color);

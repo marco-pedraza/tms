@@ -4,13 +4,33 @@ import Filter from '../components/icons/Filter';
 import { Select } from '../components/select';
 
 const meta = {
-  title: 'Components/Select',
+  title: 'Form Components/Select',
   component: Select,
   tags: ['autodocs'],
   argTypes: {
     placeholder: {
       control: { type: 'text' },
       description: 'Placeholder text for the select',
+    },
+    label: {
+      control: { type: 'text' },
+      description: 'Label text for the select',
+    },
+    staticLabel: {
+      control: { type: 'boolean' },
+      description: 'Whether the label is always visible (permanent) or dynamic',
+    },
+    feedback: {
+      control: { type: 'text' },
+      description: 'Error feedback message (always destructive)',
+    },
+    searchable: {
+      control: { type: 'boolean' },
+      description: 'Enable search functionality',
+    },
+    searchPlaceholder: {
+      control: { type: 'text' },
+      description: 'Placeholder text for the search input',
     },
     disabled: {
       control: { type: 'boolean' },
@@ -98,6 +118,9 @@ function SelectWithLabelWrapper({
   );
 }
 
+/**
+ * Select without label - just placeholder
+ */
 export const Default: Story = {
   render: (args) => <SelectWrapper args={args} />,
   args: {
@@ -108,6 +131,39 @@ export const Default: Story = {
   },
 };
 
+/**
+ * Select with dynamic floating label (appears when focused or has value)
+ */
+export const DynamicLabel: Story = {
+  render: (args) => <SelectWithLabelWrapper args={args} />,
+  args: {
+    options: sampleOptions,
+    placeholder: 'Select an option...',
+    label: 'Category',
+    staticLabel: false,
+    value: '',
+    onChange: () => {},
+  },
+};
+
+/**
+ * Select with permanent floating label (always visible)
+ */
+export const PermanentLabel: Story = {
+  render: (args) => <SelectWithLabelWrapper args={args} />,
+  args: {
+    options: sampleOptions,
+    placeholder: 'Select an option...',
+    label: 'Category',
+    staticLabel: true,
+    value: '',
+    onChange: () => {},
+  },
+};
+
+/**
+ * Select with left icon
+ */
 export const WithFilterIcon: Story = {
   render: (args) => <SelectWithFilterWrapper args={args} />,
   args: {
@@ -119,6 +175,9 @@ export const WithFilterIcon: Story = {
   },
 };
 
+/**
+ * Disabled select
+ */
 export const Disabled: Story = {
   render: (args) => <SelectDisabledWrapper args={args} />,
   args: {
@@ -130,12 +189,27 @@ export const Disabled: Story = {
   },
 };
 
-export const WithFloatingLabel: Story = {
-  render: (args) => <SelectWithLabelWrapper args={args} />,
+export const WithFeedback: Story = {
+  render: (args) => <SelectWrapper args={args} />,
   args: {
     options: sampleOptions,
     placeholder: 'Select an option...',
-    label: 'Category',
+    feedback: 'This field is required',
+    value: '',
+    onChange: () => {},
+  },
+};
+
+/**
+ * Select with search functionality
+ */
+export const WithSearch: Story = {
+  render: (args) => <SelectWrapper args={args} />,
+  args: {
+    options: sampleOptions,
+    placeholder: 'Select an option...',
+    searchable: true,
+    searchPlaceholder: 'Search options...',
     value: '',
     onChange: () => {},
   },

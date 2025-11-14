@@ -1,14 +1,14 @@
-import * as React from 'react';
+import { type HTMLAttributes, type ReactNode } from 'react';
 import { cn } from '@repo/ui/lib/utils';
 import { Badge } from './badge';
 import { Card } from './card';
 import { Text } from './text';
 
-interface SectionHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+interface SectionHeaderProps extends HTMLAttributes<HTMLDivElement> {
   title: string;
   description?: string;
-  rightContent: string;
-  icon?: React.ReactNode;
+  rightContent?: string;
+  icon?: ReactNode;
   badges?: string[];
   className?: string;
 }
@@ -67,37 +67,39 @@ function SectionHeader({
         </div>
 
         {/* Right side - Content Card with Icon and Badges */}
-        <div className="flex-shrink-0 min-w-fit m-auto order-2 md:order-none">
-          <Card
-            variant="default"
-            padding="sm"
-            shadow="lg"
-            borderColor="gray100"
-            borderStyle="solid"
-            borderRadius="lg"
-            className="flex flex-col text-center space-y-3 min-w-fit"
-          >
-            {/* Right Content with Icon */}
-            <div className="flex justify-start gap-2">
-              {icon && <div className="flex-shrink-0">{icon}</div>}
+        {rightContent && (
+          <div className="flex-shrink-0 min-w-fit m-auto order-2 md:order-none">
+            <Card
+              variant="default"
+              padding="sm"
+              shadow="lg"
+              borderColor="gray100"
+              borderStyle="solid"
+              borderRadius="lg"
+              className="flex flex-col text-center space-y-3 min-w-fit"
+            >
+              {/* Right Content with Icon */}
+              <div className="flex justify-start gap-2">
+                {icon && <div className="flex-shrink-0">{icon}</div>}
 
-              <Text variant="md" textColor="gray600" fontWeight="semibold">
-                {rightContent}
-              </Text>
-            </div>
-
-            {/* Badges */}
-            {badges.length > 0 && (
-              <div className="flex flex-wrap md:flex-nowrap gap-1 justify-center md:whitespace-nowrap">
-                {badges.map((badge, index) => (
-                  <Badge key={index} variant="default">
-                    {badge}
-                  </Badge>
-                ))}
+                <Text variant="md" textColor="gray600" fontWeight="semibold">
+                  {rightContent}
+                </Text>
               </div>
-            )}
-          </Card>
-        </div>
+
+              {/* Badges */}
+              {badges.length > 0 && (
+                <div className="flex flex-wrap md:flex-nowrap gap-1 justify-center md:whitespace-nowrap">
+                  {badges.map((badge, index) => (
+                    <Badge key={index} variant="default">
+                      {badge}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+        )}
       </Card>
     </div>
   );

@@ -44,6 +44,10 @@ const meta: Meta<typeof Button> = {
       description:
         'Change the component to the HTML tag or custom component of the only child',
     },
+    className: {
+      control: { type: 'text' },
+      description: 'Additional CSS classes to apply to the input',
+    },
   },
   args: {
     children: 'Button',

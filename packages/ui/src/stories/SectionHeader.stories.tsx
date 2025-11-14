@@ -74,6 +74,7 @@ export const Default: Story = {
 export const WithoutDescription: Story = {
   args: {
     title: 'Quick Actions',
+    description: undefined,
     rightContent: 'Status',
     icon: <Settings />,
     badges: ['Ready', 'Configured'],
@@ -86,5 +87,16 @@ export const WithoutIcon: Story = {
     description: 'Current system health and operational status',
     rightContent: 'All Systems',
     badges: ['Operational', 'Stable', 'Monitored'],
+  },
+};
+
+export const NoData: Story = {
+  args: {
+    title: 'Diagrama de asientos',
+    description:
+      'Define y gestiona el diseño de asientos para tus autobuses, personalizando la distribución, así como los servicios disponibles en cada lugar.',
+    rightContent: undefined,
+    icon: undefined,
+    badges: [],
   },
 };

@@ -1,6 +1,7 @@
 import { ComponentProps, forwardRef } from 'react';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { cn } from '@repo/ui/lib/utils';
+import { Text } from './text';
 
 const Pagination = ({ className, ...props }: ComponentProps<'nav'>) => (
   <nav
@@ -80,17 +81,14 @@ const PaginationNext = ({
 );
 PaginationNext.displayName = 'PaginationNext';
 
-const PaginationEllipsis = ({
-  className,
-  ...props
-}: ComponentProps<'span'>) => (
-  <span
+const PaginationEllipsis = ({ className, ...props }: ComponentProps<'div'>) => (
+  <Text
     aria-hidden
     className={cn('flex items-center justify-center h-7 w-7', className)}
     {...props}
   >
     <MoreHorizontal className="h-3 w-3" />
-  </span>
+  </Text>
 );
 PaginationEllipsis.displayName = 'PaginationEllipsis';
 

@@ -8,6 +8,7 @@
     "address": "Dirección",
     "hireDate": "Fecha de Contratación",
     "busLine": "Línea de Autobús",
+    "base": "Base",
     "transporter": "Grupo de Transporte",
     "license": "Licencia",
     "licenseExpiry": {
@@ -45,10 +46,14 @@
       "emergencyContactPhone": "Ej: +52 (33) 9876-5432",
       "emergencyContactRelationship": "Ej: Esposa",
       "busLine": "Selecciona una línea de autobús",
+      "base": "Selecciona la Base",
       "status": "Selecciona un estatus",
       "emptyBusLinesList": "No hay Líneas de Autobús disponibles",
       "busLineSearch": "Buscar Línea de Autobús",
-      "noBusLinesFound": "No se encontraron Líneas de Autobús"
+      "noBusLinesFound": "No se encontraron Líneas de Autobús",
+      "emptyNodesList": "No hay Bases disponibles",
+      "baseSearch": "Buscar Base",
+      "noNodesFound": "No se encontraron Bases"
     },
     "driverKey": "Clave",
     "payrollKey": "Clave Nómina",
@@ -58,6 +63,7 @@
     "hireDate": "Fecha de Contratación",
     "statusDate": "Fecha de Estatus",
     "busLine": "Línea de Autobús",
+    "base": "Base",
     "emergencyContactName": "Contacto de Emergencia",
     "emergencyContactPhone": "Teléfono de Contacto",
     "emergencyContactRelationship": "Relación",

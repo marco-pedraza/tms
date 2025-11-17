@@ -49,6 +49,7 @@ export const createDriverRepository = () => {
       with: {
         transporter: true,
         busLine: true,
+        base: true,
         assignedBus: { with: { bus: true } },
       },
     });
@@ -97,6 +98,7 @@ export const createDriverRepository = () => {
       with: {
         transporter: true,
         busLine: true,
+        base: true,
         assignedBus: { with: { bus: true } },
       },
     });
@@ -165,6 +167,7 @@ export const createDriverRepository = () => {
       with: {
         transporter: true,
         busLine: true,
+        base: true,
         assignedBus: { with: { bus: true } },
       },
     });

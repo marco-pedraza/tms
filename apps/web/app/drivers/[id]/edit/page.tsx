@@ -57,6 +57,7 @@ export default function EditDriverPage() {
     license: driver.license,
     licenseExpiry: formatDateForInput(driver.licenseExpiry),
     busLineId: driver.busLineId,
+    baseId: driver.baseId ?? null,
     timeOffs: [],
     medicalChecks: [],
   };

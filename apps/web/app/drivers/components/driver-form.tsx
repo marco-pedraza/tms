@@ -14,8 +14,10 @@ import Form from '@/components/form/form';
 import FormFooter from '@/components/form/form-footer';
 import FormLayout from '@/components/form/form-layout';
 import useForm from '@/hooks/use-form';
+import useQueryAllNodes from '@/nodes/hooks/use-query-all-nodes';
 import { nameSchema } from '@/schemas/common';
 import { optionalEmailSchema, optionalPhoneSchema } from '@/schemas/contact';
+import { optionalIntegerSchema } from '@/schemas/number';
 import {
   TimeOffType,
   driverInitialStatuses,
@@ -65,6 +67,7 @@ const createDriverFormSchema = (
       .string()
       .min(1, { message: tValidations('required') })
       .transform((val) => parseInt(val, 10)),
+    baseId: optionalIntegerSchema(),
     status: z
       .string()
       .min(1, { message: tValidations('required') })
@@ -126,6 +129,13 @@ export default function DriverForm({
       name: busLine.name,
     })) || [];
 
+  const { data: nodesData } = useQueryAllNodes();
+  const nodesOptions =
+    nodesData?.data?.map((node) => ({
+      id: node.id.toString(),
+      name: node.name,
+    })) || [];
+
   // Fetch time-offs and medical checks
   const { data: timeOffsData } = useQueryDriverTimeOffs({
     driverId: driverId || 0,
@@ -143,6 +153,7 @@ export default function DriverForm({
         email: defaultValues.email ?? '',
         phone: defaultValues.phone ?? '',
         busLineId: String(defaultValues.busLineId),
+        baseId: defaultValues.baseId?.toString() ?? '',
         status: defaultValues.status,
         hireDate: defaultValues.hireDate ?? '',
         statusDate: defaultValues.statusDate ?? '',
@@ -188,6 +199,7 @@ export default function DriverForm({
       emergencyContactRelationship: '',
       hireDate: '',
       busLineId: '',
+      baseId: '',
       status: '',
       statusDate: new Date().toISOString().split('T')[0],
       license: '',
@@ -400,6 +412,21 @@ export default function DriverForm({
                   )}
                   noResultsLabel={tDrivers('form.placeholders.noBusLinesFound')}
                   isRequired
+                />
+              )}
+            </form.AppField>
+
+            <form.AppField name="baseId">
+              {(field) => (
+                <field.ComboboxInput
+                  label={tDrivers('form.base')}
+                  placeholder={tDrivers('form.placeholders.base')}
+                  items={nodesOptions}
+                  emptyOptionsLabel={tDrivers(
+                    'form.placeholders.emptyNodesList',
+                  )}
+                  searchPlaceholder={tDrivers('form.placeholders.baseSearch')}
+                  noResultsLabel={tDrivers('form.placeholders.noNodesFound')}
                 />
               )}
             </form.AppField>

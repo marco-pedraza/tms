@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { APIError, ErrCode } from '@repo/ims-client';
@@ -12,10 +13,11 @@ import routes from '@/services/routes';
 
 export default function NewRoutePage() {
   const tRoutes = useTranslations('routes');
+  const router = useRouter();
   const { create: createRoute } = useRoutesMutations();
 
   const handleSubmit = async (values: RouteFormValues) => {
-    await createRoute.mutateWithToast(
+    const createdRoute = await createRoute.mutateWithToast(
       {
         ...values,
         serviceTypeId: values.serviceTypeId ? Number(values.serviceTypeId) : 0,
@@ -32,6 +34,9 @@ export default function NewRoutePage() {
       },
       {
         standalone: false,
+        onSuccess: (data) => {
+          router.push(routes.routes.getDetailsRoute(data.id.toString()));
+        },
         onError: (error: unknown) => {
           if ((error as APIError).code === ErrCode.AlreadyExists) {
             toast.error(tRoutes('errors.alreadyExists'));
@@ -39,6 +44,7 @@ export default function NewRoutePage() {
         },
       },
     );
+    return createdRoute;
   };
 
   return (

@@ -130,6 +130,9 @@ export default function DriverDetailsPage() {
               <dt className="font-medium">{tDrivers('fields.busLine')}:</dt>
               <dd>{driver.busLine.name}</dd>
 
+              <dt className="font-medium">{tDrivers('fields.base')}:</dt>
+              <dd>{driver.base?.name ?? '-'}</dd>
+
               <dt className="font-medium">{tDrivers('fields.transporter')}:</dt>
               <dd>{driver.transporter.name}</dd>
 

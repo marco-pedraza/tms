@@ -456,6 +456,13 @@
       "when": 1763060478322,
       "tag": "20251113190118_add_soft_delete_to_departments",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1763418699331,
+      "tag": "20251117223139_add_base_id_to_drivers",
+      "breakpoints": true
     }
   ]
 }

@@ -10,6 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { isNull, relations } from 'drizzle-orm';
 import { busCrews } from '@/inventory/fleet/buses/buses.schema';
+import { nodes } from '@/inventory/locations/nodes/nodes.schema';
 import { busLines } from '@/inventory/operators/bus-lines/bus-lines.schema';
 import { transporters } from '@/inventory/operators/transporters/transporters.schema';
 
@@ -35,6 +36,7 @@ export const drivers = pgTable(
     busLineId: integer('bus_line_id')
       .references(() => busLines.id)
       .notNull(),
+    baseId: integer('base_id').references(() => nodes.id),
     emergencyContactName: text('emergency_contact_name'),
     emergencyContactPhone: text('emergency_contact_phone'),
     emergencyContactRelationship: text('emergency_contact_relationship'),
@@ -49,6 +51,7 @@ export const drivers = pgTable(
     index().on(table.phone),
     index().on(table.transporterId),
     index().on(table.busLineId),
+    index().on(table.baseId),
     index().on(table.status),
     index().on(table.deletedAt),
     uniqueIndex().on(table.driverKey).where(isNull(table.deletedAt)),
@@ -67,6 +70,10 @@ export const driversRelations = relations(drivers, ({ one }) => ({
   busLine: one(busLines, {
     fields: [drivers.busLineId],
     references: [busLines.id],
+  }),
+  base: one(nodes, {
+    fields: [drivers.baseId],
+    references: [nodes.id],
   }),
   assignedBus: one(busCrews, {
     fields: [drivers.id],

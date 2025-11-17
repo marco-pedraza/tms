@@ -7,6 +7,7 @@ import {
 } from '@/shared/types';
 import { Bus } from '@/inventory/fleet/buses/buses.types';
 import { MedicalCheckResult } from '@/inventory/fleet/drivers/medical-checks/medical-checks.types';
+import { Node } from '@/inventory/locations/nodes/nodes.types';
 import { BusLine } from '@/inventory/operators/bus-lines/bus-lines.types';
 import { Transporter } from '@/inventory/operators/transporters/transporters.types';
 
@@ -68,6 +69,9 @@ export interface Driver {
 
   /** The bus line this driver is associated with */
   busLineId: number;
+
+  /** Base node (Base/station) */
+  baseId: number | null;
 
   /** Emergency contact name */
   emergencyContactName: string | null;
@@ -173,6 +177,12 @@ export interface CreateDriverPayload {
   busLineId: number & Min<1>;
 
   /**
+   * Base node (Base/station)
+   * Must be a positive number if provided
+   */
+  baseId?: (number & Min<1>) | null;
+
+  /**
    * Emergency contact name
    */
   emergencyContactName?: string | null;
@@ -276,6 +286,12 @@ export interface UpdateDriverPayload {
   busLineId?: number & Min<1>;
 
   /**
+   * Base node (Base/station)
+   * Must be a positive number if provided
+   */
+  baseId?: (number & Min<1>) | null;
+
+  /**
    * Emergency contact name
    */
   emergencyContactName?: string | null;
@@ -294,6 +310,7 @@ export interface UpdateDriverPayload {
 export interface DriverWithRelations extends Driver {
   transporter: Transporter;
   busLine: BusLine;
+  base?: Node | null;
   assignedBus?: Bus | null;
 }
 

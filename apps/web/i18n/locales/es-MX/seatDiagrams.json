@@ -1,0 +1,146 @@
+{
+  "title": "Diagramas de Asientos",
+  "description": "Administra plantillas de diagramas de asientos para autobuses",
+  "actions": {
+    "create": "Crear Diagrama de Asientos",
+    "update": "Actualizar Diagrama de Asientos",
+    "backToList": "Volver a diagramas de asientos",
+    "generateDiagram": "Generar diagrama",
+    "addFloor": "Agregar Piso"
+  },
+  "fields": {
+    "name": "Nombre del Diagrama",
+    "description": "Descripción del Diagrama",
+    "maxCapacity": "Capacidad Máxima",
+    "numFloors": "Número de pisos",
+    "totalSeats": "Total de Asientos",
+    "isFactoryDefault": "Plantilla de Fábrica",
+    "seatsPerFloor": "Asientos por Piso",
+    "numRows": "Número de Filas",
+    "seatsLeft": "Asientos Izquierda",
+    "seatsRight": "Asientos Derecha",
+    "floors": "{count} {count, plural, one {piso} other {pisos}}",
+    "seats": "{count} {count, plural, one {asiento} other {asientos}}",
+    "passengers": "{count} {count, plural, one {pasajero} other {pasajeros}}",
+    "floor": "Piso {floorNumber}",
+    "spaceType": "Tipo de Espacio",
+    "seatType": "Tipo de Asiento",
+    "seatNumber": "Número de Asiento",
+    "amenities": "Amenidades",
+    "reclinementAngle": "Ángulo de Inclinación (°)",
+    "disableSpace": "Desactivar Espacio"
+  },
+  "sections": {
+    "generalConfiguration": "Configuración general",
+    "quickConfiguration": "Configuración rápida",
+    "seatsConfiguration": "Configuración de asientos"
+  },
+  "pages": {
+    "new": {
+      "title": "Nuevo Diagrama de Asientos",
+      "subtitle": "Crear nuevo diagrama de asientos para los autobuses"
+    },
+    "newBasedOn": {
+      "title": "Nuevo Diagrama Basado en Plantilla",
+      "subtitle": "Crear nuevo diagrama basado en: {templateName}"
+    }
+  },
+  "readOnly": {
+    "spaceInfo": {
+      "title": "Información del espacio",
+      "selectPrompt": "Selecciona un espacio para ver su información",
+      "labels": {
+        "spaceType": "Tipo de espacio",
+        "seatType": "Tipo de asiento",
+        "seatNumber": "Número de asiento",
+        "reclinementAngle": "Ángulo de reclinación",
+        "amenities": "Amenidades",
+        "status": "Estado"
+      },
+      "values": {
+        "noNumber": "Sin número",
+        "active": "Activo",
+        "inactive": "Inactivo"
+      },
+      "emptySpaces": "No hay espacios configurados para este diagrama"
+    },
+    "visualDiagram": "Diagrama visual"
+  },
+  "form": {
+    "title": "Información del diagrama de asientos",
+    "copySuffix": " - Copia",
+    "placeholders": {
+      "name": "Nombre",
+      "description": "Descripción",
+      "numFloors": "1 piso",
+      "numRows": "10 filas",
+      "maxCapacity": "Ej: 45",
+      "totalSeats": "Ej: 40",
+      "emptyQuickConfig": "Rellena la configuración rápida y presiona: Generar Diagrama",
+      "seatTypes": "Asiento {seatType, select, regular {Regular} premium {Premium} vip {VIP} business {Business} executive {Ejecutivo} other {}}",
+      "selectSpace": "Selecciona un espacio",
+      "editSpace": "Editar Espacio",
+      "spaceType": "Selecciona el tipo de espacio",
+      "seatType": "Selecciona uno",
+      "seatNumber": "Ej: 1A",
+      "selectAmenities": "Seleccionar amenidades...",
+      "noAmenities": "No hay amenidades disponibles",
+      "reclinementAngle": "Ej: 120",
+      "addColumnBeforeHallway": "Agregar columna antes del pasillo",
+      "addColumnAfterHallway": "Agregar columna después del pasillo",
+      "removeColumnBeforeHallway": "Eliminar columna antes del pasillo",
+      "removeColumnAfterHallway": "Eliminar columna después del pasillo",
+      "addRow": "Agregar fila",
+      "removeRow": "Eliminar fila",
+      "seatConfigurationErrors": "Existen errores en la configuración de los asientos. Rellena la información de todos los asientos."
+    },
+    "seatTypes": {
+      "regular": "Regular",
+      "premium": "Premium",
+      "vip": "VIP",
+      "business": "Business",
+      "executive": "Ejecutivo"
+    },
+    "spaceTypes": {
+      "seat": "Asiento",
+      "bathroom": "Baño",
+      "stairs": "Escalera",
+      "empty": "Espacio Vacío",
+      "hallway": "Pasillo"
+    }
+  },
+  "details": {
+    "description": "Detalles del diagrama de asientos"
+  },
+  "edit": {
+    "title": "Editar Diagrama de Asientos"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Diagrama de asientos no encontrado",
+      "description": "No pudimos encontrar el diagrama de asientos que buscas. Es posible que haya sido eliminado o que no exista."
+    }
+  },
+  "messages": {
+    "create": {
+      "loading": "Creando diagrama de asientos...",
+      "success": "Diagrama de asientos creado correctamente",
+      "error": "No pudimos crear el diagrama de asientos"
+    },
+    "update": {
+      "loading": "Actualizando diagrama de asientos...",
+      "success": "Diagrama de asientos actualizado correctamente",
+      "error": "No pudimos actualizar el diagrama de asientos"
+    },
+    "delete": {
+      "loading": "Eliminando diagrama de asientos...",
+      "success": "Diagrama de asientos eliminado correctamente",
+      "error": "No pudimos eliminar el diagrama de asientos"
+    },
+    "updateSeatConfiguration": {
+      "loading": "Actualizando configuración de asientos...",
+      "success": "Configuración de asientos actualizada correctamente",
+      "error": "No pudimos actualizar la configuración de asientos"
+    }
+  }
+}

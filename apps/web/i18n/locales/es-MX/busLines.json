@@ -1,0 +1,69 @@
+{
+  "title": "Líneas de Autobús",
+  "description": "Administra información de líneas de autobús para el Sistema de Inventario de Autobuses",
+  "fields": {
+    "transporter": "Transportista",
+    "serviceType": "Tipo de Servicio",
+    "pricePerKilometer": "Precio por Kilómetro",
+    "fleetSize": "Tamaño de Flota"
+  },
+  "actions": {
+    "create": "Crear Línea de Autobús",
+    "update": "Actualizar Línea de Autobús",
+    "backToList": "Volver a líneas de autobús"
+  },
+  "form": {
+    "title": "Información de la línea de autobús",
+    "placeholders": {
+      "name": "Ej: Línea Norte",
+      "code": "Ej: LN",
+      "description": "Ej: Línea que conecta Ciudad de México con Guadalajara",
+      "transporter": "Selecciona un transportista",
+      "serviceType": "Selecciona un tipo de servicio",
+      "pricePerKilometer": "Ej: 10",
+      "fleetSize": "Ej: 10",
+      "website": "Ej: https://autobusesdemexico.com",
+      "email": "Ej: info@autobusesdemexico.com",
+      "phone": "Ej: +52 (33) 1234-5678",
+      "emptyTransportersList": "No hay Transportistas disponibles",
+      "transporterSearch": "Buscar Transportista",
+      "noTransportersFound": "No se encontraron Transportistas",
+      "emptyServiceTypesList": "No hay Tipos de Servicio disponibles",
+      "serviceTypeSearch": "Buscar Tipo de Servicio",
+      "noServiceTypesFound": "No se encontraron Tipos de Servicio"
+    }
+  },
+  "details": {
+    "description": "Detalles de la línea de autobús"
+  },
+  "edit": {
+    "title": "Editar Línea de Autobús"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Línea de autobús no encontrada",
+      "description": "No pudimos encontrar la línea de autobús que buscas. Es posible que haya sido eliminada o que no exista."
+    }
+  },
+  "messages": {
+    "create": {
+      "loading": "Creando línea de autobús...",
+      "success": "Línea de autobús creada correctamente",
+      "error": "No pudimos crear la línea de autobús"
+    },
+    "update": {
+      "loading": "Actualizando línea de autobús...",
+      "success": "Línea de autobús actualizada correctamente",
+      "error": "No pudimos actualizar la línea de autobús"
+    },
+    "delete": {
+      "loading": "Eliminando línea de autobús...",
+      "success": "Línea de autobús eliminada correctamente",
+      "error": "No pudimos eliminar la línea de autobús"
+    }
+  },
+  "emptyState": {
+    "title": "No hay líneas de autobús",
+    "description": "Este transportista aún no tiene líneas de autobús asignadas."
+  }
+}

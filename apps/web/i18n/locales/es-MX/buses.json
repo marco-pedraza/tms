@@ -1,0 +1,150 @@
+{
+  "title": "Autobuses",
+  "description": "Gestiona la flota de autobuses",
+  "notFound": {
+    "title": "Autobús no encontrado",
+    "description": "El autobús que buscas no existe o fue eliminado."
+  },
+  "details": {
+    "description": "Información detallada del autobús"
+  },
+  "sections": {
+    "basicInfo": "Información Básica",
+    "modelInfo": "Información del Modelo y Fabricante",
+    "technicalInfo": "Información Técnica",
+    "maintenanceInfo": "Información de Mantenimiento",
+    "seatDiagram": "Diagrama de Asientos",
+    "busCrew": "Asignación de Conductores",
+    "technologies": "Asignación de Tecnologías",
+    "chromatics": "Esquema Cromático"
+  },
+  "edit": {
+    "title": "Editar Autobús"
+  },
+  "actions": {
+    "create": "Crear Autobús",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "update": "Actualizar",
+    "backToList": "Volver a la lista"
+  },
+  "fields": {
+    "economicNumber": "Número Económico",
+    "registrationNumber": "Número de Registro",
+    "licensePlateType": "Tipo de Placa",
+    "licensePlateNumber": "Número de Placa",
+    "availableForTourismOnly": "Disponible Únicamente para Turismo",
+    "status": "Estado Operacional",
+    "circulationCard": "Tarjeta de Circulación",
+    "purchaseDate": "Fecha de Compra",
+    "expirationDate": "Fecha de Expiración",
+    "erpClientNumber": "Número de Cliente ERP",
+    "vehicleId": "ID del Vehículo",
+    "serialNumber": "Número de Serie",
+    "engineNumber": "Número de Motor",
+    "chassisNumber": "Número de Chasis",
+    "grossVehicleWeight": "Peso Bruto Vehicular",
+    "sctPermit": "Permiso SCT",
+    "currentKilometer": "Kilometraje Actual",
+    "gpsId": "ID GPS",
+    "lastMaintenanceDate": "Última Fecha de Mantenimiento",
+    "nextMaintenanceDate": "Próxima Fecha de Mantenimiento",
+    "year": "Año",
+    "model": "Modelo",
+    "manufacturer": "Fabricante",
+    "seatingCapacity": "Capacidad de Asientos",
+    "numFloors": "Número de Pisos",
+    "engineType": "Tipo de Motor",
+    "transporter": "Transportista",
+    "alternateTransporter": "Transportista Alterno",
+    "busLine": "Línea",
+    "base": "Base",
+    "seatDiagram": "Diagrama de Asientos",
+    "chromatics": "Esquema Cromático"
+  },
+  "form": {
+    "placeholders": {
+      "economicNumber": "Ingresa el número económico",
+      "registrationNumber": "Ingresa el número de registro",
+      "licensePlateType": "Selecciona el tipo de placa",
+      "licensePlateNumber": "Ingresa el número de placa",
+      "status": "Selecciona el estado operacional",
+      "circulationCard": "Ingresa la tarjeta de circulación",
+      "model": "Selecciona el modelo",
+      "erpClientNumber": "Ingresa el número de cliente ERP",
+      "vehicleId": "Ingresa el ID del vehículo",
+      "serialNumber": "Ingresa el número de serie",
+      "engineNumber": "Ingresa el número de motor",
+      "chassisNumber": "Ingresa el número de chasis",
+      "grossVehicleWeight": "Ingresa el peso bruto vehicular",
+      "sctPermit": "Ingresa el permiso SCT",
+      "currentKilometer": "Ingresa el kilometraje actual",
+      "gpsId": "Ingresa el ID GPS",
+      "lastMaintenanceDate": "Selecciona la última fecha de mantenimiento",
+      "nextMaintenanceDate": "Selecciona la próxima fecha de mantenimiento",
+      "transporter": "Selecciona el Transportista",
+      "alternateTransporter": "Selecciona el Transportista Alterno",
+      "busLine": "Selecciona la Línea",
+      "base": "Selecciona la Base",
+      "seatDiagram": "Selecciona el Diagrama de Asientos",
+      "emptyOptionsLabel": "No hay opciones disponibles",
+      "chromatics": "Selecciona el Esquema Cromático",
+      "transporterSearch": "Buscar Transportista",
+      "noTransportersFound": "No se encontraron Transportistas",
+      "busLineSearch": "Buscar Línea",
+      "noBusLinesFound": "No se encontraron Líneas",
+      "nodeSearch": "Buscar Base",
+      "noNodesFound": "No se encontraron Bases",
+      "seatDiagramSearch": "Buscar Diagrama de Asientos",
+      "noSeatDiagramsFound": "No se encontraron Diagramas de Asientos",
+      "modelSearch": "Buscar Modelo",
+      "noModelsFound": "No se encontraron Modelos"
+    }
+  },
+  "licensePlateTypes": {
+    "national": "Nacional",
+    "international": "Internacional",
+    "tourism": "Turismo"
+  },
+  "status": {
+    "active": "Activo",
+    "maintenance": "Mantenimiento",
+    "repair": "Reparación",
+    "out_of_service": "Fuera de Servicio",
+    "reserved": "Reservado",
+    "in_transit": "En Tránsito",
+    "retired": "Retirado"
+  },
+  "messages": {
+    "assignDrivers": {
+      "loading": "Asignando conductores...",
+      "success": "Conductores asignados correctamente",
+      "error": "No pudimos asignar los conductores"
+    },
+    "assignTechnologies": {
+      "loading": "Asignando tecnologías...",
+      "success": "Tecnologías asignadas correctamente",
+      "error": "No pudimos asignar las tecnologías"
+    },
+    "create": {
+      "loading": "Creando autobús...",
+      "success": "Autobús creado correctamente",
+      "error": "No pudimos crear el autobús"
+    },
+    "update": {
+      "loading": "Actualizando autobús...",
+      "success": "Autobús actualizado correctamente",
+      "error": "No pudimos actualizar el autobús"
+    },
+    "delete": {
+      "loading": "Eliminando autobús...",
+      "success": "Autobús eliminado correctamente",
+      "error": "No pudimos eliminar el autobús"
+    },
+    "updateBusSeatConfiguration": {
+      "loading": "Actualizando configuración de asientos...",
+      "success": "Configuración de asientos actualizada correctamente",
+      "error": "No pudimos actualizar la configuración de asientos"
+    }
+  }
+}

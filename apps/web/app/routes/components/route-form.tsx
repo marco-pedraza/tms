@@ -136,8 +136,8 @@ function validateLegContinuity(
       const currentOriginNode = nodesMap.get(nextPathway.originNodeId);
 
       const expectedOrigin =
-        previousDestinationNode?.name || tCommon('unknown');
-      const actualOrigin = currentOriginNode?.name || tCommon('unknown');
+        previousDestinationNode?.name || tCommon('fields.unknown');
+      const actualOrigin = currentOriginNode?.name || tCommon('fields.unknown');
 
       // Store error for the next leg (i+1) as it's the one that doesn't connect
       errors.set(i + 1, { expectedOrigin, actualOrigin });

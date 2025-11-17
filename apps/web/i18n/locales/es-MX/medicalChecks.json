@@ -1,0 +1,47 @@
+{
+  "title": "Chequeos Médicos",
+  "form": {
+    "title": "Agregar Chequeo Médico",
+    "disabledMessage": "Primero guarda el conductor para poder agregar chequeos médicos",
+    "placeholders": {
+      "daysUntilNextCheck": "Ej: 365 (días)",
+      "result": "Selecciona resultado",
+      "notes": "Ej: Resultado del examen, restricciones médicas, recomendaciones del médico, etc."
+    },
+    "nextCheckDate": "Próximo Chequeo"
+  },
+  "table": {
+    "title": "Chequeos Médicos",
+    "empty": "No hay chequeos médicos registrados"
+  },
+  "fields": {
+    "checkDate": "Fecha",
+    "nextCheckDate": "Próximo Chequeo",
+    "daysUntilNextCheck": "Próximo Chequeo",
+    "result": "Resultado",
+    "notes": "Observaciones"
+  },
+  "results": {
+    "fit": "Apto",
+    "limited": "Apto con Restricciones",
+    "unfit": "No Apto"
+  },
+  "messages": {
+    "loadError": "No se pudieron cargar los chequeos médicos para este conductor",
+    "create": {
+      "loading": "Agregando chequeo médico...",
+      "success": "Chequeo médico agregado correctamente",
+      "error": "No se pudo agregar el chequeo médico"
+    },
+    "update": {
+      "loading": "Actualizando chequeo médico...",
+      "success": "Chequeo médico actualizado correctamente",
+      "error": "No se pudo actualizar el chequeo médico"
+    },
+    "delete": {
+      "loading": "Eliminando chequeo médico...",
+      "success": "Chequeo médico eliminado correctamente",
+      "error": "No se pudo eliminar el chequeo médico"
+    }
+  }
+}

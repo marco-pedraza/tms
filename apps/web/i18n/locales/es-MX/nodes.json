@@ -1,0 +1,132 @@
+{
+  "title": "Nodos",
+  "description": "Administra información de nodos para el Sistema de Inventario de Autobuses",
+  "actions": {
+    "create": "Crear Nodo",
+    "update": "Actualizar Nodo",
+    "backToList": "Volver a nodos"
+  },
+  "fields": {
+    "city": "Ciudad",
+    "population": "Población",
+    "radius": "Radio (Km)",
+    "installationType": "Tipo de Instalación",
+    "address": "Dirección",
+    "contactPhone": "Teléfono",
+    "contactEmail": "Correo Electrónico",
+    "website": "Sitio Web",
+    "allowsBoarding": "Permite ascenso de pasajeros",
+    "allowsAlighting": "Permite descenso de pasajeros",
+    "label": "Etiqueta",
+    "labels": "Etiquetas",
+    "amenity": "Amenidad",
+    "amenities": "Amenidades",
+    "selectedAmenities": "{count, plural, =0 {No hay amenidades seleccionadas} =1 {# amenidad seleccionada} other {# amenidades seleccionadas}}",
+    "amenitiesAndHours": "Amenidades y Horarios",
+    "operatingHours": {
+      "title": "Horarios de Operación",
+      "24hours": "24 Horas",
+      "closed": "Cerrado",
+      "open": "Apertura",
+      "close": "Cierre",
+      "custom": "Personalizado",
+      "addTimeSlot": "Agregar horario"
+    }
+  },
+  "form": {
+    "sections": {
+      "basicInfo": "Información Básica",
+      "locationInfo": "Información Geográfica",
+      "contactInfo": "Información de Contacto Y Gestión",
+      "locationAndContactInfo": "Ubicación y Contacto",
+      "customAttributes": "Atributos Específicos"
+    },
+    "placeholders": {
+      "name": "Ej: Nodo Central",
+      "code": "Ej: NC",
+      "city": "Selecciona una ciudad",
+      "population": "Selecciona una población",
+      "radius": "Ej: 100",
+      "latitude": "Ej: 19.4326",
+      "longitude": "Ej: -99.1332",
+      "installationType": "Selecciona un tipo de instalación",
+      "address": "Ej: Av. Central #123, Col. Centro",
+      "contactPhone": "Ej: +52 (33) 1234-5678",
+      "contactEmail": "Ej: info@autobusesdemexico.com",
+      "website": "Ej: https://autobusesdemexico.com",
+      "description": "Ej: Nodo central de autobuses",
+      "selectInstallationTypeFirst": "Selecciona un tipo de instalación primero",
+      "selectInstallationTypeFirstDescription": "Para configurar los atributos específicos, primero debes seleccionar un tipo de instalación en la pestaña de información básica.",
+      "noCustomAttributes": "No hay atributos específicos configurados",
+      "noCustomAttributesDescription": "Este tipo de instalación no tiene atributos específicos definidos.",
+      "selectEnumOption": "Selecciona una opción",
+      "labels": "Selecciona etiquetas",
+      "emptyLabelsList": "No hay etiquetas disponibles",
+      "amenities": "Selecciona amenidades",
+      "emptyAmenitiesList": "No hay amenidades disponibles",
+      "emptyInstallationTypesList": "No hay Tipos de Instalación disponibles",
+      "installationTypeSearch": "Buscar Tipo de Instalación",
+      "noInstallationTypesFound": "No se encontraron Tipos de Instalación",
+      "emptyCityList": "No hay Ciudades disponibles",
+      "citySearch": "Buscar Ciudad",
+      "noCitiesFound": "No se encontraron Ciudades",
+      "emptyPopulationList": "No hay Poblaciones disponibles",
+      "populationSearch": "Buscar Población",
+      "noPopulationsFound": "No se encontraron Poblaciones"
+    }
+  },
+  "edit": {
+    "title": "Editar Nodo"
+  },
+  "details": {
+    "description": "Detalles del nodo",
+    "amenitiesTitle": "Amenidades de la Instalación",
+    "noAmenitiesAssigned": "No hay amenidades asignadas a esta instalación",
+    "noOperatingHoursDefined": "No se han definido horarios de operación para esta instalación",
+    "customAttributes": "Atributos Específicos",
+    "noCustomAttributesDefined": "No hay atributos específicos definidos para esta instalación"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Nodo no encontrado",
+      "description": "No pudimos encontrar el nodo que buscas. Es posible que haya sido eliminado o que no exista."
+    }
+  },
+  "messages": {
+    "create": {
+      "loading": "Creando nodo...",
+      "success": "Nodo creado correctamente",
+      "error": "No pudimos crear el nodo"
+    },
+    "update": {
+      "loading": "Actualizando nodo...",
+      "success": "Nodo actualizado correctamente",
+      "error": "No pudimos actualizar el nodo"
+    },
+    "delete": {
+      "loading": "Eliminando nodo...",
+      "success": "Nodo eliminado correctamente",
+      "error": "No pudimos eliminar el nodo"
+    },
+    "syncIntallationError": {
+      "create": "No pudimos completar la creación del Nodo correctamente. Por favor revisa la información y rellena nuevamente los datos faltantes.",
+      "update": "No pudimos completar la actualización del Nodo correctamente. Por favor intenta nuevamente."
+    },
+    "syncCustomAttributesError": "No pudimos actualizar las propiedades específicas de la instalación correctamente",
+    "syncCustomAttributes": {
+      "loading": "Actualizando atributos específicos...",
+      "success": "Atributos específicos actualizados correctamente",
+      "error": "No pudimos actualizar los atributos específicos"
+    },
+    "assignLabels": {
+      "loading": "Asignando etiquetas...",
+      "success": "Etiquetas asignadas correctamente",
+      "error": "No pudimos asignar las etiquetas"
+    },
+    "assignAmenities": {
+      "loading": "Asignando amenidades...",
+      "success": "Amenidades asignadas correctamente",
+      "error": "No pudimos asignar las amenidades"
+    }
+  }
+}

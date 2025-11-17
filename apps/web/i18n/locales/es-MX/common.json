@@ -1,0 +1,125 @@
+{
+  "loading": "Cargando...",
+  "errors": {
+    "default": "Ha ocurrido un error",
+    "notFound": "No encontrado",
+    "unexpected": "Error inesperado",
+    "invalidId": "ID inválido",
+    "somethingWentWrong": "Algo salió mal.",
+    "noResourceFound": "No pudimos encontrar el recurso que buscas."
+  },
+  "actions": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "view": "Ver",
+    "more": "Más acciones",
+    "create": "Crear",
+    "update": "Actualizar",
+    "add": "Agregar",
+    "backToList": "Volver a la lista",
+    "retry": "Reintentar"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "yes": "Si",
+    "no": "No",
+    "available": "Disponible",
+    "unavailable": "No Disponible",
+    "enabled": "Habilitado",
+    "disabled": "Deshabilitado",
+    "emptyTrip": "Vacío",
+    "notEmptyTrip": "Con Pasajeros"
+  },
+  "fields": {
+    "id": "ID",
+    "createdAt": "Creado",
+    "updatedAt": "Última Actualización",
+    "actions": "Acciones",
+    "name": "Nombre",
+    "code": "Código",
+    "active": "Activo",
+    "status": "Estatus",
+    "latitude": "Latitud",
+    "longitude": "Longitud",
+    "slug": "Slug",
+    "coordinates": "Coordenadas",
+    "location": "Ubicación",
+    "phone": "Teléfono",
+    "email": "Correo Electrónico",
+    "website": "Sitio Web",
+    "logoUrl": "URL del Logo",
+    "description": "Descripción",
+    "transporter": "Transportista",
+    "serviceType": "Tipo de Servicio",
+    "logo": "Logo",
+    "primaryColor": "Color Primario",
+    "secondaryColor": "Color Secundario",
+    "color": "Color",
+    "usageCount": "Uso",
+    "category": "Categoría",
+    "noDescription": "Sin descripción",
+    "firstName": "Nombre",
+    "lastName": "Apellidos",
+    "fullName": "Nombre Completo",
+    "unknown": "Desconocido"
+  },
+  "sections": {
+    "basicInfo": "Información Básica",
+    "systemInfo": "Información del Sistema",
+    "contactInfo": "Información de Contacto",
+    "operativeConfig": "Configuración Operativa",
+    "operativeConfigDescription": "Parámetros de tiempo e integración",
+    "location": "Ubicación",
+    "events": "Eventos"
+  },
+  "crud": {
+    "create": {
+      "loading": "Creando...",
+      "success": "Creado correctamente",
+      "error": "No se pudo crear"
+    },
+    "update": {
+      "loading": "Actualizando...",
+      "success": "Actualizado correctamente",
+      "error": "No se pudo actualizar"
+    },
+    "delete": {
+      "loading": "Eliminando...",
+      "success": "Eliminado correctamente",
+      "error": "No se pudo eliminar",
+      "confirm": "¿Estás seguro?",
+      "description": "Una vez eliminado, el registro ya no estará disponible en la plataforma."
+    }
+  },
+  "states": {
+    "loading": "Cargando..."
+  },
+  "days": {
+    "monday": "Lunes",
+    "tuesday": "Martes",
+    "wednesday": "Miércoles",
+    "thursday": "Jueves",
+    "friday": "Viernes",
+    "saturday": "Sábado",
+    "sunday": "Domingo"
+  },
+  "table": {
+    "add": "Agregar datos",
+    "empty": "No hay datos disponibles",
+    "not_results": "No se encontraron resultados",
+    "filters": {
+      "all": "Todos",
+      "clear": "Limpiar filtros"
+    }
+  },
+  "iconSelector": {
+    "searchPlaceholder": "Buscar icono...",
+    "selectIcon": "Seleccionar icono",
+    "popularIcons": "Iconos Populares",
+    "allIcons": "Todos los Iconos",
+    "showMore": "Mostrar más iconos..."
+  }
+}

@@ -129,6 +129,7 @@ export default function PathwayForm({
           error,
           tValidations,
           tCommon,
+          tNamespace: tPathways,
         });
       }
     },

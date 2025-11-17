@@ -1,0 +1,59 @@
+{
+  "title": "IMS.ai",
+  "inventory": {
+    "title": "Inventario",
+    "localities": {
+      "title": "Localidades",
+      "countries": "Países",
+      "states": "Estados",
+      "cities": "Ciudades",
+      "populations": "Poblaciones",
+      "nodes": "Nodos",
+      "installationTypes": "Tipos de Instalación",
+      "amenities": "Amenidades",
+      "events": "Eventos",
+      "labels": "Etiquetas"
+    },
+    "operators": {
+      "title": "Operadores",
+      "transporters": "Grupos de Transporte",
+      "serviceTypes": "Tipos de Servicio",
+      "busLines": "Líneas de Autobús"
+    },
+    "transporters": "Transportistas",
+    "serviceTypes": "Tipo de Servicio",
+    "busLines": "Líneas de Autobús",
+    "fleet": {
+      "title": "Flota",
+      "buses": "Autobuses",
+      "seatDiagrams": "Diagramas de Asientos",
+      "drivers": "Conductores",
+      "busModels": "Modelos de Autobús",
+      "technologies": "Tecnologías",
+      "chromatics": "Esquemas Cromáticos"
+    },
+    "generalConfig": {
+      "title": "Configuración",
+      "amenities": "Amenidades"
+    },
+    "routing": {
+      "title": "Recorridos",
+      "pathways": "Trayectos",
+      "routes": "Rutas"
+    },
+    "pathwayServices": "Servicios de Trayecto",
+    "services": "Servicios",
+    "busModels": "Modelos de Autobús",
+    "buses": "Autobuses"
+  },
+  "users": {
+    "title": "Organización",
+    "users": "Usuarios",
+    "roles": "Roles",
+    "departments": "Departamentos"
+  },
+  "planning": {
+    "title": "Planeación",
+    "busPlans": "Roles"
+  }
+}

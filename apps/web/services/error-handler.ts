@@ -10,6 +10,23 @@ type TranslatedValidationErrors = {
   [key in KnownServerErrors]: string;
 };
 
+/**
+ * Type helper for namespace-specific translation functions from useTranslations.
+ *
+ * Since next-intl returns functions with strict literal union types for keys,
+ * we need to use `any` here to accept any translation function. This is safe
+ * because we only call it with dynamic string keys at runtime and handle
+ * missing translations gracefully.
+ *
+ * The `any` type is necessary because:
+ * - next-intl uses strict literal union types like `'errors.notFound' | 'fields.name'`
+ * - We need runtime flexibility to pass dynamic string keys
+ * - TypeScript doesn't allow a function with specific literal params to be assigned
+ *   to a function with generic string params (contravariance)
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type NamespaceTranslationFunction = (key: any) => string;
+
 export interface ValidationErrorMetadata {
   code: KnownServerErrors | string;
   value: string | { fieldName?: string };
@@ -22,6 +39,24 @@ interface GetTranslatedValidationErrorProps {
   error: ValidationErrorMetadata;
   property: KnownServerFields;
   entity: KnownServerEntities;
+  tNamespace?: NamespaceTranslationFunction;
+}
+
+/**
+ * Converts SNAKE_CASE error codes to camelCase for translation keys.
+ *
+ * @param str - The error code in SNAKE_CASE format
+ * @returns The error code in camelCase format
+ *
+ * @example
+ * toCamelCase('SAME_ORIGIN_DESTINATION') // Returns 'sameOriginDestination'
+ * toCamelCase('EMPTY_TRIP_SELLABLE') // Returns 'emptyTripSellable'
+ */
+function toCamelCase(str: string): string {
+  return str
+    .toLowerCase()
+    .replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+    .replace(/^[a-z]/, (letter) => letter.toLowerCase());
 }
 
 /**
@@ -67,7 +102,27 @@ export function getTranslatedValidationError({
   error,
   property,
   entity,
+  tNamespace,
 }: GetTranslatedValidationErrorProps): string {
+  const errorCode = error.code.toLowerCase();
+
+  // Try namespace-specific translation first (e.g., pathways.server.*)
+  if (tNamespace) {
+    const namespaceErrorKey = `server.${toCamelCase(error.code)}`;
+    try {
+      // Internal cast: useTranslations has strict types but accepts any string at runtime
+      const translateFn = tNamespace as (key: string) => string;
+      const namespaceTranslation = translateFn(namespaceErrorKey);
+      // Check if translation was found (next-intl returns key if not found)
+      if (namespaceTranslation && namespaceTranslation !== namespaceErrorKey) {
+        return namespaceTranslation;
+      }
+    } catch {
+      // Fall through to generic errors
+    }
+  }
+
+  // Try generic known errors
   const translatedValidationErrors: TranslatedValidationErrors = {
     duplicate: tValidations('server.duplicate', {
       entity: tValidations(`entities.${entity}`),
@@ -85,14 +140,14 @@ export function getTranslatedValidationError({
     ),
     invalid_status: tValidations('server.invalid_status'),
     invalid_password: tValidations('server.invalid_password'),
-    same_origin_destination: tValidations('server.same_origin_destination'),
   };
-  const errorCode = error.code.toLowerCase();
+
   const isKnownServerError = Object.keys(translatedValidationErrors).includes(
     errorCode,
   );
+
+  // Return generic translation or fallback to server message
   return isKnownServerError
-    ? // Safely casting after checking if the error is known
-      translatedValidationErrors[errorCode as KnownServerErrors]
+    ? translatedValidationErrors[errorCode as KnownServerErrors]
     : error.message;
 }

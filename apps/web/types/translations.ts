@@ -1,5 +1,5 @@
 import { createTranslator } from 'next-intl';
-import messages from '@/i18n/locales/es-MX.json';
+import { messages } from '@/i18n/locales/es-MX';
 
 export type Messages = typeof messages;
 export type NamespaceTranslationKey = keyof Messages;

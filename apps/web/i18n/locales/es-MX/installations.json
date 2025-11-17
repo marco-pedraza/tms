@@ -1,0 +1,19 @@
+{
+  "messages": {
+    "create": {
+      "loading": "Creando instalación...",
+      "success": "Instalación creada correctamente",
+      "error": "No pudimos crear la instalación."
+    },
+    "update": {
+      "loading": "Actualizando instalación...",
+      "success": "Instalación actualizada correctamente",
+      "error": "No pudimos actualizar la instalación"
+    },
+    "delete": {
+      "loading": "Eliminando instalación...",
+      "success": "Instalación eliminada correctamente",
+      "error": "No pudimos eliminar la instalación"
+    }
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "minLength": "El campo debe tener al menos {length} caracteres.",
+  "required": "Este campo es obligatorio.",
+  "mustBeNumber": "El valor debe ser un número.",
+  "mustBeDate": "El valor debe ser una fecha válida.",
+  "greaterThanOrEquals": "El valor debe ser mayor o igual a {value}.",
+  "greaterThan": "El valor debe ser mayor a {value}.",
+  "lessThanOrEquals": "El valor debe ser menor o igual a {value}.",
+  "positive": "El valor debe ser un número positivo.",
+  "missingSeatDiagramSpaces": "Debes generar el diagrama de asientos.",
+  "name": {
+    "letters": "El nombre debe contener solo letras y espacios.",
+    "lettersAndNumbers": "El nombre debe contener solo letras, números y espacios.",
+    "nonWhitespace": "El nombre no puede contener solo espacios en blanco."
+  },
+  "code": {
+    "length": "El código debe contener {length} caracteres.",
+    "minLength": "El código debe contener al menos {length} caracteres.",
+    "length-range": "El código debe contener entre {min} y {max} caracteres.",
+    "uppercase": "El código debe contener solo letras mayúsculas.",
+    "alphanumeric": "El código debe contener solo letras mayúsculas, números y guiones.",
+    "transporterFormat": "El código debe contener solo letras mayúsculas, números y guiones (máximo 10 caracteres)."
+  },
+  "latitude": {
+    "range": "La latitud debe ser un número entre -90 y 90."
+  },
+  "longitude": {
+    "range": "La longitud debe ser un número entre -180 y 180."
+  },
+  "radius": {
+    "positive": "El radio debe ser un número positivo."
+  },
+  "color": {
+    "format": "Debe ser un color hexadecimal válido (ej: #FF5733 o #FFF)."
+  },
+  "enumValues": {
+    "commaSeparated": "Elimina cualquier coma al inicio o al final de la lista. Ingresa solo letras, números y espacios por cada valor."
+  },
+  "url": {
+    "invalid": "La URL no es válida."
+  },
+  "email": {
+    "invalid": "El correo electrónico no es válido."
+  },
+  "phone": {
+    "invalid": "El teléfono no es válido."
+  },
+  "username": {
+    "minLength": "El nombre de usuario debe tener al menos {length} caracteres.",
+    "maxLength": "El nombre de usuario no puede tener más de {length} caracteres.",
+    "format": "El nombre de usuario solo puede contener letras, números, puntos, guiones y guiones bajos."
+  },
+  "password": {
+    "minLength": "La contraseña debe tener al menos {length} caracteres.",
+    "mismatch": "Las contraseñas no coinciden."
+  },
+  "atLeastOneSeat": "Debe haber al menos un asiento (izquierdo o derecho).",
+  "server": {
+    "duplicate": "Ya existe un registro de {entity} con {property}: \"{value}\".",
+    "invalid_format": "Formato inválido en el campo {fieldName}.",
+    "invalid_status": "Transición de estatus no válida. Verifica que el cambio de estatus sea permitido.",
+    "invalid_password": "La contraseña actual es incorrecta."
+  },
+  "entities": {
+    "country": "País",
+    "state": "Estado",
+    "city": "Ciudad",
+    "population": "Población",
+    "node": "Nodo",
+    "installationType": "Tipo de Instalación",
+    "event": "Evento",
+    "label": "Etiqueta",
+    "amenity": "Amenidad",
+    "transporter": "Transportista",
+    "busLine": "Línea de Autobús",
+    "busModel": "Modelo de Autobús",
+    "bus": "Autobús",
+    "serviceType": "Tipo de Servicio",
+    "seatDiagram": "Diagrama de Asientos",
+    "driver": "Conductor",
+    "timeOff": "Período de Ausencia",
+    "technology": "Tecnología",
+    "chromatic": "Esquema Cromático",
+    "user": "Usuario",
+    "pathway": "Trayecto",
+    "role": "Rol",
+    "pathwayOption": "Opción de Trayecto",
+    "route": "Ruta",
+    "department": "Departamento"
+  },
+  "fields": {
+    "name": "Nombre",
+    "code": "Código",
+    "operatingHours": "Horarios de Operación",
+    "licensePlateNumber": "Número de Placa",
+    "registrationNumber": "Número de Registro",
+    "status": "Estatus",
+    "currentPassword": "Contraseña Actual",
+    "originNodeId": "Origen",
+    "destinationNodeId": "Destino"
+  }
+}

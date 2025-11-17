@@ -1,0 +1,46 @@
+{
+  "title": "Períodos de Ausencia",
+  "form": {
+    "title": "Agregar Período de Ausencia",
+    "disabledMessage": "Primero guarda el conductor para poder agregar períodos de ausencia",
+    "placeholders": {
+      "type": "Selecciona tipo",
+      "reason": "Ej: Evento familiar, enfermedad, etc."
+    }
+  },
+  "table": {
+    "title": "Períodos de Ausencia",
+    "empty": "No hay períodos de ausencia registrados"
+  },
+  "fields": {
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Fin",
+    "type": "Tipo",
+    "reason": "Razón"
+  },
+  "types": {
+    "vacation": "Vacaciones",
+    "leave": "Permiso",
+    "sick_leave": "Incapacidad",
+    "personal_day": "Día Personal",
+    "other": "Otro"
+  },
+  "messages": {
+    "noTimeOffs": "No se pudieron cargar los períodos de ausencia para este conductor",
+    "create": {
+      "loading": "Agregando período de ausencia...",
+      "success": "Período de ausencia agregado correctamente",
+      "error": "No se pudo agregar el período de ausencia"
+    },
+    "update": {
+      "loading": "Actualizando período de ausencia...",
+      "success": "Período de ausencia actualizado correctamente",
+      "error": "No se pudo actualizar el período de ausencia"
+    },
+    "delete": {
+      "loading": "Eliminando período de ausencia...",
+      "success": "Período de ausencia eliminado correctamente",
+      "error": "No se pudo eliminar el período de ausencia"
+    }
+  }
+}

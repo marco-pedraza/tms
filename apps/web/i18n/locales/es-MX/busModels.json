@@ -1,0 +1,104 @@
+{
+  "title": "Modelos de Autobuses",
+  "description": "Administra información de modelos de autobuses para el Sistema de Inventario",
+  "actions": {
+    "create": "Crear Modelo de Autobús",
+    "update": "Actualizar Modelo de Autobús",
+    "backToList": "Volver a modelos de autobuses",
+    "createNewDiagramBasedOnThis": "Crear Nuevo Diagrama Basado en Este"
+  },
+  "fields": {
+    "description": "Descripción",
+    "manufacturer": "Fabricante",
+    "model": "Modelo",
+    "year": "Año",
+    "seatingCapacity": "Capacidad de Asientos",
+    "trunkCapacity": "Capacidad de Maletero (kg)",
+    "fuelEfficiency": "Rendimiento de Combustible (km/L)",
+    "maxCapacity": "Capacidad Máxima (pasajeros)",
+    "numFloors": "Número de Pisos",
+    "engineType": "Tipo de Motor",
+    "busDiagramModel": "Diagrama de Asientos",
+    "amenities": "Amenidades",
+    "selectedAmenities": "Amenidades seleccionadas ({count})"
+  },
+  "filters": {
+    "active": "Activo"
+  },
+  "engineTypes": {
+    "diesel": "Diesel",
+    "electric": "Eléctrico",
+    "hybrid": "Híbrido",
+    "gasoline": "Gasolina",
+    "natural_gas": "Gas Natural",
+    "lpg": "Gas Licuado de Petróleo",
+    "other": "Otro"
+  },
+  "form": {
+    "title": "Información del modelo de autobús",
+    "placeholders": {
+      "manufacturer": "Ej: Mercedes-Benz",
+      "model": "Ej: Sprinter",
+      "year": "Ej: 2024",
+      "seatingCapacity": "Ej: 20",
+      "trunkCapacity": "Ej: 300",
+      "fuelEfficiency": "Ej: 10",
+      "maxCapacity": "Ej: 30",
+      "numFloors": "Ej: 1",
+      "engineType": "Ej: Diesel",
+      "busDiagramModel": "Selecciona el diagrama de asientos",
+      "emptyOptionsLabel": "No hay Diagramas de Asientos disponibles",
+      "busDiagramModelSearch": "Buscar Diagrama de Asientos",
+      "noBusDiagramModelsFound": "No se encontraron Diagramas de Asientos",
+      "amenities": "Selecciona las amenidades del autobús",
+      "emptyAmenitiesList": "No hay amenidades disponibles"
+    }
+  },
+  "details": {
+    "description": "Detalles del modelo de autobús",
+    "seatingCapacity": "Capacidad de asientos del autobús",
+    "trunkCapacity": "Capacidad de maletero del autobús",
+    "fuelEfficiency": "Rendimiento de combustible del autobús",
+    "maxCapacity": "Capacidad máxima de pasajeros del autobús",
+    "numFloors": "Número de pisos del autobús",
+    "engineType": "Tipo de motor del autobús",
+    "active": "Indica si el modelo de autobús está activo en el sistema"
+  },
+  "edit": {
+    "title": "Editar Modelo de Autobús"
+  },
+  "sections": {
+    "info": "Información",
+    "amenities": "Amenidades",
+    "diagram": "Diagrama de Asientos"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Modelo de autobús no encontrado",
+      "description": "No pudimos encontrar el modelo de autobús que buscas. Es posible que haya sido eliminado o que no exista."
+    }
+  },
+  "messages": {
+    "create": {
+      "loading": "Creando modelo de autobús...",
+      "success": "Modelo de autobús creado correctamente",
+      "error": "No pudimos crear el modelo de autobús"
+    },
+    "update": {
+      "loading": "Actualizando modelo de autobús...",
+      "success": "Modelo de autobús actualizado correctamente",
+      "error": "No pudimos actualizar el modelo de autobús"
+    },
+    "delete": {
+      "loading": "Eliminando modelo de autobús...",
+      "success": "Modelo de autobús eliminado correctamente",
+      "error": "No pudimos eliminar el modelo de autobús"
+    },
+    "assignAmenities": {
+      "loading": "Asignando amenidades...",
+      "success": "Amenidades asignadas correctamente",
+      "error": "No se pudieron asignar las amenidades"
+    },
+    "noAmenitiesAssigned": "No hay amenidades asignadas a este modelo de autobús."
+  }
+}

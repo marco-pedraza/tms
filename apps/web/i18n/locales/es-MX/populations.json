@@ -1,0 +1,60 @@
+{
+  "title": "Poblaciones",
+  "description": "Administra información de poblaciones para el Sistema de Inventario de Autobuses",
+  "actions": {
+    "create": "Crear Población",
+    "update": "Actualizar Población",
+    "backToList": "Volver a poblaciones"
+  },
+  "sections": {
+    "cities": {
+      "title": "Ciudades",
+      "emptyText": "No hay ciudades asignadas",
+      "assignCity": "Asignar ciudad",
+      "searchPlaceholder": "Buscar ciudad",
+      "noResults": "No se encontraron resultados"
+    }
+  },
+  "form": {
+    "title": "Información de la población",
+    "placeholders": {
+      "name": "Ej: Población Norte",
+      "code": "Ej: PN",
+      "description": "Ej: Población ubicada en la zona norte de la ciudad"
+    }
+  },
+  "edit": {
+    "title": "Editar Población"
+  },
+  "details": {
+    "description": "Detalles de la población"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Población no encontrada",
+      "description": "No pudimos encontrar la población que buscas. Es posible que haya sido eliminada o que no exista."
+    }
+  },
+  "messages": {
+    "create": {
+      "loading": "Creando población...",
+      "success": "Población creada correctamente",
+      "error": "No pudimos crear la población"
+    },
+    "update": {
+      "loading": "Actualizando población...",
+      "success": "Población actualizada correctamente",
+      "error": "No pudimos actualizar la población"
+    },
+    "delete": {
+      "loading": "Eliminando población...",
+      "success": "Población eliminada correctamente",
+      "error": "No pudimos eliminar la población"
+    },
+    "assignCities": {
+      "loading": "Asignando ciudades...",
+      "success": "Ciudades asignadas correctamente",
+      "error": "No pudimos asignar las ciudades, por favor intenta nuevamente"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "title": "Esquemas Cromáticos",
+  "description": "Gestiona los esquemas de colores para los autobuses",
+  "actions": {
+    "create": "Crear Esquema Cromático",
+    "update": "Actualizar Esquema Cromático",
+    "backToList": "Volver a esquemas cromáticos"
+  },
+  "fields": {
+    "name": "Nombre",
+    "description": "Descripción",
+    "imageUrl": "URL de la Imagen",
+    "active": "Activo"
+  },
+  "filters": {
+    "active": "Activo"
+  },
+  "form": {
+    "title": "Información del esquema cromático",
+    "placeholders": {
+      "name": "Ej: Autobús azul",
+      "description": "Ej: Autobús azul con bandas negras",
+      "imageUrl": "Ej: https://example.com/imagen.jpg"
+    }
+  },
+  "details": {
+    "description": "Detalles del esquema cromático",
+    "imageUrl": "URL de la imagen del esquema cromático",
+    "active": "Indica si el esquema cromático está activo en el sistema"
+  },
+  "edit": {
+    "title": "Editar Esquema Cromático"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Esquema cromático no encontrado",
+      "description": "No pudimos encontrar el esquema cromático que buscas. Es posible que haya sido eliminado o que no exista."
+    }
+  },
+  "messages": {
+    "create": {
+      "loading": "Creando esquema cromático...",
+      "success": "Esquema cromático creado correctamente",
+      "error": "No pudimos crear el esquema cromático"
+    },
+    "update": {
+      "loading": "Actualizando esquema cromático...",
+      "success": "Esquema cromático actualizado correctamente",
+      "error": "No pudimos actualizar el esquema cromático"
+    },
+    "delete": {
+      "loading": "Eliminando esquema cromático...",
+      "success": "Esquema cromático eliminado correctamente",
+      "error": "No pudimos eliminar el esquema cromático"
+    }
+  }
+}

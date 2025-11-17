@@ -1,0 +1,114 @@
+{
+  "title": "Conductores",
+  "description": "Administra información de conductores para el Sistema de Inventario de Autobuses",
+  "fields": {
+    "driverKey": "Clave",
+    "payrollKey": "Clave Nómina",
+    "statusDate": "Fecha de Estatus",
+    "address": "Dirección",
+    "hireDate": "Fecha de Contratación",
+    "busLine": "Línea de Autobús",
+    "transporter": "Grupo de Transporte",
+    "license": "Licencia",
+    "licenseExpiry": {
+      "title": "Vencimiento de Licencia",
+      "expired": "Vencida"
+    },
+    "emergencyContactName": "Contacto de Emergencia",
+    "emergencyContactPhone": "Teléfono de Contacto de Emergencia",
+    "emergencyContactRelationship": "Relación con el Contacto"
+  },
+  "sections": {
+    "personalInfo": "Información Personal",
+    "jobInfo": "Información Laboral",
+    "availability": "Disponibilidad",
+    "driverInfo": "Información del Conductor",
+    "medicalChecks": "Chequeos Médicos"
+  },
+  "actions": {
+    "create": "Crear Conductor",
+    "update": "Actualizar Conductor",
+    "backToList": "Volver a conductores"
+  },
+  "form": {
+    "title": "Información del conductor",
+    "placeholders": {
+      "driverKey": "Ej: AAA001",
+      "payrollKey": "Ej: PAYAAA001",
+      "firstName": "Ej: Carlos",
+      "lastName": "Ej: Mendoza",
+      "email": "Ej: carlos.mendoza@example.com",
+      "phone": "Ej: +52 (33) 1234-5678",
+      "license": "Ej: 1234567890",
+      "address": "Ej: Av. Central #123, Col. Centro, CDMX 12345",
+      "emergencyContactName": "Ej: María García",
+      "emergencyContactPhone": "Ej: +52 (33) 9876-5432",
+      "emergencyContactRelationship": "Ej: Esposa",
+      "busLine": "Selecciona una línea de autobús",
+      "status": "Selecciona un estatus",
+      "emptyBusLinesList": "No hay Líneas de Autobús disponibles",
+      "busLineSearch": "Buscar Línea de Autobús",
+      "noBusLinesFound": "No se encontraron Líneas de Autobús"
+    },
+    "driverKey": "Clave",
+    "payrollKey": "Clave Nómina",
+    "address": "Dirección",
+    "license": "Licencia",
+    "licenseExpiry": "Fecha de Vencimiento de Licencia",
+    "hireDate": "Fecha de Contratación",
+    "statusDate": "Fecha de Estatus",
+    "busLine": "Línea de Autobús",
+    "emergencyContactName": "Contacto de Emergencia",
+    "emergencyContactPhone": "Teléfono de Contacto",
+    "emergencyContactRelationship": "Relación",
+    "sections": {
+      "drivers": {
+        "selectedDrivers": "Conductores seleccionados ({count})",
+        "addDriver": "Agregar Conductor",
+        "emptyText": "No hay conductores disponibles"
+      }
+    }
+  },
+  "details": {
+    "description": "Detalles del conductor"
+  },
+  "edit": {
+    "title": "Editar Conductor"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Conductor no encontrado",
+      "description": "No pudimos encontrar el conductor que buscas. Es posible que haya sido eliminado o que no exista."
+    },
+    "timeOff": {
+      "invalidDateRange": "La fecha de inicio debe ser anterior o igual a la fecha de fin",
+      "overlappingTimeOff": "El período de ausencia se superpone con otro período de ausencia"
+    }
+  },
+  "messages": {
+    "create": {
+      "loading": "Creando conductor...",
+      "success": "Conductor creado correctamente",
+      "error": "No pudimos crear el conductor"
+    },
+    "update": {
+      "loading": "Actualizando conductor...",
+      "success": "Conductor actualizado correctamente",
+      "error": "No pudimos actualizar el conductor"
+    },
+    "delete": {
+      "loading": "Eliminando conductor...",
+      "success": "Conductor eliminado correctamente",
+      "error": "No pudimos eliminar el conductor"
+    }
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "suspended": "Suspendido",
+    "on_leave": "En Licencia",
+    "terminated": "Terminado",
+    "in_training": "En Formación",
+    "probation": "En Prueba"
+  }
+}

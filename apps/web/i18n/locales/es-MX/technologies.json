@@ -1,0 +1,71 @@
+{
+  "title": "Tecnologías",
+  "description": "Gestiona las tecnologías disponibles para los autobuses",
+  "actions": {
+    "create": "Crear Tecnología",
+    "update": "Actualizar Tecnología",
+    "backToList": "Volver a tecnologías"
+  },
+  "fields": {
+    "description": "Descripción",
+    "name": "Nombre",
+    "version": "Versión",
+    "provider": "Proveedor"
+  },
+  "filters": {
+    "active": "Activo"
+  },
+  "form": {
+    "title": "Información de la tecnología",
+    "placeholders": {
+      "name": "Ej: Wi-Fi",
+      "provider": "Ej: Google",
+      "version": "Ej: 1.0.0",
+      "description": "Ej: Internet inalámbrico gratuito",
+      "emptyOptionsLabel": "No hay tecnologías disponibles"
+    },
+    "sections": {
+      "technologies": {
+        "addTechnology": "Agregar Tecnología",
+        "selectedTechnologies": "Tecnologías seleccionadas",
+        "emptyText": "No hay tecnologías disponibles"
+      }
+    },
+    "fields": {
+      "selectedTechnologies": "Tecnologías seleccionadas"
+    }
+  },
+  "details": {
+    "description": "Detalles de la tecnología"
+  },
+  "edit": {
+    "title": "Editar Tecnología"
+  },
+  "sections": {
+    "info": "Información",
+    "technologies": "Tecnologías"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Tecnología no encontrada",
+      "description": "No pudimos encontrar la tecnología que buscas. Es posible que haya sido eliminada o que no exista."
+    }
+  },
+  "messages": {
+    "create": {
+      "loading": "Creando tecnología...",
+      "success": "Tecnología creada correctamente",
+      "error": "No pudimos crear la tecnología"
+    },
+    "update": {
+      "loading": "Actualizando tecnología...",
+      "success": "Tecnología actualizada correctamente",
+      "error": "No pudimos actualizar la tecnología"
+    },
+    "delete": {
+      "loading": "Eliminando tecnología...",
+      "success": "Tecnología eliminada correctamente",
+      "error": "No pudimos eliminar la tecnología"
+    }
+  }
+}

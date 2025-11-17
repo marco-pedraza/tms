@@ -1,0 +1,66 @@
+{
+  "title": "Amenidades",
+  "description": "Gestiona las amenidades disponibles para los tipos de instalación",
+  "actions": {
+    "create": "Crear Amenidad",
+    "update": "Actualizar Amenidad",
+    "backToList": "Volver a amenidades"
+  },
+  "fields": {
+    "amenityType": "Tipo de Amenidad",
+    "iconName": "Icono"
+  },
+  "categories": {
+    "basic": "Básico",
+    "comfort": "Confort",
+    "technology": "Tecnología",
+    "security": "Seguridad",
+    "accessibility": "Accesibilidad",
+    "services": "Servicios"
+  },
+  "amenityTypes": {
+    "bus": "Autobús",
+    "installation": "Instalación",
+    "service_type": "Tipo de Servicio"
+  },
+  "form": {
+    "title": "Información de la amenidad",
+    "placeholders": {
+      "name": "Ej: Wi-Fi",
+      "category": "Selecciona una categoría",
+      "amenityType": "Selecciona el tipo de amenidad",
+      "description": "Ej: Internet inalámbrico gratuito",
+      "iconName": "Ej: wifi"
+    }
+  },
+  "details": {
+    "description": "Detalles de la amenidad"
+  },
+  "edit": {
+    "title": "Editar Amenidad"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Amenidad no encontrada",
+      "description": "No pudimos encontrar la amenidad que buscas. Es posible que haya sido eliminada o que no exista."
+    },
+    "noIcon": "Sin icono"
+  },
+  "messages": {
+    "create": {
+      "loading": "Creando amenidad...",
+      "success": "Amenidad creada correctamente",
+      "error": "No pudimos crear la amenidad"
+    },
+    "update": {
+      "loading": "Actualizando amenidad...",
+      "success": "Amenidad actualizada correctamente",
+      "error": "No pudimos actualizar la amenidad"
+    },
+    "delete": {
+      "loading": "Eliminando amenidad...",
+      "success": "Amenidad eliminada correctamente",
+      "error": "No pudimos eliminar la amenidad"
+    }
+  }
+}

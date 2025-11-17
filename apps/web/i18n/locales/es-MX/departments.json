@@ -1,0 +1,49 @@
+{
+  "title": "Departamentos",
+  "description": "Administra departamentos organizacionales del sistema",
+  "actions": {
+    "create": "Crear Departamento",
+    "update": "Actualizar Departamento",
+    "backToList": "Volver a departamentos"
+  },
+  "fields": {
+    "name": "Nombre",
+    "code": "Código",
+    "description": "Descripción"
+  },
+  "form": {
+    "title": "Información del departamento",
+    "placeholders": {
+      "name": "Ej: Tecnologías de la Información",
+      "code": "Ej: IT-001",
+      "description": "Descripción opcional del departamento"
+    }
+  },
+  "details": {
+    "description": "Detalles del departamento"
+  },
+  "edit": {
+    "title": "Editar Departamento"
+  },
+  "notFound": {
+    "title": "Departamento no encontrado",
+    "description": "No pudimos encontrar el departamento que buscas. Es posible que haya sido eliminado o que no exista."
+  },
+  "messages": {
+    "create": {
+      "loading": "Creando departamento...",
+      "success": "Departamento creado correctamente",
+      "error": "No pudimos crear el departamento"
+    },
+    "update": {
+      "loading": "Actualizando departamento...",
+      "success": "Departamento actualizado correctamente",
+      "error": "No pudimos actualizar el departamento"
+    },
+    "delete": {
+      "loading": "Eliminando departamento...",
+      "success": "Departamento eliminado correctamente",
+      "error": "No pudimos eliminar el departamento"
+    }
+  }
+}

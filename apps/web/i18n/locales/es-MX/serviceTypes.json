@@ -1,0 +1,63 @@
+{
+  "title": "Tipos de Servicio",
+  "description": "Administra información de tipos de servicio para el Sistema de Inventario de Autobuses",
+  "actions": {
+    "create": "Crear Tipo de Servicio",
+    "update": "Actualizar Tipo de Servicio",
+    "backToList": "Volver a tipos de servicio"
+  },
+  "fields": {
+    "name": "Nombre",
+    "code": "Código",
+    "description": "Descripción",
+    "active": "Activo",
+    "amenities": "Amenidades",
+    "selectedAmenities": "Amenidades seleccionadas ({count})"
+  },
+  "form": {
+    "title": "Información del tipo de servicio",
+    "placeholders": {
+      "name": "Ej: Primera",
+      "code": "Ej: PRIM",
+      "description": "Ej: Servicio de transporte de primera clase",
+      "amenities": "Selecciona amenidades para este tipo de servicio",
+      "emptyAmenitiesList": "No hay amenidades disponibles"
+    }
+  },
+  "edit": {
+    "title": "Editar Tipo de Servicio"
+  },
+  "details": {
+    "description": "Detalles del tipo de servicio",
+    "amenitiesTitle": "Amenidades",
+    "noAmenitiesAssigned": "No hay amenidades asignadas"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Tipo de servicio no encontrado",
+      "description": "No pudimos encontrar el tipo de servicio que buscas. Es posible que haya sido eliminado o que no exista."
+    }
+  },
+  "messages": {
+    "create": {
+      "loading": "Creando tipo de servicio...",
+      "success": "Tipo de servicio creado correctamente",
+      "error": "No pudimos crear el tipo de servicio"
+    },
+    "update": {
+      "loading": "Actualizando tipo de servicio...",
+      "success": "Tipo de servicio actualizado correctamente",
+      "error": "No pudimos actualizar el tipo de servicio"
+    },
+    "delete": {
+      "loading": "Eliminando tipo de servicio...",
+      "success": "Tipo de servicio eliminado correctamente",
+      "error": "No pudimos eliminar el tipo de servicio"
+    },
+    "assignAmenities": {
+      "loading": "Asignando amenidades...",
+      "success": "Amenidades asignadas correctamente",
+      "error": "No pudimos asignar las amenidades"
+    }
+  }
+}

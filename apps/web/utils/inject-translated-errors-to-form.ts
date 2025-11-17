@@ -1,6 +1,7 @@
 import { isAPIError } from '@repo/ims-client';
 import useForm from '@/hooks/use-form';
 import {
+  NamespaceTranslationFunction,
   ValidationErrorMetadata,
   getTranslatedValidationError,
 } from '@/services/error-handler';
@@ -11,23 +12,31 @@ import {
   UseValidationsTranslationsResult,
 } from '@/types/translations';
 
-interface InjectTranslatedErrorsToFormProps {
+interface InjectTranslatedErrorsToFormProps<
+  TNamespace extends
+    NamespaceTranslationFunction = NamespaceTranslationFunction,
+> {
   form: ReturnType<typeof useForm>;
   error: unknown;
   tValidations: UseValidationsTranslationsResult;
   tCommon: UseCommonTranslationsResult;
   entity: KnownServerEntities;
+  tNamespace?: TNamespace;
 }
 
-export default function injectTranslatedErrorsToForm({
+export default function injectTranslatedErrorsToForm<
+  TNamespace extends NamespaceTranslationFunction,
+>({
   form,
   error,
   tValidations,
   tCommon,
   entity,
-}: InjectTranslatedErrorsToFormProps) {
+  tNamespace,
+}: InjectTranslatedErrorsToFormProps<TNamespace>) {
   if (!isAPIError(error)) return;
   if (!error.details || Object.keys(error.details).length === 0) return;
+
   Object.keys(error.details).forEach((key) => {
     form.setFieldMeta(key, (meta) => {
       return {
@@ -43,6 +52,7 @@ export default function injectTranslatedErrorsToForm({
                 error,
                 entity,
                 property: key as KnownServerFields,
+                tNamespace,
               }),
               path: [key],
             };

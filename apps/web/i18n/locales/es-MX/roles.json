@@ -1,0 +1,76 @@
+{
+  "title": "Roles",
+  "description": "Administra roles y permisos del sistema",
+  "actions": {
+    "create": "Crear Rol",
+    "update": "Actualizar Rol",
+    "backToList": "Volver a roles"
+  },
+  "form": {
+    "title": "Información del rol",
+    "placeholders": {
+      "name": "Ej: Administrador",
+      "description": "Descripción opcional del rol"
+    }
+  },
+  "details": {
+    "description": "Detalles del rol",
+    "permissionsTitle": "Permisos del Rol",
+    "noPermissionsAssigned": "No hay permisos asignados a este rol",
+    "managePermissions": "Gestionar Permisos"
+  },
+  "edit": {
+    "title": "Editar Rol"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Rol no encontrado",
+      "description": "No pudimos encontrar el rol que buscas. Es posible que haya sido eliminado o que no exista."
+    }
+  },
+  "messages": {
+    "create": {
+      "loading": "Creando rol...",
+      "success": "Rol creado correctamente",
+      "error": "No pudimos crear el rol"
+    },
+    "update": {
+      "loading": "Actualizando rol...",
+      "success": "Rol actualizado correctamente",
+      "error": "No pudimos actualizar el rol"
+    },
+    "delete": {
+      "loading": "Eliminando rol...",
+      "success": "Rol eliminado correctamente",
+      "error": "No pudimos eliminar el rol"
+    },
+    "assignPermissions": {
+      "loading": "Asignando permisos...",
+      "success": "Permisos asignados correctamente",
+      "error": "No pudimos asignar los permisos"
+    }
+  },
+  "buttons": {
+    "cancel": "Cancelar",
+    "saveChanges": "Guardar Cambios",
+    "saving": "Guardando...",
+    "expandAll": "Expandir Todo",
+    "collapseAll": "Contraer Todo",
+    "reset": "Restablecer"
+  },
+  "permissionsPage": {
+    "title": "Permisos",
+    "description": "Gestiona los permisos para este rol",
+    "searchPlaceholder": "Buscar permisos por nombre o descripción",
+    "changesDetected": "Cambios Detectados",
+    "added": "{count, plural, =1 {agregado} other {agregados}}",
+    "removed": "{count, plural, =1 {eliminado} other {eliminados}}",
+    "selected": "seleccionados",
+    "noGroup": "Sin Grupo",
+    "noPermissionsFound": "No se encontraron permisos que coincidan con tu búsqueda",
+    "noPermissionsAvailable": "No hay permisos disponibles",
+    "permissionsSelected": "permisos seleccionados",
+    "toggleGroup": "Alternar grupo de permisos {groupName}",
+    "togglePermission": "Alternar permiso {permissionName}"
+  }
+}

@@ -4,16 +4,16 @@ import { busLineRepository } from '@/inventory/operators/bus-lines/bus-lines.rep
 import { serviceTypeRepository } from '@/inventory/operators/service-types/service-types.repository';
 import { transporterRepository } from '@/inventory/operators/transporters/transporters.repository';
 import { createCleanupHelper } from '@/tests/shared/test-utils';
+import {
+  getDriverMedicalCheck,
+  listDriverMedicalChecks,
+  listDriverMedicalChecksPaginated,
+} from '../drivers.controller';
+import { createDriverMedicalCheck } from '../drivers.controller';
 import { driverRepository } from '../drivers.repository';
 import { DriverStatus } from '../drivers.types';
 import { MedicalCheckResult, MedicalCheckSource } from './medical-checks.types';
 import { driverMedicalCheckRepository } from './medical-checks.repository';
-import {
-  createDriverMedicalCheck,
-  getDriverMedicalCheck,
-  listDriverMedicalChecks,
-  listDriverMedicalChecksPaginated,
-} from './medical-checks.controller';
 
 describe('Driver Medical Checks Controller', () => {
   // Test data and setup

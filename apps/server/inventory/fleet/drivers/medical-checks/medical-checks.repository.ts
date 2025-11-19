@@ -1,4 +1,4 @@
-import { createBaseRepository } from '@repo/base-repo';
+import { type TransactionalDB, createBaseRepository } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
 import { driverMedicalChecks } from './medical-checks.schema';
 import type {
@@ -26,10 +26,12 @@ export const createDriverMedicalCheckRepository = () => {
   /**
    * Creates a new driver medical check with automatically calculated nextCheckDate
    * @param payload - The medical check data to create
+   * @param tx - Optional transaction instance
    * @returns The created medical check
    */
   async function create(
     payload: CreateDriverMedicalCheckPayload & { driverId: number },
+    tx?: TransactionalDB,
   ) {
     const dataWithNextDate = {
       ...payload,
@@ -40,15 +42,43 @@ export const createDriverMedicalCheckRepository = () => {
       ),
     };
 
-    return await baseRepository.create(dataWithNextDate);
+    const txBaseRepository = tx
+      ? baseRepository.withTransaction(tx)
+      : baseRepository;
+
+    return await txBaseRepository.create(dataWithNextDate);
+  }
+
+  /**
+   * Creates a transaction-scoped version of this repository
+   * Overrides baseRepository.withTransaction to preserve custom methods
+   * @param tx - Transaction instance
+   * @returns Transaction-scoped repository with all custom methods
+   */
+  function withTransaction(tx: TransactionalDB) {
+    const txBaseRepository = baseRepository.withTransaction(tx);
+    return {
+      ...txBaseRepository,
+      create: (
+        payload: CreateDriverMedicalCheckPayload & { driverId: number },
+      ) => create(payload, tx),
+      withTransaction: (newTx: TransactionalDB) => withTransaction(newTx),
+    };
   }
 
   return {
     ...baseRepository,
     create,
+    withTransaction,
   };
 };
 
 // Export the driver medical check repository instance
 export const driverMedicalCheckRepository =
   createDriverMedicalCheckRepository();
+
+/**
+ * Type representing the complete medical check repository
+ * Derived from the actual implementation
+ */
+export type MedicalCheckRepository = typeof driverMedicalCheckRepository;

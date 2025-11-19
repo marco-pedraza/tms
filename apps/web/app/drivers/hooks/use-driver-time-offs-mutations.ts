@@ -11,7 +11,7 @@ import imsClient from '@/services/ims-client';
 export default function useDriverTimeOffsMutations(driverId: number) {
   return createCollectionMutations<
     time_offs.DriverTimeOff,
-    time_offs.CreateDriverTimeOffRepositoryPayload
+    time_offs.CreateDriverTimeOffEndpointPayload
   >({
     queryKey: ['drivers', driverId.toString(), 'time-offs'],
     translationKey: 'timeOffs',

@@ -642,12 +642,12 @@ export namespace inventory {
         }
 
         /**
-         * Creates a new medical check for a driver (immutable).
+         * Creates a new medical check for a driver.
          * @param params - The medical check data to create (includes driverId)
          * @returns {Promise<DriverMedicalCheck>} The created medical check
          * @throws {APIError} If the medical check creation fails
          */
-        public async createDriverMedicalCheck(driverId: number, params: medical_checks.CreateDriverMedicalCheckRepositoryPayload): Promise<medical_checks.DriverMedicalCheck> {
+        public async createDriverMedicalCheck(driverId: number, params: medical_checks.CreateDriverMedicalCheckEndpointPayload): Promise<medical_checks.DriverMedicalCheck> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/drivers/${encodeURIComponent(driverId)}/medical-checks/create`, JSON.stringify(params))
             return await resp.json() as medical_checks.DriverMedicalCheck
@@ -659,7 +659,7 @@ export namespace inventory {
          * @returns {Promise<DriverTimeOff>} The created time-off
          * @throws {APIError} If the time-off creation fails
          */
-        public async createDriverTimeOff(driverId: number, params: time_offs.CreateDriverTimeOffRepositoryPayload): Promise<time_offs.DriverTimeOff> {
+        public async createDriverTimeOff(driverId: number, params: time_offs.CreateDriverTimeOffEndpointPayload): Promise<time_offs.DriverTimeOff> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("POST", `/drivers/${encodeURIComponent(driverId)}/time-offs/create`, JSON.stringify(params))
             return await resp.json() as time_offs.DriverTimeOff
@@ -3155,11 +3155,31 @@ export namespace inventory {
 
         /**
          * Updates an existing time-off for a driver.
-         * @param params - Object containing the time-off ID and update data (includes driverId)
+         * @param params - Object containing the driver ID, time-off ID and update data
          * @returns {Promise<DriverTimeOff>} The updated time-off
          * @throws {APIError} If the time-off is not found or update fails
          */
-        public async updateDriverTimeOff(driverId: number, id: number, params: time_offs.UpdateDriverTimeOffRepositoryPayload): Promise<time_offs.DriverTimeOff> {
+        public async updateDriverTimeOff(driverId: number, id: number, params: {
+    /**
+     * Start date of the time-off (inclusive)
+     */
+    startDate?: string | string
+
+    /**
+     * End date of the time-off (inclusive)
+     */
+    endDate?: string | string
+
+    /**
+     * Type of time-off
+     */
+    type?: time_offs.TimeOffType
+
+    /**
+     * Optional reason for the time-off
+     */
+    reason?: string | null
+}): Promise<time_offs.DriverTimeOff> {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("PUT", `/drivers/${encodeURIComponent(driverId)}/time-offs/${encodeURIComponent(id)}/update`, JSON.stringify(params))
             return await resp.json() as time_offs.DriverTimeOff
@@ -9807,7 +9827,7 @@ export namespace labels {
 }
 
 export namespace medical_checks {
-    export interface CreateDriverMedicalCheckRepositoryPayload {
+    export interface CreateDriverMedicalCheckEndpointPayload {
         /**
          * Date when the medical check was performed
          */
@@ -13063,7 +13083,7 @@ export namespace technologies {
 }
 
 export namespace time_offs {
-    export interface CreateDriverTimeOffRepositoryPayload {
+    export interface CreateDriverTimeOffEndpointPayload {
         /**
          * Start date of the time-off (inclusive)
          */
@@ -13137,28 +13157,6 @@ export namespace time_offs {
     }
 
     export type TimeOffType = "VACATION" | "LEAVE" | "SICK_LEAVE" | "PERSONAL_DAY" | "OTHER"
-
-    export interface UpdateDriverTimeOffRepositoryPayload {
-        /**
-         * Start date of the time-off (inclusive)
-         */
-        startDate?: string | string
-
-        /**
-         * End date of the time-off (inclusive)
-         */
-        endDate?: string | string
-
-        /**
-         * Type of time-off
-         */
-        type?: TimeOffType
-
-        /**
-         * Optional reason for the time-off
-         */
-        reason?: string | null
-    }
 }
 
 export namespace timezones {

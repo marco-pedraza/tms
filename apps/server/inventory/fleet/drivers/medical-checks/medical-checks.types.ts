@@ -128,3 +128,12 @@ export type CreateDriverMedicalCheckRepositoryPayload =
   CreateDriverMedicalCheckPayload & {
     driverId: number;
   };
+
+/**
+ * Payload for creating a medical check via API endpoint
+ * Includes driverId from path parameter
+ */
+export interface CreateDriverMedicalCheckEndpointPayload
+  extends CreateDriverMedicalCheckPayload {
+  driverId: number;
+}

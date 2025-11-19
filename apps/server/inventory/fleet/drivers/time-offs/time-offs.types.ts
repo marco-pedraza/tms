@@ -127,3 +127,12 @@ export type UpdateDriverTimeOffRepositoryPayload =
     id: number;
     driverId: number;
   };
+
+/**
+ * Payload for creating a time-off via API endpoint
+ * Includes driverId from path parameter
+ */
+export interface CreateDriverTimeOffEndpointPayload
+  extends CreateDriverTimeOffPayload {
+  driverId: number;
+}

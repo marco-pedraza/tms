@@ -1,5 +1,5 @@
 import { and, eq, gte, isNull, lte, ne, sql } from 'drizzle-orm';
-import { createBaseRepository } from '@repo/base-repo';
+import { type TransactionalDB, createBaseRepository } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
 import { driverTimeOffs } from './time-offs.schema';
 import type {
@@ -28,6 +28,7 @@ export const createDriverTimeOffRepository = () => {
    * @param startDate - Start date of the new time-off
    * @param endDate - End date of the new time-off
    * @param excludeId - Optional ID to exclude from the check (for updates)
+   * @param tx - Optional transaction instance
    * @returns Promise<boolean> - True if there are overlapping time-offs
    */
   const hasOverlappingTimeOffs = async (
@@ -35,6 +36,7 @@ export const createDriverTimeOffRepository = () => {
     startDate: string,
     endDate: string,
     excludeId?: number,
+    tx?: TransactionalDB,
   ): Promise<boolean> => {
     const conditions = [
       // Driver filter
@@ -55,7 +57,8 @@ export const createDriverTimeOffRepository = () => {
       conditions.push(ne(driverTimeOffs.id, excludeId));
     }
 
-    const result = await db
+    const dbInstance = tx ?? db;
+    const result = await dbInstance
       .select({ count: sql<number>`cast(count(*) as int)` })
       .from(driverTimeOffs)
       .where(and(...conditions));
@@ -63,11 +66,38 @@ export const createDriverTimeOffRepository = () => {
     return result[0].count > 0;
   };
 
+  /**
+   * Creates a transaction-scoped version of this repository
+   * Overrides baseRepository.withTransaction to preserve custom methods
+   * @param tx - Transaction instance
+   * @returns Transaction-scoped repository with all custom methods
+   */
+  function withTransaction(tx: TransactionalDB) {
+    const txBaseRepository = baseRepository.withTransaction(tx);
+    return {
+      ...txBaseRepository,
+      hasOverlappingTimeOffs: (
+        driverId: number,
+        startDate: string,
+        endDate: string,
+        excludeId?: number,
+      ) => hasOverlappingTimeOffs(driverId, startDate, endDate, excludeId, tx),
+      withTransaction: (newTx: TransactionalDB) => withTransaction(newTx),
+    };
+  }
+
   return {
     ...baseRepository,
     hasOverlappingTimeOffs,
+    withTransaction,
   };
 };
 
 // Export the driver time-off repository instance
 export const driverTimeOffRepository = createDriverTimeOffRepository();
+
+/**
+ * Type representing the complete time-off repository
+ * Derived from the actual implementation
+ */
+export type TimeOffRepository = typeof driverTimeOffRepository;

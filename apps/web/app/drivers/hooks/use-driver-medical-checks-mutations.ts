@@ -12,7 +12,7 @@ import imsClient from '@/services/ims-client';
 export default function useDriverMedicalChecksMutations(driverId: number) {
   return createCollectionMutations<
     medical_checks.DriverMedicalCheck,
-    medical_checks.CreateDriverMedicalCheckRepositoryPayload
+    medical_checks.CreateDriverMedicalCheckEndpointPayload
   >({
     queryKey: ['drivers', driverId.toString(), 'medical-checks'],
     translationKey: 'medicalChecks',

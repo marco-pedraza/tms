@@ -191,3 +191,9 @@ export const createDriverRepository = () => {
 
 // Export the driver repository instance
 export const driverRepository = createDriverRepository();
+
+/**
+ * Type representing the complete driver repository
+ * Derived from the actual implementation
+ */
+export type DriverRepository = typeof driverRepository;

@@ -3975,15 +3975,36 @@ export namespace planning {
 
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
+            this.cloneRollingPlanVersion = this.cloneRollingPlanVersion.bind(this)
             this.createRollingPlan = this.createRollingPlan.bind(this)
             this.createRollingPlanVersion = this.createRollingPlanVersion.bind(this)
             this.deleteRollingPlan = this.deleteRollingPlan.bind(this)
             this.getRollingPlan = this.getRollingPlan.bind(this)
             this.getRollingPlanVersion = this.getRollingPlanVersion.bind(this)
+            this.getRollingPlanVersionActivationLogs = this.getRollingPlanVersionActivationLogs.bind(this)
             this.listRollingPlanVersions = this.listRollingPlanVersions.bind(this)
             this.listRollingPlans = this.listRollingPlans.bind(this)
             this.listRollingPlansPaginated = this.listRollingPlansPaginated.bind(this)
             this.updateRollingPlan = this.updateRollingPlan.bind(this)
+        }
+
+        /**
+         * Clones an existing rolling plan version.
+         * Creates a new version in draft state with the same configuration but without activation history.
+         * @param params - Object containing the rolling plan ID, version ID, and optional name
+         * @param params.id - The ID of the rolling plan
+         * @param params.versionId - The ID of the rolling plan version to clone
+         * @param params.name - Optional name for the cloned version. If not provided, a name will be auto-generated
+         * @returns {Promise<RollingPlanVersion>} The cloned rolling plan version
+         * @throws {NotFoundError} If the rolling plan or version is not found
+         * @throws {APIError} If cloning fails
+         */
+        public async cloneRollingPlanVersion(id: number, versionId: number, params: {
+    name?: string
+}): Promise<rolling_plan_versions.RollingPlanVersion> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/rolling-plans/${encodeURIComponent(id)}/versions/${encodeURIComponent(versionId)}/clone`, JSON.stringify(params))
+            return await resp.json() as rolling_plan_versions.RollingPlanVersion
         }
 
         /**
@@ -4052,6 +4073,40 @@ export namespace planning {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI("GET", `/rolling-plans/${encodeURIComponent(id)}/versions/${encodeURIComponent(versionId)}`)
             return await resp.json() as rolling_plan_versions.RollingPlanVersion
+        }
+
+        /**
+         * Retrieves the activation history for a specific rolling plan version with pagination.
+         * @param params - Query parameters including orderBy, filters, and searchTerm
+         * @param params.id - The ID of the rolling plan
+         * @param params.versionId - The ID of the rolling plan version
+         * @returns {Promise<PaginatedRollingPlanVersionActivationLogsResult>} Paginated activation logs for the version
+         * @throws {NotFoundError} If the rolling plan or version is not found
+         * @throws {APIError} If retrieval fails
+         */
+        public async getRollingPlanVersionActivationLogs(id: number, versionId: number, params: {
+    page?: number
+    pageSize?: number
+    orderBy?: {
+        field: "id" | "versionId" | "rollingPlanId" | "activatedAt" | "deactivatedAt" | "createdAt" | "updatedAt" | "duration" | "isActive"
+        direction: "asc" | "desc"
+    }[]
+    filters?: {
+        id?: number
+        versionId?: number
+        rollingPlanId?: number
+        activatedAt?: string | string
+        deactivatedAt?: string | string | null
+        createdAt?: string | string | null
+        updatedAt?: string | string | null
+        duration?: number | null
+        isActive?: boolean
+    }
+    searchTerm?: string
+}): Promise<rolling_plan_version_activation_logs.PaginatedRollingPlanVersionActivationLogsResult> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI("POST", `/rolling-plans/${encodeURIComponent(id)}/versions/${encodeURIComponent(versionId)}/activation-logs`, JSON.stringify(params))
+            return await resp.json() as rolling_plan_version_activation_logs.PaginatedRollingPlanVersionActivationLogsResult
         }
 
         /**
@@ -11227,6 +11282,60 @@ export namespace roles {
          * Timestamp when the role was last updated
          */
         updatedAt: string | string | null
+    }
+}
+
+export namespace rolling_plan_version_activation_logs {
+    export interface PaginatedRollingPlanVersionActivationLogsResult {
+        pagination: shared.PaginationMeta
+        data: RollingPlanVersionActivationLog[]
+    }
+
+    export interface RollingPlanVersionActivationLog {
+        /**
+         * Unique identifier for the activation log
+         */
+        id: number
+
+        /**
+         * ID of the rolling plan version
+         */
+        versionId: number
+
+        /**
+         * ID of the rolling plan
+         */
+        rollingPlanId: number
+
+        /**
+         * Timestamp when the version was activated
+         */
+        activatedAt: string | string
+
+        /**
+         * Timestamp when the version was deactivated (null if still active)
+         */
+        deactivatedAt: string | string | null
+
+        /**
+         * Timestamp when the log record was created
+         */
+        createdAt: string | string | null
+
+        /**
+         * Timestamp when the log record was last updated
+         */
+        updatedAt: string | string | null
+
+        /**
+         * Duration in milliseconds (null if still active)
+         */
+        duration: number | null
+
+        /**
+         * Whether this activation period is currently active
+         */
+        isActive: boolean
     }
 }
 

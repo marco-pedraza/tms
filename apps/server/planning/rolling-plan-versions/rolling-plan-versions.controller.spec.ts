@@ -1,5 +1,7 @@
 import { inventoryAdapter } from '@/planning/adapters/inventory.adapter';
 import { db } from '@/planning/db-service';
+import { rollingPlanVersionActivationLogRepository } from '@/planning/rolling-plan-version-activation-logs/rolling-plan-version-activation-logs.repository';
+import { rollingPlanVersionActivationLogs } from '@/planning/rolling-plan-version-activation-logs/rolling-plan-version-activation-logs.schema';
 import { rollingPlanRepository } from '@/planning/rolling-plans/rolling-plans.repository';
 import type { CreateRollingPlanPayload } from '@/planning/rolling-plans/rolling-plans.types';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
@@ -30,8 +32,10 @@ import type {
 import { rollingPlanVersionRepository } from './rolling-plan-versions.repository';
 import { createRollingPlanVersionEntity } from './rolling-plan-version.entity';
 import {
+  cloneRollingPlanVersion,
   createRollingPlanVersion,
   getRollingPlanVersion,
+  getRollingPlanVersionActivationLogs,
   listRollingPlanVersions,
 } from './rolling-plan-versions.controller';
 // Import to ensure errors.ts file has coverage
@@ -252,9 +256,78 @@ describe('Rolling Plan Versions Controller', () => {
      * Cleans up test data after test suite
      */
     async function cleanupTestData(data: TestData): Promise<void> {
-      // Clean up all tracked rolling plan versions first
-      // Use repository forceDelete to ensure hard delete and avoid foreign key issues
+      // Clean up activation logs first (they reference versions and rolling plans)
       const trackedVersionIds = data.versionCleanup.getTrackedIds();
+      if (trackedVersionIds.length > 0) {
+        // Delete all activation logs for tracked versions
+        for (const versionId of trackedVersionIds) {
+          try {
+            const logs =
+              await rollingPlanVersionActivationLogRepository.findAllBy(
+                rollingPlanVersionActivationLogs.versionId,
+                versionId,
+              );
+            if (logs.length > 0) {
+              const logIds = logs.map((log) => log.id);
+              await rollingPlanVersionActivationLogRepository.deleteMany(
+                logIds,
+              );
+            }
+          } catch (error) {
+            console.log(
+              '⚠️ Error cleaning up activation logs for version:',
+              versionId,
+              error,
+            );
+          }
+        }
+      }
+
+      // Also clean up activation logs for the main rolling plan
+      try {
+        const logs = await rollingPlanVersionActivationLogRepository.findAllBy(
+          rollingPlanVersionActivationLogs.rollingPlanId,
+          data.rollingPlanId,
+        );
+        if (logs.length > 0) {
+          const logIds = logs.map((log) => log.id);
+          await rollingPlanVersionActivationLogRepository.deleteMany(logIds);
+        }
+      } catch (error) {
+        console.log(
+          '⚠️ Error cleaning up activation logs for rolling plan:',
+          data.rollingPlanId,
+          error,
+        );
+      }
+
+      // Clean up temporary rolling plans' activation logs
+      if (data.temporaryRollingPlanIds.length > 0) {
+        for (const rollingPlanId of data.temporaryRollingPlanIds) {
+          try {
+            const logs =
+              await rollingPlanVersionActivationLogRepository.findAllBy(
+                rollingPlanVersionActivationLogs.rollingPlanId,
+                rollingPlanId,
+              );
+            if (logs.length > 0) {
+              const logIds = logs.map((log) => log.id);
+              await rollingPlanVersionActivationLogRepository.deleteMany(
+                logIds,
+              );
+            }
+          } catch (error) {
+            console.log(
+              '⚠️ Error cleaning up activation logs for temporary rolling plan:',
+              rollingPlanId,
+              error,
+            );
+          }
+        }
+      }
+
+      // Clean up all tracked rolling plan versions
+      // Use repository forceDelete to ensure hard delete and avoid foreign key issues
       if (trackedVersionIds.length > 0) {
         for (const id of trackedVersionIds) {
           try {
@@ -993,6 +1066,544 @@ describe('Rolling Plan Versions Controller', () => {
           ).toBe(true);
         } finally {
           // Clean up - temporary rolling plan is already tracked by createTestRollingPlan
+          await testData.versionCleanup.cleanup(otherVersion.id);
+        }
+      });
+    });
+
+    describe('clone operations', () => {
+      /**
+       * Helper function to test clone operation and validate common properties
+       */
+      async function testCloneOperation(
+        sourceVersion: RollingPlanVersion,
+        options: { name?: string } = {},
+      ) {
+        const clonedVersion = await cloneRollingPlanVersion({
+          id: testData.rollingPlanId,
+          versionId: sourceVersion.id,
+          ...options,
+        });
+
+        // Track the cloned version for cleanup
+        testData.versionCleanup.track(clonedVersion.id);
+
+        // Common assertions for all clone operations
+        expect(clonedVersion).toBeDefined();
+        expect(clonedVersion.id).toBeDefined();
+        expect(clonedVersion.id).not.toBe(sourceVersion.id);
+        expect(clonedVersion.rollingPlanId).toBe(sourceVersion.rollingPlanId);
+        expect(clonedVersion.state).toBe('draft'); // Cloned versions are always draft
+        expect(clonedVersion.notes).toBe(sourceVersion.notes);
+        expect(clonedVersion.activatedAt).toBeNull(); // No activation history
+        expect(clonedVersion.deactivatedAt).toBeNull();
+
+        return clonedVersion;
+      }
+
+      test('should clone a rolling plan version with auto-generated name', async () => {
+        const sourceVersion = testData.testVersions[0]; // Use draft version
+
+        const clonedVersion = await testCloneOperation(sourceVersion);
+
+        expect(clonedVersion.name).toContain(sourceVersion.name);
+        expect(clonedVersion.name).not.toBe(sourceVersion.name); // Should have suffix
+      });
+
+      test('should clone a rolling plan version with custom name', async () => {
+        const sourceVersion = testData.testVersions[0]; // Use draft version
+        const customName = `Cloned Version ${testData.suiteId}`;
+
+        const clonedVersion = await testCloneOperation(sourceVersion, {
+          name: customName,
+        });
+
+        expect(clonedVersion.name).toBe(customName);
+      });
+
+      test('should clone active version without activation history', async () => {
+        const activeVersion = testData.testVersions.find(
+          (v) => v.state === 'active',
+        );
+        if (!activeVersion) {
+          throw new Error('No active version found in test data');
+        }
+
+        await testCloneOperation(activeVersion);
+      });
+
+      test('should generate unique name when name already exists', async () => {
+        const sourceVersion = testData.testVersions[0];
+        const baseName = sourceVersion.name;
+
+        // Create a version with a name that would conflict with the auto-generated clone name
+        // The clone will try to use baseName + random suffix, so we create a version with that pattern
+        const conflictingName = `${baseName} ABCD`; // Simulate what the clone might generate
+        const existingVersion = await createTestVersion(
+          testData,
+          conflictingName,
+          'draft',
+        );
+
+        try {
+          const clonedVersion = await cloneRollingPlanVersion({
+            id: testData.rollingPlanId,
+            versionId: sourceVersion.id,
+          });
+
+          // Track the cloned version for cleanup
+          testData.versionCleanup.track(clonedVersion.id);
+
+          // The cloned version should have a unique name (different from both baseName and conflictingName)
+          expect(clonedVersion.name).not.toBe(baseName);
+          expect(clonedVersion.name).not.toBe(conflictingName);
+          expect(clonedVersion.name).toContain(baseName);
+          // Should have a suffix (random uppercase letters or timestamp)
+          expect(clonedVersion.name.length).toBeGreaterThan(baseName.length);
+        } finally {
+          await testData.versionCleanup.cleanup(existingVersion.id);
+        }
+      });
+
+      /**
+       * Helper function to test NotFoundError scenarios for clone operations
+       */
+      async function expectCloneNotFoundError(
+        rollingPlanId: number,
+        versionId: number,
+      ) {
+        await expect(
+          cloneRollingPlanVersion({
+            id: rollingPlanId,
+            versionId,
+          }),
+        ).rejects.toThrow();
+      }
+
+      test.each([
+        {
+          description: 'rolling plan does not exist',
+          getRollingPlanId: () => 999999,
+          getVersionId: () => testData.testVersions[0].id,
+        },
+        {
+          description: 'version does not exist',
+          getRollingPlanId: () => testData.rollingPlanId,
+          getVersionId: () => 999999,
+        },
+      ])(
+        'should throw NotFoundError when $description',
+        async ({ getRollingPlanId, getVersionId }) => {
+          await expectCloneNotFoundError(getRollingPlanId(), getVersionId());
+        },
+      );
+
+      test('should throw NotFoundError when version does not belong to rolling plan', async () => {
+        // Create another rolling plan
+        const rollingPlanEntity = createUniqueEntity({
+          baseName: 'Other Rolling Plan for Clone Test',
+          suiteId: testData.suiteId,
+        });
+
+        const otherRollingPlan = await createTestRollingPlan(
+          testData,
+          rollingPlanEntity.name,
+        );
+
+        // Create a version for the other rolling plan
+        const otherVersion = await createTestVersion(
+          testData,
+          'Other Plan Version',
+          'draft',
+          { rollingPlanId: otherRollingPlan.id },
+        );
+
+        try {
+          await expectCloneNotFoundError(
+            testData.rollingPlanId, // Wrong rolling plan ID
+            otherVersion.id,
+          );
+        } finally {
+          await testData.versionCleanup.cleanup(otherVersion.id);
+        }
+      });
+    });
+
+    describe('activation logs operations', () => {
+      /**
+       * Helper function to create activation logs for testing with flexible date options
+       */
+      async function createActivationLog(
+        versionId: number,
+        rollingPlanId: number,
+        options: {
+          activatedAt?: Date;
+          deactivatedAt?: Date | null;
+          daysAgoActivated?: number;
+          daysAgoDeactivated?: number | null;
+        } = {},
+      ) {
+        const now = new Date();
+        const activatedAt =
+          options.activatedAt ??
+          (options.daysAgoActivated
+            ? new Date(
+                now.getTime() - options.daysAgoActivated * 24 * 60 * 60 * 1000,
+              )
+            : now);
+
+        const deactivatedAt =
+          options.deactivatedAt !== undefined
+            ? options.deactivatedAt
+            : options.daysAgoDeactivated
+              ? new Date(
+                  now.getTime() -
+                    options.daysAgoDeactivated * 24 * 60 * 60 * 1000,
+                )
+              : null;
+
+        const [log] = await db
+          .insert(rollingPlanVersionActivationLogs)
+          .values({
+            versionId,
+            rollingPlanId,
+            activatedAt,
+            deactivatedAt,
+          })
+          .returning();
+
+        return log;
+      }
+
+      /**
+       * Helper function to create multiple activation logs for testing
+       */
+      async function createMultipleActivationLogs(
+        versionId: number,
+        rollingPlanId: number,
+        count: number,
+        startDaysAgo = 50,
+      ) {
+        const logs = [];
+        for (let i = 0; i < count; i++) {
+          const log = await createActivationLog(versionId, rollingPlanId, {
+            daysAgoActivated: startDaysAgo - i * 10,
+            daysAgoDeactivated:
+              i === count - 1 ? null : startDaysAgo - i * 10 - 5,
+          });
+          logs.push(log);
+        }
+        return logs;
+      }
+
+      /**
+       * Helper function to test activation logs response structure
+       */
+      function validateActivationLogStructure(log: unknown) {
+        expect(log).toHaveProperty('id');
+        expect(log).toHaveProperty('versionId');
+        expect(log).toHaveProperty('rollingPlanId');
+        expect(log).toHaveProperty('activatedAt');
+        expect(log).toHaveProperty('deactivatedAt');
+        expect(log).toHaveProperty('duration');
+        expect(log).toHaveProperty('isActive');
+        expect(log).toHaveProperty('createdAt');
+        expect(log).toHaveProperty('updatedAt');
+      }
+
+      /**
+       * Helper function to test NotFoundError scenarios for activation logs
+       */
+      async function expectActivationLogsNotFoundError(
+        rollingPlanId: number,
+        versionId: number,
+      ) {
+        await expect(
+          getRollingPlanVersionActivationLogs({
+            id: rollingPlanId,
+            versionId,
+            page: 1,
+            pageSize: 10,
+          }),
+        ).rejects.toThrow();
+      }
+
+      test('should get activation logs for a version with pagination and validate structure', async () => {
+        const version = testData.testVersions[0];
+
+        // Create some activation logs using helper
+        await createActivationLog(version.id, testData.rollingPlanId, {
+          daysAgoActivated: 30,
+          daysAgoDeactivated: 20,
+        });
+        await createActivationLog(version.id, testData.rollingPlanId, {
+          daysAgoActivated: 10,
+          deactivatedAt: null, // Still active
+        });
+
+        const response = await getRollingPlanVersionActivationLogs({
+          id: testData.rollingPlanId,
+          versionId: version.id,
+          page: 1,
+          pageSize: 10,
+        });
+
+        expect(response).toBeDefined();
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(response.data.length).toBeGreaterThanOrEqual(2);
+        expect(response.pagination).toBeDefined();
+        expect(response.pagination.currentPage).toBe(1);
+        expect(response.pagination.pageSize).toBe(10);
+
+        // Verify log structure using helper
+        const log = response.data[0];
+        validateActivationLogStructure(log);
+
+        // Verify calculated fields
+        const activeLog = response.data.find((l) => l.isActive);
+        if (activeLog) {
+          expect(activeLog.deactivatedAt).toBeNull();
+          expect(activeLog.duration).toBeNull();
+        }
+
+        const inactiveLog = response.data.find((l) => !l.isActive);
+        if (inactiveLog) {
+          expect(inactiveLog.deactivatedAt).not.toBeNull();
+          expect(inactiveLog.duration).not.toBeNull();
+          expect(inactiveLog.duration).toBeGreaterThan(0);
+        }
+      });
+
+      test.each([
+        {
+          description: 'default ordering (activatedAt descending)',
+          orderBy: undefined,
+          expectedComparison: (current: number, next: number) =>
+            current >= next,
+        },
+        {
+          description: 'custom ordering (activatedAt ascending)',
+          orderBy: [
+            { field: 'activatedAt' as const, direction: 'asc' as const },
+          ],
+          expectedComparison: (current: number, next: number) =>
+            current <= next,
+        },
+      ])(
+        'should support $description',
+        async ({ orderBy, expectedComparison }) => {
+          const version = testData.testVersions[0];
+
+          // Create activation logs with different dates using helper
+          await createActivationLog(version.id, testData.rollingPlanId, {
+            daysAgoActivated: 30,
+            daysAgoDeactivated: 20,
+          });
+          await createActivationLog(version.id, testData.rollingPlanId, {
+            daysAgoActivated: 10,
+            deactivatedAt: null,
+          });
+
+          const response = await getRollingPlanVersionActivationLogs({
+            id: testData.rollingPlanId,
+            versionId: version.id,
+            page: 1,
+            pageSize: 10,
+            ...(orderBy && { orderBy }),
+          });
+
+          expect(response.data.length).toBeGreaterThan(0);
+
+          // Check ordering
+          for (let i = 0; i < response.data.length - 1; i++) {
+            const current = new Date(response.data[i].activatedAt).getTime();
+            const next = new Date(response.data[i + 1].activatedAt).getTime();
+            expect(expectedComparison(current, next)).toBe(true);
+          }
+        },
+      );
+
+      test('should support pagination', async () => {
+        const version = testData.testVersions[0];
+
+        // Create multiple activation logs using helper
+        await createMultipleActivationLogs(
+          version.id,
+          testData.rollingPlanId,
+          5,
+        );
+
+        // Get first page
+        const page1 = await getRollingPlanVersionActivationLogs({
+          id: testData.rollingPlanId,
+          versionId: version.id,
+          page: 1,
+          pageSize: 2,
+        });
+
+        expect(page1.data.length).toBe(2);
+        expect(page1.pagination.currentPage).toBe(1);
+        expect(page1.pagination.pageSize).toBe(2);
+        expect(page1.pagination.totalCount).toBeGreaterThanOrEqual(5);
+
+        // Get second page
+        const page2 = await getRollingPlanVersionActivationLogs({
+          id: testData.rollingPlanId,
+          versionId: version.id,
+          page: 2,
+          pageSize: 2,
+        });
+
+        expect(page2.data.length).toBeGreaterThan(0);
+        expect(page2.pagination.currentPage).toBe(2);
+
+        // Verify different data
+        expect(page1.data[0].id).not.toBe(page2.data[0].id);
+      });
+
+      test('should filter logs by versionId', async () => {
+        const version1 = testData.testVersions[0];
+        const version2 = testData.testVersions[1];
+
+        // Create logs for both versions using helper
+        await createActivationLog(version1.id, testData.rollingPlanId, {
+          daysAgoActivated: 10,
+          deactivatedAt: null,
+        });
+        await createActivationLog(version2.id, testData.rollingPlanId, {
+          daysAgoActivated: 10,
+          deactivatedAt: null,
+        });
+
+        // Get logs for version1 only
+        const response = await getRollingPlanVersionActivationLogs({
+          id: testData.rollingPlanId,
+          versionId: version1.id,
+          page: 1,
+          pageSize: 10,
+        });
+
+        // All logs should belong to version1
+        expect(
+          response.data.every((log) => log.versionId === version1.id),
+        ).toBe(true);
+        expect(
+          response.data.every((log) => log.versionId !== version2.id),
+        ).toBe(true);
+      });
+
+      test('should return empty array for version with no activation logs', async () => {
+        // Create a new version without activation logs
+        const newVersion = await createTestVersion(
+          testData,
+          `Version Without Logs ${testData.suiteId}`,
+          'draft',
+        );
+
+        const response = await getRollingPlanVersionActivationLogs({
+          id: testData.rollingPlanId,
+          versionId: newVersion.id,
+          page: 1,
+          pageSize: 10,
+        });
+
+        expect(response.data).toBeDefined();
+        expect(Array.isArray(response.data)).toBe(true);
+        expect(response.data.length).toBe(0);
+        expect(response.pagination.totalCount).toBe(0);
+      });
+
+      test('should calculate duration and active status correctly', async () => {
+        const version = testData.testVersions[0];
+
+        // Create both active and inactive logs using helper
+        const now = new Date();
+        const activatedAt = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
+        const deactivatedAt = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
+        const expectedDuration =
+          deactivatedAt.getTime() - activatedAt.getTime();
+
+        await createActivationLog(version.id, testData.rollingPlanId, {
+          activatedAt,
+          deactivatedAt,
+        });
+        await createActivationLog(version.id, testData.rollingPlanId, {
+          daysAgoActivated: 5,
+          deactivatedAt: null, // Still active
+        });
+
+        const response = await getRollingPlanVersionActivationLogs({
+          id: testData.rollingPlanId,
+          versionId: version.id,
+          page: 1,
+          pageSize: 10,
+        });
+
+        // Test inactive log
+        const inactiveLog = response.data.find((l) => !l.isActive);
+        if (inactiveLog) {
+          expect(inactiveLog.duration).toBe(expectedDuration);
+          expect(inactiveLog.isActive).toBe(false);
+          expect(inactiveLog.deactivatedAt).not.toBeNull();
+        }
+
+        // Test active log
+        const activeLog = response.data.find((l) => l.isActive);
+        if (activeLog) {
+          expect(activeLog.isActive).toBe(true);
+          expect(activeLog.deactivatedAt).toBeNull();
+          expect(activeLog.duration).toBeNull();
+        }
+      });
+
+      test.each([
+        {
+          description: 'rolling plan does not exist',
+          getRollingPlanId: () => 999999,
+          getVersionId: () => testData.testVersions[0].id,
+        },
+        {
+          description: 'version does not exist',
+          getRollingPlanId: () => testData.rollingPlanId,
+          getVersionId: () => 999999,
+        },
+      ])(
+        'should throw NotFoundError when $description',
+        async ({ getRollingPlanId, getVersionId }) => {
+          await expectActivationLogsNotFoundError(
+            getRollingPlanId(),
+            getVersionId(),
+          );
+        },
+      );
+
+      test('should throw NotFoundError when version does not belong to rolling plan', async () => {
+        // Create another rolling plan
+        const rollingPlanEntity = createUniqueEntity({
+          baseName: 'Other Rolling Plan for Logs Test',
+          suiteId: testData.suiteId,
+        });
+
+        const otherRollingPlan = await createTestRollingPlan(
+          testData,
+          rollingPlanEntity.name,
+        );
+
+        // Create a version for the other rolling plan
+        const otherVersion = await createTestVersion(
+          testData,
+          'Other Plan Version',
+          'draft',
+          { rollingPlanId: otherRollingPlan.id },
+        );
+
+        try {
+          await expectActivationLogsNotFoundError(
+            testData.rollingPlanId, // Wrong rolling plan ID
+            otherVersion.id,
+          );
+        } finally {
           await testData.versionCleanup.cleanup(otherVersion.id);
         }
       });

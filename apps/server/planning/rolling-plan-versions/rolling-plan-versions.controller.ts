@@ -1,4 +1,9 @@
 import { api } from 'encore.dev/api';
+import { rollingPlanVersionActivationLogRepository } from '@/planning/rolling-plan-version-activation-logs/rolling-plan-version-activation-logs.repository';
+import type {
+  PaginatedListRollingPlanVersionActivationLogsQueryParams,
+  PaginatedRollingPlanVersionActivationLogsResult,
+} from '@/planning/rolling-plan-version-activation-logs/rolling-plan-version-activation-logs.types';
 import { rollingPlanRepository } from '@/planning/rolling-plans/rolling-plans.repository';
 import { NotFoundError } from '@/shared/errors';
 import type {
@@ -118,5 +123,95 @@ export const listRollingPlanVersions = api(
     return {
       data: versions,
     };
+  },
+);
+
+/**
+ * Clones an existing rolling plan version.
+ * Creates a new version in draft state with the same configuration but without activation history.
+ * @param params - Object containing the rolling plan ID, version ID, and optional name
+ * @param params.id - The ID of the rolling plan
+ * @param params.versionId - The ID of the rolling plan version to clone
+ * @param params.name - Optional name for the cloned version. If not provided, a name will be auto-generated
+ * @returns {Promise<RollingPlanVersion>} The cloned rolling plan version
+ * @throws {NotFoundError} If the rolling plan or version is not found
+ * @throws {APIError} If cloning fails
+ */
+export const cloneRollingPlanVersion = api(
+  {
+    expose: true,
+    method: 'POST',
+    path: '/rolling-plans/:id/versions/:versionId/clone',
+    auth: true,
+  },
+  async ({
+    id,
+    versionId,
+    name,
+  }: {
+    id: number;
+    versionId: number;
+    name?: string;
+  }): Promise<RollingPlanVersion> => {
+    // Validate that the rolling plan exists
+    await rollingPlanRepository.findOne(id);
+
+    // Validate that the version exists and belongs to the rolling plan
+    const sourceVersion = await rollingPlanVersionRepository.findOne(versionId);
+
+    if (sourceVersion.rollingPlanId !== id) {
+      throw new NotFoundError(
+        `Rolling plan version ${versionId} not found for rolling plan ${id}`,
+      );
+    }
+
+    return await rollingPlanVersionApplicationService.cloneRollingPlanVersion(
+      sourceVersion,
+      name,
+    );
+  },
+);
+
+/**
+ * Retrieves the activation history for a specific rolling plan version with pagination.
+ * @param params - Query parameters including orderBy, filters, and searchTerm
+ * @param params.id - The ID of the rolling plan
+ * @param params.versionId - The ID of the rolling plan version
+ * @returns {Promise<PaginatedRollingPlanVersionActivationLogsResult>} Paginated activation logs for the version
+ * @throws {NotFoundError} If the rolling plan or version is not found
+ * @throws {APIError} If retrieval fails
+ */
+export const getRollingPlanVersionActivationLogs = api(
+  {
+    expose: true,
+    method: 'POST',
+    path: '/rolling-plans/:id/versions/:versionId/activation-logs',
+    auth: true,
+  },
+  async ({
+    id,
+    versionId,
+    ...queryParams
+  }: {
+    id: number;
+    versionId: number;
+  } & PaginatedListRollingPlanVersionActivationLogsQueryParams): Promise<PaginatedRollingPlanVersionActivationLogsResult> => {
+    // Validate that the rolling plan exists
+    await rollingPlanRepository.findOne(id);
+
+    // Validate that the version exists and belongs to the rolling plan
+    const version = await rollingPlanVersionRepository.findOne(versionId);
+
+    if (version.rollingPlanId !== id) {
+      throw new NotFoundError(
+        `Rolling plan version ${versionId} not found for rolling plan ${id}`,
+      );
+    }
+
+    // Get paginated activation logs
+    return await rollingPlanVersionActivationLogRepository.findByVersionIdPaginated(
+      versionId,
+      queryParams,
+    );
   },
 );

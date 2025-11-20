@@ -200,3 +200,5 @@ This will create `inventory-api.postman_collection.json` in the `tools/postman-g
 1. Ensure your code passes all tests
 2. Follow the established code style and formatting
 3. Run type checking before pushing changes
+
+Testing semantic release

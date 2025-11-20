@@ -146,7 +146,6 @@ describe('Buses Controller', () => {
       year: 2023,
       seatingCapacity: 40,
       numFloors: 1,
-      amenities: [],
       engineType: EngineType.DIESEL,
       active: true,
     });
@@ -238,9 +237,8 @@ describe('Buses Controller', () => {
       year: 2024,
       seatingCapacity: 72,
       numFloors: 2,
-      amenities: ['WiFi', 'USB'],
-      active: true,
       engineType: EngineType.DIESEL,
+      active: true,
     });
 
     alternativeBusModelId = busModelCleanup.track(alternativeBusModel.id);
@@ -283,7 +281,7 @@ describe('Buses Controller', () => {
     await transporterCleanup.cleanupAll();
   });
 
-  describe('success scenarios', () => {
+  describe.sequential('success scenarios', () => {
     test('should create a new bus with seat diagram and zones', async () => {
       const testBus: CreateBusPayload = {
         registrationNumber: createUniqueCode('TEST', 3),
@@ -304,7 +302,6 @@ describe('Buses Controller', () => {
         grossVehicleWeight: 15000,
         currentKilometer: 50000,
         gpsId: createUniqueCode('GPS', 5),
-        seatDiagramId: 0, // This will be set by the controller
         busLineId: busLineId,
         active: true,
       };
@@ -509,16 +506,16 @@ describe('Buses Controller', () => {
 
     test('should assign bus crew to a bus', async () => {
       const driver1 = await createDriver({
-        driverKey: 'DRV001',
-        payrollKey: 'PAY001',
+        driverKey: createUniqueCode('DRV', 3),
+        payrollKey: createUniqueCode('PAY', 3),
         firstName: 'John',
         lastName: 'Doe',
         address: '123 Main St, Downtown, Mexico City, CDMX, 12345',
-        phone: '+52 55 12345678',
-        email: 'john.doe@example.com',
+        phone: `+52 55 ${testSuiteId.substring(0, 8)}`,
+        email: `john.doe.${testSuiteId}@example.com`,
         hireDate: '2020-01-15',
         status: DriverStatus.ACTIVE,
-        license: 'LIC12345',
+        license: `LIC-${testSuiteId.substring(0, 8)}`,
         licenseExpiry: '2026-01-15',
         busLineId: busLineId,
         emergencyContactName: 'John Doe',
@@ -529,16 +526,16 @@ describe('Buses Controller', () => {
       driverCleanup.track(driver1.id);
 
       const driver2 = await createDriver({
-        driverKey: 'DRV002',
-        payrollKey: 'PAY002',
+        driverKey: createUniqueCode('DRV2', 3),
+        payrollKey: createUniqueCode('PAY2', 3),
         firstName: 'Jane',
         lastName: 'Smith',
         address: '123 Main St, Downtown, Mexico City, CDMX, 12345',
-        phone: '+52 55 12345679',
-        email: 'jane.smith@example.com',
+        phone: `+52 55 ${testSuiteId.substring(0, 7)}9`,
+        email: `jane.smith.${testSuiteId}@example.com`,
         hireDate: '2020-04-18',
         status: DriverStatus.ACTIVE,
-        license: 'LIC12346',
+        license: `LIC2-${testSuiteId.substring(0, 8)}`,
         licenseExpiry: '2026-08-20',
         busLineId: busLineId,
         emergencyContactName: 'Jane Smith',
@@ -681,7 +678,6 @@ describe('Buses Controller', () => {
         grossVehicleWeight: 15000,
         currentKilometer: 50000,
         gpsId: createUniqueCode('GPS', 5),
-        seatDiagramId: 0, // This will be set by the controller
         active: true,
       });
 
@@ -710,7 +706,6 @@ describe('Buses Controller', () => {
           grossVehicleWeight: 12000,
           currentKilometer: 30000,
           gpsId: createUniqueCode('GPS2', 5),
-          seatDiagramId: 0, // This will be set by the controller
           active: true,
         }),
       ).rejects.toThrow();
@@ -736,7 +731,6 @@ describe('Buses Controller', () => {
           grossVehicleWeight: 15000,
           currentKilometer: 50000,
           gpsId: createUniqueCode('GPS3', 5),
-          seatDiagramId: 0, // This will be set by the controller
           active: true,
         }),
       ).rejects.toThrow();
@@ -879,7 +873,6 @@ describe('Buses Controller', () => {
           grossVehicleWeight: 15000,
           currentKilometer: 50000,
           gpsId: createUniqueCode('GPS', 5),
-          seatDiagramId: 0, // This will be set by the controller
         };
 
         const created = await createBus(fullBusData);

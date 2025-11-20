@@ -1,23 +1,17 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import {
-  createCity,
-  deleteCity,
-} from '@/inventory/locations/cities/cities.controller';
-import {
-  createCountry,
-  deleteCountry,
-} from '@/inventory/locations/countries/countries.controller';
-import {
-  createState,
-  deleteState,
-} from '@/inventory/locations/states/states.controller';
+import { createCity } from '@/inventory/locations/cities/cities.controller';
+import { cityRepository } from '@/inventory/locations/cities/cities.repository';
+import { createCountry } from '@/inventory/locations/countries/countries.controller';
+import { countryRepository } from '@/inventory/locations/countries/countries.repository';
+import { createState } from '@/inventory/locations/states/states.controller';
+import { stateRepository } from '@/inventory/locations/states/states.repository';
 import {
   createCleanupHelper,
   createTestSuiteId,
   createUniqueEntity,
-  safeCleanup,
 } from '@/tests/shared/test-utils';
 import type { Transporter, TransporterWithCity } from './transporters.types';
+import { transporterRepository } from './transporters.repository';
 import {
   createTransporter,
   deleteTransporter,
@@ -87,7 +81,7 @@ describe('Transporters Controller', () => {
     });
 
     const transporterCleanup = createCleanupHelper(
-      deleteTransporter,
+      ({ id }: { id: number }) => transporterRepository.forceDelete(id),
       'transporter',
     );
 
@@ -107,30 +101,25 @@ describe('Transporters Controller', () => {
     // Delete transporters first (they reference cities)
     await data.transporterCleanup.cleanupAll();
 
-    // Delete geographic entities in reverse order using safe cleanup
-    await safeCleanup(
-      async () => {
-        await deleteCity({ id: data.cityId });
-      },
-      'city',
-      data.cityId,
-    );
+    // Delete geographic entities in correct dependency order using forceDelete
+    // Wrap in try-catch to handle cases where entities were already deleted
+    try {
+      await cityRepository.forceDelete(data.cityId);
+    } catch (error) {
+      console.log(`Error cleaning up city (ID: ${data.cityId}):`, error);
+    }
 
-    await safeCleanup(
-      async () => {
-        await deleteState({ id: data.stateId });
-      },
-      'state',
-      data.stateId,
-    );
+    try {
+      await stateRepository.forceDelete(data.stateId);
+    } catch (error) {
+      console.log(`Error cleaning up state (ID: ${data.stateId}):`, error);
+    }
 
-    await safeCleanup(
-      async () => {
-        await deleteCountry({ id: data.countryId });
-      },
-      'country',
-      data.countryId,
-    );
+    try {
+      await countryRepository.forceDelete(data.countryId);
+    } catch (error) {
+      console.log(`Error cleaning up country (ID: ${data.countryId}):`, error);
+    }
   }
 
   /**

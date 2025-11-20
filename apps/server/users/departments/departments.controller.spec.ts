@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { createTestSuiteId, createUniqueName } from '@/tests/shared/test-utils';
 import type {
   CreateDepartmentPayload,
   Department,
@@ -14,12 +15,14 @@ import {
 } from './departments.controller';
 
 describe('Departments Controller', () => {
+  const testSuiteId = createTestSuiteId('departments');
+
   // Test data
   let departmentId = 0;
 
   const testDepartment: CreateDepartmentPayload = {
-    name: 'Test Department',
-    code: 'TEST-DEPT',
+    name: createUniqueName('Test Department', testSuiteId),
+    code: `TEST-DEPT-${testSuiteId.substring(0, 8)}`,
     description: 'A test department for automated testing',
   };
 
@@ -40,7 +43,7 @@ describe('Departments Controller', () => {
     }
   });
 
-  describe('success scenarios', () => {
+  describe.sequential('success scenarios', () => {
     test('should create a new department', async () => {
       const result = await createDepartment(testDepartment);
 

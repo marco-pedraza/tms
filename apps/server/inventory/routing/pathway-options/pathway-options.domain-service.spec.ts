@@ -124,7 +124,7 @@ describe('PathwayOptionDomainService - Bulk Sync Operations', () => {
     const populationId = testPopulation.id;
 
     const testCity = await cityFactory(factoryDb).create({
-      name: createUniqueName('Test City', testSuiteId),
+      name: createUniqueName('Test City Pathway Options', testSuiteId),
     });
     const cityId = testCity.id;
 

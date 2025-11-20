@@ -3,8 +3,11 @@ import { eq, inArray } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { FieldValidationError } from '@repo/base-repo';
 import { db } from '@/inventory/db-service';
+import { createCity } from '@/inventory/locations/cities/cities.controller';
+import { createCountry } from '@/inventory/locations/countries/countries.controller';
 import { nodeRepository } from '@/inventory/locations/nodes/nodes.repository';
 import { populationRepository } from '@/inventory/locations/populations/populations.repository';
+import { createState } from '@/inventory/locations/states/states.controller';
 import { busLineRepository } from '@/inventory/operators/bus-lines/bus-lines.repository';
 import { serviceTypeRepository } from '@/inventory/operators/service-types/service-types.repository';
 import { transporterRepository } from '@/inventory/operators/transporters/transporters.repository';
@@ -16,7 +19,7 @@ import {
   createTestSuiteId,
   createUniqueEntity,
 } from '@/tests/shared/test-utils';
-import { cityFactory, populationFactory } from '@/factories';
+import { populationFactory } from '@/factories';
 import { getFactoryDb } from '@/factories/factory-utils';
 import type {
   CreateRoutePayload,
@@ -39,6 +42,8 @@ import {
 interface TestData {
   suiteId: string;
   factoryDb: ReturnType<typeof getFactoryDb>;
+  countryId: number;
+  stateId: number;
   cityId: number;
   populationId: number;
   originNodeId: number;
@@ -128,21 +133,58 @@ describe('Routes Controller', () => {
       }, 'pathway');
 
       // Create test dependencies using hybrid strategy:
-      // - Factories for cities/states/countries
+      // - Controllers for cities/states/countries (to avoid ID collisions with database sequences)
       // - Repository direct for nodes (to ensure transaction visibility)
-      const testCity = await cityFactory(factoryDb).create({
-        name: createUniqueEntity({ baseName: 'Test City', suiteId }).name,
+      const countryEntity = createUniqueEntity({
+        baseName: 'Test Country',
+        baseCode: 'TC',
+        suiteId,
+      });
+
+      const country = await createCountry({
+        name: countryEntity.name,
+        code: countryEntity.code || 'TC001',
+        active: true,
+      });
+      const countryId = country.id;
+
+      const stateEntity = createUniqueEntity({
+        baseName: 'Test State',
+        baseCode: 'TS',
+        suiteId,
+      });
+
+      const state = await createState({
+        name: stateEntity.name,
+        code: stateEntity.code || 'TS001',
+        countryId: country.id,
+        active: true,
+      });
+      const stateId = state.id;
+
+      const cityEntity = createUniqueEntity({
+        baseName: 'Test City',
+        suiteId,
+      });
+
+      const testCity = await createCity({
+        name: cityEntity.name,
+        stateId: state.id,
+        latitude: 19.4326 + Math.random() * 0.01, // Small variation to avoid conflicts
+        longitude: -99.1332 + Math.random() * 0.01,
+        timezone: 'America/Mexico_City',
+        active: true,
       });
       const cityId = testCity.id;
 
       const populationEntity = createUniqueEntity({
-        baseName: 'Test Population',
-        baseCode: 'TPOP',
+        baseName: 'Test Population Routes',
+        baseCode: 'TPOPR',
         suiteId,
       });
 
       const testPopulation = await populationFactory(factoryDb).create({
-        code: populationEntity.code || 'TPOP001',
+        code: populationEntity.code || 'TPOP002',
         description: 'Test population for routes',
         active: true,
       });
@@ -317,6 +359,8 @@ describe('Routes Controller', () => {
       return {
         suiteId,
         factoryDb,
+        countryId,
+        stateId,
         cityId,
         populationId,
         originNodeId,
@@ -415,7 +459,30 @@ describe('Routes Controller', () => {
         // Ignore cleanup errors
       }
 
-      // Cities are cleaned up automatically by factories
+      // 10. Clean up cities
+      try {
+        await db.delete(schema.cities).where(eq(schema.cities.id, data.cityId));
+      } catch {
+        // Ignore cleanup errors
+      }
+
+      // 11. Clean up states
+      try {
+        await db
+          .delete(schema.states)
+          .where(eq(schema.states.id, data.stateId));
+      } catch {
+        // Ignore cleanup errors
+      }
+
+      // 12. Clean up countries
+      try {
+        await db
+          .delete(schema.countries)
+          .where(eq(schema.countries.id, data.countryId));
+      } catch {
+        // Ignore cleanup errors
+      }
     }
 
     /**

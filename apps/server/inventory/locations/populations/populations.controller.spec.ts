@@ -637,14 +637,14 @@ describe('Populations Controller', () => {
         name: createUniqueName('Test Country for City Assignment', testSuiteId),
         code: `TCA${testSuiteId.substring(0, 4)}`,
         deletedAt: null, // Ensure country is active for tests
-      })) as Country;
+      })) as unknown as Country;
 
       testState = (await stateFactory(factoryDb).create({
         name: createUniqueName('Test State for City Assignment', testSuiteId),
         code: `TSA${testSuiteId.substring(0, 4)}`,
         countryId: testCountry.id,
         deletedAt: null, // Ensure state is active for tests
-      })) as State;
+      })) as unknown as State;
 
       // Create test cities using factory
       testCity = (await cityFactory(factoryDb).create({
@@ -654,7 +654,7 @@ describe('Populations Controller', () => {
         latitude: 19.4326,
         longitude: -99.1332,
         deletedAt: null,
-      })) as City;
+      })) as unknown as City;
 
       // Create test population for city assignment tests
       testPopulationForCityAssignment = await createPopulation({
@@ -798,14 +798,14 @@ describe('Populations Controller', () => {
         name: createUniqueName('Test Country for City Assignment', testSuiteId),
         code: `TCA${testSuiteId.substring(0, 4)}`,
         deletedAt: null, // Ensure country is active for tests
-      })) as Country;
+      })) as unknown as Country;
 
       testState = (await stateFactory(factoryDb).create({
         name: createUniqueName('Test State for City Assignment', testSuiteId),
         code: `TSA${testSuiteId.substring(0, 4)}`,
         countryId: testCountry.id,
         deletedAt: null, // Ensure state is active for tests
-      })) as State;
+      })) as unknown as State;
 
       // Create test cities using factory
       for (let i = 0; i < 4; i++) {
@@ -816,7 +816,7 @@ describe('Populations Controller', () => {
           latitude: 19.4326 + i,
           longitude: -99.1332 + i,
           deletedAt: null,
-        })) as City;
+        })) as unknown as City;
         testCities.push(city);
       }
 
@@ -1167,14 +1167,14 @@ describe('Populations Controller', () => {
         ),
         code: `TAC${testSuiteId.substring(0, 4)}`,
         deletedAt: null,
-      })) as Country;
+      })) as unknown as Country;
 
       testStateForAvailable = (await stateFactory(factoryDb).create({
         name: createUniqueName('Test State for Available Cities', testSuiteId),
         code: `TAS${testSuiteId.substring(0, 4)}`,
         countryId: testCountryForAvailable.id,
         deletedAt: null,
-      })) as State;
+      })) as unknown as State;
 
       // Create a population specifically for available cities tests
       populationForAvailableCities = await createPopulation({
@@ -1195,7 +1195,7 @@ describe('Populations Controller', () => {
           latitude: 19.4326 + i,
           longitude: -99.1332 + i,
           deletedAt: null,
-        })) as City;
+        })) as unknown as City;
         testCitiesForAvailable.push(city);
       }
     });
@@ -1344,7 +1344,7 @@ describe('Populations Controller', () => {
         ),
         code: `TPA${testSuiteId.substring(0, 4)}`,
         deletedAt: null,
-      })) as Country;
+      })) as unknown as Country;
 
       testState = (await stateFactory(factoryDb).create({
         name: createUniqueName(
@@ -1354,7 +1354,7 @@ describe('Populations Controller', () => {
         code: `TSP${testSuiteId.substring(0, 4)}`,
         countryId: testCountry.id,
         deletedAt: null,
-      })) as State;
+      })) as unknown as State;
 
       testCity = (await cityFactory(factoryDb).create({
         name: createUniqueName(
@@ -1366,7 +1366,7 @@ describe('Populations Controller', () => {
         latitude: 19.4326,
         longitude: -99.1332,
         deletedAt: null,
-      })) as City;
+      })) as unknown as City;
 
       testPopulation = await createPopulation({
         name: createUniqueName(
@@ -1425,6 +1425,100 @@ describe('Populations Controller', () => {
   });
 
   describe('get population cities', () => {
+    let testCitiesForGetCities: City[];
+    let testStateForGetCities: State;
+    let testCountryForGetCities: Country;
+    let testPopulationForCities: Population;
+
+    beforeAll(async () => {
+      const factoryDb = getFactoryDb(db);
+
+      // Create test country and state for these tests
+      testCountryForGetCities = (await countryFactory(factoryDb).create({
+        name: createUniqueName('Test Country for Get Cities', testSuiteId),
+        code: `TGC${testSuiteId.substring(0, 4)}`,
+        deletedAt: null,
+      })) as unknown as Country;
+
+      testStateForGetCities = (await stateFactory(factoryDb).create({
+        name: createUniqueName('Test State for Get Cities', testSuiteId),
+        code: `TGS${testSuiteId.substring(0, 4)}`,
+        countryId: testCountryForGetCities.id,
+        deletedAt: null,
+      })) as unknown as State;
+
+      // Create test population for this test suite
+      testPopulationForCities = await createPopulation({
+        name: createUniqueName('Population for Get Cities Test', testSuiteId),
+        code: createUniqueCode('PGC'),
+        description: 'Test population for get cities tests',
+        active: true,
+      });
+      populationCleanup.track(testPopulationForCities.id);
+
+      // Create dedicated test cities for these tests
+      testCitiesForGetCities = [];
+      for (let i = 0; i < 2; i++) {
+        const city = (await cityFactory(factoryDb).create({
+          name: createUniqueName(`Get Cities Test City ${i + 1}`, testSuiteId),
+          stateId: testStateForGetCities.id,
+          timezone: 'America/Mexico_City',
+          latitude: 19.4326 + i,
+          longitude: -99.1332 + i,
+          deletedAt: null,
+        })) as unknown as City;
+        testCitiesForGetCities.push(city);
+      }
+    });
+
+    afterAll(async () => {
+      // Clean up city assignments
+      if (testPopulationForCities?.id) {
+        try {
+          await assignCitiesToPopulation({
+            id: testPopulationForCities.id,
+            cityIds: [],
+          });
+        } catch {
+          // If population doesn't exist, directly clean up the junction table
+          await db
+            .delete(populationCities)
+            .where(
+              eq(populationCities.populationId, testPopulationForCities.id),
+            );
+        }
+      }
+
+      // Clean up test cities
+      for (const city of testCitiesForGetCities) {
+        if (city?.id) {
+          try {
+            await cityRepository.forceDelete(city.id);
+          } catch (error) {
+            console.log('Error cleaning up test city:', error);
+          }
+        }
+      }
+
+      // Clean up test state
+      if (testStateForGetCities?.id) {
+        try {
+          await stateRepository.forceDelete(testStateForGetCities.id);
+        } catch (error) {
+          console.log('Error cleaning up test state:', error);
+        }
+      }
+
+      // Clean up test country
+      if (testCountryForGetCities?.id) {
+        try {
+          await countryRepository.forceDelete(testCountryForGetCities.id);
+        } catch (error) {
+          console.log('Error cleaning up test country:', error);
+        }
+      }
+    });
+
     test('should return empty array when population has no cities assigned', async () => {
       // Use the main test population which has no cities assigned initially
       const response = await getPopulationCities({
@@ -1438,48 +1532,35 @@ describe('Populations Controller', () => {
     });
 
     test('should return cities assigned to the population', async () => {
-      // Create a test population for this specific test
-      const testPopulationForCities = await createTestPopulation(
-        'Population for Get Cities Test',
-      );
+      // Use the dedicated test cities created in beforeAll
+      const citiesToAssign = testCitiesForGetCities.map((city) => city.id);
 
-      // Use the existing cities from the city assignment tests
-      // Get available cities and assign some to our test population
-      const availableCities = await listAvailableCities({});
+      // Assign cities to the population
+      await assignCitiesToPopulation({
+        id: testPopulationForCities.id,
+        cityIds: citiesToAssign,
+      });
 
-      // Only proceed if we have available cities
-      if (availableCities.data.length >= 2) {
-        const citiesToAssign = availableCities.data
-          .slice(0, 2)
-          .map((city) => city.id);
+      const response = await getPopulationCities({
+        id: testPopulationForCities.id,
+      });
 
-        // Assign cities to the population
-        await assignCitiesToPopulation({
-          id: testPopulationForCities,
-          cityIds: citiesToAssign,
-        });
+      expect(response).toBeDefined();
+      expect(response.data).toBeDefined();
+      expect(Array.isArray(response.data)).toBe(true);
+      expect(response.data).toHaveLength(2);
 
-        const response = await getPopulationCities({
-          id: testPopulationForCities,
-        });
+      // Verify the returned cities are the ones we assigned
+      const returnedCityIds = response.data.map((city) => city.id);
+      expect(returnedCityIds).toContain(citiesToAssign[0]);
+      expect(returnedCityIds).toContain(citiesToAssign[1]);
 
-        expect(response).toBeDefined();
-        expect(response.data).toBeDefined();
-        expect(Array.isArray(response.data)).toBe(true);
-        expect(response.data).toHaveLength(2);
-
-        // Verify the returned cities are the ones we assigned
-        const returnedCityIds = response.data.map((city) => city.id);
-        expect(returnedCityIds).toContain(citiesToAssign[0]);
-        expect(returnedCityIds).toContain(citiesToAssign[1]);
-
-        // Verify city structure
-        const firstCity = response.data[0];
-        expect(firstCity.id).toBeDefined();
-        expect(firstCity.name).toBeDefined();
-        expect(firstCity.stateId).toBeDefined();
-        expect(firstCity.active).toBeDefined();
-      }
+      // Verify city structure
+      const firstCity = response.data[0];
+      expect(firstCity.id).toBeDefined();
+      expect(firstCity.name).toBeDefined();
+      expect(firstCity.stateId).toBeDefined();
+      expect(firstCity.active).toBeDefined();
     });
 
     test('should handle non-existent population ID', async () => {

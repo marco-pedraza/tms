@@ -260,8 +260,8 @@ describe('PathwayEntity', () => {
       const validPayload = {
         originNodeId: testData.nodeIds[0],
         destinationNodeId: testData.nodeIds[1],
-        name: 'Test Pathway',
-        code: 'TEST-001',
+        name: 'Test Pathway Create',
+        code: 'TPC',
         description: 'Test description',
         isSellable: true,
         isEmptyTrip: false,
@@ -270,8 +270,8 @@ describe('PathwayEntity', () => {
 
       const pathway = testData.pathwayEntity.create(validPayload);
 
-      expect(pathway.name).toBe('Test Pathway');
-      expect(pathway.code).toBe('TEST-001');
+      expect(pathway.name).toBe('Test Pathway Create');
+      expect(pathway.code).toBe('TPC');
       expect(pathway.active).toBe(false); // Always inactive
       expect(pathway.isPersisted).toBe(false);
     });

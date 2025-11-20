@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest';
+import { createTestSuiteId, createUniqueName } from '@/tests/shared/test-utils';
 import {
   createDepartment,
   deleteDepartment,
@@ -27,6 +28,8 @@ import {
 } from './user-permissions.controller';
 
 describe('User Permissions Controller', () => {
+  const testSuiteId = createTestSuiteId('user-permissions');
+
   // Test data
   let departmentId = 0;
   let userId = 0;
@@ -35,40 +38,40 @@ describe('User Permissions Controller', () => {
   let roleId = 0;
 
   const testDepartment: CreateDepartmentPayload = {
-    name: 'Test Department',
-    code: 'TEST-DEPT-UPER',
+    name: createUniqueName('Test Department', testSuiteId),
+    code: `TEST-DEPT-UPER-${testSuiteId.substring(0, 8)}`,
     description: 'A test department for user permissions testing',
   };
 
   const testUser: CreateUserPayload = {
     departmentId: 0, // Will be set after department creation
-    username: 'testuser_perm',
-    email: 'permissions.test@example.com',
+    username: `testuser_perm_${testSuiteId.substring(0, 8)}`,
+    email: `permissions.test.${testSuiteId}@example.com`,
     password: 'password123',
     firstName: 'Permission',
     lastName: 'Test',
-    phone: '+1234567890',
+    phone: `+123456${testSuiteId.substring(0, 4)}`,
     position: 'Test User',
-    employeeId: 'EMP-PERM',
+    employeeId: `EMP-PERM-${testSuiteId.substring(0, 8)}`,
     active: true,
     isSystemAdmin: false,
   };
 
   const testPermission1: CreatePermissionPayload = {
-    name: 'Test User Permission 1',
-    code: 'TEST_USER_PERM_1',
+    name: createUniqueName('Test User Permission 1', testSuiteId),
+    code: `TEST_USER_PERM_1_${testSuiteId.substring(0, 8)}`,
     description: 'A test permission for user permissions testing',
   };
 
   const testPermission2: CreatePermissionPayload = {
-    name: 'Test User Permission 2',
-    code: 'TEST_USER_PERM_2',
+    name: createUniqueName('Test User Permission 2', testSuiteId),
+    code: `TEST_USER_PERM_2_${testSuiteId.substring(0, 8)}`,
     description: 'Another test permission for user permissions testing',
   };
 
   const testRole: CreateRolePayload = {
-    code: 'TEST_USER_ROLE',
-    name: 'Test User Role',
+    code: `TEST_USER_ROLE_${testSuiteId.substring(0, 8)}`,
+    name: createUniqueName('Test User Role', testSuiteId),
     description: 'A test role for user permissions testing',
   };
 

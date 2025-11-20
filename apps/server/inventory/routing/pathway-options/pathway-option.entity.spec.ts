@@ -118,7 +118,7 @@ describe('PathwayOptionEntity - Toll Management', () => {
 
     // Create test dependencies
     const testPopulation = await populationFactory(factoryDb).create({
-      code: createUniqueCode('TPOP', 3),
+      code: createUniqueCode('TPPO', 3),
       description: 'Test population for option entity tolls',
       active: true,
     });

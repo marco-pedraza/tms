@@ -12,11 +12,15 @@
     "encore:gen-client": "turbo run ims-server#encore:gen-client",
     "encore:check": "turbo run ims-server#encore:check",
     "storybook": "turbo run storybook",
-    "shadcn": "turbo run shadcn --filter=@repo/ui --"
+    "shadcn": "turbo run shadcn --filter=@repo/ui --",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
     "@types/bcrypt": "^5.0.2",
     "debug": "^4.4.0",
+    "husky": "^9.1.7",
     "minimatch": "^10.0.1",
     "prettier": "^3.5.3",
     "tsup": "^8.4.0",

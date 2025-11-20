@@ -1,0 +1,35 @@
+name: Semantic Release (release branches)
+
+on:
+  push:
+    branches:
+      - "release/*"
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # semantic-release necesita todo el historial y tags
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Semantic Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # necesario para crear tags/releases
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }} # opcional si publicas a npm
+        run: npx semantic-release

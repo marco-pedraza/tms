@@ -1,6 +1,6 @@
 {
   "branches": ["release"],
-  "repositoryUrl": "git@github.com:marco-pedraza/tms.git",
+  "repositoryUrl": "https://github.com/marco-pedraza/tms.git",
   "tagFormat": "v${version}",
   "plugins": [
     "@semantic-release/commit-analyzer",
